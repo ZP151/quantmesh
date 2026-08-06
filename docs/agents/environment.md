@@ -26,5 +26,19 @@
 - `yeet`
 - `openai-docs`
 
-Skills are vendored at project scope so their versions are reviewable and travel with the repository. Review upstream changes before updating them.
+## Installed engineering Agent Skills
 
+- `ask-matt`: route work to the appropriate engineering flow
+- `grill-with-docs`: resolve product/domain decisions and preserve them
+- `to-spec`: publish a buildable specification
+- `to-tickets`: create tracer-bullet tickets and blocking edges
+- `wayfinder`: map large, uncertain efforts as decision tickets
+- `implement`: implement a ticket through TDD and review
+- `tdd`: red-green-refactor at public behavior seams
+- `diagnosing-bugs`: reproduce and isolate hard failures
+- `code-review`: review standards and spec compliance separately
+- `triage`: move incoming reports through the issue state machine
+- `improve-codebase-architecture`: identify deepening opportunities
+- `handoff`: create a context-safe session handoff
+
+Skills are vendored at project scope so their versions are reviewable and travel with the repository. Review upstream changes before updating them.

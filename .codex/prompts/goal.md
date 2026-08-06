@@ -1,0 +1,8 @@
+# QuantMesh Long-Running Goal
+
+Objective: `$ARGUMENTS`
+
+Follow the same durable workflow defined in `.claude/commands/goal.md`. Reconstruct state from `AGENTS.md`, `CONTEXT.md`, `docs/goals/ACTIVE.md`, the roadmap, active iteration, ADRs, Git history, GitHub issues and open PRs before acting.
+
+Continue through safe, unblocked vertical slices. Use the project Agent Skills for wayfinding, implementation, TDD, diagnosis, review and handoff. Keep progress in GitHub plus `docs/goals/ACTIVE.md` and `docs/iterations/`; never rely on chat history as the only source of state.
+

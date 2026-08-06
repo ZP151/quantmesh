@@ -15,3 +15,11 @@ Each implementation issue should include user outcome, scope, out-of-scope items
 
 When an agent workflow says “publish to the issue tracker”, create a GitHub issue. When it says “fetch the relevant ticket”, use `gh issue view <number> --comments`.
 
+## Wayfinding operations
+
+- A wayfinder map is a GitHub issue labelled `wayfinder:map`.
+- Decision tickets use one of `wayfinder:research`, `wayfinder:prototype`, `wayfinder:grilling` or `wayfinder:task`.
+- Claim a ticket by assigning it to the active GitHub user before work.
+- Represent parent/child and blocking relations with GitHub native relationships when available. If the installed `gh` version cannot create them, use explicit `## Parent` and `## Blocked by` links in issue bodies.
+- The frontier is open, unassigned child tickets whose blockers are closed.
+- Record the decision as a resolution comment, close the ticket and append only a one-line linked gist to the map.

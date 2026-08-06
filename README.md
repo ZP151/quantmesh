@@ -79,6 +79,18 @@ Create the next writable iteration record with:
 quantmesh-iteration "Paper Trading Kernel" --owner "your-name" --status active
 ```
 
+In Claude Code, start or resume the long-running project goal with:
+
+```text
+/goal
+```
+
+Or replace the objective explicitly:
+
+```text
+/goal Advance M2 deterministic paper-trading kernel through issue #1
+```
+
 ## Security defaults
 
 - Paper trading and testnet mode are enabled by default.

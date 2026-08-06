@@ -4,6 +4,8 @@
 
 QuantMesh uses an issue-driven, role-based workflow. The main agent coordinates scope and integration. Specialist agents may research or implement bounded work in parallel when their file ownership does not overlap.
 
+For multi-session objectives, `/goal` is the durable coordinator. It restores state from `docs/goals/ACTIVE.md`, Git, GitHub and the iteration ledger before choosing the next unblocked slice.
+
 ## Standard sequence
 
 1. **Intake**: Read the GitHub issue, domain context, roadmap and active iteration.
@@ -42,4 +44,3 @@ Add domain-specific checks for connectors, replay data, migrations and frontend 
 - One PR should close one coherent vertical slice.
 - Protected/shared branches are never force-pushed.
 - Live-trading changes require a dedicated risk review and paper-mode regression tests.
-

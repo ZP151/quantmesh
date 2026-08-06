@@ -59,6 +59,18 @@ Codex 和 Claude 共用 [`AGENTS.md`](AGENTS.md) 中的仓库协作协议，各�
 quantmesh-iteration "Paper Trading Kernel" --owner "your-name" --status active
 ```
 
+在 Claude Code 中启动或恢复长期目标：
+
+```text
+/goal
+```
+
+也可以明确指定或替换目标：
+
+```text
+/goal Advance M2 deterministic paper-trading kernel through issue #1
+```
+
 ## 安全默认值
 
 - 默认启用模拟盘和测试网。

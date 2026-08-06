@@ -40,6 +40,10 @@ One agent may perform several roles, but each role's output must remain visible 
 8. Update the iteration record with decisions, evidence, risks and follow-ups.
 9. Use a pull request for review; do not force-push shared branches.
 
+## Long-running goals
+
+Use `docs/goals/ACTIVE.md` as the resumable state for multi-session work. Claude Code invokes `.claude/commands/goal.md` with `/goal`; Codex can use `.codex/prompts/goal.md`. Every resume begins by reading repository docs, Git history, GitHub issues and open PRs. Chat history is never the sole source of project state.
+
 ## Trading safety invariants
 
 - Paper mode remains the default.
@@ -66,4 +70,3 @@ The repository uses the five canonical labels `needs-triage`, `needs-info`, `rea
 ### Domain docs
 
 This is a single-context repository with `CONTEXT.md` at the root and system decisions under `docs/adr/`. See `docs/agents/domain.md`.
-
