@@ -36,7 +36,7 @@ QuantMesh currently uses one bounded context: quantitative research and guarded 
 - `connectors` isolate external SDKs and protocols.
 - `research` orchestrates datasets, features, experiments and backtests.
 - `risk` will own deterministic pre-trade and portfolio controls.
-- `execution` will own order state transitions and reconciliation.
+- `execution` will own order orchestration, persistence and reconciliation; order state-transition invariants live in `domain`.
 - `api` exposes local control and observability surfaces.
 - `vendor` contains pinned upstream components and reference projects, not QuantMesh-owned code.
 

@@ -7,8 +7,8 @@
 - Roadmap milestone: M2
 - Active iteration: `docs/iterations/0003-deterministic-paper-trading-kernel.md`
 - GitHub issue: https://github.com/ZP151/quantmesh/issues/1
-- Branch: not started
-- Pull request: none
+- Branch: `feat/2-order-lifecycle` (issue #2, ready to push)
+- Pull request: draft pending push
 - Agent environment checkpoint: `4565a70`
 
 ## Completed
@@ -19,15 +19,17 @@
 
 ## Current frontier
 
-1. Split issue #1 into single-session vertical tickets with explicit blocking edges.
-2. Start with the order lifecycle and deterministic state-transition slice.
+1. Split issue #1 into single-session vertical tickets with explicit blocking edges. — done 2026-08-07, tickets #2-#6
+2. Implement [#2](https://github.com/ZP151/quantmesh/issues/2): order lifecycle and deterministic state machine. — implemented, reviewed, verified; push branch and open draft PR.
+3. Next after #2 merges: [#3](https://github.com/ZP151/quantmesh/issues/3) deterministic matcher (branch `feat/3-deterministic-matcher`).
 
 ## Last verification
 
 ```text
-pytest -q: 3 passed
+pytest -q: 36 passed
 ruff check src tests: passed
 git diff --check: passed
+git submodule status: clean
 ```
 
 ## Blockers
