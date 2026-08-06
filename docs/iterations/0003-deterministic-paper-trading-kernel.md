@@ -1,16 +1,20 @@
 # Iteration 0003 — Deterministic Paper-Trading Kernel
 
-- Status: active
+- Status: completed
 - Started: 2026-08-07
-- Completed:
+- Completed: 2026-08-07 (work complete; PRs #7-#11 remain draft pending merge review)
 - Owner: unassigned agent team
 - GitHub issue: [#1](https://github.com/ZP151/quantmesh/issues/1)
+<<<<<<< Updated upstream
 - Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2, issue #2)
+=======
+- Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2, issue #2), [draft #8](https://github.com/ZP151/quantmesh/pull/8) (slice #3, issue #3), [draft #9](https://github.com/ZP151/quantmesh/pull/9) (slice #4, issue #4), [draft #10](https://github.com/ZP151/quantmesh/pull/10) (slice #5, issue #5), [draft #11](https://github.com/ZP151/quantmesh/pull/11) (slice #6, issue #6)
+>>>>>>> Stashed changes
 - Roadmap milestone: M2
 
 ## Outcome
 
-Run a complete order lifecycle locally with reproducible cash, positions, fills and P&L before any external execution is enabled.
+Run a complete order lifecycle locally with reproducible cash, positions, fills and P&L before any external execution is enabled. Achieved: order state machine (#2), deterministic matcher (#3), portfolio accounting with fees/slippage/risk limits (#4), SQLite event persistence with replay and reconciliation (#5), read-only observability API (#6) — 110 tests, all M2 deliverables implemented on branches `feat/2`…`feat/6` with draft PRs #7-#11. Merge of the slice chain into main is the remaining gate.
 
 ## Scope
 
