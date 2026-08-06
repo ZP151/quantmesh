@@ -7,8 +7,8 @@
 - Roadmap milestone: M2
 - Active iteration: `docs/iterations/0003-deterministic-paper-trading-kernel.md`
 - GitHub issue: https://github.com/ZP151/quantmesh/issues/1
-- Branch: `feat/5-persistence-replay` (issue #5)
-- Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2), [draft #8](https://github.com/ZP151/quantmesh/pull/8) (slice #3), [draft #9](https://github.com/ZP151/quantmesh/pull/9) (slice #4), draft #10 (slice #5, to open)
+- Branch: `feat/6-api-observability` (issue #6)
+- Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2), [draft #8](https://github.com/ZP151/quantmesh/pull/8) (slice #3), [draft #9](https://github.com/ZP151/quantmesh/pull/9) (slice #4), [draft #10](https://github.com/ZP151/quantmesh/pull/10) (slice #5), draft #11 (slice #6, to open)
 - Agent environment checkpoint: `4565a70`
 
 ## Completed
@@ -23,13 +23,13 @@
 2. [#2](https://github.com/ZP151/quantmesh/issues/2) order lifecycle — implemented, reviewed, verified, committed, PR #7 draft.
 3. [#3](https://github.com/ZP151/quantmesh/issues/3) deterministic matcher — implemented, reviewed, verified on `feat/3-deterministic-matcher`; commit, push and open draft PR #8.
 4. [#4](https://github.com/ZP151/quantmesh/issues/4) portfolio accounting with fees and risk limits — implemented, reviewed, verified, committed `a331188`, [PR #9](https://github.com/ZP151/quantmesh/pull/9) draft.
-5. [#5](https://github.com/ZP151/quantmesh/issues/5) SQLite event persistence, replay and reconciliation — implemented, reviewed, verified on `feat/5-persistence-replay`; commit, push and open draft PR #10.
-6. Next after #5: [#6](https://github.com/ZP151/quantmesh/issues/6) paper account API observability.
+5. [#5](https://github.com/ZP151/quantmesh/issues/5) SQLite event persistence, replay and reconciliation — implemented, reviewed, verified, committed `60415a1`, [PR #10](https://github.com/ZP151/quantmesh/pull/10) draft.
+6. [#6](https://github.com/ZP151/quantmesh/issues/6) paper account API observability — implemented, reviewed, verified on `feat/6-api-observability`; commit, push and open draft PR #11. M2 slice sequence complete.
 
 ## Last verification
 
 ```text
-pytest -q: 96 passed
+pytest -q: 110 passed
 ruff check src tests: passed
 git diff --check: passed
 git submodule status: clean
