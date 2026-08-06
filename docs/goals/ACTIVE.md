@@ -7,8 +7,8 @@
 - Roadmap milestone: M2
 - Active iteration: `docs/iterations/0003-deterministic-paper-trading-kernel.md`
 - GitHub issue: https://github.com/ZP151/quantmesh/issues/1
-- Branch: `feat/2-order-lifecycle` (issue #2, ready to push)
-- Pull request: draft pending push
+- Branch: `feat/2-order-lifecycle` (issue #2)
+- Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7)
 - Agent environment checkpoint: `4565a70`
 
 ## Completed

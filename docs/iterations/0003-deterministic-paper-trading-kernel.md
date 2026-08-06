@@ -5,7 +5,7 @@
 - Completed:
 - Owner: unassigned agent team
 - GitHub issue: [#1](https://github.com/ZP151/quantmesh/issues/1)
-- Pull request:
+- Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2, issue #2)
 - Roadmap milestone: M2
 
 ## Outcome
