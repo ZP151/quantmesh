@@ -19,12 +19,12 @@ Run a complete order lifecycle locally with reproducible cash, positions, fills 
 
 ## Acceptance criteria
 
-- [ ] Identical replay input produces identical fills and portfolio state (replay slice #5).
+- [x] Identical replay input produces identical fills and portfolio state (replay slice #5).
 - [x] Invalid order-state transitions are rejected (slice #2, tests `test_valid_transitions_follow_the_explicit_table`, `test_terminal_states_reject_every_event`, invalid-pair tests).
 - [x] Stale or missing quotes fail closed (matcher slice #3; tests `test_stale_quote_fails_closed_for_market_orders`, `test_limit_order_against_stale_quote_fails_closed`, `test_market_order_without_a_touch_fails_closed`, `test_missing_volume_fails_closed_*`).
-- [ ] Paper account restarts and reconciles from persisted events (persistence slice #5).
+- [x] Paper account restarts and reconciles from persisted events (persistence slice #5).
 - [x] Fees, spread and slippage are visible in P&L (accounting slice #4).
-- [ ] Automated tests and verification evidence are recorded here.
+- [x] Automated tests and verification evidence are recorded here.
 
 ## Plan and role assignments
 
@@ -52,6 +52,11 @@ Run a complete order lifecycle locally with reproducible cash, positions, fills 
 - Risk limits run pre-trade in the account (`kill_switch`, `max_order_quantity`, `max_notional`, `max_position_quantity`, cash sufficiency, position sufficiency). Market-order reference price is slippage-adjusted so a cash/notional check cannot pass only to be overrun by slippage. These live in `execution` for now; a dedicated `risk` module owning pre-trade controls remains a roadmap item (ADR-0002 semantics shared).
 - `FeeModel.for_notional` = `max(min_fee, round(notional × fee_bps / 10_000, 6))`; a fee is charged on every fill including the closing one, and the fill-triggered sell-fee counts into realized P&L (buy-side fee lands in average cost).
 - `apply_fill` returns a new account and closes (pops) a long position when remaining quantity hits zero (`math.isclose`); selling beyond the position raises instead of going short.
+- Event sourcing in `execution/store.py` (stdlib `sqlite3`, no new dependency): the `events` table is the single source of truth — orders rebuild by replaying events through `OrderStateMachine.apply`, the account by replaying FILL events through `apply_fill` in global-sequence order. Derived fields are never trusted.
+- Append-only events with a monotonic global sequence (`INTEGER PRIMARY KEY AUTOINCREMENT`) and `UNIQUE(order_id, event_sequence)`; `save()` is one transaction (meta + order headers + missing events + snapshot) and idempotent — only events with a per-order sequence beyond the last persisted are appended.
+- The `account_snapshot` records reconciliation fingerprints only (derived state plus per-order headers and config): any tampering with or loss of events, order headers or config surfaces as a divergence instead of silent drift. `restore()` returns `RestoreResult(account, divergences)`; empty store and invalid persisted transitions fail closed (the latter as a typed `StoreCorruptionError`).
+- Order ids are unique per account: `submit()` rejects a reused `client_order_id` with `ValueError`, so a retry loop can never silently overwrite a live order (also what makes save/restore unambiguous).
+- `kill_switch` persists across restart (fail-closed direction: an engaged switch stays engaged).
 
 ## Work log
 
@@ -76,6 +81,11 @@ Run a complete order lifecycle locally with reproducible cash, positions, fills 
   - Added `FeeModel`, `Position`, `RiskLimits`, `SubmissionResult`, `PaperAccount` in `src/quantmesh/execution/accounting.py`; refactored `PaperMatcher` to a pydantic BaseModel; 19 tests in `tests/test_accounting.py`.
   - /code-review (standards + spec axes): resolved pydantic `PrivateAttr`-cannot-be-injected bug (matcher now a serializable field), deterministic `order_sequence` IDs instead of uuid4, slippage-adjusted cash estimate (overdraw guard), equity-based `total_pnl` (old formula double-counted the sell fee), `apply_fill` full-close path dedup, removed unused import.
   - Determinism: identical inputs (with or without `client_order_id`) produce identical `model_dump()` state; `now` injected through `submit`/`match`; timestamps timezone-aware.
+- 2026-08-07: Slice #5 (issue #5) implemented with TDD on `feat/5-persistence-replay`:
+  - Vertical slices: append-only events with monotonic sequence → rebuild orders from events → replay fills into an account → restart → reconciliation vs snapshot → tamper detection.
+  - Added `EventStore`, `RestoreResult`, `StoreCorruptionError` in `src/quantmesh/execution/store.py`; 18 tests in `tests/test_store.py`; 96 total passing.
+  - /code-review (standards + spec axes): resolved two verified must-fixes — (M1) snapshot fingerprint now covers full order headers and config so tampered `orders.side`/`quantity`/config on fill-less orders cannot pass silently; (M2) `submit()` rejects duplicate `client_order_id` so a reused id can never silently drop a newer order at persist time. Should-fixes: typed `StoreCorruptionError` instead of a raw `ValueError` on corrupt logs, `kill_switch` round-trip test + config reconciliation, explicit `is not None` for `starting_cash` (0 is a valid value). Nits: shared fingerprint helpers so save/reconcile cannot drift.
+  - Verification evidence below.
 
 ## Verification evidence
 
@@ -111,6 +121,17 @@ git submodule status: clean
 ```
 
 Review gate: /code-review two-axis (standards + spec) — zero remaining actionable findings; fixes verified by the new tests above (equity-based P&L, deterministic order IDs, slippage overdraw guard, apply_fill dedup).
+
+Slice #5 (branch `feat/5-persistence-replay`, commit pending, PR #10):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 96 passed (1 pre-existing StarletteDeprecationWarning)
+.\.venv\Scripts\ruff.exe check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: /code-review two-axis (standards + spec) — zero remaining actionable findings; fixes verified by the new tests above (header/config tamper detection, duplicate order-id rejection, typed corruption error, kill_switch round trip).
 
 Follow-up: GitHub Actions `pull_request` runs have not fired on the feature branches (runner-acquisition failures observed on main pushes); CI verification is pending GitHub infra. No code failure observed.
 

@@ -90,6 +90,8 @@ class PaperAccount(BaseModel):
     ) -> SubmissionResult:
         sequence = self.order_sequence + 1
         order_id = request.client_order_id or f"paper-{sequence}"
+        if order_id in self.orders:
+            raise ValueError(f"order id already exists: {order_id}")
         order = Order.from_request(request, order_id=order_id, created_at=now)
 
         reasons = self._risk_reasons(request, quote)
