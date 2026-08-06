@@ -1,0 +1,34 @@
+name: Feature slice
+description: Propose a bounded vertical product slice
+title: "[Feature]: "
+labels: ["needs-triage"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: User outcome
+      description: What becomes possible when this is complete?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and non-goals
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use checkboxes and observable results.
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk, data and licensing notes
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification commands
+

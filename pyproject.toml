@@ -31,6 +31,9 @@ dev = [
   "ruff>=0.8,<1",
 ]
 
+[project.scripts]
+quantmesh-iteration = "quantmesh.dev.iterations:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
@@ -44,4 +47,3 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
-

@@ -69,6 +69,16 @@ Reference and companion projects:
 
 See [`docs/REUSE_MATRIX.md`](docs/REUSE_MATRIX.md) and [`docs/REFERENCE_PROJECTS.md`](docs/REFERENCE_PROJECTS.md) for licenses, integration modes and adaptation estimates.
 
+## Agent collaboration and roadmap
+
+Codex and Claude share the repository contract in [`AGENTS.md`](AGENTS.md). Platform resources and project-scoped skills live in `.codex/` and `.claude/`. The delivery path is tracked in [`docs/roadmap/ROADMAP.md`](docs/roadmap/ROADMAP.md), with append-only iteration records under `docs/iterations/`.
+
+Create the next writable iteration record with:
+
+```powershell
+quantmesh-iteration "Paper Trading Kernel" --owner "your-name" --status active
+```
+
 ## Security defaults
 
 - Paper trading and testnet mode are enabled by default.
@@ -94,4 +104,3 @@ See [`docs/REUSE_MATRIX.md`](docs/REUSE_MATRIX.md) and [`docs/REFERENCE_PROJECTS
 QuantMesh is a software engineering and quantitative research project. It is not investment, legal or tax advice. Backtest results do not guarantee future performance, and live trading can result in partial or total loss of capital.
 
 For the Chinese project overview, see [`README.zh-CN.md`](README.zh-CN.md).
-

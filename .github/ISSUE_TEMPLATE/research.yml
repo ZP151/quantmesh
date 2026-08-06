@@ -1,0 +1,34 @@
+name: Quant research
+description: Propose a dataset, model or strategy experiment
+title: "[Research]: "
+labels: ["needs-triage"]
+body:
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Falsifiable hypothesis
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Point-in-time data and universe
+    validations:
+      required: true
+  - type: textarea
+    id: baseline
+    attributes:
+      label: Baseline and evaluation metrics
+    validations:
+      required: true
+  - type: textarea
+    id: costs
+    attributes:
+      label: Fees, spread, slippage and leakage controls
+    validations:
+      required: true
+  - type: textarea
+    id: promotion
+    attributes:
+      label: Promotion gate
+

@@ -49,6 +49,16 @@ QuantMesh 自己维护统一领域模型、连接器接口、风险引擎、编�
 
 详细许可证、集成方式和改造程度见 [`docs/REUSE_MATRIX.md`](docs/REUSE_MATRIX.md) 和 [`docs/REFERENCE_PROJECTS.md`](docs/REFERENCE_PROJECTS.md)。
 
+## Agent 协作与路线图
+
+Codex 和 Claude 共用 [`AGENTS.md`](AGENTS.md) 中的仓库协作协议，各自的平台资源和项目级技能位于 `.codex/` 与 `.claude/`。完整产品路线记录在 [`docs/roadmap/ROADMAP.md`](docs/roadmap/ROADMAP.md)，每轮可追踪记录位于 `docs/iterations/`。
+
+创建下一轮可写迭代记录：
+
+```powershell
+quantmesh-iteration "Paper Trading Kernel" --owner "your-name" --status active
+```
+
 ## 安全默认值
 
 - 默认启用模拟盘和测试网。
@@ -72,4 +82,3 @@ QuantMesh 自己维护统一领域模型、连接器接口、风险引擎、编�
 ## 免责声明
 
 QuantMesh 是软件工程和量化研究项目，不构成投资、法律或税务建议。回测结果不代表未来表现，真实交易可能导致部分或全部本金损失。
-
