@@ -28,6 +28,8 @@ Equip Codex and Claude Code with project-scoped engineering Agent Skills and a d
 
 ## Verification evidence
 
+Agent workflow implementation checkpoint: `4565a70`
+
 ```text
 pytest -q: 3 passed, 1 dependency deprecation warning
 ruff check src tests: all checks passed
