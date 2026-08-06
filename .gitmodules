@@ -1,0 +1,27 @@
+[submodule "vendor/components/qlib"]
+	path = vendor/components/qlib
+	url = https://github.com/microsoft/qlib.git
+[submodule "vendor/components/hyperliquid-python-sdk"]
+	path = vendor/components/hyperliquid-python-sdk
+	url = https://github.com/hyperliquid-dex/hyperliquid-python-sdk.git
+[submodule "vendor/components/py-clob-client-v2"]
+	path = vendor/components/py-clob-client-v2
+	url = https://github.com/Polymarket/py-clob-client-v2.git
+[submodule "vendor/components/py-moomoo-api"]
+	path = vendor/components/py-moomoo-api
+	url = https://github.com/MoomooOpen/py-moomoo-api.git
+[submodule "vendor/reference/hummingbot"]
+	path = vendor/reference/hummingbot
+	url = https://github.com/hummingbot/hummingbot.git
+[submodule "vendor/reference/freqtrade"]
+	path = vendor/reference/freqtrade
+	url = https://github.com/freqtrade/freqtrade.git
+[submodule "vendor/reference/openbb"]
+	path = vendor/reference/openbb
+	url = https://github.com/OpenBB-finance/OpenBB.git
+[submodule "vendor/reference/tradingagents"]
+	path = vendor/reference/tradingagents
+	url = https://github.com/TauricResearch/TradingAgents.git
+[submodule "vendor/reference/vnpy"]
+	path = vendor/reference/vnpy
+	url = https://github.com/vnpy/vnpy.git
