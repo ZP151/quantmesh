@@ -152,7 +152,7 @@ git submodule status: clean
 
 Review gate: /code-review two-axis (standards + spec) — zero remaining actionable findings; fixes verified by the new tests above (missing_marks naming, marks snapshot, kill_switch field consistency, POST 405, rejected-order serialization).
 
-Follow-up: GitHub Actions `pull_request` runs have not fired on the feature branches (runner-acquisition failures observed on main pushes); CI verification is pending GitHub infra. No code failure observed.
+Follow-up: GitHub Actions `pull_request` runs initially did not fire on the feature branches (runner-acquisition failures observed on main pushes). Resolved 2026-08-07: re-runs for PRs #8/#9 passed with zero code change (confirmed infrastructure, not repository defect), PR #10 re-triggered via an empty commit (`925fd0c`), and checks are green on PRs #7-#11. No code failure observed.
 
 ## Risks and follow-ups
 

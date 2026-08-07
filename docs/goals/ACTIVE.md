@@ -25,7 +25,7 @@
 4. [#4](https://github.com/ZP151/quantmesh/issues/4) portfolio accounting with fees and risk limits — implemented, reviewed, verified, committed `a331188`, [PR #9](https://github.com/ZP151/quantmesh/pull/9) draft.
 5. [#5](https://github.com/ZP151/quantmesh/issues/5) SQLite event persistence, replay and reconciliation — implemented, reviewed, verified, committed `60415a1`, [PR #10](https://github.com/ZP151/quantmesh/pull/10) draft.
 6. [#6](https://github.com/ZP151/quantmesh/issues/6) paper account API observability — implemented, reviewed, verified, committed `6920cc0`, [PR #11](https://github.com/ZP151/quantmesh/pull/11) draft. **M2 slice sequence complete.**
-7. Merge gate (decision pending): merge the M2 chain (`feat/2`…`feat/6`, PRs #7-#11) into main to close issue #1.
+7. Merge gate (decision pending): merge the M2 chain (`feat/2`…`feat/6`, PRs #7-#11) into main to close issue #1. All five PRs marked ready for review 2026-08-07 after the review gate: diffs focused, checks green on GitHub Actions (the #8/#9 failures were runner-acquisition infra and re-verified green with no code change), no open review threads. **Awaiting human approval to merge — protected branch, no merge without explicit approval.**
 8. Next after merge: M3 — data foundation and experiment registry (provider registry, normalized bar/order-book/event schemas, Parquet/DuckDB lake, dataset manifests).
 
 ## Last verification
@@ -35,6 +35,7 @@ pytest -q: 110 passed
 ruff check src tests: passed
 git diff --check: passed
 git submodule status: clean
+GitHub Actions: PRs #7-#11 checks green (2026-08-07)
 ```
 
 ## Blockers
