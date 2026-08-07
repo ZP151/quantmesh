@@ -54,11 +54,20 @@ the operator drill (Phase E).
       decision 3: Hyperliquid book updates are full level arrays, so a
       snapshot rebuild is the honest recovery — there are no deltas to
       miss).
-- [ ] Testnet execution survives disconnect/reconnect without duplicate
+- [x] Testnet execution survives disconnect/reconnect without duplicate
       orders: the journal is the single source of truth for
       client_order_id↔oid; after a reconnect the order state is re-derived
       from the broker's orders list, never re-submitted; a client id already
-      mapped refuses submission (fixture drill).
+      mapped refuses submission (fixture drill). — DONE 2026-08-08 (issue
+      #30, Phase B): 86 new tests; the acceptance drill (scripted phases:
+      lost ack → cloid recovery with re-stamped oid → cancel by oid →
+      ack-terminal match → fills + positions imported → second pass clean)
+      converges to {matched: 2, pending: 0, missing: 0, divergent: 0} with
+      0 findings and 0 refusals; the reused-cid refusal, the per-order ack
+      error → REJECTED path, fee-less and overfill refusals, and the
+      position drift findings are all fixture-covered (ADR-0007 Phase B:
+      cloid channel, journal-first ids, re-derive-on-reconnect, derived
+      statuses, ack-terminal classification).
 - [ ] Risk limits prevent excess leverage and stale-data execution: the
       pre-submission guard refuses orders that breach the leverage bound,
       liquidation-distance floor, reduce-only posture, or the stale-data
@@ -146,12 +155,28 @@ record the exact gate, proceed to M6.
   the 50 s ping anchors at the connection instant; fail-closed parsing from
   SDK-source contracts; fixture-first wire-shaped payloads through the real
   parsers; live provider explicit-construction-only.
-- ADR-0007 extension (issue #30 Phase B): the testnet Exchange adapter is
-  explicit-construction-only with an injected in-memory signer; testnet
-  pinned and mainnet refused before the wire; the journal is the single
-  source of truth for client_order_id↔oid with re-derive-on-reconnect
-  (never re-submit); per-venue status table with unmappable statuses as
-  findings.
+- ADR-0007 extension **recorded 2026-08-08** (issue #30 Phase B): the
+  testnet Exchange adapter is explicit-construction-only with an injected
+  in-memory signer (env var the operator path, fail-closed; key material
+  never persisted/logged/reported); testnet pinned and mainnet refused
+  before the wire; the journal is the single source of truth for
+  client_order_id↔oid with re-derive-on-reconnect (never re-submit), the
+  cloid channel (client_order_id → "0x"+32-hex) replacing Moomoo's remark
+  channel — a lost ack leaves PENDING unacknowledged, reconciliation
+  recovers the mapping from the venue's cloid echo and re-stamps the oid at
+  adoption (MAPPING/WARNING, non-blocking), ambiguous channels are
+  divergent; place-time "filled" acks only advance to ACCEPTED (fills
+  arrive through reconciliation with venue fill identity + fee); order
+  status is derived from the surface (no order-status endpoint): open =
+  remaining size (compatible with journal partial fills), inactive =
+  fills-only rows with journal context (fill total → FILLED, journal
+  terminal → that status, else venue silence → CANCELED); per-venue status
+  table with unmappable statuses as findings; ack-terminal orders the venue
+  no longer lists are matched (note only when no venue order id was ever
+  received); adoption only for matched/pending clean pairs through the
+  shared ADR-0006 contract types; fee-less fills refused; market orders
+  cannot carry reduce_only (the pinned SDK hard-codes it) — refused, not
+  silently re-typed; positions compare as signed sizes.
 - ADR-0007 extension (issue #31 Phase C): risk checks run before the wire
   (leverage, liquidation distance, reduce-only, stale-data window);
   funding is a fee-like journal entry.
@@ -187,6 +212,49 @@ record the exact gate, proceed to M6.
   supervisor hands it the data payload (contract aligned to the data list).
   600 passed, 3 skipped; ruff clean; diff clean; submodules clean.
   Checkpoint pushed.
+- 2026-08-08: **Issue #30 (Phase B, testnet execution adapters +
+  reconciliation) committed** — the ADR-0006 contract types
+  (`FindingKind`/`Severity`/`ReconcileTolerance`/`ReconciliationFinding`/
+  `OrderOutcome`/`ReconciliationReport`/`AdoptionResult`) extracted to
+  `quantmesh.execution.reconciliation` and re-exported by the Moomoo
+  binding; `quantmesh.hyperliquid.exchange` — wire models (BrokerOrder/
+  BrokerFill with venue fill identity + cloid/BrokerPosition/ExecutionSnapshot),
+  signer boundary (32-byte in-memory signer; `signer_from_env` fail-closed),
+  `ExchangeTransport` boundary, `ScriptedExchangeTransport` (JSONL phases,
+  deterministic oids, `lost_acks` withholding the ack), `SdkExchangeTransport`
+  (lazy + import-guarded, testnet pinned, mainnet refused, market orders
+  refuse reduce_only because the pinned SDK's `market_open` hard-codes it —
+  closing goes through reduce-only LIMIT orders), `HyperliquidExecutionAdapter`
+  (journal-first client ids — recorded before the wire, reused ids refuse —
+  per-order ack errors → REJECTED(reason), filled acks → ACCEPTED only,
+  cancel by oid or cloid), fail-closed parsers for every wire shape
+  (`tid`/`hash` fill identity, cloid echo mismatch, top-level err);
+  `quantmesh.hyperliquid.reconciliation` — cloid channel recovery
+  (recovered = MAPPING/WARNING non-blocking, re-stamps oid at adoption,
+  ambiguous channels divergent), derived statuses for a surface with no
+  order-status endpoint (open = remaining size tolerates journal partial
+  fills; inactive = fills-only rows: fill total → FILLED, journal terminal
+  → that status, else silence → CANCELED), ack-terminal unclaimed orders
+  matched (note only when the order never received a venue order id),
+  M4-discipline compares (quantity/price/fees/fill identity/positions with
+  declared tolerances; fee-less fills MISSING_DATA; stamped fill the venue
+  forgot → REVOKED_FILL), adoption only for matched/pending clean pairs
+  (fee-less and overfill refusals, derived CANCELED/REJECTED applied with
+  venue evidence timestamps, idempotent); 6-phase drill fixture
+  `wire_exchange_script.jsonl` (lost ack → cloid recovery → cancel →
+  ack-terminal match → fills + positions → clean); ADR-0007 Phase B
+  extension recorded; acceptance criterion 2 checked off. 86 new tests
+  (52 exchange, 34 reconciliation) including the acceptance drill
+  converging to 0 findings / 0 refusals. Review caught and fixed four
+  real defects before commit: `BrokerFill` lacked the cloid the snapshot
+  merge reads (fills-only rows would crash), `parse_fill` rejected rows
+  whose identity comes from `hash` when `tid` is absent, the
+  `SdkExchangeTransport._call` helper swallowed keyword arguments (the
+  `market_open` cloid route), and the drill fixture's second cloid was 33
+  hex characters — caught by the venue's own 34-char cloid shape check
+  and corrected in the fixture and tests. Shared contract types verified
+  against the Moomoo binding (full suite green). 686 passed, 3 skipped;
+  ruff clean; diff clean; submodules clean. Checkpoint pushed.
 
 ## Verification evidence
 
@@ -198,6 +266,17 @@ record the exact gate, proceed to M6.
   candle series, the book rebuilt from a fresh snapshot, resubscribes
   re-sent on the reconnected socket (8 total), and a typed trades gap
   finding ("cannot be REST re-synced; sequence resumes at tid 8").
+- Phase B slice (issue #30), after the #30 commit, 2026-08-08:
+  `pytest -q` → 686 passed, 3 skipped (symlink creation not permitted);
+  `ruff check src tests` → clean; `git diff --check` → clean;
+  `git submodule status` → clean. Drill result
+  (`test_acceptance_drill_converges_to_a_clean_report`): lost ack on
+  place (PENDING unacknowledged) → cloid channel recovers the mapping
+  (MAPPING/WARNING note, oid re-stamped at adoption) → cancel by oid →
+  ack-terminal match with a silent surface → fills 0.6 @ 107.4 + 0.4 @
+  107.5 and a +1.0 BTC position imported on the first apply pass
+  (venue-ahead progress) → final report {matched: 2, pending: 0,
+  missing: 0, divergent: 0} with 0 findings and 0 refusals.
 
 ## Risks and gates
 

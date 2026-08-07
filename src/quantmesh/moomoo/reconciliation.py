@@ -30,10 +30,6 @@ divergent, missing, and ambiguous pairs are refused, never adopted
 (decision 5).
 """
 
-from enum import StrEnum
-
-from pydantic import BaseModel, Field
-
 from quantmesh.domain.models import Side, Venue
 from quantmesh.domain.orders import (
     Fill,
@@ -43,6 +39,15 @@ from quantmesh.domain.orders import (
     OrderStatus,
 )
 from quantmesh.execution.journal import OrderJournal
+from quantmesh.execution.reconciliation import (
+    AdoptionResult,
+    FindingKind,
+    OrderOutcome,
+    ReconcileTolerance,
+    ReconciliationFinding,
+    ReconciliationReport,
+    Severity,
+)
 from quantmesh.moomoo.execution import (
     BrokerDeal,
     BrokerOrder,
@@ -72,91 +77,11 @@ BROKER_STATUS_TO_DOMAIN: dict[str, OrderStatus] = {
 # DealStatus) is a finding, never a fill.
 _HEALTHY_DEAL_STATUSES = ("OK",)
 
-
-class FindingKind(StrEnum):
-    MAPPING = "mapping"
-    QUANTITY = "quantity"
-    PRICE = "price"
-    FEE = "fee"
-    STATUS = "status"
-    TIMESTAMP = "timestamp"
-    POSITION = "position"
-    REVOKED_FILL = "revoked_fill"
-    MISSING_DATA = "missing_data"
-
-
-class Severity(StrEnum):
-    ERROR = "error"
-    WARNING = "warning"
-
-
-class ReconcileTolerance(BaseModel):
-    """Declared tolerances for one reconciliation run (ADR-0006 d. 3).
-
-    Defaults are exact — the simulated environment is deterministic, so
-    any tolerance is an explicit operator decision.
-    """
-
-    qty_bps: float = Field(default=0, ge=0)
-    price_bps: float = Field(default=0, ge=0)
-    fee_abs: float = Field(default=0, ge=0)
-    time_skew_s: float = Field(default=0, ge=0)
-    position_qty_bps: float = Field(default=0, ge=0)
-
-
-class ReconciliationFinding(BaseModel):
-    """One typed violation or refusal-relevant note (ADR-0006 d. 3)."""
-
-    kind: FindingKind
-    severity: Severity
-    message: str
-    order_id: str | None = None
-    observed: str | None = None
-    expected: str | None = None
-
-
-class OrderOutcome(BaseModel):
-    """One broker order's classification against the journal."""
-
-    broker_order_id: str | None = None
-    internal_order_id: str | None = None
-    status: str  # matched | pending | missing | divergent
-    findings: list[ReconciliationFinding] = Field(default_factory=list)
-    recovered_via_remark: bool = False
-
-
-class ReconciliationReport(BaseModel):
-    """Deterministic result of one run: outcomes plus typed findings."""
-
-    tolerance: ReconcileTolerance
-    outcomes: list[OrderOutcome] = Field(default_factory=list)
-    missing_internal: list[str] = Field(default_factory=list)
-    position_findings: list[ReconciliationFinding] = Field(default_factory=list)
-
-    @property
-    def findings(self) -> list[ReconciliationFinding]:
-        order_findings = [
-            finding
-            for outcome in self.outcomes
-            for finding in outcome.findings
-        ]
-        return order_findings + self.position_findings
-
-    @property
-    def counts(self) -> dict[str, int]:
-        counts = {"matched": 0, "pending": 0, "missing": 0, "divergent": 0}
-        for outcome in self.outcomes:
-            counts[outcome.status] += 1
-        counts["missing"] += len(self.missing_internal)
-        return counts
-
-
-class AdoptionResult(BaseModel):
-    """What a reconciliation apply imported, and what it refused."""
-
-    updated: dict[str, Order] = Field(default_factory=dict)
-    refused: list[str] = Field(default_factory=list)
-    notes: list[str] = Field(default_factory=list)
+# The ADR-0006 contract types (FindingKind, Severity, ReconcileTolerance,
+# ReconciliationFinding, OrderOutcome, ReconciliationReport, AdoptionResult)
+# live in ``quantmesh.execution.reconciliation`` and are re-exported here,
+# so existing importers keep working and the Hyperliquid binding shares
+# the same vocabulary.
 
 
 def run_reconciliation(

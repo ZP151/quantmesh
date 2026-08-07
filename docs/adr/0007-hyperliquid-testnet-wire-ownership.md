@@ -104,10 +104,49 @@ criterion deterministically — no network, no sleeps.
 
 ## Extensions (recorded when their phases land)
 
-- Phase B (#30): the testnet Exchange adapter is explicit-construction-only
-  with an injected in-memory signer; the journal is the single source of
-  truth for client_order_id↔oid with re-derive-on-reconnect (never
-  re-submit); per-venue status table with unmappable statuses as findings.
+- Phase B (#30), **recorded 2026-08-08**: testnet execution with the journal
+  as the single source of truth, the M4 discipline extended to a venue with
+  no order-status endpoint.
+  - The `Exchange` boundary (`SdkExchangeTransport`) is explicit-
+    construction-only with an injected in-memory signer: key material lives
+    in memory only — never persisted, logged, or reported — with the env var
+    as the operator path (`signer_from_env`, fail-closed on missing or
+    malformed values) and construction-time refusal of any non-testnet base
+    URL, mirroring decision 2.
+  - Identity runs through the **cloid channel**, the venue's echo of the
+    journal's `client_order_id` (exactly 32 lowercase hex → `"0x"` + 32 hex),
+    replacing Moomoo's remark channel: ids are journal-first (recorded before
+    the wire; an id already mapped refuses submission), a lost ack leaves the
+    order PENDING unacknowledged, and reconciliation recovers the mapping
+    from the venue's cloid echo and re-stamps the oid at adoption
+    (MAPPING/WARNING note, non-blocking). Both channels mapping to different
+    orders is ambiguous → divergent. Place-time "filled" acks only advance to
+    ACCEPTED — fills enter through reconciliation, stamped with the venue's
+    own fill identity (`tid`/`hash`) and fee.
+  - Order status is **derived** because the venue has no order-status
+    endpoint: "open" while the venue lists the order (its meaning is
+    "remaining size", compatible with journal partial fills — fills are
+    reported separately), "inactive" for fills-only rows interpreted with
+    journal context (fills totalling the order quantity → FILLED; a journal
+    already CANCELED/REJECTED → that status; otherwise the venue's silence
+    means the order is no longer live → CANCELED). The explicit
+    `HYPERLIQUID_STATUS_TO_DOMAIN` table declares the full venue vocabulary
+    (surface + ack); anything outside it fails closed as a status finding.
+    Ack-terminal journal orders the venue no longer lists are classified
+    matched — a confirmed ack plus a silent surface is venue truth, not a
+    lost order — with a MAPPING/WARNING note only when the order never
+    received a venue order id.
+  - Reconciliation keeps the M4 discipline on the shared contract types
+    (`quantmesh.execution.reconciliation`): matched/pending clean pairs adopt
+    broker-confirmed progress only (fills with venue identity + fee, derived
+    terminal events, the recovered oid); divergent and missing pairs are
+    refused, never adopted; fee-less fills are refused; the broker may be
+    ahead (pending, adoptable) but never behind (drift); account positions
+    compare as signed sizes.
+  - Market orders cannot carry reduce-only (the pinned SDK's `market_open`
+    hard-codes it False): the adapter refuses rather than silently re-typing
+    the order; position closing goes through reduce-only LIMIT orders
+    (Phase C's closing path).
 - Phase C (#31): risk checks run before the wire (leverage, liquidation
   distance, reduce-only, stale-data window); funding is a fee-like journal
   entry.

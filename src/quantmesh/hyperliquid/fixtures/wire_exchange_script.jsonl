@@ -1,0 +1,6 @@
+{"now": "2025-08-07T21:00:00+00:00", "lost_acks": [1001]}
+{"now": "2025-08-07T21:01:00+00:00", "open_orders": [{"coin": "BTC", "oid": 1001, "side": "B", "sz": "1.0", "limitPx": "107.2", "timestamp": 1754600400000, "cloid": "0x5e8f2c4d7a1b9e3f6c0d4a2b8e5f7c1d"}]}
+{"now": "2025-08-07T21:02:00+00:00", "open_orders": [{"coin": "BTC", "oid": 1001, "side": "B", "sz": "1.0", "limitPx": "107.2", "timestamp": 1754600400000, "cloid": "0x5e8f2c4d7a1b9e3f6c0d4a2b8e5f7c1d"}]}
+{"now": "2025-08-07T21:03:00+00:00"}
+{"now": "2025-08-07T21:04:00+00:00", "open_orders": [{"coin": "BTC", "oid": 1002, "side": "A", "sz": "1.0", "limitPx": "107.4", "timestamp": 1754600640000, "cloid": "0x9d3a6c1e8b2f4570a1c9e3d5b7f2a84c"}]}
+{"now": "2025-08-07T21:06:00+00:00", "fills": [{"coin": "BTC", "oid": 1002, "tid": 92, "px": "107.4", "sz": "0.6", "side": "A", "time": 1754600700000, "fee": "0.07"}, {"coin": "BTC", "oid": 1002, "tid": 93, "px": "107.5", "sz": "0.4", "side": "A", "time": 1754600710000, "fee": "0.05"}], "positions": [{"coin": "BTC", "szi": "1.0", "entryPx": "107.4", "leverage": {"type": "cross", "value": 3}, "liquidationPx": "50.0", "marginUsed": "35.8", "positionValue": "107.4", "unrealizedPnl": "0.0"}]}
