@@ -15,15 +15,15 @@ from pydantic import BaseModel, Field, model_validator
 
 from quantmesh.domain.models import Instrument, Side
 
-_INTERVAL_PATTERN = re.compile(r"^(\d+)([smhdw])$")
-_INTERVAL_SECONDS = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
+_UNIT_SECONDS = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
+_INTERVAL_PATTERN = re.compile(rf"^(\d+)([{''.join(_UNIT_SECONDS)}])$")
 
 
 def interval_to_timedelta(interval: str) -> timedelta:
     """Convert a compact interval like ``"5m"``, ``"1h"`` or ``"1d"`` to a timedelta.
 
-    Raises ValueError for unparseable intervals so downstream quality
-    checks fail closed instead of guessing.
+    Raises ValueError for unparseable intervals and for zero or negative
+    amounts, so downstream quality checks fail closed instead of guessing.
     """
     match = _INTERVAL_PATTERN.match(interval)
     if match is None:
@@ -31,7 +31,9 @@ def interval_to_timedelta(interval: str) -> timedelta:
             f"unsupported interval {interval!r} (expected a compact form like '5m', '1h', '1d')"
         )
     amount, unit = match.groups()
-    return timedelta(seconds=int(amount) * _INTERVAL_SECONDS[unit])
+    if int(amount) < 1:
+        raise ValueError(f"interval amount must be positive, got {interval!r}")
+    return timedelta(seconds=int(amount) * _UNIT_SECONDS[unit])
 
 
 def _require_tz_aware(timestamp: datetime) -> datetime:
@@ -126,7 +128,12 @@ def monotonic_violations(values: Sequence[object]) -> list[tuple[int, int]]:
 
     Non-decreasing is allowed (equal neighbours are not violations).
     Works on any orderable series (timestamps, venue sequences, prices).
+    Raises ValueError on ``None`` elements: an unknown sequence value
+    cannot be compared, so the check fails closed instead of crashing
+    with a raw TypeError (``TradeEvent.venue_sequence`` may be ``None``).
     """
+    if any(value is None for value in values):
+        raise ValueError("monotonic_violations cannot compare None values (sequence is unknown)")
     return [
         (i - 1, i) for i in range(1, len(values)) if values[i] < values[i - 1]
     ]
@@ -156,21 +163,25 @@ def find_duplicates(
 
 
 def find_gaps(timestamps: Sequence[datetime], *, interval: str) -> list[datetime]:
-    """Return expected observation times missing from an interval-aligned series.
+    """Return expected observation times missing from an interval series.
 
     ``timestamps`` must be strictly increasing and timezone-aware. Between
     two observations that are exactly ``k * interval`` apart, the ``k - 1``
-    expected ticks are reported. Misaligned series and non-increasing input
-    raise ValueError (fail closed) instead of producing partial detections.
+    expected ticks are reported. Every consecutive delta must be an exact
+    multiple of the interval (the series is aligned to a fixed grid anchored
+    at its first observation); a shifted-but-regular grid is not a gap and
+    returns no findings — detecting a wrong grid belongs to the coverage
+    checks in the manifest slice. Violations raise ValueError (fail closed)
+    instead of producing partial detections.
     """
     step = interval_to_timedelta(interval)
+    if any(timestamp.tzinfo is None for timestamp in timestamps):
+        raise ValueError("timestamps must be timezone-aware")
     gaps: list[datetime] = []
     for previous, current in zip(timestamps, timestamps[1:]):
-        if previous.tzinfo is None or current.tzinfo is None:
-            raise ValueError("timestamps must be timezone-aware")
         if current <= previous:
             raise ValueError(
-                "timestamps must be strictly increasing (run monotonic_violations first)"
+                "timestamps must be strictly increasing (no equal or decreasing neighbours)"
             )
         delta = current - previous
         if delta % step != timedelta(0):

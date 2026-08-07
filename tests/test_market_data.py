@@ -24,6 +24,18 @@ INSTRUMENT = Instrument(
     symbol="BTC-PERP", venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL
 )
 T0 = datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)
+NAIVE_T0 = datetime(2026, 8, 7, 12, 0, 0)
+
+
+def make_book(**overrides: object) -> OrderBook:
+    values: dict[str, object] = {
+        "instrument": INSTRUMENT,
+        "timestamp": T0,
+        "bids": [DepthLevel(price=100.5, quantity=2.0), DepthLevel(price=100.0, quantity=5.0)],
+        "asks": [DepthLevel(price=101.0, quantity=3.0), DepthLevel(price=101.5, quantity=1.0)],
+    }
+    values.update(overrides)
+    return OrderBook(**values)
 
 
 def make_bar(**overrides: object) -> Bar:
@@ -107,12 +119,7 @@ def test_bar_accepts_common_intervals() -> None:
 
 
 def test_book_accepts_sorted_levels() -> None:
-    book = OrderBook(
-        instrument=INSTRUMENT,
-        timestamp=T0,
-        bids=[DepthLevel(price=100.5, quantity=2.0), DepthLevel(price=100.0, quantity=5.0)],
-        asks=[DepthLevel(price=101.0, quantity=3.0), DepthLevel(price=101.5, quantity=1.0)],
-    )
+    book = make_book()
 
     assert book.bids[0].price == 100.5
     assert book.asks[0].price == 101.0
@@ -120,34 +127,25 @@ def test_book_accepts_sorted_levels() -> None:
 
 def test_book_rejects_unsorted_bids() -> None:
     with pytest.raises(ValidationError, match="bids"):
-        OrderBook(
-            instrument=INSTRUMENT,
-            timestamp=T0,
-            bids=[DepthLevel(price=100.0, quantity=1.0), DepthLevel(price=100.5, quantity=1.0)],
-            asks=[DepthLevel(price=101.0, quantity=1.0)],
+        make_book(
+            bids=[DepthLevel(price=100.0, quantity=1.0), DepthLevel(price=100.5, quantity=1.0)]
         )
 
 
 def test_book_rejects_unsorted_asks() -> None:
     with pytest.raises(ValidationError, match="asks"):
-        OrderBook(
-            instrument=INSTRUMENT,
-            timestamp=T0,
-            bids=[DepthLevel(price=100.0, quantity=1.0)],
-            asks=[DepthLevel(price=101.5, quantity=1.0), DepthLevel(price=101.0, quantity=1.0)],
+        make_book(
+            asks=[DepthLevel(price=101.5, quantity=1.0), DepthLevel(price=101.0, quantity=1.0)]
         )
 
 
 def test_book_rejects_duplicate_price_within_a_side() -> None:
     with pytest.raises(ValidationError, match="bids"):
-        OrderBook(
-            instrument=INSTRUMENT,
-            timestamp=T0,
+        make_book(
             bids=[
                 DepthLevel(price=100.5, quantity=2.0),
                 DepthLevel(price=100.5, quantity=3.0),
-            ],
-            asks=[DepthLevel(price=101.0, quantity=1.0)],
+            ]
         )
 
 
@@ -158,12 +156,7 @@ def test_book_rejects_nonpositive_level_price() -> None:
 
 def test_book_rejects_naive_timestamp() -> None:
     with pytest.raises(ValidationError, match="timezone"):
-        OrderBook(
-            instrument=INSTRUMENT,
-            timestamp=datetime(2026, 8, 7, 12, 0, 0),
-            bids=[DepthLevel(price=100.0, quantity=1.0)],
-            asks=[DepthLevel(price=101.0, quantity=1.0)],
-        )
+        make_book(timestamp=NAIVE_T0)
 
 
 # --- TradeEvent -------------------------------------------------------------
@@ -193,7 +186,7 @@ def test_trade_event_rejects_negative_sequence() -> None:
 
 def test_trade_event_rejects_naive_timestamp() -> None:
     with pytest.raises(ValidationError, match="timezone"):
-        make_trade(timestamp=datetime(2026, 8, 7, 12, 0, 0))
+        make_trade(timestamp=NAIVE_T0)
 
 
 # --- interval_to_timedelta --------------------------------------------------
@@ -213,6 +206,16 @@ def test_interval_to_timedelta_rejects_garbage() -> None:
             interval_to_timedelta(bad)
 
 
+def test_interval_to_timedelta_rejects_zero_amount() -> None:
+    with pytest.raises(ValueError, match="positive"):
+        interval_to_timedelta("0m")
+
+
+def test_bar_rejects_zero_interval() -> None:
+    with pytest.raises(ValidationError, match="positive"):
+        make_bar(interval="0m")
+
+
 # --- monotonicity -----------------------------------------------------------
 
 
@@ -229,6 +232,11 @@ def test_monotonic_violations_detects_out_of_order_pairs() -> None:
     values = [t1, T0, t3, t3, t1]
 
     assert monotonic_violations(values) == [(0, 1), (3, 4)]
+
+
+def test_monotonic_violations_rejects_none_values() -> None:
+    with pytest.raises(ValueError, match="None"):
+        monotonic_violations([1, None, 2])
 
 
 # --- duplication ------------------------------------------------------------
@@ -293,10 +301,31 @@ def test_find_gaps_rejects_non_increasing_input() -> None:
 
 
 def test_find_gaps_rejects_naive_timestamps() -> None:
-    naive = [datetime(2026, 8, 7, 12, 0), datetime(2026, 8, 7, 13, 0)]
+    naive = [NAIVE_T0, NAIVE_T0.replace(hour=13)]
 
     with pytest.raises(ValueError, match="timezone"):
         find_gaps(naive, interval="1h")
+
+
+def test_find_gaps_rejects_single_naive_timestamp() -> None:
+    with pytest.raises(ValueError, match="timezone"):
+        find_gaps([NAIVE_T0], interval="1h")
+
+
+def test_find_gaps_single_aware_timestamp_is_valid_and_gap_free() -> None:
+    assert find_gaps([T0], interval="1h") == []
+
+
+def test_find_gaps_shifted_regular_grid_has_no_internal_gaps() -> None:
+    # A series aligned to its own grid (anchored at :30) is not missing
+    # data; grid-shift detection belongs to the manifest coverage checks.
+    timestamps = [
+        T0.replace(minute=0, second=30),
+        T0.replace(minute=1, second=30),
+        T0.replace(minute=2, second=30),
+    ]
+
+    assert find_gaps(timestamps, interval="1m") == []
 
 
 def test_find_gaps_rejects_series_misaligned_with_interval() -> None:
