@@ -26,7 +26,7 @@
 5. [#5](https://github.com/ZP151/quantmesh/issues/5) SQLite event persistence, replay and reconciliation — implemented, reviewed, verified, committed `60415a1`, **merged to main via PR #10 (squash `349eb40`) 2026-08-07**. Issue #5 auto-closed on merge.
 6. [#6](https://github.com/ZP151/quantmesh/issues/6) paper account API observability — implemented, reviewed, verified, committed `6920cc0`, **merged to main via PR #11 (squash `25ca09d`) 2026-08-07**. Issue #6 auto-closed on merge. **M2 slice sequence complete and merged.**
 7. Merge gate — **COMPLETE 2026-08-07**: chain merged to main in order as squash `f68682c`, `ba01eda`, `62e2397`, `349eb40`, `25ca09d`; each remote feature branch deleted after its merge; issues #2-#6 closed on merge, issue #1 closed with evidence; main verified (110 passed, ruff clean) and CI green on main pushes.
-8. **Next: M3** — data foundation and experiment registry (provider registry, normalized bar/order-book/event schemas, Parquet/DuckDB lake, dataset manifests, experiment registry). Plan: `docs/iterations/0005-m3-data-foundation.md`; open issues #12-#17 and start slice #12 (normalized market-data schemas).
+8. **Next: M3** — data foundation and experiment registry (provider registry, normalized bar/order-book/event schemas, Parquet/DuckDB lake, dataset manifests, experiment registry). Plan: `docs/iterations/0005-m3-data-foundation.md`; open issues #13-#18 and start slice #13 (normalized market-data schemas). Note: issue numbers shifted because the M2 completion-records PR took #12.
 
 ## Last verification
 
