@@ -92,8 +92,54 @@ evidence are complete; CI plus the standing merge authority controls merge.
 ## Durable decisions to record when reached
 
 - ADR: OpenD adapter lifecycle, error classification, and credential boundary.
-- ADR: walk-forward/report schema and cost-model ownership.
-- ADR: broker-paper reconciliation identity and tolerance policy.
+  — recorded as ADR-0004 (2026-08-08).
+- ADR: walk-forward/report schema and cost-model ownership. — pending Phase C.
+- ADR: broker-paper reconciliation identity and tolerance policy. — pending Phase D.
+
+## Work log
+
+- 2026-08-08: Issue #25 (Phase A, OpenD contract and diagnostics)
+  implemented with TDD on `feat/m4-moomoo-equity-workflow`:
+  - `quantmesh.moomoo` package: `MoomooOpenDClient` fixture-first boundary
+    with injected `OpenDTransport`; typed errors
+    (`OpenDUnavailableError` / `OpenDAuthRequiredError` /
+    `OpenDSdkMissingError` / `OpenDProtocolError` under `OpenDError`);
+    `OpenDCapabilities` probe report with the locked-session rule
+    (auth_required forces order/order_query False); lazy-SDK `SdkTransport`
+    whose error classifier is keyword-based pending Phase E validation.
+  - Settings: `moomoo_opend_host/port/connect_timeout_s/request_timeout_s`
+    (env `QUANTMESH_MOOMOO_*`, validated: port 1-65535, timeouts > 0).
+  - `quantmesh-moomoo probe` operator command: the only path to a real
+    OpenD; redacted stdout report, writes nothing, reads no credentials,
+    typed exit codes (0 ok / 1 unavailable / 2 auth-required / 3 sdk
+    missing).
+  - 26 tests (24 initial + 2 classifier tests from review); full suite 321
+    passed, 3 skipped. Review fixes: auth-on-order-context is reported
+    state, not a raised probe failure; `_classify` unit-tested without the
+    SDK; CLI client construction decoupled for injection; malformed payload
+    fail-closed with extra vendor keys tolerated.
+  - ADR-0004 recorded.
+
+## Verification evidence
+
+Per slice: `pytest -q`, `ruff check src tests`, `git diff --check`,
+`git submodule status`.
+
+Issue #25 (Phase A, committed on `feat/m4-moomoo-equity-workflow`):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 321 passed, 3 skipped (symlink creation not permitted), 1 warning
+.\.venv\Scripts\python.exe -m ruff check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: self-review adversarial pass — auth-on-order-context is
+reportable state (capabilities) rather than a raised probe failure,
+`_classify` covered by unit tests without the SDK, CLI client
+construction decoupled for injection, malformed probe payloads fail
+closed while extra vendor keys are tolerated. The live SDK path stays
+gated on Phase E operator validation.
 
 ## Risks and gates
 

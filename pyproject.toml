@@ -33,6 +33,7 @@ dev = [
 
 [project.scripts]
 quantmesh-iteration = "quantmesh.dev.iterations:main"
+quantmesh-moomoo = "quantmesh.moomoo.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
