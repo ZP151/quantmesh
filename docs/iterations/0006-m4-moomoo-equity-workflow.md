@@ -29,16 +29,18 @@ semantics. Live trading is not part of this iteration.
 
 ## Acceptance criteria
 
-- [ ] Local OpenD health and capability status are observable without logging
-      secrets.
-- [ ] Historical, daily, and intraday Moomoo-shaped data normalize into the
-      M3 lake with manifests and quality gates.
-- [ ] Momentum, mean-reversion, and risk-parity baselines each produce a
+- [x] Local OpenD health and capability status are observable without logging
+      secrets. — issue #25 (`quantmesh-moomoo probe`, redacted, exit 3 gated).
+- [x] Historical, daily, and intraday Moomoo-shaped data normalize into the
+      M3 lake with manifests and quality gates. — issue #26 (fixture path).
+- [x] Momentum, mean-reversion, and risk-parity baselines each produce a
       reproducible walk-forward, cost-aware report from a pinned dataset.
-- [ ] A Moomoo simulated-order reconciliation identifies every matched,
+      — issue #27.
+- [x] A Moomoo simulated-order reconciliation identifies every matched,
       pending, missing, or divergent order/fill without silently accepting
-      drift.
-- [ ] No real-money order path is implemented or enabled.
+      drift. — issue #28 (fixture drills, 0-blocking-findings convergence).
+- [x] No real-money order path is implemented or enabled. — pinned
+      `TrdEnv.SIMULATE`; fixture-only CLI surface; REAL refused before the wire.
 
 ## Implementation plan
 
@@ -72,13 +74,44 @@ service that maps broker identifiers to QuantMesh client/order IDs. Reconcile
 quantities, prices, fees, status transitions, timestamps, and positions; fail
 closed on missing or ambiguous mappings. Fixture replay is mandatory.
 
-### Phase E — operator validation and milestone gate
+### Phase E — operator validation and milestone gate (PENDING HUMAN GATE)
 
 Only after all fixture tests pass, request one human-provided local OpenD plus
 Moomoo **simulated-account** validation. Run health, read-only quote/history,
 then a deliberately small simulated-order reconciliation drill. Record
 redacted evidence. This is the sole external-state gate for M4; never request
 or log a password, secret, or real-trading confirmation.
+
+**Gate status 2026-08-08 — deferred by the autonomous lane.** All safe work
+is complete: issues #25-#28 are committed on `feat/m4-moomoo-equity-workflow`
+(checkpoint `5fbeb6c`, pushed), the fixture suite is green (525 passed), and
+the live surface is deliberately locked — `probe` is read-only, writes
+nothing, reads no credentials; `paper-order`/`reconcile` refuse any
+invocation without `--fixture` (exit 3). No code, credential material, or
+safe task is waiting on this gate.
+
+**Exact operator drill (human, local OpenD running + Moomoo simulated
+account):**
+
+1. `quantmesh-moomoo probe` — expect quote=True history_kline=True
+   order=True order_query=True, auth_required=False. A locked session is
+   *reported* in the capability line, never unlocked by QuantMesh.
+2. Read-only market-data check against the simulated account (explicit
+   operator action only; the live path otherwise stays fixture-first):
+   one kline and one quote request, verifying the ADR-0004 payload
+   contract and UTC conversion against a real OpenD.
+3. Simulated-order drill: place one small simulated order via the operator
+   surface, reconcile it (`--apply`), confirm the mapping, status
+   transitions, and fill adoption match the fixture-drill semantics, then
+   cancel it. Expect the same exit-code contract (0 clean / 1 blocking
+   findings).
+4. Record redacted evidence in the Verification evidence section: command,
+   exit code, counts line, and findings summary. No account data, no
+   secrets, no ids beyond the drill order's own broker id.
+
+Until a human runs the drill, the final M4 PR stays closed: the delivery
+protocol requires operator-validation evidence before opening it. The
+branch remains the live checkpoint; CI runs on each push.
 
 ## Delivery protocol
 
