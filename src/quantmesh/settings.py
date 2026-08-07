@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     default_paper_mode: bool = True
     lake_root: Path = Path.home() / ".quantmesh" / "data"
     experiments_dir: Path = Path.home() / ".quantmesh" / "experiments"
+    reports_dir: Path = Path.home() / ".quantmesh" / "reports"
     moomoo_opend_host: str = "127.0.0.1"
     moomoo_opend_port: int = Field(default=11111, ge=1, le=65535)
     moomoo_opend_connect_timeout_s: float = Field(default=5.0, gt=0)

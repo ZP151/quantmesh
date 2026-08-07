@@ -100,7 +100,31 @@ evidence are complete; CI plus the standing merge authority controls merge.
   zoneinfo/tzdata); raw ``"None"`` autype default; `MoomooOpenDProvider`
   is explicit-construction-only (LIVE mode, registry refuses it); lake
   persists bars, trades/quotes are canonical models only.
-- ADR: walk-forward/report schema and cost-model ownership. — pending Phase C.
+- ADR: walk-forward/report schema and cost-model ownership.
+  — recorded as ADR-0005 (2026-08-08, issue #27 Phase C): a `StrategyReport`
+  is identified by its pinned setup only — dataset, manifest revision, code
+  commit, strategy, interval, universe, window spec, cost model — hashed to
+  a deterministic 16-hex `report_id` (setup hashed with sorted universe, so
+  member order never changes identity). Walk-forward windows are count-based
+  over the observed bar grid (`train_bars >= 2`, `step_bars >= test_bars`,
+  so evaluation segments never overlap and the equity curve concatenates
+  without double counting); calendar-free, so a pinned dataset pins the
+  windows. One QuantMesh-owned `CostModel` (fee + half-spread + slippage
+  bps / 10_000) is applied uniformly to every baseline, charged once per
+  window on one-way turnover. Metrics schema is fixed with documented
+  units (`sharpe`/`annualized_return` are `None` when undefined, never
+  fabricated). Baselines are pure, no-RNG functions (momentum top half,
+  mean-reversion bottom half, risk-parity inverse vol with zero-vol
+  excluded; ties break on symbol) and fail closed on undefined inputs.
+  Artifacts are deterministic functions of the ID at
+  `reports_root/<id>/{report.json,equity_curve.csv,trades.csv}`;
+  `report.json` excludes `created_at` so regeneration is byte-identical.
+  `ReportRegistry` persists JSONL with the experiment-registry discipline:
+  atomic appends, fail-closed reads with line attribution and duplicate-ID
+  detection, every recorded pin validated through the lake's manifest gate
+  (a report that exists is one whose data still exists at the pinned
+  revision). VectorBT/Qlib remain optional future accelerators; the
+  baselines stay dependency-free so pinning stays honest.
 - ADR: broker-paper reconciliation identity and tolerance policy. — pending Phase D.
 
 ## Work log
@@ -199,6 +223,41 @@ provider fail-closed on non-mapping transport payloads, SdkTransport
 error-string classification path exercised by unit tests without the
 SDK. Likely Phase E adjustment (ADR-0004): time-format drift between
 SDK versions.
+
+- 2026-08-08: Issue #27 (Phase C, research baselines) implemented with
+  TDD on `feat/m4-moomoo-equity-workflow`:
+  - `quantmesh.research`: `StrategyReport` (pinned setup + results,
+    id-consistency validator, tz-aware `created_at` normalized to UTC,
+    finite metrics), `WalkForwardSpec` (count-based windows, never-overlap
+    validator), `UniverseMember`, `CostModel` (bps components, finite at
+    the boundary), `WindowResult`; `report_id` (16-hex setup hash over
+    canonical sorted-universe JSON, "baseline-report\0" domain prefix);
+    `ReportRegistry` (JSONL, atomic mkstemp+os.replace appends, duplicate
+    IDs refused, fail-closed reads with line attribution, `resolve_pin`
+    through the lake manifest gate refusing moved manifests); `Baseline`
+    module: `momentum_weights` / `mean_reversion_weights` /
+    `risk_parity_weights` (pure, no RNG, ties break on symbol, zero-vol
+    excluded, all-zero fails closed), `run_walk_forward` (aligned-grid
+    fail-closed, no lookahead, cost charged once per window on one-way
+    turnover, equity curve concatenates disjoint test segments),
+    `run_baseline_report` (universe validation incl. cross-venue symbol
+    collision fail-closed, pin-before-compute, byte-stable artifacts,
+    registry record). Settings: `reports_dir` default
+    `~/.quantmesh/reports`. ADR-0005 recorded (9 decisions).
+  - Verification: full suite `443 passed, 3 skipped` (54 new Phase C
+    tests), `ruff check` clean, `git diff --check` passed, submodules
+    clean. Review: adversarial pass — window boundary math cross-checked
+    against `test_starts` (60 bars → [30, 40, 50]; 59 → [30, 40];
+    35 fails closed), lookahead audit (weights from bars strictly before
+    each test start; vol from `[train_start+1, test_start)`), trades
+    journal computed before the weight-state update (n_trades [2, 0, 0]
+    across windows), reproducibility test as the acceptance criterion
+    (two fresh roots → identical ID/metrics/windows and byte-identical
+    artifacts; `created_at` excluded from `report.json`), and the new
+    cross-venue symbol guard found in review (the backtester keys bars by
+    symbol, so a symbol on two venues would silently overwrite — now
+    refused with a regression test). Next: #28 (Phase D, simulated
+    execution reconciliation).
 
 ## Risks and gates
 
