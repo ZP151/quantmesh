@@ -23,7 +23,7 @@ Run a complete order lifecycle locally with reproducible cash, positions, fills 
 - [x] Invalid order-state transitions are rejected (slice #2, tests `test_valid_transitions_follow_the_explicit_table`, `test_terminal_states_reject_every_event`, invalid-pair tests).
 - [x] Stale or missing quotes fail closed (matcher slice #3; tests `test_stale_quote_fails_closed_for_market_orders`, `test_limit_order_against_stale_quote_fails_closed`, `test_market_order_without_a_touch_fails_closed`, `test_missing_volume_fails_closed_*`).
 - [ ] Paper account restarts and reconciles from persisted events (persistence slice #5).
-- [ ] Fees, spread and slippage are visible in P&L (accounting slice #4).
+- [x] Fees, spread and slippage are visible in P&L (accounting slice #4).
 - [ ] Automated tests and verification evidence are recorded here.
 
 ## Plan and role assignments
@@ -45,6 +45,13 @@ Run a complete order lifecycle locally with reproducible cash, positions, fills 
 - Fail-closed wins over resting: a stale quote, a missing touch, or missing/zero depth rejects the order (both market and limit) instead of risking a phantom fill (product invariant #6). Depth (`quote.volume`) caps fills for both order types; a non-crossed limit order is the only "still working" outcome.
 - Slippage (`slippage_bps`, default 5.0) applies to market orders only; limit orders fill at the touch price when crossed (never worse than their limit). Stale boundary is inclusive: a quote exactly `max_quote_age` old is still valid.
 - `MatchResult` carries either fills or a rejection, never both; `match_step` gives time priority in submission order and skips terminal orders silently.
+- Portfolio accounting lives in `execution/` (`src/quantmesh/execution/accounting.py`): `PaperAccount` is the aggregate root — submission is risk-gated, then matched, then applied; every application returns a new account state (immutable, event-derived like the order lifecycle).
+- `PaperAccount` is a pydantic model carrying serializable config (`fee_model`, `risk_limits`, `matcher`); `PaperMatcher` became a pydantic BaseModel so it is a normal serializable field (slice #4) — required for persistence (slice #5) and for deterministic risk estimation with slippage.
+- Order IDs are deterministic: `client_order_id` if provided, else a per-account `order_sequence` counter (`paper-1`, `paper-2`, …) — no uuid4, so identical input replays identical state.
+- P&L is equity-based: `equity = cash + Σ mark × position`; `total_pnl = equity − starting_cash`. `starting_cash` is captured at construction (`capture_starting_cash`, in-place `mode="after"` validator — returning a copy from a top-level validator is unsupported by pydantic during `__init__`). This nets entry/exit fees, spread and slippage into a single number.
+- Risk limits run pre-trade in the account (`kill_switch`, `max_order_quantity`, `max_notional`, `max_position_quantity`, cash sufficiency, position sufficiency). Market-order reference price is slippage-adjusted so a cash/notional check cannot pass only to be overrun by slippage. These live in `execution` for now; a dedicated `risk` module owning pre-trade controls remains a roadmap item (ADR-0002 semantics shared).
+- `FeeModel.for_notional` = `max(min_fee, round(notional × fee_bps / 10_000, 6))`; a fee is charged on every fill including the closing one, and the fill-triggered sell-fee counts into realized P&L (buy-side fee lands in average cost).
+- `apply_fill` returns a new account and closes (pops) a long position when remaining quantity hits zero (`math.isclose`); selling beyond the position raises instead of going short.
 
 ## Work log
 
@@ -64,6 +71,11 @@ Run a complete order lifecycle locally with reproducible cash, positions, fills 
   - Added `PaperMatcher` and `MatchResult` in `src/quantmesh/execution/matcher.py`; 23 tests in `tests/test_matcher.py`.
   - /code-review (standards + spec axes): resolved missing-volume-unlimited-depth phantom-fill hazard (now fail closed for both order types), reused `OrderStateMachine.TERMINAL_STATES` and `Order.remaining_quantity`, added fills/rejection exclusivity to `MatchResult`, timezone-aware timestamp guard, tests for limit partial fills and remainder re-matching.
   - Caller contract for the next slice (#4): fills → `OrderStateMachine.apply(FILL)`, rejection → `REJECTED`, empty result → order stays working.
+- 2026-08-07: Slice #4 (issue #4) implemented with TDD on `feat/4-portfolio-accounting`:
+  - Vertical slices: cash/position math on fills → weighted-average cost and realized P&L → pre-trade risk gates → `submit()` end-to-end → equity-based P&L.
+  - Added `FeeModel`, `Position`, `RiskLimits`, `SubmissionResult`, `PaperAccount` in `src/quantmesh/execution/accounting.py`; refactored `PaperMatcher` to a pydantic BaseModel; 19 tests in `tests/test_accounting.py`.
+  - /code-review (standards + spec axes): resolved pydantic `PrivateAttr`-cannot-be-injected bug (matcher now a serializable field), deterministic `order_sequence` IDs instead of uuid4, slippage-adjusted cash estimate (overdraw guard), equity-based `total_pnl` (old formula double-counted the sell fee), `apply_fill` full-close path dedup, removed unused import.
+  - Determinism: identical inputs (with or without `client_order_id`) produce identical `model_dump()` state; `now` injected through `submit`/`match`; timestamps timezone-aware.
 
 ## Verification evidence
 
@@ -88,6 +100,17 @@ git submodule status: clean
 ```
 
 Review gate: /code-review two-axis (standards + spec) — zero remaining actionable findings; fixes verified by the new tests above.
+
+Slice #4 (branch `feat/4-portfolio-accounting`, commit pending, PR #9):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 78 passed (1 pre-existing StarletteDeprecationWarning)
+.\.venv\Scripts\ruff.exe check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: /code-review two-axis (standards + spec) — zero remaining actionable findings; fixes verified by the new tests above (equity-based P&L, deterministic order IDs, slippage overdraw guard, apply_fill dedup).
 
 Follow-up: GitHub Actions `pull_request` runs have not fired on the feature branches (runner-acquisition failures observed on main pushes); CI verification is pending GitHub infra. No code failure observed.
 

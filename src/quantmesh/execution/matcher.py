@@ -8,7 +8,7 @@ with a rejection instead of a phantom fill.
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from quantmesh.domain.models import Quote, Side
 from quantmesh.domain.orders import Fill, Order, OrderStateMachine, OrderType
@@ -28,17 +28,11 @@ class MatchResult(BaseModel):
         return self
 
 
-class PaperMatcher:
+class PaperMatcher(BaseModel):
     """Matches orders against a single quote, deterministically."""
 
-    def __init__(
-        self,
-        *,
-        slippage_bps: float = 5.0,
-        max_quote_age: timedelta = timedelta(seconds=30),
-    ) -> None:
-        self.slippage_bps = slippage_bps
-        self.max_quote_age = max_quote_age
+    slippage_bps: float = Field(default=5.0, ge=0)
+    max_quote_age: timedelta = Field(default=timedelta(seconds=30))
 
     def match(
         self, order: Order, quote: Quote, *, now: datetime
