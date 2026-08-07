@@ -1,16 +1,16 @@
 # Iteration 0003 — Deterministic Paper-Trading Kernel
 
-- Status: active
+- Status: completed
 - Started: 2026-08-07
-- Completed:
+- Completed: 2026-08-07 (work complete; PRs #7-#11 remain draft pending merge review)
 - Owner: unassigned agent team
 - GitHub issue: [#1](https://github.com/ZP151/quantmesh/issues/1)
-- Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2, issue #2)
+- Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2, issue #2), [draft #8](https://github.com/ZP151/quantmesh/pull/8) (slice #3, issue #3), [draft #9](https://github.com/ZP151/quantmesh/pull/9) (slice #4, issue #4), [draft #10](https://github.com/ZP151/quantmesh/pull/10) (slice #5, issue #5), [draft #11](https://github.com/ZP151/quantmesh/pull/11) (slice #6, issue #6)
 - Roadmap milestone: M2
 
 ## Outcome
 
-Run a complete order lifecycle locally with reproducible cash, positions, fills and P&L before any external execution is enabled.
+Run a complete order lifecycle locally with reproducible cash, positions, fills and P&L before any external execution is enabled. Achieved: order state machine (#2), deterministic matcher (#3), portfolio accounting with fees/slippage/risk limits (#4), SQLite event persistence with replay and reconciliation (#5), read-only observability API (#6) — 110 tests, all M2 deliverables implemented on branches `feat/2`…`feat/6` with draft PRs #7-#11. Merge of the slice chain into main is the remaining gate.
 
 ## Scope
 
@@ -24,6 +24,8 @@ Run a complete order lifecycle locally with reproducible cash, positions, fills 
 - [x] Stale or missing quotes fail closed (matcher slice #3; tests `test_stale_quote_fails_closed_for_market_orders`, `test_limit_order_against_stale_quote_fails_closed`, `test_market_order_without_a_touch_fails_closed`, `test_missing_volume_fails_closed_*`).
 - [x] Paper account restarts and reconciles from persisted events (persistence slice #5).
 - [x] Fees, spread and slippage are visible in P&L (accounting slice #4).
+- [x] Account, positions, orders and P&L endpoints return consistent state (API slice #6).
+- [x] Kill-switch status is observable (API slice #6).
 - [x] Automated tests and verification evidence are recorded here.
 
 ## Plan and role assignments
@@ -86,6 +88,12 @@ Run a complete order lifecycle locally with reproducible cash, positions, fills 
   - Added `EventStore`, `RestoreResult`, `StoreCorruptionError` in `src/quantmesh/execution/store.py`; 18 tests in `tests/test_store.py`; 96 total passing.
   - /code-review (standards + spec axes): resolved two verified must-fixes — (M1) snapshot fingerprint now covers full order headers and config so tampered `orders.side`/`quantity`/config on fill-less orders cannot pass silently; (M2) `submit()` rejects duplicate `client_order_id` so a reused id can never silently drop a newer order at persist time. Should-fixes: typed `StoreCorruptionError` instead of a raw `ValueError` on corrupt logs, `kill_switch` round-trip test + config reconciliation, explicit `is not None` for `starting_cash` (0 is a valid value). Nits: shared fingerprint helpers so save/reconcile cannot drift.
   - Verification evidence below.
+- 2026-08-07: Slice #6 (issue #6) implemented with TDD on `feat/6-api-observability`:
+  - Vertical slices: account summary → positions with unrealized P&L → orders with event histories → P&L with injected marks → kill-switch status → read-only enforcement.
+  - Extended `src/quantmesh/api/app.py` with `create_app(*, account, marks)` — a read-only FastAPI factory (GET /account, /positions, /orders, /orders/{id}, /pnl, /kill-switch); mark prices are injected by reference (the operator's update seam), no clock or feed reads; module-level `app` stays as the smoke-test bootstrap.
+  - 14 tests in `tests/test_api.py`; 110 total passing.
+  - /code-review (standards + spec axes): zero must-fix code defects. Should-fixes resolved: `/pnl` names unmarked positions in `missing_marks` so excluded-from-equity value is never silent (and `/positions` reports `unrealized_pnl: null`); per-request snapshot of marks removes the check-then-index race; `/kill-switch` and `/account` share the `kill_switch` field name; HTTP-level POST-405 test pins read-only enforcement; rejected-order serialization (reason + null fill fields) covered.
+  - Verification evidence below.
 
 ## Verification evidence
 
@@ -133,7 +141,18 @@ git submodule status: clean
 
 Review gate: /code-review two-axis (standards + spec) — zero remaining actionable findings; fixes verified by the new tests above (header/config tamper detection, duplicate order-id rejection, typed corruption error, kill_switch round trip).
 
-Follow-up: GitHub Actions `pull_request` runs have not fired on the feature branches (runner-acquisition failures observed on main pushes); CI verification is pending GitHub infra. No code failure observed.
+Slice #6 (branch `feat/6-api-observability`, commit pending, PR #11):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 110 passed (1 pre-existing StarletteDeprecationWarning)
+.\.venv\Scripts\ruff.exe check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: /code-review two-axis (standards + spec) — zero remaining actionable findings; fixes verified by the new tests above (missing_marks naming, marks snapshot, kill_switch field consistency, POST 405, rejected-order serialization).
+
+Follow-up: GitHub Actions `pull_request` runs initially did not fire on the feature branches (runner-acquisition failures observed on main pushes). Resolved 2026-08-07: re-runs for PRs #8/#9 passed with zero code change (confirmed infrastructure, not repository defect), PR #10 re-triggered via an empty commit (`925fd0c`), and checks are green on PRs #7-#11. No code failure observed.
 
 ## Risks and follow-ups
 
