@@ -65,7 +65,7 @@ Out of scope (recorded, not deferred silently):
 
 ## Acceptance criteria
 
-1. [ ] A local/OpenAI-compatible model gateway serves structured
+1. [x] A local/OpenAI-compatible model gateway serves structured
       outputs through schema validation: malformed or schema-violating
       model responses are refused with a typed error and no partial
       object escapes; the gateway defaults to loopback and refuses
@@ -321,13 +321,14 @@ the M5 operator drill).
 
 ## Durable decisions to record when reached
 
-- ADR-0010 **to record** (Phase A): the model gateway is a boundary
-  with injected transports; the wire is OpenAI-compatible chat
-  completions; loopback-only by default with an explicit
-  construction-time `allow_remote=True` override (never env-driven);
-  the API key is env-injected per request and never serialized;
-  structured output is pydantic-validated at the boundary with no
-  partial object escape.
+- ADR-0010 **recorded** (Phase A, issue #45, decision 1): the model
+  gateway is a boundary with injected transports; the wire is
+  OpenAI-compatible chat completions; loopback-only by default with
+  an explicit construction-time `allow_remote=True` override (never
+  env-driven); the API key is env-injected per request and never
+  serialized; structured output is pydantic-validated at the boundary
+  with no partial object escape. Decision 1 + consequences written
+  into ADR-0010 on 2026-08-08.
 - ADR-0010 extension **to record** (Phase B): role outputs are
   pydantic schemas that contain no execution-shaped fields; the
   pipeline order is deterministic and the critic gate blocks in
@@ -370,10 +371,64 @@ the M5 operator drill).
   M8 is fixture-driven local computation end to end (a live
   local-model operator drill is recorded as optional, not a blocker);
   the stacked PR chain is the only dependency.
+- 2026-08-08 (issue #45, Phase A): implemented `ai/` — `errors.py`
+  (five typed errors), `wire.py` (`ChatMessage`/`ModelRequest`/
+  `ModelResponse`, `build_chat_body` with the JSON-schema
+  `response_format`, fail-closed `parse_completion`), `transport.py`
+  (`ModelTransport` boundary, `ScriptedModelTransport` with JSONL
+  line attribution + `payload` escape hatch + `seen_bodies`,
+  `HttpModelTransport` loopback-by-default with explicit
+  `allow_remote=True`, env-injected `QUANTMESH_MODEL_API_KEY` in the
+  Authorization header, key-less reprs), `gateway.py` (`ModelGateway`
+  with `complete`/`complete_structured` — parse + pydantic validation
+  at the boundary, typed `ModelOutputError` naming the violation, no
+  partial object escape, structured-only). Settings gained
+  `model_gateway_url` (loopback default)/`model_name`/
+  `model_request_timeout_s`; `model_max_tokens` deliberately dropped
+  from settings (the request wire model owns max_tokens). ADR-0010
+  decision 1 recorded. The first test run surfaced three test-side
+  defects (pydantic `ge/le` → JSON-schema minimum/maximum, not
+  exclusive; unbracketed IPv6 host in the fixture URL; fake httpx
+  responses needed a `Response` wrapper) and adversarial review
+  caught two real defects before commit (non-str `model_name`
+  accepted silently; the redaction scan attempted a real connection
+  to 127.0.0.1:1 — now faked). 66 gateway tests green; ruff clean
+  across src and tests.
 
 ## Verification evidence
 
-- Phase A slice (issue #45): pending.
+- Phase A slice (issue #45): `tests/test_ai_gateway.py` — 66 passed
+  in 0.38s. Wire contract: role literal + empty-content refusals,
+  request bounds (min 1 message, temperature [0, 2], max_tokens >
+  0), canonical body shape with temperature/max_tokens passthrough,
+  JSON-schema `response_format` (name/strict/min-max bounds) present
+  only on the structured path; `parse_completion` fail-closed on
+  every pinned shape violation (non-mapping payload, no/empty
+  choices, non-mapping choice/message, non-str content/finish_reason/
+  wire-model, non-int usage) with the wire-model-name fallback.
+  Scripted transport: record replay in order, `seen_bodies` capture,
+  JSONL round-trip with blank-line tolerance, line attribution on
+  non-JSON/non-mapping lines, record-index attribution on missing/
+  non-str content and payload-mixing, `payload` escape hatch,
+  exhaustion refusal with count. HTTP transport (faked httpx — no
+  network anywhere): loopback hosts accepted (127.0.0.1/localhost/
+  ::1), remote refused naming the host + the explicit override,
+  `allow_remote=True` acceptance, scheme/host refusals, settings-url
+  default, key from env with explicit-key precedence, repr and
+  construction-error key scans, Authorization header placement with
+  the key absent from the body, HTTP refusal with server text,
+  non-JSON body, wrapped transport errors, timeout plumbed. Gateway:
+  complete/structured happy paths, canonical body via `seen_bodies`,
+  settings-model-name resolution, missing-model refusal at call,
+  non-str model refusal at construction, structured JSON/schema/
+  empty refusal paths naming the violating fields, no partial object
+  escape. Redaction scan (M5 wallet-isolation discipline): the key is
+  absent from every failure surface (transport/gateway reprs and all
+  raised exception strings) including a hostile wire shape exercised
+  through the gateway. Adversarial review before commit fixed the
+  non-str model-name hole and removed a real network attempt from
+  the redaction scan (faked httpx raises the connect error instead).
+  ADR-0010 decision 1 recorded. Full suite: pending (running).
 - Phase B slice (issue #46): pending.
 - Phase C slice (issue #47): pending.
 - Phase D slice (issue #48): pending.

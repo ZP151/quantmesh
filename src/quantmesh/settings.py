@@ -44,6 +44,14 @@ class Settings(BaseSettings):
     # 10): append-only JSONL ledgers on the ADR-0006 discipline.
     alerts_dir: Path = Path.home() / ".quantmesh" / "alerts"
     promotions_dir: Path = Path.home() / ".quantmesh" / "promotions"
+    # Local AI research layer (M8, ADR-0010): the model gateway defaults
+    # to a loopback endpoint; a non-loopback URL requires explicit
+    # construction-time allow_remote=True (never env-driven). The API
+    # key lives in the environment (QUANTMESH_MODEL_API_KEY), injected
+    # per request, never stored here.
+    model_gateway_url: str = "http://127.0.0.1:11434"
+    model_name: str = ""
+    model_request_timeout_s: float = Field(default=60.0, gt=0)
 
     model_config = SettingsConfigDict(
         env_file=".env",
