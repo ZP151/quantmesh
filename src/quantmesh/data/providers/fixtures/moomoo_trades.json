@@ -1,0 +1,4 @@
+[
+  {"symbol": "AAPL", "datetime": "2026-08-07T12:00:00Z", "price": 204.0, "quantity": 10, "side": "B", "seq": 5001},
+  {"symbol": "AAPL", "datetime": "2026-08-07T12:00:15Z", "price": 204.1, "quantity": 5, "side": "S", "seq": 5002}
+]

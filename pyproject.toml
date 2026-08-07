@@ -37,6 +37,9 @@ quantmesh-iteration = "quantmesh.dev.iterations:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+quantmesh = ["data/providers/fixtures/*.json"]
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]

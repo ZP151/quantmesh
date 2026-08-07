@@ -2,7 +2,7 @@
 
 - Status: in progress
 - Started: 2026-08-07
-- Completed: slice #1 (issue #14, merged `0bee38f`); slices #2-#3 (issues #15, #16, committed on `feat/m3-data-foundation`)
+- Completed: slice #1 (issue #14, merged `0bee38f`); slices #2-#4 (issues #15-#17, committed on `feat/m3-data-foundation`)
 - Owner: unassigned agent team
 - GitHub issue: issues #14-#19 (open; #12 was consumed by the M2 completion-records PR and #13 by the squash-divergence tracking issue)
 - Pull request: one final M3 integration PR from `feat/m3-data-foundation`; individual issue commits are pushed and reviewed locally
@@ -208,6 +208,31 @@ tracking issue took #13).
   - ADR-0003 extended with the manifest contract (location, fields,
     freshness semantics, point-in-time `Dataset` view).
   - Verification evidence below.
+- 2026-08-07: Slice #4 (issue #17) implemented with TDD on
+  `feat/m3-data-foundation`:
+  - Vertical slices: `Provider`/`ProviderMode` contract (bars, order
+    books, trades out) → `FixtureProvider` base (injectable fixture dir,
+    fail-closed load) → hyperliquid + moomoo fixture adapters (canonical
+    mapping, symbol/interval checks, explicit side map) →
+    `ProviderRegistry` keyed by `Venue` (refuses SANDBOX/LIVE —
+    fixture-only is the M3 posture per AGENTS.md; one provider per
+    venue) → 6 fixture JSON files → provider-isolation test making the
+    exit criterion concrete (canonical shard columns + manifest coverage
+    fields, no provider identity).
+  - Added `src/quantmesh/data/providers/` (5 modules, 6 fixtures) and
+    `[tool.setuptools.package-data]` so fixtures ship in wheels; 23
+    provider tests in `tests/test_providers.py`; 243 total passing.
+  - Adversarial review found 3 real bugs + 2 design risks, all fixed
+    with regression tests: moomoo books/trades never verified the
+    requested symbol and no adapter rejected cross-venue instruments (a
+    MSFT backtest could silently trade AAPL prices), `_utc` silently
+    shifted naive fixture timestamps by the local machine offset
+    (fail-open), and unknown side markers silently mapped to SELL.
+    Hardening: empty fixtures fail closed ("no rows"), the bar-interval
+    check covers every row, per-row parse errors carry fixture + row
+    attribution (no raw KeyError / bare ValidationError), offset-form
+    timestamps normalize to UTC (regression-tested).
+  - Verification evidence below.
 
 ## Verification evidence
 
@@ -265,6 +290,27 @@ temp-name race, stray-file crashes, Windows reserved names, NULL/
 undecodable raw exceptions) plus `Dataset` constructor enforcement and
 13 new regression tests (47 manifest+layout tests total). Issues #15
 and #16 close only when their commits land in the final M3 PR.
+
+Slice #4 (issue #17, committed on `feat/m3-data-foundation`):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 243 passed, 1 skipped (symlink creation not permitted), 1 warning
+.\.venv\Scripts\python.exe -m ruff check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: adversarial correctness review — 3 real bugs fixed (moomoo
+books/trades symbol check + cross-venue instrument rejection, naive
+fixture-timestamp UTC drift, unknown-side silent SELL) plus fail-closed
+empty fixtures, per-row interval checks, fixture+row error attribution
+and wheel package-data; 9 regression tests added (23 provider tests
+total). Provider-isolation test proves the exit criterion at the bytes
+level: shard columns are exactly the 8 canonical lake columns and
+manifest coverage carries only canonical fields (caller-supplied
+`source` labels and the venue in partition paths are the only remaining
+identity signals, which the criterion does not claim to remove).
+Issues #15-#17 close only when their commits land in the final M3 PR.
 
 ## Risks and follow-ups
 

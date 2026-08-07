@@ -1,0 +1,5 @@
+[
+  {"symbol": "AAPL", "interval": "1m", "datetime": "2026-08-07T12:00:00Z", "open": 200.0, "high": 205.0, "low": 199.0, "close": 204.0, "volume": 1000.0},
+  {"symbol": "AAPL", "interval": "1m", "datetime": "2026-08-07T12:01:00Z", "open": 204.0, "high": 207.0, "low": 203.0, "close": 206.5, "volume": 850.0},
+  {"symbol": "AAPL", "interval": "1m", "datetime": "2026-08-07T12:02:00Z", "open": 206.5, "high": 208.0, "low": 205.5, "close": 207.2, "volume": 1200.0}
+]
