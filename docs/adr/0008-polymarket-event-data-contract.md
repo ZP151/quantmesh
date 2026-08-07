@@ -131,10 +131,52 @@ decisions (point-in-time replay).
 ## Extensions (recorded when their phases land)
 
 - Phase A (issue #34), **recorded 2026-08-08**: this document.
-- Phase B (issue #35): Kalshi contract authority — recorded wire
-  fixtures plus docs.kalshi.com (no vendorable SDK exists); the live
-  base URL `https://api.elections.kalshi.com` pinned; the migration
-  host refused; the adapter cannot hold credentials.
+- Phase B (issue #35), **recorded 2026-08-08**: Kalshi contract
+  authority — recorded wire fixtures plus docs.kalshi.com (no
+  vendorable SDK exists); the live base URL
+  `https://api.elections.kalshi.com` pinned; the migration host
+  refused at construction; the adapter cannot hold credentials. Live
+  probing pinned the following to the recorded wire (the docs were
+  stale on each):
+  - **Routes**: executed trades live at `GET /markets/trades?ticker=`
+    (not `/markets/{ticker}/trades`, which 404s even on liquid
+    markets); candlesticks live at
+    `GET /series/{series}/markets/{ticker}/candlesticks` with
+    `period_interval` one of 1/60/1440 (not
+    `/markets/{ticker}/candlesticks`, which 404s). `/markets` rejects
+    `status=active` with a recorded 400 — the filter set is
+    {open, settled, unopened}, even though the market object's own
+    `status` field reports `active`.
+  - **Orderbook**: the response is `orderbook_fp` with `yes_dollars`
+    and `no_dollars` ladders, both ascending worst-first resting bids
+    (the docs' "best to worst" claim is contradicted by the wire). The
+    best YES bid is the max of the yes ladder; the best YES ask is
+    derived as `1 − max(no ladder)` (the docs' own rule, verified
+    exact against the market object's `yes_bid_dollars`/`yes_ask_dollars`
+    captured at the same instant: derived 0.42/0.69 matched the
+    market object, sizes 6.00/4.00 cross-checked too). A NO bid at
+    $1.00 mirrors to a $0 ask and is skipped — it carries no tradeable
+    depth.
+  - **Bars are genuine**: candlesticks report `volume_fp`, so Kalshi
+    serves an honest bar surface (contrast Polymarket, decision 4).
+    Zero-volume rows carry only `price.previous_dollars` (no period
+    OHLC) and produce no bar — nothing is fabricated; a traded row
+    missing its trade OHLC is a fail-closed error. `end_period_ts` is
+    the period END; bars are re-based to the M3 bar-open convention.
+  - **Resolution is inline**: a settled/finalized market carries its
+    `result` ("yes"/"no") and `settlement_ts` on the market object, so
+    Kalshi `EventMarket`s resolve from the venue report (unlike
+    Polymarket's winner-flag-only path); non-binary markets are
+    refused at the adapter.
+  - **Error shapes**: `{"error": {"code", "message"}}` on 404s (typed
+    refusal with the server's message) and `{"msg": "Parameter
+    validation failed ..."}` on 400s; the migration host
+    `trading-api.kalshi.com` answers everything with a plain-text 401
+    "API has been moved to https://api.elections.kalshi.com/" —
+    refused at construction, parity with the M5 testnet-pin discipline.
+  - **Series identity**: the `/series/{ticker}` object carries its
+    ticker in `ticker`, not `series_ticker` (the docs' schema field is
+    absent on the wire).
 - Phase C (issue #36): implied probabilities are pure and
   fee/spread/liquidity-aware with venue-pinned payoff structures;
   forecast reports reuse the M5 report-stack discipline and enforce

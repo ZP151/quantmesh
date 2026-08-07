@@ -1,0 +1,79 @@
+[
+  {
+    "venue": "kalshi",
+    "venue_market_id": "KXELONMARS-99",
+    "event_ticker": "KXELONMARS-99",
+    "title": "Will Elon Musk visit Mars before Aug 1, 2099?",
+    "category": "World",
+    "start_at": "2025-08-28T20:45:00Z",
+    "expiry_at": "2099-08-08T15:00:00Z",
+    "outcomes": [
+      {
+        "name": "Yes",
+        "venue_outcome_id": "yes"
+      },
+      {
+        "name": "No",
+        "venue_outcome_id": "no"
+      }
+    ],
+    "resolution_rule": {
+      "rule_text": "If Elon Musk visits Mars before the earlier of his death or Aug 1, 2099, then the market resolves to Yes.",
+      "fingerprint": "3cc99deafe7889fab7c820a180fb95249e561b796072d2830012d5b013b9032a"
+    },
+    "resolution": [],
+    "resolved_at": null
+  },
+  {
+    "venue": "kalshi",
+    "venue_market_id": "KXMVECROSSCATEGORY-S2026B117AD0234B-20FD2D82A98",
+    "event_ticker": "KXMVECROSSCATEGORY-S2026B117AD0234B",
+    "title": "yes Ben Shelton,yes Joao Fonseca,yes Jakub Mensik,yes Hubert Hurkacz,yes Timo Legout,yes Arthur Nagel,yes Reese Brantmeier,yes Mai Hontama,yes Anne Christine Lutkemeyer,yes Eunhye Lee,yes Mirra Andreeva,yes Naomi Osaka,yes Coco Gauff,yes Jessica Pegula,yes Aryna Sabalenka",
+    "category": "Exotics",
+    "start_at": "2026-08-07T19:05:28Z",
+    "expiry_at": "2026-08-22T16:00:00Z",
+    "outcomes": [
+      {
+        "name": "Yes",
+        "venue_outcome_id": "yes"
+      },
+      {
+        "name": "No",
+        "venue_outcome_id": "no"
+      }
+    ],
+    "resolution_rule": {
+      "rule_text": "Bergs vs Shelton",
+      "fingerprint": "6326ecfe5d35d936f3e1e555cf1c6b7ba82d25b6ebbf9be5f52ac291a9a0d380"
+    },
+    "resolution": [
+      "No"
+    ],
+    "resolved_at": "2026-08-07T19:11:27.082954Z"
+  },
+  {
+    "venue": "kalshi",
+    "venue_market_id": "KXFED-27APR-T3.50",
+    "event_ticker": "KXFED-27APR",
+    "title": "Will the upper bound of the federal funds rate be above 3.50% following the Fed's Apr 28, 2027 meeting?",
+    "category": null,
+    "start_at": "2025-10-13T14:00:00Z",
+    "expiry_at": "2027-05-05T18:05:00Z",
+    "outcomes": [
+      {
+        "name": "Yes",
+        "venue_outcome_id": "yes"
+      },
+      {
+        "name": "No",
+        "venue_outcome_id": "no"
+      }
+    ],
+    "resolution_rule": {
+      "rule_text": "If the upper bound of the target federal funds rate published on the Federal Reserve's official website is greater than 3.50% following the Federal Reserve's Apr 28, 2027 meeting, then the market resolves to Yes.",
+      "fingerprint": "f1391807ce30b9f7a78d88d4597d2e8112d93af33e9d7cb925e5081b4bb9d5f5"
+    },
+    "resolution": [],
+    "resolved_at": null
+  }
+]

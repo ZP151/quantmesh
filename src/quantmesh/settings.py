@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     polymarket_gamma_url: str = "https://gamma-api.polymarket.com"
     polymarket_clob_url: str = "https://clob.polymarket.com"
     polymarket_request_timeout_s: float = Field(default=10.0, gt=0)
+    # Kalshi (M6 Phase B): the public trade-api v2 host is pinned; the
+    # migration host is refused at construction (ADR-0008).
+    kalshi_base_url: str = "https://api.elections.kalshi.com/trade-api/v2"
+    kalshi_request_timeout_s: float = Field(default=10.0, gt=0)
 
     model_config = SettingsConfigDict(
         env_file=".env",

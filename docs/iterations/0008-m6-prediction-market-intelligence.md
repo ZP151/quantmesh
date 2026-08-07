@@ -63,11 +63,11 @@ event mapping.
 
 ## Acceptance criteria
 
-1. [~] Polymarket discovery/CLOB/history and Kalshi market data normalize
+1. [x] Polymarket discovery/CLOB/history and Kalshi market data normalize
       through fixture-first adapters into the M3 lake (fixture path
       registry-registered; live providers explicit-construction-only,
-      keyless, read-only). — Polymarket side complete (issue #34, Phase A
-      2026-08-08); Kalshi side pending Phase B (issue #35).
+      keyless, read-only). — Phase A (issue #34) 2026-08-08 + Phase B
+      (issue #35) 2026-08-08.
 2. [ ] Canonical event/outcome/resolution-rule/expiry models carry
       fee/spread/liquidity-aware implied probabilities computed by pure,
       fixture-tested functions (binary payoff structure per venue,
@@ -188,12 +188,24 @@ operator drill).
   reachable because no order path exists); M6 surfaces are read-only
   market data by construction — there is no credential, no order, no
   real-money path.
-- ADR-0008 extension (issue #35 Phase B): the Kalshi contract authority
-  is the recorded wire fixtures plus the docs.kalshi.com endpoint/field
-  contract, because no vendorable SDK exists (legacy `kalshi-python`
-  repo removed; modern SDKs are PyPI-generated from an unpublishable
-  spec); the live base URL `https://api.elections.kalshi.com` is pinned
-  and the migration host is refused; the adapter cannot hold credentials.
+- ADR-0008 extension (issue #35 Phase B), **recorded 2026-08-08**: the
+  Kalshi contract authority is the recorded wire fixtures plus the
+  docs.kalshi.com endpoint/field contract, because no vendorable SDK
+  exists (legacy `kalshi-python` repo removed; modern SDKs are
+  PyPI-generated from an unpublishable spec); the live base URL
+  `https://api.elections.kalshi.com` is pinned and the migration host
+  is refused at construction; the adapter cannot hold credentials. The
+  recorded specifics: trades at `/markets/trades?ticker=` and
+  candlesticks at `/series/{series}/markets/{ticker}/candlesticks`
+  (both other routes 404); `/markets` rejects the `status=active`
+  filter; both orderbook ladders ascend worst-first resting bids with
+  YES asks derived as 1 − NO bid (verified exact against the market
+  object at the same instant); bars are genuine (volume reported),
+  zero-volume rows produce no bar; resolution is inline on
+  settled/finalized market objects; error shapes are
+  `{"error": {code, message}}` and `{"msg": ...}`; the migration host
+  answers plain-text 401; the series object carries its ticker in
+  `ticker`.
 - ADR-0008 extension (issue #36 Phase C): implied probabilities are
   pure and fee/spread/liquidity-aware with venue-pinned payoff
   structures; forecast reports reuse the M5 report-stack discipline
@@ -249,6 +261,42 @@ operator drill).
   bug (first market's description was applied to every market of an
   event) and removed an unused connect-timeout setting. 822 passed,
   3 skipped; ruff/diff/submodules clean.
+- 2026-08-08: **Phase B (issue #35) implemented** — `quantmesh.kalshi`
+  (typed errors; wire models and fail-closed parsers pinned to shapes
+  recorded live 2026-08-08 at `api.elections.kalshi.com`;
+  `HttpxKalshiTransport` httpx-based against the settings-pinned base
+  URL, migration host refused at construction; `KalshiMarketDataAdapter`
+  pure wire→domain mapping; `KalshiFixtureProvider` registry-registered /
+  `KalshiLiveProvider` explicit-construction-only; no auth surface
+  exists anywhere). Live contract probing recorded the divergences that
+  became the ADR-0008 Phase B extension: trades live at
+  `/markets/trades?ticker=` and candlesticks at
+  `/series/{series}/markets/{ticker}/candlesticks` (the docs' routes
+  404 even on liquid markets); `/markets` rejects `status=active` with
+  a recorded 400; both orderbook ladders ascend worst-first resting
+  bids (docs claim best-to-worst) — best YES ask derived as 1 − best
+  NO bid per the docs' own rule, verified exact (0.42/0.69 with sizes
+  6.00/4.00) against the market object captured at the same instant;
+  candlesticks report `volume_fp` so Kalshi serves a genuine bar
+  surface, zero-volume rows (only `price.previous_dollars`) produce no
+  bar, `end_period_ts` is the period end and bars re-base to M3
+  bar-open; resolution is inline on settled/finalized market objects
+  (`result` + `settlement_ts`); error shapes are
+  `{"error": {code, message}}` (404s) and `{"msg": ...}` (400s) plus
+  the plain-text "API has been moved" 401 from the migration host;
+  `/series/{ticker}` carries identity in `ticker`, not `series_ticker`.
+  16 wire fixtures under `src/quantmesh/kalshi/fixtures/` (including
+  the recorded error payloads and the migration-host 401); 4
+  canonical-shaped fixtures under `data/providers/fixtures/`
+  (`kalshi_{events,markets,books,trades}.json`) derived through the
+  real parsers; `QUANTMESH_KALSHI_*` settings; ADR-0008 Phase B
+  extension recorded. 57 new tests (881 passed, 3 skipped); the tests
+  exposed and fixed two fail-closed gaps — `parse_market` leaked raw
+  `KeyError`s (now wrapped like `parse_markets`) and `parse_series`
+  read the docs' `series_ticker` field the recorded wire doesn't
+  carry (identity is in `ticker`). Adversarial review also fixed 10
+  over-long lines (E501) the earlier session left in the package;
+  ruff/diff/submodules clean.
 
 ## Verification evidence
 
@@ -260,8 +308,21 @@ operator drill).
   construction proven (faked `builtins.__import__` asserting
   `key=None`); registry refuses LIVE; bars/trades fail closed;
   canonical fixture consistency tests pin the M3-shape derivations.
-- Phase B slice (issue #35): same gates; Kalshi fixtures through the
-  real parsers; migration-host refusal test.
+- Phase B slice (issue #35): **881 passed, 3 skipped** (57 new tests);
+  ruff clean; `git diff --check` clean; submodules clean. Fixture
+  drill: recorded Kalshi wire shapes (3-event discovery page, Mars
+  bundle, Fed + settled market objects with the 0.42/0.69/0.77 quote
+  and 6.00/4.00 sizes, worst-first ladders, 5 complementary trades,
+  230-row candlestick series with 10 traded bars, series object)
+  through the real parsers; malformed variants fail closed (non-pair
+  levels, out-of-order ladders, prices outside [0, 1], non-
+  complementary trades, unknown status/market_type/result/taker_side,
+  traded row missing OHLC, missing expiration, naive anything); typed
+  error payloads (`{"error": ...}` and `{"msg": ...}`) and non-JSON
+  bodies (`KalshiUnavailableError`); migration-host and unpinned-host
+  construction refusal; registry refuses LIVE; derived-ask skip at
+  $1.00; canonical fixture consistency tests pin the four
+  `kalshi_*.json` derivations against the adapters.
 - Phase C slice (issue #36): same gates; calibration fixture drills;
   point-in-time replay test (resolution after window close never seen
   in train); forecast report byte-reproducibility across registry roots.
