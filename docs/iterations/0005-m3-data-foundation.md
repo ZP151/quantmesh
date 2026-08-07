@@ -2,7 +2,7 @@
 
 - Status: in progress
 - Started: 2026-08-07
-- Completed: slice #1 (issue #14, merged `0bee38f`); slices #2-#4 (issues #15-#17, committed on `feat/m3-data-foundation`)
+- Completed: slice #1 (issue #14, merged `0bee38f`); slices #2-#5 (issues #15-#18, committed on `feat/m3-data-foundation`)
 - Owner: unassigned agent team
 - GitHub issue: issues #14-#19 (open; #12 was consumed by the M2 completion-records PR and #13 by the squash-divergence tracking issue)
 - Pull request: one final M3 integration PR from `feat/m3-data-foundation`; individual issue commits are pushed and reviewed locally
@@ -233,6 +233,37 @@ tracking issue took #13).
     attribution (no raw KeyError / bare ValidationError), offset-form
     timestamps normalize to UTC (regression-tested).
   - Verification evidence below.
+- 2026-08-07: Slice #5 (issue #18) implemented with TDD on
+  `feat/m3-data-foundation`:
+  - Vertical slices: `experiment_id` (deterministic setup hash —
+    dataset, manifest revision, commit, canonical parameters; metrics
+    excluded, so results never change identity) → `Experiment` model
+    (grammar validation, aware UTC `created_at`, id-integrity
+    recompute on load) → `ExperimentRegistry.record` (git-HEAD commit
+    default, duplicate refusal, pin validated through the lake's
+    manifest gate before anything is written) → JSONL persistence
+    (atomic unique-temp + rename rewrites, fail-closed per-line reads
+    with line attribution) → `resolve` (re-open the pinned dataset:
+    gate + revision equality) → the clean-checkout integration test.
+  - Added `src/quantmesh/research/experiments.py` (exports in
+    `research/__init__.py`), `settings.experiments_dir` default
+    `~/.quantmesh/experiments` (`QUANTMESH_EXPERIMENTS_DIR` override);
+    22 experiment tests in `tests/test_experiments.py`; 265 total
+    passing.
+  - Adversarial review found 2 real bugs, both fixed with regression
+    tests: NaN/Infinity parameter values made the persisted line's
+    recomputed ID diverge (pydantic serializes them as `null`, the ID
+    hash over raw `NaN` did not) and permanently bricked the whole
+    registry file — non-finite floats are now rejected at the model
+    boundary; duplicate IDs in the file passed read validation and a
+    metrics-only tamper resolved silently — `_read` now refuses
+    duplicate IDs with line attribution. Hardening: the duplicate
+    check runs before the pin check (a re-record after the lake
+    advanced reports "already recorded", not a misleading pin error),
+    registry-root-is-a-file fails closed, and the docstring records
+    that metrics are unsigned results (undetectable without signing,
+    out of M3 scope) and that concurrent writers are last-writer-wins.
+  - Verification evidence below.
 
 ## Verification evidence
 
@@ -311,6 +342,28 @@ manifest coverage carries only canonical fields (caller-supplied
 `source` labels and the venue in partition paths are the only remaining
 identity signals, which the criterion does not claim to remove).
 Issues #15-#17 close only when their commits land in the final M3 PR.
+
+Slice #5 (issue #18, committed on `feat/m3-data-foundation`):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 265 passed, 1 skipped (symlink creation not permitted), 1 warning
+.\.venv\Scripts\python.exe -m ruff check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: adversarial correctness review — 2 real bugs fixed
+(NaN/Infinity values bricking the registry via id/serialization
+divergence, duplicate IDs passing read validation) plus dup-check
+ordering and root-is-a-file fail-closed; 5 regression tests added (22
+experiment tests total). The clean-checkout integration test
+(`test_resolve_reopens_pinned_dataset_on_clean_checkout`) proves the
+first M3 exit criterion: registry → manifest → lake resolution on
+copied roots re-scans shard bytes via duckdb and refuses a regenerated
+(revision-2) manifest; the known same-count/same-range byte-change
+blind spot is inherited from the lake gate spec (documented in
+manifest.py) and revision regeneration is the honest record of change.
+Issues #15-#18 close only when their commits land in the final M3 PR.
 
 ## Risks and follow-ups
 
