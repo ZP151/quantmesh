@@ -151,6 +151,10 @@ tracking issue took #13).
     regex/dict drift), `make_book`/`NAIVE_T0` test helpers, misleading
     error hint reworded. Decisions recorded above.
   - Verification evidence below.
+- 2026-08-07: Slice #1 merged to main as squash `0bee38f` (PR #21);
+  issue #14 auto-closed on merge. Next: slice #2 (issue #15, Parquet/
+  DuckDB lake) — writes ADR-0003 (lake layout and normalization
+  contract).
 
 ## Verification evidence
 
@@ -159,7 +163,8 @@ Per slice: `pytest -q`, `ruff check src tests`, `git diff --check`,
 criteria in slices #15 and #17.
 
 Slice #1 (issue #14, branch `feat/14-normalized-market-data-schemas`, PR
-pending):
+[#21](https://github.com/ZP151/quantmesh/pull/21), merged as squash
+`0bee38f`):
 
 ```text
 .\.venv\Scripts\python.exe -m pytest -q: 148 passed (1 pre-existing StarletteDeprecationWarning)
@@ -173,6 +178,7 @@ violations; all must-fixes resolved (fail-closed `"0m"` interval,
 `None`-safe monotonicity, tz-validation on all `find_gaps` inputs,
 honest grid-relative docstring); standards judgement calls resolved
 (single-source interval grammar, test helpers, reworded error hint).
+Issue #14 closed on merge; remote feature branch deleted.
 
 ## Risks and follow-ups
 
