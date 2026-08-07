@@ -10,5 +10,6 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0004 | completed | 2026-08-07 | 2026-08-07 | Engineering Agent Skills and durable goal command | This change |
 | 0005 | completed | 2026-08-07 | 2026-08-07 | M3 data foundation and experiment registry | Merged through PRs [23](https://github.com/ZP151/quantmesh/pull/23) and [24](https://github.com/ZP151/quantmesh/pull/24) |
 | 0006 | active | 2026-08-07 | | M4 Moomoo equity workflow | [Plan](0006-m4-moomoo-equity-workflow.md) |
+| 0007 | active | 2026-08-08 | | M5 Hyperliquid testnet workflow | [Plan](0007-m5-hyperliquid-testnet-workflow.md) |
 
 <!-- quantmesh-iterations:append-above -->
