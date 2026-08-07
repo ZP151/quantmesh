@@ -215,6 +215,26 @@ criterion deterministically — no network, no sleeps.
     a run without signals keeps the pre-Phase-D identity. The strategy
     vocabulary is extended (`low_volatility`, `book_imbalance`) rather
     than opened up, so an unknown strategy stays a validation error.
-- Phase E (#33): private keys enter only via injected signer or env var, in
-  memory, never persisted or logged; wallet-isolation tests are part of the
-  secret-handling suite.
+- Phase E (#33), **recorded 2026-08-08**: key material is confined to
+  memory by construction and by test.
+  - Private keys enter only through an injected `InMemorySigner` or the
+    `signer_from_env` env-var path; nothing ever persists, logs, or
+    reports them. The signer's repr is redacted (`<InMemorySigner
+    redacted (32 bytes)>` — the default dataclass repr would print the
+    bytes into logs, exceptions, and process dumps), and env-parse
+    errors describe the shape without echoing the value (a malformed
+    secret is itself key material).
+  - Construction without a key fails closed: the transport's signer is a
+    required positional argument with no default and `None` is refused —
+    there is no default-key path.
+  - The wallet-isolation suite proves the invariant durably: a full
+    scripted order/cancel/reconcile drill with a real 32-byte key leaves
+    no key hex, key-bytes repr, or signer repr in the journal JSONL, the
+    shipped drill script, captured DEBUG logs, or the entire scratch
+    tree, and the wired risk-gate refusal path is clean and consumes
+    nothing.
+  - The operator drill (faucet → env → health/read-only checks → small
+    order/cancel/reconcile drill → redacted evidence, exact steps in
+    iteration 0007) is the sole external-state gate for M5; it is
+    recorded and deferred until a human runs it, and no real-money,
+    mainnet, or unredacted-key path exists anywhere.

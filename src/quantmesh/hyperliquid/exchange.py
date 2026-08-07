@@ -208,6 +208,11 @@ class InMemorySigner:
                 f"(got {type(self.private_key).__name__})"
             )
 
+    def __repr__(self) -> str:
+        # Phase E (issue #33): the default dataclass repr would print the
+        # key bytes into logs, exceptions, and process dumps. Redact.
+        return "<InMemorySigner redacted (32 bytes)>"
+
 
 def signer_from_env(env_name: str = "QUANTMESH_HYPERLIQUID_PRIVATE_KEY") -> InMemorySigner:
     """Build an in-memory signer from an env var (the Phase E operator path).
@@ -225,8 +230,10 @@ def signer_from_env(env_name: str = "QUANTMESH_HYPERLIQUID_PRIVATE_KEY") -> InMe
     try:
         key = bytes.fromhex(value)
     except ValueError as error:
+        # Phase E (issue #33): never echo the env value — for a secret it
+        # is itself key material and the message could land in logs.
         raise HyperliquidProtocolError(
-            f"{env_name} must hold a hex private key, not {value!r}"
+            f"{env_name} must hold a 64-hex-character hex private key"
         ) from error
     if len(key) != 32:
         raise HyperliquidProtocolError(
@@ -392,6 +399,11 @@ class SdkExchangeTransport:
         base_url: str | None = None,
         request_timeout_s: float = 10.0,
     ) -> None:
+        if signer is None:
+            raise TypeError(
+                "SdkExchangeTransport requires an injected signer; there is no "
+                "default-key path (Phase E, issue #33)"
+            )
         if base_url is not None and base_url != TESTNET_API_URL:
             raise HyperliquidProtocolError(
                 f"refusing base URL {base_url!r}: only the testnet endpoint "

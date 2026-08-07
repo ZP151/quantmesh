@@ -99,11 +99,24 @@ the operator drill (Phase E).
       `signals_digest` pinned on `StrategyReport` itself; end-to-end
       reports reproduce byte-identically and signal inputs differentiate
       the identity.
-- [ ] Wallet isolation: private-key material is accepted only through an
+- [x] Wallet isolation: private-key material is accepted only through an
       injected in-memory signer or env var; never persisted, logged, or
       reported; adapter construction without a key fails closed; the
       Exchange adapter pins testnet and refuses any non-testnet base URL
-      before the wire.
+      before the wire. — DONE 2026-08-08 (issue #33, Phase E safe work;
+      the operator drill itself is the deferred human gate below):
+      `InMemorySigner` repr/str redact the key bytes (the default
+      dataclass repr would print them into logs and dumps),
+      `signer_from_env` errors never echo the env value (a malformed
+      secret is itself key material), `SdkExchangeTransport(None)` and
+      missing-signer construction fail closed (no default-key path),
+      and the wallet-isolation suite drives a full scripted drill
+      (lost ack → cloid recovery → cancel → fills + positions → clean)
+      with a real 32-byte key, then scans the journal JSONL, the drill
+      script, captured DEBUG logs, and the entire scratch tree for the
+      key's hex form, its bytes repr, and the signer repr — and proves a
+      risk-refusal message carries no key material either; testnet pin +
+      non-testnet refusal were already covered at Phase B construction.
 - [ ] No real-money order path is implemented or enabled.
 
 ## Implementation plan
@@ -154,6 +167,63 @@ testnet order/cancel/reconcile drill; redacted evidence is recorded. This
 is the sole external-state gate for M5 — same posture as M4 Phase E:
 never request or log a real wallet, mainnet key, or real-trading
 confirmation.
+
+**Operator gate (recorded 2026-08-08; deferred — all safe Phase E work
+is complete and committed, and the final M5 PR stays closed until a human
+runs this drill and records redacted evidence):**
+
+1. Fund a Hyperliquid *testnet* wallet via the testnet faucet/bridge
+   (https://app.hyperliquid-testnet.xyz — testnet tokens have no value)
+   and export its private key as 64 hex characters.
+2. In a fresh terminal with shell history disabled, export
+   `QUANTMESH_HYPERLIQUID_PRIVATE_KEY=<64-hex>`. Never write the key into
+   a file, commit, issue, log, or chat; never use a mainnet wallet.
+3. Health + read-only market-data check (no key needed):
+   ```python
+   from quantmesh.hyperliquid.rest import SdkRestTransport
+   from quantmesh.hyperliquid.market_data import HyperliquidLiveProvider
+   from quantmesh.domain.models import Instrument, InstrumentType, Venue
+   info = SdkRestTransport()                      # testnet pinned; mainnet refused
+   meta = info.meta()                             # sanity: venue reachable
+   provider = HyperliquidLiveProvider(info)       # explicit-construction-only
+   btc = Instrument("BTC", venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)
+   bars = provider.fetch_bars(btc, interval="1h", start=..., end=...)  # bounded range mandatory
+   book = provider.fetch_order_books(btc)
+   ```
+   Expect: `meta` returns, bars/book return fresh testnet data, no key
+   material printed anywhere.
+4. Deliberately small order/cancel/reconcile drill (key needed):
+   ```python
+   from datetime import UTC, datetime
+   from quantmesh.hyperliquid.exchange import (
+       HyperliquidExecutionAdapter, SdkExchangeTransport, signer_from_env)
+   from quantmesh.execution.journal import OrderJournal
+   from quantmesh.domain.models import OrderRequest, Side, Instrument, InstrumentType, Venue
+   from quantmesh.domain.orders import OrderStatus
+   from quantmesh.hyperliquid.reconciliation import apply_reconciliation, run_reconciliation
+   from quantmesh.settings import settings
+   transport = SdkExchangeTransport(signer_from_env())
+   journal = OrderJournal(settings.orders_dir)
+   adapter = HyperliquidExecutionAdapter(transport, journal)
+   order = adapter.place(
+       OrderRequest(instrument=Instrument("BTC", venue=Venue.HYPERLIQUID,
+                   instrument_type=InstrumentType.PERPETUAL),
+                   side=Side.SELL, quantity=0.001, limit_price=<mid*1.02>),
+       order_id="op-drill-1", created_at=datetime.now(UTC),
+       client_order_id="<32-hex>")
+   assert order.status is OrderStatus.ACCEPTED
+   adapter.cancel(journal.get("op-drill-1"), at=datetime.now(UTC))
+   report = run_reconciliation(transport.snapshot(), journal)
+   apply_reconciliation(report, journal, transport.snapshot())
+   ```
+   Expect: ACCEPTED then CANCELED, reconciliation clean (matched 1,
+   findings empty). The journal file holds no key material — the
+   wallet-isolation suite proves the invariant; the operator just
+   confirms the drill ran.
+5. Record redacted evidence in this document and close the gate: date,
+   venue response statuses, final reconciliation counts, and a journal
+   excerpt with no key material. Then the M5 final PR opens, #33 closes,
+   and M6 is unblocked.
 
 ## Delivery protocol
 
@@ -223,9 +293,15 @@ record the exact gate, proceed to M6.
   `signals_digest` on the recorded report, None preserves the legacy
   identity); the baseline strategy vocabulary is extended
   (`low_volatility`, `book_imbalance`) rather than opened up.
-- ADR-0007 extension (issue #33 Phase E): private keys enter only via
-  injected signer or env var, in memory, never persisted or logged;
-  wallet-isolation tests are part of the secret-handling suite.
+- ADR-0007 extension (issue #33 Phase E) **recorded 2026-08-08**: private
+  keys enter only via injected signer or env var, in memory, never
+  persisted or logged; the signer's repr redacts the key bytes; env-parse
+  errors never echo the value; construction without a key fails closed;
+  the wallet-isolation suite scans every durable surface (journal, drill
+  script, captured logs, scratch tree) and the refusal path for key
+  material after a full scripted drill; the operator drill is the sole
+  external-state gate — recorded verbatim above and deferred until a
+  human runs it.
 
 ## Work log
 
@@ -357,6 +433,30 @@ record the exact gate, proceed to M6.
   symbols sorted by name — the implementation was right, the test was
   wrong). 755 passed, 3 skipped; ruff check clean; diff clean; submodules
   clean. Checkpoint pushed.
+- 2026-08-08: **Issue #33 (Phase E, wallet isolation + operator drill
+  gate) committed** — two leak vectors fixed in `exchange.py`: the
+  default dataclass repr of `InMemorySigner` printed the key bytes into
+  logs/exceptions/dumps (now a redacted `<InMemorySigner redacted
+  (32 bytes)>`), and `signer_from_env` echoed the malformed env value in
+  its error message (a secret being parsed is itself key material — the
+  message now states the shape without repeating the value);
+  `SdkExchangeTransport(None)` fails closed at construction (no
+  default-key path), matching the Phase B TypeError for a missing
+  signer; `tests/test_hyperliquid_wallet_isolation.py` — the
+  secret-handling suite: signer repr redaction; env-parse error
+  redaction across malformed values; construction-without-key fail-closed;
+  a full scripted drill (lost ack → cloid recovery → cancel → fills +
+  positions → clean, same `wire_exchange_script.jsonl` drive as the
+  Phase B acceptance drill) with a real 32-byte key, after which every
+  durable surface — journal JSONL, the shipped drill script, captured
+  DEBUG logs, and the whole scratch tree — is scanned for the key's hex
+  form, its bytes repr, and the signer repr, and a wired risk-refusal
+  path is scanned too (typed refusal message, empty journal, no wire
+  calls). ADR-0007 Phase E extension recorded; acceptance criterion 5
+  checked off; the operator drill gate is recorded verbatim in the Phase
+  E section and deferred (testnet wallet + faucet + exact steps +
+  redacted evidence requirement). 5 new tests. 760 passed, 3 skipped;
+  ruff check clean; diff clean; submodules clean. Checkpoint pushed.
 
 ## Verification evidence
 
@@ -407,6 +507,24 @@ record the exact gate, proceed to M6.
   report_identity` proves the same setup with different signal inputs
   yields different report ids (and `report_id(..., signals_digest=None)`
   keeps the legacy id).
+- Phase E slice (issue #33), after the #33 commit, 2026-08-08:
+  `pytest -q` → 760 passed, 3 skipped (symlink creation not permitted);
+  `ruff check src tests` → clean; `git diff --check` → clean;
+  `git submodule status` → clean. Isolation drill
+  (`test_full_drill_leaves_no_key_material_on_durable_surfaces`): a
+  full scripted order/cancel/reconcile drill with a real 32-byte key
+  leaves no key hex, key-bytes repr, or signer repr in the journal, the
+  shipped drill script, captured DEBUG logs, or the entire scratch tree;
+  `test_refusal_messages_carry_no_key_material` proves the wired risk
+  gate's typed refusal message is clean and consumes nothing;
+  `test_in_memory_signer_repr_redacts_key_material` and
+  `test_signer_from_env_errors_never_echo_the_value` cover the two
+  fixed leak vectors; `test_exchange_transport_construction_without_a_
+  key_fails_closed` covers the missing-signer and None paths. Operator
+  gate recorded and deferred: exact faucet → env → health/read-only →
+  small order/cancel/reconcile drill → redacted-evidence steps are in
+  the Phase E section; the final M5 PR stays closed until a human runs
+  it.
 
 ## Risks and gates
 
