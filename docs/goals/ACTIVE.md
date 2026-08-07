@@ -3,9 +3,9 @@
 - Status: active
 - Objective: M2 delivered and merged to main; next M3 (data foundation) per `docs/iterations/0005-m3-data-foundation.md`
 - Started: 2026-08-07
-- Last checkpoint: 2026-08-07 (M2 merge gate complete)
+- Last checkpoint: 2026-08-07 (M3 slice #1 — issue #14 — implemented, reviewed, PR open)
 - Roadmap milestone: M2 (`DONE`) → M3 (`NEXT`, plan ready)
-- Active iteration: `docs/iterations/0005-m3-data-foundation.md` (planned 2026-08-07) — issues #14-#19 open, slice #14 (normalized market-data schemas) next
+- Active iteration: `docs/iterations/0005-m3-data-foundation.md` (active 2026-08-07) — issues #14-#19 open, slice #14 (normalized market-data schemas) in progress
 - GitHub issue: https://github.com/ZP151/quantmesh/issues/1 (closed 2026-08-07)
 - Branch: `main` (M2 chain merged; feature branches deleted)
 - Pull request: [merged #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2), [merged #8](https://github.com/ZP151/quantmesh/pull/8) (slice #3), [merged #9](https://github.com/ZP151/quantmesh/pull/9) (slice #4), [merged #10](https://github.com/ZP151/quantmesh/pull/10) (slice #5), [merged #11](https://github.com/ZP151/quantmesh/pull/11) (slice #6)
@@ -26,7 +26,7 @@
 5. [#5](https://github.com/ZP151/quantmesh/issues/5) SQLite event persistence, replay and reconciliation — implemented, reviewed, verified, committed `60415a1`, **merged to main via PR #10 (squash `349eb40`) 2026-08-07**. Issue #5 auto-closed on merge.
 6. [#6](https://github.com/ZP151/quantmesh/issues/6) paper account API observability — implemented, reviewed, verified, committed `6920cc0`, **merged to main via PR #11 (squash `25ca09d`) 2026-08-07**. Issue #6 auto-closed on merge. **M2 slice sequence complete and merged.**
 7. Merge gate — **COMPLETE 2026-08-07**: chain merged to main in order as squash `f68682c`, `ba01eda`, `62e2397`, `349eb40`, `25ca09d`; each remote feature branch deleted after its merge; issues #2-#6 closed on merge, issue #1 closed with evidence; main verified (110 passed, ruff clean) and CI green on main pushes.
-8. **Next: M3** — data foundation and experiment registry (provider registry, normalized bar/order-book/event schemas, Parquet/DuckDB lake, dataset manifests, experiment registry). Plan: `docs/iterations/0005-m3-data-foundation.md`; issues #14-#19 open, start slice #14 (normalized market-data schemas). Note: issue numbers shifted twice — the M2 completion-records PR took #12 and the squash-divergence tracking issue took #13.
+8. **Next: M3** — data foundation and experiment registry (provider registry, normalized bar/order-book/event schemas, Parquet/DuckDB lake, dataset manifests, experiment registry). Plan: `docs/iterations/0005-m3-data-foundation.md`; issues #14-#19 open, slice #14 (normalized market-data schemas) in progress on `feat/14-normalized-market-data-schemas` (implemented, two-axis review clean, PR open; 148 tests). Note: issue numbers shifted twice — the M2 completion-records PR took #12 and the squash-divergence tracking issue took #13.
 
 ## Last verification
 

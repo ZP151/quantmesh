@@ -66,8 +66,8 @@ tracking issue took #13).
 
 - Planner: this record (2026-08-07).
 - Quant researcher: define schema invariants and quality-check semantics
-  (slice #12); define what "reproducible experiment" means in practice
-  (slice #16).
+  (slice #14); define what "reproducible experiment" means in practice
+  (slice #18).
 - Implementer: TDD each slice on its own branch (`feat/14`…`feat/19`),
   one slice per session.
 - Reviewer: two-axis /code-review (standards + spec) on each slice before
@@ -91,7 +91,22 @@ tracking issue took #13).
   credentials, models and audit logs stay under user control (roadmap
   principle 5).
 - The lake, partition layout and normalization contract are durable
-  architecture: record them in a new ADR-0003 during slice #13.
+  architecture: record them in a new ADR-0003 during slice #15.
+- Canonical interval grammar is the compact form `\d+[smhdw]`
+  (`"1m"`, `"1h"`, `"1d"`, …); adapters convert provider-specific
+  interval strings into it (slice #14 decision, reviewed).
+- Market-data timestamps are timezone-aware at the model boundary
+  (stricter than the order-domain models, whose matcher guards at use
+  time): the quality primitives' correctness depends on aware datetimes,
+  and naive data failing at the model boundary is cheaper than failing
+  in the lake (slice #14 decision, reviewed).
+- `DepthLevel` bid/ask identity is positional (which list the level is
+  in), not a field on the level; a redundant side field would invite
+  drift (slice #14 decision, reviewed).
+- Gap detection is grid-relative: `find_gaps` reports missing ticks
+  between observations when every consecutive delta is an exact multiple
+  of the interval; a shifted-but-regular grid is coverage/alignment
+  detection, deferred to the manifest slice (#16).
 - Manifests are versioned JSON beside each dataset, produced by a manifest
   writer and required by the validation gate before a dataset is queryable.
   They carry source, timezone, revision, license and coverage — the
@@ -114,20 +129,55 @@ tracking issue took #13).
   iteration 0003.
 - 2026-08-07: M2 merged to main (PRs #7-#11); plan renumbering applied.
 - 2026-08-07: Issues #14-#19 opened. Renumbered from #13-#18: #13 was taken
-  by the squash-divergence tracking issue (see `docs/13-squash-divergence-recovery`
-  PR); #12 was taken by the M2 completion-records PR. Slice #1 (issue #14)
-  is next.
+  by the squash-divergence tracking issue (PR #20, squash `a617ab6`); #12
+  was taken by the M2 completion-records PR. Slice #1 (issue #14) is next.
+- 2026-08-07: Slice #1 (issue #14) implemented with TDD on
+  `feat/14-normalized-market-data-schemas`:
+  - Vertical slices: models (`Bar` → `OrderBook` → `TradeEvent`) →
+    invariants (OHLC consistency, per-side book ordering, positivity) →
+    interval parsing → monotonicity → duplication → gap detection.
+  - Added `Bar`, `DepthLevel`, `OrderBook`, `TradeEvent` plus
+    `monotonic_violations`, `find_duplicates`, `find_gaps`,
+    `interval_to_timedelta` in `src/quantmesh/domain/market_data.py`;
+    32 tests in `tests/test_market_data.py`; 142 total passing.
+  - /code-review two-axis (standards + spec): zero hard violations. Spec
+    must-fixes resolved: `"0m"` intervals fail closed (ValueError /
+    ValidationError, was ZeroDivisionError in `find_gaps`);
+    `monotonic_violations` rejects `None` with a typed error (legal
+    `TradeEvent.venue_sequence`); `find_gaps` validates timezone
+    awareness on all inputs including single-element series; docstring
+    made honest about grid-relative semantics. Standards judgement
+    calls: interval unit map is the single source for the grammar (no
+    regex/dict drift), `make_book`/`NAIVE_T0` test helpers, misleading
+    error hint reworded. Decisions recorded above.
+  - Verification evidence below.
 
 ## Verification evidence
 
-Pending slices. Per slice: `pytest -q`, `ruff check src tests`,
-`git diff --check`, `git submodule status`; integration evidence for the
-two roadmap exit criteria in slices #14 and #16.
+Per slice: `pytest -q`, `ruff check src tests`, `git diff --check`,
+`git submodule status`; integration evidence for the two roadmap exit
+criteria in slices #15 and #17.
+
+Slice #1 (issue #14, branch `feat/14-normalized-market-data-schemas`, PR
+pending):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 148 passed (1 pre-existing StarletteDeprecationWarning)
+.\.venv\Scripts\ruff.exe check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: /code-review two-axis (standards + spec) — zero hard
+violations; all must-fixes resolved (fail-closed `"0m"` interval,
+`None`-safe monotonicity, tz-validation on all `find_gaps` inputs,
+honest grid-relative docstring); standards judgement calls resolved
+(single-source interval grammar, test helpers, reworded error hint).
 
 ## Risks and follow-ups
 
 - Lake layout and partition conventions are hard to change once datasets
-  exist: ADR-0003 in slice #13 must be reviewed before the first real
+  exist: ADR-0003 in slice #15 must be reviewed before the first real
   ingestion.
 - Provider adapters must never grow credentials: the registry contract
   should make "fixture-only" the default and live/sandbox an explicit,
