@@ -39,6 +39,13 @@ class Provider(ABC):
     venue: Venue
     mode: ProviderMode = ProviderMode.FIXTURE
 
+    def _require_venue(self, instrument: Instrument) -> None:
+        """Fail closed when an instrument belongs to another venue's adapter."""
+        if instrument.venue is not self.venue:
+            raise ValueError(
+                f"{self.venue.value} adapter cannot serve {instrument.venue.value} instruments"
+            )
+
     @abstractmethod
     def fetch_bars(
         self,
@@ -133,13 +140,6 @@ class FixtureProvider(Provider, ABC):
             except (KeyError, IndexError, TypeError) as error:
                 raise ValueError(f"fixture {path} row {index} is malformed: {error}") from error
         return parsed
-
-    def _require_venue(self, instrument: Instrument) -> None:
-        """Fail closed when an instrument belongs to another venue's adapter."""
-        if instrument.venue is not self.venue:
-            raise ValueError(
-                f"{self.venue.value} adapter cannot serve {instrument.venue.value} instruments"
-            )
 
     def _filtered(self, events: list[Bar | OrderBook | TradeEvent], start, end) -> list:
         """Inclusive time filter with fail-closed aware bounds."""

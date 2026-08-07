@@ -43,10 +43,17 @@ the operator drill (Phase E).
 
 ## Acceptance criteria
 
-- [ ] REST/WebSocket market data normalizes into the M3 lake with reconnect
+- [x] REST/WebSocket market data normalizes into the M3 lake with reconnect
       and gap recovery: after a scripted disconnect, candle coverage is
       clean and the order-book rebuilds without missed deltas (fixture
-      drill).
+      drill). — DONE 2026-08-08 (issue #29, Phase A): 75 new tests; the
+      acceptance drill (scripted frames → `DROP` → `RESUME` → REST re-sync)
+      ends with a gap-free merged candle series, a fresh-snapshot book, and
+      a typed trades-gap finding; the fixture provider registers in the M3
+      registry and its bars round-trip through `Lake` gap-free (ADR-0007
+      decision 3: Hyperliquid book updates are full level arrays, so a
+      snapshot rebuild is the honest recovery — there are no deltas to
+      miss).
 - [ ] Testnet execution survives disconnect/reconnect without duplicate
       orders: the journal is the single source of truth for
       client_order_id↔oid; after a reconnect the order state is re-derived
@@ -127,11 +134,18 @@ record the exact gate, proceed to M6.
 
 ## Durable decisions to record when reached
 
-- ADR-0007 (expected, issue #29 Phase A): Hyperliquid is reached only
-  through the pinned SDK submodule; QuantMesh owns reconnect and gap
-  recovery on top of the SDK's WS manager (heartbeat → resubscribe →
-  REST re-sync; l2Book rebuild from snapshot + deltas); candles use the M3
-  lake gates.
+- ADR-0007 **recorded 2026-08-08** (issue #29 Phase A): Hyperliquid is
+  reached only through the pinned SDK submodule (lazy, import-guarded REST
+  `Info` boundary; the SDK's WS manager has no reconnect, so QuantMesh owns
+  the stream); testnet pinned and mainnet refused before the wire; reconnect
+  = heartbeat → resubscribe → REST re-sync (candles merged over the gap with
+  the frame stream winning, the book replaced by a fresh snapshot —
+  Hyperliquid pushes full level arrays, not deltas, so there is nothing to
+  replay; trades are typed gap findings — no public trades REST endpoint);
+  a clean socket close is a disconnect too (backoff, no reconnect storm);
+  the 50 s ping anchors at the connection instant; fail-closed parsing from
+  SDK-source contracts; fixture-first wire-shaped payloads through the real
+  parsers; live provider explicit-construction-only.
 - ADR-0007 extension (issue #30 Phase B): the testnet Exchange adapter is
   explicit-construction-only with an injected in-memory signer; testnet
   pinned and mainnet refused before the wire; the journal is the single
@@ -151,11 +165,39 @@ record the exact gate, proceed to M6.
   #29-#33 created; branch `feat/m5-hyperliquid-testnet-workflow` branched
   from the M4 tip `b6fd2ea` (stacked delivery). M4's final PR and M5's
   final PR both await their operator gates; all safe work proceeds.
+- 2026-08-08: **Issue #29 (Phase A, REST/WS market data with reconnect and
+  gap recovery) committed** — `quantmesh.hyperliquid` package: typed errors;
+  `wire` parsers (candles/l2Book/trades/allMids/funding/meta/spotMeta) with
+  contracts derived from the pinned SDK source and fail-closed shape
+  checks; `SdkRestTransport` (lazy, import-guarded, testnet pinned, mainnet
+  refused at construction) + `ScriptedRestTransport` drill stub; WS layer
+  split into the deterministic `StreamSupervisor` state machine, the
+  scripted `SimulatedStreamTransport`, and the `HyperliquidStream` asyncio
+  pump with exponential backoff (SDK's `WebsocketManager` has no reconnect —
+  ADR-0007); `HyperliquidDataAdapter`/`HyperliquidFixtureProvider`
+  (wire-shaped fixtures through the real parsers, registry-registerable)/
+  `HyperliquidLiveProvider` (explicit-construction-only, bounded ranges,
+  trades fail closed); 6 wire-shape fixtures; settings for the pinned
+  testnet URL and timeouts; ADR-0007 recorded (5 decisions + 3 extension
+  hooks). 75 new tests. Review caught and fixed two real defects: the live
+  pump used `async with` on a raw coroutine (`TypeError` on Python 3.13 —
+  the SDK connection is awaited before entering the context manager, and a
+  clean socket close now marks channels dark and backs off instead of
+  spinning), and `parse_trades_frame` expected the frame envelope while the
+  supervisor hands it the data payload (contract aligned to the data list).
+  600 passed, 3 skipped; ruff clean; diff clean; submodules clean.
+  Checkpoint pushed.
 
 ## Verification evidence
 
-Per slice: `pytest -q`, `ruff check src tests`, `git diff --check`,
-`git submodule status`.
+- Phase A slice (issue #29), after the #29 commit, 2026-08-08:
+  `pytest -q` → 600 passed, 3 skipped (symlink creation not permitted);
+  `ruff check src tests` → clean; `git diff --check` → clean;
+  `git submodule status` → clean. Fixture drill result: scripted frames →
+  `DROP` → `RESUME` → re-sync ends with `find_gaps == []` over the merged
+  candle series, the book rebuilt from a fresh snapshot, resubscribes
+  re-sent on the reconnected socket (8 total), and a typed trades gap
+  finding ("cannot be REST re-synced; sequence resumes at tid 8").
 
 ## Risks and gates
 
