@@ -125,7 +125,19 @@ evidence are complete; CI plus the standing merge authority controls merge.
   (a report that exists is one whose data still exists at the pinned
   revision). VectorBT/Qlib remain optional future accelerators; the
   baselines stay dependency-free so pinning stays honest.
-- ADR: broker-paper reconciliation identity and tolerance policy. — pending Phase D.
+- ADR: broker-paper reconciliation identity and tolerance policy.
+  — recorded as ADR-0006 (2026-08-08, issue #28 Phase D): the journal is
+  the single source of truth for the broker_order_id↔order_id mapping;
+  the remark channel recovers lost acknowledgements and ambiguous
+  mappings fail closed; an explicit `BROKER_STATUS_TO_DOMAIN` table maps
+  broker statuses (TIMEOUT/DISABLED/DELETED/FILL_CANCELLED unmappable →
+  status findings); `ReconcileTolerance` is declared per run with exact
+  (0) simulator defaults; fills are identified by the broker deal_id
+  stamped as `broker_fill_id` and unhealthy deals are revoked-fill
+  findings; adoption applies only to matched/pending clean pairs through
+  the `OrderStateMachine` (divergence/missing/ambiguous refused); the
+  execution adapter is explicit-construction-only with `TrdEnv.SIMULATE`
+  pinned and REAL refused before the wire.
 
 ## Work log
 
@@ -184,8 +196,64 @@ evidence are complete; CI plus the standing merge authority controls merge.
     AttributeError leak).
   - ADR-0004 extended with the market-data payload contract (decisions
     8-13) and its consequences.
-
-## Verification evidence
+- 2026-08-08: Issue #28 (Phase D, simulated execution reconciliation)
+  implemented with TDD on `feat/m4-moomoo-equity-workflow`:
+  - Domain: `OrderEvent`/`OrderEventType` with `reason` for rejections,
+    `Fill(broker_fill_id, fee)` stamped from broker deals,
+    `OrderStateMachine` transitions incl. ACCEPTED and
+    CANCELED/REJECTED with the broker message; `Order.fills` re-derived
+    from FILL events.
+  - `OrderJournal` (ADR-0006 decision 1): JSONL journal under
+    `settings.orders_dir`; single source of truth for the
+    broker_order_id↔order_id mapping; atomic temp+replace appends;
+    duplicate ids refused; corrupt lines fail closed with line
+    attribution; in-place snapshot replacement preserves history; fill
+    round-trip persisted.
+  - `SimulatedFixtureTransport`: deterministic JSONL phase script
+    (`{"now", "orders", "deals", "positions", "lost_acks"}`) — the state
+    at time *t* is the latest phase with `now <= t`, pure declaration,
+    never mutated; `place` assigns B-1, B-2… deterministically and
+    withholds the acknowledgement (`OpenDUnavailableError`) for ids in
+    `lost_acks` — the disconnect gap the remark channel recovers.
+  - Wire models `BrokerOrder`/`BrokerDeal`/`BrokerPosition` with
+    venue-local wall-clock→UTC conversion by market prefix (ADR-0004
+    zones); unknown markets, unparseable times, and unknown sides fail
+    closed at the wire boundary (model validators, not lazy properties).
+  - `MoomooExecutionAdapter` (explicit-construction-only, ADR-0006
+    decision 6): stamps the broker order id, derives LIMIT/MARKET order
+    type, enforces the 64-byte remark limit, requires market metadata
+    fail-closed; `SdkTradeTransport` pins `TrdEnv.SIMULATE` and refuses a
+    non-simulated environment before anything reaches the wire; SDK
+    import guarded in tests via a monkeypatched `__import__`.
+  - Reconciliation service: `ReconcileTolerance` (declared per run,
+    deterministic simulator defaults exact), `run_reconciliation` pairs
+    by broker_order_id or the remark channel (recovered mappings are
+    WARNING and non-blocking), explicit `BROKER_STATUS_TO_DOMAIN` table
+    with unmappable statuses reported as findings, `_is_progress`
+    broker-ahead classification (broker terminal vs live journal is
+    pending progress), position reconciliation with tolerance flags;
+    `apply_reconciliation` adopts only matched/pending clean pairs
+    through the state machine — ACCEPTED re-stamp, fills→FILLED, CANCELED,
+    REJECTED with reason — and refuses divergence/missing/ambiguous/
+    fee-less pairs and FILLED without complete fills; the second run on a
+    matched pair changes nothing.
+  - CLI: `quantmesh-moomoo paper-order` (--fixture, --symbol, --market,
+    --side, --qty, --price, --currency, --client-order-id) and
+    `reconcile` (report-only by default, --apply explicit, --at replay
+    instant defaulting to the script's end, tolerance flags
+    --qty-bps/--price-bps/--fee-abs/--time-skew-s/--position-qty-bps);
+    both commands are Phase E-gated (exit 3) without `--fixture`; a
+    lost-ack paper-order records the unacknowledged order with a warning
+    (exit 0); reconcile exits 1 on blocking findings.
+  - 87 new tests (13 journal + 22 execution + 37 reconciliation + 15
+    CLI); full suite 525 passed, 3 skipped; ruff clean; `git diff --check`
+    clean; submodules pinned. Review: adversarial pass — the missing
+    `Severity.ERROR` in `_compare_positions` (TypeError) fixed; the
+    remark-recovery WARNING no longer classifies a recovered pair as
+    divergent (non-blocking by kind); ACCEPTED became adoptable so a
+    broker-ahead pair converges; the smoke drill converges lost-ack →
+    remark recovery → adoption → matched with 0 findings.
+  - ADR-0006 recorded (6 decisions).
 
 Per slice: `pytest -q`, `ruff check src tests`, `git diff --check`,
 `git submodule status`.
@@ -257,7 +325,28 @@ SDK versions.
     cross-venue symbol guard found in review (the backtester keys bars by
     symbol, so a symbol on two venues would silently overwrite — now
     refused with a regression test). Next: #28 (Phase D, simulated
-    execution reconciliation).
+    execution reconciliation) — implemented and verified below; next:
+    Phase E gate.
+
+Issue #28 (Phase D, committed on `feat/m4-moomoo-equity-workflow`):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 525 passed, 3 skipped (symlink creation not permitted), 1 warning
+.\.venv\Scripts\python.exe -m ruff check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: self-review adversarial pass — the smoke drill is the
+acceptance criterion: a lost acknowledgement places an order the
+journal records unacknowledged; the remark channel recovers the
+mapping (WARNING, non-blocking); `--apply` adopts ACCEPTED and
+re-stamps the broker id; the fill (D-1 @ fee 0.5) adopts to FILLED;
+the final run reports 1 matched, 0 findings. Classification semantics:
+recovered mappings are non-blocking, broker-ahead is pending progress,
+and only terminal agreement on both sides is "matched". The live
+simulated account stays behind the Phase E gate; `paper-order` and
+`reconcile` refuse any invocation without `--fixture` (exit 3).
 
 ## Risks and gates
 

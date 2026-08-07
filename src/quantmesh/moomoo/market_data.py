@@ -47,6 +47,15 @@ _REQUIRED_TICKER_ROW_KEYS = ("time", "price", "volume")
 _REQUIRED_QUOTE_ROW_KEYS = ("data_date", "last_price")
 
 
+def market_zone(market: object) -> ZoneInfo:
+    """IANA zone for a bare market prefix (``US``, ``HK``, ``CN``)."""
+    if not isinstance(market, str) or market not in _MARKET_TZ:
+        raise ValueError(
+            f"market {market!r} (supported: {', '.join(sorted(_MARKET_TZ))})"
+        )
+    return _MARKET_TZ[market]
+
+
 def market_tz(code: object) -> ZoneInfo:
     """IANA zone for a market-qualified code; unknown markets fail closed."""
     market, _ = _split_code(code)
