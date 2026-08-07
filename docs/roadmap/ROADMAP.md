@@ -215,5 +215,5 @@ Exit criteria:
 
 ## Current next slice
 
-Implement M2 as a sequence of small issues: domain state machine, deterministic matcher, portfolio accounting, persistence/replay, then API observability. Record each slice in `docs/iterations/INDEX.md` and link its GitHub issue and PR.
+M3 (data foundation and experiment registry) is planned in `docs/iterations/0005-m3-data-foundation.md` as a six-slice chain: normalized market-data schemas, Parquet/DuckDB lake with quality checks, dataset manifests, provider registry (fixture-only adapters), experiment registry, then scheduled ingestion and gap detection. M2's slice chain (PRs #7-#11) is review-complete and awaits merge approval.
 
