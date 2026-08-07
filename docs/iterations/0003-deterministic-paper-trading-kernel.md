@@ -2,15 +2,15 @@
 
 - Status: completed
 - Started: 2026-08-07
-- Completed: 2026-08-07 (work complete; PRs #7-#11 remain draft pending merge review)
+- Completed: 2026-08-07 (work complete; PRs #7-#11 merged to main)
 - Owner: unassigned agent team
-- GitHub issue: [#1](https://github.com/ZP151/quantmesh/issues/1)
-- Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2, issue #2), [draft #8](https://github.com/ZP151/quantmesh/pull/8) (slice #3, issue #3), [draft #9](https://github.com/ZP151/quantmesh/pull/9) (slice #4, issue #4), [draft #10](https://github.com/ZP151/quantmesh/pull/10) (slice #5, issue #5), [draft #11](https://github.com/ZP151/quantmesh/pull/11) (slice #6, issue #6)
+- GitHub issue: [#1](https://github.com/ZP151/quantmesh/issues/1) (closed 2026-08-07)
+- Pull request: [merged #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2, issue #2), [merged #8](https://github.com/ZP151/quantmesh/pull/8) (slice #3, issue #3), [merged #9](https://github.com/ZP151/quantmesh/pull/9) (slice #4, issue #4), [merged #10](https://github.com/ZP151/quantmesh/pull/10) (slice #5, issue #5), [merged #11](https://github.com/ZP151/quantmesh/pull/11) (slice #6, issue #6)
 - Roadmap milestone: M2
 
 ## Outcome
 
-Run a complete order lifecycle locally with reproducible cash, positions, fills and P&L before any external execution is enabled. Achieved: order state machine (#2), deterministic matcher (#3), portfolio accounting with fees/slippage/risk limits (#4), SQLite event persistence with replay and reconciliation (#5), read-only observability API (#6) — 110 tests, all M2 deliverables implemented on branches `feat/2`…`feat/6` with draft PRs #7-#11. Merge of the slice chain into main is the remaining gate.
+Run a complete order lifecycle locally with reproducible cash, positions, fills and P&L before any external execution is enabled. Achieved: order state machine (#2), deterministic matcher (#3), portfolio accounting with fees/slippage/risk limits (#4), SQLite event persistence with replay and reconciliation (#5), read-only observability API (#6) — 110 tests. All M2 deliverables implemented on branches `feat/2`…`feat/6` with PRs #7-#11 and **merged to main 2026-08-07** (squashes `f68682c`, `ba01eda`, `62e2397`, `349eb40`, `25ca09d`). Issues #2-#6 auto-closed on their PRs' merges; issue #1 closed with evidence.
 
 ## Scope
 
@@ -94,6 +94,7 @@ Run a complete order lifecycle locally with reproducible cash, positions, fills 
   - 14 tests in `tests/test_api.py`; 110 total passing.
   - /code-review (standards + spec axes): zero must-fix code defects. Should-fixes resolved: `/pnl` names unmarked positions in `missing_marks` so excluded-from-equity value is never silent (and `/positions` reports `unrealized_pnl: null`); per-request snapshot of marks removes the check-then-index race; `/kill-switch` and `/account` share the `kill_switch` field name; HTTP-level POST-405 test pins read-only enforcement; rejected-order serialization (reason + null fill fields) covered.
   - Verification evidence below.
+- 2026-08-07: Merge gate executed (approved): PRs #7-#11 squash-merged to main in order as `f68682c`, `ba01eda`, `62e2397`, `349eb40`, `25ca09d`. Each subsequent merge required merging main into its branch first to resolve stacked conflicts (shared docs always resolved to the branch-side superset; add/add on `matcher.py`/`accounting.py`/`test_accounting.py` during the #9/#10 merges resolved the same way); every merged tree verified with pytest/ruff/`git diff --check` before its squash (59→78→96→110 passed). Remote feature branches deleted after each successful merge. Issues #2-#6 auto-closed on merge; issue #1 closed with evidence. Main verified post-merge: 110 passed, ruff clean, CI green on main pushes.
 
 ## Verification evidence
 

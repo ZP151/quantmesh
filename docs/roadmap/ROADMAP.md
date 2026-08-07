@@ -47,7 +47,7 @@ Exit criteria:
 
 ## Product milestones
 
-### M2 — Deterministic paper-trading kernel (`ACTIVE`)
+### M2 — Deterministic paper-trading kernel (`DONE`, merged to main 2026-08-07)
 
 Outcome: run a complete order lifecycle locally with reproducible cash, positions, fills and P&L.
 
@@ -215,5 +215,5 @@ Exit criteria:
 
 ## Current next slice
 
-M3 (data foundation and experiment registry) is planned in `docs/iterations/0005-m3-data-foundation.md` as a six-slice chain: normalized market-data schemas, Parquet/DuckDB lake with quality checks, dataset manifests, provider registry (fixture-only adapters), experiment registry, then scheduled ingestion and gap detection. M2's slice chain (PRs #7-#11) is review-complete and awaits merge approval.
+M3 (data foundation and experiment registry) is planned in `docs/iterations/0005-m3-data-foundation.md` as a six-slice chain: normalized market-data schemas, Parquet/DuckDB lake with quality checks, dataset manifests, provider registry (fixture-only adapters), experiment registry, then scheduled ingestion and gap detection. M2's slice chain (PRs #7-#11) merged to main 2026-08-07; start M3 with issue #12 (normalized market-data schemas).
 
