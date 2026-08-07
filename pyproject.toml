@@ -16,6 +16,7 @@ dependencies = [
   "pandas>=2.2,<3",
   "pydantic>=2.9,<3",
   "pydantic-settings>=2.6,<3",
+  "tzdata>=2024.1",  # zoneinfo on Windows reads the IANA database from tzdata
   "uvicorn[standard]>=0.32,<1",
 ]
 

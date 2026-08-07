@@ -45,6 +45,52 @@ password QuantMesh must never see.
    missing or mistyped keys are `OpenDProtocolError`; extra vendor keys are
    tolerated (the vendored SDK grows fields).
 
+## Extension (2026-08-08, issue #26 Phase B): market-data payload contract
+
+Phase B adds historical klines, real-time tickers and stock quotes through
+the same boundary. The rules above are unchanged; this extension fixes the
+wire contract between transport and adapter.
+
+8. **Pandas stops at the transport.** The vendored SDK returns DataFrames;
+   `SdkTransport` converts them to plain dict payloads, so no DataFrame
+   (and no SDK type) appears anywhere else in QuantMesh. The wire contract
+   is: a top-level mapping with ``code`` (market-qualified, e.g.
+   ``"US.AAPL"``) and ``rows`` (a list of row mappings), plus contract keys
+   per request. Extra vendor keys are tolerated; missing or mistyped keys
+   fail closed with ``OpenDProtocolError``.
+9. **Kline payload** carries ``interval`` (canonical, e.g. ``"1d"``, ``"5m"``)
+   and ``autype`` (``"None"`` raw / ``"qfq"`` / ``"hfq"``); each row has
+   ``time_key``, ``open``, ``high``, ``low``, ``close``, ``volume``.
+   ``SdkTransport`` maps the canonical interval to the SDK ``KLType``
+   (1m/3m/5m/15m/30m/60m/1d/1w); month/quarter/year klines have no
+   canonical representation and are refused.
+10. **Ticker payload** rows carry ``time``, ``price``, ``volume`` and
+    optionally ``sequence`` and ``direction`` (``"BUY"``/``"SELL"``/
+    ``"NEUTRAL"``/``"N/A"``); quote payload rows carry ``data_date``,
+    ``data_time`` and ``last_price`` (plus optional volume/turnover/OHLC).
+    Quote mapping targets the canonical ``Quote`` (last/volume; bid/ask are
+    not in the stock-quote payload and stay ``None``).
+11. **Venue-local wall-clock strings are provider metadata.** The SDK
+    reports times in the venue's local zone (US = Eastern, HK/CN = Beijing)
+    with no zone marker. The adapter converts them to UTC via the market
+    prefix of the payload code: ``US`` → ``America/New_York``, ``HK`` →
+    ``Asia/Hong_Kong``, ``CN`` → ``Asia/Shanghai`` (DST-aware via
+    ``zoneinfo``/``tzdata``). An unknown market prefix, an unparseable time,
+    or a payload code whose symbol does not match the requested instrument
+    is an ``OpenDProtocolError`` — never a guessed timestamp.
+12. **Raw prices are the default.** ``autype`` defaults to ``"None"``
+    (unadjusted). An adjustment type is explicit at the request; the
+    payload echoes it back and the adapter validates it, so bars from an
+    unknown adjustment are never trusted.
+13. **The OpenD ingestion path is explicit construction only.**
+    ``MoomooOpenDProvider`` (``ProviderMode.LIVE``) wraps client + adapter
+    into the canonical ``Provider`` surface (bars, trades) and is
+    constructed by hand with an injected transport — tests inject wire
+    fixtures, an operator injects ``SdkTransport``. The fixture-only
+    ``ProviderRegistry`` still refuses it, so no default or registered
+    path can reach OpenD. The lake persists bars; trades and quotes are
+    canonical models without a lake path in Phase B.
+
 ## Consequences
 
 - Unit tests run with neither OpenD nor the SDK (26 Phase A tests).
@@ -55,3 +101,9 @@ password QuantMesh must never see.
 - Future Moomoo capabilities (market data, simulated orders) extend the
   transport protocol and client methods without touching the boundary rules
   above.
+- The market-data transport methods default to ``NotImplementedError`` in
+  the protocol, so a probe-only transport is still a valid
+  ``OpenDTransport``; the client surfaces the failure at call time.
+- Time-format drift (the SDK's venue-local strings) is the likeliest
+  Phase E adjustment; the adapter's parse formats are centralized in one
+  module.

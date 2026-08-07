@@ -92,7 +92,14 @@ evidence are complete; CI plus the standing merge authority controls merge.
 ## Durable decisions to record when reached
 
 - ADR: OpenD adapter lifecycle, error classification, and credential boundary.
-  — recorded as ADR-0004 (2026-08-08).
+  — recorded as ADR-0004 (2026-08-08), extended 2026-08-08 with the
+  market-data payload contract (issue #26 Phase B): pandas stops at the
+  transport; kline/ticker/quote payload contracts; venue-local wall-clock
+  times converted to UTC via market-prefix timezone metadata (US
+  America/New_York, HK Asia/Hong_Kong, CN Asia/Shanghai — DST-aware via
+  zoneinfo/tzdata); raw ``"None"`` autype default; `MoomooOpenDProvider`
+  is explicit-construction-only (LIVE mode, registry refuses it); lake
+  persists bars, trades/quotes are canonical models only.
 - ADR: walk-forward/report schema and cost-model ownership. — pending Phase C.
 - ADR: broker-paper reconciliation identity and tolerance policy. — pending Phase D.
 
@@ -119,6 +126,40 @@ evidence are complete; CI plus the standing merge authority controls merge.
     SDK; CLI client construction decoupled for injection; malformed payload
     fail-closed with extra vendor keys tolerated.
   - ADR-0004 recorded.
+- 2026-08-08: Issue #26 (Phase B, market-data adapter) implemented with
+  TDD on `feat/m4-moomoo-equity-workflow`:
+  - Wire-shape contract derived from the vendored `py-moomoo-api` source
+    (not docs): `request_history_kline` always returns a 3-tuple
+    `(ret, table, page_req_key)` on every path; `get_stock_quote` /
+    `get_rt_ticker` return 2-tuples; venue-local wall-clock time strings
+    (US Eastern, HK/CN Beijing) with no zone marker; `AuType` keys
+    `"None"/"qfq"/"hfq"`; error strings carried in the data slot when
+    `ret != 0`.
+  - `SdkTransport` extended with `history_kline` / `rt_ticker` /
+    `stock_quote`, each returning pandas-free dict payloads (pandas stops
+    at the transport, ADR-0004 extension decisions 8-13) with per-request
+    context open/close and typed classification of `ret != 0` failures.
+  - `MoomooDataAdapter`: pure payload→model mapping, fail closed
+    (missing/mistyped keys, unknown market/autype/direction, unparseable
+    times, code-symbol mismatch, multi-row quotes), venue-local times
+    converted to aware UTC via market-prefix IANA zones (zoneinfo +
+    tzdata, declared core dependency for Windows).
+  - `MoomooOpenDProvider`: explicit-construction-only LIVE provider
+    (registry refuses, tested); venue-local date bounds with UTC range
+    filtering; interval/autype echo cross-checks; order books out of
+    scope (Phase D); fixture payloads through the full M3 lake path
+    (write → ManifestWriter → freshness gate → read back → clean
+    coverage) for US/HK daily and 5m intraday.
+  - 92 Moomoo tests; full suite 389 passed, 3 skipped; ruff clean;
+    `git diff --check` clean; submodules pinned. Review fixes: the lake
+    round trip is asserted on the canonical field surface (metadata is
+    request-side identity, ADR-0003 boundary, pinned by test) instead of
+    full Bar equality; `_assert_same_series` currency comparison fixed
+    to compare the expected set, not the ternary; 12 long lines reflowed;
+    provider fail-closed on a non-mapping transport payload (no untyped
+    AttributeError leak).
+  - ADR-0004 extended with the market-data payload contract (decisions
+    8-13) and its consequences.
 
 ## Verification evidence
 
@@ -140,6 +181,24 @@ reportable state (capabilities) rather than a raised probe failure,
 construction decoupled for injection, malformed probe payloads fail
 closed while extra vendor keys are tolerated. The live SDK path stays
 gated on Phase E operator validation.
+
+Issue #26 (Phase B, committed on `feat/m4-moomoo-equity-workflow`):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 389 passed, 3 skipped (symlink creation not permitted), 1 warning
+.\.venv\Scripts\python.exe -m ruff check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: self-review adversarial pass — wire arities verified
+against the vendored SDK source (3-tuple kline on every path, 2-tuple
+quote/ticker; `dict_data` appears only in the unused `get_cur_kline`
+surface), lake round trip pinned to the ADR-0003 field surface,
+provider fail-closed on non-mapping transport payloads, SdkTransport
+error-string classification path exercised by unit tests without the
+SDK. Likely Phase E adjustment (ADR-0004): time-format drift between
+SDK versions.
 
 ## Risks and gates
 
