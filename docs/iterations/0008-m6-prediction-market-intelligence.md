@@ -5,7 +5,7 @@
 - Completed:
 - Owner: Claude (solo delivery lane)
 - GitHub issue: #34-#37 (Phases A-D)
-- Pull request: pending (opened after acceptance criteria complete; stacks on the M5 PR)
+- Pull request: [#38](https://github.com/ZP151/quantmesh/pull/38) (opened 2026-08-08 after acceptance criteria complete; base = `feat/m5-hyperliquid-testnet-workflow`, stacked — merges after the M5 PR, which awaits the M5 operator drill)
 - Roadmap milestone: M6 (`LATER` → `ACTIVE`)
 
 ## Outcome
