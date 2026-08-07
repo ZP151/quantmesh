@@ -323,7 +323,15 @@ tracking issue took #13).
     `rewritten=<the job's series>` so day rewrites stay legal,
     `coverage_gaps` documents its same-count/same-range blind spot,
     ADR-0003 records the monotonic rule, and 6 manifest + 3 lake
-    regression tests added (297 total passing).
+    regression tests added (297 total passing). CI then caught two more
+    gaps: `duckdb` was only in the research extra while the lake
+    hard-imports it (promoted to core dependencies — CI installs
+    `.[dev]`), and `_reject_symlinks` only walked a path's parents, so a
+    symlink at the terminal path itself (the symbol directory
+    `read_bars` hands over, or a shard file) passed through — the
+    terminal path is now checked too. Both surfaced only on Linux CI:
+    the lake symlink tests skip where symlink creation is not permitted,
+    and Windows runners skip them.
 
 Per slice: `pytest -q`, `ruff check src tests`, `git diff --check`,
 `git submodule status`; integration evidence for the two roadmap exit

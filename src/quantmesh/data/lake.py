@@ -59,12 +59,16 @@ def _reject_symlinks(root: Path, path: Path) -> None:
     The manifest scan already rejects links at every layout level; the
     raw ``Lake`` read/write surface must too — a linked interval, venue
     or symbol directory could otherwise point reads at bytes outside the
-    root or land writes outside it.
+    root or land writes outside it. The terminal path itself is checked
+    as well as its parents: ``read_bars`` hands over the symbol
+    directory, and a shard file may itself be a link.
     """
+    if path.is_symlink():
+        raise ValueError(f"symlink in lake layout is not allowed: {path}")
     for parent in path.parents:
         if parent == root:
             break
-        if parent.exists() and parent.is_symlink():
+        if parent.is_symlink():
             raise ValueError(f"symlink in lake layout is not allowed: {parent}")
 
 
