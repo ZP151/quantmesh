@@ -79,7 +79,7 @@ and event-risk constraints.
       benchmark, ablation and out-of-sample evidence; every window
       trains on its own train slice only (no-lookahead proven by test);
       runs are deterministic on pinned fixtures. — Phase B (issue #40).
-3. [ ] Ensemble weights derive from validation windows only (proven by
+3. [x] Ensemble weights derive from validation windows only (proven by
       test); ensemble predictions carry calibrated uncertainty, with
       calibration evidence computed under the M6 Brier/reliability
       discipline. — Phase C (issue #41).
@@ -240,10 +240,17 @@ operator drill).
   carry benchmark + ablation + OOS evidence; determinism is pinned at
   fixed versions/seeds with cross-platform float differences documented
   (identity never includes weights).
-- ADR-0009 extension **to record** (issue #41 Phase C): ensemble weights
-  derive from validation windows only; epistemic uncertainty is the
-  between-member disagreement; calibration uses the M6 Brier/reliability
-  discipline.
+- ADR-0009 extension **recorded** (issue #41 Phase C): ensemble weights
+  derive from validation windows only (the flip test proves it);
+  epistemic uncertainty is the between-member disagreement (identical
+  members → 0.0); calibration uses the M6 Brier/reliability discipline;
+  membership is classifier-only (hmm/garch/linear refused — calibration
+  needs probability-vs-outcome pairs); member featuresets resolve
+  through the Phase A registry and must align on the same bar grid per
+  symbol; the ensemble report registry rides the M5 stack with the
+  lake-pin gate at record; the flip writes perturbed bars under the
+  same dataset name so all setup ids stay identical (the column-order
+  confound).
 - ADR-0009 extension **to record** (issue #42 Phase D): portfolio
   construction is risk-budget via scipy SLSQP with a documented
   constraint surface (venue, asset-class, event-risk, leverage); shocks
@@ -320,6 +327,31 @@ operator drill).
   ablations and universe coverage validate before any work. 45
   pipeline tests green; affected research suites (models/baselines/
   reports/features) 128 passed.
+- 2026-08-08 (issue #41, Phase C): implemented `ensemble.py` (~800
+  lines) — `EnsembleSpec` (members ≥ 2, classifier-only,
+  inverse_error|nnls), per-window validation holdouts between fit and
+  test rows, weight functions (inverse error with zero-error
+  domination; scipy nnls with n_obs ≥ n_members), disagreement =
+  weighted variance (identical members → 0.0), M6 `brier_by_bin`
+  calibration pooling across windows, `EnsembleReport` on the M5 stack
+  (setup-only id + self-consistency validator, byte-stable artifacts,
+  JSONL registry with duplicate refusal → lake-pin gate → atomic
+  append). Probing caught two subtle defects before they could ship:
+  the pipeline codecs return 1-D positive-class probabilities (no
+  `[:, 1]`), and the flip test's original design — registering the
+  perturbed lake under a different dataset name — changed the sorted
+  featureset order (feature ids encode the dataset name), so run B was
+  a different ensemble entirely: the instrumented probe showed 6
+  distinct fit-input digests per run with identical y digests, proving
+  the weight divergence was a setup difference, not lookahead. The
+  flip now writes perturbed bars under the same dataset name in a
+  separate lake root, so all setup ids (featureset/member/spec/report)
+  stay identical and only the test-segment bytes differ; the test
+  additionally asserts `report_a.id == report_b.id`. The dangling-pin
+  registry test probes with a hand-built second report (the recorded
+  report's duplicate refusal fires before the pin check) and asserts
+  the ledger is byte-unchanged after the refusal. 39 ensemble tests
+  green; full suite 1125 passed / 3 skipped; ruff clean.
 
 ## Verification evidence
 
@@ -359,7 +391,28 @@ operator drill).
   the cross-root acceptance drill with byte-identical artifacts and
   equal ids. Affected suites (models/baselines/reports/features): 128
   passed.
-- Phase C slice (issue #41): pending.
+- Phase C slice (issue #41): `tests/test_research_ensemble.py` — 39
+  passed. Weight functions: inverse-error arithmetic ([0.1, 0.3] →
+  [0.75, 0.25]), zero-error domination, refusals (non-finite,
+  negative, all-zero, empty); nnls known case (y == a member column →
+  [0.0, 1.0]), sum-to-one on seeded RNG, too-few-observations and
+  non-finite refusals, `PipelineUnavailableError` under faked imports.
+  Predict: weighted mean + weighted-variance arithmetic, non-negative
+  and sum-to-one refusals, one-prediction-per-member guard. Spec: id
+  changes with every setup field, member-order invariance, classifier-
+  only kinds refused, duplicates refused, min-2 enforced, wrong id
+  refused. Report: 3 windows, n_test [30, 30, 27] (final window drops
+  the newest unresolved bar per symbol — M6 precedent), n_validation
+  15/window, weights sum to 1, nnls report, the flip test (identical
+  weights across the test-bytes flip, `report_a.id == report_b.id`,
+  window 0 byte-identical, flipped windows' Briers and calibration
+  differ), identical members → [0.5, 0.5] weights and 0.0
+  disagreement, report-id setup sensitivity, train-window and
+  warm-up guards, unrecorded-featureset refusal, grid-alignment
+  refusal, calibration discipline (half-open bins, empty-bin None),
+  registry duplicate/dangling-pin/fail-closed/root-not-dir, and the
+  cross-root acceptance drill with byte-identical artifacts. Full
+  suite: 1125 passed, 3 skipped; ruff clean; `git diff --check` clean.
 - Phase D slice (issue #42): pending.
 - Phase E slice (issue #43): pending.
 
@@ -383,6 +436,16 @@ operator drill).
 - Portfolio optimizer sensitivity — scipy SLSQP with documented
   starting points; constraints re-verified by projection after
   optimization; infeasible systems fail closed.
+- Feature ids encode the dataset name — a featureset's sorted member
+  order (and thus per-symbol matrix column layout) changes when the
+  same features are registered against a differently named dataset.
+  The ensemble flip test is pinned to same-name flips; anything that
+  re-registers features under a new dataset name must rebuild the
+  featureset (a different set is a different setup by design).
+- nnls weight conditioning — requires validation observations ≥ member
+  count; below that budget the method refuses (fail-closed) and the
+  inverse-error method remains the no-scipy default; scipy itself is
+  lazy import-guarded with a typed `PipelineUnavailableError`.
 - Data drift between fixture universes and live research — fixture
   universes are the pinned contract; drift detection (Phase E) exists
   precisely to flag the divergence when live data arrives (M8/M10).

@@ -161,6 +161,59 @@ pinned by test:
   Evidence ids ride on the report as results (`evidence` field), so
   the evidence bundle is auditable but outside identity.
 
+### 8. Ensemble weights come from validation slices only; uncertainty is disagreement; reports ride the M6 stack (Phase C extension, issue #41)
+
+`quantmesh.research.ensemble` combines registered classifier members
+(logistic, lightgbm) into an `EnsembleSpec` whose id pins members +
+weight method + validation budget — setup only, never outcomes. The
+Phase C contract, pinned by test:
+
+- **No lookahead is structural for weights.** Each window holds out a
+  validation slice between fit rows and test rows
+  (`fit_rows = [train_start, test_start - 1 - validation_bars)`,
+  `validation_rows = [test_start - 1 - validation_bars, test_start - 1)`)
+  and derives the window's weights from validation Brier errors only:
+  inverse-error normalization, or scipy `nnls` when the calibration
+  budget outnumbers the members. The acceptance proof is the flip
+  test: scaling only the final test segment's closes (so feature and
+  outcome bytes change while every validation slice stays untouched)
+  must leave every window's weights identical — and the report id
+  identical, because ids pin setup only. The flip writes the
+  perturbed bars under the *same dataset name* in a separate lake
+  root, so every setup id (featureset, member, spec, report) stays
+  identical and only the evaluation bytes differ; a flip that changed
+  the dataset name would reorder the featureset's sorted ids and
+  silently construct a different ensemble (the column-order
+  confound).
+- **Membership is classifier-only, alignment is grid-exact.** HMM,
+  GARCH and linear are refused at spec validation — calibration needs
+  probability-vs-outcome pairs, so only `predict_proba` codecs
+  qualify. Member featuresets resolve through the Phase A registry
+  (`get_set` + `get_spec`, dangling sets refused) and must cover the
+  whole universe; per symbol, every member's matrix must share the
+  same index (a different warm-up length is refused with a message
+  naming the symbol). Member fits pool per-symbol blocks positionally
+  in sorted-symbol order (pd.concat would union columns into NaN
+  holes) — the Phase B idiom.
+- **Uncertainty is disagreement.** The per-window epistemic estimate
+  is the weighted variance of member predictions around the weighted
+  mean — identical members produce exactly 0.0 by construction;
+  divergent members produce positive disagreement. It is a result,
+  never identity.
+- **Calibration reuses the M6 discipline.** Out-of-sample
+  probability-vs-outcome pairs pool across windows into `brier_by_bin`
+  (half-open bins, empty-bin `None`); an empty pool fails closed.
+  The newest unresolved bar drops per symbol per window (M6
+  precedent), so the final window's `n_test_observations` is one less
+  per symbol.
+- **Reports ride the M5/M6 stack.** `EnsembleReport` (id over sorted
+  setup, self-consistency validator), byte-stable artifacts
+  (report.json excluding `created_at`, windows.csv, calibration.csv),
+  and an append-only JSONL registry whose record path is: duplicate
+  refusal first, then the lake-pin gate (`resolve_pin`, "now revision
+  N" refusal), then mkstemp+os.replace append. Reads fail closed with
+  line attribution.
+
 ## Consequences
 
 - Registry reads are O(records) linear scans over small JSONL files
@@ -192,3 +245,13 @@ pinned by test:
   documented at the codec; weakly separated regimes degrade the
   signal rather than fail, which is a documented limitation, not a
   silent guarantee (recorded as a Phase D risk in iteration 0009).
+- The ensemble adds scipy to the research extra surface for `nnls`
+  weighting, loaded lazily with the same `PipelineUnavailableError`
+  contract (decision 6); the inverse-error method works without it.
+  Weight derivation is O(members × validation bars) per window — the
+  validation holdout buys soundness at a small per-window cost the
+  Phase B benchmarks already absorb.
+- Phase C's registry discipline extends the Phase B consequence:
+  every recorded ensemble report dangles the moment its lake dataset
+  advances to a new revision — the intended audit trail, with
+  `resolve_pin` refusing any new report against the old pin.
