@@ -77,7 +77,7 @@ Out of scope (recorded, not deferred silently):
       pipeline (analyst → critic gate → risk → portfolio); a critic
       flag blocks a claim downstream; no role output can carry
       order-shaped data (proven by test). — Phase B (issue #46).
-3. [ ] Retrieval over documents, experiment records and audit logs
+3. [x] Retrieval over documents, experiment records and audit logs
       returns passages with resolvable citations; a citation that
       cannot be resolved to a source fails closed. — Phase C (issue
       #47).
@@ -341,10 +341,16 @@ the M5 operator drill).
   digests + context digests, never model outputs; the roles module
   imports no execution surface. Decision 2 written into ADR-0010 on
   2026-08-08.
-- ADR-0010 extension **to record** (Phase C): retrieval is
-  lexical-first (deterministic, dependency-free); citations are
-  resolvable identities that fail closed; embedding reranking is a
-  documented lazy extension, never a required path.
+- ADR-0010 **recorded** (Phase C, issue #47, decision 3): retrieval is
+  lexical-first (deterministic casefold/IDF ranker, pure python —
+  embedding reranking is a documented lazy extension behind the
+  `RetrievalSource` protocol, never a required path); one protocol,
+  three sources (document index, experiment registry, order journal as
+  the read-only audit surface); citations are resolvable identities
+  that fail closed (`CitationResolutionError` on unknown kind, missing
+  record, or out-of-range span); documents are ingested on the
+  ADR-0006 manifest discipline under `settings.documents_dir`. Decision
+  3 written into ADR-0010 on 2026-08-08.
 - ADR-0010 extension **to record** (Phase D): the tool registry
   contains no execution surface (structural, proven by test);
   prompt data is redacted before the wire with a report; decision
@@ -433,6 +439,35 @@ the M5 operator drill).
   charters + 10 schemas + 4 no-order-shape incl. the
   no-execution-import source scan + 5 gate + 16 pipeline); ruff clean
   across src and tests.
+- 2026-08-08 (issue #47, Phase C): implemented `ai/retrieval.py` —
+  `Document` (kind literal filing|news|note, tz-aware ingested_at,
+  `extra="forbid"`) and `DocumentIndex` (JSONL manifest under the new
+  `settings.documents_dir` on the ADR-0006 discipline: atomic
+  temp+replace appends, fail-closed reads with line attribution,
+  duplicate ids refused at read and before ingestion reads the file,
+  root-not-dir refusal, ingestion fail-closed on unreadable/non-UTF8/
+  empty files and unknown kinds); the deterministic lexical ranker
+  (`tokenize` casefold `\w+` tokens, smoothed-IDF weights, sum over
+  query-token overlap with query dedup and zero-overlap exclusion,
+  ties by index — byte-deterministic, pure python, no new dependency);
+  `Citation{source_kind literal, source_id, span}`/`RetrievedPassage`/
+  `ResolvedSource` and the `RetrievalSource` protocol with three
+  registered sources — `DocumentSource`, `ExperimentSource`
+  (M3 registry records as canonical `model_dump_json()` text, hand-
+  written fixture JSONL in tests since `record()` runs the lake pin
+  gate), `AuditSource` (M2 `OrderJournal` as a read-only data surface);
+  `resolve_citation` fail-closed (`CitationResolutionError` on unknown
+  kind — defense in depth past the literal — missing record, or
+  out-of-range span). `errors.py` gained `RetrievalError`/
+  `CitationResolutionError`; `ai/__init__.py` exports the full
+  retrieval surface. Test-side catch: `\w+` treats `btc_returns` as one
+  token (underscore joins), so the experiment search fixture pins the
+  underscored dataset name as the query. 52 retrieval tests green
+  (tokenizer/IDF/ranker pinned arithmetic incl. the 2.9808 vs 1.2877
+  doc0/doc1 pin, citation/passage/document model refusals, manifest
+  discipline with line attribution, per-source search/resolve over
+  fixture documents/experiments/orders, every citation-refusal path);
+  ruff clean across src and tests.
 
 ## Verification evidence
 
@@ -497,7 +532,35 @@ the M5 operator drill).
   `extra="ignore"` (order-shaped JSON validated as an empty report) —
   all role schemas now `extra="forbid"`. ADR-0010 decision 2 recorded;
   acceptance criterion 2 checked off.
-- Phase C slice (issue #47): pending.
+- Phase C slice (issue #47): `tests/test_ai_retrieval.py` — 52 passed
+  in ~1.4s. Tokenizer/ranker pinned arithmetic: `idf_weights` on
+  `["aaa bbb ccc", "bbb ddd", "eee"]` gives aaa ≈ 1.6931 > bbb ≈ 1.2877
+  > 1.0, and `rank_texts("aaa bbb", ..., top_k=2) == [0, 1]` (doc0 =
+  aaa+bbb ≈ 2.9808, doc1 = bbb ≈ 1.2877, doc2 excluded as
+  zero-overlap); ties break by index, repeated query tokens count once,
+  tokenless queries and top_k < 1 are typed `RetrievalError`s. Models:
+  `Citation` span shape (negative/reversed refused), source-kind
+  literal, `extra="forbid"` on Citation/RetrievedPassage/Document
+  (hostile extra fields refused), Document kind literal and naive-
+  timestamp refusal. Manifest discipline: ingest round-trips through a
+  fresh `DocumentIndex`, append order preserved, duplicate id refused
+  *before* the file is read, unknown kind/empty id refused, unreadable/
+  empty/non-UTF8 files refused with "cannot ingest", `get`/missing-
+  record ValueErrors, missing-root → [], corrupted line attributed
+  ("line 1 is invalid"), duplicate ids across lines attributed
+  ("share a document id"), root-not-a-directory refusal. Sources:
+  document search ranks by content over a fixture index, experiment
+  search over hand-written registry JSONL (record() bypassed — it runs
+  the lake pin gate; reading never does), audit search over a real
+  `OrderJournal` fixture, each source's resolve returns the record plus
+  the canonical span-indexable text, missing ids refused per source.
+  Citation resolution: document/experiment/audit all resolve, span
+  bounds checked against the canonical text, unknown kind refused
+  (via `model_construct` — the literal is the first line of defense,
+  the resolver the second), missing record refused, out-of-range span
+  refused — every refusal path a typed `CitationResolutionError`.
+  Full suite green after the issue #47 commit (see Last verification
+  in ACTIVE.md).
 - Phase D slice (issue #48): pending.
 - Phase E slice (issue #49): pending.
 

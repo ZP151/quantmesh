@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     model_gateway_url: str = "http://127.0.0.1:11434"
     model_name: str = ""
     model_request_timeout_s: float = Field(default=60.0, gt=0)
+    # Ingestion manifest for retrieval documents (M8 Phase C): append-only
+    # JSONL on the ADR-0006 discipline.
+    documents_dir: Path = Path.home() / ".quantmesh" / "documents"
 
     model_config = SettingsConfigDict(
         env_file=".env",

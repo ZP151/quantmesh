@@ -103,7 +103,37 @@ in code (Phase B, issue #46)
 ### Decision 3 — Retrieval is lexical-first; citations are resolvable
 identities (Phase C, issue #47)
 
-(Recorded when Phase C lands.)
+`quantmesh.ai.retrieval`:
+
+- One protocol, three sources: `RetrievalSource{kind, search, resolve}`
+  over the `DocumentIndex` (filings/news/notes ingested under the new
+  `settings.documents_dir`), the M3 `ExperimentRegistry`, and the M2
+  `OrderJournal` as the audit source. Every source renders its records
+  to a canonical text (documents: their content; experiments/orders:
+  `model_dump_json()`), so a span indexes into exactly what the model
+  was given. The audit source reads the journal as data (`all()`/`get()`
+  only) — it is a read surface over the M2 record store, not an
+  order-sending adapter, so the Phase E no-execution-import scan must
+  target order-sending surfaces, not this read path.
+- The ranker is deterministic and pure: casefold tokenization, smoothed
+  IDF weights, sum-of-IDF over query-token overlap (query tokens
+  deduplicated, zero-overlap documents excluded), ties broken by
+  original index — byte-identical results across runs and platforms
+  (pinned arithmetic tests). Embedding reranking is a documented lazy
+  extension behind the same protocol, never a required path.
+- Documents are ingested on the ADR-0006 discipline under
+  `settings.documents_dir`: atomic temp+replace appends to one JSONL
+  manifest, fail-closed reads with line attribution, duplicate ids
+  refused (before the file is even read), and ingestion itself refuses
+  unreadable, non-UTF8, or empty files and unknown kinds.
+- Citations are resolvable identities, never blobs: `Citation
+  {source_kind, source_id, span}` plus a canonical text. `resolve_citation`
+  fails closed with `CitationResolutionError` on an unknown kind
+  (defense in depth — the pydantic literal already refuses it), a
+  missing record, or an out-of-range span; retrieval failures are typed
+  `RetrievalError`. Both join the M8 errors family as `ModelError`
+  subclasses, so the gateway/pipeline error handling covers them
+  uniformly.
 
 ### Decision 4 — The tool registry contains no execution surface;
 prompt data is redacted before the wire; decision records are

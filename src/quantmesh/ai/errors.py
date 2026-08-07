@@ -27,3 +27,11 @@ class UnknownRoleError(ModelError):
 
 class PipelineError(ModelError):
     """A research-pipeline violation (stage order, gate, references)."""
+
+
+class RetrievalError(ModelError):
+    """A retrieval violation (ingestion, index, ranking, source access)."""
+
+
+class CitationResolutionError(ModelError):
+    """A citation failed to resolve (unknown kind, missing id, bad span)."""

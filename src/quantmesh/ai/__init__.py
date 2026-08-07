@@ -1,15 +1,33 @@
 """Local AI research layer integration points (M8)."""
 
 from quantmesh.ai.errors import (
+    CitationResolutionError,
     ModelConfigurationError,
     ModelError,
     ModelOutputError,
     ModelProtocolError,
     ModelUnavailableError,
     PipelineError,
+    RetrievalError,
     UnknownRoleError,
 )
 from quantmesh.ai.gateway import ModelGateway
+from quantmesh.ai.retrieval import (
+    DOCUMENTS_FILE,
+    AuditSource,
+    Citation,
+    Document,
+    DocumentIndex,
+    DocumentSource,
+    ExperimentSource,
+    ResolvedSource,
+    RetrievalSource,
+    RetrievedPassage,
+    idf_weights,
+    rank_texts,
+    resolve_citation,
+    tokenize,
+)
 from quantmesh.ai.roles import (
     CHARTERS,
     ROLE_ORDER,
@@ -43,12 +61,20 @@ from quantmesh.ai.wire import (
 
 __all__ = [
     "AnalystReport",
+    "AuditSource",
     "CHARTERS",
     "ChatMessage",
+    "Citation",
+    "CitationResolutionError",
     "Claim",
     "CriticGateResult",
     "CriticVerdict",
     "DEFAULT_CHAT_PATH",
+    "DOCUMENTS_FILE",
+    "Document",
+    "DocumentIndex",
+    "DocumentSource",
+    "ExperimentSource",
     "FlaggedClaim",
     "HttpModelTransport",
     "MODEL_API_KEY_ENV",
@@ -66,6 +92,10 @@ __all__ = [
     "ROLE_ORDER",
     "ResearchPipeline",
     "ResearchResult",
+    "ResolvedSource",
+    "RetrievalError",
+    "RetrievalSource",
+    "RetrievedPassage",
     "RiskFinding",
     "RiskReview",
     "RoleCharter",
@@ -73,5 +103,9 @@ __all__ = [
     "UnknownRoleError",
     "build_chat_body",
     "charter",
+    "idf_weights",
     "parse_completion",
+    "rank_texts",
+    "resolve_citation",
+    "tokenize",
 ]
