@@ -72,7 +72,7 @@ Out of scope (recorded, not deferred silently):
       remote endpoints unless explicitly constructed; a scripted
       transport makes the whole surface deterministic and testable. —
       Phase A (issue #45).
-2. [ ] Analyst, critic, risk and portfolio roles produce
+2. [x] Analyst, critic, risk and portfolio roles produce
       schema-validated research outputs through a deterministic
       pipeline (analyst → critic gate → risk → portfolio); a critic
       flag blocks a claim downstream; no role output can carry
@@ -329,10 +329,18 @@ the M5 operator drill).
   serialized; structured output is pydantic-validated at the boundary
   with no partial object escape. Decision 1 + consequences written
   into ADR-0010 on 2026-08-08.
-- ADR-0010 extension **to record** (Phase B): role outputs are
-  pydantic schemas that contain no execution-shaped fields; the
-  pipeline order is deterministic and the critic gate blocks in
-  deterministic code; identity never includes model outputs.
+- ADR-0010 **recorded** (Phase B, issue #46, decision 2): role
+  outputs are pydantic schemas with `extra="forbid"` (order-shaped
+  fields refused, never silently dropped — pydantic's default
+  `extra="ignore"` is fail-open, caught by adversarial review); the
+  pipeline order is fixed in code with the critic gate blocking in
+  deterministic code (pass-with-flags/flag-without-flags/out-of-range
+  indices are typed errors); risk/portfolio references are structural
+  subsets of the supplied verdict/output ids (required at
+  construction); `run_id` is setup-only over role set + charter
+  digests + context digests, never model outputs; the roles module
+  imports no execution surface. Decision 2 written into ADR-0010 on
+  2026-08-08.
 - ADR-0010 extension **to record** (Phase C): retrieval is
   lexical-first (deterministic, dependency-free); citations are
   resolvable identities that fail closed; embedding reranking is a
@@ -393,6 +401,37 @@ the M5 operator drill).
   caught two real defects before commit (non-str `model_name`
   accepted silently; the redaction scan attempted a real connection
   to 127.0.0.1:1 — now faked). 66 gateway tests green; ruff clean
+  across src and tests; full suite 1365 passed / 3 skipped; committed
+  `a134d23` and pushed (first push on the M8 branch).
+- 2026-08-08 (issue #46, Phase B): implemented `ai/roles.py` — role
+  charters as pinned data (`RoleCharter` with setup-only digests,
+  `tools` tuples pre-binding the Phase D registry names),
+  `analyst`/`critic`/`risk`/`portfolio` charters with pinned system
+  prompts, output schemas (`Claim` — ≥1 non-empty citation required at
+  validation, confidence [0,1], direction literal; `AnalystReport`;
+  `CriticVerdict`/`FlaggedClaim`; `RiskReview`/`RiskFinding` with
+  severity literal; `PortfolioReview` — suggestions only, no
+  quantity/price fields), `ResearchPipeline` (fixed analyst → critic
+  gate → risk → portfolio stage order; `_apply_critic_gate` in code —
+  pass-with-flags/flag-without-flags/out-of-range indices are typed
+  `PipelineError`s; the blocked claim never reaches later stages,
+  proven via `seen_bodies`), structural reference checks
+  (`referenced_verdicts` ⊆ supplied M5 risk-gate verdict ids,
+  `referenced_inputs` ⊆ supplied M7 constraint/optimizer output ids —
+  both supplies required at construction), `run_id` = 16-hex
+  setup-only over role set + charter digests + context digests (never
+  model outputs — proven by two scripts with the same inputs sharing
+  an id while differing in output). `errors.py` gained
+  `UnknownRoleError`/`PipelineError`; `ai/__init__.py` exports the
+  full roles surface. The first test run caught a real fail-open
+  defect: pydantic's default `extra="ignore"` silently dropped
+  order-shaped fields (an order-shaped JSON validated as an empty
+  report) — every role schema now sets `extra="forbid"`, and the
+  hostile drills (order-shaped top level, order-shaped claim inside a
+  report, order-shaped pipeline output) all fail closed with
+  `ModelOutputError` naming the field. 40 roles tests green (5
+  charters + 10 schemas + 4 no-order-shape incl. the
+  no-execution-import source scan + 5 gate + 16 pipeline); ruff clean
   across src and tests.
 
 ## Verification evidence
@@ -428,8 +467,36 @@ the M5 operator drill).
   through the gateway. Adversarial review before commit fixed the
   non-str model-name hole and removed a real network attempt from
   the redaction scan (faked httpx raises the connect error instead).
-  ADR-0010 decision 1 recorded. Full suite: pending (running).
-- Phase B slice (issue #46): pending.
+  ADR-0010 decision 1 recorded. Full suite 1365 passed / 3 skipped
+  after the issue #45 commit `a134d23` (2026-08-08); pushed.
+- Phase B slice (issue #46): `tests/test_ai_roles.py` — 40 passed in
+  0.24s. Charters: canonical role set/order, fully pinned charters,
+  accessor, unknown-role refusals, digest determinism + sensitivity.
+  Schemas at the gateway boundary: claim-without-citation,
+  empty-citation, confidence out of [0,1], bad direction, bad critic
+  verdict literal, empty flag reason, empty referenced_verdicts, bad
+  severity, empty suggestion, bad posture — all typed
+  `ModelOutputError` naming the field. No-order-shape: schema walk
+  over every reachable model asserting no quantity/qty/size/venue/
+  order_id/price/limit_price/side field, hostile order-shaped JSON at
+  the top level and inside a claim refused without partial escape,
+  and the roles module source contains no import of
+  `quantmesh.paper`/`execution`/`hyperliquid.exchange`/`moomoo`.
+  Critic gate: pass allows all, flag blocks the claim downstream
+  (proven by the captured risk/portfolio request bodies), out-of-range
+  index / flag-without-flags / pass-with-flags typed `PipelineError`s,
+  empty analyst report flows through cleanly. Pipeline: full-run
+  success, fixed stage order (system prompts + context markers in the
+  four captured bodies), run_id stable + records byte-identical across
+  runs, sensitive to context and to charter digests, independent of
+  model outputs (two scripts, same id, different claims), construction
+  fail-closed paths (empty context, non-str context value, empty
+  verdict supply, empty output supply, missing charter, unknown role),
+  unsupplied reference refusals, hostile analyst output refused with
+  no result escaping. Adversarial review caught the fail-open
+  `extra="ignore"` (order-shaped JSON validated as an empty report) —
+  all role schemas now `extra="forbid"`. ADR-0010 decision 2 recorded;
+  acceptance criterion 2 checked off.
 - Phase C slice (issue #47): pending.
 - Phase D slice (issue #48): pending.
 - Phase E slice (issue #49): pending.

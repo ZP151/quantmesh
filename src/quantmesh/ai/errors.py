@@ -1,4 +1,4 @@
-"""Model gateway typed errors (M8, issue #45, Phase A)."""
+"""Model gateway typed errors (M8, issues #45/#46)."""
 
 
 class ModelError(ValueError):
@@ -19,3 +19,11 @@ class ModelProtocolError(ModelError):
 
 class ModelOutputError(ModelError):
     """Model text failed to parse or validate against the schema."""
+
+
+class UnknownRoleError(ModelError):
+    """A role name is not one of the canonical research roles."""
+
+
+class PipelineError(ModelError):
+    """A research-pipeline violation (stage order, gate, references)."""

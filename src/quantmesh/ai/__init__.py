@@ -6,8 +6,26 @@ from quantmesh.ai.errors import (
     ModelOutputError,
     ModelProtocolError,
     ModelUnavailableError,
+    PipelineError,
+    UnknownRoleError,
 )
 from quantmesh.ai.gateway import ModelGateway
+from quantmesh.ai.roles import (
+    CHARTERS,
+    ROLE_ORDER,
+    AnalystReport,
+    Claim,
+    CriticGateResult,
+    CriticVerdict,
+    FlaggedClaim,
+    PortfolioReview,
+    ResearchPipeline,
+    ResearchResult,
+    RiskFinding,
+    RiskReview,
+    RoleCharter,
+    charter,
+)
 from quantmesh.ai.transport import (
     DEFAULT_CHAT_PATH,
     MODEL_API_KEY_ENV,
@@ -24,8 +42,14 @@ from quantmesh.ai.wire import (
 )
 
 __all__ = [
+    "AnalystReport",
+    "CHARTERS",
     "ChatMessage",
+    "Claim",
+    "CriticGateResult",
+    "CriticVerdict",
     "DEFAULT_CHAT_PATH",
+    "FlaggedClaim",
     "HttpModelTransport",
     "MODEL_API_KEY_ENV",
     "ModelConfigurationError",
@@ -37,7 +61,17 @@ __all__ = [
     "ModelResponse",
     "ModelTransport",
     "ModelUnavailableError",
+    "PipelineError",
+    "PortfolioReview",
+    "ROLE_ORDER",
+    "ResearchPipeline",
+    "ResearchResult",
+    "RiskFinding",
+    "RiskReview",
+    "RoleCharter",
     "ScriptedModelTransport",
+    "UnknownRoleError",
     "build_chat_body",
+    "charter",
     "parse_completion",
 ]

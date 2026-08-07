@@ -61,11 +61,44 @@ transports, loopback by default, structured-only (Phase A, issue #45)
   line (the M5 signer-redaction discipline; proven by the
   redaction-scan test).
 
-### Decision 2 — Role outputs are schemas without execution-shaped
-fields; the pipeline order is deterministic and the critic gate blocks
+### Decision 2 — Role outputs are schemas that refuse order-shaped
+data; the pipeline order is deterministic and the critic gate blocks
 in code (Phase B, issue #46)
 
-(Recorded when Phase B lands.)
+`quantmesh.ai.roles`:
+
+- Role charters are pinned data (`RoleCharter{role, system_prompt,
+  tools, output_schema_id}`) for analyst/critic/risk/portfolio, each
+  with a setup-only digest; charter digests and context digests fold
+  into the pipeline's 16-hex `run_id` (role set + charters + inputs,
+  never model outputs — the M7 discipline).
+- Output schemas (`AnalystReport`/`Claim`, `CriticVerdict`/
+  `FlaggedClaim`, `RiskReview`/`RiskFinding`, `PortfolioReview`) all
+  set `extra="forbid"`: an order-shaped field smuggled into a claim is
+  refused at validation, never silently dropped (pydantic's default
+  `extra="ignore"` is fail-open — an adversarial review catch). A
+  claim without at least one citation id is refused at validation;
+  empty/whitespace citation ids, out-of-range confidence, and
+  unknown-direction values are all refused.
+- The pipeline stage order is fixed in code (analyst -> critic gate ->
+  risk -> portfolio); each stage receives only the redacted input
+  context and prior stages' validated outputs. The critic gate is
+  deterministic code, not model cooperation: 'pass' with flagged
+  claims, 'flag' with none, and out-of-range claim indices are all
+  typed `PipelineError`s; a flag removes the claim from everything
+  downstream (proven by the captured request bodies).
+- Risk and portfolio references are structural: `RiskReview
+  .referenced_verdicts` must be a non-empty subset of the supplied M5
+  risk-gate verdict ids and `PortfolioReview.referenced_inputs` a
+  non-empty subset of the supplied M7 constraint/optimizer output ids
+  — an unsupplied reference is a typed `PipelineError`. The supplies
+  are required at construction (fail-closed: the risk stage cannot run
+  without the verdicts it must cite).
+- No execution authority by construction: the roles module contains no
+  order-shaped field in any schema (schema-walk test) and imports no
+  execution surface (`quantmesh.paper`/`execution`/`hyperliquid
+  .exchange`/`moomoo` — source-scanned test); everything runs through
+  the structured-only gateway.
 
 ### Decision 3 — Retrieval is lexical-first; citations are resolvable
 identities (Phase C, issue #47)
