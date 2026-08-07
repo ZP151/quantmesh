@@ -5,11 +5,7 @@
 - Completed: 2026-08-07 (work complete; PRs #7-#11 remain draft pending merge review)
 - Owner: unassigned agent team
 - GitHub issue: [#1](https://github.com/ZP151/quantmesh/issues/1)
-<<<<<<< Updated upstream
-- Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2, issue #2)
-=======
 - Pull request: [draft #7](https://github.com/ZP151/quantmesh/pull/7) (slice #2, issue #2), [draft #8](https://github.com/ZP151/quantmesh/pull/8) (slice #3, issue #3), [draft #9](https://github.com/ZP151/quantmesh/pull/9) (slice #4, issue #4), [draft #10](https://github.com/ZP151/quantmesh/pull/10) (slice #5, issue #5), [draft #11](https://github.com/ZP151/quantmesh/pull/11) (slice #6, issue #6)
->>>>>>> Stashed changes
 - Roadmap milestone: M2
 
 ## Outcome
