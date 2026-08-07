@@ -255,9 +255,11 @@ class TestModelSpec:
         assert all(variant.id != base.id for variant in variations)
 
     def test_unknown_model_type_refused(self) -> None:
-        assert MODEL_TYPES == ("linear",)
+        # Phase B (issue #40) registered the pipeline types alongside
+        # the Phase A linear codec.
+        assert MODEL_TYPES == ("linear", "logistic", "lightgbm", "hmm", "garch")
         with pytest.raises(ValueError, match="unknown model type"):
-            spec(model_type="lightgbm")
+            spec(model_type="xgboost")
 
     def test_window_validation(self) -> None:
         with pytest.raises(ValueError, match="timezone-aware"):

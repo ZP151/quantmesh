@@ -46,6 +46,11 @@ COMMIT_PATTERN = "^[0-9a-f]{7,64}$"
 
 Parameter = str | int | float | bool | None
 
+# Pipeline-driven strategies (M7 Phase B, issue #40): the backtester
+# fits the pipeline per window through a signal provider rather than
+# consuming static signal series.
+MODEL_STRATEGIES = ("logistic", "lightgbm", "hmm", "garch")
+
 STRATEGIES = (
     "momentum",
     "mean_reversion",
@@ -53,6 +58,10 @@ STRATEGIES = (
     # M5 crypto baselines (issue #32, Phase D).
     "low_volatility",
     "book_imbalance",
+    # M7 Phase B pipelines (issue #40): one strategy per pipeline kind;
+    # all four weight by the top half of the train segment's mean
+    # prediction (see run_walk_forward's window_signal_provider).
+    *MODEL_STRATEGIES,
 )
 
 # Bars per trading day for annualization: 252 trading days, each of
@@ -172,13 +181,17 @@ def report_id(
     window_spec: WalkForwardSpec,
     costs: CostModel,
     signals_digest: str | None = None,
+    pipeline_digest: str | None = None,
 ) -> str:
     """Deterministic identity of a report: setup only, never results.
 
     The universe hashes over its sorted member list, so member order
     does not change the identity (ADR-0005 decision 2).
     ``signals_digest`` (issue #32, Phase D) folds signal-driven inputs
-    into the setup; omitted runs keep the pre-Phase-D identity.
+    into the setup; omitted runs keep the pre-Phase-D identity. The
+    same rule governs ``pipeline_digest`` (issue #40, Phase B): pipeline
+    reports pin the pipeline's setup, and strategy reports without a
+    pipeline keep their legacy ids.
     """
     members = sorted((member.venue.value, member.symbol) for member in universe)
     setup = {
@@ -193,6 +206,8 @@ def report_id(
     }
     if signals_digest is not None:
         setup["signals_digest"] = signals_digest
+    if pipeline_digest is not None:
+        setup["pipeline_digest"] = pipeline_digest
     canonical = json.dumps(setup, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(f"baseline-report\0{canonical}".encode()).hexdigest()[:16]
 
@@ -201,8 +216,12 @@ class StrategyReport(BaseModel):
     """One recorded baseline run: pinned setup plus observed results.
 
     ``signals_digest`` (issue #32, Phase D) pins the signal inputs of
-    signal-driven strategies; runs without signals leave it None, so
-    pre-Phase-D records and ids are unchanged.
+    signal-driven strategies; ``pipeline_digest`` (issue #40, Phase B)
+    pins a pipeline strategy's setup. Runs without either leave it
+    None, so pre-Phase-D records and ids are unchanged. ``evidence``
+    (issue #40, Phase B) records the evidence bundle of a pipeline
+    report — benchmark and ablation report ids, the OOS flag — as
+    results: never identity, so it rides along outside the id.
     """
 
     id: str = Field(pattern=ID_PATTERN)
@@ -215,8 +234,10 @@ class StrategyReport(BaseModel):
     window_spec: WalkForwardSpec
     costs: CostModel
     signals_digest: str | None = Field(default=None, pattern=ID_PATTERN)
+    pipeline_digest: str | None = Field(default=None, pattern=ID_PATTERN)
     created_at: datetime
     metrics: dict[str, Parameter] = Field(default_factory=dict)
+    evidence: dict[str, Parameter] = Field(default_factory=dict)
     windows: list[WindowResult] = Field(default_factory=list)
 
     @field_validator("metrics")
@@ -225,6 +246,14 @@ class StrategyReport(BaseModel):
         for name, value in values.items():
             if isinstance(value, float) and not math.isfinite(value):
                 raise ValueError(f"metric {name!r} is not finite ({value})")
+        return values
+
+    @field_validator("evidence")
+    @classmethod
+    def evidence_are_finite(cls, values: dict[str, Parameter]) -> dict[str, Parameter]:
+        for name, value in values.items():
+            if isinstance(value, float) and not math.isfinite(value):
+                raise ValueError(f"evidence {name!r} is not finite ({value})")
         return values
 
     @model_validator(mode="after")
@@ -246,6 +275,7 @@ class StrategyReport(BaseModel):
             window_spec=self.window_spec,
             costs=self.costs,
             signals_digest=self.signals_digest,
+            pipeline_digest=self.pipeline_digest,
         )
         if self.id != expected:
             raise ValueError(

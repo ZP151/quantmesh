@@ -1,5 +1,9 @@
 """Model registry: versioned models with setup-only identity (issue #39).
 
+(``from __future__ import annotations`` keeps the pipeline type hints in
+``fit_model`` lazy like the imports themselves — the codecs are optional
+runtime surface, ADR-0009 decision 6.)
+
 A ``ModelSpec`` pins everything that defines a training run — code
 commit, model type, hyperparameters, feature-set digest, lake dataset
 and revision, and the training window bounds — under a deterministic
@@ -20,6 +24,8 @@ discipline: atomic appends, fail-closed reads with line attribution,
 duplicate refusal, pin validated before anything is written.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import math
@@ -28,6 +34,10 @@ import subprocess
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from quantmesh.research.pipelines import LightGBMPipeline, LogisticPipeline
 
 import numpy as np
 import pandas as pd
@@ -53,9 +63,11 @@ COMMIT_PATTERN = "^[0-9a-f]{7,64}$"
 Parameter = str | int | float | bool | None
 
 # Model types with a registered artifact codec. Phase A ships the pure
-# numpy linear codec; the roadmap pipeline types (lightgbm / logistic /
-# hmm / garch) are registered by Phase B with their pipelines.
-MODEL_TYPES = ("linear",)
+# numpy linear codec; Phase B (issue #40) registers the pipeline types
+# (logistic / lightgbm as classifier codecs via
+# ``quantmesh.research.pipelines``; hmm / garch as return-based codecs
+# that fit through their pipelines, never through ``fit_model(X, y)``).
+MODEL_TYPES = ("linear", "logistic", "lightgbm", "hmm", "garch")
 
 LINEAR_FORMAT = "quantmesh-linear-v1"
 
@@ -88,7 +100,7 @@ class LinearModel:
         y: pd.Series,
         *,
         train_mask: pd.Series | None = None,
-    ) -> "LinearModel":
+    ) -> LinearModel:
         """Fit on ``X``/``y``, optionally restricted by an aligned boolean mask.
 
         Fails closed on non-finite values, empty training sets,
@@ -146,7 +158,7 @@ class LinearModel:
         return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "LinearModel":
+    def from_bytes(cls, data: bytes) -> LinearModel:
         try:
             payload = json.loads(data.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
@@ -220,7 +232,7 @@ class ModelSpec(BaseModel):
         return values
 
     @model_validator(mode="after")
-    def spec_is_consistent(self) -> "ModelSpec":
+    def spec_is_consistent(self) -> ModelSpec:
         validate_dataset_name(self.dataset)
         if self.model_type not in MODEL_TYPES:
             raise ValueError(
@@ -258,13 +270,17 @@ def fit_model(
     y: pd.Series,
     *,
     train_mask: pd.Series | None = None,
-) -> LinearModel:
+) -> LinearModel | LogisticPipeline | LightGBMPipeline:
     """Fit a model of the spec's type over the given feature frame and target.
 
-    Phase A implements the ``linear`` type; the roadmap pipeline types
-    dispatch here as Phase B registers their codecs. The caller supplies
-    frames computed from the spec's feature set (the spec pins the
-    feature-set digest; ``fit_model`` is deliberately registry-free).
+    Phase A implements the ``linear`` type; Phase B (issue #40) dispatches
+    the classifier pipelines (logistic / lightgbm) to their lazy
+    import-guarded codecs. The return-based pipeline types (hmm / garch)
+    fit on per-symbol returns through their pipelines, never here —
+    ``fit_model`` refuses them rather than fabricating a classifier out
+    of a series fit. The caller supplies frames computed from the spec's
+    feature set (the spec pins the feature-set digest; ``fit_model`` is
+    deliberately registry-free).
     """
     if spec.model_type not in MODEL_TYPES:
         raise ValueError(
@@ -273,7 +289,21 @@ def fit_model(
         )
     if spec.model_type == "linear":
         return LinearModel.fit(X, y, train_mask=train_mask)
-    raise ValueError(f"model type {spec.model_type!r} has no fit dispatch")
+    if spec.model_type == "logistic":
+        # Lazy import: the pipelines module is import-guarded on the
+        # research extra, which is optional runtime surface (ADR-0009).
+        from quantmesh.research.pipelines import LogisticPipeline
+
+        return LogisticPipeline(spec.hyperparameters).fit(X, y)
+    if spec.model_type == "lightgbm":
+        from quantmesh.research.pipelines import LightGBMPipeline
+
+        return LightGBMPipeline(spec.hyperparameters).fit(X, y)
+    raise ValueError(
+        f"model type {spec.model_type!r} fits on returns through its pipeline "
+        "(HMMPipeline / GARCHPipeline in quantmesh.research.pipelines), "
+        "not fit_model(X, y)"
+    )
 
 
 class ModelRecord(BaseModel):
@@ -294,7 +324,7 @@ class ModelRecord(BaseModel):
         return values
 
     @model_validator(mode="after")
-    def record_is_consistent(self) -> "ModelRecord":
+    def record_is_consistent(self) -> ModelRecord:
         if self.created_at.tzinfo is None:
             raise ValueError("created_at must be timezone-aware")
         self.created_at = self.created_at.astimezone(UTC)

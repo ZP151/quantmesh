@@ -33,7 +33,7 @@ and event-risk constraints.
   `quantmesh.research.drift` (PSI/KS drift, staleness, failure
   detection, alert ledger, promotion ledger); extension of the M5
   walk-forward report stack and the M5 `STRATEGIES` branch mechanism;
-  the research extra pins (scipy/hmmlearn/arch) and the CI install
+  the research extra pins (scipy/arch) and the CI install
   change.
 - Out of scope: any execution path — M7 computes, records and alerts;
   it places nothing (the M2 paper kernel remains the only execution
@@ -42,8 +42,10 @@ and event-risk constraints.
   recorded and deferred).
 - Reuse: lightgbm (>=4.5,<5) and scikit-learn (>=1.5,<2) already
   pinned in the research extra; new pins scipy (>=1.13,<2, used
-  directly so pinned), hmmlearn (>=0.3,<1), arch (>=7,<8) in the
-  research extra; the M3 experiment-registry discipline (setup-only
+  directly so pinned) and arch (>=7,<8) in the research extra —
+  hmmlearn is deliberately not added, because the HMM codec ended up
+  pure numpy (ADR-0009 decision 7: its EM is numerically unfit on
+  variance-regime data); the M3 experiment-registry discipline (setup-only
   identity, lake-pin gate at record and resolve, JSONL with atomic
   appends and fail-closed reads) for the model/feature registries; the
   M5 report stack (`run_walk_forward`, `STRATEGIES` branches, `report_id`,
@@ -72,7 +74,7 @@ and event-risk constraints.
       attribution, duplicate refusal, byte-stable artifacts; a pinned
       feature set reproduces identical frames on a clean checkout. —
       Phase A (issue #39).
-2. [ ] LightGBM, logistic, HMM and GARCH baseline pipelines each
+2. [x] LightGBM, logistic, HMM and GARCH baseline pipelines each
       produce cost-aware walk-forward reports (M5 report stack) with
       benchmark, ablation and out-of-sample evidence; every window
       trains on its own train slice only (no-lookahead proven by test);
@@ -128,8 +130,8 @@ registry roots.
 ### Phase B — baseline pipelines (issue #40)
 
 `quantmesh.research.pipelines`: lazy import-guarded accessors (the M5
-SDK-transport idiom) for lightgbm, scikit-learn, hmmlearn and arch with
-typed errors; `LightGBMPipeline` / `LogisticPipeline` (binary
+SDK-transport idiom) for lightgbm, scikit-learn and arch with typed
+errors; `LightGBMPipeline` / `LogisticPipeline` (binary
 classifier on feature frames), `HMMPipeline` (regime signal), `GARCHPipeline`
 (volatility forecast signal); each exposes fit-on-train / predict-on-test
 and registers as a `run_walk_forward` strategy branch (the M5 Phase D
@@ -139,13 +141,22 @@ reports with benchmark (incumbent baselines from M4/M5) + ablation
 construction) evidence recorded as `StrategyReport`s; deterministic
 seeds and same-version byte determinism pinned by test; the fixture
 drill runs the M3 lake fixture universe (equity + crypto bars) plus M6
-implied probabilities as event-derived features. Dependency decisions
-recorded in ADR-0009: research extra gains scipy/hmmlearn/arch pins;
-CI installs `.[dev,research]` (deliberate, documented deviation from
-the M3 duckdb-promotion precedent: the ML stack is genuinely optional
-runtime surface and the paper kernel core stays lean). Tests:
-per-pipeline walk-forward reports, ablation deltas, no-lookahead proof,
-typed errors without the extra, determinism.
+implied probabilities as event-derived features. Classifier windows
+pool the per-symbol feature blocks positionally into one fit (each
+symbol's matrix carries its own feature ids, so a name-wise concat
+would union the columns into NaN holes); return pipelines fit per
+window on train returns only. Dependency decisions recorded in
+ADR-0009: research extra gains scipy/arch pins (hmmlearn is *not*
+added — its EM numerically diverges on variance-regime data, so the
+HMM codec is a pure-numpy deterministic method-of-moments estimator
+with no hyperparameters; ADR-0009 decision 7 records the evidence and
+the amendment); CI installs `.[dev,research]` (deliberate, documented
+deviation from the M3 duckdb-promotion precedent: the ML stack is
+genuinely optional runtime surface and the paper kernel core stays
+lean). Tests: per-pipeline walk-forward reports, ablation deltas,
+no-lookahead proof, typed errors without the extra, determinism,
+fail-closed HMM guards (no variance contrast, non-empty
+hyperparameters), pooled-fit NaN freedom.
 
 ### Phase C — ensemble and uncertainty calibration (issue #41)
 
@@ -215,8 +226,9 @@ operator drill).
   the record; Phase A ships the pure-numpy `linear` codec
   (`quantmesh-linear-v1` canonical JSON); feature kinds beyond bars are
   documented extensions, refused at construction and compute. Dependency
-  decision: the research extra gains scipy/hmmlearn/arch pins, and CI
-  installs `.[dev,research]` — a deliberate, documented extension of the
+  decision: the research extra gains scipy/arch pins (hmmlearn is
+  *not* added — decision 7 records why), and CI installs
+  `.[dev,research]` — a deliberate, documented extension of the
   dependency contract (a first-class, CI-tested extra because M7 makes
   the research surface one), contrasted with the M3 duckdb-promotion
   precedent (an infra necessity); the paper kernel core stays lean and
@@ -280,6 +292,34 @@ operator drill).
   instead). 60 new tests, full suite 1041 passed / 3 skipped, ruff
   clean, `git diff --check` and `git submodule status` clean. Committed
   as `M7-1 (#39): feature and model registries` and pushed.
+- 2026-08-08 (issue #40, Phase B): implemented `pipelines.py` (~780
+  lines) — the four codecs, `run_pipeline_report`, and the
+  `window_signal_provider` hook in `run_walk_forward`. Logistic and
+  LightGBM codecs round-trip canonically (the booster serializes as a
+  model string — the sklearn wrapper's fitted state does not
+  rehydrate from bytes); the LightGBM test suite caught that raw
+  single-feature XOR data grows no tree, so the fixture is a step
+  threshold and prediction goes through `Booster.predict(raw_score)`
+  with a sigmoid. HMM and GARCH went through probe-driven diagnosis:
+  GARCH's `fix()` wires parameters positionally, so the codec rebuilds
+  them in `_all_parameter_names()` order (`parameter_names()` returns
+  the mean model only and would drop the variance terms). The HMM
+  consumed the most probing: hmmlearn 0.3.3's EM numerically diverges
+  on variance-regime data even from the true parameters (its
+  log-likelihood *decreases*, violating EM monotonicity — reproduced
+  for covariance_type full and diag), and scikit-learn's
+  GaussianMixture collapses into degenerate spike components on skewed
+  squared returns — so the codec is a deterministic method-of-moments
+  estimator (sample-mean threshold on squared returns, emission
+  moments + Laplace-smoothed transition counts from the path, forward
+  filter with log-sum-exp stabilization) and hmmlearn was dropped
+  from the research extra (ADR-0009 decision 7 amendment). The report
+  harness fixes: pooled classifier fits stack per-symbol blocks
+  positionally (per-symbol feature ids would union into NaN columns),
+  warm-up rows are dropped with an empty-overlap fail-closed guard,
+  ablations and universe coverage validate before any work. 45
+  pipeline tests green; affected research suites (models/baselines/
+  reports/features) 128 passed.
 
 ## Verification evidence
 
@@ -299,18 +339,44 @@ operator drill).
   across roots; the artifact loaded from one root predicts exactly on
   the other's frame). Full suite: 1041 passed, 3 skipped (pre-existing
   skips); ruff, `git diff --check`, `git submodule status` all clean.
-- Phase B slice (issue #40): pending.
+- Phase B slice (issue #40): `tests/test_research_pipelines.py` — 45
+  passed, zero warnings. LightGBM: step-threshold accuracy 1.0,
+  probabilities {0, 1}, byte-exact round-trip and refit (maxdiff 0.0).
+  GARCH: signal separation q0 0.5409 / volatile 0.1065 / q1 0.4898 on
+  the sine fixture with round-trip allclose; param re-wiring in
+  `_all_parameter_names()` order verified by probe. HMM: moment
+  estimator on the Gaussian regime fixture separates blocks with
+  margins ≈ 1.0 (test threshold +0.3); determinism (byte-exact refits)
+  and forward-filter causality (prefix invariant to appended
+  observations) proven by test; the log-sum-exp stabilization removes
+  the NaN underflow on extreme observations; hyperparameters refused,
+  no-variance-contrast fails closed, and the pure-numpy estimator fits
+  under the fully faked import guard. Report harness: 3 windows × 3
+  symbols with per-window provider calls [(0,30),(10,40),(20,50)],
+  turnover [1.0, 0.0, 0.0] (open then hold), 5 recorded reports with
+  benchmark + ablation evidence, report id changes with
+  hyperparameters, warm-up/ablation/universe fail-closed paths, and
+  the cross-root acceptance drill with byte-identical artifacts and
+  equal ids. Affected suites (models/baselines/reports/features): 128
+  passed.
 - Phase C slice (issue #41): pending.
 - Phase D slice (issue #42): pending.
 - Phase E slice (issue #43): pending.
 
 ## Risks and gates
 
-- Library determinism across platforms (lightgbm/hmmlearn/arch) —
+- Library determinism across platforms (lightgbm/arch) —
   determinism is pinned at fixed versions and seeds on the CI platform;
   cross-platform float differences are documented; identity never
   includes weights, so a rebuilt artifact with identical evidence is
-  the same model.
+  the same model. The HMM is immune by construction (pure numpy,
+  no RNG).
+- HMM estimator scope — method-of-moments assumes a clean variance
+  threshold split of squared returns (well-separated regimes); weakly
+  separated regimes (low scale ratios) degrade the signal rather than
+  fail. Documented at the codec and in ADR-0009 decision 7; the M8
+  research layer is the venue to revisit estimators with real-data
+  evidence.
 - ML dependency weight — the research extra keeps the paper kernel
   core lean; CI installs the extra so the pipelines are first-class
   tested surface.

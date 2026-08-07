@@ -20,7 +20,7 @@ plus the dependency contract the Phase B pipelines need. Two facts
 shape the decisions:
 
 - **The venv has no research stack installed** (no scikit-learn,
-  lightgbm, vectorbt, scipy, hmmlearn or arch), and CI installs only
+  lightgbm, vectorbt, scipy or arch), and CI installs only
   `.[dev]` — so a Phase B pipeline that imports any of these breaks
   both local runs and CI.
 - **M3 promoted duckdb to the core dependency by documented
@@ -89,7 +89,7 @@ a spec that cannot compute.
 ### 6. The research extra is part of the dependency contract; CI installs `.[dev,research]`
 
 Phase B extends `pyproject.toml`'s `research` extra with
-`scipy>=1.13,<2`, `hmmlearn>=0.3,<1`, `arch>=7,<8` beside the pinned
+`scipy>=1.13,<2` and `arch>=7,<8` beside the pinned
 roadmap libraries (lightgbm 4.5+, scikit-learn 1.5+, vectorbt
 0.27+), and CI's install step becomes `.[dev,research]` so the
 pipeline codecs are installed where their tests run. This is a
@@ -100,6 +100,66 @@ duckdb promotion which was an infra necessity. Phase B code paths
 use lazy import-guarded accessors (the M5 SDK idiom): importing
 `quantmesh.research` never requires the research stack, so the core
 test suite stays runnable without it.
+
+### 7. Baseline pipelines are lazy import-guarded codecs with per-window train-only fits and an evidence bundle (Phase B extension, issue #40)
+
+`quantmesh.research.pipelines` registers four strategy codecs —
+`LogisticPipeline`, `LightGBMPipeline`, `HMMPipeline`,
+`GARCHPipeline` — each exposing fit / predict(-proba) / signals and
+canonical byte formats (`quantmesh-logistic-v1`, `quantmesh-lightgbm-v1`,
+`quantmesh-hmm-v1`, `quantmesh-garch-v1`) matching the Phase A
+byte-addressed artifact contract. The libraries load lazily and raise
+`PipelineUnavailableError` with a typed message when the extra is
+missing (the M5 SDK-transport idiom, decision 6). Three properties are
+pinned by test:
+
+- **No lookahead is structural.** Classifier labels lead by one bar
+  (`y[t]` = direction of `close[t+1]`), so a window's train slice ends
+  at `test_start - 2` and the last label compares closes up to
+  `test_start - 1` — known at rebalance. The HMM signal is a manual
+  forward filter (smoothing both directions would leak the future);
+  the causality test appends observations and demands the signal
+  prefix stay identical. GARCH's conditional variance at bar `t` uses
+  observations up to `t - 1` by construction.
+- **Determinism is a pinned contract.** Fixed seeds; lightgbm with
+  `deterministic=True`, `num_threads=1`; sklearn lbfgs and arch MLE
+  without RNG. The HMM is fit by deterministic method-of-moments —
+  no RNG anywhere in the estimator. Same-version byte determinism is
+  proven by refits on identical data and by the cross-root acceptance
+  drill, which demands byte-identical report artifacts from two
+  independent lakes and registries. Identity never includes weights
+  or metrics, so a rebuilt artifact with identical evidence is the
+  same model.
+- **The HMM codec is pure numpy and takes no hyperparameters.** Its
+  two-state Gaussian HMM (emissions on squared returns, state 0 =
+  calm, state 1 = volatile) is estimated by method-of-moments: the
+  state path is seeded by the sample-mean threshold of the train
+  slice's squared returns, emission means/variances and
+  Laplace-smoothed transition/start counts come from that path, and
+  the signal is the log-sum-exp-stabilized forward filter's posterior
+  on the volatile state. No EM: hmmlearn 0.3.3's EM numerically
+  diverges on variance-regime data (its log-likelihood *decreases*,
+  violating EM monotonicity — reproduced from the true parameters)
+  and scikit-learn's GaussianMixture collapses into degenerate spike
+  components on skewed squared returns, so neither off-the-shelf EM
+  is fit to back the codec. Consequently hmmlearn is *not* a research
+  dependency (an amendment to decision 6), and a non-empty
+  hyperparameter dict is refused — an inert knob would silently drift
+  the digest. A train slice without enough bars on both sides of the
+  threshold fails closed.
+- **Pipeline strategies backtest through the report stack.** Each kind
+  is a `MODEL_STRATEGIES` member; `run_walk_forward` gains a
+  `window_signal_provider(train_start, test_start)` hook that fits on
+  the window's train slice and returns mean train signals, weighted by
+  the shared top-half rule (`signal_top_half_weights`, factored out of
+  the M5 `book_imbalance_weights`). `run_pipeline_report` orchestrates
+  the evidence bundle: benchmark reports (the incumbent M4/M5
+  baselines), ablation reports (one full pipeline report per dropped
+  feature name), and the main report — all recorded as
+  `StrategyReport`s whose ids pin the `pipeline_digest` (kind +
+  normalized hyperparameters + feature-set id), never the outcomes.
+  Evidence ids ride on the report as results (`evidence` field), so
+  the evidence bundle is auditable but outside identity.
 
 ## Consequences
 
@@ -117,3 +177,18 @@ test suite stays runnable without it.
 - Adding `.[dev,research]` to CI installs ~6 additional packages on
   every job; acceptable for the test surface they unlock, and the
   core suite (without research extra) still passes alone.
+- Phase B registers four more codec formats (`quantmesh-logistic-v1`,
+  `quantmesh-lightgbm-v1`, `quantmesh-hmm-v1`, `quantmesh-garch-v1`),
+  versioned and validated on load like the linear codec; each kind is
+  a `MODEL_STRATEGIES` strategy, so a new pipeline kind is code plus
+  one tuple member. Cross-platform float differences in library-backed
+  codecs are documented at the codec; they never change identity,
+  because identity pins setup only — weights and metrics are results.
+- hmmlearn is dropped from the research extra (decision 7): the HMM
+  codec's estimator is pure numpy, so the extra loses a package while
+  the HMM remains a registered, CI-tested pipeline kind. The
+  estimator's method-of-moments assumption — a clean threshold split
+  of squared returns, i.e. well-separated volatility regimes — is
+  documented at the codec; weakly separated regimes degrade the
+  signal rather than fail, which is a documented limitation, not a
+  silent guarantee (recorded as a Phase D risk in iteration 0009).

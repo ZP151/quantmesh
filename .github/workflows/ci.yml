@@ -19,7 +19,10 @@ jobs:
           python-version: "3.13"
           cache: pip
       - name: Install
-        run: python -m pip install -e ".[dev]"
+        # The research extra is first-class tested surface since M7 Phase B
+        # (ADR-0009 decision 6): the pipeline codecs must exist where their
+        # tests run. The paper kernel core stays lean without it.
+        run: python -m pip install -e ".[dev,research]"
       - name: Lint
         run: ruff check src tests
       - name: Test
