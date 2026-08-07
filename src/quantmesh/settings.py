@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # registry discipline.
     features_dir: Path = Path.home() / ".quantmesh" / "features"
     models_dir: Path = Path.home() / ".quantmesh" / "models"
+    # Drift alerts and signal promotions (M7 Phase E, ADR-0009 decision
+    # 10): append-only JSONL ledgers on the ADR-0006 discipline.
+    alerts_dir: Path = Path.home() / ".quantmesh" / "alerts"
+    promotions_dir: Path = Path.home() / ".quantmesh" / "promotions"
 
     model_config = SettingsConfigDict(
         env_file=".env",

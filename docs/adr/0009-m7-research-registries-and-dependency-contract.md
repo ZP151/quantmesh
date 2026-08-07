@@ -269,6 +269,55 @@ function of its setup:
   universe IS the setup) with duplicate refusal, atomic appends and
   fail-closed reads.
 
+### 10. Drift and failure detection are evidence-producing with an alert ledger; promotion pins the evidence, never the outcome (Phase E extension, issue #43)
+
+`quantmesh.research.drift` ships four pieces:
+
+- **The statistics are pure numpy.** PSI (reference-quantile bin edges,
+  epsilon-clamped shares, out-of-range current values kept in the edge
+  bins) and the two-sample KS statistic (exact ECDF gap) compute with
+  no research extra; the p-value is the textbook asymptotic Kolmogorov
+  series (pinned to 1.0 below λ < 0.1, where the series cannot
+  converge and the approximation error is below 1e-3). The acceptance
+  test cross-checks both against scipy where it is installed. Every
+  statistic is fail-closed on samples it cannot judge: short samples
+  (fewer than 10 observations), non-finite values, non-numeric dtypes,
+  degenerate references, and 2-D input all refuse with the column
+  named.
+- **Detection is fail-closed on unjudgeable data; failure detection
+  runs *on* broken data.** `detect_feature_drift` treats the reference
+  frame as the contract — a current frame missing or carrying extra
+  columns is refused (a missing feature is *named* by
+  `detect_failures`, never silently dropped from the test), and any
+  column that cannot support the statistics refuses. `detect_staleness`
+  applies the M5 stale-data discipline to feature inputs: missing or
+  future timestamps and naive clocks refuse; stale follows the
+  matcher's rule (`latest + max_age < now`, strict at the boundary).
+  `detect_failures` is the one check that must work on broken data —
+  an empty or NaN-filled frame reports missing features, NaN rows, and
+  coverage collapse instead of refusing.
+- **Alerts ride the ADR-0006 JSONL discipline** (atomic temp+replace
+  appends, fail-closed reads with line attribution, duplicate
+  refusal). An alert's identity includes its detection time: the same
+  condition re-detected later is a new event (monitoring semantics —
+  a persistent drift keeps alerting while it persists), while an
+  identical replay is refused (determinism semantics). `DriftReport`
+  composes the checks that ran — a frame too broken for the drift
+  test still contributes its failure and staleness alerts — and
+  `record_report_alerts` persists the derived alerts.
+- **Promotion requires the full evidence bundle; identity pins the
+  evidence, never the outcome.** `PromotionEvidence` refuses at
+  construction any bundle without at least one benchmark report id,
+  at least one ablation report id, and the OOS report id;
+  `evidence_from_report` extracts the bundle off a pipeline report's
+  `evidence` keys (benchmark/ablation ids, `windows_oos` flag) and
+  refuses a report without OOS windows. The promotion record's id is
+  a pure function of the signal name, the sorted evidence ids, and
+  the report-only kill-switch flag — never metrics, never
+  `promoted_at` (a result, like `created_at`), so the same evidence
+  is the same promotion, refused by the ledger. The kill-switch flag
+  is recorded now, report-only; enforcement lands in M10.
+
 ## Consequences
 
 - scipy is already on the research-extra surface for nnls (decision 6);
@@ -337,3 +386,34 @@ function of its setup:
   every recorded ensemble report dangles the moment its lake dataset
   advances to a new revision — the intended audit trail, with
   `resolve_pin` refusing any new report against the old pin.
+- Phase E: drift detection runs without the research extra — the PSI
+  and KS statistics are pure numpy (the scipy cross-check lives in
+  the tests, which already carry the extra) — while the promotion
+  acceptance drill runs the pipeline report, which requires it.
+- The KS p-value is the asymptotic Kolmogorov series, pinned to 1.0
+  below λ < 0.1 where the series diverges; the acceptance tests
+  cross-check the statistic to 1e-12 and the p-value to 1e-3 against
+  scipy's asymptotic mode. The p-value is a screening signal, never
+  an exact tail probability, and is documented as such.
+- Drift and failure detection split fail-closed behavior: frames too
+  broken to judge are refused by the drift test with the column
+  named, while `detect_failures` runs *on* broken data and names
+  missing features, NaN rows, and coverage collapse. The failure
+  check is the gate for broken frames; a broken frame contributes
+  failure and staleness alerts even when the drift test refuses it.
+- A coverage collapse with NaN rows reports one alert (the root
+  cause), not two: `detect_failures` reports `collapsed: nan` when
+  NaN rows are present and `collapsed: coverage` only when rows
+  collapsed without NaNs.
+- Alert identity includes `detected_at`, so a persistent condition
+  keeps alerting while it persists (monitoring semantics) and an
+  identical replay at the same instant is refused (determinism).
+  Ledger readers therefore see event series, not point-in-time
+  duplicates.
+- Promotion identity excludes `promoted_at` (a result, like
+  `created_at`): the same evidence is the same promotion and is
+  refused by the ledger, which is what makes promotion idempotent
+  under re-run. The kill-switch flag is in the identity, so the same
+  evidence promoted under report-only and enforced regimes are two
+  different decisions; the enforcement regime lands in M10, and
+  records already carry the flag so the M10 hook needs no migration.

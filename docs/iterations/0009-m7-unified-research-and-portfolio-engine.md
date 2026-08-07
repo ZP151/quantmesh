@@ -89,7 +89,7 @@ and event-risk constraints.
       scenario tests (gap moves, liquidation cascade, funding spike,
       event mis-resolution) run on fixture universes through the M2
       kernel replay. — Phase D (issue #42).
-5. [ ] Every promoted signal carries a promotion record linking
+5. [x] Every promoted signal carries a promotion record linking
       benchmark, ablation and out-of-sample evidence (exit criterion
       1); injected drift and stale data are detected and alerted. —
       Phase E (issue #43).
@@ -265,11 +265,12 @@ operator drill).
   scenario reports run on the M5 stack with setup-only ids (scenario
   id over the timeline, shocks/orders canonical within a step) and no
   lake pin (the recorded universe IS the setup — the M6 precedent).
-- ADR-0009 extension **to record** (issue #43 Phase E): drift and
-  failure detection are evidence-producing with an alert ledger; signal
-  promotion requires the full benchmark/ablation/OOS evidence bundle
-  and identity pins the evidence, never the outcome; kill-switch
-  integration is report-only until M10.
+- ADR-0009 extension **recorded** (issue #43 Phase E, decision 10):
+  drift and failure detection are evidence-producing with an alert
+  ledger; signal promotion requires the full benchmark/ablation/OOS
+  evidence bundle and identity pins the evidence, never the outcome;
+  kill-switch integration is report-only until M10. Decision 10 and
+  its consequences written into ADR-0009 on 2026-08-08.
 
 ## Work log
 
@@ -392,6 +393,36 @@ operator drill).
   *structurally* infeasible — the check working as intended). 82
   portfolio tests green; full suite 1207 passed / 3 skipped; ruff
   clean.
+- 2026-08-08 (issue #43, Phase E): implemented `research/drift.py` —
+  pure-numpy PSI (reference-quantile bin edges, epsilon-clamped
+  shares, out-of-range current values held in the edge bins) and KS
+  (exact ECDF-gap statistic; p-value = asymptotic Kolmogorov series
+  pinned to 1.0 below λ < 0.1) cross-checked against scipy in the
+  tests (statistic 1e-12, p-value 1e-3); `detect_feature_drift`
+  (reference frame IS the contract: missing/extra columns refused
+  with the column named), `detect_prediction_drift` (score drift vs
+  the training window), `detect_staleness` (M5 discipline verbatim:
+  missing/naive/future timestamps refuse; `latest + max_age < now`
+  strict at the boundary), `detect_failures` — the ONE check that
+  runs on broken data (missing features, NaN rows, coverage
+  collapse; a collapse with NaNs reports one root-cause alert);
+  `AlertRecord`/`AlertLedger` (identity INCLUDES `detected_at` —
+  re-detection is a new event, identical replay is refused; ADR-0006
+  atomic temp+replace appends, fail-closed reads with line
+  attribution), `DriftReport`/`build_drift_report`/
+  `record_report_alerts` (a frame too broken for the drift test
+  still contributes failure and staleness alerts), and
+  `PromotionRecord`/`PromotionLedger` with `evidence_from_report`
+  (full benchmark + ablation + OOS bundle required at the type
+  level; `windows_oos` gate; identity pins the evidence — never
+  metrics, never `promoted_at` — with the report-only kill-switch
+  flag in the identity; enforcement is M10). Settings gained
+  `alerts_dir`/`promotions_dir`; ADR-0009 decision 10 recorded. The
+  test run surfaced the pandas `.loc[int]`-appends-on-DatetimeIndex
+  trap (NaN injection must use `.iloc`), the frame_digest
+  DatetimeIndex requirement, and hex-only report ids in fixtures —
+  all fixed. 92 drift tests green; full suite 1299 passed / 3
+  skipped; ruff clean.
 
 ## Verification evidence
 
@@ -492,7 +523,40 @@ operator drill).
   before any artifact write), id-setup sensitivity, setup-mismatch
   validator, kernel account_config snapshot. Full suite: 1207 passed,
   3 skipped; ruff clean; `git diff --check` clean.
-- Phase E slice (issue #43): pending.
+- Phase E slice (issue #43): `tests/test_research_drift.py` — 92
+  passed in 7.44s. PSI: pinned arithmetic (9 bins at share 0.05 vs
+  0.1 → 0.05·ln(2), top bin 0.55 vs 0.1 → 0.45·ln(5.5), total
+  1.07905), degenerate-reference/too-few-bins/short-sample/non-finite/
+  non-numeric/2-D refusals. KS: statistic exact on pinned ECDF gaps
+  and scipy cross-check (abs 1e-12), p-value monotone in the gap and
+  scipy-asymp cross-check (abs 1e-3), λ < 0.1 pinned to 1.0. Feature
+  drift: reference frame is the contract — missing columns refused
+  with names, extra columns refused, per-feature ValueError
+  attribution, drifted flag on psi/ks thresholds, full
+  report-model validation. Prediction drift: training-window score
+  comparison, short/future-timestamp/non-finite refusals. Staleness:
+  M5 rule verbatim — age vs max_age strict at the boundary,
+  timestamp-column mode, timezone-naive refused, NaT refused,
+  future timestamp refused ("the clock or the feed is untrustworthy"),
+  empty frame refused. Failures: missing features named, NaN rows
+  counted, coverage collapse, one-root-cause alert (collapse with
+  NaNs reports `nan`, not both). Alert identity: re-detection at a
+  later instant records, identical replay refused, observed values
+  non-finite refused, id-self-consistency validator. Ledgers:
+  duplicate refusal, corrupted-line attribution, root-not-a-
+  directory. Promotion: full-bundle enforcement per missing member,
+  non-hex/non-report-id refusals, `windows_oos` gate,
+  evidence_from_report refusing non-str evidence, identical evidence
+  is the same promotion (different `promoted_at` still refused),
+  kill-switch in identity. Acceptance drills (exit criteria 1-2):
+  real `run_pipeline_report` with ablations → promotion ids resolve
+  via registry.get with benchmark+ablation+OOS ids linked; injected
+  drift (momentum + 1.0 shift flagged; NaN column via `.iloc`)
+  detected and alerted with sources `feature:momentum`,
+  `features:index` (aged −3 days, staleness now = T0+72h,
+  max_age 24h) and `features:nan`; the drift test refuses the NaN
+  frame (fail-closed) while failures run on it. Full suite: 1299
+  passed, 3 skipped; ruff clean; `git diff --check` clean.
 
 ## Risks and gates
 
@@ -541,6 +605,30 @@ operator drill).
   design; a multi-round cascade was mathematically impossible (post-
   sweep < pre-sweep) and was removed during design review. A
   liquidation shock on a market without a bid fails closed.
+- Drift-test fail-closed split — the drift test refuses frames it
+  cannot judge (non-finite, missing/extra columns) while
+  `detect_failures` runs on broken data. A monitoring loop therefore
+  composes the checks: drift refusal is not an alert in itself, and
+  the operator sees the failure alert instead. The acceptance drill
+  pins this split.
+- KS p-value is asymptotic — the Kolmogorov series is pinned to 1.0
+  below λ < 0.1 (where the series diverges) and is a screening
+  signal, not an exact tail probability; the acceptance tests
+  cross-check it against scipy's asymptotic mode to 1e-3, and the
+  `drifted` flag only triggers on `psi > threshold` or `p < alpha`,
+  so borderline p-values are screened by PSI. Detection thresholds
+  are per-call parameters, not globals.
+- Alert volume on persistent drift — identity includes
+  `detected_at`, so a persistent condition alerts on every
+  observation cycle; consumers dedupe by source + kind window, and
+  the ledger keeps the full event series by design (ADR-0006
+  discipline).
+- Promotion identity excludes `promoted_at` — the same evidence
+  cannot be re-promoted (the ledger refuses); changing the
+  evidence, the signal name, or (in M10) the kill-switch regime is
+  the intentional way to re-promote. Promotion is evidence-first by
+  construction, and enforcement (M10) is out of scope here — the
+  kill-switch flag is recorded, report-only.
 - Funding charges precede step orders — a funding shock in the same
   step as the position-opening order refuses (the position does not
   exist yet at charge time); scenarios express this as separate
