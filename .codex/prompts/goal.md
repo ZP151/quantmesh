@@ -12,3 +12,5 @@ clean, all required CI and local checks pass, review has no unresolved finding,
 and it contains no credentials, live trading, destructive migration, paid
 service, incompatible license, or major architecture change. Merge dependent
 PRs one at a time and re-check the next PR after each merge.
+
+Squash merges rewrite commit IDs, so local `main` can diverge from `origin/main` after merging a PR. Preserve a divergent local `main` and always create the next work branch from `origin/main`; reconcile by fast-forward only.

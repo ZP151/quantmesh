@@ -4,7 +4,7 @@
 - Started: 2026-08-07
 - Completed:
 - Owner: unassigned agent team
-- GitHub issue: issues #13-#18 (to open; #12 was consumed by the M2 completion-records PR)
+- GitHub issue: issues #14-#19 (open; #12 was consumed by the M2 completion-records PR and #13 by the squash-divergence tracking issue)
 - Pull request: to be opened per slice
 - Roadmap milestone: M3 (see `docs/roadmap/ROADMAP.md`)
 
@@ -41,25 +41,26 @@ roadmap exit criteria for M3.
 Split into six single-session vertical tickets with explicit blocking edges,
 mirroring the M2 slice chain. Issue numbers continue the shared
 issues/PRs sequence: issues #1-#6 exist, PRs #7-#11 exist, so M3 issues are
-#12-#17.
+#14-#19 (the M2 completion-records PR took #12 and the squash-divergence
+tracking issue took #13).
 
-1. [#13] Normalized market-data schemas (no deps) — `Bar`, `OrderBook`
+1. [#14] Normalized market-data schemas (no deps) — `Bar`, `OrderBook`
    (depth levels), `TradeEvent` pydantic models plus monotonicity,
    gap and duplication primitives. Domain layer only, no I/O.
-2. [#14] Parquet/DuckDB local data lake (blocks on #13) — lake layout and
+2. [#15] Parquet/DuckDB local data lake (blocks on #14) — lake layout and
    partition convention, DuckDB-backed read/write surface, data-quality
    checks (missing/duplicated/out-of-order). Writes ADR-0003 (data lake and
    normalization contract).
-3. [#15] Dataset manifests (blocks on #14) — source, timezone, revision,
+3. [#16] Dataset manifests (blocks on #15) — source, timezone, revision,
    license and coverage metadata; manifest generation and validation; a
    manifest is required before a dataset is queryable.
-4. [#16] Provider registry (blocks on #13) — provider contract
+4. [#17] Provider registry (blocks on #14) — provider contract
    (bar/order-book/trade fetch), registry keyed by `Venue`, adapters
    isolated behind the contract; fixture data only, no live credentials.
-5. [#17] Experiment registry (blocks on #15) — experiment IDs linking
+5. [#18] Experiment registry (blocks on #16) — experiment IDs linking
    dataset manifest references (pinned revision), code commit, parameters
    and metrics; reproducible from a manifest on a clean checkout.
-6. [#18] Scheduled ingestion and gap detection (blocks on #15, #16) —
+6. [#19] Scheduled ingestion and gap detection (blocks on #16, #17) —
    scheduler driving providers into the lake, gap detection comparing
    observed coverage against manifests.
 
@@ -67,7 +68,7 @@ issues/PRs sequence: issues #1-#6 exist, PRs #7-#11 exist, so M3 issues are
 - Quant researcher: define schema invariants and quality-check semantics
   (slice #12); define what "reproducible experiment" means in practice
   (slice #16).
-- Implementer: TDD each slice on its own branch (`feat/13`…`feat/18`),
+- Implementer: TDD each slice on its own branch (`feat/14`…`feat/19`),
   one slice per session.
 - Reviewer: two-axis /code-review (standards + spec) on each slice before
   merge.
@@ -107,10 +108,15 @@ issues/PRs sequence: issues #1-#6 exist, PRs #7-#11 exist, so M3 issues are
 ## Work log
 
 - 2026-08-07: Created the M3 plan from the roadmap's M3 section. Issues
-  #13-#18 open when M2 merges to main (renumbered from #12-#17 after the
-  M2 completion-records PR took #12); each slice then gets a branch,
-  PR and verification evidence as in iteration 0003.
+  #14-#19 open once M2 merges to main (renumbered twice: the M2
+  completion-records PR took #12, the squash-divergence tracking issue took
+  #13); each slice then gets a branch, PR and verification evidence as in
+  iteration 0003.
 - 2026-08-07: M2 merged to main (PRs #7-#11); plan renumbering applied.
+- 2026-08-07: Issues #14-#19 opened. Renumbered from #13-#18: #13 was taken
+  by the squash-divergence tracking issue (see `docs/13-squash-divergence-recovery`
+  PR); #12 was taken by the M2 completion-records PR. Slice #1 (issue #14)
+  is next.
 
 ## Verification evidence
 
