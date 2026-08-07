@@ -21,3 +21,13 @@ class HyperliquidProtocolError(HyperliquidError):
 
 class HyperliquidSDKMissingError(HyperliquidError):
     """The vendored hyperliquid-python-sdk is not importable."""
+
+
+class HyperliquidRiskRefusalError(HyperliquidError):
+    """A pre-submission risk check refused the order (issue #31, Phase C).
+
+    Raised by the execution adapter when the configured ``RiskLimits``
+    gate fails: the order was evaluated against the risk context and
+    refused before anything was recorded or sent — no journal entry, no
+    wire call. The message carries the typed refusals.
+    """

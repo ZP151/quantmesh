@@ -27,6 +27,8 @@ is silent and only fills remain — the reconciliation derives the honest
 terminal meaning from fills and journal state (never guessing).
 """
 
+from __future__ import annotations
+
 import json
 import math
 import os
@@ -34,7 +36,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -49,10 +51,14 @@ from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.errors import (
     HyperliquidError,
     HyperliquidProtocolError,
+    HyperliquidRiskRefusalError,
     HyperliquidSDKMissingError,
     HyperliquidUnavailableError,
 )
 from quantmesh.hyperliquid.rest import TESTNET_API_URL
+
+if TYPE_CHECKING:
+    from quantmesh.hyperliquid.risk import RiskContextProvider, RiskLimits
 from quantmesh.hyperliquid.wire import ms_to_utc
 
 __all__ = [
@@ -126,7 +132,7 @@ class BrokerFill(BaseModel):
     cloid: str | None = None
 
     @model_validator(mode="after")
-    def side_is_concrete(self) -> "BrokerFill":
+    def side_is_concrete(self) -> BrokerFill:
         _require_side(self.side, f"fill {self.fill_id}")
         return self
 
@@ -540,11 +546,34 @@ class HyperliquidExecutionAdapter:
     oid. ``cancel`` applies the venue-confirmed cancel through the state
     machine — the venue's surface forgets canceled orders, so the ack is
     the only honest terminal record.
+
+    The pre-submission risk gate (issue #31, Phase C) is optional and
+    paired: ``risk_limits`` and ``risk_context`` are configured together
+    or not at all (a gate without its context provider, or vice versa, is
+    a construction error). When configured, every ``place`` runs
+    ``evaluate_order`` against the provider's fresh context BEFORE the
+    journal-first recording; a refusal raises
+    ``HyperliquidRiskRefusalError`` and nothing is recorded or sent.
     """
 
-    def __init__(self, transport: ExchangeTransport, journal: OrderJournal) -> None:
+    def __init__(
+        self,
+        transport: ExchangeTransport,
+        journal: OrderJournal,
+        *,
+        risk_limits: RiskLimits | None = None,
+        risk_context: RiskContextProvider | None = None,
+    ) -> None:
+        if (risk_limits is None) != (risk_context is None):
+            raise ValueError(
+                "risk_limits and risk_context must be configured together; "
+                "a gate without its context provider (or vice versa) would "
+                "run with a silently missing half"
+            )
         self.transport = transport
         self.journal = journal
+        self.risk_limits = risk_limits
+        self.risk_context = risk_context
 
     def place(
         self,
@@ -560,6 +589,29 @@ class HyperliquidExecutionAdapter:
                 f"instrument {request.instrument.symbol!r} is not a Hyperliquid "
                 "instrument"
             )
+
+        # Pre-submission risk gate (issue #31, Phase C): runs before
+        # anything is recorded or sent, so a refusal consumes nothing —
+        # no journal entry, no wire call (HyperliquidRiskRefusalError).
+        if self.risk_limits is not None and self.risk_context is not None:
+            from quantmesh.hyperliquid.risk import evaluate_order
+
+            decision = evaluate_order(
+                request,
+                reduce_only=reduce_only,
+                context=self.risk_context.risk_context(),
+                limits=self.risk_limits,
+            )
+            if not decision.allowed:
+                refusals = "; ".join(
+                    f"[{refusal.kind}] {refusal.message}"
+                    for refusal in decision.refusals
+                )
+                raise HyperliquidRiskRefusalError(
+                    f"risk gate refused the order for "
+                    f"{request.instrument.symbol!r}: {refusals}"
+                )
+
         order_id = order_id or uuid.uuid4().hex
         created_at = created_at or datetime.now(UTC)
         client_order_id = client_order_id or request.client_order_id or uuid.uuid4().hex

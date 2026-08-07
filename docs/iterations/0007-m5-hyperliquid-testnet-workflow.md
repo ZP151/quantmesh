@@ -68,10 +68,19 @@ the operator drill (Phase E).
       position drift findings are all fixture-covered (ADR-0007 Phase B:
       cloid channel, journal-first ids, re-derive-on-reconnect, derived
       statuses, ack-terminal classification).
-- [ ] Risk limits prevent excess leverage and stale-data execution: the
+- [x] Risk limits prevent excess leverage and stale-data execution: the
       pre-submission guard refuses orders that breach the leverage bound,
       liquidation-distance floor, reduce-only posture, or the stale-data
-      window; funding is accounted in the journal (fixture tests).
+      window; funding is accounted in the journal (fixture tests). — DONE
+      2026-08-08 (issue #31, Phase C): 40 new tests; the pure
+      `evaluate_order` gate covers each check including the fail-closed
+      MISSING_DATA paths (no equity, no entry, no liquidation price, no
+      mark, no funding), the funding-corrected liquidation-distance
+      estimate (paid funding shrinks the distance; direction flips rebase
+      to the new entry; reductions and full closes skip the estimate),
+      and the adapter wiring proves a refusal consumes nothing — no
+      journal entry, no wire call; `FundingLedger` anchors, deltas,
+      no-ops, per-coin series, and fail-closed reads are fixture-covered.
 - [ ] Order-book imbalance and volatility baselines each produce a
       reproducible walk-forward, cost-aware report from a pinned dataset
       (M5 report stack on the M4 `run_walk_forward`/`ReportRegistry`).
@@ -177,9 +186,15 @@ record the exact gate, proceed to M6.
   shared ADR-0006 contract types; fee-less fills refused; market orders
   cannot carry reduce_only (the pinned SDK hard-codes it) — refused, not
   silently re-typed; positions compare as signed sizes.
-- ADR-0007 extension (issue #31 Phase C): risk checks run before the wire
-  (leverage, liquidation distance, reduce-only, stale-data window);
-  funding is a fee-like journal entry.
+- ADR-0007 extension (issue #31 Phase C) **recorded 2026-08-08**: the
+  pure, deterministic pre-submission gate (leverage bound, liquidation-
+  distance floor from l2Book + funding + position, reduce-only posture,
+  stale-data window) fails closed on missing inputs; the adapter wires
+  `risk_limits` + `risk_context` paired or not at all, the gate runs
+  before the journal-first recording, and a refusal raises
+  `HyperliquidRiskRefusalError` consuming nothing; funding is a fee-like
+  `FundingLedger` entry (signed deltas vs the running cumulative per
+  coin, atomic writes, fail-closed reads).
 - ADR-0007 extension (issue #33 Phase E): private keys enter only via
   injected signer or env var, in memory, never persisted or logged;
   wallet-isolation tests are part of the secret-handling suite.
@@ -255,6 +270,35 @@ record the exact gate, proceed to M6.
   and corrected in the fixture and tests. Shared contract types verified
   against the Moomoo binding (full suite green). 686 passed, 3 skipped;
   ruff clean; diff clean; submodules clean. Checkpoint pushed.
+- 2026-08-08: **Issue #31 (Phase C, risk pre-submission surface)
+  committed** — `quantmesh.hyperliquid.risk`: pure `evaluate_order` gate
+  over `RiskLimits`/`RiskContext` with four fail-closed checks (stale-data
+  window — missing, future, or over-age book timestamps refuse; reduce-only
+  posture; leverage bound on the resulting signed position vs account
+  equity — full closes skip, missing equity/entry MISSING_DATA; liquidation-
+  distance floor — the venue's reported liquidationPx scaled to the
+  size-weighted entry of the resulting position, funding-corrected toward
+  the mark (conservative), measured against the l2Book mid, already-at-or-
+  beyond a refusal, reductions/full closes skip the estimate, direction
+  flips rebase to the new entry); typed `RiskKind`/`RiskRefusal`/
+  `RiskDecision` (allowed only with zero refusals, checks recorded in gate
+  order); `RiskContextProvider` Protocol; `FundingLedger` fee-like journal
+  entry — signed deltas against each coin's running cumulative (never the
+  last row's delta, which would compound the series — caught and fixed in
+  review), `funding.jsonl` under the orders dir, atomic temp+replace
+  writes, fail-closed reads with line attribution, first record anchors,
+  zero deltas no-ops; adapter wiring — `risk_limits` + `risk_context`
+  paired at construction or ValueError, the gate runs BEFORE the journal-
+  first recording, a refusal raises `HyperliquidRiskRefusalError` with the
+  typed refusals and consumes nothing (no journal entry, no wire call);
+  ADR-0007 Phase C extension recorded; acceptance criterion 3 checked off.
+  40 new tests (26 gate, 7 adapter wiring, 7 funding ledger). Review caught
+  one real defect before commit: the ledger computed deltas against the
+  previous row's delta instead of the running cumulative (a three-record
+  series would compound to 3.6 instead of 1.1 — now fixed with a regression
+  test), plus the adapter's TYPE_CHECKING annotations needed the module's
+  `from __future__ import annotations`. 726 passed, 3 skipped; ruff clean;
+  diff clean; submodules clean. Checkpoint pushed.
 
 ## Verification evidence
 
@@ -277,6 +321,17 @@ record the exact gate, proceed to M6.
   107.5 and a +1.0 BTC position imported on the first apply pass
   (venue-ahead progress) → final report {matched: 2, pending: 0,
   missing: 0, divergent: 0} with 0 findings and 0 refusals.
+- Phase C slice (issue #31), after the #31 commit, 2026-08-08:
+  `pytest -q` → 726 passed, 3 skipped (symlink creation not permitted);
+  `ruff check src tests` → clean; `git diff --check` → clean;
+  `git submodule status` → clean. Gate drill
+  (`test_adapter_gate_refuses_before_anything_is_recorded_or_sent`): a
+  leverage-violating order through the wired adapter raises
+  `HyperliquidRiskRefusalError` (the message carries the typed `[leverage]`
+  refusal) with an empty journal and zero wire calls — the refuse path
+  consumes nothing; the funding ledger's three-record series proves the
+  delta is against the running cumulative, not the last row
+  (`test_ledger_records_deltas_since_the_last_cumulative`).
 
 ## Risks and gates
 

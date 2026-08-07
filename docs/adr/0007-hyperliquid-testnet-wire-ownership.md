@@ -147,9 +147,49 @@ criterion deterministically — no network, no sleeps.
     hard-codes it False): the adapter refuses rather than silently re-typing
     the order; position closing goes through reduce-only LIMIT orders
     (Phase C's closing path).
-- Phase C (#31): risk checks run before the wire (leverage, liquidation
-  distance, reduce-only, stale-data window); funding is a fee-like journal
-  entry.
+- Phase C (#31), **recorded 2026-08-08**: a pre-submission risk gate sits
+  between the adapter and the wire, and funding is accounted as a fee-like
+  journal entry.
+  - The gate is pure and deterministic (`evaluate_order` over
+    `RiskLimits` + `RiskContext`) — fixture-testable without the SDK or the
+    network — and it fails closed: a check whose inputs are incomplete is a
+    typed `MISSING_DATA` refusal, never a guess. The four checks:
+    - **Leverage bound** — the resulting signed position (venue position +
+      the new order) at the entry estimate (limit price, else the l2Book
+      mid) divided by account equity must stay within `max_leverage`
+      (default 3.0x); a full close has nothing left to lever and skips the
+      check; missing equity or entry fails closed.
+    - **Liquidation-distance floor** — the resulting position's estimated
+      distance to its liquidation price must stay above
+      `min_liquidation_distance_bps` (default 500). The estimate scales the
+      venue's own reported `liquidationPx` proportionally to the
+      size-weighted entry of the resulting position (a direction flip
+      rebases to the new entry), corrects the entry for cumulative funding
+      (paid funding moves the effective entry toward the mark — a
+      conservative shrink), and measures against the l2Book mid; a mark
+      already at or beyond the estimate is a refusal. Orders that strictly
+      decrease risk (reductions, full closes) skip the estimate; anything
+      the estimate needs (position, entry, liquidation price, mark,
+      funding) that is missing fails closed.
+    - **Reduce-only posture** — with `reduce_only` limits configured, only
+      reduce-only orders pass.
+    - **Stale-data window** — the latest book timestamp must be within
+      `stale_data_window_s` (default 30) of the context clock; a missing or
+      future timestamp is a refusal — no order trades on stale data.
+  - The adapter wires the gate paired: `risk_limits` and `risk_context`
+    (a `RiskContextProvider` that assembles position, book, funding,
+    equity, and clock at order time) are configured together or not at all
+    — a half-configured gate is a construction error. The gate runs BEFORE
+    the journal-first recording, and a refusal raises
+    `HyperliquidRiskRefusalError` carrying the typed refusals: nothing is
+    recorded, nothing is sent.
+  - Funding is a fee-like journal entry: `FundingLedger` records the
+    signed delta of each position's venue-reported cumulative funding
+    (positive = the position paid) into `funding.jsonl` under the orders
+    directory — append-only with atomic temp-file+replace writes and
+    fail-closed reads with line attribution, per-coin series (each delta
+    is against that coin's running cumulative, never the last row), the
+    first record anchors, zero deltas are no-ops.
 - Phase E (#33): private keys enter only via injected signer or env var, in
   memory, never persisted or logged; wallet-isolation tests are part of the
   secret-handling suite.
