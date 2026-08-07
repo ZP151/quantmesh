@@ -67,6 +67,7 @@ from quantmesh.hyperliquid.risk import (
     RiskRefusal,
     evaluate_order,
 )
+from quantmesh.hyperliquid.signal import book_imbalance, imbalance_by_bar
 from quantmesh.hyperliquid.stream import (
     GapFinding,
     HyperliquidStream,
@@ -122,8 +123,10 @@ __all__ = [
     "StreamSupervisor",
     "TESTNET_API_URL",
     "apply_reconciliation",
+    "book_imbalance",
     "build_snapshot",
     "evaluate_order",
+    "imbalance_by_bar",
     "next_backoff",
     "parse_cancel_ack",
     "parse_fill",

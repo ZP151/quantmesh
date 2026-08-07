@@ -7,14 +7,20 @@ end-to-end runner pins the dataset through the lake's manifest gate and
 produces artifacts whose bytes are reproducible.
 """
 
+import math
 from datetime import timedelta
 
 import pytest
 from research_fixtures import START, SYMBOLS, fixture_bars, pinned_lake
 
-from quantmesh.domain.market_data import Bar
+from quantmesh.data.lake import Lake
+from quantmesh.data.manifest import ManifestWriter
+from quantmesh.domain.market_data import Bar, DepthLevel, OrderBook
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
+from quantmesh.hyperliquid.signal import imbalance_by_bar
 from quantmesh.research.baselines import (
+    book_imbalance_weights,
+    low_volatility_weights,
     mean_reversion_weights,
     momentum_weights,
     risk_parity_weights,
@@ -26,6 +32,7 @@ from quantmesh.research.reports import (
     ReportRegistry,
     UniverseMember,
     WalkForwardSpec,
+    report_id,
 )
 
 COMMIT = "b" * 40
@@ -35,6 +42,13 @@ UNIVERSE = [
 SPEC = WalkForwardSpec(train_bars=30, test_bars=10, step_bars=10)
 COSTS = CostModel(fee_bps=5, half_spread_bps=5, slippage_bps=2)
 ZERO_COSTS = CostModel(fee_bps=0, half_spread_bps=0, slippage_bps=0)
+
+# Per-symbol bid-side bias for the Phase D book fixtures: AAA is
+# bid-heavy (+1/3 imbalance), BBB balanced (0), CCC ask-heavy (−1/3).
+BIAS = {"AAA": 2.0, "BBB": 1.0, "CCC": 0.5}
+UNIVERSE_CRYPTO = [
+    UniverseMember(venue=Venue.HYPERLIQUID, symbol=symbol) for symbol in SYMBOLS
+]
 
 
 def fixture_series(n: int = 60) -> dict[str, list[Bar]]:
@@ -377,3 +391,281 @@ def test_rerun_into_same_registry_is_refused(roots) -> None:
     run_report(registry)
     with pytest.raises(ValueError, match="already recorded"):
         run_report(registry)
+
+
+# --- Phase D: M5 crypto baselines (issue #32) ----------------------------------
+
+
+def test_low_volatility_weights_long_quietest_bottom_half() -> None:
+    assert low_volatility_weights({"A": 0.2, "B": 0.1, "C": 0.3}) == {
+        "A": 0.5,
+        "B": 0.5,
+        "C": 0.0,
+    }
+    assert low_volatility_weights({"A": 0.4, "B": 0.3, "C": 0.2, "D": 0.1}) == {
+        "A": 0.0,
+        "B": 0.0,
+        "C": 0.5,
+        "D": 0.5,
+    }
+
+
+def test_low_volatility_includes_zero_volatility_symbols() -> None:
+    # Unlike risk-parity, zero train volatility is the signal, not an
+    # undefined input.
+    assert low_volatility_weights({"A": 0.0, "B": 0.1}) == {"A": 1.0, "B": 0.0}
+
+
+def test_book_imbalance_weights_long_signal_top_half() -> None:
+    assert book_imbalance_weights({"A": 0.3, "B": -0.1, "C": 0.0}) == {
+        "A": 0.5,
+        "B": 0.0,
+        "C": 0.5,
+    }
+
+
+def test_baseline_weight_ties_break_on_symbol() -> None:
+    assert low_volatility_weights({"A": 0.1, "B": 0.1, "C": 0.1}) == {
+        "A": 0.5,
+        "B": 0.5,
+        "C": 0.0,
+    }
+    assert book_imbalance_weights({"A": 0.0, "B": 0.0, "C": 0.0}) == {
+        "A": 0.0,
+        "B": 0.5,
+        "C": 0.5,
+    }
+
+
+def test_book_imbalance_without_signals_fails_closed() -> None:
+    with pytest.raises(ValueError, match="needs signals_by_symbol"):
+        run_walk_forward(
+            fixture_series(),
+            strategy="book_imbalance",
+            window_spec=SPEC,
+            costs=ZERO_COSTS,
+        )
+
+
+def test_signal_series_must_match_the_bar_grid() -> None:
+    series = fixture_series(60)
+    with pytest.raises(ValueError, match="shifted signal"):
+        run_walk_forward(
+            series,
+            strategy="book_imbalance",
+            window_spec=SPEC,
+            costs=ZERO_COSTS,
+            signals_by_symbol={symbol: [0.0] * 59 for symbol in SYMBOLS},
+        )
+
+
+def test_signal_series_must_match_the_universe() -> None:
+    series = fixture_series(60)
+    signals = {symbol: [0.0] * 60 for symbol in SYMBOLS}
+    signals["ZZZ"] = [0.0] * 60
+    with pytest.raises(ValueError, match="disagree on the universe"):
+        run_walk_forward(
+            series,
+            strategy="book_imbalance",
+            window_spec=SPEC,
+            costs=ZERO_COSTS,
+            signals_by_symbol=signals,
+        )
+
+
+def test_book_imbalance_weights_use_train_window_signals_only() -> None:
+    """No lookahead: window 1 trains on AAA (+), BBB (0), CCC (−) — the
+    test segment holds AAA/BBB even though window 2's train signals turn
+    against AAA and window 3 rotates to BBB/CCC."""
+    series = fixture_series(60)
+    signals = {symbol: [0.0] * 60 for symbol in SYMBOLS}
+    for index in range(60):
+        signals["AAA"][index] = 0.5 if index < 30 else -0.5
+        signals["CCC"][index] = -0.5 if index < 30 else 0.5
+    result = run_walk_forward(
+        series,
+        strategy="book_imbalance",
+        window_spec=SPEC,
+        costs=ZERO_COSTS,
+        signals_by_symbol=signals,
+    )
+    assert {(symbol, after) for _, symbol, _, after, _ in result.trades[:2]} == {
+        ("AAA", 0.5),
+        ("BBB", 0.5),
+    }
+    assert result.windows[0].n_trades == 2  # the initial rebalance
+    assert result.windows[1].n_trades == 0  # weights held through window 2
+    assert result.windows[2].n_trades == 2  # window 3 rotates to BBB/CCC
+
+
+def test_low_volatility_report_runs_end_to_end(roots) -> None:
+    lake_root, registry_root = roots
+    registry = ReportRegistry(root=registry_root, lake_root=lake_root)
+    report = run_report(registry, "low_volatility")
+    assert report.strategy == "low_volatility"
+    assert report.metrics["n_windows"] == 3
+    assert registry.get(report.id) == report
+
+
+def crypto_bars(symbol: str, n: int = 60) -> list[Bar]:
+    """HYPERLIQUID-venue bars over the same closed-form shapes."""
+    base, drift, amplitude = SYMBOLS[symbol]
+    instrument = Instrument(
+        symbol=symbol,
+        venue=Venue.HYPERLIQUID,
+        instrument_type=InstrumentType.PERPETUAL,
+        currency="USD",
+    )
+    return [
+        Bar(
+            instrument=instrument,
+            timestamp=START + timedelta(hours=index),
+            interval="1h",
+            open=price,
+            high=price,
+            low=price,
+            close=price,
+            volume=1000.0,
+        )
+        for index in range(n)
+        for price in [
+            base * (1.0 + drift * index / n + amplitude * math.sin(2 * math.pi * index / 14))
+        ]
+    ]
+
+
+def crypto_books(symbol: str, n: int = 60) -> list[OrderBook]:
+    """Two snapshots per bar window; the bid side scales by the bias."""
+    bars = crypto_bars(symbol, n)
+    bias = BIAS[symbol]
+    books = []
+    for bar in bars:
+        for offset_minutes in (15, 45):
+            books.append(
+                OrderBook(
+                    instrument=bar.instrument,
+                    timestamp=bar.timestamp + timedelta(minutes=offset_minutes),
+                    bids=[DepthLevel(price=bar.close * 0.999, quantity=10.0 * bias)],
+                    asks=[DepthLevel(price=bar.close * 1.001, quantity=10.0)],
+                )
+            )
+    return books
+
+
+def crypto_lake(root, *, name: str = "crypto") -> None:  # noqa: ANN001
+    lake = Lake(root)
+    for symbol in SYMBOLS:
+        lake.write_bars(name, crypto_bars(symbol))
+    ManifestWriter(root).generate(name, source="fixture", license="test")
+
+
+def crypto_signals() -> dict[str, list[float]]:
+    return {
+        symbol: imbalance_by_bar(crypto_books(symbol), crypto_bars(symbol))
+        for symbol in SYMBOLS
+    }
+
+
+def run_crypto_report(
+    registry: ReportRegistry, *, signals: dict[str, list[float]] | None = None
+):
+    return run_baseline_report(
+        dataset="crypto",
+        revision=1,
+        strategy="book_imbalance",
+        interval="1h",
+        universe=UNIVERSE_CRYPTO,
+        window_spec=SPEC,
+        costs=COSTS,
+        signals_by_symbol=signals,
+        commit=COMMIT,
+        registry=registry,
+    )
+
+
+def test_book_imbalance_report_runs_end_to_end(tmp_path) -> None:
+    lake_root = tmp_path / "lake"
+    registry_root = tmp_path / "reports"
+    crypto_lake(lake_root)
+    registry = ReportRegistry(root=registry_root, lake_root=lake_root)
+
+    report = run_crypto_report(registry, signals=crypto_signals())
+
+    assert report.strategy == "book_imbalance"
+    assert report.metrics["n_windows"] == 3
+    assert len(report.windows) == 3
+    assert registry.get(report.id) == report
+    for name in ("report.json", "equity_curve.csv", "trades.csv"):
+        assert (registry_root / report.id / name).exists()
+
+
+def test_signal_reports_are_byte_reproducible(tmp_path) -> None:
+    """The Phase D acceptance: identical pinned setup + signals -> identical bytes."""
+    first_id = None
+    for root in (tmp_path / "first", tmp_path / "second"):
+        crypto_lake(root / "lake")
+        registry = ReportRegistry(root=root / "reports", lake_root=root / "lake")
+        report = run_crypto_report(registry, signals=crypto_signals())
+        if first_id is None:
+            first_id = report.id
+        else:
+            assert report.id == first_id
+            for name in ("report.json", "equity_curve.csv", "trades.csv"):
+                first_bytes = (tmp_path / "first" / "reports" / first_id / name).read_bytes()
+                second_bytes = (root / "reports" / report.id / name).read_bytes()
+                assert first_bytes == second_bytes, f"{name} differs between runs"
+
+
+def test_signal_inputs_are_part_of_the_report_identity(tmp_path) -> None:
+    """Different signal series, same dataset pin -> different report ids."""
+    ids = []
+    for bias in (2.0, 1.0):
+        lake_root = tmp_path / f"lake-{bias}"
+        registry = ReportRegistry(
+            root=tmp_path / f"reports-{bias}", lake_root=lake_root
+        )
+        crypto_lake(lake_root)
+        signals = crypto_signals()
+        if bias == 1.0:  # make every symbol balanced
+            signals = {
+                symbol: [0.0] * 60 for symbol in SYMBOLS
+            }
+        ids.append(run_crypto_report(registry, signals=signals).id)
+    assert ids[0] != ids[1]
+
+
+def test_report_id_includes_the_signals_digest() -> None:
+    plain = report_id(
+        dataset="crypto",
+        revision=1,
+        commit=COMMIT,
+        strategy="book_imbalance",
+        interval="1h",
+        universe=UNIVERSE_CRYPTO,
+        window_spec=SPEC,
+        costs=COSTS,
+    )
+    with_signals = report_id(
+        dataset="crypto",
+        revision=1,
+        commit=COMMIT,
+        strategy="book_imbalance",
+        interval="1h",
+        universe=UNIVERSE_CRYPTO,
+        window_spec=SPEC,
+        costs=COSTS,
+        signals_digest="a" * 16,
+    )
+    assert plain != with_signals
+    # None keeps the legacy identity: existing reports do not change.
+    assert report_id(
+        dataset="crypto",
+        revision=1,
+        commit=COMMIT,
+        strategy="book_imbalance",
+        interval="1h",
+        universe=UNIVERSE_CRYPTO,
+        window_spec=SPEC,
+        costs=COSTS,
+        signals_digest=None,
+    ) == plain

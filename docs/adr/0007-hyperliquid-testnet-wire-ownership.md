@@ -190,6 +190,31 @@ criterion deterministically — no network, no sleeps.
     fail-closed reads with line attribution, per-coin series (each delta
     is against that coin's running cumulative, never the last row), the
     first record anchors, zero deltas are no-ops.
+- Phase D (#32), **recorded 2026-08-08**: order-book imbalance and
+  volatility baselines on the M5 report stack.
+  - The imbalance signal is pure and depth-weighted over the full book:
+    `book_imbalance = (Σbid − Σask)/(Σbid + Σask)`. A book with zero depth
+    on both sides is an error, never a fabricated value; one-sided books
+    are well-defined extremes (±1.0).
+  - The canonical per-bar series `imbalance_by_bar` buckets snapshots into
+    `[timestamp, timestamp + interval)` bar windows and returns the per-bar
+    means, aligned 1:1 with the bar grid. Alignment fails closed: a
+    snapshot outside every window, a bar without a snapshot, a
+    non-monotonic snapshot series, a symbol mismatch, or mixed bar
+    intervals all raise — a misaligned signal would silently shift the
+    hypothesis, so it cannot exist silently.
+  - Signal-driven baseline strategies (`book_imbalance`, and `low_
+    volatility` over realized train volatility) consume caller-supplied
+    per-bar signal series validated against the grid (universe equality +
+    per-symbol length). Weights are computed from the train slice of each
+    window only — no lookahead by construction, proven by test.
+  - The signal inputs are part of the report's pinned setup: a digest
+    over the canonical sorted signal JSON folds into `report_id` and is
+    recorded on the report as `signals_digest`, so the identity covers
+    the signal series and the recorded setup and the id cannot disagree;
+    a run without signals keeps the pre-Phase-D identity. The strategy
+    vocabulary is extended (`low_volatility`, `book_imbalance`) rather
+    than opened up, so an unknown strategy stays a validation error.
 - Phase E (#33): private keys enter only via injected signer or env var, in
   memory, never persisted or logged; wallet-isolation tests are part of the
   secret-handling suite.

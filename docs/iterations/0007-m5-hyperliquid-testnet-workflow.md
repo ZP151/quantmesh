@@ -81,9 +81,24 @@ the operator drill (Phase E).
       and the adapter wiring proves a refusal consumes nothing — no
       journal entry, no wire call; `FundingLedger` anchors, deltas,
       no-ops, per-coin series, and fail-closed reads are fixture-covered.
-- [ ] Order-book imbalance and volatility baselines each produce a
+- [x] Order-book imbalance and volatility baselines each produce a
       reproducible walk-forward, cost-aware report from a pinned dataset
-      (M5 report stack on the M4 `run_walk_forward`/`ReportRegistry`).
+      (M5 report stack on the M4 `run_walk_forward`/`ReportRegistry`). —
+      DONE 2026-08-08 (issue #32, Phase D): `book_imbalance` (depth-
+      weighted (Σbid−Σask)/(Σbid+Σask), fail-closed on empty books) and
+      `imbalance_by_bar` (snapshots bucketed into [timestamp, timestamp+
+      interval) bar windows, per-bar means aligned 1:1 with the bar grid;
+      outside-every-window, no-snapshot, non-monotonic, and symbol-
+      mismatch inputs all fail closed); `low_volatility_weights` (bottom
+      half by train realized vol, zero-vol symbols included) and
+      `book_imbalance_weights` (top half by train mean signal) as
+      `run_walk_forward` strategy branches; the signal series are caller-
+      supplied per bar, validated against the grid (universe + length), a
+      train-window-only proof guards against lookahead, and the signal
+      digest folds into `report_id` (None keeps legacy identity) with
+      `signals_digest` pinned on `StrategyReport` itself; end-to-end
+      reports reproduce byte-identically and signal inputs differentiate
+      the identity.
 - [ ] Wallet isolation: private-key material is accepted only through an
       injected in-memory signer or env var; never persisted, logged, or
       reported; adapter construction without a key fails closed; the
@@ -195,6 +210,19 @@ record the exact gate, proceed to M6.
   `HyperliquidRiskRefusalError` consuming nothing; funding is a fee-like
   `FundingLedger` entry (signed deltas vs the running cumulative per
   coin, atomic writes, fail-closed reads).
+- ADR-0007 extension (issue #32 Phase D) **recorded 2026-08-08**: the
+  order-book imbalance signal is pure and depth-weighted over the full
+  book (Σbid−Σask)/(Σbid+Σask), an empty book is an error; the per-bar
+  canonical series buckets snapshots into [timestamp, timestamp+interval)
+  windows aligned 1:1 with the bar grid and fails closed on any gap
+  (snapshot outside every window, bar without snapshot, non-monotonic
+  series, symbol mismatch, mixed intervals); signal-driven baseline
+  strategies consume caller-supplied per-bar signal series validated
+  against the grid, train-window-only by construction; the signal digest
+  is part of the report setup (folds into `report_id`, pinned as
+  `signals_digest` on the recorded report, None preserves the legacy
+  identity); the baseline strategy vocabulary is extended
+  (`low_volatility`, `book_imbalance`) rather than opened up.
 - ADR-0007 extension (issue #33 Phase E): private keys enter only via
   injected signer or env var, in memory, never persisted or logged;
   wallet-isolation tests are part of the secret-handling suite.
@@ -299,6 +327,36 @@ record the exact gate, proceed to M6.
   test), plus the adapter's TYPE_CHECKING annotations needed the module's
   `from __future__ import annotations`. 726 passed, 3 skipped; ruff clean;
   diff clean; submodules clean. Checkpoint pushed.
+- 2026-08-08: **Issue #32 (Phase D, order-book imbalance and volatility
+  baselines) committed** — `quantmesh.hyperliquid.signal`: pure
+  depth-weighted `book_imbalance` over the full book (one-sided books are
+  well-defined ±1.0, an empty book fails closed), `imbalance_by_bar`
+  cursor-aligned bucketing into [timestamp, timestamp+interval) bar
+  windows with per-bar means aligned 1:1 to the grid and every misalignment
+  an error (outside every window, bar without snapshot, non-monotonic
+  snapshots, symbol mismatch, mixed intervals, empty inputs);
+  `quantmesh.research.baselines` — `low_volatility_weights` (bottom half
+  by train realized vol, equal weight, zero-vol symbols included, sorted
+  tie-break) and `book_imbalance_weights` (top half by train mean signal)
+  as `run_walk_forward` strategy branches; `signals_by_symbol` validated
+  against the bar grid (universe equality + per-symbol length), computed
+  per window from the train slice only (no lookahead — proven by a test
+  where the signal flips after window 1 and the weights hold); the signal
+  digest (`_signals_digest`, sha256 over sorted signal JSON) folds into
+  `report_id` and is pinned as `signals_digest` on `StrategyReport` so the
+  recorded setup and the identity agree (None keeps the legacy id — the
+  review caught that the report model recomputed the expected id without
+  the digest, rejecting every signal-driven report; fixed by carrying the
+  digest on the report itself); `STRATEGIES` extended with
+  `low_volatility`/`book_imbalance` rather than opened up; exports in the
+  hyperliquid and research package surfaces; acceptance criterion 4
+  checked off. 55 new/updated tests (16 signal, 39 baseline) plus the
+  corrected tie-break and train-window expectations. Review caught two
+  real defects before commit: the identity/pin mismatch above, and the
+  tie-break expectation (bottom half of a 3-way tie is the first two
+  symbols sorted by name — the implementation was right, the test was
+  wrong). 755 passed, 3 skipped; ruff check clean; diff clean; submodules
+  clean. Checkpoint pushed.
 
 ## Verification evidence
 
@@ -332,6 +390,23 @@ record the exact gate, proceed to M6.
   consumes nothing; the funding ledger's three-record series proves the
   delta is against the running cumulative, not the last row
   (`test_ledger_records_deltas_since_the_last_cumulative`).
+- Phase D slice (issue #32), after the #32 commit, 2026-08-08:
+  `pytest -q` → 755 passed, 3 skipped (symlink creation not permitted);
+  `ruff check src tests` → clean; `git diff --check` → clean;
+  `git submodule status` → clean. Signal drill
+  (`test_series_means_the_snapshots_inside_each_bar_window`): a snapshot
+  at a bar boundary lands in the next bar, per-bar means align 1:1 with
+  the bar grid, and every misalignment path (snapshot outside every
+  window, bar without snapshot, non-monotonic series, symbol mismatch,
+  mixed intervals, empty book/inputs) raises instead of fabricating a
+  value. Baseline drills: `test_book_imbalance_weights_use_train_window_
+  signals_only` proves no lookahead (the train signal flips after window
+  1 yet the weights hold through window 2), `test_signal_reports_are_
+  byte_reproducible` proves two registries under different roots produce
+  byte-identical artifacts, and `test_signal_inputs_are_part_of_the_
+  report_identity` proves the same setup with different signal inputs
+  yields different report ids (and `report_id(..., signals_digest=None)`
+  keeps the legacy id).
 
 ## Risks and gates
 
