@@ -68,19 +68,31 @@ event mapping.
       registry-registered; live providers explicit-construction-only,
       keyless, read-only). — Phase A (issue #34) 2026-08-08 + Phase B
       (issue #35) 2026-08-08.
-2. [ ] Canonical event/outcome/resolution-rule/expiry models carry
+2. [x] Canonical event/outcome/resolution-rule/expiry models carry
       fee/spread/liquidity-aware implied probabilities computed by pure,
       fixture-tested functions (binary payoff structure per venue,
       spread-adjusted mid, liquidity confidence from book depth and tick
-      size).
-3. [ ] Point-in-time replay prevents look-ahead from market resolution
+      size). — Phase C (issue #36) 2026-08-08: break-even-derived
+      fee-aware mid (Polymarket linear fee shifts the no-arbitrage
+      center; Kalshi's `taker_fee_bps = 0` — its quadratic fee is
+      absorbed by the confidence band, never fabricated), liquidity
+      confidence from documented depth/spread constants, history
+      fallback below the 0.5 threshold.
+3. [x] Point-in-time replay prevents look-ahead from market resolution
       data: every train window uses only observations timestamped at or
       before its end, enforced by construction and proven by a test
-      where a resolution flips the outcome after window close.
-4. [ ] Forecast reports (M5 report-stack discipline: deterministic
+      where a resolution flips the outcome after window close. — Phase C
+      (issue #36) 2026-08-08: enforced in `_outcome_value` (an
+      observation strictly older than `resolved_at` never sees the
+      outcome), proven by the flip test in
+      `tests/test_events_forecast.py`.
+4. [x] Forecast reports (M5 report-stack discipline: deterministic
       setup-only `report_id`, `ReportRegistry`, byte-stable artifacts)
       include Brier score, calibration (reliability) curves and
-      liquidity confidence.
+      liquidity confidence. — Phase C (issue #36) 2026-08-08: Brier +
+      reliability bins + liquidity-weighted Brier; the report stack
+      mirrors M5 minus the lake pin (the recorded universe of event
+      markets is itself the setup).
 5. [ ] Cross-platform event mapping is reconciliation-disciplined: the
       same real-world event on Polymarket and Kalshi maps only through
       explicit evidence (normalized title, outcome set, expiry, and
@@ -206,12 +218,28 @@ operator drill).
   `{"error": {code, message}}` and `{"msg": ...}`; the migration host
   answers plain-text 401; the series object carries its ticker in
   `ticker`.
-- ADR-0008 extension (issue #36 Phase C): implied probabilities are
-  pure and fee/spread/liquidity-aware with venue-pinned payoff
-  structures; forecast reports reuse the M5 report-stack discipline
-  (setup-only identity, registry, byte-stable artifacts) and enforce
-  point-in-time replay by construction — resolution data participates
-  only from its resolution timestamp.
+- ADR-0008 extension (issue #36 Phase C), **recorded 2026-08-08**:
+  implied probabilities are pure and fee/spread/liquidity-aware with
+  venue-pinned payoff structures; forecast reports reuse the M5
+  report-stack discipline (setup-only identity, registry, byte-stable
+  artifacts) and enforce point-in-time replay by construction —
+  resolution data participates only from its resolution timestamp.
+  The recorded specifics: the fee-aware mid is break-even-derived
+  (`mid + fee_rate * half_spread`, from the shifted no-arbitrage
+  interval `[b(1-f), a(1+f)]`), zero when the venue reports no bps
+  fee (Kalshi) or only one side exists; liquidity confidence is a
+  depth score (saturating at 2000 total contracts) times a spread
+  score (1.0 at ≤ 2 ticks, 0.2 floor at 10 ticks), halved on a
+  one-sided book, rounded to 4 decimals; the history fallback blends
+  the quote toward the recent price mean below 0.5 confidence and
+  never dilutes at or above it; Brier is binary and point-in-time —
+  an observation strictly older than `resolved_at` never sees the
+  outcome (one exactly on the instant does), split resolutions are
+  refused (binary Brier needs a binary resolution; fractional-payoff
+  is a documented future extension), a resolution without
+  `resolved_at` fails closed, unresolved windows report `None`;
+  forecast reports need no lake pin because the recorded universe of
+  event markets is itself the setup.
 - ADR-0008 extension (issue #37 Phase D): cross-platform event mapping
   is reconciliation-disciplined — explicit evidence (normalized title,
   outcome set, expiry, resolution-rule fingerprints) required for a
@@ -297,6 +325,39 @@ operator drill).
   carry (identity is in `ticker`). Adversarial review also fixed 10
   over-long lines (E501) the earlier session left in the package;
   ruff/diff/submodules clean.
+- 2026-08-08: **Phase C (issue #36) implemented** —
+  `quantmesh.events.calibration` (pure fee/spread/liquidity-aware
+  transforms with documented formulas: break-even-derived fee-aware
+  mid, liquidity confidence with documented depth/spread constants,
+  history fallback below 0.5 confidence, Brier pair/mean/bin metrics
+  with half-open bins and empty-bin `None` discipline,
+  liquidity-weighted Brier) + `quantmesh.events.forecast`
+  (ForecastObservation/ForecastMarket with strictly-ascending
+  aware-timestamp validation; ForecastWindowSpec mirroring the M5
+  walk-forward shape; run_forecast with the point-in-time outcome
+  rule in `_outcome_value` — observations strictly older than
+  `resolved_at` never see the outcome, split resolutions refused,
+  resolution without `resolved_at` fails closed; ForecastReport with
+  setup-only 16-hex id over commit + sorted universe (composite
+  `venue:venue_market_id` keys) + window spec + bins;
+  ForecastReportRegistry JSONL with atomic appends, fail-closed reads
+  with line attribution, duplicate-id refusal — no lake pin, the
+  recorded universe is the setup; byte-stable artifacts
+  `report.json` (created_at excluded)/`windows.csv`/`calibration.csv`
+  across registry roots; run_forecast_report end-to-end).
+  `events/__init__.py` exports the full surface. 69 new tests (951
+  passed, 3 skipped); the calibration suite pinned the documented
+  arithmetic (fee shift 0.001 at 1000 bps, tight/wide/one-sided
+  confidence cases, fallback blend, bin partitioning incl. `p == 1.0`
+  in the last bin and half-open boundaries); the forecast suite
+  proves point-in-time replay by flipping a resolution after window
+  close (windows closed before `resolved_at` stay `None` under both
+  outcomes; overlapping windows flip exactly) and byte-reproducibility
+  across registry roots. Review-by-test exposed one genuine gap — the
+  CalibrationBin row builder omitted `count` (no default) — fixed
+  with a default of 0; the replay boundary is documented as
+  strictly-older-never (an observation exactly on the resolution
+  instant does see the outcome); ruff/diff clean.
 
 ## Verification evidence
 
@@ -323,9 +384,34 @@ operator drill).
   construction refusal; registry refuses LIVE; derived-ask skip at
   $1.00; canonical fixture consistency tests pin the four
   `kalshi_*.json` derivations against the adapters.
-- Phase C slice (issue #36): same gates; calibration fixture drills;
-  point-in-time replay test (resolution after window close never seen
-  in train); forecast report byte-reproducibility across registry roots.
+- Phase C slice (issue #36): **951 passed, 3 skipped** (69 new tests);
+  ruff clean; `git diff --check` clean. Calibration drill: fee-aware
+  mid arithmetic pinned (mid 0.5, bid 0.49/ask 0.51, 1000 bps →
+  adjusted 0.501 with spread_adjustment 0.001; Kalshi zero fee → zero
+  adjustment; one-sided last-trade surface; no-price-surface refusal);
+  liquidity confidence cases (tight ≤ 2 ticks, 0.2 floor at 10 ticks,
+  depth saturation at 2000, one-sided halving, 4-decimal rounding);
+  history signal mean/volatility with fail-closed empties and
+  out-of-range; fallback blend below 0.5 and no-dilution above; Brier
+  pair/mean with binary-outcome and empty-series refusals; bin
+  partitioning with `p == 1.0` in the last bin, half-open boundaries
+  and empty-bin `None`. Forecast drill: window structure over a
+  timestamp-sorted grid (train_end/test_start/test_end boundaries);
+  **point-in-time replay** — a market resolved at T+12h over a 20-hour
+  grid: windows closing before the resolution report `brier = None`
+  (n_resolved 0) even though the market is resolved today, and
+  flipping the resolution from No to Yes changes only the overlapping
+  and post-resolution windows (0.184967 → 0.324967 and 0.2211 →
+  0.2811), never the closed one; split-resolution and
+  resolution-without-timestamp refusals; all-zero-confidence windows
+  report plain Brier with the weighted estimate `None`; setup-only id
+  determinism incl. universe-order invariance; registry discipline
+  (duplicate-record refusal, corrupted-line and duplicate-id
+  fail-closed reads with line attribution, persistence across
+  instances); artifact byte-reproducibility across two registry roots
+  with `created_at` excluded from `report.json`; windows.csv and
+  calibration.csv row shapes pinned (composite `venue:market` ids,
+  empty-bin rows emitted blank).
 - Phase D slice (issue #37): same gates; mapping ledger drill
   (matched/pending/ambiguous with evidence); acceptance drill converges
   to calibrated forecast reports with Brier + calibration + liquidity

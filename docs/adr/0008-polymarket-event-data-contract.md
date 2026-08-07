@@ -183,6 +183,52 @@ decisions (point-in-time replay).
   point-in-time replay by construction — resolution data participates
   only from its resolution timestamp (including the Gamma inference
   path for markets whose CLOB object has been retired).
+
+  Recorded specifics (`quantmesh.events.calibration` and
+  `quantmesh.events.forecast`, 2026-08-08):
+
+  - **Fee-aware mid, derived from break-even, not assumed.** The
+    consensus price is the mid `(bid + ask) / 2`, else the venue's
+    last trade, else fail closed — a quote with neither is no price.
+    The linear-fee venue (Polymarket `taker_fee_bps` on notional)
+    widens the no-arbitrage interval: buying YES at `a` breaks even
+    at `a(1 + f)`, selling at `b` at `b(1 - f)`, whose center is
+    `mid + f(a - b)/2 = mid + fee_rate * half_spread`; that shift is
+    `spread_adjustment`. Kalshi's `taker_fee_bps = 0` (its fee is
+    quadratic on profit and not linearizable into the quote surface —
+    the adapter says so) yields a zero adjustment; the quadratic fee
+    is absorbed by the confidence band, never fabricated.
+  - **Liquidity confidence, documented constants.** Depth score =
+    total contract depth saturating at 2000 (both sides), spread
+    score = 1.0 at ≤ 2 ticks decaying linearly to a 0.2 floor at 10
+    ticks; a one-sided book halves the product (the other side's
+    level is unobserved, not absent). Confidence is rounded to 4
+    decimals; below 0.5 the history fallback blends the quote toward
+    the recent price series' mean (volatility surfaced in the basis),
+    at or above 0.5 the quote stands undiluted.
+  - **Brier is binary and point-in-time.** Per-pair `brier`,
+    `brier_score`, reliability-curve `brier_by_bin` (half-open bins,
+    `p == 1.0` in the last; empty bins stay `None`) and
+    `liquidity_weighted_brier`. Forecast windows evaluate contiguous
+    tails of each market's timestamp-sorted observation grid; an
+    observation strictly older than `resolved_at` never sees the
+    outcome (an observation exactly on the resolution instant does),
+    so a resolution that flips after a window closed cannot leak into
+    it — enforced in `_outcome_value`, proven by the flip test.
+    Split (multi-outcome) resolutions are refused — a binary Brier
+    needs a binary resolution (fractional-payoff is a documented
+    future extension); a resolution without `resolved_at` fails
+    closed (it cannot be replayed). Unresolved windows report
+    `brier = None`, never a fabricated number.
+  - **Forecast report stack mirrors M5 (ADR-0005) with no lake pin.**
+    `ForecastReport.id` is a setup-only 16-hex hash over commit +
+    sorted universe (venue, venue_market_id composite) + window spec
+    + bin count; `ForecastReportRegistry` is JSONL with atomic
+    temp+replace appends, fail-closed reads with line attribution and
+    duplicate-id refusal; artifacts (`report.json` with `created_at`
+    excluded, `windows.csv`, `calibration.csv`) are byte-stable
+    across registry roots. The recorded universe of event markets
+    *is* the pin — there is no lake manifest to reference.
 - Phase D (issue #37): cross-platform event mapping is
   reconciliation-disciplined — explicit evidence (normalized title,
   outcome set, expiry, resolution-rule fingerprints) required for a
