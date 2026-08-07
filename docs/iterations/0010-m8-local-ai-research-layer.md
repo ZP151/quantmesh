@@ -1,0 +1,411 @@
+# Iteration 0010 — M8: Local AI research layer
+
+- Status: active
+- Started: 2026-08-08
+- Completed:
+- Owner: Claude
+- GitHub issue: issues #45-#49 (Phases A-E, dependency-ordered: #46/#47/#48/#49 block on #45, #48/#49 block on #46, #48/#49 block on #47, #49 blocks on #48)
+- Pull request: (opened after acceptance criteria complete; base = `feat/m7-unified-research-and-portfolio-engine`, stacked — merges after the M7 PR #44, which stacks behind the M6 PR #38, which awaits the M5 PR, which awaits the M5 operator drill)
+- Roadmap milestone: M8 (`LATER` → `ACTIVE`)
+
+## Outcome
+
+Use AI to accelerate research while preserving deterministic execution
+authority: a local-first model gateway, structured analyst/critic/risk/
+portfolio research roles, retrieval over local documents, experiment
+records and audit logs, enforced tool permissions and prompt-data
+redaction, and content-addressed decision logs with citations and model
+metadata. AI output is a *claim with evidence*, never an instruction
+with authority — the M2 paper kernel remains the only execution surface,
+and no role, tool, or schema in this milestone can reach it.
+
+## Scope and boundaries
+
+In scope:
+
+- A fixture-first `quantmesh.ai.gateway` boundary: OpenAI-compatible
+  chat completions with JSON-schema structured output, injected
+  transports (`HttpModelTransport` + `ScriptedModelTransport`),
+  loopback-only default, pydantic validation at the boundary.
+- Structured research roles (analyst, critic, risk, portfolio) with
+  pydantic output schemas and a deterministic pipeline with a critic
+  gate; role outputs carry claims, citations and reviews — never
+  orders.
+- Retrieval over local documents (filings/news/notes), experiment
+  registry records and audit logs, with resolvable citations.
+- A tool registry with per-role permission sets enforced at call time;
+  prompt-data redaction before anything leaves the boundary, with a
+  redaction report; an append-only decision log on the ADR-0006
+  discipline.
+- Acceptance drills proving the roadmap exit criteria on scripted
+  fixtures.
+
+Out of scope (recorded, not deferred silently):
+
+- **AI order authority**: no execution tool exists in the tool
+  registry, no role schema can carry an order, and the M2 kernel and
+  M5 execution adapters are unreachable from this package (structural,
+  proven by test). Promotion/kill-switch *enforcement* remains M10;
+  this milestone never changes what promotes.
+- **Paid or remote model infrastructure**: the gateway refuses
+  non-loopback endpoints unless explicitly constructed with
+  `allow_remote=True` (an explicit construction-time decision, never
+  env-driven), and `model_gateway_url` defaults to a local endpoint.
+  No new dependency and no paid API is required for any test or
+  acceptance drill — everything runs against `ScriptedModelTransport`.
+- **Embeddings/vector search as a required path**: retrieval is
+  lexical-first (deterministic token-overlap/IDF ranking, pure
+  python). Local-embedding reranking is a documented lazy extension
+  behind the same `RetrievalSource` protocol, not a dependency.
+- **M10 scope**: secret store integration, live enablement, incident
+  runbooks — all remain M10.
+- **OpenBB/AGPL code embedding**: OpenBB is reference-only (AGPLv3;
+  patterns at a process boundary, never copied into this tree).
+  TradingAgents is Apache-2.0 and likewise pattern-only.
+
+## Acceptance criteria
+
+1. [ ] A local/OpenAI-compatible model gateway serves structured
+      outputs through schema validation: malformed or schema-violating
+      model responses are refused with a typed error and no partial
+      object escapes; the gateway defaults to loopback and refuses
+      remote endpoints unless explicitly constructed; a scripted
+      transport makes the whole surface deterministic and testable. —
+      Phase A (issue #45).
+2. [ ] Analyst, critic, risk and portfolio roles produce
+      schema-validated research outputs through a deterministic
+      pipeline (analyst → critic gate → risk → portfolio); a critic
+      flag blocks a claim downstream; no role output can carry
+      order-shaped data (proven by test). — Phase B (issue #46).
+3. [ ] Retrieval over documents, experiment records and audit logs
+      returns passages with resolvable citations; a citation that
+      cannot be resolved to a source fails closed. — Phase C (issue
+      #47).
+4. [ ] Tool calls are enforced per role against a registry that
+      contains no execution surface; prompt data is redacted before it
+      leaves the boundary with a redaction report; every research
+      decision is recorded with model metadata and citations on the
+      ADR-0006 ledger discipline. — Phase D (issue #48).
+5. [ ] Acceptance drills prove the M8 exit criteria on fixture
+      universes: hostile model output is schema-rejected and cannot
+      bypass the risk APIs (exit criterion 1); research claims link to
+      source data and reproducible experiments, and an unresolvable
+      citation refuses the claim (exit criterion 2). — Phase E (issue
+      #49).
+
+## Plan and role assignments
+
+- Planner: Claude
+- Quant researcher: Claude
+- Implementer: Claude
+- Reviewer: Claude (adversarial self-review before every commit)
+- Verifier: Claude (fixture drills, full suite, ruff, diff, submodules)
+
+## Reuse survey (2026-08-08)
+
+Vendored trees read at the file level; both remain reference-only
+(patterns, never code — OpenBB is AGPLv3, TradingAgents Apache-2.0).
+
+- **TradingAgents** (`vendor/reference/tradingagents`): the graph-based
+  orchestration (langgraph nodes, checkpointer, reflection) is
+  reference-only — QuantMesh's pipeline is deliberately linear and
+  deterministic. What ports directly: (a) role factories returning
+  node closures and per-role tool binding — TradingAgents gates tools
+  by giving each role only its own `ToolNode`; M8's `ToolSpec`
+  `allowed_roles` matrix is the finer-grained form of the same
+  discipline, enforced at call time; (b) pydantic v2 output schemas
+  whose field descriptions double as extraction instructions
+  (`agents/schemas.py`) — M8 role schemas follow this, with one
+  deliberate difference: TradingAgents' `invoke_structured_or_freetext`
+  falls back to freetext, M8 refuses freetext (structured-only,
+  fail-closed — an ADR decision); (c) the provider-agnostic
+  OpenAI-compatible client factory and the canonical provider→env-var
+  map (`llm_clients/factory.py`, `api_key_env.py`) — M8's gateway
+  boundary mirrors the factory/client shape, minus the multi-provider
+  surface (one OpenAI-compatible wire, loopback default).
+- **OpenBB** (`vendor/reference/openbb`): the vendored copy contains
+  NO LLM code — the OpenBB LLM/agents product lives in a separate
+  repo; the roadmap's "AI/data boundaries" maps to the `mcp_server`
+  extension (FastAPI MCP server exposing the command surface as
+  tools — `ToolInfo`/`CategoryInfo`, `prompts.py`) and
+  `core/openbb_core/app/command_runner.py`. Patterns only: MCP-style
+  tool exposure for a future M9/10 surface, and the `CredentialsLoader`
+  design (provider credentials as pydantic `SecretStr`, env-gathered) —
+  M8 keeps the M5 discipline (env-injected, never serialized) and
+  adopts `SecretStr` for the gateway key field. No RAG exists in
+  either tree — M8's lexical-first retrieval is original, and
+  embedding reranking stays a documented lazy extension.
+
+### Phase A — model gateway (issue #45)
+
+`quantmesh.ai.gateway`:
+
+- `ChatMessage` (role system/user/assistant, content), `ModelRequest`
+  (messages, temperature, max_tokens, response_format), `ModelResponse`
+  (content, model metadata — name/version reported by the endpoint or
+  pinned in settings, finish_reason, usage) — all pydantic, all
+  fail-closed on construction (bounds on temperature/max_tokens).
+- `ModelGateway` boundary: `complete(request)` and
+  `complete_structured(request, schema)` — the structured path appends
+  the JSON-schema `response_format` (or JSON-mode) request, parses the
+  response text, validates with pydantic, and on any failure raises a
+  typed `ModelOutputError` naming the failure (unparseable JSON,
+  schema-violation fields, wrong shape) — **no partial object ever
+  escapes**.
+- Transports (injected, the M4/M5/M6 fixture-first pattern):
+  `ScriptedModelTransport` (JSONL canned responses with per-line
+  attribution, fail-closed on malformed lines, deterministic —
+  everything except the optional live drill runs on this) and
+  `HttpModelTransport` (httpx — already a core dependency from M6 —
+  against `settings.model_gateway_url`, OpenAI-compatible
+  `/chat/completions`, typed unavailable on HTTP/transport errors).
+- Local-first posture: `model_gateway_url` defaults to
+  `http://127.0.0.1:11434` (Ollama's local port; the reference local
+  gateway, documented as a default not a hard requirement); a
+  non-loopback host is refused at construction unless
+  `allow_remote=True` is passed explicitly (construction-time decision,
+  never env-driven — the Kalshi migration-host precedent).
+  `QUANTMESH_MODEL_API_KEY` (if set) is injected per request and never
+  serialized into logs, exceptions, or the request record (the M5
+  signer redaction discipline).
+- Settings: `model_gateway_url`, `model_name` (empty → structured
+  refusals name the missing model), `model_request_timeout_s`,
+  `model_max_tokens`.
+- Tests: transport boundary, scripted-line attribution, structured
+  parse/validation refusal paths (schema-violating JSON, truncated
+  JSON, non-JSON), loopback/remote construction rules, key redaction
+  (the M5 wallet-isolation test discipline: scan captured logs/exc
+  strings for the key), settings defaults. No new dependency: httpx +
+  pydantic are already core.
+
+### Phase B — structured research roles (issue #46)
+
+`quantmesh.ai.roles`:
+
+- Role charters as data: `RoleCharter{role, system_prompt, tools,
+  output_schema_id}` for `analyst` (research claims from sources, with
+  citations), `critic` (adversarial review of the analyst's claims —
+  refuses claims lacking support), `risk` (review risk surfaces; must
+  reference the M5 risk-gate verdicts supplied in context), `portfolio`
+  (portfolio suggestions; must reference the M7 constraint/optimizer
+  outputs supplied in context). Charters are pinned constants with
+  digests folded into the pipeline identity.
+- Output schemas (pydantic): `AnalystReport` (claims: `Claim{
+  statement, confidence, direction, evidence_citations[]}` — a claim
+  without at least one citation is refused at validation), `CriticVerdict`
+  (verdict pass|flag, flagged_claims with reasons),
+  `RiskReview` (findings, posture relative to the supplied gate
+  verdicts), `PortfolioReview` (suggestions referencing constraint
+  outputs). **No order-shaped field exists in any schema** — proven by
+  a shape test that walks the schemas for order fields
+  (quantity/venue/order id/price) and by a hostile-script drill where
+  an order-shaped JSON fails validation.
+- `ResearchPipeline`: deterministic stage order (analyst → critic gate
+  → risk → portfolio); each stage receives only (a) the redacted input
+  context, (b) prior stages' validated outputs; a `flag` verdict blocks
+  the flagged claims from the critic's report reaching later stages
+  (the gate is in deterministic code, not in the model's cooperation).
+- Identity: `run_id` setup-only over role set + charter digests + input
+  digests (never model outputs — the M7 discipline); recorded in the
+  decision log.
+- Tests: charter/schema registries, claim-without-citation refusal,
+  critic gate behavior on scripted verdicts, pipeline determinism on a
+  scripted transport (same inputs → same run id, same stage order,
+  identical decision records), the no-order-shape test, unknown-role
+  refusal.
+
+### Phase C — retrieval over filings, news, experiments, audit logs (issue #47)
+
+`quantmesh.ai.retrieval`:
+
+- `Document{id, kind: filing|news|note, source_path, ingested_at,
+  content}` and `DocumentIndex` — a JSONL manifest under
+  `settings.documents_dir` on the ADR-0006 discipline (atomic
+  temp+replace appends, fail-closed reads with line attribution,
+  duplicate id refusal); `ingest_file` from local text files
+  (filings/news/notes), fail-closed on unreadable/non-UTF8/empty files
+  and non-text kinds.
+- `RetrievalSource` protocol: `search(query, top_k) ->
+  list[RetrievedPassage]` with three registered sources — the document
+  index, the experiment registry (`ExperimentRegistry` records, M3),
+  and the audit log surface (M2 event store / registry JSONLs). Each
+  passage carries `Citation{source_kind, source_id, span}` — a
+  resolvable identity, never a blob.
+- Ranker: deterministic lexical (casefold tokenization, IDF-weighted
+  overlap — pure python, no new dependency); embedding rerank is a
+  documented lazy extension registered through the same protocol, never
+  required (ADR decision).
+- `resolve_citation(citation) -> source record` fails closed when the
+  source kind is unknown, the id is missing, or the span is out of
+  range — the Phase E drill depends on this.
+- Fail-closed surface: empty index, unknown kind, duplicate ids,
+  missing files on resolve, zero-length queries, top_k bounds.
+- Tests: tokenizer/ranker pinned arithmetic, per-source search over
+  fixture registries/logs, citation resolution + every refusal path,
+  manifest discipline (duplicate/corrupted line/root-not-dir).
+
+### Phase D — tool permissions, prompt-data redaction, decision logs (issue #48)
+
+`quantmesh.ai.tools` / `quantmesh.ai.redact` / `quantmesh.ai.decisions`:
+
+- `ToolSpec{name, surface, description, allowed_roles}` registry with
+  read-only research tools only: `retrieve_documents`,
+  `read_experiment`, `read_report`, `read_risk_context`,
+  `read_portfolio_snapshot`. Enforcement at call time: a tool call is
+  dispatched only when the calling role is in `allowed_roles`, with a
+  typed refusal naming the role and the tool. **The registry contains
+  no execution surface** — no order, no kernel entry, no adapter call
+  exists as a tool; a hostile model that "calls" one gets the unknown-
+  tool refusal. A structural test proves the tool dispatch module
+  cannot import the execution adapters.
+- `redact_context(context) -> (redacted, RedactionReport)`: scrubs
+  secret material (private-key shapes, `QUANTMESH_*` env values, API
+  tokens, signer bytes) and applies data minimization (only requested
+  fields serialized) BEFORE anything is sent to the gateway; the
+  report counts and classifies redactions. Tests follow the M5
+  wallet-isolation discipline: the raw secret never appears in the
+  redacted payload, and a secret smuggled inside *retrieved document
+  text* is also scrubbed (prompt-injection containment).
+- `DecisionLog` JSONL under `settings.decisions_dir` on ADR-0006:
+  every pipeline stage records `DecisionRecord{run_id, role, model{
+  name, version, endpoint_kind}, prompt_digest (sha256 of the redacted
+  prompt), schema_id, verdict, citations[], output_digest, refusal?,
+  recorded_at}`. Identity is **content-addressed**: `decision_id =
+  sha256` over the record minus `recorded_at` (the FundingLedger
+  precedent) — an identical replay is refused as a duplicate, any
+  difference is a new audit entry. Reads fail closed with line
+  attribution.
+- Tests: permission matrix (every role × every tool), unknown-tool
+  refusal, no-execution-import structural test, redaction arithmetic
+  and the injection-containment test, decision identity
+  (output change → new id, identical replay → duplicate refused),
+  ledger discipline.
+
+### Phase E — acceptance drills (issue #49)
+
+Drills on fixture universes (scripted transports throughout):
+
+- **Exit criterion 1 (schema-validated, cannot bypass risk APIs)**:
+  a hostile scripted model answers the analyst stage with
+  schema-violating JSON (refused, typed, no partial object), with an
+  order-shaped payload (refused at validation — no order field exists),
+  and with a tool call to a non-existent execution surface (refused as
+  unknown tool, permission enforcement tested role × tool); the
+  structural tests prove the ai package never imports the execution
+  adapters and the risk surface is reachable only through the
+  deterministic M5 gate.
+- **Exit criterion 2 (claims link to sources and reproducible
+  experiments)**: an end-to-end pipeline over a fixture experiment
+  registry record + a fixture document + an audit-log slice — the
+  analyst's claims carry citations; `resolve_citation` resolves every
+  one (experiment id → `ExperimentRegistry.get`, document → span);
+  a second drill injects a fabricated citation and the critic flags
+  it, the decision log records the refusal, and the claim never
+  reaches later stages.
+- Cross-root acceptance: two independent `decisions_dir` roots replay
+  the same drill → byte-identical decision JSONL (determinism
+  evidence).
+
+## Delivery protocol
+
+Solo fast lane: one branch `feat/m8-local-ai-research-layer`, one
+tested/reviewed/issue-linked commit per issue, push each checkpoint,
+one final M8 PR after acceptance criteria complete, squash-merge under
+the standing merge authority when CI is green, close #45-#49,
+checkpoint ACTIVE.md/0010/ROADMAP.md. There is no human gate in M8:
+every surface is fixture-driven local computation (the optional
+live-local-model operator drill is recorded below, not a blocker).
+The stacking constraint: the M8 PR merges after the M7 PR #44 (which
+stacks behind the M6 PR #38, which stacks on the M5 PR, which awaits
+the M5 operator drill).
+
+## Durable decisions to record when reached
+
+- ADR-0010 **to record** (Phase A): the model gateway is a boundary
+  with injected transports; the wire is OpenAI-compatible chat
+  completions; loopback-only by default with an explicit
+  construction-time `allow_remote=True` override (never env-driven);
+  the API key is env-injected per request and never serialized;
+  structured output is pydantic-validated at the boundary with no
+  partial object escape.
+- ADR-0010 extension **to record** (Phase B): role outputs are
+  pydantic schemas that contain no execution-shaped fields; the
+  pipeline order is deterministic and the critic gate blocks in
+  deterministic code; identity never includes model outputs.
+- ADR-0010 extension **to record** (Phase C): retrieval is
+  lexical-first (deterministic, dependency-free); citations are
+  resolvable identities that fail closed; embedding reranking is a
+  documented lazy extension, never a required path.
+- ADR-0010 extension **to record** (Phase D): the tool registry
+  contains no execution surface (structural, proven by test);
+  prompt data is redacted before the wire with a report; decision
+  records are content-addressed audit entries on the ADR-0006
+  discipline (identical replay refused, any difference is a new
+  entry).
+- ADR-0010 extension **to record** (Phase E): acceptance evidence is
+  scripted-fixture-based; a live local model (e.g. Ollama) is an
+  optional operator drill with exact steps, never a merge gate.
+
+## Work log
+
+- 2026-08-08: M8 planned and opened — iteration 0010 recorded; issues
+  #45-#49 created with the M8 label; branch
+  `feat/m8-local-ai-research-layer` branched from the M7 tip `bcef32b`
+  (stacked delivery: M8 PR base = the M7 branch, merging after the M7
+  PR #44, which stacks behind the M6 PR #38, which awaits the M5 PR/
+  operator drill). Reuse survey done at the file level: TradingAgents
+  (Apache-2.0) ports three patterns — role factories with per-role
+  tool binding (its per-role `ToolNode` gating is M8's `allowed_roles`
+  matrix in coarser form), pydantic output schemas with field
+  descriptions as extraction instructions, and the OpenAI-compatible
+  client factory/provider-env map (M8 runs one wire, loopback by
+  default); its `invoke_structured_or_freetext` freetext fallback is
+  deliberately NOT replicated (structured-only, fail-closed). OpenBB
+  (AGPLv3, reference-only) has NO LLM code in the vendored copy — the
+  roadmap's "AI/data boundaries" maps to the `mcp_server` extension
+  (command surface as MCP tools) and `CredentialsLoader`/`SecretStr`
+  (env-gathered provider credentials); neither tree has any RAG, so
+  the lexical-first retrieval is original. No new core dependency:
+  httpx and pydantic already cover the gateway. No external gates:
+  M8 is fixture-driven local computation end to end (a live
+  local-model operator drill is recorded as optional, not a blocker);
+  the stacked PR chain is the only dependency.
+
+## Verification evidence
+
+- Phase A slice (issue #45): pending.
+- Phase B slice (issue #46): pending.
+- Phase C slice (issue #47): pending.
+- Phase D slice (issue #48): pending.
+- Phase E slice (issue #49): pending.
+
+## Risks and gates
+
+- **LLM nondeterminism** — nothing downstream depends on exact model
+  output: pipeline identity excludes outputs, decision records are
+  content-addressed (so identical replays are refused, differences are
+  audit entries), and every claim is a claim with citations, never an
+  input to execution. The critic gate and all numeric uses validate
+  bounds at the schema boundary.
+- **Prompt injection from retrieved content** — retrieved text is
+  data, not instructions: passages are quoted, tool selection is fixed
+  by the registry, the critic reviews claims against sources, and the
+  redaction pass scrubs secrets even when they arrive *inside*
+  document text (tested). A hostile document cannot summon a tool the
+  role does not hold.
+- **Data egress** — loopback default, remote override explicit at
+  construction, redaction report before the wire, no credentials in
+  prompts; the optional live drill runs against a local model only.
+- **Model/API key material** — `QUANTMESH_MODEL_API_KEY` is injected
+  per request and excluded from logs, exceptions, and decision records
+  (the M5 wallet-isolation test discipline).
+- **AGPL boundary (OpenBB)** — reference-only; patterns at a process
+  boundary; no code embedding in this tree. TradingAgents (Apache-2.0)
+  is likewise pattern-only — see the reuse survey.
+- **Dependency weight** — no new core dependency: httpx and pydantic
+  are already core (M6/M0); retrieval is pure python; embedding
+  reranking, if ever added, is a lazy extra behind the protocol.
+- **Stacked PR chain** — the M8 PR merges after #44/#38/the M5 PR;
+  the chain's only human gate is the M5 operator testnet drill
+  (recorded, exact steps in iteration 0007 Phase E). No M8 work
+  depends on it.

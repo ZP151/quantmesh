@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-08-07
+Last updated: 2026-08-08
 
 ## Status legend
 
@@ -158,7 +158,7 @@ Exit criteria:
 - Every promoted signal has benchmark, ablation and out-of-sample evidence.
 - Portfolio construction respects venue, asset and event-risk constraints.
 
-### M8 — Local AI research layer (`LATER`)
+### M8 — Local AI research layer (`ACTIVE`, plan: `docs/iterations/0010-m8-local-ai-research-layer.md`)
 
 Outcome: use AI to accelerate research while preserving deterministic execution authority.
 
@@ -215,10 +215,14 @@ Exit criteria:
 
 ## Current delivery plan
 
-M7 is active. Its implementation detail is versioned in
-`docs/iterations/0009-m7-unified-research-and-portfolio-engine.md`; the
-long-running goal governs outcomes and safety boundaries, while that
-iteration document governs phases, tickets, contracts, reuse, evidence,
-and the stacked-PR constraint (the M4 and M5 operator drill gates
-remain recorded and pending; M6's final PR #38 and M7's final PR stack
-behind them).
+M8 is active. Its implementation detail is versioned in
+`docs/iterations/0010-m8-local-ai-research-layer.md`; the long-running
+goal governs outcomes and safety boundaries, while that iteration
+document governs phases, tickets, contracts, reuse, evidence, and the
+stacked-PR constraint. M7's final PR #44 is open with its acceptance
+criteria complete and stacks behind M6's final PR #38; both stack
+behind the M5 PR, which awaits the M5 operator testnet drill gate. M8
+itself has no human gate — every surface is fixture-driven local
+computation with no credentials and no execution authority (an optional
+live-local-model operator drill is recorded in iteration 0010, not a
+blocker).
