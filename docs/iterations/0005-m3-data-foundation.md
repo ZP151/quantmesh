@@ -2,7 +2,7 @@
 
 - Status: in progress
 - Started: 2026-08-07
-- Completed: slice #1 (issue #14, merged `0bee38f`); slice #2 (issue #15, committed on `feat/m3-data-foundation`)
+- Completed: slice #1 (issue #14, merged `0bee38f`); slices #2-#3 (issues #15, #16, committed on `feat/m3-data-foundation`)
 - Owner: unassigned agent team
 - GitHub issue: issues #14-#19 (open; #12 was consumed by the M2 completion-records PR and #13 by the squash-divergence tracking issue)
 - Pull request: one final M3 integration PR from `feat/m3-data-foundation`; individual issue commits are pushed and reviewed locally
@@ -184,6 +184,30 @@ tracking issue took #13).
     ingestion; records the layout, normalization contract (UTC on write
     and read), stored-order reads, quality gate, and the pyarrow decision.
   - Verification evidence below.
+- 2026-08-07: Slice #3 (issue #16) implemented with TDD on
+  `feat/m3-data-foundation`:
+  - Vertical slices: shared layout module (path grammar extracted from
+    slice #15 into `src/quantmesh/data/layout.py`) → `SeriesCoverage` /
+    `DatasetManifest` models → `scan_series` (duckdb count/min/max per
+    series, UTC-normalized) → `ManifestWriter.generate` (revision bump,
+    atomic unique-temp write) → gate `Lake.dataset()` + `Dataset` view
+    (manifest required, name match, coverage freshness vs disk).
+  - Added `layout.py` and `manifest.py`; 47 manifest + lake tests in
+    `tests/test_manifest.py` (extended `test_lake.py` with reserved-name
+    and extra symbol cases); 220 total passing (1 skipped: symlink
+    creation not permitted on this Windows machine).
+  - Adversarial review found 5 real bugs, all fixed with regression
+    tests: symlink/junction components could point the lake at external
+    bytes (now rejected at every layout level), concurrent `generate()`
+    raced on a fixed temp name (now unique `mkstemp` files), stray files
+    below the interval level crashed `scan_series` raw (now skipped;
+    stray dirs still fail closed), Windows reserved names passed the
+    whitelists (now rejected), and NULL/undecodable inputs leaked raw
+    AttributeError/UnicodeDecodeError (now fail-closed ValueErrors).
+    `Dataset.__init__` now also enforces the manifest-name match.
+  - ADR-0003 extended with the manifest contract (location, fields,
+    freshness semantics, point-in-time `Dataset` view).
+  - Verification evidence below.
 
 ## Verification evidence
 
@@ -226,6 +250,21 @@ ADR-0003 reviewed against the implementation: layout, UTC normalization
 contract, stored-order reads, quality gate and the pyarrow decision all
 match the code. Issue #15 closes only when its commit lands in the final
 M3 PR.
+
+Slice #3 (issue #16, committed on `feat/m3-data-foundation`):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 220 passed, 1 skipped (symlink creation not permitted), 1 warning
+.\.venv\Scripts\python.exe -m ruff check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: adversarial review — 5 real bugs fixed (symlink escape,
+temp-name race, stray-file crashes, Windows reserved names, NULL/
+undecodable raw exceptions) plus `Dataset` constructor enforcement and
+13 new regression tests (47 manifest+layout tests total). Issues #15
+and #16 close only when their commits land in the final M3 PR.
 
 ## Risks and follow-ups
 

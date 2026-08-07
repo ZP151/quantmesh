@@ -16,7 +16,6 @@ cross partitions, or break the COPY statement.
 """
 
 import os
-import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -24,7 +23,16 @@ from pathlib import Path
 
 import duckdb
 import pandas as pd
+from pydantic import ValidationError
 
+from quantmesh.data.layout import (
+    SHARD_NAME,
+    shards_in,
+    validate_dataset_name,
+    validate_day,
+    validate_symbol,
+)
+from quantmesh.data.manifest import MANIFEST_NAME, DatasetManifest, scan_series
 from quantmesh.domain.market_data import (
     Bar,
     find_duplicates,
@@ -34,33 +42,6 @@ from quantmesh.domain.market_data import (
 )
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.settings import Settings
-
-_DATASET_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$")
-_SYMBOL_PATTERN = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$")
-_DAY_PATTERN = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
-_SHARD = "shard-0000.parquet"
-
-
-def validate_dataset_name(dataset: str) -> None:
-    """Reject dataset names that could escape the lake root or break tooling."""
-    if _DATASET_PATTERN.fullmatch(dataset) is None:
-        raise ValueError(
-            f"invalid dataset name {dataset!r} "
-            "(expected lowercase [a-z0-9], separators only inside)"
-        )
-
-
-def _validate_symbol(symbol: str) -> None:
-    if _SYMBOL_PATTERN.fullmatch(symbol) is None:
-        raise ValueError(
-            f"invalid symbol {symbol!r} "
-            "(expected [A-Za-z0-9], separators and dots only inside)"
-        )
-
-
-def _validate_day(day: str) -> None:
-    if _DAY_PATTERN.fullmatch(day) is None:
-        raise ValueError(f"invalid day {day!r} (expected an ISO UTC date like 2026-08-07)")
 
 
 def _require_aware(timestamp: datetime | None, name: str) -> None:
@@ -101,9 +82,9 @@ class Lake:
     ) -> Path:
         validate_dataset_name(dataset)
         interval_to_timedelta(interval)
-        _validate_symbol(symbol)
-        _validate_day(day)
-        return self.root / dataset / interval / venue.value / symbol / day / _SHARD
+        validate_symbol(symbol)
+        validate_day(day)
+        return self.root / dataset / interval / venue.value / symbol / day / SHARD_NAME
 
     def write_bars(self, dataset: str, bars: Sequence[Bar]) -> None:
         """Write bars into their partition paths, one shard per UTC date.
@@ -119,7 +100,7 @@ class Lake:
         if not bars:
             raise ValueError("write_bars requires at least one bar")
         for current in bars:
-            _validate_symbol(current.instrument.symbol)
+            validate_symbol(current.instrument.symbol)
         groups: dict[tuple[str, Venue, str, str], list[Bar]] = {}
         for current in bars:
             key = (
@@ -144,7 +125,7 @@ class Lake:
                     "currency": [b.instrument.currency for b in group],
                 }
             )
-            temp = path.with_name(f"{_SHARD}.tmp")
+            temp = path.with_name(f"{SHARD_NAME}.tmp")
             try:
                 with duckdb.connect() as con:
                     con.register("frame", frame)
@@ -175,15 +156,11 @@ class Lake:
         """
         validate_dataset_name(dataset)
         interval_to_timedelta(interval)
-        _validate_symbol(symbol)
+        validate_symbol(symbol)
         _require_aware(start, "start")
         _require_aware(end, "end")
         partition = self.root / dataset / interval / venue.value / symbol
-        files = sorted(
-            path
-            for path in partition.glob(f"*/{_SHARD}")
-            if _DAY_PATTERN.fullmatch(path.parent.name) is not None
-        )
+        files = shards_in(partition)
         if not files:
             return []
         bars: list[Bar] = []
@@ -241,3 +218,81 @@ class Lake:
             duplicates=find_duplicates(bars, key=lambda b: b.timestamp),
             gaps=gaps,
         )
+
+    def dataset(self, name: str) -> "Dataset":
+        """The manifest-gated queryable view of one dataset (issue #16).
+
+        Refuses to open a dataset that has no manifest, an unreadable or
+        version-mismatched manifest, a manifest for a different name, a
+        non-UTC timezone, or declared coverage that no longer matches
+        the shards on disk (stale data must be regenerated before
+        querying). The raw ``Lake`` remains the storage surface;
+        experiments read through this gate so pinned revisions mean
+        something.
+        """
+        validate_dataset_name(name)
+        manifest_path = self.root / name / MANIFEST_NAME
+        if not manifest_path.exists():
+            raise ValueError(
+                f"dataset {name!r} has no manifest — generate one (ManifestWriter) "
+                "before querying"
+            )
+        try:
+            manifest = DatasetManifest.model_validate_json(
+                manifest_path.read_text(encoding="utf-8")
+            )
+        except (ValidationError, UnicodeDecodeError, OSError) as error:
+            raise ValueError(f"dataset {name!r} manifest is invalid: {error}") from error
+        if manifest.dataset != name:
+            raise ValueError(f"manifest dataset {manifest.dataset!r} does not match {name!r}")
+        scan = scan_series(self.root, name)
+        declared = {
+            (c.interval, c.venue, c.symbol): (c.rows, c.start, c.end)
+            for c in manifest.coverage
+        }
+        if scan != declared:
+            raise ValueError(
+                f"dataset {name!r} manifest is stale — on-disk coverage differs; regenerate"
+            )
+        return Dataset(self, name, manifest)
+
+
+class Dataset:
+    """Queryable view of a manifest-gated dataset (ADR-0003, issue #16).
+
+    A ``Dataset`` is a point-in-time view: it is validated against the
+    shards when opened, and must be re-opened after any write so the
+    manifest gate can check freshness again. Prefer constructing via
+    ``Lake.dataset()``; direct construction still enforces that the
+    manifest belongs to the dataset name.
+    """
+
+    def __init__(self, lake: Lake, name: str, manifest: DatasetManifest) -> None:
+        if manifest.dataset != name:
+            raise ValueError(f"manifest dataset {manifest.dataset!r} does not match {name!r}")
+        self._lake = lake
+        self.name = name
+        self.manifest = manifest
+
+    def read_bars(
+        self,
+        *,
+        interval: str,
+        venue: Venue,
+        symbol: str,
+        start: datetime | None = None,
+        end: datetime | None = None,
+    ) -> list[Bar]:
+        """Read the dataset's bars; the dataset name is bound by the gate."""
+        return self._lake.read_bars(
+            self.name,
+            interval=interval,
+            venue=venue,
+            symbol=symbol,
+            start=start,
+            end=end,
+        )
+
+    def quality(self, *, interval: str, venue: Venue, symbol: str) -> LakeQuality:
+        """Quality report for one series of the dataset."""
+        return self._lake.quality(self.name, interval=interval, venue=venue, symbol=symbol)

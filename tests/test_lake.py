@@ -165,7 +165,7 @@ def test_write_rejects_empty_sequence(tmp_path: Path) -> None:
         Lake(tmp_path).write_bars("empty", [])
 
 
-@pytest.mark.parametrize("bad", ["..", "../evil", "a b", "UpPer", "-lead", "trail-"])
+@pytest.mark.parametrize("bad", ["..", "../evil", "a b", "UpPer", "-lead", "trail-", "con", "nul"])
 def test_write_rejects_invalid_dataset_names(tmp_path: Path, bad: str) -> None:
     with pytest.raises(ValueError, match="dataset"):
         Lake(tmp_path).write_bars(bad, [bar()])
@@ -254,7 +254,7 @@ def test_lake_from_settings_uses_configured_root(
     assert shard(tmp_path / "env-lake", "cfg", "1m", Venue.HYPERLIQUID, "BTC-PERP", DAY1).exists()
 
 
-@pytest.mark.parametrize("bad", ["..", "../x", "a b", "up/per", "a'b", "-lead"])
+@pytest.mark.parametrize("bad", ["..", "../x", "a b", "up/per", "a'b", "-lead", "CON", "lpt1"])
 def test_write_rejects_invalid_symbols(tmp_path: Path, bad: str) -> None:
     instrument = Instrument(
         symbol=bad, venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL

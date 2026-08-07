@@ -49,6 +49,18 @@ losslessly, including the timezone of every timestamp.
 - A dataset becomes queryable-by-experiments only after it passes quality
   and carries a manifest (issue #16). Quality checks are the gate, not the
   default assumption.
+- Manifests are versioned JSON at `<dataset>/manifest.json` (issue #16):
+  `schema_version` (currently 1), source, timezone (must be `UTC` — the
+  lake is UTC-normalized), license, revision, `generated_at` and per-series
+  coverage (interval, venue, symbol, first/last timestamp, row count).
+  `ManifestWriter.generate` scans the shards and bumps the revision;
+  `Lake.dataset()` is the queryable surface and refuses to open a dataset
+  whose manifest is missing, invalid, for a different name, or stale —
+  "stale" means declared coverage (series set, rows, range) differs from
+  the bytes on disk. A `Dataset` is a point-in-time view: re-open after
+  writes. Symlinks anywhere in the layout are rejected, and every name is
+  whitelist-checked, so a dataset can never point at bytes outside the
+  lake root.
 - Every path component is validated against a whitelist before any I/O:
   dataset `^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$`, symbol
   `^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$`, day `YYYY-MM-DD`, and
