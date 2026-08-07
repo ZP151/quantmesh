@@ -93,11 +93,19 @@ event mapping.
       reliability bins + liquidity-weighted Brier; the report stack
       mirrors M5 minus the lake pin (the recorded universe of event
       markets is itself the setup).
-5. [ ] Cross-platform event mapping is reconciliation-disciplined: the
+5. [x] Cross-platform event mapping is reconciliation-disciplined: the
       same real-world event on Polymarket and Kalshi maps only through
       explicit evidence (normalized title, outcome set, expiry, and
       resolution-rule fingerprints), reported as matched/pending/
-      ambiguous — never silent fuzzy matching.
+      ambiguous — never silent fuzzy matching. — Phase D (issue #37)
+      2026-08-08: four independent evidence kinds, ≥2 → MATCHED,
+      exactly 1 → PENDING, conflicting strong candidates → AMBIGUOUS;
+      unmatched events are listed, never guessed; every verdict lands
+      in the append-only JSONL mapping ledger (ADR-0006 discipline)
+      and the acceptance drill pins the honest fixture verdict (18
+      pending pairs — the generic Yes/No outcome set never matches)
+      and the MATCHED/Brier/calibration/liquidity path on a drill-only
+      pair.
 
 ## Plan and role assignments
 
@@ -167,15 +175,25 @@ liquidity confidence (exit criteria 3-4). ADR-0008 Phase C extension.
 ### Phase D — cross-platform event mapping + point-in-time replay acceptance (issue #37)
 
 `quantmesh.events.mapping`: canonical event identity via normalized
-title + outcome set + expiry + resolution-rule fingerprints; explicit
-evidence required for a match; outcomes are matched/pending/ambiguous
-with the evidence recorded (JSONL mapping ledger, atomic appends,
-fail-closed reads — the ADR-0006 reconciliation discipline applied to
-events); point-in-time replay tests (resolution flips the outcome after
-window close; the train never sees it); acceptance drill: fixture
-Polymarket + Kalshi datasets → mapped events → implied probabilities →
-calibration `ForecastReport` end-to-end with Brier + calibration +
-liquidity confidence; final M6 PR (stacks on the M5 PR).
+title (NFKC/casefold/whitespace-collapse) + outcome set + expiry +
+resolution-rule fingerprints; explicit evidence required for a match
+(two or more independent kinds → MATCHED, exactly one → PENDING,
+conflicting strong candidates on one side → AMBIGUOUS, no candidate →
+unmatched — never guessed); `pair_key` order-invariant 16-hex identity;
+outcomes are matched/pending/ambiguous with the evidence recorded in
+the append-only JSONL mapping ledger (`MappingLedger`, atomic
+temp+replace appends, fail-closed reads with line attribution,
+duplicate refusal by (pair_key, status, evidence signature), changed
+evidence appends as history — the ADR-0006 reconciliation discipline
+applied to events); acceptance drill: fixture Polymarket + Kalshi
+datasets through the real adapters → honest mapping verdict (18 pending
+pairs on the generic Yes/No outcome set alone, including the known-real
+Fed correspondence the algorithm refuses to claim) + a drill-only
+synthetic pair (DRILL- ids) demonstrating MATCHED with all four
+evidence kinds → implied probabilities from the recorded wire prices →
+calibration `ForecastReport` end-to-end with point-in-time Brier +
+reliability bins + liquidity confidence, byte-stable across registry
+roots; final M6 PR (stacks on the M5 PR).
 
 ## Delivery protocol
 
@@ -240,11 +258,24 @@ operator drill).
   `resolved_at` fails closed, unresolved windows report `None`;
   forecast reports need no lake pin because the recorded universe of
   event markets is itself the setup.
-- ADR-0008 extension (issue #37 Phase D): cross-platform event mapping
-  is reconciliation-disciplined — explicit evidence (normalized title,
-  outcome set, expiry, resolution-rule fingerprints) required for a
-  match, outcomes matched/pending/ambiguous, never silent fuzzy
-  matching.
+- ADR-0008 extension (issue #37 Phase D), **recorded 2026-08-08**:
+  cross-platform event mapping is reconciliation-disciplined —
+  explicit evidence (normalized title, outcome set, expiry,
+  resolution-rule fingerprints) required for a match, outcomes
+  matched/pending/ambiguous, never silent fuzzy matching. Recorded
+  specifics: four independent evidence kinds with a two-evidence
+  threshold for MATCHED (one → PENDING, conflicting strong candidates
+  → AMBIGUOUS, none → unmatched, never guessed); the generic binary
+  outcome set alone never matches (the fixture drill pins 18 pending
+  pairs, including the real Fed correspondence the mapping refuses to
+  claim because title/expiry/rule differ); `pair_key` is an
+  order-invariant 16-hex hash over the sorted member ids and every
+  verdict is deterministic over the evidence; the mapping ledger
+  (`~/.quantmesh/mappings/mappings.jsonl`) is append-only JSONL with
+  atomic appends, fail-closed reads with line attribution, duplicate
+  refusal by (pair_key, status, evidence signature) and changed
+  evidence appending as history (a PENDING pair later matching
+  upgrades to MATCHED, `by_pair` returns the history in order).
 
 ## Work log
 
@@ -358,6 +389,43 @@ operator drill).
   with a default of 0; the replay boundary is documented as
   strictly-older-never (an observation exactly on the resolution
   instant does see the outcome); ruff/diff clean.
+- 2026-08-08: **Phase D (issue #37) implemented** —
+  `quantmesh.events.mapping` (four independent evidence kinds —
+  normalized-title equality, sorted outcome-set equality, expiry
+  within the 3600s tolerance, resolution-rule fingerprint equality;
+  status is a deterministic function of the evidence: ≥2 → MATCHED,
+  exactly 1 → PENDING, ≥2 strong candidates on one side → AMBIGUOUS,
+  no candidate → unmatched, never guessed; `pair_key` =
+  sha256("event-pair\0" + sorted ids json)[:16], order-invariant;
+  `EventPairing`/`EventMappingReport` consistency validators incl.
+  evidence-sortedness and paired-vs-unmatched disjointness;
+  `MappingLedger` append-only JSONL at `~/.quantmesh/mappings/` with
+  atomic temp+replace appends, fail-closed reads with line
+  attribution, duplicate refusal by (pair_key, status, evidence
+  signature) and changed-evidence history for `by_pair`). 30 new
+  tests (981 passed, 3 skipped). The acceptance drill runs the real
+  fixture datasets through the real adapters and pins the honest
+  verdict: all fixture markets are binary Yes/No, so all 18 candidate
+  pairs carry exactly the outcome-set evidence and stay PENDING —
+  including the known-real Fed correspondence (Sept 2026 Polymarket
+  questions vs the Apr 2027 Kalshi question; titles, expiries and
+  rule fingerprints all differ) — while a drill-only synthetic pair
+  (DRILL- ids, clearly labelled, distinct title/outcomes/expiry/rule)
+  matches on all four evidence kinds, resolves on the positive side
+  at T+12h over a 20-hour observation grid, and feeds
+  `run_forecast_report` end-to-end: the unresolved Fed market reports
+  `None` windows (quote 0.42/0.69 → implied 0.555 at 0.2 confidence),
+  the drill market's windows close before resolution report `None`,
+  later windows evaluate p = 0.5 against outcome 1.0 (brier 0.25,
+  3-of-5 and 5-of-5 resolved observations demonstrating the
+  point-in-time boundary), reliability bins land in bin 5, and the
+  artifacts are byte-stable across registry roots. Probe against the
+  fixture reality corrected two planned drill assumptions: the
+  kalshi Fed event id is `KXFED-27APR-T3.50` (not `KXFED-27APR`), and
+  the Kalshi candles fixture is entirely zero-volume (the ADR-0008
+  decision-4 rule fabricates no bars) so the drill uses the recorded
+  quote directly rather than a history fallback — the fallback
+  remains unit-tested. ruff/diff clean.
 
 ## Verification evidence
 
@@ -412,10 +480,35 @@ operator drill).
   with `created_at` excluded from `report.json`; windows.csv and
   calibration.csv row shapes pinned (composite `venue:market` ids,
   empty-bin rows emitted blank).
-- Phase D slice (issue #37): same gates; mapping ledger drill
-  (matched/pending/ambiguous with evidence); acceptance drill converges
-  to calibrated forecast reports with Brier + calibration + liquidity
-  confidence.
+- Phase D slice (issue #37): **981 passed, 3 skipped** (30 new tests);
+  ruff clean; `git diff --check` clean. Mapping drill: evidence
+  discipline pinned (normalized-title equality incl. NFKC width and
+  case-folding, outcome-set order-insensitivity, expiry tolerance
+  boundary at exactly ±3600s, rule-fingerprint equality); status
+  arithmetic (two strong candidates → AMBIGUOUS with all evidence
+  recorded, strong+weak → MATCHED + PENDING, exactly one evidence →
+  PENDING, none → unmatched, never guessed); fail-closed inputs
+  (empty universes, duplicate ids, unsorted evidence, wrong pair
+  keys, pending-with-two-evidence and matched-with-one, paired-vs-
+  unmatched overlap); ledger discipline (duplicate refusal by
+  (pair_key, status, evidence signature), PENDING → MATCHED history
+  appends in order, corrupted-line fail-closed reads with line
+  attribution, persistence across instances). Acceptance drill: the
+  recorded fixture datasets through the real adapters → the honest
+  verdict of 18 PENDING pairs on the generic Yes/No outcome set alone
+  (the real Fed correspondence is NOT claimed — titles, expiries and
+  rule fingerprints differ), a drill-only synthetic pair matching on
+  all four evidence kinds and recorded in the ledger (19 records,
+  re-record refused) → implied probabilities from the recorded wire
+  prices (Fed quote 0.42/0.69 → 0.555 at 0.2 liquidity confidence)
+  → calibration `ForecastReport` end-to-end: unresolved Fed market
+  reports `None` windows; the drill pair resolves on the positive
+  side at T+12h and the point-in-time boundary shows in the window
+  counts (0/3/5 resolved; the observation exactly on the resolution
+  instant sees the outcome) with brier 0.25, reliability bins in
+  bin 5 and full liquidity confidence; report id determinism,
+  metrics (4 windows, 2 evaluated, 8 resolved), and artifact
+  byte-stability across two registry roots.
 
 ## Risks and gates
 

@@ -3,9 +3,11 @@
 Venue-neutral event, outcome, resolution-rule, quote and implied-
 probability models that both Polymarket and Kalshi adapters normalize
 into (``quantmesh.events.models``); the pure fee/spread/liquidity-aware
-calibration transforms (``quantmesh.events.calibration``); and the
+calibration transforms (``quantmesh.events.calibration``); the
 calibration forecast report stack with point-in-time replay
-(``quantmesh.events.forecast``).
+(``quantmesh.events.forecast``); and the evidence-disciplined
+cross-platform event mapping and its ledger
+(``quantmesh.events.mapping``).
 """
 
 from quantmesh.events.calibration import (
@@ -33,6 +35,18 @@ from quantmesh.events.forecast import (
     run_forecast,
     run_forecast_report,
 )
+from quantmesh.events.mapping import (
+    EventMappingReport,
+    EventPairing,
+    EvidenceKind,
+    MappingEvidence,
+    MappingLedger,
+    MappingRecord,
+    MappingStatus,
+    map_events,
+    normalize_event_text,
+    pair_key,
+)
 from quantmesh.events.models import (
     EventMarket,
     EventVenue,
@@ -45,7 +59,10 @@ from quantmesh.events.models import (
 __all__ = [
     "CalibrationBin",
     "EventMarket",
+    "EventMappingReport",
+    "EventPairing",
     "EventVenue",
+    "EvidenceKind",
     "ForecastMarket",
     "ForecastObservation",
     "ForecastReport",
@@ -53,6 +70,10 @@ __all__ = [
     "ForecastWindowResult",
     "ForecastWindowSpec",
     "ImpliedProbability",
+    "MappingEvidence",
+    "MappingLedger",
+    "MappingRecord",
+    "MappingStatus",
     "MarketForecast",
     "MarketQuote",
     "Outcome",
@@ -67,6 +88,9 @@ __all__ = [
     "implied_probability",
     "liquidity_confidence",
     "liquidity_weighted_brier",
+    "map_events",
+    "normalize_event_text",
+    "pair_key",
     "run_forecast",
     "run_forecast_report",
     "with_history_fallback",

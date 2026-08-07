@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # migration host is refused at construction (ADR-0008).
     kalshi_base_url: str = "https://api.elections.kalshi.com/trade-api/v2"
     kalshi_request_timeout_s: float = Field(default=10.0, gt=0)
+    # Cross-platform event mapping ledger (M6 Phase D, ADR-0008 decision
+    # 5): append-only record of every mapping verdict.
+    mappings_dir: Path = Path.home() / ".quantmesh" / "mappings"
 
     model_config = SettingsConfigDict(
         env_file=".env",

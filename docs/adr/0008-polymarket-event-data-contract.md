@@ -234,3 +234,41 @@ decisions (point-in-time replay).
   outcome set, expiry, resolution-rule fingerprints) required for a
   match, outcomes matched/pending/ambiguous, never silent fuzzy
   matching.
+
+  Recorded specifics (`quantmesh.events.mapping`, 2026-08-08):
+
+  - **Four independent evidence kinds; a pair needs two.** TITLE:
+    normalized question texts equal (NFKC, case folding, whitespace
+    collapsing — the resolution-rule fingerprint normalization);
+    OUTCOME_SET: the normalized outcome-name sets equal (order-
+    insensitive); EXPIRY: both expiries present and within the
+    tolerance (default 3600s — admits sub-minute clock skew without
+    admitting adjacent meetings); RESOLUTION_RULE: the canonical rule
+    fingerprints equal. Two or more satisfied kinds make a pair
+    MATCHED; exactly one leaves it PENDING (more evidence — typically
+    the resolution itself — is required); when one event is strongly
+    matched by two candidates on the other venue the conflicting pairs
+    are AMBIGUOUS with all their evidence recorded. Events with no
+    candidate pair are listed unmatched, never guessed. `pair_key` is
+    an order-invariant 16-hex hash over the sorted member ids; every
+    verdict is a deterministic function of the evidence, never of
+    list order.
+  - **The generic binary outcome set never matches.** All fixture
+    markets are binary Yes/No, so on the recorded fixture universes
+    every candidate pair carries exactly one evidence item (the
+    outcome set) and stays PENDING — including the Fed correspondence
+    that is in fact real: the September 2026 Polymarket questions and
+    the April 2027 Kalshi question differ in title, expiry and rule
+    fingerprint, so the mapping refuses to claim them. The acceptance
+    drill pins this honest verdict (18 pending pairs) and demonstrates
+    the MATCHED path on a drill-only pair whose four evidence kinds
+    align.
+  - **Ledger discipline mirrors ADR-0006.** `MappingLedger` is an
+    append-only JSONL record of every verdict with its evidence and
+    the producing commit (`~/.quantmesh/mappings/mappings.jsonl`):
+    atomic temp+replace appends, fail-closed reads with line
+    attribution, duplicate refusal by (pair_key, status, evidence
+    signature), and re-evaluation with *changed* evidence appends as
+    history — a PENDING pair that later matches upgrades to MATCHED
+    with the evidence to prove it (`by_pair` returns the history in
+    order).
