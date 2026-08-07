@@ -1,12 +1,12 @@
 # Iteration 0005 — M3 Data Foundation and Experiment Registry
 
-- Status: in progress
+- Status: complete
 - Started: 2026-08-07
-- Completed: slice #1 (issue #14, merged `0bee38f`); slices #2-#6 (issues #15-#19, committed on `feat/m3-data-foundation`)
+- Completed: 2026-08-07 — slice #1 (issue #14, merged `0bee38f`); slices #2-#6 (issues #15-#19, merged to main as squash `bcfb0b1` via the final M3 PR #23)
 - Owner: unassigned agent team
-- GitHub issue: issues #14-#19 (open; #12 was consumed by the M2 completion-records PR and #13 by the squash-divergence tracking issue)
-- Pull request: one final M3 integration PR from `feat/m3-data-foundation`; individual issue commits are pushed and reviewed locally
-- Roadmap milestone: M3 (see `docs/roadmap/ROADMAP.md`)
+- GitHub issue: issues #14-#19 (all closed; #12 was consumed by the M2 completion-records PR and #13 by the squash-divergence tracking issue)
+- Pull request: [merged #23](https://github.com/ZP151/quantmesh/pull/23) — one final M3 integration PR from `feat/m3-data-foundation`, squash `bcfb0b1`
+- Roadmap milestone: M3 (see `docs/roadmap/ROADMAP.md`) — DONE
 
 ## Outcome
 
@@ -27,14 +27,18 @@ roadmap exit criteria for M3.
 
 ## Acceptance criteria
 
-- [ ] A pinned dataset reproduces an experiment on a clean checkout
-      (integration test spanning manifest → lake → experiment registry).
-- [ ] Missing, duplicated and out-of-order observations are detected by the
-      data-quality checks.
-- [ ] A strategy-facing consumer cannot see which provider produced a dataset
-      (provider isolation behind the registry contract).
-- [ ] No live credentials, secrets or private keys appear in code, tests,
-      fixtures, logs or manifests.
+- [x] A pinned dataset reproduces an experiment on a clean checkout
+      (integration test spanning manifest → lake → experiment registry) —
+      `test_resolve_reopens_pinned_dataset_on_clean_checkout`.
+- [x] Missing, duplicated and out-of-order observations are detected by the
+      data-quality checks — lake quality primitives (issue #14) plus the
+      ingestion roundtrip test and `coverage_gaps`.
+- [x] A strategy-facing consumer cannot see which provider produced a dataset
+      (provider isolation behind the registry contract) —
+      `test_provider_isolation_lake_bytes_are_provider_agnostic`.
+- [x] No live credentials, secrets or private keys appear in code, tests,
+      fixtures, logs or manifests — secret scan of the full M3 diff clean
+      (only policy-doc mentions of "credential").
 
 ## Plan and role assignments
 
@@ -332,6 +336,15 @@ tracking issue took #13).
     terminal path is now checked too. Both surfaced only on Linux CI:
     the lake symlink tests skip where symlink creation is not permitted,
     and Windows runners skip them.
+  - 2026-08-07 close-out: final M3 PR [#23](https://github.com/ZP151/quantmesh/pull/23)
+    merged to main as squash `bcfb0b1` (non-draft; CI green on the PR
+    branch head — the two follow-up commits CI caught are the `duckdb`
+    core-dependency promotion and the terminal-path symlink fix);
+    `feat/m3-data-foundation` deleted; issues #14-#19 closed. Main
+    verified locally (297 passed, 3 skipped, ruff clean). All four M3
+    exit criteria met (see checkboxes above). M3 complete.
+
+## Verification evidence
 
 Per slice: `pytest -q`, `ruff check src tests`, `git diff --check`,
 `git submodule status`; integration evidence for the two roadmap exit

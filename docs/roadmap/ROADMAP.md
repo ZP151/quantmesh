@@ -69,7 +69,7 @@ Exit criteria:
 - Invalid state transitions and stale quotes fail closed.
 - Paper account survives restart and reconciles from persisted events.
 
-### M3 — Data foundation and experiment registry (`NEXT`)
+### M3 — Data foundation and experiment registry (`DONE`, merged to main 2026-08-07 as squash `bcfb0b1` via PR #23)
 
 Outcome: ingest, normalize and version research data without coupling strategies to providers.
 
@@ -88,7 +88,7 @@ Exit criteria:
 - A pinned dataset can reproduce an experiment on a clean checkout.
 - Missing, duplicated and out-of-order observations are detected.
 
-### M4 — Equity workflow with Moomoo (`NEXT`)
+### M4 — Equity workflow with Moomoo (`NEXT`, start per frontier item 9 in `docs/goals/ACTIVE.md`)
 
 Outcome: research and paper-trade a small US/HK equity universe through one workflow.
 
