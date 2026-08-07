@@ -249,6 +249,14 @@ def test_submit_is_deterministic_for_identical_inputs() -> None:
     assert first.model_dump() == second.model_dump()
 
 
+def test_submit_rejects_a_reused_client_order_id() -> None:
+    account_ = account()
+    account_ = account_.submit(make_request(Side.BUY, 10), make_quote(), now=NOW).account
+
+    with pytest.raises(ValueError, match="order id already exists"):
+        account_.submit(make_request(Side.BUY, 10), make_quote(), now=NOW)
+
+
 def test_submit_is_deterministic_without_a_client_order_id() -> None:
     quote = make_quote()
     request = make_request(Side.BUY, 10, client_order_id=None)
