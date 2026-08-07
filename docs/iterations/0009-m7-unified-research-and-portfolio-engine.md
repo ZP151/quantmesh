@@ -65,7 +65,7 @@ and event-risk constraints.
 
 ## Acceptance criteria
 
-1. [ ] Feature and model registries follow the M3 discipline: setup-only
+1. [x] Feature and model registries follow the M3 discipline: setup-only
       identity (commit + name + parameters + dataset pins — never
       metrics), lake-pin validation at record AND resolve, JSONL with
       atomic temp+replace appends, fail-closed reads with line
@@ -102,13 +102,15 @@ and event-risk constraints.
 
 ### Phase A — feature and model registries (issue #39)
 
-`quantmesh.research.features`: `FeatureSpec` (name, kind — bar-derived /
-orderbook-derived / event-derived, source venue and universe, parameters,
-setup-only 16-hex `feature_id` over commit + name + kind + parameters +
-dataset pins), `FeatureSet` (ordered specs + its own digest, folding into
-model identity), `compute_features` (deterministic frames from pinned M3
-lake datasets; fail-closed on missing pins, empty outputs, mixed
-grids). `quantmesh.research.models`: `ModelSpec` (type — lightgbm /
+`quantmesh.research.features`: `FeatureSpec` (name, kind — bar-derived
+recorded; orderbook/event kinds are documented extensions that land
+with their pin contracts and consumers, never recordable-but-
+uncomputable, source venue and universe, parameters, setup-only 16-hex
+`feature_id` over commit + name + kind + parameters + dataset pins),
+`FeatureSet` (sorted member ids + its own digest — member order never
+changes identity — folding into model identity), `compute_features`
+(deterministic frames from pinned M3 lake datasets; fail-closed on
+missing pins, empty outputs, mixed grids). `quantmesh.research.models`: `ModelSpec` (type — lightgbm /
 logistic / hmm / garch, hyperparameters, `features_digest`, dataset
 pins, setup-only 16-hex `model_id`), `ModelRecord` (spec + metrics as
 results + artifact sha256 + train-window bounds), `ModelRegistry`
@@ -203,19 +205,22 @@ operator drill).
 
 ## Durable decisions to record when reached
 
-- ADR-0009 **to record** (issue #39 Phase A): the feature and model
+- ADR-0009 **recorded** (issue #39 Phase A): the feature and model
   registries follow the M3 experiment-registry discipline — setup-only
   16-hex identity over commit + name/type + parameters + dataset pins
   (metrics and artifacts are results, never identity), lake-pin
   validation at record AND resolve, JSONL with atomic temp+replace
   appends, fail-closed reads with line attribution, duplicate refusal;
   model artifacts are byte-stable per type with the sha256 recorded on
-  the record. Dependency decision: the research extra gains
-  scipy/hmmlearn/arch pins, and CI installs `.[dev,research]` — a
-  deliberate, documented deviation from the M3 duckdb-promotion
-  precedent (the ML stack is optional runtime surface; the paper
-  kernel core stays lean; the research extra is a first-class,
-  CI-tested surface because M7 makes it one).
+  the record; Phase A ships the pure-numpy `linear` codec
+  (`quantmesh-linear-v1` canonical JSON); feature kinds beyond bars are
+  documented extensions, refused at construction and compute. Dependency
+  decision: the research extra gains scipy/hmmlearn/arch pins, and CI
+  installs `.[dev,research]` — a deliberate, documented extension of the
+  dependency contract (a first-class, CI-tested extra because M7 makes
+  the research surface one), contrasted with the M3 duckdb-promotion
+  precedent (an infra necessity); the paper kernel core stays lean and
+  Phase B codecs are lazy import-guarded.
 - ADR-0009 extension **to record** (issue #40 Phase B): baseline
   pipelines are lazy import-guarded with typed errors (the M5
   SDK-transport idiom); every pipeline fits on its window's train slice
@@ -252,10 +257,48 @@ operator drill).
   `ExperimentRegistry` pattern are the direct integration points. No
   external gates: M7 is local computation over pinned fixtures end to
   end (the stacked M4/M5/M6 PR chain is the only dependency).
+- 2026-08-08 (issue #39, Phase A): implemented `features.py` and
+  `models.py`. Feature side: `FeatureSpec`/`FeatureSet`/`FeatureRegistry`
+  with setup-only ids, five bar builtins (momentum, log_return,
+  rolling_mean, rolling_std, realized_vol) validated at record AND
+  compute, `compute_features` opening datasets once per pin through the
+  lake's manifest gate, `frame_digest` (sorted canonical JSON, UTC ISO
+  timestamps, repr floats) as the reproducibility reference. Model side:
+  `MODEL_TYPES=("linear",)` — the pure-numpy `LinearModel` codec with
+  canonical `quantmesh-linear-v1` JSON bytes; `ModelSpec`/`ModelRecord`/
+  `ModelRegistry` with byte-addressed artifacts (sha256 recorded, load
+  re-verifies; record append last so a crash leaves at worst an
+  unreferenced orphan). Settings gained `features_dir`/`models_dir`.
+  ADR-0009 recorded. During review the test file's first run exposed
+  six real defects, all fixed: non-hex `COMMIT` fixture (pattern
+  mismatch), id-clobbering test helper (explicit wrong ids must pass
+  through), `window=` overrides not folded into `parameters`, closed-
+  form comparisons including the NaN warm-up prefix, the
+  duplicate-timestamps premise broken by write_bars' day-shard
+  replacement (duplicates only possible within one call), and
+  `.loc[list]` frame alignment (reindex onto the feature index
+  instead). 60 new tests, full suite 1041 passed / 3 skipped, ruff
+  clean, `git diff --check` and `git submodule status` clean. Committed
+  as `M7-1 (#39): feature and model registries` and pushed.
 
 ## Verification evidence
 
-- Phase A slice (issue #39): pending.
+- Phase A slice (issue #39): `tests/test_research_features.py` (29
+  tests) + `tests/test_research_models.py` (31 tests) — 60 passed.
+  Identity: 9 field variations each change the feature id; featureset
+  id order-insensitive; model id sensitive to every setup field.
+  Pin discipline: record refused before any write when the lake
+  manifest is missing or the revision differs (registry directory
+  absent afterwards); `resolve` re-opens through the manifest gate.
+  Fail-closed reads: corrupted line reported with line number,
+  duplicate ids refused, registry root being a file refused. Artifacts:
+  record/load round-trip with sha re-verification; tampered and
+  missing artifacts fail closed. Acceptance drills: two pinned lakes +
+  two registries → identical feature frames (`frame_digest` equality)
+  and byte-identical model artifacts (sha256, id and metrics equal
+  across roots; the artifact loaded from one root predicts exactly on
+  the other's frame). Full suite: 1041 passed, 3 skipped (pre-existing
+  skips); ruff, `git diff --check`, `git submodule status` all clean.
 - Phase B slice (issue #40): pending.
 - Phase C slice (issue #41): pending.
 - Phase D slice (issue #42): pending.
