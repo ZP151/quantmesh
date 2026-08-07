@@ -124,7 +124,7 @@ Exit criteria:
 - Testnet execution survives disconnect/reconnect without duplicate orders.
 - Risk limits prevent excess leverage and stale-data execution.
 
-### M6 — Prediction-market intelligence (`LATER`)
+### M6 — Prediction-market intelligence (`ACTIVE`, plan: `docs/iterations/0008-m6-prediction-market-intelligence.md`)
 
 Outcome: normalize event markets into calibrated probability signals.
 
@@ -141,7 +141,7 @@ Exit criteria:
 - Point-in-time replay prevents look-ahead from market resolution data.
 - Forecast reports include Brier score, calibration and liquidity confidence.
 
-### M7 — Unified research and portfolio engine (`LATER`)
+### M7 — Unified research and portfolio engine (`ACTIVE`, plan: `docs/iterations/0009-m7-unified-research-and-portfolio-engine.md`)
 
 Outcome: combine equity, crypto and event signals under one risk budget.
 
@@ -215,7 +215,10 @@ Exit criteria:
 
 ## Current delivery plan
 
-M4 is active. Its implementation detail is versioned in
-`docs/iterations/0006-m4-moomoo-equity-workflow.md`; the long-running goal
-governs outcomes and safety boundaries, while that iteration document governs
-phases, tickets, contracts, reuse, evidence, and the simulated-account gate.
+M7 is active. Its implementation detail is versioned in
+`docs/iterations/0009-m7-unified-research-and-portfolio-engine.md`; the
+long-running goal governs outcomes and safety boundaries, while that
+iteration document governs phases, tickets, contracts, reuse, evidence,
+and the stacked-PR constraint (the M4 and M5 operator drill gates
+remain recorded and pending; M6's final PR #38 and M7's final PR stack
+behind them).
