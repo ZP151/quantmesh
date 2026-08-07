@@ -83,7 +83,7 @@ and event-risk constraints.
       test); ensemble predictions carry calibrated uncertainty, with
       calibration evidence computed under the M6 Brier/reliability
       discipline. — Phase C (issue #41).
-4. [ ] Portfolio construction respects venue, asset and event-risk
+4. [x] Portfolio construction respects venue, asset and event-risk
       constraints (proven by test on fixture universes); exposure
       decomposes by venue, asset class and event; deterministic
       scenario tests (gap moves, liquidation cascade, funding spike,
@@ -251,11 +251,20 @@ operator drill).
   lake-pin gate at record; the flip writes perturbed bars under the
   same dataset name so all setup ids stay identical (the column-order
   confound).
-- ADR-0009 extension **to record** (issue #42 Phase D): portfolio
-  construction is risk-budget via scipy SLSQP with a documented
-  constraint surface (venue, asset-class, event-risk, leverage); shocks
-  are deterministic and scenario reports run on the M5 report stack;
-  infeasible systems fail closed.
+- ADR-0009 extension **recorded** (issue #42 Phase D): portfolio
+  construction is risk-budget via scipy SLSQP (documented starting
+  points, analytic jacobian, post-solve re-verification at 1e-6 on
+  unrounded weights with returned checks re-measured on the 6 dp
+  rounded weights); the constraint surface is four typed caps —
+  venue, asset-class, event-risk (weight × (1 − M6 held probability)),
+  leverage (M5 max_leverage linkage); structural infeasibility is
+  refused pre-solve only when venue caps cover every universe venue
+  and sum below 1; shocks (gap, funding, single-sweep liquidation,
+  event mis-resolution) replay deterministically through the M2 kernel
+  (funding charged before step orders; event sleeves marked-only);
+  scenario reports run on the M5 stack with setup-only ids (scenario
+  id over the timeline, shocks/orders canonical within a step) and no
+  lake pin (the recorded universe IS the setup — the M6 precedent).
 - ADR-0009 extension **to record** (issue #43 Phase E): drift and
   failure detection are evidence-producing with an alert ledger; signal
   promotion requires the full benchmark/ablation/OOS evidence bundle
@@ -352,6 +361,37 @@ operator drill).
   report's duplicate refusal fires before the pin check) and asserts
   the ledger is byte-unchanged after the refusal. 39 ensemble tests
   green; full suite 1125 passed / 3 skipped; ruff clean.
+- 2026-08-08 (issue #42, Phase D): implemented the full
+  `quantmesh.portfolio` package — `constraints.py` (four typed caps
+  incl. event-risk Σ w(1−p) from the M6 implied probabilities and the
+  M5 `leverage_cap_from_risk_limits` linkage), `exposure.py`
+  (decomposition by venue/asset class/event with the paired
+  probability⇔event-key validator), `optimizer.py` (risk-budget SLSQP:
+  Σ(RC − budget)² with analytic jacobian, documented inverse-vol/equal
+  starting points, structural-infeasibility refusal, post-solve
+  re-verification), `scenarios.py` (gap/funding/liquidation/event-
+  misresolution shocks replayed through the M2 kernel), `reports.py`
+  (scenario reports on the M5 stack, no lake pin — the M6 precedent),
+  plus the `PaperAccount.apply_funding`/`total_funding` kernel
+  extension. The first test run surfaced three real defects: the
+  report artifact writer called `model_dump()` without `mode="json"`,
+  so `json.dumps` choked on the datetime fields (the M6 idiom fixed
+  it); the structural-infeasibility check fired on an EMPTY venue-cap
+  surface (sum of zero caps = 0 < 1) — it now refuses only when the
+  caps cover every venue in the universe, the partition argument; and
+  the liquidation-cascade design was rewritten to a single sweep
+  before testing (a round-loop could never succeed: closing converts
+  mark to cash minus fees, so post-sweep < pre-sweep equity and the
+  floor condition `pre < floor ≤ post` is unreachable — success
+  requires the closeable bid to sit above the triggering mark). The
+  fixture arithmetic is pinned by test: buy 8000 AAA at the 105 ask
+  → cash 159,160; 20% gap-down marks equity at 751,160; a 0.76 floor
+  sweeps at the 76 bid → cash 766,552, and a 0.8 floor fails closed.
+  The optimizer's binding tests needed multi-venue universes (a
+  single-venue universe with its only venue capped below 1 is
+  *structurally* infeasible — the check working as intended). 82
+  portfolio tests green; full suite 1207 passed / 3 skipped; ruff
+  clean.
 
 ## Verification evidence
 
@@ -413,7 +453,45 @@ operator drill).
   registry duplicate/dangling-pin/fail-closed/root-not-dir, and the
   cross-root acceptance drill with byte-identical artifacts. Full
   suite: 1125 passed, 3 skipped; ruff clean; `git diff --check` clean.
-- Phase D slice (issue #42): pending.
+- Phase D slice (issue #42): `tests/test_portfolio_constraints.py`
+  (17) + `tests/test_portfolio_optimizer.py` (14) +
+  `tests/test_portfolio_scenarios.py` (38) +
+  `tests/test_portfolio_reports.py` (13) — 82 passed. Constraints:
+  paired probability⇔event-key validator, cap bounds and uniqueness,
+  M5 `leverage_cap_from_risk_limits` linkage, event-risk
+  Σ w(1−p) arithmetic (0.3 × 0.95 on a 5%-probability outcome),
+  typed violations, duplicate-holding refusal. Exposure: decomposition
+  by venue/class/event with both FED-SEP markets aggregating under one
+  key. Optimizer: uncorrelated closed form (diag(4,1) → weights
+  (1/3, 2/3), RC 4/9 each from the equal start), correlated parity
+  ([[4, 1.5],[1.5, 1]] → (1/3, 2/3), RC 7/9 — two-asset parity is
+  inverse-vol regardless of correlation), each cap class binding at
+  its limit (venue 0.25, class 0.5, event-risk 0.15 on p=0.5 →
+  weight 0.3, leverage 0.25), checks re-measuring the returned rounded
+  weights, determinism, structural infeasibility (full-coverage caps
+  summing < 1), covariance refusals (ndim/shape/non-finite/asymmetry/
+  non-PSD), zero-variance and unknown-start refusals, n < 2 and
+  duplicate holdings, scipy-missing → `PipelineUnavailableError` via a
+  monkeypatched importlib. Scenarios: kernel funding extension
+  (charge/receive/multi-position/unknown/non-finite/over-cash), gap
+  up/down arithmetic (95/105/92.5 ↔ 76/84/74 at −20%), the pinned
+  liquidation drill (159,160 → gap → 751,160 → sweep at 76 →
+  766,552, n_liquidation_rounds 1, drawdown 0.233448; 0.8 floor fails
+  closed; sub-floor no-trigger; no-bid refusal), funding replay
+  (8,400 charged then 4,200 received; short marks at the bid and
+  receives; unknown-position and over-cash refusals; funding charged
+  before step orders), event mis-resolution (0.05 sleeve zeroed;
+  both markets on one key zeroed; unknown event refused), kill-switch
+  rejection, missing quote/mark fail-closed paths, scenario-id
+  sensitivity to timeline order and shock parameters with invariance
+  to within-step ordering, step-advance and id-match validators.
+  Reports: full drill (id/registry/artifacts/metrics), report.json
+  excluding `created_at`, windows.csv exact rows, byte-identical
+  artifacts across two roots, registry duplicate/corrupted-line
+  (line 2 attributed)/shared-id/root-not-a-directory (failing closed
+  before any artifact write), id-setup sensitivity, setup-mismatch
+  validator, kernel account_config snapshot. Full suite: 1207 passed,
+  3 skipped; ruff clean; `git diff --check` clean.
 - Phase E slice (issue #43): pending.
 
 ## Risks and gates
@@ -446,6 +524,28 @@ operator drill).
   count; below that budget the method refuses (fail-closed) and the
   inverse-error method remains the no-scipy default; scipy itself is
   lazy import-guarded with a typed `PipelineUnavailableError`.
+- Structural-infeasibility coverage — the partition refusal covers
+  venue caps only; a system blocked solely by a leverage cap (a
+  single-venue universe capped below 1) surfaces as a typed solver
+  refusal ("SLSQP did not converge") rather than a structural one.
+  Both are fail-closed; the asymmetry is documented in ADR-0009
+  decision 9.
+- Boundary rounding at binding caps — returned checks re-measure the
+  6 dp rounded weights, so a binding cap can sit at limit ± 5e-7 of
+  rounding; refusals use the unrounded point at 1e-6 and the returned
+  checks' violation tolerance is 1e-9 on the rounded values. The
+  binding tests assert observed ≤ limit + 1e-6, never exact equality
+  to the last float.
+- Liquidation single-sweep semantics — closing converts mark to cash
+  (minus fees), so a floor the flush cannot reach fails closed by
+  design; a multi-round cascade was mathematically impossible (post-
+  sweep < pre-sweep) and was removed during design review. A
+  liquidation shock on a market without a bid fails closed.
+- Funding charges precede step orders — a funding shock in the same
+  step as the position-opening order refuses (the position does not
+  exist yet at charge time); scenarios express this as separate
+  steps. The paper kernel has no margin: any charge beyond cash fails
+  closed.
 - Data drift between fixture universes and live research — fixture
   universes are the pinned contract; drift detection (Phase E) exists
   precisely to flag the divergence when live data arrives (M8/M10).

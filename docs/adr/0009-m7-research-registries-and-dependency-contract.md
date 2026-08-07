@@ -214,6 +214,88 @@ Phase C contract, pinned by test:
   N" refusal), then mkstemp+os.replace append. Reads fail closed with
   line attribution.
 
+### 9. Portfolio construction is risk-budget SLSQP over a typed constraint surface; scenarios replay deterministically through the paper kernel; reports ride the M5 stack (Phase D extension, issue #42)
+
+`quantmesh.portfolio` ships four pieces, each a pure, deterministic
+function of its setup:
+
+- **Risk-budget construction** (`optimizer.py`) minimizes
+  `sum((RC_k - portfolio_variance / n) ^ 2)` — equal per-asset risk
+  budgets, the classic risk-parity objective — via scipy SLSQP with
+  an analytic jacobian, a documented starting point (inverse-volatility
+  weights normalized to unit sum, or equal weight on request; never a
+  random seed), and a long-only box plus `sum(w) == 1`. Every solve is
+  re-verified after the fact: solver failure, non-finite outputs,
+  violated equality/box/linear constraints all fail closed with the
+  solver's message attached. The tolerance split is explicit: refusals
+  test the solver's unrounded point at `FEASIBILITY_TOLERANCE = 1e-6`,
+  while the returned checks re-measure the *rounded* (6 dp) weights the
+  caller actually receives, so a report can never disagree with its own
+  weights.
+- **The constraint surface** (`constraints.py`) is four typed cap
+  classes, each a linear form in the weights: per-venue caps,
+  asset-class caps, event-risk caps (`weight x (1 - held_probability)`
+  from the M6 implied probabilities — a position on a 0.05-probability
+  outcome counts 0.95 of its weight), and per-venue leverage limits
+  drawn from the M5 pre-submission check
+  (`hyperliquid.risk.RiskLimits.max_leverage`, issue #31). Evaluations
+  are pure arithmetic (`constraint_values`/`check_constraints`, the M5
+  RiskRefusal idiom: allowed only with zero violations). Structural
+  infeasibility is refused before solving when the venue caps *cover
+  every venue in the universe* and sum below 1 — the partition
+  argument. An empty or partial surface has no partition argument and
+  is always feasible a priori (uncapped venues absorb the remainder).
+- **Deterministic scenario shocks** (`scenarios.py`) replay through
+  the M2 paper kernel verbatim: gap moves scale a market's
+  bid/ask/last, funding charges book signed mark-implied notional
+  through the kernel's `PaperAccount.apply_funding` extension (the M5
+  FundingLedger precedent), liquidation force-closes every position at
+  the current shocked bid in a *single* sweep, and event
+  mis-resolutions zero the M6 event sleeves (marked-only — no
+  execution path exists for event contracts). The liquidation cascade
+  is single-sweep by construction: closing converts mark to cash
+  (minus fees), so post-sweep equity is always below pre-sweep equity
+  — a floor the flush cannot reach fails closed instead of looping
+  forever. Within a step the replay order is fixed: shocked quotes →
+  funding charges → order submissions → event shocks → liquidation,
+  with every window snapshotted after the step.
+- **Scenario reports** (`reports.py`) ride the M5/M6 stack: the id is
+  setup-only over commit + scenario id (itself setup-only over the
+  timeline, with shocks and orders canonical within a step) + sorted
+  universe + account configuration — never outcomes; artifacts are
+  byte-stable (report.json excluding `created_at`, windows.csv) and
+  reproduce byte-identically across independent roots; the registry
+  follows the M6 forecast precedent (no lake pin: the recorded
+  universe IS the setup) with duplicate refusal, atomic appends and
+  fail-closed reads.
+
+## Consequences
+
+- scipy is already on the research-extra surface for nnls (decision 6);
+  the optimizer's SLSQP loads lazily under the same
+  `PipelineUnavailableError` contract. The paper kernel core stays
+  scipy-free — `quantmesh.portfolio` is research-side.
+- The structural-infeasibility check covers venue caps only. A
+  universe whose only feasible direction is blocked by a *leverage*
+  cap (e.g. a single-venue universe capped below 1) reaches the solver
+  and surfaces as a typed "SLSQP did not converge" refusal — still
+  fail-closed, but attributed to the solver rather than to structure.
+  Decision 9 pins that asymmetry on the record rather than papering
+  over it.
+- Funding charges are booked against the pre-step positions and
+  charged *before* the step's orders submit; a funding shock on a
+  symbol the account does not yet hold, a non-finite charge, or a
+  charge beyond cash all fail closed — the paper kernel has no margin.
+- The 6 dp weight rounding makes boundary constraints exact at the
+  cap in every binding test; the returned checks' violation tolerance
+  (1e-9) applies to the rounded weights, and the solver-level refusal
+  tolerance (1e-6) to the unrounded point — two distinct guarantees,
+  documented at the optimizer.
+- Byte-identical artifacts across roots depend on `created_at` staying
+  excluded from the artifacts (it lives only in the registry line,
+  where it is allowed to differ) and on the windows' timestamps being
+  setup-pinned step times, never clock reads.
+
 ## Consequences
 
 - Registry reads are O(records) linear scans over small JSONL files

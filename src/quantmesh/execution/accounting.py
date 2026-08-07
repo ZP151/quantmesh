@@ -71,6 +71,7 @@ class PaperAccount(BaseModel):
     positions: dict[str, Position] = Field(default_factory=dict)
     orders: dict[str, Order] = Field(default_factory=dict)
     total_fees: float = 0
+    total_funding: float = 0
     realized_pnl: float = 0
     order_sequence: int = Field(default=0, ge=0)
     starting_cash: float | None = None
@@ -182,6 +183,39 @@ class PaperAccount(BaseModel):
         orders[order.order_id] = order
         return self.model_copy(
             update={"orders": orders, "order_sequence": sequence}
+        )
+
+    def apply_funding(self, charges: dict[str, float]) -> "PaperAccount":
+        """Apply deterministic funding payments to open positions.
+
+        Each charge is a signed cash amount keyed by position key
+        (positive = the position pays, negative = receives), applied
+        against the current mark-implied notional by the caller — the
+        account itself only books the cash move (the M5 FundingLedger
+        precedent: funding is a fee-like journal entry). Charges for
+        positions the account does not hold, non-finite charges, and
+        charges that would push cash negative all fail closed.
+        """
+        total = 0.0
+        for key, charge in charges.items():
+            if key not in self.positions:
+                raise ValueError(
+                    f"funding charge for unknown position {key!r}; "
+                    "the account cannot be charged for what it does not hold"
+                )
+            if not math.isfinite(charge):
+                raise ValueError(f"non-finite funding charge for {key!r}")
+            total += charge
+        if not math.isfinite(total):
+            raise ValueError("funding charges do not sum to a finite amount")
+        if self.cash - total < 0:
+            raise ValueError(
+                f"funding payments of {total:.6f} exceed cash {self.cash:.6f}; "
+                "margin beyond the cash account is out of scope for the "
+                "paper kernel"
+            )
+        return self.model_copy(
+            update={"cash": self.cash - total, "total_funding": self.total_funding + total}
         )
 
     def apply_fill(self, order: Order, fill: Fill) -> "PaperAccount":
