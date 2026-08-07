@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -6,6 +8,7 @@ class Settings(BaseSettings):
     environment: str = "local"
     allow_live_trading: bool = False
     default_paper_mode: bool = True
+    lake_root: Path = Path.home() / ".quantmesh" / "data"
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -1,8 +1,8 @@
 # Iteration 0005 — M3 Data Foundation and Experiment Registry
 
-- Status: planned
+- Status: in progress
 - Started: 2026-08-07
-- Completed:
+- Completed: slice #1 (issue #14, merged `0bee38f`); slice #2 (issue #15, committed on `feat/m3-data-foundation`)
 - Owner: unassigned agent team
 - GitHub issue: issues #14-#19 (open; #12 was consumed by the M2 completion-records PR and #13 by the squash-divergence tracking issue)
 - Pull request: one final M3 integration PR from `feat/m3-data-foundation`; individual issue commits are pushed and reviewed locally
@@ -83,9 +83,11 @@ tracking issue took #13).
   moomoo, hyperliquid, polymarket, kalshi). Provider-specific fields stay in
   adapter payloads, never in the canonical models.
 - The lake is a local directory of Parquet files queried through DuckDB
-  (already pinned in the `research` extra, `duckdb>=1.1,<2`, MIT). Add
-  `pyarrow` for deterministic schema control and pandas interop
-  (Apache-2.0). Partition convention:
+  (already pinned in the `research` extra, `duckdb>=1.1,<2`, MIT). Issue #15
+  asked to add `pyarrow`, but the slice review showed it is not required:
+  pandas (already a main dependency) is the deterministic write bridge —
+  column order and frame layout are dict-ordered, and COPY writes no index
+  column — so pyarrow stays out (ADR-0003). Partition convention:
   `data/<dataset>/<interval>/<venue>/<symbol>/<date>/<shard>.parquet`.
   Local-first: the lake root comes from settings (pydantic-settings,
   `QUANTMESH_` prefix, `.env`), defaulting under the user's data directory —
@@ -159,6 +161,29 @@ tracking issue took #13).
 - 2026-08-07: Switched remaining M3 work (#15-#19) to the solo delivery fast
   lane on `feat/m3-data-foundation`: commits and iteration evidence remain
   per issue, while one final M3 PR replaces repeated per-slice PR/merge cycles.
+- 2026-08-07: Slice #2 (issue #15) implemented with TDD on
+  `feat/m3-data-foundation`:
+  - Vertical slices: `Lake` write (canonical layout, day-shard grouping,
+    wholesale day replacement) → read (stored order, inclusive UTC range
+    filter, empty partition) → `Settings.lake_root` (default
+    `~/.quantmesh/data`, `QUANTMESH_LAKE_ROOT` override) → quality
+    (`Lake.quality` over the slice #14 primitives) → ADR-0003.
+  - Added `src/quantmesh/data/lake.py` (`Lake`, `LakeQuality`,
+    `validate_dataset_name`), `src/quantmesh/data/__init__.py`, the
+    `lake_root` setting, ADR-0003; 34 lake tests in `tests/test_lake.py`;
+    182 total passing.
+  - Two-axis review found 3 real bugs, all fixed with regression tests:
+    unvalidated `symbol`/`interval`/`day` path components (write could
+    escape the lake root; read with `symbol=".."` could leak other
+    partitions), unescaped COPY target (raw duckdb error / SQL surface
+    for roots or symbols with quotes), naive `start`/`end` bounds
+    (raw TypeError instead of fail-closed ValueError). Hardening also
+    landed: temp-file + atomic rename per shard, day-dir filtering on
+    read, per-duckdb-version determinism caveat.
+  - ADR-0003 written and reviewed against the implementation before any
+    ingestion; records the layout, normalization contract (UTC on write
+    and read), stored-order reads, quality gate, and the pyarrow decision.
+  - Verification evidence below.
 
 ## Verification evidence
 
@@ -183,6 +208,24 @@ violations; all must-fixes resolved (fail-closed `"0m"` interval,
 honest grid-relative docstring); standards judgement calls resolved
 (single-source interval grammar, test helpers, reworded error hint).
 Issue #14 closed on merge; remote feature branch deleted.
+
+Slice #2 (issue #15, committed on `feat/m3-data-foundation`):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 182 passed (1 pre-existing StarletteDeprecationWarning)
+.\.venv\Scripts\python.exe -m ruff check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: adversarial correctness review — 3 real bugs found and
+fixed (symbol/interval/day path validation, SQL literal escaping,
+naive-bound fail-closed) plus atomic temp+rename writes and read-side
+day-dir filtering; 12 regression tests added (34 lake tests total).
+ADR-0003 reviewed against the implementation: layout, UTC normalization
+contract, stored-order reads, quality gate and the pyarrow decision all
+match the code. Issue #15 closes only when its commit lands in the final
+M3 PR.
 
 ## Risks and follow-ups
 
