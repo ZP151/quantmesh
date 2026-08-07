@@ -5,7 +5,7 @@
 - Completed:
 - Owner: Claude (solo delivery lane)
 - GitHub issue: #39-#43 (Phases A-E)
-- Pull request: (opened after acceptance criteria complete; base = `feat/m6-prediction-market-intelligence`, stacked — merges after the M6 PR #38, which awaits the M5 PR, which awaits the M5 operator drill)
+- Pull request: [open #44](https://github.com/ZP151/quantmesh/pull/44) (opened 2026-08-08 after acceptance criteria complete; base = `feat/m6-prediction-market-intelligence` — the M6 remote tip is exactly the M7 base `7c4a0d1`, so the PR shows the 6 M7 commits cleanly; stacked — merges after the M6 PR #38, which awaits the M5 PR, which awaits the M5 operator drill)
 - Roadmap milestone: M7 (`LATER` → `ACTIVE`)
 
 ## Outcome
