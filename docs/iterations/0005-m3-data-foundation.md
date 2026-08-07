@@ -5,7 +5,7 @@
 - Completed:
 - Owner: unassigned agent team
 - GitHub issue: issues #14-#19 (open; #12 was consumed by the M2 completion-records PR and #13 by the squash-divergence tracking issue)
-- Pull request: to be opened per slice
+- Pull request: one final M3 integration PR from `feat/m3-data-foundation`; individual issue commits are pushed and reviewed locally
 - Roadmap milestone: M3 (see `docs/roadmap/ROADMAP.md`)
 
 ## Outcome
@@ -68,8 +68,9 @@ tracking issue took #13).
 - Quant researcher: define schema invariants and quality-check semantics
   (slice #14); define what "reproducible experiment" means in practice
   (slice #18).
-- Implementer: TDD each slice on its own branch (`feat/14`…`feat/19`),
-  one slice per session.
+- Implementer: TDD each slice on `feat/m3-data-foundation` under the solo
+  fast lane, with one coherent commit per issue and a push after each verified
+  slice.
 - Reviewer: two-axis /code-review (standards + spec) on each slice before
   merge.
 - Verifier: record exact commands and results in this record per slice.
@@ -155,6 +156,9 @@ tracking issue took #13).
   issue #14 auto-closed on merge. Next: slice #2 (issue #15, Parquet/
   DuckDB lake) — writes ADR-0003 (lake layout and normalization
   contract).
+- 2026-08-07: Switched remaining M3 work (#15-#19) to the solo delivery fast
+  lane on `feat/m3-data-foundation`: commits and iteration evidence remain
+  per issue, while one final M3 PR replaces repeated per-slice PR/merge cycles.
 
 ## Verification evidence
 

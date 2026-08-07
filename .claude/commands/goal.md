@@ -52,11 +52,26 @@ Do not silently broaden scope. If `$ARGUMENTS` conflicts with the active goal, u
 
 ## 3. Establish a safe work unit
 
+## Solo delivery fast lane
+
+When the active goal explicitly names a milestone integration branch, one
+developer may complete several dependent issues on that one branch. Keep one
+coherent, tested commit per issue and update the iteration record in the same
+commit; do not create a checkpoint-only PR or merge after every slice. Push
+the integration branch after each verified slice so it remains recoverable.
+
+Open one PR at the milestone integration gate, or earlier only for a
+credential, license, destructive migration, paid-service, or major
+architecture decision. Review every issue-sized commit before continuing, run
+the full checks per slice, and use the standing merge authority at the final
+PR. Issues remain the source of scope and acceptance criteria; close them
+only when their commit is present in the merged milestone PR.
+
 For implementation work:
 
 1. Confirm the issue is `ready-for-agent`, or make its acceptance criteria complete first.
 2. Assign/claim the issue before editing.
-3. Work on `feat/<issue>-<slug>`, `fix/<issue>-<slug>` or `docs/<issue>-<slug>`, never directly on `main`.
+3. Work on `feat/<issue>-<slug>`, `fix/<issue>-<slug>` or `docs/<issue>-<slug>`, never directly on `main`, unless the active goal has already selected a milestone integration branch under the solo delivery fast lane.
 4. Pull no unrelated work into the branch.
 5. Link the issue, branch and active iteration in `docs/goals/ACTIVE.md`.
 
@@ -97,9 +112,9 @@ Trading-safety rules are non-negotiable: paper mode defaults on, stale data fail
 When a work unit is ready:
 
 1. Commit with the issue number.
-2. Push the feature branch without force.
-3. Open or update a draft PR linked to the issue and iteration.
-4. Wait for CI and review; fix failures on the same branch.
+2. Push the active feature or milestone integration branch without force.
+3. In the solo delivery fast lane, keep working on the integration branch and open a PR only at the milestone gate or an earlier high-risk gate. Otherwise, open or update a draft PR linked to the issue and iteration.
+4. Wait for CI and review at every opened PR; run local verification and commit-level review for every fast-lane slice.
 5. The user grants standing approval to merge a self-created PR into `main`
    using a squash merge and delete its remote feature branch when all of the
    following are true: the PR is non-draft; its scope is already authorized;

@@ -38,7 +38,10 @@ One agent may perform several roles, but each role's output must remain visible 
 6. Add or update tests before marking implementation complete.
 7. Run the relevant checks listed in `docs/agents/collaboration.md`.
 8. Update the iteration record with decisions, evidence, risks and follow-ups.
-9. Use a pull request for review; do not force-push shared branches.
+9. Use a pull request for review; do not force-push shared branches. For a
+   solo milestone explicitly marked as a fast lane in `ACTIVE.md`, use one
+   integration branch and one final milestone PR instead of a PR per slice;
+   retain one tested, reviewed commit and iteration checkpoint per issue.
 
 ## Branch hygiene after squash merges
 
