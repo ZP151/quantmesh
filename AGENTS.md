@@ -40,6 +40,20 @@ One agent may perform several roles, but each role's output must remain visible 
 8. Update the iteration record with decisions, evidence, risks and follow-ups.
 9. Use a pull request for review; do not force-push shared branches.
 
+## Branch hygiene after squash merges
+
+Squash merges rewrite commit IDs: the feature-branch commits never become
+ancestors of `main`, so after a merge, local `main` can diverge from
+`origin/main` (a previously merged commit sits on top of the new head). When
+this happens:
+
+- Preserve the divergent local `main`; never `reset --hard` it away unless the
+  divergence is fully contained in `origin/main` and verified.
+- Create every new work branch from `origin/main`, never from local `main`.
+- Reconcile local `main` by fast-forwarding when possible; otherwise leave it
+  in place, note the divergence in the active iteration record, and keep
+  working from `origin/main`.
+
 ## Long-running goals
 
 Use `docs/goals/ACTIVE.md` as the resumable state for multi-session work. Claude Code invokes `.claude/commands/goal.md` with `/goal`; Codex can use `.codex/prompts/goal.md`. Every resume begins by reading repository docs, Git history, GitHub issues and open PRs. Chat history is never the sole source of project state.

@@ -215,5 +215,5 @@ Exit criteria:
 
 ## Current next slice
 
-M3 (data foundation and experiment registry) is planned in `docs/iterations/0005-m3-data-foundation.md` as a six-slice chain: normalized market-data schemas, Parquet/DuckDB lake with quality checks, dataset manifests, provider registry (fixture-only adapters), experiment registry, then scheduled ingestion and gap detection. M2's slice chain (PRs #7-#11) merged to main 2026-08-07; start M3 with issue #12 (normalized market-data schemas).
+M3 (data foundation and experiment registry) is planned in `docs/iterations/0005-m3-data-foundation.md` as a six-slice chain: normalized market-data schemas, Parquet/DuckDB lake with quality checks, dataset manifests, provider registry (fixture-only adapters), experiment registry, then scheduled ingestion and gap detection. M2's slice chain (PRs #7-#11) merged to main 2026-08-07; start M3 with issue #14 (normalized market-data schemas).
 

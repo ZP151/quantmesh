@@ -37,6 +37,8 @@ gh pr list --state open --json number,title,headRefName,baseRefName,statusCheckR
 
 Preserve user changes. Never discard, reset, clean or overwrite work you did not create. Never expose credentials or private keys in output.
 
+Squash merges rewrite commit IDs, so local `main` can diverge from `origin/main` after merging a PR (the merged branch commit is not an ancestor). Preserve a divergent local `main` and always create the next work branch from `origin/main`; reconcile local `main` by fast-forward only.
+
 ## 2. Resolve the requested goal
 
 - A GitHub issue/PR reference is the immediate work specification.
