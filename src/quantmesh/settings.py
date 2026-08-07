@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     hyperliquid_testnet_url: str = "https://api.hyperliquid-testnet.xyz"
     hyperliquid_connect_timeout_s: float = Field(default=5.0, gt=0)
     hyperliquid_request_timeout_s: float = Field(default=10.0, gt=0)
+    # Polymarket (M6): public read-only endpoints, pinned, keyless
+    # (ADR-0008). Overrides are explicit construction-time decisions,
+    # never env-driven secret material.
+    polymarket_gamma_url: str = "https://gamma-api.polymarket.com"
+    polymarket_clob_url: str = "https://clob.polymarket.com"
+    polymarket_request_timeout_s: float = Field(default=10.0, gt=0)
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -63,10 +63,11 @@ event mapping.
 
 ## Acceptance criteria
 
-1. [ ] Polymarket discovery/CLOB/history and Kalshi market data normalize
+1. [~] Polymarket discovery/CLOB/history and Kalshi market data normalize
       through fixture-first adapters into the M3 lake (fixture path
       registry-registered; live providers explicit-construction-only,
-      keyless, read-only).
+      keyless, read-only). — Polymarket side complete (issue #34, Phase A
+      2026-08-08); Kalshi side pending Phase B (issue #35).
 2. [ ] Canonical event/outcome/resolution-rule/expiry models carry
       fee/spread/liquidity-aware implied probabilities computed by pure,
       fixture-tested functions (binary payoff structure per venue,
@@ -217,12 +218,48 @@ operator drill).
   `trading-api.kalshi.com` host serves a migration notice);
   docs.kalshi.com serves no downloadable OpenAPI spec. No external
   gates: M6 is public read-only market data end to end.
+- 2026-08-08: **Phase A (issue #34) implemented** — canonical
+  `quantmesh.events` models (`EventVenue` with `to_domain_venue()`,
+  `ResolutionRule` with NFKC/casefold/whitespace-collapse fingerprint
+  revalidation, `EventMarket`/`Outcome`/`MarketQuote`/`ImpliedProbability`
+  with aware-timestamp and bounds validators) + `quantmesh.polymarket`
+  (typed errors; wire models and fail-closed parsers pinned to the
+  vendored `py-clob-client-v2` source and wire shapes recorded live
+  2026-08-08; `SdkPolyTransport` keyless — `ClobClient(host, chain_id,
+  key=None)`, proven by a faked-import test; `PolyMarketDataAdapter`
+  pure wire→domain mapping; `PolyFixtureProvider` registry-registered /
+  `PolyLiveProvider` explicit-construction-only). Live contract probing
+  recorded the divergences that became ADR-0008 decision 2: the live
+  `/book` omits the SDK's `last_trade_price`/`min_order_size`/`neg_risk`/
+  `tick_size` fields (read from the market object instead); level order
+  is worst-first (best levels extracted order-agnostically); `/prices-
+  history` rows are objects `{"t", "p"}` with long ranges refused
+  server-side; fees live at `/fee-rate` → `{"base_fee": bps}` (the SDK's
+  `or 0` fallback deliberately not replicated — fail-closed); errors are
+  `{"error": str}`; retired markets 404 "market not found". Polymarket
+  has no public bar surface and no public trades surface on the pinned
+  contract → `fetch_bars`/`fetch_trades` fail closed, and the canonical
+  fixture set is `polymarket_events.json` + `polymarket_books.json`
+  (`polymarket_trades.json` deliberately omitted — ADR-0008 decision 4).
+  10 wire fixtures under `src/quantmesh/polymarket/fixtures/`; 2
+  canonical-shaped fixtures under `data/providers/fixtures/` derived
+  through the real parsers; `QUANTMESH_POLYMARKET_*` settings; ADR-0008
+  recorded (5 decisions + Phase B/C/D extension hooks). 64 new tests;
+  adversarial review fixed a per-market `_rule_text` cross-assignment
+  bug (first market's description was applied to every market of an
+  event) and removed an unused connect-timeout setting. 822 passed,
+  3 skipped; ruff/diff/submodules clean.
 
 ## Verification evidence
 
-- Phase A slice (issue #34): `pytest -q` counts; ruff check clean; diff
-  clean; submodules clean. Fixture drill: Gamma/CLOB wire shapes through
-  the real parsers; keyless construction proven; registry refuses LIVE.
+- Phase A slice (issue #34): **822 passed, 3 skipped** (symlink
+  creation not permitted on Windows); ruff clean; `git diff --check`
+  clean; submodules clean. Fixture drill: recorded Gamma/CLOB wire
+  shapes (1 resolved NBA event + 5 active Fed markets + 99-level book +
+  707-row prices-history) through the real parsers; keyless
+  construction proven (faked `builtins.__import__` asserting
+  `key=None`); registry refuses LIVE; bars/trades fail closed;
+  canonical fixture consistency tests pin the M3-shape derivations.
 - Phase B slice (issue #35): same gates; Kalshi fixtures through the
   real parsers; migration-host refusal test.
 - Phase C slice (issue #36): same gates; calibration fixture drills;
