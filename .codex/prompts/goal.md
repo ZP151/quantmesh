@@ -12,3 +12,7 @@ clean, all required CI and local checks pass, review has no unresolved finding,
 and it contains no credentials, live trading, destructive migration, paid
 service, incompatible license, or major architecture change. Merge dependent
 PRs one at a time and re-check the next PR after each merge.
+
+When local `main` diverges from `origin/main` after a squash merge, preserve
+the local branch and start the next work branch from `origin/main`; do not
+attempt an automatic reset, rebase, or history merge.

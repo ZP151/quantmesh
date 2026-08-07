@@ -60,6 +60,13 @@ For implementation work:
 
 If the current worktree is dirty, identify ownership of every change. Continue only when the changes are part of this goal or can be safely isolated.
 
+If local `main` has diverged from `origin/main` after a squash merge, treat
+`origin/main` as the integration source of truth. Do not reset, rebase, merge
+or overwrite the divergent local branch automatically. Preserve it for audit,
+then create the next work branch directly from `origin/main` and continue;
+for example, `git switch -c feat/<issue>-<slug> origin/main`. Record the
+divergence only if it blocks a required change.
+
 ## 4. Persistent execution loop
 
 Continue until the objective is achieved or a genuine human/external gate is reached:
