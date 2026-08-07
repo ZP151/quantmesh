@@ -58,9 +58,16 @@ losslessly, including the timezone of every timestamp.
   whose manifest is missing, invalid, for a different name, or stale —
   "stale" means declared coverage (series set, rows, range) differs from
   the bytes on disk. A `Dataset` is a point-in-time view: re-open after
-  writes. Symlinks anywhere in the layout are rejected, and every name is
-  whitelist-checked, so a dataset can never point at bytes outside the
-  lake root.
+  writes. Regeneration is monotonic: `ManifestWriter` refuses to declare
+  less coverage than the previous manifest — vanished series, shrunk
+  rows, or a moved end are refused unless the series was rebuilt from an
+  authoritative source (`rewritten`), and a moved-forward start is
+  refused even for rewritten series, because a new day must never mask a
+  lost interior day. Removing `manifest.json` is the explicit override
+  for deliberate changes. Symlinks anywhere in the layout are rejected
+  (on the manifest scan and on the raw `Lake` read/write surface), and
+  every name is whitelist-checked, so a dataset can never point at bytes
+  outside the lake root.
 - Every path component is validated against a whitelist before any I/O:
   dataset `^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$`, symbol
   `^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$`, day `YYYY-MM-DD`, and

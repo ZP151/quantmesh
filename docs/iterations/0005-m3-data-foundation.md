@@ -2,7 +2,7 @@
 
 - Status: in progress
 - Started: 2026-08-07
-- Completed: slice #1 (issue #14, merged `0bee38f`); slices #2-#5 (issues #15-#18, committed on `feat/m3-data-foundation`)
+- Completed: slice #1 (issue #14, merged `0bee38f`); slices #2-#6 (issues #15-#19, committed on `feat/m3-data-foundation`)
 - Owner: unassigned agent team
 - GitHub issue: issues #14-#19 (open; #12 was consumed by the M2 completion-records PR and #13 by the squash-divergence tracking issue)
 - Pull request: one final M3 integration PR from `feat/m3-data-foundation`; individual issue commits are pushed and reviewed locally
@@ -264,8 +264,66 @@ tracking issue took #13).
     that metrics are unsigned results (undetectable without signing,
     out of M3 scope) and that concurrent writers are last-writer-wins.
   - Verification evidence below.
-
-## Verification evidence
+- 2026-08-07: Slice #6 (issue #19) implemented with TDD on
+  `feat/m3-data-foundation`:
+  - Vertical slices: `IngestionJob` (dataset/interval/cadence grammar,
+    cadence validated but unused — M3 ships no timer, the caller runs
+    the deterministic loop) → `Ingestor.ingest` (fetch window re-opens
+    the UTC day of the last stored tick so the day shard is rebuilt
+    wholesale from the provider; full-OHLCV no-op comparison; stale
+    manifest healing) → `run` (ordered slots, `None` = nothing new) →
+    `coverage_gaps` (`SeriesGap`/`CoverageReport`: vanished series,
+    missing day shards, undeclared bytes; interval-grid expected days;
+    fails closed on missing/invalid/foreign manifests, corrupt shards
+    and fully-empty datasets).
+  - Added `src/quantmesh/data/ingestion.py`; 23 ingestion tests in
+    `tests/test_ingestion.py` (15 initial + 8 review regressions); 288
+    total passing.
+  - Adversarial review found 2 real bugs + 3 risks, all fixed with
+    regression tests: (1) the no-op check compared timestamps only, so
+    a provider correction or retraction of the last day was silently
+    dropped — the check now compares full OHLCV content, and the
+    regression tests prove corrections (same timestamps, new values)
+    and retractions (provider shrank) rebuild the day shard; (2) a
+    write whose manifest regeneration failed (corrupt unrelated shard)
+    left the dataset permanently gated because the next run no-op'd —
+    an unchanged run now heals a stale manifest by regenerating, so
+    the failure stays loud every run and recovery happens
+    automatically once the shard is repaired. Risks: raw duckdb
+    exceptions leaked from `scan_series` and `Lake.read_bars` (now
+    wrapped as fail-closed ValueErrors with shard attribution, covering
+    the gate, `generate`, `coverage_gaps` and `ingest`), calendar-day
+    `missing_days` reported phantom gaps for coarse intervals (expected
+    days now come from the interval grid anchored at the declared
+    start; trading calendars explicitly out of scope), and a fully
+    empty dataset was reported clean (now fails closed — a coverage
+    report must never bless total data loss). Minor: the timestamp-set
+    per-bar rebuild (O(fetched × stored)) is gone with the content
+    comparison, and the previously untested documented semantics now
+    have tests.
+  - Verification evidence below.
+  - Round-2 (final holistic review of the complete M3 diff): 1 real bug
+    + 1 risk + 3 minors fixed. The real bug was interior-day-loss
+    masking: after a day shard is deleted, a later ingest rewrites the
+    day window and regenerates a manifest whose row counts and end are
+    unchanged — the missing day is invisible to the lake gate and to
+    `coverage_gaps` (same count, same range). Fixed with the
+    monotonic-coverage invariant: `ManifestWriter.generate` now loads
+    the previous manifest and refuses to declare less coverage —
+    vanished series, shrunk rows, or a moved-back end unless the series
+    is rebuilt from an authoritative source (`rewritten`), and a
+    moved-forward start always (a new day must never mask a lost
+    interior day); removing `manifest.json` is the documented explicit
+    override. The risk: raw duckdb exceptions and NULL timestamps from
+    tampered shards — `Lake.read_bars` now fails closed on NULL
+    timestamps, and `_reject_symlinks` guards the raw `Lake` read/write
+    surface (previously only the manifest scan rejected links, so a
+    symlinked interval/venue/symbol dir could redirect raw reads/writes
+    outside the root). Minors: the write path passes
+    `rewritten=<the job's series>` so day rewrites stay legal,
+    `coverage_gaps` documents its same-count/same-range blind spot,
+    ADR-0003 records the monotonic rule, and 6 manifest + 3 lake
+    regression tests added (297 total passing).
 
 Per slice: `pytest -q`, `ruff check src tests`, `git diff --check`,
 `git submodule status`; integration evidence for the two roadmap exit
@@ -365,6 +423,39 @@ blind spot is inherited from the lake gate spec (documented in
 manifest.py) and revision regeneration is the honest record of change.
 Issues #15-#18 close only when their commits land in the final M3 PR.
 
+Slice #6 (issue #19, committed on `feat/m3-data-foundation`):
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q: 297 passed, 3 skipped (symlink creation not permitted), 1 warning
+.\.venv\Scripts\python.exe -m ruff check src tests: All checks passed
+git diff --check: passed
+git submodule status: clean
+```
+
+Review gate: adversarial correctness review — 2 real bugs fixed
+(content-blind no-op check dropping last-day corrections/retractions;
+write-without-manifest failure permanently gating the dataset, now
+healed on the next unchanged run) plus duckdb-exception wrapping in
+`scan_series`/`read_bars`, interval-grid expected days for
+`missing_days`, and empty-dataset fail-closed; 8 regression tests
+added (23 ingestion tests total). The roundtrip test
+(`test_ingestion_and_detection_roundtrip`) completes the second M3
+exit criterion: ingested data, then a deleted interior day detected by
+both the lake quality checks (gaps) and `coverage_gaps` (named missing
+day), regenerated to restore the gate.
+
+Round-2 review gate (final holistic review of the complete M3 diff):
+monotonic-coverage invariant in `ManifestWriter` (refuses vanished
+series, shrunk rows, moved-back end unless `rewritten`; moved-forward
+start always; manifest removal is the documented override) — 6
+manifest regression tests including rewritten-start-forward refusal
+and override-by-removal; `Lake.read_bars` fails closed on NULL
+timestamps, `_reject_symlinks` on the raw read/write surface — 3 lake
+regression tests (skipped where symlinks are not permitted); the one
+pre-existing growth test that implicitly blessed an interior-day loss
+now keeps its start. Issues #15-#19 close only when
+their commits land in the final M3 PR.
+
 ## Risks and follow-ups
 
 - Lake layout and partition conventions are hard to change once datasets
@@ -376,3 +467,11 @@ Issues #15-#18 close only when their commits land in the final M3 PR.
 - DuckDB/Parquet versions move fast; pin and record the versions used in
   manifests so "pinned dataset" stays pinned (license checklist in
   REUSE_MATRIX.md).
+- Same-count/same-range byte tampering is invisible to the lake gate and
+  to `coverage_gaps`: a day shard replaced with different bars of the
+  same row count and same first/last timestamp compares clean because
+  nothing in M3 fingerprints content (monotonic coverage and
+  `_unchanged` content comparison cover writes and shrinks, not
+  blind tampering). Follow-up: a content fingerprint (e.g. shard-byte
+  hashes) in the manifest, validated by the gate — deliberately out of
+  M3 scope.

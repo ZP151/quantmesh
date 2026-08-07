@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -398,3 +399,96 @@ def test_symlinks_in_lake_layout_are_rejected(tmp_path: Path) -> None:
         ManifestWriter(tmp_path).generate("ds", source="s", license="l")
     with pytest.raises(ValueError, match="symlink"):
         lake.read_bars("ds", interval="1m", venue=Venue.HYPERLIQUID, symbol="BTC-PERP")
+
+
+def test_generate_refuses_vanished_series(tmp_path: Path) -> None:
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar(), bar(instrument=AAPL)])
+    ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+    shutil.rmtree(tmp_path / "ds" / "1m" / "moomoo")
+
+    with pytest.raises(ValueError, match="vanished"):
+        ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+
+
+def test_generate_refuses_unrewritten_rows_shrink(tmp_path: Path) -> None:
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar(), bar(timestamp=T0 + timedelta(minutes=1))])
+    ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+    lake.write_bars("ds", [bar()])  # same day shard rewritten with one bar
+
+    with pytest.raises(ValueError, match="rows shrank"):
+        ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+
+
+def test_generate_allows_rewritten_rows_shrink(tmp_path: Path) -> None:
+    """A series rebuilt from an authoritative source may lose rows (retraction)."""
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar(), bar(timestamp=T0 + timedelta(minutes=1))])
+    ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+    lake.write_bars("ds", [bar()])
+
+    manifest = ManifestWriter(tmp_path).generate(
+        "ds",
+        source="s",
+        license="l",
+        rewritten=frozenset({("1m", Venue.HYPERLIQUID, "BTC-PERP")}),
+    )
+
+    assert manifest.revision == 2
+    assert manifest.coverage[0].rows == 1
+
+
+def test_generate_refuses_rewritten_start_forward(tmp_path: Path) -> None:
+    """A rewritten series whose start moved forward would bless an interior loss."""
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar(), bar(timestamp=T0 + timedelta(minutes=1))])
+    ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+    lake.write_bars("ds", [bar(timestamp=T0 + timedelta(minutes=1))])
+
+    with pytest.raises(ValueError, match="start moved forward"):
+        ManifestWriter(tmp_path).generate(
+            "ds",
+            source="s",
+            license="l",
+            rewritten=frozenset({("1m", Venue.HYPERLIQUID, "BTC-PERP")}),
+        )
+
+
+def test_generate_allows_growth_and_new_series(tmp_path: Path) -> None:
+    """Growth must keep the full day shard: wholesale replacement means a
+    rewrite that omits earlier ticks would move the start forward."""
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar(), bar(timestamp=T0 + timedelta(minutes=1))])
+    ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+    lake.write_bars(
+        "ds",
+        [
+            bar(),
+            bar(timestamp=T0 + timedelta(minutes=1)),
+            bar(timestamp=T0 + timedelta(minutes=2)),
+            bar(instrument=AAPL),
+        ],
+    )
+
+    manifest = ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+
+    assert manifest.revision == 2
+    assert {entry.symbol for entry in manifest.coverage} == {"BTC-PERP", "AAPL"}
+    btc = next(entry for entry in manifest.coverage if entry.symbol == "BTC-PERP")
+    assert btc.rows == 3
+    assert btc.start == T0
+
+
+def test_generate_override_by_removing_manifest(tmp_path: Path) -> None:
+    """Removing the manifest is the explicit recovery for deliberate changes."""
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar(), bar(timestamp=T0 + timedelta(minutes=1))])
+    ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+    lake.write_bars("ds", [bar()])
+    (tmp_path / "ds" / MANIFEST_NAME).unlink()
+
+    manifest = ManifestWriter(tmp_path).generate("ds", source="s", license="l")
+
+    assert manifest.revision == 1
+    assert manifest.coverage[0].rows == 1

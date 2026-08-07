@@ -53,6 +53,21 @@ def _sql_literal(value: str) -> str:
     return value.replace("'", "''")
 
 
+def _reject_symlinks(root: Path, path: Path) -> None:
+    """Reject symlinked components between the root and the target path.
+
+    The manifest scan already rejects links at every layout level; the
+    raw ``Lake`` read/write surface must too — a linked interval, venue
+    or symbol directory could otherwise point reads at bytes outside the
+    root or land writes outside it.
+    """
+    for parent in path.parents:
+        if parent == root:
+            break
+        if parent.exists() and parent.is_symlink():
+            raise ValueError(f"symlink in lake layout is not allowed: {parent}")
+
+
 @dataclass(frozen=True)
 class LakeQuality:
     """Data-quality report for one (dataset, interval, venue, symbol) series."""
@@ -101,6 +116,16 @@ class Lake:
             raise ValueError("write_bars requires at least one bar")
         for current in bars:
             validate_symbol(current.instrument.symbol)
+            _reject_symlinks(
+                self.root,
+                self.shard_file(
+                    dataset,
+                    current.interval,
+                    current.instrument.venue,
+                    current.instrument.symbol,
+                    current.timestamp.astimezone(UTC).date().isoformat(),
+                ),
+            )
         groups: dict[tuple[str, Venue, str, str], list[Bar]] = {}
         for current in bars:
             key = (
@@ -160,6 +185,7 @@ class Lake:
         _require_aware(start, "start")
         _require_aware(end, "end")
         partition = self.root / dataset / interval / venue.value / symbol
+        _reject_symlinks(self.root, partition)
         files = shards_in(partition)
         if not files:
             return []
@@ -167,9 +193,15 @@ class Lake:
         with duckdb.connect() as con:
             for file in files:
                 query = f"SELECT * FROM read_parquet('{_sql_literal(file.as_posix())}')"
-                for ts, open_, high, low, close, volume, instrument_type, currency in (
-                    con.execute(query).fetchall()
-                ):
+                try:
+                    rows = con.execute(query).fetchall()
+                except duckdb.Error as error:
+                    raise ValueError(f"shard {file} is unreadable: {error}") from error
+                for ts, open_, high, low, close, volume, instrument_type, currency in rows:
+                    if ts is None:
+                        raise ValueError(
+                            f"shard {file} contains NULL timestamps — tampered or corrupt"
+                        )
                     normalized = (
                         ts.astimezone(UTC) if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
                     )

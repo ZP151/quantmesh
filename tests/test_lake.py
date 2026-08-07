@@ -1,6 +1,9 @@
+import os
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
+import duckdb
+import pandas as pd
 import pytest
 
 from quantmesh.data.lake import Lake, LakeQuality
@@ -36,6 +39,62 @@ def bar(instrument: Instrument = BTC, **overrides: object) -> Bar:
 
 def shard(root: Path, dataset: str, interval: str, venue: Venue, symbol: str, day: str) -> Path:
     return root / dataset / interval / venue.value / symbol / day / "shard-0000.parquet"
+
+
+def test_read_bars_rejects_null_timestamps(tmp_path: Path) -> None:
+    """A tampered shard with NULL timestamps fails closed, not with AttributeError."""
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar()])
+    target = shard(tmp_path, "ds", "1m", Venue.HYPERLIQUID, "BTC-PERP", DAY1)
+    frame = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime([None]),
+            "open": [100.0],
+            "high": [101.0],
+            "low": [99.0],
+            "close": [100.5],
+            "volume": [10.0],
+            "instrument_type": ["perpetual"],
+            "currency": [None],
+        }
+    )
+    with duckdb.connect() as con:
+        con.register("frame", frame)
+        con.execute(f"COPY (SELECT * FROM frame) TO '{target.as_posix()}' (FORMAT PARQUET)")
+
+    with pytest.raises(ValueError, match="NULL timestamps"):
+        lake.read_bars("ds", interval="1m", venue=Venue.HYPERLIQUID, symbol="BTC-PERP")
+
+
+def test_read_bars_rejects_symlinked_symbol_dir(tmp_path: Path) -> None:
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar()])
+    symbol_dir = tmp_path / "ds" / "1m" / "hyperliquid" / "BTC-PERP"
+    backup = tmp_path / "backup"
+    os.rename(symbol_dir, backup)
+    try:
+        os.symlink(backup, symbol_dir, target_is_directory=True)
+    except OSError:
+        pytest.skip("cannot create symlinks on this machine")
+
+    with pytest.raises(ValueError, match="symlink"):
+        lake.read_bars("ds", interval="1m", venue=Venue.HYPERLIQUID, symbol="BTC-PERP")
+
+
+def test_write_bars_rejects_symlinked_symbol_dir(tmp_path: Path) -> None:
+    lake = Lake(tmp_path)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    symbol_dir = tmp_path / "ds" / "1m" / "hyperliquid" / "BTC-PERP"
+    symbol_dir.parent.mkdir(parents=True)
+    try:
+        os.symlink(outside, symbol_dir, target_is_directory=True)
+    except OSError:
+        pytest.skip("cannot create symlinks on this machine")
+
+    with pytest.raises(ValueError, match="symlink"):
+        lake.write_bars("ds", [bar()])
+    assert not (outside / "2026-08-07" / "shard-0000.parquet").exists()
 
 
 def test_write_creates_canonical_partition_layout(tmp_path: Path) -> None:

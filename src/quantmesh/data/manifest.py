@@ -127,10 +127,15 @@ def scan_series(
                     last: datetime | None = None
                     for shard in shards:
                         quoted = shard.as_posix().replace("'", "''")
-                        count, start, end = con.execute(
-                            f"SELECT count(*), min(timestamp), max(timestamp) "
-                            f"FROM read_parquet('{quoted}')"
-                        ).fetchone()
+                        try:
+                            count, start, end = con.execute(
+                                f"SELECT count(*), min(timestamp), max(timestamp) "
+                                f"FROM read_parquet('{quoted}')"
+                            ).fetchone()
+                        except duckdb.Error as error:
+                            raise ValueError(
+                                f"shard {shard} is unreadable: {error}"
+                            ) from error
                         if count == 0:
                             raise ValueError(
                                 f"shard {shard} has no rows (crash orphan?); remove or re-write it"
@@ -153,17 +158,31 @@ class ManifestWriter:
         self.root = root
 
     def generate(
-        self, dataset: str, *, source: str, license: str, revision: int | None = None
+        self,
+        dataset: str,
+        *,
+        source: str,
+        license: str,
+        revision: int | None = None,
+        rewritten: frozenset[tuple[str, Venue, str]] = frozenset(),
     ) -> DatasetManifest:
         """Scan the dataset's shards and write a fresh manifest.
 
         ``revision`` defaults to the previous manifest's revision + 1
         (1 when none exists); pass it explicitly to pin a revision.
-        Raises when a previous manifest exists but is unreadable:
-        regeneration is explicit recovery, not silent overwrite.
-        Concurrent generation is not supported — the last writer wins —
-        but a unique temp file per call means a race can never corrupt
-        or mix manifest bytes.
+        ``rewritten`` lists the (interval, venue, symbol) series this
+        call just rebuilt from an authoritative source (the provider);
+        only those may lose rows or trailing range versus the previous
+        manifest. Any other shrink — a vanished series, fewer rows, a
+        start pushed forward or an end pulled back — is refused: a
+        manifest must never declare *less* than it did before, because
+        regeneration from lossy bytes erases the evidence of data loss
+        (removing ``<dataset>/manifest.json`` first is the explicit
+        recovery for deliberate changes). Raises when a previous
+        manifest exists but is unreadable: regeneration is explicit
+        recovery, not silent overwrite. Concurrent generation is not
+        supported — the last writer wins — but a unique temp file per
+        call means a race can never corrupt or mix manifest bytes.
         """
         validate_dataset_name(dataset)
         if not (self.root / dataset).is_dir():
@@ -171,8 +190,11 @@ class ManifestWriter:
         if not source.strip() or not license.strip():
             raise ValueError("source and license must be non-empty")
         scan = scan_series(self.root, dataset)
+        previous = self._previous_manifest(dataset)
+        if previous is not None:
+            self._require_no_coverage_loss(dataset, previous, scan, rewritten)
         if revision is None:
-            revision = self._previous_revision(dataset) + 1
+            revision = (previous.revision if previous is not None else 0) + 1
         if revision < 1:
             raise ValueError(f"revision must be >= 1, got {revision}")
         manifest = DatasetManifest(
@@ -208,10 +230,10 @@ class ManifestWriter:
                 os.unlink(temp_name)
         return manifest
 
-    def _previous_revision(self, dataset: str) -> int:
+    def _previous_manifest(self, dataset: str) -> DatasetManifest | None:
         path = self.root / dataset / MANIFEST_NAME
         if not path.exists():
-            return 0
+            return None
         try:
             previous = DatasetManifest.model_validate_json(path.read_text(encoding="utf-8"))
         except (ValidationError, UnicodeDecodeError, OSError) as error:
@@ -222,4 +244,46 @@ class ManifestWriter:
             raise ValueError(
                 f"existing manifest is for dataset {previous.dataset!r}, not {dataset!r}"
             )
-        return previous.revision
+        return previous
+
+    def _require_no_coverage_loss(
+        self,
+        dataset: str,
+        previous: DatasetManifest,
+        scan: dict[tuple[str, Venue, str], tuple[int, datetime, datetime]],
+        rewritten: frozenset[tuple[str, Venue, str]],
+    ) -> None:
+        """Refuse to declare less coverage than the previous manifest did.
+
+        The fetch window can only rebuild the *last* stored day of one
+        series, so a shrink that is not on a ``rewritten`` series — or
+        that pushes a rewritten series' start forward — cannot come from
+        ingestion and is treated as possible data loss.
+        """
+        problems: list[str] = []
+        for entry in previous.coverage:
+            key = (entry.interval, entry.venue, entry.symbol)
+            observed = scan.get(key)
+            if observed is None:
+                problems.append(f"series {key} vanished (was {entry.rows} rows)")
+                continue
+            rows, start, end = observed
+            if start > entry.start:
+                problems.append(
+                    f"series {key} start moved forward {entry.start.date()} -> {start.date()}"
+                )
+            if key in rewritten:
+                continue  # this call rebuilt the series from an authoritative source
+            if rows < entry.rows:
+                problems.append(f"series {key} rows shrank {entry.rows} -> {rows}")
+            if end < entry.end:
+                problems.append(
+                    f"series {key} end moved backward {entry.end.date()} -> {end.date()}"
+                )
+        if problems:
+            raise ValueError(
+                f"refusing to regenerate manifest for {dataset!r}: "
+                + "; ".join(problems)
+                + f" — possible data loss, investigate first "
+                f"(remove {self.root / dataset / MANIFEST_NAME} to override)"
+            )
