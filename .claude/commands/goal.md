@@ -73,7 +73,7 @@ Continue until the objective is achieved or a genuine human/external gate is rea
 7. Commit a coherent checkpoint referencing the issue.
 8. Re-read `git status`, `git log`, issue comments and PR state before the next slice.
 
-Do not stop merely because one intermediate step is complete. Do stop at review/credential/legal gates, destructive operations, live-trading enablement, or a decision that materially changes product scope.
+Do not stop merely because one intermediate step is complete. Do stop at credential/legal gates, destructive operations, live-trading enablement, or a decision that materially changes product scope.
 
 ## 5. Verification and review gate
 
@@ -98,7 +98,20 @@ When a work unit is ready:
 2. Push the feature branch without force.
 3. Open or update a draft PR linked to the issue and iteration.
 4. Wait for CI and review; fix failures on the same branch.
-5. Do not self-merge unless the user explicitly authorized it.
+5. The user grants standing approval to merge a self-created PR into `main`
+   using a squash merge and delete its remote feature branch when all of the
+   following are true: the PR is non-draft; its scope is already authorized;
+   merge state is clean; all required CI checks passed; no review is pending or
+   requesting changes; `/code-review` found no unresolved actionable issue;
+   local required checks pass; and the change contains no credential handling,
+   live trading, destructive migration, paid service, incompatible license, or
+   major architecture change.
+6. For a dependent PR chain, merge one PR at a time in dependency order.
+   After every merge, fetch `main`, inspect the next PR's reduced diff and
+   checks, then continue only if it still satisfies the standing approval.
+7. If GitHub branch protection refuses the merge despite all checks, record the
+   exact rule and continue with another safe unblocked task; do not ask merely
+   to repeat a routine merge approval.
 
 Use GitHub issues/PRs for work state, `docs/iterations/` for append-only delivery evidence, ADRs for durable decisions and `docs/goals/ACTIVE.md` for session-resume state.
 
@@ -116,4 +129,3 @@ On a genuine block:
 - Record the blocker, attempted alternatives and exact human action required.
 - Apply `ready-for-human` or `needs-info` as appropriate.
 - Leave the branch, issue, iteration and goal files sufficient for a fresh session to resume without chat history.
-
