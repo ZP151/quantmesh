@@ -60,7 +60,7 @@ export function isNavActive(pathname: string, item: NavItem): boolean {
     (other) =>
       other.path !== item.path &&
       other.path.length > item.path.length &&
-      pathname.startsWith(`${other.path}/`),
+      (pathname === other.path || pathname.startsWith(`${other.path}/`)),
   )
 }
 

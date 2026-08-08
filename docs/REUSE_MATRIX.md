@@ -23,6 +23,10 @@ This document records which open-source projects are reused, why they are used, 
 | Analytics chart candidate | `apache/echarts` | P&L, exposure, calibration and scenario visualizations | Package behind a chart adapter | Light to medium | Apache-2.0; preserve notice |
 | Frontend design skill | `Leonxlnx/taste-skill` @ `e988add20dab0fa97d7a76781c48961c8184288e` | Anti-template design and design-system selection | Project-scoped Codex/Claude skill; advisory outside dashboards | None | MIT; license preserved under `docs/third-party/` |
 | Product UI skill | `pbakaus/impeccable` @ `aee6ce9352b842217b3f57c78296a7a4fa35a7f3` | Product context, UX shaping and bounded visual QA | Project-scoped Codex/Claude skill | None | Apache-2.0; upstream notice preserved under `docs/third-party/` |
+| Frontend test runner | `vitest` 3.2.x | Unit/component test runner for the React SPA (Phase E) | Dev dependency behind `npx vitest run` | Light | MIT |
+| Browser DOM for tests | `jsdom` 26.x | jsdom environment for component tests (Phase E) | Dev dependency (Vitest `environment: "jsdom"`) | None | MIT |
+| React testing library | `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event` (16/6/14) | Component queries, matchers and user-event simulation | Dev dependencies; the E2E surface stays Playwright | Light | MIT (all three) |
+| Frontend linter | `oxlint` 1.x | Fast lint pass for the SPA source | Dev dependency behind `npm run lint` | Light | MIT |
 
 ## Selection rule
 

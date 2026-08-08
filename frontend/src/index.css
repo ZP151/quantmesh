@@ -128,3 +128,18 @@
     @apply font-sans;
     }
 }
+
+/* WCAG 2.2 / PRODUCT.md accessibility commitment: users who request
+   reduced motion get it. shadcn primitives (dialog, accordion, …) and
+   the shell animate through tw-animate-css utilities and Tailwind
+   transitions — all of it collapses to a single frame here. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

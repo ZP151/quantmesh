@@ -154,7 +154,7 @@ export function AppShell() {
               <Badge
                 variant="outline"
                 title={`Demo root ${demoStatus.data.root} · anchored ${dateTime(demoStatus.data.scenario.anchor)} · all surfaces synthetic`}
-                className="font-mono text-[10px]"
+                className="hidden font-mono text-[10px] md:inline-flex"
               >
                 <span className="mr-1 inline-block size-1.5 rounded-full bg-emerald-500" aria-hidden />
                 Paper demo · seed {demoStatus.data.scenario.seed}
@@ -190,7 +190,9 @@ export function AppShell() {
                 aria-label="Reset demo session"
               >
                 <RotateCcw className="size-3.5" aria-hidden />
-                {resetArmed ? 'Confirm reset' : 'Reset demo'}
+                <span className="hidden sm:inline">
+                  {resetArmed ? 'Confirm reset' : 'Reset demo'}
+                </span>
               </Button>
             )}
 
