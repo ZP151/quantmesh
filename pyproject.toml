@@ -28,11 +28,13 @@ research = [
   # first-class, CI-tested surface (`.[dev,research]` install).
   # hmmlearn is deliberately absent: its EM is numerically unfit for
   # the HMM codec, which is pure numpy (ADR-0009 decision 7).
+  # vectorbt was removed (M10 Phase D, ADR-0012 decision 4): it ships
+  # as Apache-2.0 WITH Commons Clause (source-available, not OSI) and
+  # no code path imports it.
   "arch>=7,<8",
   "lightgbm>=4.5,<5",
   "scikit-learn>=1.5,<2",
   "scipy>=1.13,<2",
-  "vectorbt>=0.27,<1",
 ]
 dev = [
   "pytest>=8.3,<9",

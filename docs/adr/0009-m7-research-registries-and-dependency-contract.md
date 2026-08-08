@@ -20,7 +20,7 @@ plus the dependency contract the Phase B pipelines need. Two facts
 shape the decisions:
 
 - **The venv has no research stack installed** (no scikit-learn,
-  lightgbm, vectorbt, scipy or arch), and CI installs only
+  lightgbm, scipy or arch), and CI installs only
   `.[dev]` — so a Phase B pipeline that imports any of these breaks
   both local runs and CI.
 - **M3 promoted duckdb to the core dependency by documented
@@ -90,8 +90,9 @@ a spec that cannot compute.
 
 Phase B extends `pyproject.toml`'s `research` extra with
 `scipy>=1.13,<2` and `arch>=7,<8` beside the pinned
-roadmap libraries (lightgbm 4.5+, scikit-learn 1.5+, vectorbt
-0.27+), and CI's install step becomes `.[dev,research]` so the
+roadmap libraries (lightgbm 4.5+, scikit-learn 1.5+; vectorbt was
+listed at the time and removed in M10 Phase D — see below), and
+CI's install step becomes `.[dev,research]` so the
 pipeline codecs are installed where their tests run. This is a
 *deliberate extension of the dependency contract* (a first-class
 extra), documented here rather than as a per-milestone deviation —

@@ -24,7 +24,33 @@ jobs:
         # tests run. The paper kernel core stays lean without it.
         run: python -m pip install -e ".[dev,research]"
       - name: Lint
-        run: ruff check src tests
+        run: ruff check src tests tools
       - name: Test
         run: pytest -q
+
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install audit tooling and project environment
+        # The license review reads the installed distributions'
+        # metadata, so the environment must be the real CI install
+        # (`.[dev,research]`, exactly like the python job).
+        run: |
+          python -m pip install pip-audit
+          python -m pip install -e ".[dev,research]"
+      - name: Advisory scan (pip-audit over the locked environment)
+        # requirements-audit.txt pins the resolved install closure
+        # (regenerate via `pip install --dry-run --report` after a
+        # dependency change — see docs/release-process.md). A newly
+        # published advisory fails this job loudly.
+        run: python -m pip_audit -r requirements-audit.txt --no-deps
+      - name: License review (deterministic inventory check)
+        run: python tools/license_review.py
 

@@ -1480,3 +1480,89 @@ class TestPhaseCPerVenueKillSwitch:
         assert "Per-venue kill switches" in html
         assert "Block moomoo paper orders" in html
         assert "REFUSED" in html
+
+
+class TestWriteSurfaceOriginGuard:
+    """M10 Phase D (issue #61), threat model T-14: the three write
+    surfaces (watchlist add/remove, kill switch) refuse a POST whose
+    Origin is present but not loopback. Browser CSRF always sends the
+    attacker's Origin; an absent Origin (CLI, drill, non-browser
+    client) stays allowed — every pre-existing POST test pins that
+    path."""
+
+    def test_hostile_origin_kill_switch_post_is_refused(self) -> None:
+        app_client = client()
+
+        response = app_client.post(
+            "/kill-switch",
+            data={"action": "engage", "confirm": "confirm"},
+            headers={"Origin": "http://evil.example"},
+        )
+
+        assert response.status_code == 200
+        assert 'role="alert"' in response.text
+        assert "cross-origin send" in response.text
+        # The switch never flipped.
+        assert app_client.get("/kill-switch").json() == {
+            "kill_switch": False,
+            "kill_switches": {},
+        }
+
+    def test_loopback_origin_kill_switch_post_flips(self) -> None:
+        app_client = client()
+
+        response = app_client.post(
+            "/kill-switch",
+            data={"action": "engage", "confirm": "confirm"},
+            headers={"Origin": "http://127.0.0.1:8642"},
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 303
+        assert app_client.get("/kill-switch").json() == {
+            "kill_switch": True,
+            "kill_switches": {},
+        }
+
+    def test_hostile_origin_watchlist_post_is_refused(self, tmp_path) -> None:
+        store = WatchlistStore(root=tmp_path / "watchlists")
+        app_client = client(watchlist=store)
+
+        response = app_client.post(
+            "/watchlist/add",
+            data={"symbol": "SOL"},
+            headers={"Origin": "http://evil.example"},
+        )
+
+        assert response.status_code == 200
+        assert 'role="alert"' in response.text
+        assert "cross-origin send" in response.text
+        assert app_client.get("/watchlist").text.count("SOL") == 0
+
+    def test_loopback_origin_watchlist_add_succeeds(self, tmp_path) -> None:
+        store = WatchlistStore(root=tmp_path / "watchlists")
+        app_client = client(watchlist=store)
+
+        response = app_client.post(
+            "/watchlist/add",
+            data={"symbol": "SOL"},
+            headers={"Origin": "http://localhost:8642"},
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 303
+        assert "SOL" in app_client.get("/watchlist").text
+
+    def test_absent_origin_stays_allowed(self, tmp_path) -> None:
+        # The non-browser path: no Origin header at all, like the
+        # E2E/drill clients — pinned explicitly so the threat model's
+        # claim ("absent Origin is allowed") is a tested fact.
+        store = WatchlistStore(root=tmp_path / "watchlists")
+        app_client = client(watchlist=store)
+
+        response = app_client.post(
+            "/watchlist/add", data={"symbol": "SOL"}, follow_redirects=False
+        )
+
+        assert response.status_code == 303
+        assert "SOL" in app_client.get("/watchlist").text

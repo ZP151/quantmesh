@@ -42,7 +42,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -77,6 +77,38 @@ class WorkstationConfigError(ValueError):
 def _is_loopback(host: str) -> bool:
     """Loopback only: localhost, IPv6 ::1, and the whole 127.0.0.0/8."""
     return host in {"localhost", "::1"} or host.startswith("127.")
+
+
+def _guard_origin(
+    app: FastAPI, request: Request, redirect: str, surface: str
+) -> Response | None:
+    """Refuse a write-surface POST whose Origin is present but not
+    loopback (threat model T-14, docs/threat-model.md).
+
+    Browser CSRF — a hostile page in the user's browser POSTing to the
+    loopback bind — always sends an Origin naming the attacker's site;
+    a same-origin form send names the loopback host. An absent Origin
+    is allowed: a non-browser client (CLI, drill) cannot be
+    distinguished from a same-origin send, and refusing it would break
+    every non-browser consumer of the two write surfaces. Returns the
+    typed error page to return, or None when the origin passes.
+    """
+    origin = request.headers.get("origin")
+    if origin is None:
+        return None
+    try:
+        hostname = urlsplit(origin).hostname
+    except ValueError:
+        hostname = None
+    if hostname is not None and _is_loopback(hostname):
+        return None
+    return _error_page(
+        app,
+        request,
+        redirect,
+        f"{surface} POST refused: cross-origin send (Origin {origin!r} "
+        "is not loopback)",
+    )
 
 
 @dataclass(frozen=True)
@@ -802,6 +834,9 @@ def create_workstation_app(
 def _register_watchlist_forms(app: FastAPI) -> None:
     @app.post("/watchlist/add", response_class=HTMLResponse)
     def watchlist_add(request: Request, symbol: str = Form(...)) -> Response:
+        refused = _guard_origin(app, request, "/watchlist", "watchlist")
+        if refused is not None:
+            return refused
         context = app.state.page_context
         if context.watchlist is None:
             return _error_page(app, request, "/watchlist", "no watchlist store is bound")
@@ -813,6 +848,9 @@ def _register_watchlist_forms(app: FastAPI) -> None:
 
     @app.post("/watchlist/remove", response_class=HTMLResponse)
     def watchlist_remove(request: Request, symbol: str = Form(...)) -> Response:
+        refused = _guard_origin(app, request, "/watchlist", "watchlist")
+        if refused is not None:
+            return refused
         context = app.state.page_context
         if context.watchlist is None:
             return _error_page(app, request, "/watchlist", "no watchlist store is bound")
@@ -936,6 +974,9 @@ def _register_kill_switch(app: FastAPI) -> None:
         confirm: str | None = Form(default=None),
         venue: str | None = Form(default=None),
     ) -> Response:
+        refused = _guard_origin(app, request, "/kill-switch/control", "kill-switch")
+        if refused is not None:
+            return refused
         if action not in ("engage", "disarm") or confirm != "confirm":
             return _error_page(
                 app,
