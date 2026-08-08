@@ -68,10 +68,13 @@ makes the business workflow directly testable. Do not promote RC1 to
    `docs/release-notes/v0.1.0-rc2.md`), PR #75 squash-merged into main
    at `710a931`, tag `v0.1.0-rc2` pushed on the merge commit, CI green
    on the PR; the two gate-caught E2E interleaving defects were fixed
-   and recorded (iteration 0014 Checkpoint 5). Remaining: reproduce
-   the install in an isolated directory
-   (`C:\Users\15492\Develop\quantmesh-rc2-acceptance`), hand the
-   operator the browser acceptance checklist, and promote to `v0.1.0`
+   and recorded (iteration 0014 Checkpoint 5). Isolated install
+   reproduced from the tag under
+   `C:\Users\15492\Develop\quantmesh-rc2-acceptance`: golden path
+   53/53 PASSED on that tree and `quantmesh-workstation --demo` is
+   live at http://127.0.0.1:8766/app/ (seeded scenario with full
+   provenance). Remaining: the operator runs the browser acceptance
+   checklist against that install, then promotion to `v0.1.0` happens
    only after explicit human acceptance.
 
 ## Standing authority
