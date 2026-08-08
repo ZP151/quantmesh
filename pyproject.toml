@@ -39,6 +39,12 @@ dev = [
   "pytest-asyncio>=0.24,<1",
   "ruff>=0.8,<1",
 ]
+e2e = [
+  # M9 Phase F (ADR-0011 decision 7): dev-only browser E2E. Browser
+  # binaries are installed separately (`playwright install chromium`);
+  # the suite skips cleanly when the package or the browser is missing.
+  "playwright>=1.44,<2",
+]
 
 [project.scripts]
 quantmesh-iteration = "quantmesh.dev.iterations:main"
