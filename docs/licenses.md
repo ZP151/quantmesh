@@ -50,18 +50,18 @@ license names its package and fails the job.
   flag, so the OS keyring is never touched (T-07).
 
 ## Inventory (generated 2026-08-08; 100 packages in this environment,
-plus 5 Linux-marker closure packages)
+plus 6 Linux-only closure packages)
 
-The CI-relevant closure is the 60 packages pinned in
+The CI-relevant closure is the 61 packages pinned in
 `requirements-audit.txt` (a fresh `.[dev,research]` install,
 quantmesh itself excluded); the table below is the review output
 over the working environment (superset — includes leftover
 transitives of the removed vectorbt and of earlier dev experiments,
-all permissively licensed) plus the 5 Linux-marker closure packages
-(`jeepney`, `SecretStorage`, `cryptography`, `cffi`, `pycparser`)
-that keyring pulls in on CI's Linux runner, so the documented
-coverage holds on both platforms. Regenerate with
-`python tools/license_review.py`.
+all permissively licensed) plus the 6 Linux-only closure packages
+CI's Linux runner installs (`uvloop` from `uvicorn[standard]`;
+`jeepney`, `SecretStorage`, `cryptography`, `cffi`, `pycparser`
+from keyring), so the documented coverage holds on both platforms.
+Regenerate with `python tools/license_review.py`.
 
 | Package | Version | License |
 | --- | --- | --- |
@@ -166,6 +166,7 @@ coverage holds on both platforms. Regenerate with
 | tzlocal | 5.4.4 | MIT |
 | urllib3 | 2.7.0 | MIT |
 | uvicorn | 0.52.1 | BSD-3-Clause |
+| uvloop | 0.22.1 | MIT |
 | watchfiles | 1.2.0 | MIT |
 | wcwidth | 0.8.2 | MIT |
 | websockets | 17.0.1 | BSD-3-Clause |
