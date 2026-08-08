@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     # Watchlists (M9 Phase B, ADR-0011 decision 3): the one UI-owned
     # write surface, JSONL on the ADR-0006 discipline.
     watchlists_dir: Path = Path.home() / ".quantmesh" / "watchlists"
+    # Operational metrics (M10 Phase A, issue #58): metric samples as
+    # JSONL on the ADR-0006 discipline.
+    metrics_dir: Path = Path.home() / ".quantmesh" / "metrics"
 
     model_config = SettingsConfigDict(
         env_file=".env",

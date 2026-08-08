@@ -50,6 +50,7 @@ e2e = [
 quantmesh-iteration = "quantmesh.dev.iterations:main"
 quantmesh-moomoo = "quantmesh.moomoo.cli:main"
 quantmesh-workstation = "quantmesh.api.workstation:main"
+quantmesh-ops = "quantmesh.ops.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
