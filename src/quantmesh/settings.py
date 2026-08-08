@@ -35,6 +35,15 @@ class Settings(BaseSettings):
     # Cross-platform event mapping ledger (M6 Phase D, ADR-0008 decision
     # 5): append-only record of every mapping verdict.
     mappings_dir: Path = Path.home() / ".quantmesh" / "mappings"
+    # Feature and model registries (M7 Phase A, ADR-0009): versioned
+    # feature specs/sets and byte-addressed model artifacts on the M3
+    # registry discipline.
+    features_dir: Path = Path.home() / ".quantmesh" / "features"
+    models_dir: Path = Path.home() / ".quantmesh" / "models"
+    # Drift alerts and signal promotions (M7 Phase E, ADR-0009 decision
+    # 10): append-only JSONL ledgers on the ADR-0006 discipline.
+    alerts_dir: Path = Path.home() / ".quantmesh" / "alerts"
+    promotions_dir: Path = Path.home() / ".quantmesh" / "promotions"
 
     model_config = SettingsConfigDict(
         env_file=".env",

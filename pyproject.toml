@@ -22,8 +22,14 @@ dependencies = [
 
 [project.optional-dependencies]
 research = [
+  # M7 Phase B (ADR-0009 decision 6): the roadmap pipeline codecs are a
+  # first-class, CI-tested surface (`.[dev,research]` install).
+  # hmmlearn is deliberately absent: its EM is numerically unfit for
+  # the HMM codec, which is pure numpy (ADR-0009 decision 7).
+  "arch>=7,<8",
   "lightgbm>=4.5,<5",
   "scikit-learn>=1.5,<2",
+  "scipy>=1.13,<2",
   "vectorbt>=0.27,<1",
 ]
 dev = [
@@ -43,7 +49,14 @@ where = ["src"]
 quantmesh = ["data/providers/fixtures/*.json"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+# The repo root is on the path so both test import styles resolve under
+# bare `pytest` (CI) and `python -m pytest` alike: helper modules are
+# imported both bare (`from moomoo_wire import ...` — pytest's basedir
+# insertion puts tests/ on the path) and package-qualified
+# (`from tests.research_fixtures import ...` — tests/ resolves as a
+# namespace package from the root). tests/ intentionally has no
+# __init__.py; a package marker would break the bare style.
+pythonpath = ["src", "."]
 testpaths = ["tests"]
 
 [tool.ruff]

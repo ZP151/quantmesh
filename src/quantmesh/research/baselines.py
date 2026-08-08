@@ -21,12 +21,14 @@ import json
 import math
 import os
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
 from quantmesh.domain.market_data import Bar, interval_to_timedelta
 from quantmesh.research.reports import (
+    MODEL_STRATEGIES,
     CostModel,
     Parameter,
     ReportRegistry,
@@ -92,6 +94,22 @@ def low_volatility_weights(train_vols: dict[str, float]) -> dict[str, float]:
     return {symbol: (weight if symbol in bottom else 0.0) for symbol in ranked}
 
 
+def signal_top_half_weights(train_signals: dict[str, float]) -> dict[str, float]:
+    """Long-only, equal weight on the top half of the universe by a
+    train-window mean signal (issues #32 Phase D, #40 Phase B).
+
+    The shared rank rule for signal-driven strategies: sort by the
+    signal (symbol name as the tiebreaker), hold the top half equal
+    weight, and pay the rest zero. Identical code used to live inside
+    ``book_imbalance_weights``; the M7 pipelines weight by their mean
+    train-window prediction under the same rule.
+    """
+    ranked = sorted(train_signals, key=lambda symbol: (train_signals[symbol], symbol))
+    top = ranked[len(ranked) // 2 :]
+    weight = 1.0 / len(top)
+    return {symbol: (weight if symbol in top else 0.0) for symbol in ranked}
+
+
 def book_imbalance_weights(train_signals: dict[str, float]) -> dict[str, float]:
     """Long-only, equal weight on the top half of the universe by
     train-window mean order-book imbalance (issue #32, Phase D).
@@ -101,10 +119,7 @@ def book_imbalance_weights(train_signals: dict[str, float]) -> dict[str, float]:
     series from ``quantmesh.hyperliquid.signal``; weights are rank-based
     like momentum, but over the signal, not the return.
     """
-    ranked = sorted(train_signals, key=lambda symbol: (train_signals[symbol], symbol))
-    top = ranked[len(ranked) // 2 :]
-    weight = 1.0 / len(top)
-    return {symbol: (weight if symbol in top else 0.0) for symbol in ranked}
+    return signal_top_half_weights(train_signals)
 
 
 @dataclass(frozen=True)
@@ -124,6 +139,7 @@ def run_walk_forward(
     window_spec: WalkForwardSpec,
     costs: CostModel,
     signals_by_symbol: dict[str, list[float]] | None = None,
+    window_signal_provider: Callable[[int, int], dict[str, float]] | None = None,
 ) -> BacktestResult:
     """Backtest one strategy over aligned bar series, cost-aware.
 
@@ -142,6 +158,16 @@ def run_walk_forward(
     other strategies ignore it. A signal series that does not match the
     bar grid (length or symbol set) fails closed — a shifted signal
     would silently backtest a different hypothesis.
+
+    ``window_signal_provider`` (issue #40, Phase B) is how the M7
+    pipeline strategies backtest: called per window with the grid
+    positions ``(train_start, test_start)``, it must fit the pipeline on
+    the train segment only and return one mean train-window signal per
+    symbol, from which the weights follow by the shared top-half rule
+    (``signal_top_half_weights``). The train slice covers bars
+    ``[train_start, test_start - 1]``, so the pipeline never sees a test
+    bar. A pipeline strategy without a provider fails closed — a weight
+    vector would otherwise be fabricated.
     """
     grid = _aligned_grid(bars_by_symbol)
     if signals_by_symbol is not None:
@@ -187,6 +213,13 @@ def run_walk_forward(
                     for symbol in signals_by_symbol
                 }
             )
+        elif strategy in MODEL_STRATEGIES:
+            if window_signal_provider is None:
+                raise ValueError(
+                    f"strategy {strategy!r} needs a window_signal_provider; a "
+                    "weight vector without a per-window model fit would be fabricated"
+                )
+            weights = signal_top_half_weights(window_signal_provider(train_start, test_start))
         else:
             raise ValueError(f"unknown strategy {strategy!r}")
 
@@ -270,7 +303,7 @@ def run_baseline_report(
     registry = registry if registry is not None else ReportRegistry()
     if commit is None:
         commit = current_commit()
-    members = _validate_universe(universe)
+    members = validate_universe(universe)
     dataset_handle = registry.resolve_pin(dataset, revision)
     bars_by_symbol: dict[str, list[Bar]] = {}
     for member in members:
@@ -319,12 +352,13 @@ def run_baseline_report(
         metrics=result.metrics,
         windows=result.windows,
     )
-    _write_artifacts(registry.root, report, result)
+    write_artifacts(registry.root, report, result)
     registry.record(report)
     return report
 
 
-def _validate_universe(universe: list[UniverseMember]) -> list[UniverseMember]:
+def validate_universe(universe: list[UniverseMember]) -> list[UniverseMember]:
+    """Universe rules shared with the baseline and pipeline harnesses."""
     if not universe:
         raise ValueError("universe must not be empty")
     seen: set[tuple[str, str]] = set()
@@ -449,8 +483,11 @@ def _max_drawdown(daily_returns: list[float]) -> float:
     return worst
 
 
-def _write_artifacts(root: Path, report: StrategyReport, result: BacktestResult) -> None:
+def write_artifacts(root: Path, report: StrategyReport, result: BacktestResult) -> None:
     """Write the report's artifacts byte-stable (ADR-0005 decision 7).
+
+    Public since issue #40 (Phase B): ``run_pipeline_report`` records
+    pipeline reports through the same artifact writer.
 
     ``report.json`` excludes ``created_at`` — bookkeeping, not setup or
     results — so regenerating a report produces identical bytes.
