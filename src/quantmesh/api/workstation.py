@@ -61,6 +61,7 @@ from quantmesh.events.mapping import MappingLedger
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
+from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
 from quantmesh.research.reports import ReportRegistry
@@ -129,6 +130,7 @@ class PageContext:
     decisions: DecisionLog | None = None
     documents: DocumentIndex | None = None
     hl_posture: HyperliquidRiskLimits | None = None
+    enablement: ApprovalLedger | None = None
 
 
 @dataclass(frozen=True)
@@ -667,6 +669,26 @@ def _kill_switch_provider(context: PageContext) -> dict[str, object]:
     return {"kill_switch": account.kill_switch, "kill_switches": kill_switches}
 
 
+def _enablement_provider(context: PageContext) -> dict[str, object]:
+    """The enablement screen (M10 Phase E): read-only per-venue state
+    derived from the approval ledger, plus the recorded live-enablement
+    gate text. There is deliberately no form and no POST: enablement
+    transitions are CLI/operator-owned and never permitted from the
+    UI."""
+    ledger = context.enablement
+    states = []
+    if ledger is not None:
+        for venue in sorted(ledger.states()):
+            states.append(
+                {"venue": venue.value, "state": ledger.state(venue).value}
+            )
+    return {
+        "states": states,
+        "bound": ledger is not None,
+        "gate_text": GATE_TEXT,
+    }
+
+
 # The page registry, pinned by the page-registry test (every route
 # registered, every template loadable, autoescape on, every page
 # renders through its provider). Later phases append screens here.
@@ -742,6 +764,13 @@ PAGES: tuple[Page, ...] = (
         _kill_switch_provider,
         "Kill switch",
     ),
+    Page(
+        "/enablement",
+        "enablement.html",
+        "QuantMesh — Enablement",
+        _enablement_provider,
+        "Enablement",
+    ),
 )
 
 
@@ -765,6 +794,7 @@ def create_workstation_app(
     decisions: DecisionLog | None = None,
     documents: DocumentIndex | None = None,
     hl_posture: HyperliquidRiskLimits | None = None,
+    enablement: ApprovalLedger | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -783,9 +813,14 @@ def create_workstation_app(
     (`journal`, `mappings`, `decisions`), the document index
     (`documents`) and the M5 Hyperliquid pre-submission posture
     (`hl_posture`) — unbound, the risk and audit pages render typed
-    lines naming the missing surface. The kill-switch POST flips the
-    injected account's flag in both `app.state` and the page context,
-    so the JSON surface and every page agree (ADR-0011 decision 6).
+    lines naming the missing surface. The M10 Phase E enablement
+    ledger (`enablement`) is the same kind of injection: the
+    /enablement screen renders per-venue state and the recorded
+    live-enablement gate, read-only — transitions are CLI/operator-
+    owned and never permitted from the UI. The kill-switch POST flips
+    the injected account's flag in both `app.state` and the page
+    context, so the JSON surface and every page agree (ADR-0011
+    decision 6).
     """
     host = settings.workstation_host if host is None else host
     if not _is_loopback(host):
@@ -812,6 +847,7 @@ def create_workstation_app(
         decisions=decisions,
         documents=documents,
         hl_posture=hl_posture,
+        enablement=enablement,
     )
 
     for page in PAGES:

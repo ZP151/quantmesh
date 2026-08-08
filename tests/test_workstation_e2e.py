@@ -331,6 +331,7 @@ def test_kill_switch_keyboard_only(page, base_url) -> None:
         ("/risk", "Risk"),
         ("/audit", "Audit explorer"),  # audit.html's h1 is "Audit explorer", not "Audit"
         ("/kill-switch/control", "Paper kernel kill switch"),
+        ("/enablement", "Enablement"),
     ],
 )
 def test_accessibility_snapshots(page, base_url, path: str, heading: str) -> None:

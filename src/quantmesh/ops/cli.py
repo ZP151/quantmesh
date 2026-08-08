@@ -1,12 +1,14 @@
-"""``quantmesh-ops`` operator commands (M10 Phase A/B, issues #58/#59).
+"""``quantmesh-ops`` operator commands (M10 Phases A-E, issues #58-#62).
 
 ``record-metric`` records one metric sample; ``export-audit`` writes
 the HMAC-signed audit bundle over the four journals; ``verify-export``
 verifies a bundle under the given key; ``recover`` replays the order
 journal into a fresh account and reconciles it (the Phase B recovery
-drill). All local computation — no network, no credentials beyond the
-local key file the operator names explicitly (the keyring backend
-lands in Phase E behind the same KeyStore protocol).
+drill); ``enable`` records enablement transitions — the Phase E
+approval workflow, CLI/operator-owned. All local computation — no
+network, no credentials beyond the local key file the operator names
+explicitly (the keyring backend is fixture-only in Phase E; a real
+keyring store refuses outside a drill flag).
 """
 
 import argparse
@@ -16,10 +18,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from quantmesh.ai.decisions import DecisionLog
+from quantmesh.domain.models import Venue
 from quantmesh.events.mapping import MappingLedger
 from quantmesh.execution import OrderJournal
 from quantmesh.execution.accounting import DEFAULT_FEE_BPS
 from quantmesh.execution.reconciliation import ReconcileTolerance, Severity
+from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger, EnablementError
 from quantmesh.ops.export import export_audit_bundle, verify_audit_bundle
 from quantmesh.ops.metrics import Metric, MetricsStore, metric_id
 from quantmesh.ops.recover import recover
@@ -34,6 +38,13 @@ def _parse_at(text: str) -> datetime:
     if parsed.tzinfo is None:
         raise argparse.ArgumentTypeError(f"timestamp must be timezone-aware: {text!r}")
     return parsed.astimezone(UTC)
+
+
+def _parse_venue(text: str) -> Venue:
+    try:
+        return Venue(text)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(f"unknown venue {text!r}") from error
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -85,6 +96,29 @@ def build_parser() -> argparse.ArgumentParser:
     recover_drill.add_argument("--price-bps", type=float, default=0)
     recover_drill.add_argument("--fee-abs", type=float, default=0)
     recover_drill.add_argument("--position-bps", type=float, default=0)
+
+    enable = subparsers.add_parser(
+        "enable",
+        help="record an enablement transition (the M10 Phase E approval "
+        "workflow, CLI/operator-owned)",
+    )
+    enable.add_argument("venue", type=_parse_venue, help="venue name")
+    enable.add_argument(
+        "kind",
+        choices=("request", "approve", "withdraw", "revoke"),
+        help="the transition to record",
+    )
+    enable.add_argument(
+        "--actor", required=True, help="who is performing the action"
+    )
+    enable.add_argument("--at", type=_parse_at, help="ISO-8601 aware timestamp")
+    enable.add_argument(
+        "--gate-text",
+        help="the recorded live-enablement gate text (required for approve)",
+    )
+    enable.add_argument(
+        "--root", type=Path, help="enablement ledger root (default: settings)"
+    )
 
     return parser
 
@@ -168,6 +202,42 @@ def main(argv: Sequence[str] | None = None) -> int:
             finding.severity is Severity.ERROR for finding in report.findings
         ) or report.counts["missing"]:
             return 1
+        return 0
+    if args.command == "enable":
+        ledger = ApprovalLedger(root=args.root)
+        acted_at = args.at if args.at is not None else datetime.now(UTC)
+        if args.kind == "approve":
+            # The gate text is presented here; the approval record must
+            # carry it back verbatim or the ledger refuses.
+            print(
+                f"live-enablement gate (must be acknowledged verbatim): {GATE_TEXT}",
+                file=sys.stderr,
+            )
+            if args.gate_text is None:
+                print(
+                    "approve requires --gate-text (the recorded gate text)",
+                    file=sys.stderr,
+                )
+                return 1
+        try:
+            if args.kind == "approve":
+                record = ledger.approve(
+                    args.venue,
+                    actor=args.actor,
+                    acted_at=acted_at,
+                    gate_text=args.gate_text,
+                )
+            else:
+                record = getattr(ledger, args.kind)(
+                    args.venue, actor=args.actor, acted_at=acted_at
+                )
+        except EnablementError as error:
+            print(f"enable refused: {error}", file=sys.stderr)
+            return 1
+        print(
+            f"venue {args.venue.value}: {record.kind} recorded by "
+            f"{record.actor} -> {ledger.state(args.venue).value}"
+        )
         return 0
     raise AssertionError(f"unhandled command {args.command!r}")
 

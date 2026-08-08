@@ -69,6 +69,7 @@ from quantmesh.execution.accounting import (
 )
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
+from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import (
     AlertLedger,
     AlertRecord,
@@ -141,6 +142,7 @@ def client(
     decisions: DecisionLog | None = None,
     documents: DocumentIndex | None = None,
     hl_posture: HyperliquidRiskLimits | None = None,
+    enablement: ApprovalLedger | None = None,
 ) -> TestClient:
     return TestClient(
         create_workstation_app(
@@ -158,6 +160,7 @@ def client(
             decisions=decisions,
             documents=documents,
             hl_posture=hl_posture,
+            enablement=enablement,
         )
     )
 
@@ -1566,3 +1569,58 @@ class TestWriteSurfaceOriginGuard:
 
         assert response.status_code == 303
         assert "SOL" in app_client.get("/watchlist").text
+
+
+class TestEnablementScreen:
+    """The M10 Phase E enablement screen: read-only per-venue state and
+    the recorded gate. There is deliberately no form and no POST —
+    transitions are CLI/operator-owned (ADR-0012 decision 5)."""
+
+    def test_unbound_ledger_renders_typed_empty_state(self) -> None:
+        html = client().get("/enablement").text
+
+        assert "No enablement ledger is bound." in html
+        # The recorded gate renders verbatim on every state of the page.
+        assert GATE_TEXT in html
+
+    def test_bound_ledger_renders_per_venue_states(self, tmp_path) -> None:
+        ledger = ApprovalLedger(root=tmp_path / "enablement")
+        ledger.request(Venue.MOOMOO, actor="operator-alpha", acted_at=NOW)
+        ledger.approve(
+            Venue.MOOMOO, actor="operator-alpha", acted_at=NOW, gate_text=GATE_TEXT
+        )
+        ledger.request(Venue.HYPERLIQUID, actor="operator-alpha", acted_at=NOW)
+
+        html = client(enablement=ledger).get("/enablement").text
+
+        assert "No enablement ledger is bound." not in html
+        assert "<code>moomoo</code>" in html
+        assert "<code>hyperliquid</code>" in html
+        assert "enabled" in html
+        assert "pending" in html
+        assert "disabled" not in html  # no venue is disabled in this fixture
+        assert GATE_TEXT in html
+
+    def test_empty_ledger_says_every_venue_disabled(self, tmp_path) -> None:
+        html = client(enablement=ApprovalLedger(root=tmp_path / "enablement")).get(
+            "/enablement"
+        ).text
+
+        assert "No enablement records yet" in html
+        assert GATE_TEXT in html
+
+    def test_page_is_read_only(self, tmp_path) -> None:
+        ledger = ApprovalLedger(root=tmp_path / "enablement")
+        app_client = client(enablement=ledger)
+
+        # No write surface exists: a POST is refused, and the ledger
+        # cannot be changed through the UI by construction.
+        assert app_client.post("/enablement", data={"venue": "moomoo"}).status_code == 405
+        assert "No enablement ledger is bound." not in app_client.get(
+            "/enablement"
+        ).text
+        assert ledger.all() == []
+
+    def test_nav_reaches_the_enablement_screen(self) -> None:
+        html = client().get("/").text
+        assert '<a href="/enablement">Enablement</a>' in html

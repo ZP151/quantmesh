@@ -42,13 +42,19 @@ license names its package and fails the job.
   carrying a non-OSI dependency. The review's text classifier refuses
   the Commons Clause before the Apache appendix text can match, so a
   Commons-Clause package can never silently re-enter the inventory.
+- **keyring was added to the `dev` extra (ADR-0012 decision 5,
+  M10 Phase E)** — MIT, the OS-backed secret store behind the
+  `KeyStore` protocol. The suite exercises only the fixture backend;
+  the real backend refuses construction outside an explicit drill
+  flag, so the OS keyring is never touched (T-07).
 
-## Inventory (generated 2026-08-08, 94 packages in this environment)
+## Inventory (generated 2026-08-08, 100 packages in this environment)
 
-The CI-relevant closure is the 49 packages pinned in
-`requirements-audit.txt` (a fresh `.[dev,research]` install); the
-table below is the review output over the working environment
-(superset — includes leftover transitives of the removed vectorbt,
+The CI-relevant closure is the 55 packages pinned in
+`requirements-audit.txt` (a fresh `.[dev,research]` install,
+quantmesh itself excluded); the table below is the review output
+over the working environment (superset — includes leftover
+transitives of the removed vectorbt and of earlier dev experiments,
 all permissively licensed). Regenerate with
 `python tools/license_review.py`.
 
@@ -85,16 +91,21 @@ all permissively licensed). Regenerate with
 | ipython | 9.16.1 | BSD-3-Clause |
 | ipython_pygments_lexers | 1.1.1 | BSD-3-Clause |
 | ipywidgets | 8.1.8 | BSD-3-Clause |
+| jaraco.classes | 3.4.0 | MIT |
+| jaraco.context | 6.1.2 | MIT |
+| jaraco.functools | 4.6.0 | MIT |
 | jedi | 0.20.0 | MIT |
 | Jinja2 | 3.1.6 | BSD-3-Clause |
 | joblib | 1.5.3 | BSD-3-Clause |
 | jupyterlab_widgets | 3.0.16 | BSD-2-Clause |
+| keyring | 25.7.0 | MIT |
 | kiwisolver | 1.5.0 | BSD-3-Clause |
 | lightgbm | 4.7.0 | MIT |
 | llvmlite | 0.48.0 | Apache-2.0 | BSD-2-Clause |
 | MarkupSafe | 3.0.3 | BSD-3-Clause |
 | matplotlib | 3.11.1 | Apache-2.0 |
 | matplotlib-inline | 0.2.2 | BSD-3-Clause |
+| more-itertools | 11.1.0 | MIT |
 | mypy_extensions | 1.1.0 | MIT |
 | narwhals | 2.24.0 | MIT |
 | numba | 0.66.0 | BSD-3-Clause |
@@ -124,6 +135,7 @@ all permissively licensed). Regenerate with
 | python-dotenv | 1.2.2 | BSD-3-Clause |
 | python-multipart | 0.0.32 | Apache-2.0 |
 | pytz | 2026.3.post1 | MIT |
+| pywin32-ctypes | 0.2.3 | BSD-3-Clause |
 | PyYAML | 6.0.3 | MIT |
 | regex | 2026.7.19 | Apache-2.0 | CNRI-Python |
 | requests | 2.34.2 | Apache-2.0 |

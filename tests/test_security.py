@@ -82,8 +82,16 @@ def _token_resolves(token: str, suite_source: str) -> bool:
     neither part of the name."""
     bare = token.strip("`").strip()
     bare = re.sub(r"\s*\(\d+\)\s*$", "", bare)
-    if re.fullmatch(r"ADR-00\d\d decision \d", bare):
-        return True
+    if match := re.fullmatch(r"ADR-(00\d\d) decision (\d)", bare):
+        # An ADR decision citation resolves only against a real
+        # `### Decision N` header in exactly one matching ADR file.
+        adr_dir = REPO / "docs" / "adr"
+        candidates = list(adr_dir.glob(f"{match.group(1)}-*.md"))
+        if len(candidates) == 1:
+            text = candidates[0].read_text(encoding="utf-8")
+            if re.search(rf"^### Decision {match.group(2)}\b", text, re.MULTILINE):
+                return True
+        return False
     if bare.startswith(("tests/", "docs/", "tools/", "src/")) and (
         REPO / bare
     ).exists():
