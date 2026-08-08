@@ -70,6 +70,11 @@ class Settings(BaseSettings):
     # JSONL on the ADR-0006 discipline.
     metrics_dir: Path = Path.home() / ".quantmesh" / "metrics"
     enablement_dir: Path = Path.home() / ".quantmesh" / "enablement"
+    # Frontend (M11, ADR-0013): the React SPA is the default operator
+    # surface. QUANTMESH_LEGACY_UI=1 mounts the RC1 Jinja2 pages again
+    # (the ADR's same-release rollback switch); unset/false/0 serves
+    # the SPA. Never env-escalable to anything else.
+    legacy_ui: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

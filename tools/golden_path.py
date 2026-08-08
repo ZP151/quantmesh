@@ -37,6 +37,7 @@ from pydantic import BaseModel
 
 from quantmesh.ai.decisions import Citation, DecisionLog, DecisionRecord, ModelMeta
 from quantmesh.ai.retrieval import DocumentIndex
+from quantmesh.api import workstation
 from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.api.workstation import create_workstation_app
 from quantmesh.data.ingestion import IngestionJob, Ingestor
@@ -407,6 +408,10 @@ def run(root: Path) -> None:
     # -------------------------------------------------------------------
 
     def build_app() -> object:
+        # The UI walk pins the RC1 Jinja2 pages (ADR-0013 decision 6,
+        # the rollback switch); Phase C migrates these checks to the
+        # SPA surface.
+        workstation.settings.legacy_ui = True
         return create_workstation_app(
             account=account,
             marks={POSITION_KEY: 95.0},

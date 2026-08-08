@@ -8,6 +8,7 @@ screen on.
 """
 
 import dataclasses
+import re
 import sys
 import types
 from collections.abc import Mapping
@@ -26,6 +27,7 @@ from quantmesh.api import workstation
 from quantmesh.api.app import create_app
 from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.api.workstation import (
+    LEGACY_TO_SPA,
     PAGES,
     PageContext,
     WorkstationConfigError,
@@ -125,6 +127,15 @@ def sample_account() -> PaperAccount:
         make_request(Side.BUY, 10, limit_price=99.0), make_quote(), now=NOW
     ).account
     return account
+
+
+@pytest.fixture(autouse=True)
+def _legacy_ui(monkeypatch) -> None:
+    """The rendering tests pin the RC1 Jinja2 pages, so the suite runs
+    in legacy mode (ADR-0013 decision 6, the rollback switch). The SPA
+    surface tests override to the default mode explicitly. Restored by
+    monkeypatch after every test."""
+    monkeypatch.setattr(workstation.settings, "legacy_ui", True)
 
 
 def client(
@@ -314,7 +325,13 @@ class TestPageRegistry:
     def test_routes_are_unique_and_registered(self) -> None:
         routes = [page.route for page in PAGES]
         assert len(routes) == len(set(routes))
-        app_routes = {route.path for route in client().app.routes}
+        # APIRoute only: the M1 kernel API is registered through
+        # include_router (FastAPI >= 0.14x wraps those in a lazy
+        # _IncludedRouter entry) while the page routes are added
+        # directly and stay plain APIRoutes.
+        app_routes = {
+            route.path for route in client().app.routes if isinstance(route, APIRoute)
+        }
         for route in routes:
             assert route in app_routes
 
@@ -415,6 +432,117 @@ class TestM1SurfaceStillServed:
         html = client().get("/").text
         assert __version__ in html
         assert settings.app_name in html
+
+
+class TestSpaSurface:
+    """ADR-0013 Phase A: the default operator surface is the React SPA.
+
+    Every legacy route 302s to its /app counterpart, the committed
+    bundle is served under /app (deep links fall through to
+    index.html), the kernel API is double-mounted at /api with unique
+    operation ids, a missing bundle serves an instructive 503, and the
+    two write surfaces stay registered behind the same origin guard.
+    """
+
+    @pytest.fixture
+    def spa_client(self, monkeypatch) -> TestClient:
+        """A default-mode (SPA) client: overrides the autouse legacy pin."""
+        monkeypatch.setattr(workstation.settings, "legacy_ui", False)
+        return client()
+
+    def test_legacy_routes_redirect_to_their_spa_paths(self, spa_client) -> None:
+        for legacy, spa in LEGACY_TO_SPA.items():
+            response = spa_client.get(legacy, follow_redirects=False)
+            assert response.status_code == 302, legacy
+            assert response.headers["location"] == spa, legacy
+
+    def test_detail_routes_redirect_to_spa_listings(self, spa_client) -> None:
+        for path in ("/experiments/anything", "/documents/anything"):
+            response = spa_client.get(path, follow_redirects=False)
+            assert response.status_code == 302, path
+            assert response.headers["location"].startswith("/app/"), path
+
+    def test_spa_root_and_deep_links_serve_the_bundle(self, spa_client) -> None:
+        for path in ("/app/", "/app/markets", "/app/trading/orders"):
+            response = spa_client.get(path)
+            assert response.status_code == 200, path
+            assert "QuantMesh" in response.text
+
+    def test_bare_app_path_redirects_to_trailing_slash(self, spa_client) -> None:
+        response = spa_client.get("/app", follow_redirects=False)
+        assert response.status_code == 302
+        assert response.headers["location"] == "/app/"
+
+    def test_kernel_api_served_under_api_prefix(self, spa_client) -> None:
+        positions = spa_client.get("/api/positions").json()
+        assert len(positions) == 1
+        assert positions[0]["key"] == POSITION_KEY
+        assert spa_client.get("/api/orders").status_code == 200
+        assert spa_client.get("/api/kill-switch").status_code == 200
+
+    def test_openapi_operation_ids_are_unique_across_mounts(self, spa_client) -> None:
+        paths = spa_client.get("/openapi.json").json()["paths"]
+        ids = [
+            operation["operationId"]
+            for path in paths.values()
+            for operation in path.values()
+            if "operationId" in operation
+        ]
+        assert len(ids) == len(set(ids)), "duplicate operation ids in /openapi.json"
+        assert any(identifier.startswith("api_") for identifier in ids)
+
+    def test_missing_bundle_serves_instructive_503(
+        self, spa_client, monkeypatch, tmp_path
+    ) -> None:
+        monkeypatch.setattr(workstation, "SPA_INDEX", tmp_path / "absent" / "index.html")
+
+        response = spa_client.get("/app/")
+
+        assert response.status_code == 503
+        assert "QUANTMESH_LEGACY_UI" in response.text
+        assert "build_frontend" in response.text
+
+    def test_traversal_probes_fall_through_to_the_bundle(self, spa_client) -> None:
+        for url in (
+            "/app/..%2f..%2fpyproject.toml",
+            "/app/%2e%2e/%2e%2e/pyproject.toml",
+            "/app/..%2F..%2Fsrc%2Fquantmesh%2Fsettings.py",
+        ):
+            response = spa_client.get(url)
+            assert response.status_code == 200, url
+            assert "<!doctype html>" in response.text
+
+    def test_assets_and_root_bundle_files_served(self, spa_client) -> None:
+        assert spa_client.get("/app/favicon.svg").status_code == 200
+        assert spa_client.get("/app/icons.svg").status_code == 200
+        # Every hashed asset resolves through the mount.
+        index = spa_client.get("/app/").text
+        match = re.search(r'src="(/app/assets/[^"]+\.js)"', index)
+        assert match is not None
+        assert spa_client.get(match.group(1)).status_code == 200
+
+    def test_write_surfaces_stay_registered_in_spa_mode(
+        self, tmp_path, monkeypatch
+    ) -> None:
+        monkeypatch.setattr(workstation.settings, "legacy_ui", False)
+        watched = WatchlistStore(root=tmp_path / "watchlists")
+        app_client = client(watchlist=watched)
+
+        response = app_client.post(
+            "/watchlist/add", data={"symbol": "SOL"}, follow_redirects=False
+        )
+        assert response.status_code == 303
+        assert [record.symbol for record in watched.all()] == ["SOL"]
+
+        response = app_client.post(
+            "/kill-switch",
+            data={"action": "engage", "confirm": "confirm"},
+            follow_redirects=False,
+        )
+        assert response.status_code == 303
+        # The JSON surface agrees with the flipped account.
+        assert app_client.get("/api/kill-switch").json()["kill_switch"] is True
+        assert app_client.get("/api/account").json()["kill_switch"] is True
 
 
 class TestConsoleScript:

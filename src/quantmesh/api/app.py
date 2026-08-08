@@ -6,9 +6,15 @@ fetched) so responses stay deterministic — the operator replaces
 `app.state.marks` as new marks arrive. This layer is intentionally
 read-only with respect to execution: no order placement, no control
 endpoints.
+
+Since M11 (ADR-0013) the kernel API is registered twice on the same
+app: at the root paths (the RC1 contract, pinned by `test_api.py`)
+and under `/api` (the SPA surface the frontend calls). One router
+registration serves both prefixes; handlers read state from
+`request.app.state`, so both mounts see the same account and marks.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 
 from quantmesh import __version__
 from quantmesh.domain.orders import Order
@@ -54,25 +60,22 @@ def _order_summary(order: Order) -> dict:
     }
 
 
-def create_app(
-    *, account: PaperAccount, marks: dict[str, float] | None = None
-) -> FastAPI:
-    """A read-only observability app bound to one paper account.
+def observability_router() -> APIRouter:
+    """The read-only kernel API (ADR-0013 Decision 1).
 
-    `marks` is held by reference: mutating it after creation is the way
-    the operator supplies updated mark prices.
+    Mounted at the root (RC1 contract) and under ``/api`` (the SPA
+    surface). Handlers read ``request.app.state`` so one registration
+    serves both prefixes with the same state.
     """
-    app = FastAPI(title=settings.app_name, version=__version__)
-    app.state.account = account
-    app.state.marks = marks if marks is not None else {}
+    router = APIRouter()
 
-    @app.get("/health")
+    @router.get("/health")
     def health() -> dict[str, str | bool]:
         return _health()
 
-    @app.get("/account")
-    def account_summary() -> dict:
-        current = app.state.account
+    @router.get("/account")
+    def account_summary(request: Request) -> dict:
+        current = request.app.state.account
         return {
             "cash": current.cash,
             "starting_cash": (
@@ -85,9 +88,9 @@ def create_app(
             "order_sequence": current.order_sequence,
         }
 
-    @app.get("/positions")
-    def positions() -> list[dict]:
-        marks = dict(app.state.marks)
+    @router.get("/positions")
+    def positions(request: Request) -> list[dict]:
+        marks = dict(request.app.state.marks)
         return [
             {
                 "key": key,
@@ -101,24 +104,27 @@ def create_app(
                     else None
                 ),
             }
-            for key, position in app.state.account.positions.items()
+            for key, position in request.app.state.account.positions.items()
         ]
 
-    @app.get("/orders")
-    def orders() -> list[dict]:
-        return [_order_summary(order) for order in app.state.account.orders.values()]
+    @router.get("/orders")
+    def orders(request: Request) -> list[dict]:
+        return [
+            _order_summary(order)
+            for order in request.app.state.account.orders.values()
+        ]
 
-    @app.get("/orders/{order_id}")
-    def order(order_id: str) -> dict:
-        current = app.state.account.orders.get(order_id)
+    @router.get("/orders/{order_id}")
+    def order(request: Request, order_id: str) -> dict:
+        current = request.app.state.account.orders.get(order_id)
         if current is None:
             raise HTTPException(status_code=404, detail=f"unknown order {order_id}")
         return _order_summary(current)
 
-    @app.get("/pnl")
-    def pnl() -> dict:
-        current = app.state.account
-        marks = dict(app.state.marks)
+    @router.get("/pnl")
+    def pnl(request: Request) -> dict:
+        current = request.app.state.account
+        marks = dict(request.app.state.marks)
         return {
             "starting_cash": (
                 current.starting_cash
@@ -137,13 +143,13 @@ def create_app(
             ),
         }
 
-    @app.get("/kill-switch")
-    def kill_switch() -> dict[str, object]:
+    @router.get("/kill-switch")
+    def kill_switch(request: Request) -> dict[str, object]:
         # M10 Phase C (issue #60): the global bit plus the per-venue
         # map, both read from the account object the control flips —
         # the JSON surface, the page context and the kernel gate are
         # the same state by construction.
-        current = app.state.account
+        current = request.app.state.account
         return {
             "kill_switch": current.kill_switch,
             "kill_switches": {
@@ -152,6 +158,31 @@ def create_app(
             },
         }
 
+    return router
+
+
+def create_app(
+    *, account: PaperAccount, marks: dict[str, float] | None = None
+) -> FastAPI:
+    """A read-only observability app bound to one paper account.
+
+    `marks` is held by reference: mutating it after creation is the way
+    the operator supplies updated mark prices. The kernel API is served
+    at the root (RC1 contract) and under `/api` (ADR-0013 SPA surface).
+    """
+    app = FastAPI(title=settings.app_name, version=__version__)
+    app.state.account = account
+    app.state.marks = marks if marks is not None else {}
+    router = observability_router()
+    app.include_router(router)
+    # The /api surface (ADR-0013) serves the same handlers under a
+    # distinct prefix; operation ids are prefixed so /openapi.json
+    # (the typed-client source) has no duplicates.
+    app.include_router(
+        router,
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
     return app
 
 

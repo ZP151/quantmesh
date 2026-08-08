@@ -66,7 +66,15 @@ quantmesh-ops = "quantmesh.ops.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-quantmesh = ["data/providers/fixtures/*.json"]
+quantmesh = [
+  "data/providers/fixtures/*.json",
+  "api/templates/*.html",
+  "api/static/*.css",
+  # The committed SPA bundle (ADR-0013 decision 2): hashed assets plus
+  # the root files vite emits (index.html, favicon, icons).
+  "api/static/app/*",
+  "api/static/app/assets/*",
+]
 
 [tool.pytest.ini_options]
 # The repo root is on the path so both test import styles resolve under

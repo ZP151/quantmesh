@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 import pytest
 import uvicorn
 
+from quantmesh.api import workstation
 from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.api.workstation import create_workstation_app
 from quantmesh.domain.models import (
@@ -37,6 +38,20 @@ pytest.importorskip(
     "playwright.sync_api",
     reason="playwright is not installed (dev-only e2e extra: pip install -e '.[dev,e2e]')",
 )
+
+# This suite walks the RC1 Jinja2 pages (ADR-0013 decision 6, the
+# rollback switch): the SPA is the default surface now, so the walk
+# pins legacy mode for the whole module. The SPA walk lands with the
+# app shell in Phase C, and the Phase E Playwright pass exercises the
+# demo workflow in the browser.
+workstation.settings.legacy_ui = True
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _restore_legacy_ui() -> None:
+    """Restore the default surface once the module's tests are done."""
+    yield
+    workstation.settings.legacy_ui = False
 
 HOST = "127.0.0.1"
 PORT = 8642

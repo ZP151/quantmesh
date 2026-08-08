@@ -1,11 +1,16 @@
-"""Local frontend workstation (M9, issues #51-#55).
+"""Local frontend workstation (M9, issues #51-#55; M11, ADR-0013).
 
 `create_workstation_app` supersets the M1 read-only `create_app` with
-server-rendered Jinja2 pages: a strict route -> template -> data
-provider registry, a shared layout with keyboard/accessibility posture
-(skip link, landmarks, visible focus, local stylesheet — no CDN), and
-static assets served by the same process. No node toolchain, no build
-step.
+the operator surface. Since ADR-0013 that surface is the React SPA by
+default: the committed bundle is served under `/app`, every legacy
+route 302s to its SPA counterpart, and `/app/{path:path}` falls
+through to `index.html` so react-router deep links work on refresh —
+no node toolchain at serve time. With `QUANTMESH_LEGACY_UI=1` the RC1
+Jinja2 pages mount instead (the ADR's same-release rollback switch): a
+strict route -> template -> data provider registry, a shared layout
+with keyboard/accessibility posture (skip link, landmarks, visible
+focus, local stylesheet — no CDN), and static assets served by the
+same process.
 
 Construction is fail-closed on the bind surface: a non-loopback
 `settings.workstation_host` is a typed `WorkstationConfigError` — the
@@ -17,7 +22,8 @@ the paper-level kill switch, a form control that flips the injected
 paper account's global flag or one venue's flag (M10 Phase C) — the
 accounting risk gate refuses new order submissions while the global
 switch or the order's venue switch is engaged, with no model
-involvement. Page providers receive injected read surfaces — account, marks,
+involvement. Both write surfaces stay registered in SPA mode: the SPA
+calls the same loopback POSTs. Page providers receive injected read surfaces — account, marks,
 markets, watchlist, the research registries (experiments, promotions,
 reports), the forecast report registry (Phase D), and the Phase E
 surfaces (the alert ledger, the audit journals — orders, mappings,
@@ -45,7 +51,7 @@ from pathlib import Path
 from urllib.parse import quote, urlsplit
 
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -69,6 +75,69 @@ from quantmesh.settings import settings
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 STATIC_DIR = Path(__file__).parent / "static"
+# The committed SPA bundle (ADR-0013 decision 2): vite builds with
+# base "/app/" into frontend/dist, and tools/build_frontend.py copies
+# the result here so the Python package serves it — no node runtime at
+# serve time. The bundle is part of the package data, so a missing
+# directory means a checkout predating the build.
+SPA_DIR = STATIC_DIR / "app"
+SPA_INDEX = SPA_DIR / "index.html"
+SPA_ASSETS = SPA_DIR / "assets"
+# The bundle's root-level files (vite public/) are the only non-asset
+# paths served directly; everything else under /app falls through to
+# index.html for react-router. A whitelist stays fail-closed — no
+# filesystem traversal surface on the loopback bind.
+_BUNDLE_ROOT_FILES = frozenset({"favicon.svg", "icons.svg"})
+
+# ADR-0013 decision 3: in SPA mode every legacy route 302s to the /app
+# path whose SPA screen supersedes it; react-router owns deep links
+# from there. The parameterized detail pages redirect to their SPA
+# listing until Phase C adds the real detail routes.
+LEGACY_TO_SPA: dict[str, str] = {
+    "/": "/app/",
+    "/instruments": "/app/markets",
+    "/watchlist": "/app/markets/watchlist",
+    "/experiments": "/app/research/experiments",
+    "/promotions": "/app/research/promotions",
+    "/forecasts": "/app/research/forecasts",
+    "/portfolio/positions": "/app/trading/positions",
+    "/portfolio/orders": "/app/trading/orders",
+    "/portfolio/pnl": "/app/trading/pnl",
+    "/risk": "/app/risk",
+    "/audit": "/app/ops/audit",
+    "/kill-switch/control": "/app/ops/kill-switch",
+    "/enablement": "/app/ops/enablement",
+}
+
+
+def _spa_missing_page() -> str:
+    """The instructive 503 body served when the SPA bundle is absent.
+
+    The bundle is committed to the package, so a missing bundle means
+    the checkout predates the frontend build (or the package was
+    trimmed). Name the recovery paths: build once, or set
+    QUANTMESH_LEGACY_UI=1 to remount the RC1 pages from this same
+    release. Never a blank page.
+    """
+    return (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        "<title>QuantMesh — frontend bundle missing</title>"
+        "<style>body{font-family:system-ui,sans-serif;max-width:44rem;"
+        "margin:3rem auto;padding:0 1rem;line-height:1.5}"
+        "code{background:#f2f2f2;padding:.1em .35em;border-radius:4px}"
+        "</style></head><body>"
+        "<h1>Frontend bundle missing</h1>"
+        "<p>This workstation serves the QuantMesh web app (ADR-0013), but "
+        f"<code>{SPA_DIR}</code> does not contain a build. The bundle is "
+        "committed to the package, so this usually means the checkout "
+        "predates the frontend build.</p>"
+        "<p>Recovery:</p><ul>"
+        "<li>Run <code>python tools/build_frontend.py</code> and restart.</li>"
+        "<li>Or set <code>QUANTMESH_LEGACY_UI=1</code> and restart to "
+        "remount the RC1 server-rendered pages from this same release "
+        "(the ADR-0013 rollback switch).</li>"
+        "</ul></body></html>"
+    )
 
 
 class WorkstationConfigError(ValueError):
@@ -850,21 +919,110 @@ def create_workstation_app(
         enablement=enablement,
     )
 
-    for page in PAGES:
-        app.add_api_route(
-            page.route,
-            _renderer(app, page),
-            methods=["GET"],
-            response_class=HTMLResponse,
-        )
-
-    _register_watchlist_forms(app)
-    _register_experiment_detail(app)
-    _register_kill_switch(app)
-    _register_document_detail(app)
+    if settings.legacy_ui:
+        # RC1 rollback mode (ADR-0013 decision 6): the Jinja2 pages
+        # mount exactly as they did in RC1, including the detail pages.
+        for page in PAGES:
+            app.add_api_route(
+                page.route,
+                _renderer(app, page),
+                methods=["GET"],
+                response_class=HTMLResponse,
+            )
+        _register_watchlist_forms(app)
+        _register_experiment_detail(app)
+        _register_kill_switch(app)
+        _register_document_detail(app)
+    else:
+        # SPA mode (default): every legacy route 302s to its SPA
+        # counterpart and the compiled bundle is served under /app.
+        # The two write surfaces stay registered — the SPA calls the
+        # same loopback POSTs behind the same origin guard.
+        _register_spa_redirects(app)
+        _register_watchlist_forms(app)
+        _register_kill_switch(app)
+        _register_spa_serving(app)
 
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     return app
+
+
+def _spa_redirect(route: str) -> Callable[[Request], RedirectResponse]:
+    """302 to the SPA path superseding one legacy page (ADR-0013)."""
+    target = LEGACY_TO_SPA[route]
+
+    def redirect(request: Request) -> RedirectResponse:
+        return RedirectResponse(target, status_code=302)
+
+    return redirect
+
+
+def _register_spa_redirects(app: FastAPI) -> None:
+    """Legacy page routes -> SPA deep links (ADR-0013 decision 3).
+
+    Every RC1 page route 302s to the /app path whose SPA screen
+    supersedes it. The parameterized detail pages (experiment,
+    document) redirect to their SPA listing — the SPA gains the real
+    detail routes in Phase C, at which point these targets move.
+    """
+
+    for page in PAGES:
+        app.add_api_route(
+            page.route,
+            _spa_redirect(page.route),
+            methods=["GET"],
+            response_class=RedirectResponse,
+        )
+
+    @app.get("/experiments/{experiment_id}", include_in_schema=False)
+    def experiment_detail_redirect(
+        request: Request, experiment_id: str
+    ) -> RedirectResponse:
+        return RedirectResponse(LEGACY_TO_SPA["/experiments"], status_code=302)
+
+    @app.get("/documents/{document_id}", include_in_schema=False)
+    def document_detail_redirect(
+        request: Request, document_id: str
+    ) -> RedirectResponse:
+        return RedirectResponse(LEGACY_TO_SPA["/audit"], status_code=302)
+
+
+def _register_spa_serving(app: FastAPI) -> None:
+    """Serve the committed SPA bundle (ADR-0013 decision 2).
+
+    ``/app/assets/*`` is the bundle's asset directory (vite ``base:
+    "/app/"``); every other ``/app`` path falls through to
+    ``index.html`` so react-router deep links work on refresh. The
+    mount is skipped when the bundle directory is absent (StaticFiles
+    refuses a missing directory) — the fallback then serves the
+    instructive 503, never a blank page.
+    """
+    if SPA_ASSETS.is_dir():
+        app.mount(
+            "/app/assets",
+            StaticFiles(directory=str(SPA_ASSETS)),
+            name="app-assets",
+        )
+    else:
+        # No bundle on disk (checkout predates the frontend build);
+        # /app/assets 404s and the fallback below names the problem.
+        pass
+
+    @app.get("/app", include_in_schema=False)
+    def spa_root(request: Request) -> Response:
+        # The catch-all matches "/app/" (path=""), not "/app" — make
+        # the bare path resolve so a bookmarked URL never 404s.
+        return RedirectResponse("/app/", status_code=302)
+
+    @app.get("/app/{path:path}", include_in_schema=False)
+    def spa_fallback(request: Request, path: str) -> Response:
+        if not SPA_INDEX.is_file():
+            return HTMLResponse(_spa_missing_page(), status_code=503)
+        if path in _BUNDLE_ROOT_FILES:
+            file = SPA_DIR / path
+            if file.is_file():
+                return FileResponse(file)
+        return HTMLResponse(SPA_INDEX.read_bytes())
 
 
 def _register_watchlist_forms(app: FastAPI) -> None:
