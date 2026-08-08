@@ -105,7 +105,7 @@ Exit criteria:
 - At least three baseline strategies have walk-forward, cost-aware reports.
 - Moomoo paper orders reconcile with internal order state.
 
-### M5 — Hyperliquid crypto workflow (`LATER`)
+### M5 — Hyperliquid crypto workflow (`ACTIVE`, plan: `docs/iterations/0007-m5-hyperliquid-testnet-workflow.md`)
 
 Outcome: analyze spot/perpetual markets and execute safely on testnet.
 

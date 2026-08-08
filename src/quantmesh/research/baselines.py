@@ -16,6 +16,7 @@ manifest gate, writes deterministic artifacts, and records the report.
 """
 
 import csv
+import hashlib
 import json
 import math
 import os
@@ -77,6 +78,35 @@ def risk_parity_weights(
     return {symbol: inverse.get(symbol, 0.0) / total for symbol in train_returns}
 
 
+def low_volatility_weights(train_vols: dict[str, float]) -> dict[str, float]:
+    """Long-only, equal weight on the bottom half of the universe by
+    train-window realized volatility (issue #32, Phase D).
+
+    The M5 volatility baseline: hold the quietest names. Unlike
+    risk-parity the weights are rank-based and long-only, and
+    zero-volatility symbols are the signal, not an undefined input.
+    """
+    ranked = sorted(train_vols, key=lambda symbol: (train_vols[symbol], symbol))
+    bottom = ranked[: len(ranked) // 2 + len(ranked) % 2]
+    weight = 1.0 / len(bottom)
+    return {symbol: (weight if symbol in bottom else 0.0) for symbol in ranked}
+
+
+def book_imbalance_weights(train_signals: dict[str, float]) -> dict[str, float]:
+    """Long-only, equal weight on the top half of the universe by
+    train-window mean order-book imbalance (issue #32, Phase D).
+
+    The M5 imbalance baseline: hold the names whose depth is most
+    buy-side pressured. The signal values are the per-bar mean imbalance
+    series from ``quantmesh.hyperliquid.signal``; weights are rank-based
+    like momentum, but over the signal, not the return.
+    """
+    ranked = sorted(train_signals, key=lambda symbol: (train_signals[symbol], symbol))
+    top = ranked[len(ranked) // 2 :]
+    weight = 1.0 / len(top)
+    return {symbol: (weight if symbol in top else 0.0) for symbol in ranked}
+
+
 @dataclass(frozen=True)
 class BacktestResult:
     """Outputs of ``run_walk_forward``, fed into a ``StrategyReport``."""
@@ -93,6 +123,7 @@ def run_walk_forward(
     strategy: str,
     window_spec: WalkForwardSpec,
     costs: CostModel,
+    signals_by_symbol: dict[str, list[float]] | None = None,
 ) -> BacktestResult:
     """Backtest one strategy over aligned bar series, cost-aware.
 
@@ -103,8 +134,18 @@ def run_walk_forward(
     equity curve concatenates the disjoint test segments in order, so
     the report's aggregate metrics cover every evaluation day exactly
     once (ADR-0005 decision 3).
+
+    ``signals_by_symbol`` carries one canonical signal value per bar,
+    aligned 1:1 with the bars (issue #32, Phase D: the per-bar mean
+    order-book imbalance series). The ``book_imbalance`` strategy
+    requires it and weights by each train window's mean signal; the
+    other strategies ignore it. A signal series that does not match the
+    bar grid (length or symbol set) fails closed — a shifted signal
+    would silently backtest a different hypothesis.
     """
     grid = _aligned_grid(bars_by_symbol)
+    if signals_by_symbol is not None:
+        _validate_signals(signals_by_symbol, bars_by_symbol)
     closes = {symbol: [bar.close for bar in bars] for symbol, bars in bars_by_symbol.items()}
     returns = {symbol: _daily_returns(closes[symbol]) for symbol in closes}
     rate = costs.rate()
@@ -132,6 +173,20 @@ def run_walk_forward(
             weights = mean_reversion_weights(window_returns)
         elif strategy == "risk_parity":
             weights = risk_parity_weights(window_returns, window_vols)
+        elif strategy == "low_volatility":
+            weights = low_volatility_weights(window_vols)
+        elif strategy == "book_imbalance":
+            if signals_by_symbol is None:
+                raise ValueError(
+                    "strategy 'book_imbalance' needs signals_by_symbol; a "
+                    "weight vector without the signal series would be fabricated"
+                )
+            weights = book_imbalance_weights(
+                {
+                    symbol: _mean(signals_by_symbol[symbol][train_start:test_start])
+                    for symbol in signals_by_symbol
+                }
+            )
         else:
             raise ValueError(f"unknown strategy {strategy!r}")
 
@@ -195,6 +250,7 @@ def run_baseline_report(
     universe: list[UniverseMember],
     window_spec: WalkForwardSpec,
     costs: CostModel,
+    signals_by_symbol: dict[str, list[float]] | None = None,
     commit: str | None = None,
     registry: ReportRegistry | None = None,
 ) -> StrategyReport:
@@ -206,6 +262,10 @@ def run_baseline_report(
     written byte-stable under ``reports_root/<id>/`` and the record is
     appended to the registry. ``commit`` defaults to the current git
     HEAD.
+
+    ``signals_by_symbol`` (issue #32, Phase D) carries the canonical
+    per-bar signal series for signal-driven strategies; its digest
+    folds into the report id so the identity covers the signal inputs.
     """
     registry = registry if registry is not None else ReportRegistry()
     if commit is None:
@@ -224,8 +284,15 @@ def run_baseline_report(
             )
         bars_by_symbol[member.symbol] = bars
 
+    signals_digest = (
+        _signals_digest(signals_by_symbol) if signals_by_symbol is not None else None
+    )
     result = run_walk_forward(
-        bars_by_symbol, strategy=strategy, window_spec=window_spec, costs=costs
+        bars_by_symbol,
+        strategy=strategy,
+        window_spec=window_spec,
+        costs=costs,
+        signals_by_symbol=signals_by_symbol,
     )
     report = StrategyReport(
         id=report_id(
@@ -237,6 +304,7 @@ def run_baseline_report(
             universe=members,
             window_spec=window_spec,
             costs=costs,
+            signals_digest=signals_digest,
         ),
         dataset=dataset,
         revision=revision,
@@ -246,6 +314,7 @@ def run_baseline_report(
         universe=members,
         window_spec=window_spec,
         costs=costs,
+        signals_digest=signals_digest,
         created_at=datetime.now(UTC),
         metrics=result.metrics,
         windows=result.windows,
@@ -271,6 +340,45 @@ def _validate_universe(universe: list[UniverseMember]) -> list[UniverseMember]:
             "keys bars by symbol and would silently overwrite one venue's bars"
         )
     return universe
+
+
+def _mean(values: list[float]) -> float:
+    if not values:
+        raise ValueError("cannot mean an empty signal segment; the window is empty")
+    return sum(values) / len(values)
+
+
+def _validate_signals(
+    signals_by_symbol: dict[str, list[float]],
+    bars_by_symbol: dict[str, list[Bar]],
+) -> None:
+    """A signal series must cover exactly the bar grid (issue #32, Phase D)."""
+    if set(signals_by_symbol) != set(bars_by_symbol):
+        raise ValueError(
+            "signal series and bar series disagree on the universe: "
+            f"{sorted(signals_by_symbol)} != {sorted(bars_by_symbol)}"
+        )
+    for symbol, signals in signals_by_symbol.items():
+        if len(signals) != len(bars_by_symbol[symbol]):
+            raise ValueError(
+                f"signal series for {symbol!r} has {len(signals)} values but the "
+                f"bar series has {len(bars_by_symbol[symbol])}; a shifted signal "
+                "would silently backtest a different hypothesis"
+            )
+
+
+def _signals_digest(signals_by_symbol: dict[str, list[float]]) -> str:
+    """Deterministic digest of the signal inputs, folded into the report id.
+
+    The id stays a setup-only hash (ADR-0005 decision 2): the signal
+    series are inputs, not results, so the digest covers them.
+    """
+    canonical = json.dumps(
+        {symbol: values for symbol, values in sorted(signals_by_symbol.items())},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(f"baseline-signals\0{canonical}".encode()).hexdigest()[:16]
 
 
 def _aligned_grid(bars_by_symbol: dict[str, list[Bar]]) -> list[datetime]:

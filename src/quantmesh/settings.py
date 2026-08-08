@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     moomoo_opend_port: int = Field(default=11111, ge=1, le=65535)
     moomoo_opend_connect_timeout_s: float = Field(default=5.0, gt=0)
     moomoo_opend_request_timeout_s: float = Field(default=10.0, gt=0)
+    # Hyperliquid (M5): the testnet endpoint is pinned; a mainnet URL is
+    # refused by the adapter before the wire (ADR-0007).
+    hyperliquid_testnet_url: str = "https://api.hyperliquid-testnet.xyz"
+    hyperliquid_connect_timeout_s: float = Field(default=5.0, gt=0)
+    hyperliquid_request_timeout_s: float = Field(default=10.0, gt=0)
 
     model_config = SettingsConfigDict(
         env_file=".env",

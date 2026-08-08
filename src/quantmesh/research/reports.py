@@ -46,7 +46,14 @@ COMMIT_PATTERN = "^[0-9a-f]{7,64}$"
 
 Parameter = str | int | float | bool | None
 
-STRATEGIES = ("momentum", "mean_reversion", "risk_parity")
+STRATEGIES = (
+    "momentum",
+    "mean_reversion",
+    "risk_parity",
+    # M5 crypto baselines (issue #32, Phase D).
+    "low_volatility",
+    "book_imbalance",
+)
 
 # Bars per trading day for annualization: 252 trading days, each of
 # 24h/interval (a "1d" bar covers one trading day, "5m" covers 288).
@@ -164,11 +171,14 @@ def report_id(
     universe: list[UniverseMember],
     window_spec: WalkForwardSpec,
     costs: CostModel,
+    signals_digest: str | None = None,
 ) -> str:
     """Deterministic identity of a report: setup only, never results.
 
     The universe hashes over its sorted member list, so member order
     does not change the identity (ADR-0005 decision 2).
+    ``signals_digest`` (issue #32, Phase D) folds signal-driven inputs
+    into the setup; omitted runs keep the pre-Phase-D identity.
     """
     members = sorted((member.venue.value, member.symbol) for member in universe)
     setup = {
@@ -181,12 +191,19 @@ def report_id(
         "window_spec": window_spec.model_dump(),
         "costs": costs.model_dump(),
     }
+    if signals_digest is not None:
+        setup["signals_digest"] = signals_digest
     canonical = json.dumps(setup, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(f"baseline-report\0{canonical}".encode()).hexdigest()[:16]
 
 
 class StrategyReport(BaseModel):
-    """One recorded baseline run: pinned setup plus observed results."""
+    """One recorded baseline run: pinned setup plus observed results.
+
+    ``signals_digest`` (issue #32, Phase D) pins the signal inputs of
+    signal-driven strategies; runs without signals leave it None, so
+    pre-Phase-D records and ids are unchanged.
+    """
 
     id: str = Field(pattern=ID_PATTERN)
     dataset: str
@@ -197,6 +214,7 @@ class StrategyReport(BaseModel):
     universe: list[UniverseMember]
     window_spec: WalkForwardSpec
     costs: CostModel
+    signals_digest: str | None = Field(default=None, pattern=ID_PATTERN)
     created_at: datetime
     metrics: dict[str, Parameter] = Field(default_factory=dict)
     windows: list[WindowResult] = Field(default_factory=list)
@@ -227,6 +245,7 @@ class StrategyReport(BaseModel):
             universe=self.universe,
             window_spec=self.window_spec,
             costs=self.costs,
+            signals_digest=self.signals_digest,
         )
         if self.id != expected:
             raise ValueError(
