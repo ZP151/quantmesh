@@ -81,10 +81,17 @@ Out of scope (recorded, not deferred silently):
       UI: the M3 registry's experiments render side by side with
       metrics, and the M7 promotion ledger renders with its evidence
       links resolved. — Phase C (issue #53).
-3. [ ] Prediction probability and calibration views render the M6
-      forecast reports: implied probabilities with their liquidity
-      confidence, and reliability-bin calibration with the Brier
-      score. — Phase D (issue #54).
+3. [x] Prediction probability and calibration views render the M6
+      forecast reports: per-market evaluation cards over the venue's
+      mid-derived implied probabilities (Brier and
+      liquidity-confidence-weighted Brier per window, unresolved
+      windows rendering "pending", never a fabricated value) and
+      reliability-bin calibration with the per-bin Brier score.
+      — Phase D (issue #54). *Planned wording corrected on
+      implementation: a forecast record holds window results, not the
+      observation grid, so no "current implied probability" can be
+      rendered honestly — the card is the evaluation (ADR-0011
+      decision 5).*
 4. [ ] Risk alerts and the audit explorer render the M7 alert ledger,
       the M5 risk posture, the M2 order journal, the M6 mapping ledger
       and the M8 decision log in one chronological view; the global
@@ -255,11 +262,18 @@ documented in Risks and gates below).
   ADR-0010 loopback discipline).
 - Decision 3 (Phase B): watchlists are the one UI-owned write surface,
   JSONL on the ADR-0006 discipline under `watchlists_dir`.
-- Decision 4 (Phase D/E): the workstation is a read-only data plane —
-  every screen reads through existing registries and ledgers; the only
-  control that mutates state is the paper-level kill switch (M10 owns
-  execution-plane enforcement).
-- Decision 5 (Phase F): Playwright is a dev-only extra whose suite
+- Decision 4 (Phase C, recorded): the research screens are read-only
+  views over injected registries; unbound registries and unresolvable
+  evidence render typed states, never crashes.
+- Decision 5 (Phase D, recorded): portfolio and prediction screens
+  render the M1/M6 surfaces by the same code path under `/portfolio/*`
+  — the HTML layer never shadows the JSON routes, and the forecast
+  view renders only recorded evaluation data ("pending", en dashes,
+  typed missing-artifact states — never fabricated numbers).
+- Decision 6 (Phase E): the paper-level kill switch is the
+  workstation's second write surface (flips the paper kernel's flag;
+  execution-plane enforcement is M10).
+- Decision 7 (Phase F): Playwright is a dev-only extra whose suite
   boots a real uvicorn process over a fixture universe; keyboard-only
   and accessibility-snapshot tests are first-class acceptance
   evidence; a missing browser is a recorded fallback, never a
@@ -345,6 +359,55 @@ empty-ledger states); the drill's first run caught the benchmark/OOS
 duplicate-report-id premise (two reports with identical setup are
 refused by the registry by design — the OOS report now uses a
 distinct interval). ADR-0011 decision 4 recorded.
+
+**Issue #54 (Phase D, positions, orders, fills, P&L and prediction
+views) committed 2026-08-08** — `workstation.py`: `PageContext` gains
+the injected `forecasts` registry (the M6 `ForecastReportRegistry`,
+optional like the research registries); PAGES grows four screens —
+`/portfolio/positions`, `/portfolio/orders`, `/portfolio/pnl` and
+`/forecasts` (the `/portfolio/*` namespace keeps the M1 JSON routes
+served on the same app object, pinned by the no-shadowing test).
+Portfolio screens render the M1 surface by the same code path:
+`_positions_provider` computes unrealized P&L with exactly the
+`/positions` formula `(mark − average_cost) × quantity` (a position
+without a mark renders a typed "no mark" state), `_order_view` wraps
+the same `_order_summary` the JSON `/orders` endpoint serializes with
+(event stream with fill events highlighted, rejected orders render
+their reason, newest-first with the id tie-break), and `_pnl_provider`
+mirrors `/pnl` (starting cash, realized/unrealized/equity/total,
+marks table, and the named missing-marks list — understated equity is
+never silent). Prediction views render the M6 registry records:
+per-market evaluation cards (identity, resolution state, windows
+evaluating the venue's mid-derived implied probabilities, Brier and
+liquidity-confidence-weighted Brier per window — unresolved windows
+render "pending", never a number), reliability-bin calibration with
+the per-bin Brier (empty bins render an en dash, never "None"), and
+the artifact state named from the registry root (a missing artifact
+renders a typed "Forecast artifacts missing" state naming the absent
+files; the record still renders). Templates
+`positions.html`/`orders.html`/`pnl.html`/`forecasts.html` (native
+`<details>/<summary>` for event streams and calibration, `scope`
+headers, evaluation-note wording), `.missing-mark`/`.pending`/
+`.fill-event` styles in the local stylesheet. 13 new tests:
+positions/P&L parity with the JSON surface, no-shadowing
+content-type pins, missing-mark and empty states, order event
+streams/fills parity, rejected-order reason, forecast unbound/empty
+states, the two-market drill (evaluated windows carry the recorded
+Brier, unresolved windows render exactly `2 × windows` "pending"
+cells, calibration bins render the model's numbers with "—" for empty
+bins and no "None" anywhere), missing-artifacts typed state, and
+newest-first report ordering. Two planned premises corrected on
+implementation, both recorded in ADR-0011 decision 5: (1) the HTML
+routes live under `/portfolio/*` because the M1 JSON endpoints own
+`/positions`/`/orders`/`/pnl` on the same app object (the first
+registry-test run also caught the `&` in the PnL page title being
+autoescaped — the title is now escape-free); (2) the forecast record
+holds window results, not the observation grid, so the
+"implied-probability card" is the evaluation of the venue's
+mid-derived probabilities — a current probability would be
+fabricated. Acceptance criterion 3 checked off. Full suite 1617
+passed / 3 skipped. ADR-0011 decision 5 recorded (the planned
+kill-switch and Playwright decisions shift to 6 and 7).
 
 ## Verification evidence
 

@@ -22,7 +22,7 @@ The M1 baseline is a read-only FastAPI app (`create_app`) binding the
 paper-account observability endpoints to one injected `PaperAccount`;
 the M9 workstation supersets it.
 
-## Decision 1 — The workstation is server-rendered Jinja2 over the
+### Decision 1 — The workstation is server-rendered Jinja2 over the
 existing FastAPI stack: no node toolchain, no build step, no CDN
 (Phase A, issue #51)
 
@@ -123,17 +123,55 @@ issue #53)
 - No write surface is added: experiment, promotion, decision and
   alert writes remain CLI/registry-owned.
 
+### Decision 5 — Portfolio and prediction screens render the M1 and M6
+surfaces by the same code path, under `/portfolio/*` (Phase D, issue
+#54)
+
+- The positions, orders and P&L screens render the M1 surface. A
+  position's unrealized P&L uses exactly the `/positions` formula
+  `(mark − average_cost) × quantity`, and a position without a mark
+  renders a typed "no mark" state — never a number. Orders serialize
+  through the same `_order_summary` the JSON endpoint uses, so the
+  HTML screen and the API surface cannot drift apart (decision 1's
+  consequence, applied by construction); the event stream renders
+  fill events, and a rejected order renders its reason.
+- The HTML screens live at `/portfolio/positions`, `/portfolio/orders`
+  and `/portfolio/pnl`: the M1 JSON endpoints keep their own routes on
+  the same app object, and the no-shadowing test pins both surfaces
+  served (the HTML layer never shadows the observability API).
+- The forecast screen renders the M6 `ForecastReportRegistry` records:
+  setup and aggregate metrics; per-market evaluation cards (identity,
+  resolution state, and the windows that evaluate the venue's
+  mid-derived implied probabilities); a reliability-bin calibration
+  view with the per-bin Brier; and the artifact state named from the
+  registry root (`report.json`/`windows.csv`/`calibration.csv`
+  existence). A forecast record holds window results, not the
+  observation grid — a "current implied probability" would be
+  fabricated, so none is rendered: the card is the evaluation, an
+  unresolved window renders "pending", an empty calibration bin
+  renders an en dash, and a missing artifact renders a typed
+  "Forecast artifacts missing" state naming the absent files. An
+  unbound registry renders a typed empty state (decision 4 applied to
+  the forecast surface).
+
 ## Consequences
 
 - The workstation adds one core dependency (jinja2, BSD-3) and no
   node toolchain; a browser is only needed for the dev-only E2E
-  acceptance (Phase F, decision 5).
+  acceptance (Phase F, decision 7).
 - A non-loopback `workstation_host` is a construction error: the
   workstation cannot be accidentally exposed, and environment
   configuration cannot change that.
 - The HTML layer renders the same account state the M1 JSON endpoints
-  serve, computed by the same code path; understated or missing data
-  (positions without marks) is named in the UI, never silent.
+  serve, computed by the same code path (the portfolio screens reuse
+  the endpoint functions by construction); understated or missing
+  data (positions without marks, unmarked equity) is named in the UI,
+  never silent. The `/portfolio/*` namespace keeps the JSON routes
+  served on the same app object.
+- The prediction view renders only recorded evaluation data: an
+  unresolved window says "pending" and a market whose observation
+  grid the record does not hold renders no probability at all — the
+  UI never invents a number the report cannot substantiate.
 - The UI owns exactly one persisted surface (the watchlist); its
   JSONL file is on the same discipline as the experiment and audit
   journals, so a corrupted or hostile watchlist file fails closed
