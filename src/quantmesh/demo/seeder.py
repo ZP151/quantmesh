@@ -159,6 +159,10 @@ class DemoProviders:
     def _instrument(self, venue: str, symbol: str) -> Instrument:
         return _instrument(symbol, venue, self._kinds[(venue, symbol)])
 
+    def instrument(self, venue: str, symbol: str) -> Instrument:
+        """The canonical instrument for one seeded (venue, symbol)."""
+        return self._instrument(venue, symbol)
+
     def series(self, venue: str, symbol: str, *, interval: str = "1d") -> list[Bar]:
         """The seeded bar series, through the real adapter."""
         return self._provider(venue, symbol).fetch_bars(

@@ -91,7 +91,7 @@ SURFACE_COUNTS = {
     "reports": 4,
     "forecasts": 4,
     "alerts": 5,
-    "orders": 7,
+    "orders": 8,
     "decisions": 4,
     "mappings": 3,
     "documents": 3,

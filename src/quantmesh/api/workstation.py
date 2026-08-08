@@ -48,12 +48,14 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
+from typing import Literal
 from urllib.parse import quote, urlsplit
 
-from fastapi import FastAPI, Form, Request
+from fastapi import APIRouter, FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 
 from quantmesh import __version__
 from quantmesh.ai.decisions import DecisionLog
@@ -740,6 +742,101 @@ def _enablement_provider(context: PageContext) -> dict[str, object]:
     }
 
 
+def _json_context(request: Request) -> PageContext:
+    """The page context every JSON route renders; a plain M1 app (no
+    workstation context) is a typed 404, never an attribute error."""
+    context = getattr(request.app.state, "page_context", None)
+    if context is None:
+        raise HTTPException(status_code=404, detail="no workstation context is attached")
+    return context
+
+
+def _json_guard_origin(request: Request, surface: str) -> None:
+    """Refuse a JSON write POST whose Origin is present but not
+    loopback (threat model T-14), as a typed 403 for the JSON surface
+    instead of the HTML error page the form endpoints render."""
+    origin = request.headers.get("origin")
+    if origin is None:
+        return
+    try:
+        hostname = urlsplit(origin).hostname
+    except ValueError:
+        hostname = None
+    if hostname is not None and _is_loopback(hostname):
+        return
+    raise HTTPException(
+        status_code=403,
+        detail=f"{surface} refused: cross-origin send (Origin {origin!r} is not loopback)",
+    )
+
+
+class _KillSwitchBody(BaseModel):
+    """The JSON kill-switch flip the SPA shell calls. The form endpoint
+    stays the RC1 contract; both flip the same account object and
+    replace it in app.state and the page context, so the JSON surface,
+    every page and the kernel gate agree (ADR-0011 decision 6)."""
+
+    action: Literal["engage", "disarm"]
+    venue: str | None = None
+
+
+def spa_router() -> APIRouter:
+    """The SPA JSON read surface (iteration 0014 Phase C).
+
+    One route per screen, rendering through the exact page providers
+    the RC1 templates use — the same functions, the same dicts — so
+    the browser and the legacy screens can never disagree. The surface
+    is a strict superset of the M1 API: /api/overview, /api/markets,
+    /api/watchlist, /api/experiments, /api/promotions, /api/forecasts,
+    /api/risk, /api/audit and /api/enablement, plus the JSON
+    kill-switch POST the shell's persistent control calls.
+    """
+    router = APIRouter()
+
+    def read(route: str, name: str, provider: Callable[[PageContext], dict[str, object]]) -> None:
+        def handle(request: Request) -> dict[str, object]:
+            return provider(_json_context(request))
+
+        router.add_api_route(route, handle, methods=["GET"], name=name)
+
+    read("/overview", "overview", _overview_provider)
+    read("/markets", "markets", _instruments_provider)
+    read("/watchlist", "watchlist", _watchlist_provider)
+    read("/experiments", "experiments", _experiments_provider)
+    read("/promotions", "promotions", _promotions_provider)
+    read("/forecasts", "forecasts", _forecasts_provider)
+    read("/risk", "risk", _risk_provider)
+    read("/audit", "audit", _audit_provider)
+    read("/enablement", "enablement", _enablement_provider)
+
+    @router.post("/kill-switch")
+    def kill_switch_json(request: Request, body: _KillSwitchBody) -> dict[str, object]:
+        _json_guard_origin(request, "kill-switch")
+        context = _json_context(request)
+        if body.venue is None:
+            flipped = context.account.model_copy(update={"kill_switch": body.action == "engage"})
+        else:
+            try:
+                venue_enum = Venue(body.venue)
+            except ValueError:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"kill-switch POST refused: unknown venue {body.venue!r}",
+                ) from None
+            kill_switches = dict(context.account.kill_switches)
+            if body.action == "engage":
+                kill_switches[venue_enum] = True
+            else:
+                kill_switches.pop(venue_enum, None)
+            flipped = context.account.model_copy(update={"kill_switches": kill_switches})
+        flipped_context = replace(context, account=flipped)
+        request.app.state.account = flipped
+        request.app.state.page_context = flipped_context
+        return _kill_switch_provider(flipped_context)
+
+    return router
+
+
 # The page registry, pinned by the page-registry test (every route
 # registered, every template loadable, autoescape on, every page
 # renders through its provider). Later phases append screens here.
@@ -899,6 +996,16 @@ def create_workstation_app(
         documents=documents,
         hl_posture=hl_posture,
         enablement=enablement,
+    )
+
+    # The SPA JSON surface (Phase C) in both modes: a strict superset
+    # of the M1 API, so a client that wants JSON has one source of
+    # truth regardless of the render mode. Same api_ operation-id
+    # discipline as the observability router.
+    app.include_router(
+        spa_router(),
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
     )
 
     if settings.legacy_ui:

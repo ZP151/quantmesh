@@ -27,13 +27,19 @@ prefix), so the SPA and the RC1 contract call the same handlers.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
-from urllib.parse import urlsplit
+from typing import Literal
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request
+from pydantic import BaseModel, Field
 
-from quantmesh.api.workstation import PageContext, _is_loopback, create_workstation_app
+from quantmesh.api.app import _order_summary
+from quantmesh.api.workstation import (
+    PageContext,
+    _json_guard_origin,
+    create_workstation_app,
+)
 from quantmesh.demo.manifest import MARKER_NAME, DemoScenario
 from quantmesh.demo.seeder import (
     DemoRootError,
@@ -43,7 +49,25 @@ from quantmesh.demo.seeder import (
     reset_demo_root,
     seed_demo_root,
 )
+from quantmesh.domain.models import OrderRequest, Quote, Side
 from quantmesh.settings import settings
+
+
+class _DemoOrderBody(BaseModel):
+    """One demo paper order: the SPA's simulated submit (the Phase C
+    tracer bullet). Gated exactly like the workstation's other write
+    surfaces and filled through the seeded provider pipeline, so the
+    browser places an order through the real domain services — never a
+    UI-only fixture. ``idempotency_key`` is the M10 replay guard: a
+    retry with the same key returns the original order, never a
+    duplicate."""
+
+    venue: str
+    symbol: str
+    side: Literal["BUY", "SELL"]
+    quantity: float = Field(gt=0)
+    limit_price: float | None = Field(default=None, gt=0)
+    idempotency_key: str | None = None
 
 
 @dataclass
@@ -73,26 +97,6 @@ def _status(runtime: DemoRuntime) -> dict[str, object]:
         "last_update": runtime.scenario.anchor.isoformat(),
         "health": {"status": "ok", "seed": runtime.scenario.seed},
     }
-
-
-def _guard_origin(request: Request, surface: str) -> None:
-    """Refuse a demo write POST whose Origin is present but not
-    loopback (the threat model T-14 discipline the workstation's other
-    write surfaces apply); raises a typed HTTP error for the JSON
-    surface."""
-    origin = request.headers.get("origin")
-    if origin is None:
-        return
-    try:
-        hostname = urlsplit(origin).hostname
-    except ValueError:
-        hostname = None
-    if hostname is not None and _is_loopback(hostname):
-        return
-    raise HTTPException(
-        status_code=403,
-        detail=f"{surface} refused: cross-origin send (Origin {origin!r} is not loopback)",
-    )
 
 
 def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
@@ -147,7 +151,7 @@ def demo_router() -> APIRouter:
         runtime = getattr(request.app.state, "demo", None)
         if runtime is None:
             raise HTTPException(status_code=404, detail="no demo runtime is attached")
-        _guard_origin(request, "demo reset")
+        _json_guard_origin(request, "demo reset")
         try:
             # Reset with the scenario the root was seeded with (loaded
             # from its provenance on restart), so a reset reproduces
@@ -158,6 +162,80 @@ def demo_router() -> APIRouter:
         runtime.seeded = seeded
         _apply_seeded(request.app, seeded)
         return _status(runtime)
+
+    @router.post("/demo/order")
+    def demo_order(request: Request, body: _DemoOrderBody) -> dict[str, object]:
+        """One simulated paper order through the real pipeline.
+
+        The SPA tracer bullet: submit against the seeded order book's
+        touch (the providers serve the same walk the board renders),
+        through the paper account's own risk gate — a kill switch or a
+        broken limit refuses with the gate's own message. The order is
+        recorded in the seeded journal (a public service append) and
+        the fresh account replaces ``app.state`` and the page context,
+        so the JSON surface, every page and the kernel gate agree.
+        Timestamps derive from the scenario anchor, never the wall
+        clock, so a replay session can reproduce the same session.
+        Reset restores the pristine root.
+        """
+        runtime = getattr(request.app.state, "demo", None)
+        if runtime is None:
+            raise HTTPException(status_code=404, detail="no demo runtime is attached")
+        _json_guard_origin(request, "demo order")
+        context = request.app.state.page_context
+        providers = runtime.seeded.providers
+        if (body.venue, body.symbol) not in providers.universe():
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"demo order refused: {body.venue}:{body.symbol} is outside the seeded universe"
+                ),
+            )
+        instrument = providers.instrument(body.venue, body.symbol)
+        book = providers.order_books(body.venue, body.symbol)[0]
+        best_bid = book.bids[0].price if book.bids else None
+        best_ask = book.asks[0].price if book.asks else None
+        quote = Quote(
+            instrument=instrument,
+            timestamp=runtime.scenario.anchor,
+            bid=best_bid,
+            ask=best_ask,
+            last=(
+                (best_bid + best_ask) / 2
+                if best_bid is not None and best_ask is not None
+                else best_bid
+            ),
+            # The available liquidity is the depth the board renders —
+            # the matcher's "missing volume" gate needs a real number.
+            volume=sum(level.quantity for level in (*book.bids, *book.asks)),
+        )
+        result = context.account.submit(
+            OrderRequest(
+                instrument=instrument,
+                side=Side.BUY if body.side == "BUY" else Side.SELL,
+                quantity=body.quantity,
+                limit_price=body.limit_price,
+                idempotency_key=body.idempotency_key,
+            ),
+            quote,
+            now=runtime.scenario.anchor,
+        )
+        if result.rejection is not None:
+            raise HTTPException(status_code=409, detail=result.rejection)
+        # A replay returns the original order and a fresh account copy;
+        # the journal already holds it (and refuses duplicates), so only
+        # first-time submissions append.
+        if context.journal is not None and result.replay_of is None:
+            context.journal.record(result.order)
+        request.app.state.account = result.account
+        request.app.state.page_context = replace(context, account=result.account)
+        return {
+            "order": _order_summary(result.order),
+            "account": {
+                "cash": result.account.cash,
+                "equity": result.account.equity(runtime.seeded.marks),
+            },
+        }
 
     return router
 
