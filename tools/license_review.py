@@ -51,6 +51,7 @@ ALLOWED = {
     "CC0-1.0",
     "CNRI-Python",  # the historical CNRI Python license (permissive)
     "MIT-CMU",  # MIT variant with the CMU notice (Pillow)
+    "MIT-0",  # MIT No Attribution (OSI-approved; cffi declares it)
 }
 
 # Hand-verified overrides for packages whose metadata carries no

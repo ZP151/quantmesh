@@ -14,7 +14,8 @@ license names its package and fails the job.
   BSD-3-Clause, Apache-2.0, PSF-2.0, ISC, MPL-2.0 (file-level
   copyleft — permissive for redistribution; certifi, tqdm), 0BSD,
   Zlib, CC0-1.0, CNRI-Python (the historical CNRI Python license),
-  MIT-CMU (Pillow's MIT variant).
+  MIT-CMU (Pillow's MIT variant), MIT-0 (MIT No Attribution,
+  OSI-approved; cffi declares it).
 - **Refused**: GPL/AGPL, LGPL, proprietary licenses, source-available
   restrictions such as the Commons Clause, and anything unclassified.
 - **`WITH <exception>` SPDX qualifiers relax** the license
@@ -48,14 +49,18 @@ license names its package and fails the job.
   the real backend refuses construction outside an explicit drill
   flag, so the OS keyring is never touched (T-07).
 
-## Inventory (generated 2026-08-08, 100 packages in this environment)
+## Inventory (generated 2026-08-08; 100 packages in this environment,
+plus 5 Linux-marker closure packages)
 
-The CI-relevant closure is the 55 packages pinned in
+The CI-relevant closure is the 60 packages pinned in
 `requirements-audit.txt` (a fresh `.[dev,research]` install,
 quantmesh itself excluded); the table below is the review output
 over the working environment (superset — includes leftover
 transitives of the removed vectorbt and of earlier dev experiments,
-all permissively licensed). Regenerate with
+all permissively licensed) plus the 5 Linux-marker closure packages
+(`jeepney`, `SecretStorage`, `cryptography`, `cffi`, `pycparser`)
+that keyring pulls in on CI's Linux runner, so the documented
+coverage holds on both platforms. Regenerate with
 `python tools/license_review.py`.
 
 | Package | Version | License |
@@ -67,11 +72,13 @@ all permissively licensed). Regenerate with
 | arch | 7.2.0 | BSD-2-Clause |
 | asttokens | 3.0.2 | MIT (documented exception) |
 | certifi | 2026.7.22 | MPL-2.0 (documented exception) |
+| cffi | 2.1.1 | MIT-0 |
 | charset-normalizer | 3.4.9 | MIT (documented exception) |
 | click | 8.4.2 | BSD-3-Clause |
 | colorama | 0.4.6 | BSD-3-Clause |
 | comm | 0.2.3 | BSD-3-Clause |
 | contourpy | 1.3.3 | BSD-3-Clause |
+| cryptography | 50.0.0 | Apache-2.0 | BSD-3-Clause |
 | cycler | 0.12.1 | BSD-3-Clause |
 | dateparser | 1.4.2 | BSD-3-Clause |
 | dill | 0.4.1 | BSD-3-Clause |
@@ -95,6 +102,7 @@ all permissively licensed). Regenerate with
 | jaraco.context | 6.1.2 | MIT |
 | jaraco.functools | 4.6.0 | MIT |
 | jedi | 0.20.0 | MIT |
+| jeepney | 0.9.0 | MIT |
 | Jinja2 | 3.1.6 | BSD-3-Clause |
 | joblib | 1.5.3 | BSD-3-Clause |
 | jupyterlab_widgets | 3.0.16 | BSD-2-Clause |
@@ -126,6 +134,7 @@ all permissively licensed). Regenerate with
 | pydantic | 2.13.4 | MIT |
 | pydantic-settings | 2.14.2 | MIT |
 | pydantic_core | 2.46.4 | MIT |
+| pycparser | 3.0 | BSD-3-Clause |
 | pyee | 13.0.1 | MIT |
 | Pygments | 2.20.0 | BSD-2-Clause |
 | pyparsing | 3.3.2 | MIT |
@@ -143,6 +152,7 @@ all permissively licensed). Regenerate with
 | schedule | 1.2.2 | MIT |
 | scikit-learn | 1.9.0 | BSD-3-Clause |
 | scipy | 1.18.0 | BSD-3-Clause |
+| SecretStorage | 3.5.0 | BSD-3-Clause |
 | six | 1.17.0 | MIT |
 | stack-data | 0.6.3 | MIT |
 | starlette | 1.4.1 | BSD-3-Clause |
