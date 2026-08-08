@@ -145,8 +145,8 @@ Regenerate with `python tools/license_review.py`.
 | pyee | 13.0.1 | MIT |
 | Pygments | 2.20.0 | BSD-2-Clause |
 | pyparsing | 3.3.2 | MIT |
-| pytest | 8.4.2 | MIT |
-| pytest-asyncio | 0.26.0 | Apache-2.0 |
+| pytest | 9.1.1 | MIT |
+| pytest-asyncio | 1.4.0 | Apache-2.0 |
 | python-dateutil | 2.9.0.post0 | BSD-3-Clause |
 | python-dotenv | 1.2.2 | BSD-3-Clause |
 | python-multipart | 0.0.32 | Apache-2.0 |
