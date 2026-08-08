@@ -42,10 +42,18 @@ makes the business workflow directly testable. Do not promote RC1 to
    risk/audit loop was verified over HTTP end to end (including kill-switch
    409, idempotent replay and reset), all 12 legacy routes 302 to `/app`,
    and the backend suite is 1,840/1,840 green.
-4. Add one public-data connector path and validated file import, then complete
-   bounded design, accessibility, E2E and clean-checkout verification.
-5. Publish `v0.1.0-rc2` from one integration PR and obtain explicit human
-   acceptance before a final release.
+4. ~~Add one public-data connector path and validated file import~~ (done,
+   Phase D boundary): `src/quantmesh/demo/datalink.py` adds a 5-connector
+   diagnostics panel, a credential-free testnet-pinned Hyperliquid l2Book
+   path with rate-limit retry, `.datalink` caching, provenance and labeled
+   synthetic fallback, and CSV/JSON/Parquet import with preview, mapping,
+   per-row rejection reasons and `operator-import` manifests — missing
+   software/credentials/network are instructive states, never blank pages.
+   `tests/test_datalink.py` 20/20 green; live smoke on 8794 verified the
+   fallback path, rejections and reset isolation.
+5. Complete bounded design, accessibility, E2E and clean-checkout
+   verification (Phase E), then publish `v0.1.0-rc2` from one integration
+   PR and obtain explicit human acceptance before a final release.
 
 ## Standing authority
 
