@@ -80,7 +80,7 @@ Out of scope (recorded, not deferred silently):
       exports are implemented and drilled; the export signature
       verifies and a tampered export fails verification. — Phase A
       (issue #58).
-5. [ ] The threat model is recorded, the CI dependency/license
+5. [x] The threat model is recorded, the CI dependency/license
       scanning job is green (no incompatible licenses), and the
       release process is documented. — Phase D (issue #61).
 6. [ ] The per-venue enablement approval workflow and secret-store
@@ -405,6 +405,50 @@ complete — 2026-08-08.**
   map on the account object; enforcement in the accounting risk
   gate, never an AI surface).
 
+**Issue #61 (Phase D, threat model + dependency/license scanning +
+release process) complete — 2026-08-08.**
+
+- `docs/threat-model.md`: 15 threats (T-01…T-15), each named with the
+  control that addresses it and the test that pins it, plus the two
+  accepted residuals (same-origin page bug, physical access). The
+  register is a contract: `tests/test_security.py` verifies every
+  citation resolves to a real test/file/ADR.
+- The scanning gate found its first real finding: **vectorbt**
+  (research extra) ships as Apache-2.0 **WITH the Commons Clause**
+  (source-available, not OSI) — no code path imported it, so it was
+  removed from the extra; ADR-0009's dependency-contract text
+  updated. `tools/license_review.py` (stdlib-only, deterministic,
+  no network) classifies every installed distribution from PEP
+  639/345 metadata against the `docs/licenses.md` allowlist; the
+  text classifier refuses the Commons Clause *before* the Apache
+  appendix text can match, and the expression classifier refuses
+  "WITH Commons-Clause" before the qualifier strip. 94 packages
+  reviewed, all allowed.
+- `requirements-audit.txt`: the frozen install closure of
+  `.[dev,research]` (49 pins, generated via `pip install --dry-run
+  --report`; no vectorbt, no quantmesh). CI `security` job:
+  `pip-audit -r requirements-audit.txt --no-deps` (new advisory
+  fails loudly) + `python tools/license_review.py` over the real
+  install; CI Lint step now covers `tools`.
+- `docs/release-process.md`: branch/PR conventions, the full-suite
+  gate, drill-evidence requirements, the audit-lock regeneration
+  procedure, versioning, and the human-gate checklist for any future
+  live operation.
+- CSRF hardening found while writing the threat model (T-14): the
+  three write POSTs (`/watchlist/add`, `/watchlist/remove`,
+  `/kill-switch`) refuse a present non-loopback Origin — browser
+  CSRF always sends the attacker's Origin; absent Origin (CLI/drill)
+  stays allowed. Pinned by `TestWriteSurfaceOriginGuard` (5 tests);
+  the E2E keyboard drill still passes (same-origin loopback sends).
+- Tests: `tests/test_security.py` — 14 passed (threat-model register
+  + citation resolution, license classifier unit tests incl.
+  Commons-Clause refusal and WITH-exception stripping, installed-
+  env classification, licenses-doc ↔ script agreement, audit-lock
+  parseability). Ruff E/F/I/UP clean incl. tools.
+- ADR-0012 decision 4 recorded (CI-only scanning: pip-audit over the
+  frozen closure + deterministic license review; the Origin guard;
+  the vectorbt removal as the enforcement precedent).
+
 ## Verification evidence
 
 - `tests/test_ops.py`: 37 passed (2026-08-08).
@@ -417,7 +461,15 @@ complete — 2026-08-08.**
   `TestPhaseCPerVenueKillSwitch`: 5 passed (2026-08-08).
 - `tests/test_workstation_e2e.py`: 15 passed (2026-08-08) — the
   keyboard-only drill covers the global engage/disarm round trip and
-  a per-venue engage→disarm round trip through the confirm-gated POST.
-- Full suite: 1725 passed / 3 skipped (2026-08-08).
-- `ruff check src tests`: clean on the M10-3 surface.
-- Full-suite run recorded in ACTIVE.md after the M10-3 commit.
+  a per-venue engage→disarm round trip through the confirm-gated POST;
+  re-run green after the Phase D Origin guard (same-origin loopback
+  sends pass).
+- `tests/test_security.py`: 14 passed (2026-08-08) — threat-model
+  register + citation resolution, license-classifier units
+  (Commons-Clause refusal, WITH-exception stripping, permissive SPDX
+  members, copyleft refusal), installed-environment classification,
+  licenses-doc ↔ script agreement, audit-lock parseability.
+- `tools/license_review.py`: 94 packages reviewed, all allowed
+  (2026-08-08).
+- Full suite: recorded in ACTIVE.md after the M10-4 commit.
+- `ruff check src tests tools`: clean on the M10-4 surface.
