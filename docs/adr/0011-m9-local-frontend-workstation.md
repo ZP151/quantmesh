@@ -188,6 +188,36 @@ control (Phase E, issue #55)
   Enforcement across the wider execution plane is M10 — the UI states
   this.
 
+### Decision 7 — End-to-end coverage is a dev-only Playwright extra
+that boots the real workstation on a pinned loopback port and skips
+cleanly when the browser is absent (Phase F, issue #56)
+
+- `playwright` (Apache-2.0, `>=1.44,<2`) is a dev-only extra
+  (`.[dev,e2e]`), never a runtime dependency. The browser binaries are
+  installed separately (`playwright install chromium`), and the suite
+  skips cleanly — never fails — when the package is missing
+  (`pytest.importorskip`) or the chromium binary is absent (the launch
+  failure becomes a skip with the install hint): a pipeline without
+  the browser stays green, and the skip is a recorded fallback, never
+  a fabricated pass.
+- The E2E suite boots the real workstation (uvicorn over the same
+  `create_workstation_app` a fixture universe is built for) on a
+  pinned loopback port (127.0.0.1:8642), with a port-in-use pre-check
+  that skips rather than clobbering an existing server. It exercises
+  the exit criteria as browser-driven evidence: the core paper
+  workflow walk (overview → watchlist add → instruments → positions →
+  orders → P&L) through the UI alone; keyboard-only navigation and
+  kill-switch engage/disarm round trip (Tab/Arrow/Space/Enter, real
+  focus order — no injected focus helpers, no mouse); and aria
+  snapshots of the registry's list screens asserting the
+  banner/nav/main landmarks and the page heading. The mark is
+  asserted through the mark-derived unrealized P&L — the only place a
+  mark reaches the surface.
+- The accessibility assertions use the Playwright aria snapshot (the
+  modern replacement for the removed `page.accessibility` API); tests
+  pin the page h1 by name, disambiguating headings that share a name
+  with a section (`P&L`) rather than relaxing exactness.
+
 ## Consequences
 
 - The workstation adds one core dependency (jinja2, BSD-3) and no

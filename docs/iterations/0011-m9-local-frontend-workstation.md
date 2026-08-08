@@ -72,7 +72,7 @@ Out of scope (recorded, not deferred silently):
 
 ## Acceptance criteria
 
-1. [ ] The workstation serves a core paper workflow end-to-end without
+1. [x] The workstation serves a core paper workflow end-to-end without
       direct database or CLI access: over a fixture universe the
       operator can reach market overview, a watchlist, an instrument
       view, positions, orders (with events/fills) and P&L purely
@@ -97,7 +97,7 @@ Out of scope (recorded, not deferred silently):
       and the M8 decision log in one chronological view; the global
       kill switch control flips the paper kernel's flag and the UI
       reflects the state. — Phase E (issue #55).
-5. [ ] Critical controls pass keyboard, accessibility and end-to-end
+5. [x] Critical controls pass keyboard, accessibility and end-to-end
       tests: the Playwright suite covers the core paper workflow
       (criterion 1) and the critical controls (kill switch, navigation,
       promotion view) operate with keyboard only and satisfy
@@ -450,6 +450,36 @@ POSTs. Operator drill: 16/16 checks passed over real ledger data
 trip, hostile POST refused with state untouched). Acceptance
 criterion 4 checked off. Full suite 1631 passed / 3 skipped (79
 workstation tests). ADR-0011 decision 6 recorded.
+
+**Issue #56 (Phase F, Playwright E2E + acceptance) committed
+2026-08-08**
+— `playwright` (1.62.0) added as the dev-only `e2e` extra (ADR-0011
+decision 7); chromium installed once as a local dev step for the
+acceptance run. `tests/test_workstation_e2e.py` (15 tests): the suite
+boots the real workstation through uvicorn on the pinned loopback
+127.0.0.1:8642 over the fixture universe (same construction as the
+unit drills — sample account with 3 orders / 16 AAPL held at 100.0
+average, marks at 95.0, venue markets, fresh watchlist store), with a
+port-in-use pre-check that skips rather than clobbering an existing
+server. The fallback gate is exercised, not assumed: `importorskip`
+skips cleanly when playwright is missing, and a launch failure
+(chromium absent) becomes a skip with the install hint — probed by
+renaming the browser installs (12 skipped) and restoring them (12
+passed), so a pipeline without the browser stays green, never fails.
+Exit-criterion tests: the core paper workflow walk (overview →
+watchlist add → instruments → positions → orders → P&L, purely
+through the UI — the mark is asserted through the mark-derived
+unrealized P&L (95.0 − 100.0) × 16 = −80.0, the only place a mark
+reaches the surface), keyboard-only navigation plus a keyboard-only
+hop to the promotion view, the kill-switch engage → disarm round trip
+with Tab/Arrow/Space/Enter only, and aria snapshots of the registry's
+12 list screens asserting the banner/nav/main landmarks and the page
+heading — via the modern `aria_snapshot` replacement for the removed
+`page.accessibility` API, with `.first` pinning the P&L page (h1 and
+section h2 share the name) and the audit h1 asserted as "Audit
+explorer". Acceptance criteria 1 and 5 checked off. Workstation
+surface 94 tests green (79 unit + 15 E2E). ADR-0011 decision 7
+recorded.
 
 ## Verification evidence
 
