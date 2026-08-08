@@ -6,10 +6,13 @@ The review evaluates the *release closure* — the packages pinned in
 environment happens to contain:
 
 1. Every pinned package must be installed in this environment, or it is
-   refused ("pinned but not installed"); the documented Linux-only
-   closure members (uvloop from ``uvicorn[standard]``; the keyring
-   backend chain jeepney/SecretStorage/cryptography/cffi/pycparser)
-   are tolerated as absent on non-Linux platforms.
+   refused ("pinned but not installed"); the documented
+   platform-restricted closure members — uvloop from
+   ``uvicorn[standard]`` and the keyring backend chain
+   jeepney/SecretStorage/cryptography/cffi/pycparser (Linux only),
+   plus colorama (pytest's win32 marker) and pywin32-ctypes
+   (keyring's win32 backend) (Windows only) — are tolerated as
+   absent on platforms where they do not resolve.
 2. Every installed third-party distribution outside the closure is
    refused ("installed but not pinned") — except the build tooling pip/
    setuptools/wheel that a venv itself provides. This is what makes the
@@ -45,15 +48,18 @@ PROJECT_NAMES = {"quantmesh"}
 # are allowed to be installed without being pinned.
 BUILD_TOOLING = {"pip", "setuptools", "wheel"}
 
-# Closure members pinned for every platform but installable only on
-# some: uvloop (`uvicorn[standard]` is cpython/Linux-only) and the
-# keyring backend chain that resolves on Linux (jeepney ->
-# SecretStorage -> cryptography -> cffi -> pycparser). On non-Linux
-# platforms they are tolerated as *absent*; docs/licenses.md records
-# them as the Linux-only closure. If a real dependency change adds a
-# new platform-restricted member, the lock regeneration (release
-# process) and this set must grow together — the gate fails loudly
-# otherwise.
+# Closure members pinned for every platform but part of the frozen
+# resolution on one platform family only: uvloop
+# (`uvicorn[standard]` is CPython/Linux-only) and the keyring backend
+# chain that resolves on Linux (jeepney -> SecretStorage ->
+# cryptography -> cffi -> pycparser), plus colorama (pytest's
+# win32-marker dependency) and pywin32-ctypes (keyring's win32
+# backend), which resolve on Windows only. A member absent from this
+# platform is tolerated as *absent* (and still classified when it IS
+# installed); docs/licenses.md records the set as the
+# platform-restricted closure. If a real dependency change adds a new
+# platform-restricted member, the lock regeneration (release process)
+# and this set must grow together — the gate fails loudly otherwise.
 PLATFORM_TOLERATED = {
     "uvloop",
     "jeepney",
@@ -61,6 +67,8 @@ PLATFORM_TOLERATED = {
     "cryptography",
     "cffi",
     "pycparser",
+    "colorama",
+    "pywin32-ctypes",
 }
 
 # The frozen install closure the review evaluates. The default is the
@@ -251,7 +259,9 @@ def review(closure: dict[str, str]) -> tuple[list[str], list[str], list[str], li
         dist = installed.get(name)
         if dist is None:
             if name in PLATFORM_TOLERATED:
-                missing.append(f"{name}=={version}  (pinned for Linux; not installed here)")
+                missing.append(
+                    f"{name}=={version}  (pinned for another platform; not installed here)"
+                )
             else:
                 failures.append(
                     f"{name}=={version}  pinned in requirements-audit.txt but not "

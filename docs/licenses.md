@@ -70,12 +70,15 @@ point"). Under the closure contract they are isolated from the product
 inventory by design; installing them into a release environment
 refuses the license gate with a precise message.
 
-## Linux-only closure members
+## Platform-restricted closure members
 
-Six closure packages are pinned for every platform but installable
-only on some. On non-Linux machines the license review tolerates their
-*absence* (they are pinned in the lock, documented here, and verified
-from the Linux CI run):
+Eight closure packages are pinned for every platform but part of the
+frozen resolution on one platform family only. On platforms where they
+do not resolve, the license review tolerates their *absence* (they are
+pinned in the lock, documented here, and verified from the platform's
+own CI/gate run):
+
+Six resolve on Linux only (verified from the Linux CI run):
 
 - `uvloop` — MIT — `uvicorn[standard]`'s loop on CPython/Linux
 - `jeepney` — MIT — keyring's Linux D-Bus backend
@@ -83,6 +86,15 @@ from the Linux CI run):
 - `cryptography` — Apache-2.0 | BSD-3-Clause — SecretStorage's crypto
 - `cffi` — MIT-0 — cryptography's CFFI backend
 - `pycparser` — BSD-3-Clause — CFFI's parser
+
+Two resolve on Windows only (the canonical lock is generated on
+Windows, so the dry-run report includes them; the Linux resolution
+never selects them):
+
+- `colorama` — BSD-3-Clause — pytest's `sys_platform == "win32"`
+  dependency
+- `pywin32-ctypes` — BSD-3-Clause — keyring's Windows Secret Service
+  backend
 
 If a dependency change adds a new platform-restricted member, the lock
 regeneration (see `docs/release-process.md`) and
@@ -125,7 +137,7 @@ Version numbers drift with the lock; the license key is the contract.
 | certifi | 2026.7.22 | MPL-2.0 (documented exception) |
 | cffi | 2.1.1 (Linux-only) | MIT-0 |
 | click | 8.4.2 | BSD-3-Clause |
-| colorama | 0.4.6 | BSD-3-Clause |
+| colorama | 0.4.6 (Windows-only) | BSD-3-Clause |
 | cryptography | 50.0.0 (Linux-only) | Apache-2.0 | BSD-3-Clause |
 | duckdb | 1.5.5 | MIT |
 | fastapi | 0.141.1 | MIT |
@@ -165,7 +177,7 @@ Version numbers drift with the lock; the license key is the contract.
 | python-dotenv | 1.2.2 | BSD-3-Clause |
 | python-multipart | 0.0.32 | Apache-2.0 |
 | pytz | 2026.3.post1 | MIT |
-| pywin32-ctypes | 0.2.3 | BSD-3-Clause |
+| pywin32-ctypes | 0.2.3 (Windows-only) | BSD-3-Clause |
 | PyYAML | 6.0.3 | MIT |
 | ruff | 0.16.2 | MIT |
 | scikit-learn | 1.9.0 | BSD-3-Clause |

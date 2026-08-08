@@ -99,10 +99,14 @@ records counts, dates and any debugging detours.
   Linux-only closure members, so keep the six platform-restricted pins
   from the previous lock: `uvloop`, `jeepney`, `SecretStorage`,
   `cryptography`, `cffi`, `pycparser` (uvicorn[standard]'s loop and
-  keyring's Linux backend chain — see docs/licenses.md). If a real
-  dependency change adds a new platform-restricted member, extend
-  `PLATFORM_TOLERATED` in `tools/license_review.py` together with this
-  list and the docs; the gate fails loudly otherwise.
+  keyring's Linux backend chain — see docs/licenses.md). Conversely,
+  this Windows-generated lock also contains win32-marker entries
+  (`colorama`, `pywin32-ctypes`) that a Linux-generated lock would
+  omit — which would fail the Windows gate, so keep the canonical lock
+  Windows-generated. If a real dependency change adds a new
+  platform-restricted member, extend `PLATFORM_TOLERATED` in
+  `tools/license_review.py` together with this list and the docs; the
+  gate fails loudly otherwise.
 
   `pip-audit` in CI checks the pinned file (`--no-deps`, no
   re-resolution). The license review evaluates the same closure:
