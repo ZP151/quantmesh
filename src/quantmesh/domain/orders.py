@@ -4,7 +4,12 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
-from quantmesh.domain.models import Instrument, OrderRequest, Side
+from quantmesh.domain.models import (
+    IDEMPOTENCY_KEY_PATTERN,
+    Instrument,
+    OrderRequest,
+    Side,
+)
 
 
 class OrderType(StrEnum):
@@ -74,6 +79,7 @@ class Order(BaseModel):
     limit_price: float | None = Field(default=None, gt=0)
     created_at: datetime
     client_order_id: str | None = None
+    idempotency_key: str | None = Field(default=None, pattern=IDEMPOTENCY_KEY_PATTERN)
     broker_order_id: str | None = None
     status: OrderStatus = OrderStatus.PENDING
     filled_quantity: float = Field(default=0, ge=0)
@@ -104,6 +110,7 @@ class Order(BaseModel):
             limit_price=request.limit_price,
             created_at=created_at,
             client_order_id=request.client_order_id,
+            idempotency_key=request.idempotency_key,
         )
 
     @property

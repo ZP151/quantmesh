@@ -3,6 +3,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+IDEMPOTENCY_KEY_PATTERN = r"^[A-Za-z0-9_.:-]{1,64}$"
+
 
 class Venue(StrEnum):
     INTERNAL = "internal"
@@ -49,6 +51,16 @@ class OrderRequest(BaseModel):
     limit_price: float | None = Field(default=None, gt=0)
     paper: bool = True
     client_order_id: str | None = None
+    idempotency_key: str | None = Field(
+        default=None,
+        pattern=IDEMPOTENCY_KEY_PATTERN,
+        description=(
+            "M10 Phase B (issue #59): client-supplied replay guard. A "
+            "submission with a key already recorded on the account replays "
+            "the original order instead of duplicating it; keys are recorded "
+            "in the order journal and participate in its identity."
+        ),
+    )
 
 
 class Signal(BaseModel):

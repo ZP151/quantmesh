@@ -87,6 +87,7 @@ class OrderJournal:
             raise ValueError(f"order journal {path} is unreadable") from error
         orders = []
         seen: dict[str, int] = {}
+        seen_keys: dict[str, int] = {}
         for line_number, line in enumerate(text.splitlines(), start=1):
             if not line.strip():
                 continue
@@ -101,6 +102,17 @@ class OrderJournal:
                     f"order journal {path} lines {seen[order.order_id]} and "
                     f"{line_number} share an order id"
                 )
+            # M10 Phase B (issue #59): idempotency keys participate in
+            # journal identity — a key used twice means a duplicate slipped
+            # through, and the read fails closed instead of replaying it.
+            if order.idempotency_key is not None:
+                if order.idempotency_key in seen_keys:
+                    raise ValueError(
+                        f"order journal {path} lines "
+                        f"{seen_keys[order.idempotency_key]} and {line_number} "
+                        f"share an idempotency key"
+                    )
+                seen_keys[order.idempotency_key] = line_number
             seen[order.order_id] = line_number
             orders.append(order)
         return orders
