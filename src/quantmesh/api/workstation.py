@@ -14,9 +14,10 @@ workstation is a local surface, never env-escalable (ADR-0011 decision
 except two named surfaces (ADR-0011 decisions 3 and 6): the watchlist
 store (the one UI-owned write surface, on the ADR-0006 discipline) and
 the paper-level kill switch, a form control that flips the injected
-paper account's flag — while engaged the paper kernel refuses new
-order submissions; enforcement across the wider execution plane is
-M10. Page providers receive injected read surfaces — account, marks,
+paper account's global flag or one venue's flag (M10 Phase C) — the
+accounting risk gate refuses new order submissions while the global
+switch or the order's venue switch is engaged, with no model
+involvement. Page providers receive injected read surfaces — account, marks,
 markets, watchlist, the research registries (experiments, promotions,
 reports), the forecast report registry (Phase D), and the Phase E
 surfaces (the alert ledger, the audit journals — orders, mappings,
@@ -41,7 +42,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -53,12 +54,14 @@ from quantmesh.ai.decisions import DecisionLog
 from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.watchlist import WatchlistError, WatchlistStore
+from quantmesh.domain.models import Venue
 from quantmesh.domain.orders import Order
 from quantmesh.events.forecast import ForecastReportRegistry, forecast_artifact_paths
 from quantmesh.events.mapping import MappingLedger
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
+from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
 from quantmesh.research.reports import ReportRegistry
@@ -75,6 +78,38 @@ class WorkstationConfigError(ValueError):
 def _is_loopback(host: str) -> bool:
     """Loopback only: localhost, IPv6 ::1, and the whole 127.0.0.0/8."""
     return host in {"localhost", "::1"} or host.startswith("127.")
+
+
+def _guard_origin(
+    app: FastAPI, request: Request, redirect: str, surface: str
+) -> Response | None:
+    """Refuse a write-surface POST whose Origin is present but not
+    loopback (threat model T-14, docs/threat-model.md).
+
+    Browser CSRF — a hostile page in the user's browser POSTing to the
+    loopback bind — always sends an Origin naming the attacker's site;
+    a same-origin form send names the loopback host. An absent Origin
+    is allowed: a non-browser client (CLI, drill) cannot be
+    distinguished from a same-origin send, and refusing it would break
+    every non-browser consumer of the two write surfaces. Returns the
+    typed error page to return, or None when the origin passes.
+    """
+    origin = request.headers.get("origin")
+    if origin is None:
+        return None
+    try:
+        hostname = urlsplit(origin).hostname
+    except ValueError:
+        hostname = None
+    if hostname is not None and _is_loopback(hostname):
+        return None
+    return _error_page(
+        app,
+        request,
+        redirect,
+        f"{surface} POST refused: cross-origin send (Origin {origin!r} "
+        "is not loopback)",
+    )
 
 
 @dataclass(frozen=True)
@@ -95,6 +130,7 @@ class PageContext:
     decisions: DecisionLog | None = None
     documents: DocumentIndex | None = None
     hl_posture: HyperliquidRiskLimits | None = None
+    enablement: ApprovalLedger | None = None
 
 
 @dataclass(frozen=True)
@@ -612,8 +648,45 @@ def _audit_provider(context: PageContext) -> dict[str, object]:
 
 
 def _kill_switch_provider(context: PageContext) -> dict[str, object]:
-    """The kill-switch page: current state plus the confirmation form."""
-    return {"kill_switch": context.account.kill_switch}
+    """The kill-switch page: the global flag, the per-venue flags over
+    the venues the workstation knows (the injected markets; the
+    account's own flags when markets is empty), and the confirmation
+    forms. Global and per-venue live on the same account object the
+    form flips, so the JSON surface, the page context and the kernel
+    gate cannot disagree (ADR-0012 decision 3)."""
+    account = context.account
+    names = {venue.value for venue in account.kill_switches}
+    names.update(context.markets)
+    kill_switches: dict[str, bool] = {}
+    for name in sorted(names):
+        try:
+            venue = Venue(name)
+        except ValueError:
+            # A markets key that is not a venue cannot be engaged; it is
+            # never rendered as a control.
+            continue
+        kill_switches[name] = account.kill_switches.get(venue, False)
+    return {"kill_switch": account.kill_switch, "kill_switches": kill_switches}
+
+
+def _enablement_provider(context: PageContext) -> dict[str, object]:
+    """The enablement screen (M10 Phase E): read-only per-venue state
+    derived from the approval ledger, plus the recorded live-enablement
+    gate text. There is deliberately no form and no POST: enablement
+    transitions are CLI/operator-owned and never permitted from the
+    UI."""
+    ledger = context.enablement
+    states = []
+    if ledger is not None:
+        for venue in sorted(ledger.states()):
+            states.append(
+                {"venue": venue.value, "state": ledger.state(venue).value}
+            )
+    return {
+        "states": states,
+        "bound": ledger is not None,
+        "gate_text": GATE_TEXT,
+    }
 
 
 # The page registry, pinned by the page-registry test (every route
@@ -691,6 +764,13 @@ PAGES: tuple[Page, ...] = (
         _kill_switch_provider,
         "Kill switch",
     ),
+    Page(
+        "/enablement",
+        "enablement.html",
+        "QuantMesh — Enablement",
+        _enablement_provider,
+        "Enablement",
+    ),
 )
 
 
@@ -714,6 +794,7 @@ def create_workstation_app(
     decisions: DecisionLog | None = None,
     documents: DocumentIndex | None = None,
     hl_posture: HyperliquidRiskLimits | None = None,
+    enablement: ApprovalLedger | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -732,9 +813,14 @@ def create_workstation_app(
     (`journal`, `mappings`, `decisions`), the document index
     (`documents`) and the M5 Hyperliquid pre-submission posture
     (`hl_posture`) — unbound, the risk and audit pages render typed
-    lines naming the missing surface. The kill-switch POST flips the
-    injected account's flag in both `app.state` and the page context,
-    so the JSON surface and every page agree (ADR-0011 decision 6).
+    lines naming the missing surface. The M10 Phase E enablement
+    ledger (`enablement`) is the same kind of injection: the
+    /enablement screen renders per-venue state and the recorded
+    live-enablement gate, read-only — transitions are CLI/operator-
+    owned and never permitted from the UI. The kill-switch POST flips
+    the injected account's flag in both `app.state` and the page
+    context, so the JSON surface and every page agree (ADR-0011
+    decision 6).
     """
     host = settings.workstation_host if host is None else host
     if not _is_loopback(host):
@@ -761,6 +847,7 @@ def create_workstation_app(
         decisions=decisions,
         documents=documents,
         hl_posture=hl_posture,
+        enablement=enablement,
     )
 
     for page in PAGES:
@@ -783,6 +870,9 @@ def create_workstation_app(
 def _register_watchlist_forms(app: FastAPI) -> None:
     @app.post("/watchlist/add", response_class=HTMLResponse)
     def watchlist_add(request: Request, symbol: str = Form(...)) -> Response:
+        refused = _guard_origin(app, request, "/watchlist", "watchlist")
+        if refused is not None:
+            return refused
         context = app.state.page_context
         if context.watchlist is None:
             return _error_page(app, request, "/watchlist", "no watchlist store is bound")
@@ -794,6 +884,9 @@ def _register_watchlist_forms(app: FastAPI) -> None:
 
     @app.post("/watchlist/remove", response_class=HTMLResponse)
     def watchlist_remove(request: Request, symbol: str = Form(...)) -> Response:
+        refused = _guard_origin(app, request, "/watchlist", "watchlist")
+        if refused is not None:
+            return refused
         context = app.state.page_context
         if context.watchlist is None:
             return _error_page(app, request, "/watchlist", "no watchlist store is bound")
@@ -892,17 +985,22 @@ def _register_experiment_detail(app: FastAPI) -> None:
 
 
 def _register_kill_switch(app: FastAPI) -> None:
-    """POST /kill-switch: the paper-level kill switch (ADR-0011 decision
-    6, the second UI-owned write surface).
+    """POST /kill-switch: the global and per-venue kill switches
+    (ADR-0011 decision 6, ADR-0012 decision 3, the second UI-owned
+    write surface).
 
     The confirmation is part of the form itself: the submit must carry
     `action` in {engage, disarm} AND the literal `confirm=confirm`
     field — a hostile POST (non-form body, missing or wrong fields) is
     refused with a typed error page and the account is never touched.
-    A successful flip replaces the injected account (the paper kernel
-    refuses new submissions while engaged; enforcement across the wider
-    execution plane is M10) in both `app.state` and the page context,
-    so the M1 JSON surface and every page agree on the state.
+    An optional `venue` field targets the per-venue map: a named venue
+    flips only that venue's switch (disarm removes it — absence reads
+    disarmed), leaving the global bit and every other venue untouched;
+    a venue that is not a known `Venue` is refused with a typed error
+    page. A successful flip replaces the injected account in both
+    `app.state` and the page context, so the M1 JSON surface, every
+    page and the kernel gate agree on the state. Enforcement lives in
+    the accounting risk gate, not in any AI surface.
     """
 
     @app.post("/kill-switch", response_class=HTMLResponse)
@@ -910,7 +1008,11 @@ def _register_kill_switch(app: FastAPI) -> None:
         request: Request,
         action: str | None = Form(default=None),
         confirm: str | None = Form(default=None),
+        venue: str | None = Form(default=None),
     ) -> Response:
+        refused = _guard_origin(app, request, "/kill-switch/control", "kill-switch")
+        if refused is not None:
+            return refused
         if action not in ("engage", "disarm") or confirm != "confirm":
             return _error_page(
                 app,
@@ -920,9 +1022,28 @@ def _register_kill_switch(app: FastAPI) -> None:
                 "(action=engage|disarm and confirm=confirm)",
             )
         context = app.state.page_context
-        flipped = context.account.model_copy(
-            update={"kill_switch": action == "engage"}
-        )
+        if venue is None:
+            flipped = context.account.model_copy(
+                update={"kill_switch": action == "engage"}
+            )
+        else:
+            try:
+                venue_enum = Venue(venue)
+            except ValueError:
+                return _error_page(
+                    app,
+                    request,
+                    "/kill-switch/control",
+                    f"kill-switch POST refused: unknown venue {venue!r}",
+                )
+            kill_switches = dict(context.account.kill_switches)
+            if action == "engage":
+                kill_switches[venue_enum] = True
+            else:
+                kill_switches.pop(venue_enum, None)
+            flipped = context.account.model_copy(
+                update={"kill_switches": kill_switches}
+            )
         app.state.account = flipped
         app.state.page_context = replace(context, account=flipped)
         return RedirectResponse("/kill-switch/control", status_code=303)

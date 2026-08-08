@@ -227,7 +227,10 @@ def test_keyboard_only_navigation(page, base_url) -> None:
 
 def test_kill_switch_keyboard_only(page, base_url) -> None:
     """Exit criterion 2: the kill-switch control flips with Tab/Space/
-    Enter only — engage then disarm round trip."""
+    Enter only — global engage then disarm, and a per-venue engage then
+    disarm round trip through the same confirm-gated POST (M10 Phase C).
+    The per-venue forms follow the global form in the DOM, so the tab
+    sequence reaches the global controls first."""
     page.goto(f"{base_url}/kill-switch/control")
     page.get_by_role("heading", name="Paper kernel kill switch", exact=True).wait_for()
     assert "disarmed" in page.locator("body").inner_text()
@@ -241,6 +244,19 @@ def test_kill_switch_keyboard_only(page, base_url) -> None:
     def on_submit(_el: dict) -> bool:
         return page.evaluate("document.activeElement.type") == "submit"
 
+    def on_moomoo_radio(_el: dict) -> bool:
+        # A radio inside the moomoo per-venue form (which carries the
+        # hidden venue field) — the global form has none.
+        return page.evaluate(
+            """() => {
+                const el = document.activeElement;
+                if (el.name !== "action") return false;
+                return el.closest("form").querySelector(
+                    'input[name="venue"]'
+                )?.value === "moomoo";
+            }"""
+        )
+
     # The radio group: ArrowDown/ArrowUp move within it, Space selects.
     assert _tab_to(page, on_radio_group)
     page.keyboard.press("ArrowDown")  # engage -> disarm
@@ -250,7 +266,9 @@ def test_kill_switch_keyboard_only(page, base_url) -> None:
 
     assert _tab_to(page, on_confirm)
     page.keyboard.press("Space")
-    assert page.get_by_role("checkbox").is_checked()
+    assert page.get_by_role(
+        "checkbox", name="I confirm this is the global paper-level kill switch"
+    ).is_checked()
     assert _tab_to(page, on_submit)
     page.keyboard.press("Enter")
     page.get_by_role("heading", name="Paper kernel kill switch", exact=True).wait_for()
@@ -265,6 +283,37 @@ def test_kill_switch_keyboard_only(page, base_url) -> None:
     page.keyboard.press("Enter")
     page.get_by_role("heading", name="Paper kernel kill switch", exact=True).wait_for()
     assert "disarmed" in page.locator("body").inner_text()
+
+    # Per-venue engage round trip (M10 Phase C): tab past the global
+    # form to the moomoo controls, submit the venue form unchanged —
+    # the global state stays disarmed while moomoo is refused.
+    assert _tab_to(page, on_moomoo_radio)
+    assert page.get_by_role(
+        "radio", name="Block moomoo paper orders"
+    ).is_checked()
+    assert _tab_to(page, on_confirm)
+    page.keyboard.press("Space")
+    assert page.get_by_role(
+        "checkbox", name="I confirm this is the per-venue kill switch for moomoo"
+    ).is_checked()
+    assert _tab_to(page, on_submit)
+    page.keyboard.press("Enter")
+    page.get_by_role("heading", name="Paper kernel kill switch", exact=True).wait_for()
+    assert "REFUSED" in page.locator("body").inner_text()
+    assert "The global kill switch is disarmed." in page.locator("body").inner_text()
+
+    # Per-venue disarm: the checked radio is now "Allow moomoo paper orders".
+    assert _tab_to(page, on_moomoo_radio)
+    assert page.get_by_role(
+        "radio", name="Allow moomoo paper orders"
+    ).is_checked()
+    assert _tab_to(page, on_confirm)
+    page.keyboard.press("Space")
+    assert _tab_to(page, on_submit)
+    page.keyboard.press("Enter")
+    page.get_by_role("heading", name="Paper kernel kill switch", exact=True).wait_for()
+    assert "REFUSED" not in page.locator("body").inner_text()
+    assert "Paper orders on moomoo are allowed." in page.locator("body").inner_text()
 
 
 @pytest.mark.parametrize(
@@ -282,6 +331,7 @@ def test_kill_switch_keyboard_only(page, base_url) -> None:
         ("/risk", "Risk"),
         ("/audit", "Audit explorer"),  # audit.html's h1 is "Audit explorer", not "Audit"
         ("/kill-switch/control", "Paper kernel kill switch"),
+        ("/enablement", "Enablement"),
     ],
 )
 def test_accessibility_snapshots(page, base_url, path: str, heading: str) -> None:

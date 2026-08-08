@@ -42,7 +42,13 @@ DRIFT_BINS = 10
 PSI_EPSILON = 1e-6
 ALERTS_FILE = "alerts.jsonl"
 PROMOTIONS_FILE = "promotions.jsonl"
-ALERT_KIND = Literal["feature_drift", "prediction_drift", "staleness", "failure"]
+ALERT_KIND = Literal[
+    "feature_drift",
+    "prediction_drift",
+    "staleness",
+    "failure",
+    "reliability_limit",  # M10 Phase A: ops:limits breach emission
+]
 
 _T = TypeVar("_T", bound="BaseModel")
 

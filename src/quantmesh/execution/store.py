@@ -14,7 +14,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from quantmesh.domain.models import Instrument, Side
+from quantmesh.domain.models import Instrument, Side, Venue
 from quantmesh.domain.orders import (
     Fill,
     Order,
@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS account_meta (
     risk_limits TEXT NOT NULL,
     matcher TEXT NOT NULL,
     kill_switch INTEGER NOT NULL,
+    kill_switches TEXT NOT NULL DEFAULT '{}',
     order_sequence INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS account_snapshot (
@@ -92,6 +93,19 @@ class EventStore:
         self._conn = sqlite3.connect(str(path))
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(_SCHEMA)
+        # M10 Phase C (issue #60): additive migration for databases
+        # created before the per-venue kill-switch column existed —
+        # CREATE TABLE IF NOT EXISTS cannot add a column, so pre-existing
+        # stores gain it with the empty-map default (disarmed everywhere).
+        columns = {
+            row["name"]
+            for row in self._conn.execute("PRAGMA table_info(account_meta)")
+        }
+        if "kill_switches" not in columns:
+            self._conn.execute(
+                "ALTER TABLE account_meta ADD COLUMN "
+                "kill_switches TEXT NOT NULL DEFAULT '{}'"
+            )
         self._conn.commit()
 
     def close(self) -> None:
@@ -127,6 +141,7 @@ class EventStore:
             risk_limits=meta["risk_limits"],
             matcher=meta["matcher"],
             kill_switch=meta["kill_switch"],
+            kill_switches=meta["kill_switches"],
         )
         orders = self._rebuild_orders()
         orders_by_id = {order.order_id: order for order in orders}
@@ -160,14 +175,15 @@ class EventStore:
             """
             INSERT INTO account_meta (
                 id, starting_cash, fee_model, risk_limits, matcher,
-                kill_switch, order_sequence
-            ) VALUES (1, ?, ?, ?, ?, ?, ?)
+                kill_switch, kill_switches, order_sequence
+            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (id) DO UPDATE SET
                 starting_cash = excluded.starting_cash,
                 fee_model = excluded.fee_model,
                 risk_limits = excluded.risk_limits,
                 matcher = excluded.matcher,
                 kill_switch = excluded.kill_switch,
+                kill_switches = excluded.kill_switches,
                 order_sequence = excluded.order_sequence
             """,
             (
@@ -180,6 +196,12 @@ class EventStore:
                 account.risk_limits.model_dump_json(),
                 account.matcher.model_dump_json(),
                 int(account.kill_switch),
+                json.dumps(
+                    {
+                        venue.value: engaged
+                        for venue, engaged in account.kill_switches.items()
+                    }
+                ),
                 account.order_sequence,
             ),
         )
@@ -267,6 +289,36 @@ class EventStore:
             ),
         )
 
+    def _parse_kill_switches(self, raw: str) -> dict[Venue, bool]:
+        """Decode the persisted per-venue map fail-closed: a corrupt
+        payload or an unknown venue name is a StoreCorruptionError, and
+        a non-boolean value is refused rather than coerced (a string
+        ``"false"`` must not read as engaged)."""
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError as error:
+            raise StoreCorruptionError(
+                f"account kill_switches is not JSON: {raw!r}"
+            ) from error
+        if not isinstance(parsed, dict):
+            raise StoreCorruptionError(
+                f"account kill_switches is not an object: {raw!r}"
+            )
+        kill_switches: dict[Venue, bool] = {}
+        for name, engaged in parsed.items():
+            try:
+                venue = Venue(name)
+            except ValueError as error:
+                raise StoreCorruptionError(
+                    f"account kill_switches names unknown venue {name!r}"
+                ) from error
+            if not isinstance(engaged, bool):
+                raise StoreCorruptionError(
+                    f"account kill_switches venue {name!r} is not a boolean"
+                )
+            kill_switches[venue] = engaged
+        return kill_switches
+
     def _load_meta(self) -> dict | None:
         row = self._conn.execute(
             "SELECT * FROM account_meta WHERE id = 1"
@@ -279,6 +331,7 @@ class EventStore:
             "risk_limits": RiskLimits.model_validate_json(row["risk_limits"]),
             "matcher": PaperMatcher.model_validate_json(row["matcher"]),
             "kill_switch": bool(row["kill_switch"]),
+            "kill_switches": self._parse_kill_switches(row["kill_switches"]),
             "order_sequence": row["order_sequence"],
         }
 

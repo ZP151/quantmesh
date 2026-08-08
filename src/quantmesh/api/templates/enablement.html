@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Enablement</h1>
+<section aria-labelledby="gate-heading">
+  <h2 id="gate-heading">The recorded live-enablement gate</h2>
+  <p>The standing gate (the long-running goal, verbatim):</p>
+  <blockquote>{{ gate_text }}.</blockquote>
+  <p class="notice">Enablement transitions are CLI/operator-owned and are
+  never permitted from this screen: the state machine refuses any
+  transition that is not backed by a recorded approval record carrying
+  this gate text, and no live execution surface exists in M10.</p>
+</section>
+<section aria-labelledby="states-heading">
+  <h2 id="states-heading">Per-venue enablement state</h2>
+  {% if not bound %}
+  <p class="notice">No enablement ledger is bound.</p>
+  {% elif not states %}
+  <p>No enablement records yet — every venue is disabled.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Venue</th>
+        <th scope="col">State</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in states %}
+      <tr>
+        <th scope="row"><code>{{ row.venue }}</code></th>
+        <td>{% if row.state == "enabled" %}<strong class="engaged">{{ row.state }}</strong>{% else %}{{ row.state }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

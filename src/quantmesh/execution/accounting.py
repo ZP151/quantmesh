@@ -11,7 +11,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
 
-from quantmesh.domain.models import Instrument, OrderRequest, Quote, Side
+from quantmesh.domain.models import Instrument, OrderRequest, Quote, Side, Venue
 from quantmesh.domain.orders import (
     Fill,
     Order,
@@ -62,6 +62,7 @@ class SubmissionResult(BaseModel):
     account: "PaperAccount"
     fills: list[Fill] = []
     rejection: str | None = None
+    replay_of: str | None = None
 
 
 class PaperAccount(BaseModel):
@@ -79,6 +80,10 @@ class PaperAccount(BaseModel):
     risk_limits: RiskLimits = Field(default_factory=RiskLimits)
     matcher: PaperMatcher = Field(default_factory=PaperMatcher)
     kill_switch: bool = False
+    # M10 Phase C (issue #60): per-venue switches on the same account
+    # object — the global bit overrides, a venue switch blocks only its
+    # venue. Absence from the map reads as disarmed.
+    kill_switches: dict[Venue, bool] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def capture_starting_cash(self) -> "PaperAccount":
@@ -89,10 +94,31 @@ class PaperAccount(BaseModel):
     def submit(
         self, request: OrderRequest, quote: Quote, *, now: datetime
     ) -> SubmissionResult:
-        sequence = self.order_sequence + 1
-        order_id = request.client_order_id or f"paper-{sequence}"
-        if order_id in self.orders:
+        # M10 Phase B (issue #59): the idempotency key is the replay unit.
+        # A keyed submission first looks for any recorded order carrying
+        # the same key — the retry returns that original order with
+        # `replay_of` naming it, never duplicated, never re-gated, and
+        # the account state is unchanged (a rejected or accepted original
+        # replays as itself, not as a re-submission), regardless of any
+        # other request fields the client regenerated on retry. Detection
+        # happens BEFORE the sequence is consumed and the risk gate runs.
+        # Without a key, identity falls back to `client_order_id` (which
+        # may itself derive from the key when it was absent: `paper-<key>`).
+        key = request.idempotency_key
+        if key is not None:
+            for existing in self.orders.values():
+                if existing.idempotency_key == key:
+                    return SubmissionResult(
+                        order=existing, account=self, replay_of=existing.order_id
+                    )
+        order_id = request.client_order_id or (
+            f"paper-{key}" if key is not None else None
+        )
+        if order_id is not None and order_id in self.orders:
             raise ValueError(f"order id already exists: {order_id}")
+        sequence = self.order_sequence + 1
+        if order_id is None:
+            order_id = f"paper-{sequence}"
         order = Order.from_request(request, order_id=order_id, created_at=now)
 
         reasons = self._risk_reasons(request, quote)
@@ -119,8 +145,15 @@ class PaperAccount(BaseModel):
 
     def _risk_reasons(self, request: OrderRequest, quote: Quote) -> list[str]:
         reasons: list[str] = []
+        # M10 Phase C (issue #60): global and per-venue switches both
+        # refuse here, in the accounting risk gate — a submission cannot
+        # route around the switch, and no model surface is involved.
         if self.kill_switch:
             reasons.append("kill switch enabled")
+        if self.kill_switches.get(request.instrument.venue):
+            reasons.append(
+                f"kill switch enabled for venue {request.instrument.venue.value}"
+            )
         limits = self.risk_limits
         if (
             limits.max_order_quantity is not None
