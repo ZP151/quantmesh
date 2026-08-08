@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Paper kernel kill switch</h1>
+
+{% if error %}
+<p class="notice" role="alert">{{ error }}</p>
+{% endif %}
+
+<p>
+  This control flips the <strong>paper-level</strong> kill-switch flag on the
+  injected paper account: while engaged, the paper kernel refuses new order
+  submissions. This is display-and-enforce for the paper surface only —
+  enforcement across the wider execution plane is M10.
+</p>
+{% if kill_switch %}
+<p class="kill-switch-current">The kill switch is <strong class="engaged">ENGAGED</strong> — new paper orders are refused.</p>
+{% else %}
+<p class="kill-switch-current">The kill switch is disarmed.</p>
+{% endif %}
+<form method="post" action="/kill-switch">
+  <fieldset>
+    <legend>Confirm the action</legend>
+    <p>
+      <label><input type="radio" name="action" value="engage"{% if not kill_switch %} checked{% endif %}> Engage — refuse new paper orders</label><br>
+      <label><input type="radio" name="action" value="disarm"{% if kill_switch %} checked{% endif %}> Disarm</label>
+    </p>
+    <p>
+      <label><input type="checkbox" name="confirm" value="confirm" required> I confirm this is the paper-level kill switch.</label>
+    </p>
+    <button type="submit">Apply kill switch</button>
+  </fieldset>
+</form>
+{% endblock %}

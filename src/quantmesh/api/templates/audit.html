@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Audit explorer</h1>
+
+{% if error %}
+<p class="notice" role="alert">{{ error }}</p>
+{% endif %}
+
+<p class="ledger-bindings">
+  Order journal: {% if journal_bound %}bound{% else %}<span class="missing-mark">unbound</span>{% endif %}
+  · Mappings ledger: {% if mappings_bound %}bound{% else %}<span class="missing-mark">unbound</span>{% endif %}
+  · Decision log: {% if decisions_bound %}bound{% else %}<span class="missing-mark">unbound</span>{% endif %}
+</p>
+{% if not entries %}
+<p>No audit entries — bind at least one ledger to see its records.</p>
+{% endif %}
+{% for entry in entries %}
+{% if entry.kind == "order" %}
+<section id="{{ entry.anchor }}" class="audit-entry audit-order" aria-labelledby="{{ entry.anchor }}-heading">
+  <h2 id="{{ entry.anchor }}-heading">Order {{ entry.order.order_id }} — {{ entry.order.status }}</h2>
+  <dl>
+    <div><dt>Instrument</dt><dd>{{ entry.order.instrument.symbol }} <span class="venue">{{ entry.order.instrument.venue }}</span></dd></div>
+    <div><dt>Side</dt><dd>{{ entry.order.side }}</dd></div>
+    <div><dt>Quantity</dt><dd>{{ entry.order.quantity }}</dd></div>
+    <div><dt>Type</dt><dd>{{ entry.order.order_type }}{% if entry.order.limit_price is not none %} @ {{ entry.order.limit_price }}{% endif %}</dd></div>
+    <div><dt>Filled</dt><dd>{{ entry.order.filled_quantity }} @ {{ entry.order.average_fill_price if entry.order.average_fill_price is not none else "—" }}</dd></div>
+    <div><dt>Created</dt><dd>{{ entry.order.created_at }}</dd></div>
+  </dl>
+  <details>
+    <summary>{{ entry.order.events|length }} event{{ "s" if entry.order.events|length != 1 }}</summary>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Sequence</th>
+          <th scope="col">Timestamp</th>
+          <th scope="col">Event</th>
+          <th scope="col">Status</th>
+          <th scope="col">Quantity</th>
+          <th scope="col">Price</th>
+          <th scope="col">Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in entry.order.events %}
+        <tr{% if event.event_type == "fill" %} class="fill-event"{% endif %}>
+          <th scope="row">{{ event.sequence }}</th>
+          <td>{{ event.timestamp }}</td>
+          <td>{{ event.event_type }}</td>
+          <td>{{ event.status }}</td>
+          <td>{{ event.quantity }}</td>
+          <td>{{ event.price if event.price is not none else "—" }}</td>
+          <td>{{ event.reason if event.reason is not none else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </details>
+</section>
+{% elif entry.kind == "mapping" %}
+<section id="{{ entry.anchor }}" class="audit-entry audit-mapping" aria-labelledby="{{ entry.anchor }}-heading">
+  <h2 id="{{ entry.anchor }}-heading">Pairing {{ entry.mapping.pair_key }} — {{ entry.mapping.status }}</h2>
+  <dl>
+    <div><dt>Status</dt><dd>{{ entry.mapping.status }}</dd></div>
+    <div><dt>Commit</dt><dd><code>{{ entry.mapping.commit }}</code></dd></div>
+    <div><dt>Recorded</dt><dd>{{ entry.mapping.recorded_at }}</dd></div>
+    <div><dt>Evidence</dt><dd>{% for item in entry.mapping.evidence %}<code>{{ item.kind }}</code>: {{ item.detail }}{% if not loop.last %}; {% endif %}{% endfor %}</dd></div>
+  </dl>
+</section>
+{% elif entry.kind == "decision" %}
+<section id="{{ entry.anchor }}" class="audit-entry audit-decision" aria-labelledby="{{ entry.anchor }}-heading">
+  <h2 id="{{ entry.anchor }}-heading">{{ entry.decision.role }} — {{ entry.decision.verdict }}</h2>
+  <dl>
+    <div><dt>Decision id</dt><dd><code>{{ entry.decision.decision_id }}</code></dd></div>
+    <div><dt>Run</dt><dd><code>{{ entry.decision.run_id }}</code></dd></div>
+    <div><dt>Model</dt><dd>{{ entry.decision.model.name }} {{ entry.decision.model.version }} <span class="venue">{{ entry.decision.model.endpoint_kind }}</span></dd></div>
+    <div><dt>Schema</dt><dd><code>{{ entry.decision.schema_id }}</code></dd></div>
+    <div><dt>Refusal</dt><dd>{{ entry.decision.refusal if entry.decision.refusal is not none else "—" }}</dd></div>
+    <div><dt>Recorded</dt><dd>{{ entry.decision.recorded_at }}</dd></div>
+    <div><dt>Prompt digest</dt><dd><code>{{ entry.decision.prompt_digest }}</code></dd></div>
+    <div><dt>Output digest</dt><dd><code>{{ entry.decision.output_digest }}</code></dd></div>
+    <div><dt>Citations</dt><dd>
+      {% if entry.decision.citations %}
+      <ul class="citations">
+        {% for citation in entry.decision.citations %}
+        <li><a href="{{ citation.href }}"><code>{{ citation.source_kind }}:{{ citation.source_id }}</code></a>{% if citation.span %} (chars {{ citation.span }}){% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}<span class="missing-mark">—</span>{% endif %}
+    </dd></div>
+  </dl>
+</section>
+{% endif %}
+{% endfor %}
+{% endblock %}

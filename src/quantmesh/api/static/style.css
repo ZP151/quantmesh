@@ -166,6 +166,38 @@ dd {
   margin: 0;
 }
 
+.audit-entry {
+  border-left: 3px solid var(--border);
+  border-radius: 0;
+  margin-top: 1rem;
+}
+
+.audit-entry h2 {
+  margin-top: 0;
+}
+
+.ledger-bindings {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.citations {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.document-content {
+  overflow-x: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.kill-switch-current {
+  font-weight: 600;
+}
+
 footer {
   font-size: 0.8rem;
   opacity: 0.7;

@@ -17,8 +17,11 @@ from pathlib import Path
 import pytest
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 
 from quantmesh import __version__
+from quantmesh.ai.decisions import DecisionLog, DecisionRecord, ModelMeta
+from quantmesh.ai.retrieval import Citation, DocumentIndex
 from quantmesh.api import workstation
 from quantmesh.api.app import create_app
 from quantmesh.api.watchlist import WatchlistStore
@@ -49,6 +52,14 @@ from quantmesh.events.forecast import (
     run_forecast,
     run_forecast_report,
 )
+from quantmesh.events.mapping import (
+    MAPPINGS_FILE,
+    EvidenceKind,
+    MappingEvidence,
+    MappingLedger,
+    MappingRecord,
+    MappingStatus,
+)
 from quantmesh.events.models import EventMarket, EventVenue, Outcome, ResolutionRule
 from quantmesh.execution.accounting import (
     FeeModel,
@@ -56,7 +67,16 @@ from quantmesh.execution.accounting import (
     PaperMatcher,
     RiskLimits,
 )
-from quantmesh.research.drift import PromotionLedger, PromotionRecord, promotion_id
+from quantmesh.execution.journal import OrderJournal
+from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
+from quantmesh.research.drift import (
+    AlertLedger,
+    AlertRecord,
+    PromotionLedger,
+    PromotionRecord,
+    alert_id,
+    promotion_id,
+)
 from quantmesh.research.experiments import Experiment, ExperimentRegistry, experiment_id
 from quantmesh.research.reports import (
     CostModel,
@@ -115,6 +135,12 @@ def client(
     promotions: PromotionLedger | None = None,
     reports: ReportRegistry | None = None,
     forecasts: ForecastReportRegistry | None = None,
+    alerts: AlertLedger | None = None,
+    journal: OrderJournal | None = None,
+    mappings: MappingLedger | None = None,
+    decisions: DecisionLog | None = None,
+    documents: DocumentIndex | None = None,
+    hl_posture: HyperliquidRiskLimits | None = None,
 ) -> TestClient:
     return TestClient(
         create_workstation_app(
@@ -126,6 +152,12 @@ def client(
             promotions=promotions,
             reports=reports,
             forecasts=forecasts,
+            alerts=alerts,
+            journal=journal,
+            mappings=mappings,
+            decisions=decisions,
+            documents=documents,
+            hl_posture=hl_posture,
         )
     )
 
@@ -1008,3 +1040,338 @@ class TestPhaseDPortfolioAndPredictionScreens:
         assert html.index(newer.id) < html.index(older.id)
         # record() writes no artifacts: the typed state renders.
         assert "Forecast artifacts missing" in html
+
+
+def _alert_record(
+    *,
+    kind: str,
+    source: str,
+    detected_at: datetime,
+    message: str,
+    observed: dict[str, object] | None = None,
+) -> AlertRecord:
+    observed = observed or {}
+    return AlertRecord(
+        id=alert_id(
+            kind=kind, source=source, detected_at=detected_at, observed=observed
+        ),
+        kind=kind,
+        source=source,
+        detected_at=detected_at,
+        message=message,
+        observed=observed,
+    )
+
+
+def _alert_setup(tmp_path) -> tuple[AlertLedger, list[AlertRecord]]:
+    """Two alerts: an older feature drift, a newer staleness."""
+    ledger = AlertLedger(root=tmp_path / "alerts")
+    records = [
+        _alert_record(
+            kind="feature_drift",
+            source="feature:momentum",
+            detected_at=NOW - timedelta(hours=2),
+            message="momentum drifted",
+            observed={"psi": 1.07905},
+        ),
+        _alert_record(
+            kind="staleness",
+            source="features:index",
+            detected_at=NOW - timedelta(hours=1),
+            message="index is stale",
+            observed={"age_hours": 30},
+        ),
+    ]
+    for record in records:
+        ledger.record(record)
+    return ledger, records
+
+
+def _journal_setup(tmp_path) -> tuple[OrderJournal, list[object]]:
+    """The journal holds the sample account's three orders."""
+    journal = OrderJournal(root=tmp_path / "journal")
+    orders = list(sample_account().orders.values())
+    for order in orders:
+        journal.record(order)
+    return journal, orders
+
+
+def _mapping_setup(tmp_path, *, recorded_at: datetime) -> MappingLedger:
+    """One MATCHED pair on two evidence kinds, hand-written as JSONL."""
+    ledger = MappingLedger(root=tmp_path / "mappings")
+    record = MappingRecord(
+        pair_key="a" * 16,
+        status=MappingStatus.MATCHED,
+        evidence=[
+            MappingEvidence(kind=EvidenceKind.OUTCOME_SET, detail="yes/no"),
+            MappingEvidence(kind=EvidenceKind.TITLE, detail="same title"),
+        ],
+        commit="b" * 40,
+        recorded_at=recorded_at,
+    )
+    mappings_dir = tmp_path / "mappings"
+    mappings_dir.mkdir(parents=True, exist_ok=True)
+    (mappings_dir / MAPPINGS_FILE).write_text(
+        record.model_dump_json() + "\n", encoding="utf-8"
+    )
+    return ledger
+
+
+class _Claim(BaseModel):
+    claim: str
+    confidence: float
+    citations: list[str]
+
+
+def _decision_setup(
+    tmp_path, *, recorded_at: datetime
+) -> tuple[DecisionLog, DecisionRecord]:
+    """One analyst decision record through the real construction path."""
+    log = DecisionLog(root=tmp_path / "decisions")
+    record = DecisionRecord.for_stage(
+        run_id="c" * 16,
+        role="analyst",
+        model=ModelMeta(name="fixture-model", version="1.0", endpoint_kind="scripted"),
+        prompt="What is the state of the market?",
+        schema_id="analyst-claim-v1",
+        output=_Claim(
+            claim="The market is calm.",
+            confidence=0.7,
+            citations=["experiment:a1b2c3d4e5f60718", "document:doc-1", "audit:paper-1"],
+        ),
+        citations=[
+            Citation(source_kind="experiment", source_id="a1b2c3d4e5f60718"),
+            Citation(source_kind="document", source_id="doc-1"),
+            Citation(source_kind="audit", source_id="paper-1"),
+        ],
+        recorded_at=recorded_at,
+    )
+    log.record(record)
+    return log, record
+
+
+def _document_setup(tmp_path) -> DocumentIndex:
+    """One ingested news document."""
+    source = tmp_path / "news.txt"
+    source.write_text("The Fed holds rates steady at the July meeting.", encoding="utf-8")
+    index = DocumentIndex(root=tmp_path / "documents")
+    index.ingest_file(source, kind="news", doc_id="doc-1")
+    return index
+
+
+class TestPhaseERiskAuditAndKillSwitch:
+    """Phase E screens (issue #55): the risk page, the audit explorer
+    and the global kill-switch control (ADR-0011 decision 6)."""
+
+    def test_risk_page_renders_typed_states_and_default_limits(self) -> None:
+        html = client().get("/risk").text
+
+        # Unbound surfaces render their typed empty states.
+        assert "No alert ledger is bound." in html
+        assert "No M5 posture is bound." in html
+        # The paper kernel's pre-trade limits default to none -> en dash.
+        assert html.count(">—</dd>") == 3
+        assert "disarmed" in html
+
+    def test_risk_page_renders_customized_paper_limits(self) -> None:
+        account = sample_account().model_copy(
+            update={
+                "risk_limits": RiskLimits(
+                    max_order_quantity=10.0,
+                    max_notional=25_000.0,
+                    max_position_quantity=50.0,
+                )
+            }
+        )
+
+        html = client(account=account).get("/risk").text
+
+        assert ">10.0</dd>" in html
+        assert ">25000.0</dd>" in html
+        assert ">50.0</dd>" in html
+        # No M5 posture injected -> the typed unbound state still renders.
+        assert "No M5 posture is bound." in html
+
+    def test_risk_page_renders_hl_posture_defaults_when_injected(self) -> None:
+        html = client(hl_posture=HyperliquidRiskLimits()).get("/risk").text
+
+        assert ">3.0</dd>" in html
+        assert ">500</dd>" in html
+        assert ">false</dd>" in html
+        assert ">30</dd>" in html
+        # The accounting surface still renders with its en dashes.
+        assert html.count(">—</dd>") == 3
+
+    def test_risk_page_renders_customized_hl_posture(self) -> None:
+        html = client(
+            hl_posture=HyperliquidRiskLimits(
+                max_leverage=4.5,
+                min_liquidation_distance_bps=700.0,
+                reduce_only=True,
+                stale_data_window_s=60,
+            )
+        ).get("/risk").text
+
+        assert ">4.5</dd>" in html
+        assert ">700.0</dd>" in html
+        assert ">true</dd>" in html
+        assert ">60</dd>" in html
+
+    def test_risk_page_renders_alerts_with_sources_newest_first(self, tmp_path) -> None:
+        ledger, records = _alert_setup(tmp_path)
+
+        html = client(alerts=ledger).get("/risk").text
+
+        assert "feature:momentum" in html
+        assert "features:index" in html
+        assert "momentum drifted" in html
+        assert "index is stale" in html
+        assert "psi" in html
+        assert "1.07905" in html
+        # Newest alert first: the staleness record (NOW-1h) precedes the
+        # drift record (NOW-2h) in the table.
+        assert html.index("index is stale") < html.index("momentum drifted")
+
+    def test_audit_page_renders_typed_unbound_state(self) -> None:
+        html = client().get("/audit").text
+
+        # Each ledger chip renders its typed unbound state.
+        assert html.count('class="missing-mark">unbound</span>') == 3
+        assert "Order journal:" in html
+        assert "Mappings ledger:" in html
+        assert "Decision log:" in html
+        assert "No audit entries" in html
+
+    def test_audit_page_merges_three_ledgers_chronologically(self, tmp_path) -> None:
+        journal, orders = _journal_setup(tmp_path)
+        mappings = _mapping_setup(tmp_path, recorded_at=NOW - timedelta(hours=2))
+        decisions, record = _decision_setup(tmp_path, recorded_at=NOW - timedelta(hours=1))
+
+        html = client(
+            journal=journal, mappings=mappings, decisions=decisions
+        ).get("/audit").text
+
+        assert "Order journal: bound" in html
+        assert "Mappings ledger: bound" in html
+        assert "Decision log: bound" in html
+        order_id = orders[0].order_id
+        mapping_anchor = f'id="mapping-{"a" * 16}"'
+        decision_anchor = f'id="decision-{record.decision_id}"'
+        # Newest first: order (NOW) -> decision (NOW-1h) -> mapping (NOW-2h).
+        assert html.index(f'id="order-{order_id}"') < html.index(decision_anchor)
+        assert html.index(decision_anchor) < html.index(mapping_anchor)
+        # The order entry renders its event stream incl. fills.
+        assert ">fill</td>" in html
+        assert ">accepted</td>" in html
+        # The mapping entry renders its verdict and evidence.
+        assert ">matched</dd>" in html
+        assert ">title</code>" in html
+        assert "same title" in html
+        # The decision entry renders model metadata and the verdict.
+        assert "fixture-model" in html
+        assert "scripted" in html
+        # The verdict JSON renders in the heading, quote-escaped (&#34;).
+        assert record.verdict.replace('"', "&#34;") in html
+
+    def test_audit_citations_render_resolvable_links(self, tmp_path) -> None:
+        journal, _ = _journal_setup(tmp_path)
+        decisions, _ = _decision_setup(tmp_path, recorded_at=NOW - timedelta(hours=1))
+        documents = _document_setup(tmp_path)
+
+        html = client(
+            journal=journal, decisions=decisions, documents=documents
+        ).get("/audit").text
+
+        assert 'href="/experiments/a1b2c3d4e5f60718"' in html
+        assert 'href="/documents/doc-1"' in html
+        assert 'href="/audit#order-paper-1"' in html
+        assert "experiment:a1b2c3d4e5f60718" in html
+        assert "document:doc-1" in html
+        assert "audit:paper-1" in html
+
+    def test_document_detail_renders_the_record(self, tmp_path) -> None:
+        documents = _document_setup(tmp_path)
+
+        html = client(documents=documents).get("/documents/doc-1").text
+
+        assert "Document doc-1" in html
+        assert ">news</dd>" in html
+        assert "The Fed holds rates steady" in html
+
+    def test_document_detail_unknown_id_renders_typed_error(self, tmp_path) -> None:
+        documents = _document_setup(tmp_path)
+
+        response = client(documents=documents).get("/documents/absent")
+
+        assert 'role="alert"' in response.text
+        assert "no document" in response.text
+
+    def test_document_detail_unbound_index_renders_typed_error(self) -> None:
+        response = client().get("/documents/doc-1")
+
+        assert 'role="alert"' in response.text
+        assert "no document index is bound" in response.text
+
+    def test_kill_switch_engage_round_trip(self) -> None:
+        app_client = client()
+
+        response = app_client.post(
+            "/kill-switch",
+            data={"action": "engage", "confirm": "confirm"},
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 303
+        assert response.headers["location"] == "/kill-switch/control"
+        # The M1 JSON surface and the page context agree.
+        assert app_client.get("/kill-switch").json() == {"kill_switch": True}
+        context = app_client.app.state.page_context
+        assert context.account.kill_switch is True
+        assert app_client.app.state.account.kill_switch is True
+        # The header reflects the state on every page.
+        overview = app_client.get("/").text
+        assert 'data-kill-switch="true"' in overview
+        assert "ENGAGED" in overview
+        # The control page reflects it too.
+        control = app_client.get("/kill-switch/control").text
+        assert "ENGAGED" in control
+        assert 'name="action" value="disarm" checked' in control
+
+    def test_kill_switch_disarm_round_trip(self) -> None:
+        app_client = client()
+        app_client.post("/kill-switch", data={"action": "engage", "confirm": "confirm"})
+
+        response = app_client.post(
+            "/kill-switch",
+            data={"action": "disarm", "confirm": "confirm"},
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 303
+        assert app_client.get("/kill-switch").json() == {"kill_switch": False}
+        assert 'data-kill-switch="false"' in app_client.get("/").text
+
+    def test_kill_switch_hostile_posts_refused(self) -> None:
+        app_client = client()
+
+        hostile = (
+            {"action": "engage"},
+            {"action": "engage", "confirm": "yes"},
+            {"action": "flip", "confirm": "confirm"},
+            {},
+        )
+        for payload in hostile:
+            response = app_client.post("/kill-switch", data=payload)
+            assert response.status_code == 200
+            assert 'role="alert"' in response.text
+            assert "refused" in response.text
+        # A non-form body is refused too.
+        response = app_client.post(
+            "/kill-switch", json={"action": "engage", "confirm": "confirm"}
+        )
+        assert response.status_code == 200
+        assert 'role="alert"' in response.text
+        assert "refused" in response.text
+        # The account was never touched.
+        assert app_client.get("/kill-switch").json() == {"kill_switch": False}
+        assert app_client.app.state.page_context.account.kill_switch is False
