@@ -51,9 +51,21 @@ makes the business workflow directly testable. Do not promote RC1 to
    software/credentials/network are instructive states, never blank pages.
    `tests/test_datalink.py` 20/20 green; live smoke on 8794 verified the
    fallback path, rejections and reset isolation.
-5. Complete bounded design, accessibility, E2E and clean-checkout
-   verification (Phase E), then publish `v0.1.0-rc2` from one integration
-   PR and obtain explicit human acceptance before a final release.
+5. ~~Complete bounded design, accessibility, E2E and clean-checkout
+   verification~~ (done, Phase E boundary): 18/18 frontend unit tests
+   (vitest), 5/5 SPA Playwright E2E, Impeccable one-pass detector
+   `[]` with a programmatic visual audit clean at 28 route×viewport
+   combos (0 overflow/clip/contrast/focus failures), real Tab-press
+   keyboard walks, WCAG 2.2 AA contrast, non-color status cues,
+   `prefers-reduced-motion` support, compact/desktop/tablet layouts,
+   and the frontend build (`npm ci` → bundle-freshness check →
+   vitest) added to the clean-checkout release gate; release notes
+   (EN + zh-CN) written. Evidence in iteration 0014 Checkpoint 4.
+6. Run the full release gate from a clean checkout, merge the single
+   RC2 PR, tag the verified merge commit `v0.1.0-rc2`, reproduce the
+   install in an isolated directory and hand the operator the browser
+   acceptance checklist — promote to `v0.1.0` only after explicit
+   human acceptance.
 
 ## Standing authority
 
