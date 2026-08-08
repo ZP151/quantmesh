@@ -37,8 +37,11 @@ research = [
   "scipy>=1.13,<2",
 ]
 dev = [
-  "pytest>=8.3,<9",
-  "pytest-asyncio>=0.24,<1",
+  # PYSEC-2026-1845 affects pytest<9.0.3; keep the resolver from
+  # selecting a vulnerable 8.x release. pytest-asyncio 1.x is the
+  # compatible line for pytest 9 (1.4.0 allows pytest<10).
+  "pytest>=9.0.3,<10",
+  "pytest-asyncio>=1,<2",
   "ruff>=0.8,<1",
   # M10 Phase E (ADR-0012 decision 5): OS-backed secret store. Only
   # ever exercised against a fixture backend in tests; the real
