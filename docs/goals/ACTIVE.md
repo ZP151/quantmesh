@@ -23,9 +23,9 @@ makes the business workflow directly testable. Do not promote RC1 to
 
 ## Immediate frontier
 
-1. Approve ADR-0013 through implementation evidence: React/TypeScript/Vite,
-   selectively owned shadcn/ui components, typed FastAPI client and a packaged
-   one-process production build.
+1. ~~Approve ADR-0013 through implementation evidence~~ (done, checkpoint
+   bfa097c): the SPA spike is served from the packaged bundle with the
+   rollback switch, `/api` double mount and a green 1811-test suite.
 2. Build deterministic `--demo` runtime assembly with provenance, freshness,
    reset/replay and representative cross-market/research/paper/risk/audit data.
 3. Deliver one browser tracer bullet from market evidence to paper fill,
