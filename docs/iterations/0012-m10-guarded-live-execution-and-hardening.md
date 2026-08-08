@@ -64,7 +64,7 @@ Out of scope (recorded, not deferred silently):
 
 ## Acceptance criteria
 
-1. [ ] Reliability and drawdown limits are defined, measured over
+1. [x] Reliability and drawdown limits are defined, measured over
       paper operation and alerted on breach (alerts via the M7
       `AlertLedger`), and incident runbooks exist and are tested for
       content. — Phases A/B (issues #58/#59).
@@ -76,7 +76,7 @@ Out of scope (recorded, not deferred silently):
       journal replay with an idempotency key replays to the same
       state, and the reconciliation identity/tolerance discipline
       (ADR-0006) verifies it. — Phase B (issue #59).
-4. [ ] Metrics, structured logs, alert emission and signed audit
+4. [x] Metrics, structured logs, alert emission and signed audit
       exports are implemented and drilled; the export signature
       verifies and a tampered export fails verification. — Phase A
       (issue #58).
@@ -284,8 +284,37 @@ store integration (issue #62)
 
 ## Work log
 
-**Issue #58 (Phase A, operational hardening) pending.**
+**Issue #58 (Phase A, operational hardening) complete — 2026-08-08.**
+
+- Implemented `quantmesh.ops`: `metrics.py` (Metric id over
+  name+measured_at, MetricsStore on the ADR-0006 discipline),
+  `limits.py` (ReliabilityLimits; running-peak drawdown evaluation;
+  breach → `reliability_limit`/`ops:limits` alert through the M7
+  AlertLedger), `logging_fmt.py` (StructuredFormatter), `secrets.py`
+  (KeyStore protocol + KeyFileStore), `export.py`
+  (quantmesh-audit-bundle v1: canonicalized-content digest,
+  HMAC-SHA256 tag, BundleVerificationError), `cli.py`
+  (`quantmesh-ops` record-metric/export-audit/verify-export);
+  `settings.metrics_dir`; `drift.ALERT_KIND` extended with
+  `reliability_limit`.
+- Debugging note: the running-worst drawdown tracker started at 0.0
+  and used `min()`, so a real breach read as 0.0 (3 failures); fixed
+  to track the max of per-step (peak − value)/peak. The MetricsStore
+  read path missed the root-not-dir refusal (a file root read as
+  empty); fixed with an explicit root check. The CLI tamper drill
+  originally exported empty default surfaces (tamper was a no-op);
+  the drill now populates real surfaces first.
+- Tests: `tests/test_ops.py` — 37 passed (metric model, store
+  discipline incl. attribution + duplicate refusal, drawdown/mismatch
+  limits, breach alert emission + identical re-detection refused,
+  formatter shape/fields/repr fallback, key store incl. traversal +
+  dir refusal, export round-trip + 4 tamper drills, CLI round-trip +
+  exit codes, runbook doc test). Ruff E/F/I/UP clean.
+- ADR-0012 decision 1 recorded (metrics/logs on ADR-0006, alerts via
+  the M7 ledger, local HMAC-signed exports).
 
 ## Verification evidence
 
-(empty)
+- `tests/test_ops.py`: 37 passed (2026-08-08).
+- `ruff check src tests`: clean on the Phase A surface.
+- Full-suite run recorded in ACTIVE.md after the M10-1 commit.
