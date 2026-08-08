@@ -23,7 +23,6 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from quantmesh.ai.retrieval import Citation
-from quantmesh.ai.roles import ROLE_ORDER
 from quantmesh.settings import settings
 
 __all__ = [
@@ -161,6 +160,11 @@ class DecisionRecord(BaseModel):
         fields, so the consistency validator has the true id at
         construction.
         """
+        # Deferred import: roles.py imports this module at module level
+        # (the pipeline records decisions), so a module-level edge here
+        # would cycle.
+        from quantmesh.ai.roles import ROLE_ORDER
+
         if role not in ROLE_ORDER:
             raise ValueError(f"unknown research role: {role!r}")
         verdict = getattr(output, "verdict", None)

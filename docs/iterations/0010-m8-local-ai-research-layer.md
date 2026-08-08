@@ -86,7 +86,7 @@ Out of scope (recorded, not deferred silently):
       leaves the boundary with a redaction report; every research
       decision is recorded with model metadata and citations on the
       ADR-0006 ledger discipline. — Phase D (issue #48).
-5. [ ] Acceptance drills prove the M8 exit criteria on fixture
+5. [x] Acceptance drills prove the M8 exit criteria on fixture
       universes: hostile model output is schema-rejected and cannot
       bypass the risk APIs (exit criterion 1); research claims link to
       source data and reproducible experiments, and an unresolvable
@@ -291,7 +291,11 @@ Vendored trees read at the file level; both remain reference-only
 
 ### Phase E — acceptance drills (issue #49)
 
-Drills on fixture universes (scripted transports throughout):
+Drills on fixture universes (scripted transports throughout); the
+pipeline records every stage decision when a `DecisionLog` is injected
+(model metadata required at construction — never fabricated;
+`recorded_at` pinnable for byte-deterministic drills, excluded from
+identity):
 
 - **Exit criterion 1 (schema-validated, cannot bypass risk APIs)**:
   a hostile scripted model answers the analyst stage with
@@ -308,11 +312,24 @@ Drills on fixture universes (scripted transports throughout):
   analyst's claims carry citations; `resolve_citation` resolves every
   one (experiment id → `ExperimentRegistry.get`, document → span);
   a second drill injects a fabricated citation and the critic flags
-  it, the decision log records the refusal, and the claim never
-  reaches later stages.
+  it, the decision log records the refusal (the analyst record keeps
+  the fabricated citation as audit material, the critic record
+  carries the flag verdict plus the gate's refusal summary), and the
+  claim never reaches later stages (proven by the captured request
+  bodies).
 - Cross-root acceptance: two independent `decisions_dir` roots replay
-  the same drill → byte-identical decision JSONL (determinism
-  evidence).
+  the same drill with a pinned `recorded_at` → byte-identical
+  decision JSONL (determinism evidence).
+
+Optional operator drill (never a merge gate — all acceptance evidence
+is fixture-based): with a local model serving the loopback default
+(e.g. `ollama serve` on 127.0.0.1:11434, `settings.model_name` set),
+run the same four-stage pipeline against `HttpModelTransport` with a
+small structured-capable model and confirm the validated outputs parse
+into the role schemas; optionally set `QUANTMESH_MODEL_API_KEY` and
+confirm the redaction report counts it when it appears in the context.
+Exact steps are recorded here for the operator, not required for the
+M8 merge.
 
 ## Delivery protocol
 
@@ -372,9 +389,19 @@ the M5 operator drill).
   `for_stage` digest building and a consistency validator, on the
   ADR-0006 discipline under `settings.decisions_dir`. Decision 4
   written into ADR-0010 on 2026-08-08.
-- ADR-0010 extension **to record** (Phase E): acceptance evidence is
-  scripted-fixture-based; a live local model (e.g. Ollama) is an
-  optional operator drill with exact steps, never a merge gate.
+- ADR-0010 **recorded** (Phase E, issue #49, decision 5): acceptance
+  evidence is scripted-fixture-based — both exit criteria proven on
+  fixture universes (hostile output refused with no partial object
+  and nothing recorded; order-shaped payload refused; unknown-tool
+  refusal; ast-level package import scan proving no order-sending
+  surface, the M2 journal the sole permitted execution-package import;
+  citable-claims drill where every citation resolves; fabricated
+  citation flagged/blocked/recorded); decision-log recording is wired
+  into the pipeline (model metadata required at construction,
+  recorded_at pinnable and excluded from identity); cross-root
+  byte-identical decision JSONL is acceptance evidence; a live local
+  model (Ollama, loopback default) is an optional operator drill,
+  never a merge gate. Decision 5 written into ADR-0010 on 2026-08-08.
 
 ## Work log
 
@@ -616,6 +643,45 @@ the M5 operator drill).
   refused — every refusal path a typed `CitationResolutionError`.
   Full suite green after the issue #47 commit (see Last verification
   in ACTIVE.md).
+- Phase E slice (issue #49): `tests/test_ai_acceptance.py` — 9 passed
+  in ~1.6s (236 ai tests total: gateway 66 + roles 40 + retrieval 52 +
+  Phase D 69 + acceptance 9). Exit criterion 1: hostile non-JSON
+  analyst output → `ModelOutputError` "not JSON" with the injected
+  decision log still empty (no partial object escaped, nothing
+  recorded); an order-shaped analyst payload (quantity/venue/
+  order_type smuggled into a claim) → `ModelOutputError` naming the
+  extra fields; a hostile `place_order` tool call → `UnknownToolError`;
+  the permission matrix holds at dispatch (portfolio × read_report →
+  `ToolRefusalError` naming role and tool); a risk review referencing
+  an unsupplied verdict id → `PipelineError` "unsupplied risk-gate
+  verdict ids" — the structural reference check is the only path to
+  the risk surface; the ast-level import scan over every ai module
+  (importlib + ast, no text false-positives) finds no import of paper
+  / moomoo execution / hyperliquid exchange+risk / matcher /
+  accounting / store / reconciliation, and asserts
+  `quantmesh.execution.journal` is the sole execution-package import
+  (the read-only audit store, ADR-0010 decision 3). Exit criterion 2:
+  the citable-claims drill — pipeline over the fixture universe
+  (document d-1 + experiment registry record + journal row o-1) with
+  three claims citing document/experiment/audit ids: all three
+  citations resolve through `resolve_citation` against the three
+  sources; the decision log holds exactly four records in stage order,
+  all with the setup-only run_id, all `refusal=None`, the analyst
+  record carrying the three `Citation` objects (kinds document/
+  experiment/audit, ids d-1/<hex>/o-1) and the verdicts extracted per
+  stage ("pass"/"aligned"/"within_constraints"; analyst = canonical
+  JSON); the fabricated-citation drill — analyst cites `document:zzz`,
+  the scripted critic flags claim 0, the gate blocks it in code
+  (blocked = 1, allowed = ()), the blocked claim's text is absent from
+  the captured risk and portfolio request bodies (it never reaches
+  later stages), the analyst record keeps `document:zzz` as audit
+  material, the critic record carries verdict "flag" and refusal
+  "critic gate blocked 1 claim(s): indices [0]", and `resolve_citation`
+  fails closed with `CitationResolutionError` naming the missing id.
+  Cross-root: the same drill over two independent `decisions_dir`
+  roots with a pinned `recorded_at` yields byte-identical decision
+  JSONL (determinism evidence). Full suite 1535 passed / 3 skipped
+  after the issue #49 commit (see Last verification in ACTIVE.md).
 - Phase D slice (issue #48): `tests/test_ai_tools.py` +
   `test_ai_redact.py` + `test_ai_decisions.py` — 69 passed in ~1.5s
   (161 AI tests total across gateway 66 + roles 40 + retrieval 52 +
@@ -674,6 +740,47 @@ the M5 operator drill).
   the RiskReview/PortfolioReview posture-verdict gap (extraction
   extended) and the unused `sources` map. ADR-0010 decision 4
   recorded; acceptance criterion 4 checked off.
+- 2026-08-08 (issue #49, Phase E): wired decision-log recording into
+  `ResearchPipeline` — optional `decision_log`/`model_meta`/
+  `recorded_at` construction params (model metadata required when a
+  log is injected — never fabricated; `recorded_at` pins the audit
+  timestamp for byte-deterministic drills, excluded from identity so
+  pinning never changes ids; without a log the pipeline is a pure
+  computation, so the existing pipeline tests are untouched), `_record`
+  per stage (analyst/critic/risk/portfolio records via
+  `DecisionRecord.for_stage` with the exact prompt sent and the
+  validated output; the critic record carries the gate's refusal
+  summary when claims were blocked), `_claim_citations` parsing the
+  claims' `kind:id` citation ids into resolvable `Citation` objects
+  (recorded as audit material even when fabricated; resolution stays
+  the drill's job). The module-level import edge is decisions ← roles
+  (pipeline recording is a roles concern); `for_stage`'s `ROLE_ORDER`
+  import is now deferred inside the function to break the cycle.
+  `tests/test_ai_acceptance.py` — 9 drills: hostile non-JSON analyst
+  output refused with nothing recorded (empty log proves no partial
+  object escaped); order-shaped analyst payload refused at validation
+  naming the smuggled fields; hostile `place_order` tool call →
+  `UnknownToolError`; portfolio role refused `read_report` →
+  `ToolRefusalError` naming role and tool; risk stage referencing an
+  unsupplied verdict id → `PipelineError` (the structural check is the
+  only path to the risk surface); ast-level import scan over every ai
+  module proving no order-sending surface (paper / moomoo execution /
+  hyperliquid exchange+risk / matcher / accounting / store /
+  reconciliation) is imported, with `quantmesh.execution.journal`
+  asserted as the sole permitted execution-package import; citable-
+  claims drill (three claims citing document/experiment/audit — every
+  citation resolves, decision log holds four records with the three
+  `Citation` objects, verdicts extracted per stage); fabricated-
+  citation drill (critic flag → gate blocks in code, blocked claim
+  absent from the risk and portfolio request bodies, analyst record
+  keeps `document:zzz` as audit material, critic record verdict flag
+  + "critic gate blocked 1 claim(s): indices [0]", `resolve_citation`
+  fails closed); cross-root drill (two `decisions_dir` roots, pinned
+  `recorded_at` → byte-identical decision JSONL). Test-side catch:
+  the `_claim` helper emitted a bare claim where the analyst wire
+  needs `{"claims": [...]}` — wrapped, and the two drills that used
+  it passed. ADR-0010 decision 5 recorded; acceptance criterion 5
+  checked off — **M8 acceptance criteria 1-5 complete**.
 
 ## Risks and gates
 

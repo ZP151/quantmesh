@@ -184,11 +184,37 @@ content-addressed (Phase D, issue #48)
 local model is an optional operator drill, never a merge gate
 (Phase E, issue #49)
 
-### Decision 5 — Acceptance evidence is scripted-fixture-based; a live
-local model is an optional operator drill, never a merge gate
-(Phase E, issue #49)
-
-(Recorded when Phase E lands.)
+- Both roadmap exit criteria are proven on fixture universes with
+  scripted transports (no network, no paid infrastructure, no
+  credentials): (1) hostile model output — non-JSON and
+  schema-violating (including order-shaped payloads) — is refused
+  with a typed `ModelOutputError`, no partial object escapes and
+  nothing is recorded; a hostile tool call to an execution surface is
+  the typed unknown-tool refusal; and an ast-level import scan over
+  every ai module proves the package imports no order-sending surface
+  (the M2 `OrderJournal` is the sole permitted execution-package
+  import — a read-only record store; the risk stage's only authority
+  is the structural reference check against supplied verdicts). (2)
+  An end-to-end pipeline over a fixture document, experiment record
+  and audit-log slice produces claims whose citations all resolve;
+  a fabricated citation is flagged by the critic, blocked by the gate
+  in code (never reaching later stages — proven by the captured
+  request bodies), and recorded in the decision log as audit
+  material.
+- Recording decision logs is wired into the pipeline itself: with an
+  injected `DecisionLog` (model metadata required at construction —
+  never fabricated; `recorded_at` pinnable for byte-deterministic
+  drills, excluded from identity), every stage appends one
+  content-addressed record; the analyst record carries the claims'
+  citations as resolvable `Citation` objects and the critic record
+  carries the gate's refusal summary when claims were blocked.
+- Cross-root determinism is acceptance evidence: the same drill over
+  two independent `decisions_dir` roots with a pinned `recorded_at`
+  yields byte-identical decision JSONL.
+- A live local model (e.g. Ollama on the loopback default) is an
+  optional operator drill with exact steps recorded in iteration
+  0010 Phase E — never a merge gate: all acceptance evidence is
+  fixture-based and deterministic.
 
 ## Consequences
 

@@ -14,12 +14,15 @@ import hashlib
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from quantmesh.ai.decisions import DecisionLog, DecisionRecord, ModelMeta
 from quantmesh.ai.errors import PipelineError, UnknownRoleError
 from quantmesh.ai.gateway import ModelGateway
+from quantmesh.ai.retrieval import Citation
 from quantmesh.ai.wire import ChatMessage, ModelRequest
 
 __all__ = [
@@ -287,6 +290,26 @@ def _format_context(context: Mapping[str, str]) -> str:
     )
 
 
+_CITATION_KINDS = ("document", "experiment", "audit")
+
+
+def _claim_citations(claims: tuple[Claim, ...]) -> list[Citation]:
+    """Parse 'kind:id' claim citation ids into resolvable Citation objects.
+
+    Every parseable id is recorded — a fabricated citation is audit
+    material too; resolution happens downstream. Ids that do not parse
+    into a known kind are left out of the citation list (the verdict
+    and output digest still record them).
+    """
+    citations: list[Citation] = []
+    for claim in claims:
+        for citation_id in claim.evidence_citations:
+            kind, _, source_id = citation_id.partition(":")
+            if kind in _CITATION_KINDS and source_id:
+                citations.append(Citation(source_kind=kind, source_id=source_id))
+    return citations
+
+
 def _apply_critic_gate(verdict: CriticVerdict, report: AnalystReport) -> CriticGateResult:
     """Resolve the critic's verdict against the analyst report in code.
 
@@ -325,6 +348,17 @@ class ResearchPipeline:
     be one of them. Construction fails closed on missing charters,
     unknown roles, and empty supplies; ``run_id`` is setup-only over
     role set + charter digests + context digests, never model outputs.
+
+    When ``decision_log`` is supplied, every stage records a
+    content-addressed ``DecisionRecord`` (model metadata required at
+    construction — never fabricated) whose citations come from the
+    analyst claims' ``kind:id`` citation ids (kind one of
+    document/experiment/audit — recorded as audit entries even when a
+    citation does not resolve; resolution is the drill's job) and whose
+    critic record carries the gate's refusal when claims were blocked.
+    ``recorded_at`` pins the audit timestamp for byte-deterministic
+    drills; decision identity excludes it, so pinning never changes
+    ids. Without a log the pipeline is a pure computation.
     """
 
     def __init__(
@@ -335,6 +369,9 @@ class ResearchPipeline:
         risk_verdicts: Mapping[str, str],
         portfolio_inputs: Mapping[str, str],
         charters: Mapping[str, RoleCharter] | None = None,
+        decision_log: DecisionLog | None = None,
+        model_meta: ModelMeta | None = None,
+        recorded_at: datetime | None = None,
     ) -> None:
         resolved = dict(CHARTERS) if charters is None else dict(charters)
         missing = [role for role in ROLE_ORDER if role not in resolved]
@@ -358,11 +395,18 @@ class ResearchPipeline:
             raise PipelineError(
                 "the portfolio stage requires supplied constraint/optimizer outputs"
             )
+        if decision_log is not None and model_meta is None:
+            raise PipelineError(
+                "decision-log recording requires model metadata (model_meta)"
+            )
         self._gateway = gateway
         self._context = dict(context)
         self._risk_verdicts = dict(risk_verdicts)
         self._portfolio_inputs = dict(portfolio_inputs)
         self._charters = resolved
+        self._decision_log = decision_log
+        self._model_meta = model_meta
+        self._recorded_at = recorded_at
 
     @property
     def run_id(self) -> str:
@@ -395,6 +439,34 @@ class ResearchPipeline:
         )
         return self._gateway.complete_structured(request, schema)
 
+    def _record(
+        self,
+        role: str,
+        prompt: str,
+        output: BaseModel,
+        *,
+        citations: list[Citation] | None = None,
+        refusal: str | None = None,
+    ) -> None:
+        """Record one stage decision; without an injected log this is a no-op."""
+        if self._decision_log is None:
+            return
+        if self._model_meta is None:
+            raise PipelineError("decision-log recording requires model metadata")
+        self._decision_log.record(
+            DecisionRecord.for_stage(
+                run_id=self.run_id,
+                role=role,
+                model=self._model_meta,
+                prompt=prompt,
+                schema_id=self._charters[role].output_schema_id,
+                output=output,
+                citations=citations,
+                refusal=refusal,
+                recorded_at=self._recorded_at,
+            )
+        )
+
     def _require_references(
         self,
         referenced: list[str],
@@ -410,10 +482,13 @@ class ResearchPipeline:
         """Execute the fixed analyst -> critic -> risk -> portfolio order."""
         context_block = _format_context(self._context)
 
-        analyst_report = self._stage(
+        analyst_prompt = f"Research context:\n\n{context_block}"
+        analyst_report = self._stage("analyst", analyst_prompt, AnalystReport)
+        self._record(
             "analyst",
-            f"Research context:\n\n{context_block}",
-            AnalystReport,
+            analyst_prompt,
+            analyst_report,
+            citations=_claim_citations(tuple(analyst_report.claims)),
         )
 
         critic_prompt = (
@@ -424,6 +499,18 @@ class ResearchPipeline:
         )
         verdict = self._stage("critic", critic_prompt, CriticVerdict)
         gate = _apply_critic_gate(verdict, analyst_report)
+        gate_refusal = None
+        if gate.blocked:
+            blocked_indices = sorted(
+                index
+                for index, claim in enumerate(analyst_report.claims)
+                if claim in gate.blocked
+            )
+            gate_refusal = (
+                f"critic gate blocked {len(gate.blocked)} claim(s): "
+                f"indices {blocked_indices}"
+            )
+        self._record("critic", critic_prompt, verdict, refusal=gate_refusal)
 
         gated_report = AnalystReport(claims=list(gate.allowed))
         verdict_block = "\n".join(
@@ -441,6 +528,7 @@ class ResearchPipeline:
         self._require_references(
             risk_review.referenced_verdicts, self._risk_verdicts, what="risk-gate verdict"
         )
+        self._record("risk", risk_prompt, risk_review)
 
         portfolio_block = "\n".join(
             f"- {output_id}: {summary}"
@@ -460,6 +548,7 @@ class ResearchPipeline:
             self._portfolio_inputs,
             what="constraint/optimizer output",
         )
+        self._record("portfolio", portfolio_prompt, portfolio_review)
 
         return ResearchResult(
             run_id=self.run_id,
