@@ -21,6 +21,13 @@ license names its package and fails the job.
 - **`WITH <exception>` SPDX qualifiers relax** the license
   (e.g. `BSD-2-Clause AND Apache-2.0 WITH LLVM-exception` for
   llvmlite) and are stripped, never treated as restricting members.
+- **Free-text `License` fields read the first line as authoritative**
+  when it names a known license: some wheels inline the entire
+  `LICENSES/` folder into one field (pandas 2.3.3 Linux builds — BSD
+  text plus bundled Apache/MIT texts), where scanning the whole blob
+  would credit a bundled third-party text as the project's license.
+  The Commons Clause check still runs first, so a
+  Commons-Clause package can never slip through via a bundled text.
 - **Documented exceptions** cover packages whose metadata carries no
   usable license field; each must name the license the package
   actually ships under:

@@ -10,9 +10,13 @@ every package is allowed — exit 1 names the offenders.
 Classification order (fail-closed at each step):
 1. PEP 639 ``License-Expression`` (SPDX) — the authoritative source
    when present; ``X OR Y`` alternations pass if any member is allowed.
-2. The ``License`` free-text field — keyword detection for MIT,
-   BSD-2/3-Clause and Apache-2.0, which covers the packages that
-   embed the full text instead of an expression.
+2. The ``License`` free-text field — the first line is authoritative
+   when it names a known license (wheels sometimes inline the entire
+   ``LICENSES/`` folder into one field — e.g. pandas 2.3.3 Linux
+   builds — where scanning the whole blob would credit a bundled
+   third-party text as the project's license); otherwise keyword
+   detection for MIT, BSD-2/3-Clause and Apache-2.0 covers the
+   packages that embed the full text instead of an expression.
 3. ``Classifier`` declarations of the OSI-Approved family.
 4. ``LICENSE_EXCEPTIONS`` — hand-verified overrides for packages whose
    metadata carries no usable license; every entry must also appear in
@@ -102,29 +106,38 @@ def _from_expression(expr: str) -> str | None:
     return None
 
 
-_LICENSE_TEXT_PATTERNS = [
-    # Apache-2.0, detected from the appendix text.
-    (
-        "Apache-2.0",
-        re.compile(
-            r"Apache License\s+Version 2\.0|"
-            r'Licensed under the Apache License, Version 2\.0'
-        ),
-    ),
-    # MIT and BSD share the first line; the permissive three-clause
-    # family is told apart by the "Neither the name" clause (BSD).
-    ("MIT", re.compile(r"Permission is hereby granted")),
-]
+# Free-text License fields sometimes inline the whole LICENSES/ folder
+# (pandas 2.3.3 Linux wheels: BSD text plus bundled third-party
+# Apache/MIT texts in one 91 kB field). When the first line names a
+# known license it is authoritative — scanning the whole blob would
+# credit a bundled text as the project's own license. Unknown first
+# lines (copyright lines, prose) fall through to the keyword scan.
+_LINE1_NAMES = {
+    "BSD 3-Clause License": "BSD-3-Clause",
+    "BSD 2-Clause License": "BSD-2-Clause",
+    "The MIT License": "MIT",
+    "MIT License": "MIT",
+    "Apache License 2.0": "Apache-2.0",
+    "Apache License, Version 2.0": "Apache-2.0",
+    "Apache License Version 2.0": "Apache-2.0",
+    "Python Software Foundation License": "PSF-2.0",
+}
 
 
 def _from_text(text: str) -> str | None:
-    """Classify an embedded license text. MIT and BSD are
-    distinguished by the BSD 'Neither the name ...' restriction."""
+    """Classify an embedded license text. The first line is
+    authoritative when it names a known license (bundled-licenses
+    blobs would otherwise misclassify via a bundled text); MIT and
+    BSD are otherwise distinguished by the BSD 'Neither the name ...'
+    restriction."""
     if "Commons Clause" in text:
         # Apache-2.0 + Commons Clause is source-available, not OSI —
         # the Apache appendix text is inside, so the clause must be
         # refused *before* the Apache pattern can match (vectorbt).
         return None
+    first = text.splitlines()[0].strip()
+    if first in _LINE1_NAMES:
+        return _LINE1_NAMES[first]
     if "Apache License" in text and "Version 2.0" in text:
         return "Apache-2.0"
     if "Permission is hereby granted" in text:
