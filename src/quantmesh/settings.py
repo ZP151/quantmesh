@@ -75,6 +75,12 @@ class Settings(BaseSettings):
     # (the ADR's same-release rollback switch); unset/false/0 serves
     # the SPA. Never env-escalable to anything else.
     legacy_ui: bool = False
+    # Deterministic demo runtime (iteration 0014 Phase B): the labeled
+    # scenario lives under its own root, always separate from the
+    # operator's data dirs above — reset only ever writes beneath this
+    # root, and never touches a non-demo root (marker-guarded).
+    demo_root: Path = Path.home() / ".quantmesh" / "demo"
+    demo_seed: int = 20260809
 
     model_config = SettingsConfigDict(
         env_file=".env",

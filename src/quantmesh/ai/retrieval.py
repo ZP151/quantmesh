@@ -183,10 +183,17 @@ class DocumentIndex:
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.documents_dir
 
-    def ingest_file(self, path: Path, *, kind: str, doc_id: str) -> Document:
+    def ingest_file(
+        self, path: Path, *, kind: str, doc_id: str, ingested_at: datetime | None = None
+    ) -> Document:
         """Ingest a local text file as a ``kind`` record; fail-closed on
         unreadable, non-UTF8, empty files, unknown kinds and duplicate
-        ids (the duplicate is refused before the file is read)."""
+        ids (the duplicate is refused before the file is read). A
+        relative ``path`` is read against (and stored relative to) the
+        registry root, so records are portable and byte-reproducible
+        across roots; absolute paths are stored as given.
+        ``ingested_at`` defaults to the current time; pin it explicitly
+        when the record must be byte-reproducible (demo seed, replay)."""
         if kind not in DOCUMENT_KINDS:
             raise RetrievalError(f"unknown document kind {kind!r} (filing|news|note)")
         if not doc_id.strip():
@@ -195,8 +202,9 @@ class DocumentIndex:
         if any(record.id == doc_id for record in existing):
             raise RetrievalError(f"document {doc_id!r} already indexed")
         path = Path(path)
+        read_path = path if path.is_absolute() else self.root / path
         try:
-            text = path.read_text(encoding="utf-8")
+            text = read_path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError) as error:
             raise RetrievalError(f"cannot ingest {path}: {error}") from error
         if not text.strip():
@@ -205,7 +213,7 @@ class DocumentIndex:
             id=doc_id,
             kind=kind,
             source_path=str(path),
-            ingested_at=datetime.now(UTC),
+            ingested_at=ingested_at or datetime.now(UTC),
             content=text,
         )
         self._append(document, existing)

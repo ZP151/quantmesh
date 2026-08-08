@@ -110,13 +110,16 @@ class ExperimentRegistry:
         commit: str | None = None,
         parameters: dict[str, Parameter] | None = None,
         metrics: dict[str, Parameter] | None = None,
+        created_at: datetime | None = None,
     ) -> Experiment:
         """Record a run; ``commit`` defaults to the current git HEAD.
 
         The pin is validated before anything is written: the dataset
         must pass the lake's manifest gate and the manifest revision
         must match ``revision``, so the registry never holds a dangling
-        pin.
+        pin. ``created_at`` defaults to the current time; pin it
+        explicitly when a record must be byte-reproducible (demo seed,
+        replay).
         """
         if commit is None:
             commit = self._current_commit()
@@ -127,7 +130,7 @@ class ExperimentRegistry:
             commit=commit,
             parameters=parameters or {},
             metrics=metrics or {},
-            created_at=datetime.now(UTC),
+            created_at=created_at or datetime.now(UTC),
         )
         existing = self.all()
         if any(record.id == experiment.id for record in existing):

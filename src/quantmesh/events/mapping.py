@@ -370,10 +370,20 @@ class MappingLedger:
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.mappings_dir
 
-    def record(self, report: EventMappingReport, commit: str | None = None) -> list[MappingRecord]:
+    def record(
+        self,
+        report: EventMappingReport,
+        commit: str | None = None,
+        recorded_at: datetime | None = None,
+    ) -> list[MappingRecord]:
+        """Record every pair verdict of a report in one timestamped batch.
+
+        ``recorded_at`` defaults to the current time; pin it explicitly
+        when the records must be byte-reproducible (demo seed, replay).
+        """
         if commit is None:
             commit = current_commit()
-        now = datetime.now(UTC)
+        now = recorded_at or datetime.now(UTC)
         records = [
             MappingRecord(
                 pair_key=pair.pair_key,

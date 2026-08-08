@@ -91,9 +91,7 @@ from quantmesh.research.reports import (
 )
 from quantmesh.settings import settings
 
-INSTRUMENT = Instrument(
-    symbol="AAPL", venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY
-)
+INSTRUMENT = Instrument(symbol="AAPL", venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)
 POSITION_KEY = "internal:AAPL"
 NOW = datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)
 MARKS = {POSITION_KEY: 95.0}
@@ -259,16 +257,11 @@ def promotion_setup(
     ablation = make_report(strategy="mean_reversion", metrics={"sharpe": 0.9})
     # A different interval gives the OOS report a distinct setup — the
     # registry refuses two reports sharing an id.
-    oos = make_report(
-        strategy="momentum", interval="1h", evidence={"windows_oos": True}
-    )
+    oos = make_report(strategy="momentum", interval="1h", evidence={"windows_oos": True})
     reports_root = tmp_path / "reports"
     reports_root.mkdir()
     (reports_root / "reports.jsonl").write_text(
-        "\n".join(
-            report.model_dump_json() for report in (benchmark, ablation, oos)
-        )
-        + "\n",
+        "\n".join(report.model_dump_json() for report in (benchmark, ablation, oos)) + "\n",
         encoding="utf-8",
     )
     promotion = PromotionRecord(
@@ -329,9 +322,7 @@ class TestPageRegistry:
         # include_router (FastAPI >= 0.14x wraps those in a lazy
         # _IncludedRouter entry) while the page routes are added
         # directly and stay plain APIRoutes.
-        app_routes = {
-            route.path for route in client().app.routes if isinstance(route, APIRoute)
-        }
+        app_routes = {route.path for route in client().app.routes if isinstance(route, APIRoute)}
         for route in routes:
             assert route in app_routes
 
@@ -491,9 +482,7 @@ class TestSpaSurface:
         assert len(ids) == len(set(ids)), "duplicate operation ids in /openapi.json"
         assert any(identifier.startswith("api_") for identifier in ids)
 
-    def test_missing_bundle_serves_instructive_503(
-        self, spa_client, monkeypatch, tmp_path
-    ) -> None:
+    def test_missing_bundle_serves_instructive_503(self, spa_client, monkeypatch, tmp_path) -> None:
         monkeypatch.setattr(workstation, "SPA_INDEX", tmp_path / "absent" / "index.html")
 
         response = spa_client.get("/app/")
@@ -521,16 +510,12 @@ class TestSpaSurface:
         assert match is not None
         assert spa_client.get(match.group(1)).status_code == 200
 
-    def test_write_surfaces_stay_registered_in_spa_mode(
-        self, tmp_path, monkeypatch
-    ) -> None:
+    def test_write_surfaces_stay_registered_in_spa_mode(self, tmp_path, monkeypatch) -> None:
         monkeypatch.setattr(workstation.settings, "legacy_ui", False)
         watched = WatchlistStore(root=tmp_path / "watchlists")
         app_client = client(watchlist=watched)
 
-        response = app_client.post(
-            "/watchlist/add", data={"symbol": "SOL"}, follow_redirects=False
-        )
+        response = app_client.post("/watchlist/add", data={"symbol": "SOL"}, follow_redirects=False)
         assert response.status_code == 303
         assert [record.symbol for record in watched.all()] == ["SOL"]
 
@@ -551,7 +536,7 @@ class TestConsoleScript:
         monkeypatch.setitem(sys.modules, "uvicorn", types.SimpleNamespace(run=lambda **kw: None))
 
         with pytest.raises(WorkstationConfigError, match="loopback"):
-            workstation.main()
+            workstation.main([])
 
     def test_main_serves_on_loopback_with_settings_bind(self, monkeypatch) -> None:
         calls: dict = {}
@@ -563,7 +548,7 @@ class TestConsoleScript:
         monkeypatch.setattr(settings, "workstation_host", "127.0.0.1")
         monkeypatch.setattr(settings, "workstation_port", 9876)
 
-        workstation.main()
+        workstation.main([])
 
         assert calls["host"] == "127.0.0.1"
         assert calls["port"] == 9876
@@ -624,9 +609,11 @@ class TestPhaseBScreens:
         assert "Watchlist is empty" in html
 
     def test_instruments_cross_venue_sorted(self, tmp_path) -> None:
-        html = client(markets=dict(self.MARKETS), watchlist=self.watched(tmp_path)).get(
-            "/instruments"
-        ).text
+        html = (
+            client(markets=dict(self.MARKETS), watchlist=self.watched(tmp_path))
+            .get("/instruments")
+            .text
+        )
 
         # Venue-major, symbol-minor: hyperliquid BTC, ETH, then moomoo AAPL, BTC.
         assert html.index(">hyperliquid<") < html.index(">moomoo<")
@@ -643,9 +630,7 @@ class TestPhaseBScreens:
         watched = self.watched(tmp_path)
         app_client = client(markets=dict(self.MARKETS), watchlist=watched)
 
-        response = app_client.post(
-            "/watchlist/add", data={"symbol": "ETH"}, follow_redirects=False
-        )
+        response = app_client.post("/watchlist/add", data={"symbol": "ETH"}, follow_redirects=False)
 
         assert response.status_code == 303
         assert response.headers["location"] == "/watchlist"
@@ -945,9 +930,7 @@ def forecast_setup(tmp_path: Path) -> tuple[ForecastReportRegistry, ForecastRepo
                 ),
                 observations=_observation_grid(),
             ),
-            ForecastMarket(
-                market=_event_market("mkt-u"), observations=_observation_grid()
-            ),
+            ForecastMarket(market=_event_market("mkt-u"), observations=_observation_grid()),
         ],
         window_spec=_FORECAST_SPEC,
         n_bins=5,
@@ -962,11 +945,7 @@ def _forecast_report(*, market_id: str, created_at: datetime) -> ForecastReport:
     its page renders the typed missing-artifacts state."""
     universe = [_event_market(market_id)]
     metrics, per_market = run_forecast(
-        [
-            ForecastMarket(
-                market=_event_market(market_id), observations=_observation_grid(20)
-            )
-        ],
+        [ForecastMarket(market=_event_market(market_id), observations=_observation_grid(20))],
         window_spec=_FORECAST_SPEC,
         n_bins=5,
     )
@@ -1048,12 +1027,16 @@ class TestPhaseDPortfolioAndPredictionScreens:
         assert ">0</td>" in html
 
     def test_rejected_order_renders_reason(self) -> None:
-        rejected = PaperAccount(
-            cash=10_000.0,
-            fee_model=FeeModel(fee_bps=10),
-            matcher=PaperMatcher(slippage_bps=0.0),
-            risk_limits=RiskLimits(max_order_quantity=10),
-        ).submit(make_request(Side.BUY, 15), make_quote(), now=NOW).account
+        rejected = (
+            PaperAccount(
+                cash=10_000.0,
+                fee_model=FeeModel(fee_bps=10),
+                matcher=PaperMatcher(slippage_bps=0.0),
+                risk_limits=RiskLimits(max_order_quantity=10),
+            )
+            .submit(make_request(Side.BUY, 15), make_quote(), now=NOW)
+            .account
+        )
 
         html = client(rejected).get("/portfolio/orders").text
 
@@ -1183,9 +1166,7 @@ def _alert_record(
 ) -> AlertRecord:
     observed = observed or {}
     return AlertRecord(
-        id=alert_id(
-            kind=kind, source=source, detected_at=detected_at, observed=observed
-        ),
+        id=alert_id(kind=kind, source=source, detected_at=detected_at, observed=observed),
         kind=kind,
         source=source,
         detected_at=detected_at,
@@ -1242,9 +1223,7 @@ def _mapping_setup(tmp_path, *, recorded_at: datetime) -> MappingLedger:
     )
     mappings_dir = tmp_path / "mappings"
     mappings_dir.mkdir(parents=True, exist_ok=True)
-    (mappings_dir / MAPPINGS_FILE).write_text(
-        record.model_dump_json() + "\n", encoding="utf-8"
-    )
+    (mappings_dir / MAPPINGS_FILE).write_text(record.model_dump_json() + "\n", encoding="utf-8")
     return ledger
 
 
@@ -1254,9 +1233,7 @@ class _Claim(BaseModel):
     citations: list[str]
 
 
-def _decision_setup(
-    tmp_path, *, recorded_at: datetime
-) -> tuple[DecisionLog, DecisionRecord]:
+def _decision_setup(tmp_path, *, recorded_at: datetime) -> tuple[DecisionLog, DecisionRecord]:
     """One analyst decision record through the real construction path."""
     log = DecisionLog(root=tmp_path / "decisions")
     record = DecisionRecord.for_stage(
@@ -1334,14 +1311,18 @@ class TestPhaseERiskAuditAndKillSwitch:
         assert html.count(">—</dd>") == 3
 
     def test_risk_page_renders_customized_hl_posture(self) -> None:
-        html = client(
-            hl_posture=HyperliquidRiskLimits(
-                max_leverage=4.5,
-                min_liquidation_distance_bps=700.0,
-                reduce_only=True,
-                stale_data_window_s=60,
+        html = (
+            client(
+                hl_posture=HyperliquidRiskLimits(
+                    max_leverage=4.5,
+                    min_liquidation_distance_bps=700.0,
+                    reduce_only=True,
+                    stale_data_window_s=60,
+                )
             )
-        ).get("/risk").text
+            .get("/risk")
+            .text
+        )
 
         assert ">4.5</dd>" in html
         assert ">700.0</dd>" in html
@@ -1378,9 +1359,7 @@ class TestPhaseERiskAuditAndKillSwitch:
         mappings = _mapping_setup(tmp_path, recorded_at=NOW - timedelta(hours=2))
         decisions, record = _decision_setup(tmp_path, recorded_at=NOW - timedelta(hours=1))
 
-        html = client(
-            journal=journal, mappings=mappings, decisions=decisions
-        ).get("/audit").text
+        html = client(journal=journal, mappings=mappings, decisions=decisions).get("/audit").text
 
         assert "Order journal: bound" in html
         assert "Mappings ledger: bound" in html
@@ -1409,9 +1388,7 @@ class TestPhaseERiskAuditAndKillSwitch:
         decisions, _ = _decision_setup(tmp_path, recorded_at=NOW - timedelta(hours=1))
         documents = _document_setup(tmp_path)
 
-        html = client(
-            journal=journal, decisions=decisions, documents=documents
-        ).get("/audit").text
+        html = client(journal=journal, decisions=decisions, documents=documents).get("/audit").text
 
         assert 'href="/experiments/a1b2c3d4e5f60718"' in html
         assert 'href="/documents/doc-1"' in html
@@ -1503,9 +1480,7 @@ class TestPhaseERiskAuditAndKillSwitch:
             assert 'role="alert"' in response.text
             assert "refused" in response.text
         # A non-form body is refused too.
-        response = app_client.post(
-            "/kill-switch", json={"action": "engage", "confirm": "confirm"}
-        )
+        response = app_client.post("/kill-switch", json={"action": "engage", "confirm": "confirm"})
         assert response.status_code == 200
         assert 'role="alert"' in response.text
         assert "refused" in response.text
@@ -1581,9 +1556,7 @@ class TestPhaseCPerVenueKillSwitch:
             "kill_switch": False,
             "kill_switches": {"hyperliquid": True},
         }
-        assert app_client.app.state.page_context.account.kill_switches == {
-            Venue.HYPERLIQUID: True
-        }
+        assert app_client.app.state.page_context.account.kill_switches == {Venue.HYPERLIQUID: True}
 
     def test_hostile_venue_refused_without_touching_state(self) -> None:
         app_client = client(markets=self.MARKETS)
@@ -1602,9 +1575,7 @@ class TestPhaseCPerVenueKillSwitch:
         }
 
     def test_account_flags_render_without_markets(self) -> None:
-        account = sample_account().model_copy(
-            update={"kill_switches": {Venue.MOOMOO: True}}
-        )
+        account = sample_account().model_copy(update={"kill_switches": {Venue.MOOMOO: True}})
 
         html = client(account=account).get("/kill-switch/control").text
 
@@ -1691,9 +1662,7 @@ class TestWriteSurfaceOriginGuard:
         store = WatchlistStore(root=tmp_path / "watchlists")
         app_client = client(watchlist=store)
 
-        response = app_client.post(
-            "/watchlist/add", data={"symbol": "SOL"}, follow_redirects=False
-        )
+        response = app_client.post("/watchlist/add", data={"symbol": "SOL"}, follow_redirects=False)
 
         assert response.status_code == 303
         assert "SOL" in app_client.get("/watchlist").text
@@ -1714,9 +1683,7 @@ class TestEnablementScreen:
     def test_bound_ledger_renders_per_venue_states(self, tmp_path) -> None:
         ledger = ApprovalLedger(root=tmp_path / "enablement")
         ledger.request(Venue.MOOMOO, actor="operator-alpha", acted_at=NOW)
-        ledger.approve(
-            Venue.MOOMOO, actor="operator-alpha", acted_at=NOW, gate_text=GATE_TEXT
-        )
+        ledger.approve(Venue.MOOMOO, actor="operator-alpha", acted_at=NOW, gate_text=GATE_TEXT)
         ledger.request(Venue.HYPERLIQUID, actor="operator-alpha", acted_at=NOW)
 
         html = client(enablement=ledger).get("/enablement").text
@@ -1730,9 +1697,9 @@ class TestEnablementScreen:
         assert GATE_TEXT in html
 
     def test_empty_ledger_says_every_venue_disabled(self, tmp_path) -> None:
-        html = client(enablement=ApprovalLedger(root=tmp_path / "enablement")).get(
-            "/enablement"
-        ).text
+        html = (
+            client(enablement=ApprovalLedger(root=tmp_path / "enablement")).get("/enablement").text
+        )
 
         assert "No enablement records yet" in html
         assert GATE_TEXT in html
@@ -1744,9 +1711,7 @@ class TestEnablementScreen:
         # No write surface exists: a POST is refused, and the ledger
         # cannot be changed through the UI by construction.
         assert app_client.post("/enablement", data={"venue": "moomoo"}).status_code == 405
-        assert "No enablement ledger is bound." not in app_client.get(
-            "/enablement"
-        ).text
+        assert "No enablement ledger is bound." not in app_client.get("/enablement").text
         assert ledger.all() == []
 
     def test_nav_reaches_the_enablement_screen(self) -> None:

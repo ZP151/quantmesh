@@ -149,9 +149,7 @@ def _is_loopback(host: str) -> bool:
     return host in {"localhost", "::1"} or host.startswith("127.")
 
 
-def _guard_origin(
-    app: FastAPI, request: Request, redirect: str, surface: str
-) -> Response | None:
+def _guard_origin(app: FastAPI, request: Request, redirect: str, surface: str) -> Response | None:
     """Refuse a write-surface POST whose Origin is present but not
     loopback (threat model T-14, docs/threat-model.md).
 
@@ -176,8 +174,7 @@ def _guard_origin(
         app,
         request,
         redirect,
-        f"{surface} POST refused: cross-origin send (Origin {origin!r} "
-        "is not loopback)",
+        f"{surface} POST refused: cross-origin send (Origin {origin!r} is not loopback)",
     )
 
 
@@ -230,10 +227,14 @@ def _overview_provider(context: PageContext) -> dict[str, object]:
             for symbol in sorted(context.markets[venue])
         ]
         venues.append({"venue": venue, "instruments": instruments})
-    watchlist_entries = [
-        {"symbol": record.symbol, "mark": _mark_for(context.markets, record.symbol)}
-        for record in sorted(context.watchlist.all(), key=lambda item: item.symbol)
-    ] if context.watchlist is not None else []
+    watchlist_entries = (
+        [
+            {"symbol": record.symbol, "mark": _mark_for(context.markets, record.symbol)}
+            for record in sorted(context.watchlist.all(), key=lambda item: item.symbol)
+        ]
+        if context.watchlist is not None
+        else []
+    )
     return {
         "account": {
             "cash": account.cash,
@@ -244,9 +245,7 @@ def _overview_provider(context: PageContext) -> dict[str, object]:
             "kill_switch": account.kill_switch,
         },
         "marks": dict(context.marks),
-        "missing_marks": sorted(
-            key for key in account.positions if key not in context.marks
-        ),
+        "missing_marks": sorted(key for key in account.positions if key not in context.marks),
         "venues": venues,
         "watchlist": watchlist_entries,
     }
@@ -333,9 +332,7 @@ def _resolve_report_links(
         try:
             report = registry.get(report_id_value)
         except ValueError:
-            links.append(
-                {"id": report_id_value, "resolved": False, "reason": "missing evidence"}
-            )
+            links.append({"id": report_id_value, "resolved": False, "reason": "missing evidence"})
             continue
         links.append(
             {
@@ -371,9 +368,7 @@ def _promotions_provider(context: PageContext) -> dict[str, object]:
                     "benchmarks": _resolve_report_links(
                         record.benchmark_report_ids, context.reports
                     ),
-                    "ablations": _resolve_report_links(
-                        record.ablation_report_ids, context.reports
-                    ),
+                    "ablations": _resolve_report_links(record.ablation_report_ids, context.reports),
                     "oos": oos,
                 }
             )
@@ -392,9 +387,7 @@ def _positions_provider(context: PageContext) -> dict[str, object]:
             "average_cost": position.average_cost,
             "realized_pnl": position.realized_pnl,
             "unrealized_pnl": (
-                (marks[key] - position.average_cost) * position.quantity
-                if key in marks
-                else None
+                (marks[key] - position.average_cost) * position.quantity if key in marks else None
             ),
         }
         for key, position in context.account.positions.items()
@@ -411,9 +404,7 @@ def _order_view(order: Order) -> dict:
     fill events, extracted here for the screen.
     """
     view = _order_summary(order)
-    view["fills"] = [
-        event for event in view["events"] if event["event_type"] == "fill"
-    ]
+    view["fills"] = [event for event in view["events"] if event["event_type"] == "fill"]
     return view
 
 
@@ -447,9 +438,7 @@ def _pnl_provider(context: PageContext) -> dict[str, object]:
         "equity": account.equity(marks),
         "total_pnl": account.total_pnl(marks),
         "marks": marks,
-        "missing_marks": sorted(
-            key for key in account.positions if key not in marks
-        ),
+        "missing_marks": sorted(key for key in account.positions if key not in marks),
     }
 
 
@@ -494,8 +483,7 @@ def _market_view(report: object, market: object) -> dict[str, object]:
         (
             candidate
             for candidate in report.universe
-            if f"{candidate.venue.value}:{candidate.venue_market_id}"
-            == market.market_id
+            if f"{candidate.venue.value}:{candidate.venue_market_id}" == market.market_id
         ),
         None,
     )
@@ -546,9 +534,7 @@ def _forecasts_provider(context: PageContext) -> dict[str, object]:
     reports = []
     if registry is not None:
         # Newest first, id as the deterministic tie-break.
-        ordered = sorted(
-            registry.all(), key=lambda item: (item.created_at, item.id), reverse=True
-        )
+        ordered = sorted(registry.all(), key=lambda item: (item.created_at, item.id), reverse=True)
         reports = [_forecast_view(registry, report) for report in ordered]
     return {"reports": reports, "registry_bound": registry is not None}
 
@@ -636,9 +622,7 @@ def _decision_view(record: object) -> dict[str, object]:
                 "source_kind": citation.source_kind,
                 "source_id": citation.source_id,
                 "span": (
-                    f"{citation.span[0]}–{citation.span[1]}"
-                    if citation.span is not None
-                    else None
+                    f"{citation.span[0]}–{citation.span[1]}" if citation.span is not None else None
                 ),
                 "href": _citation_href(citation),
             }
@@ -748,9 +732,7 @@ def _enablement_provider(context: PageContext) -> dict[str, object]:
     states = []
     if ledger is not None:
         for venue in sorted(ledger.states()):
-            states.append(
-                {"venue": venue.value, "state": ledger.state(venue).value}
-            )
+            states.append({"venue": venue.value, "state": ledger.state(venue).value})
     return {
         "states": states,
         "bound": ledger is not None,
@@ -975,15 +957,11 @@ def _register_spa_redirects(app: FastAPI) -> None:
         )
 
     @app.get("/experiments/{experiment_id}", include_in_schema=False)
-    def experiment_detail_redirect(
-        request: Request, experiment_id: str
-    ) -> RedirectResponse:
+    def experiment_detail_redirect(request: Request, experiment_id: str) -> RedirectResponse:
         return RedirectResponse(LEGACY_TO_SPA["/experiments"], status_code=302)
 
     @app.get("/documents/{document_id}", include_in_schema=False)
-    def document_detail_redirect(
-        request: Request, document_id: str
-    ) -> RedirectResponse:
+    def document_detail_redirect(request: Request, document_id: str) -> RedirectResponse:
         return RedirectResponse(LEGACY_TO_SPA["/audit"], status_code=302)
 
 
@@ -1062,9 +1040,7 @@ def _renderer(app: FastAPI, page: Page) -> Callable[[Request], HTMLResponse]:
     return render
 
 
-def _error_page(
-    app: FastAPI, request: Request, route: str, message: str
-) -> HTMLResponse:
+def _error_page(app: FastAPI, request: Request, route: str, message: str) -> HTMLResponse:
     page = next(item for item in PAGES if item.route == route)
     return _render_page(app, page, request, {"error": message})
 
@@ -1132,9 +1108,7 @@ def _register_experiment_detail(app: FastAPI) -> None:
             request=request,
             name="experiment_detail.html",
             context={
-                **_base_context(
-                    f"QuantMesh — Experiment {experiment.id}", context.account
-                ),
+                **_base_context(f"QuantMesh — Experiment {experiment.id}", context.account),
                 "experiment": _experiment_view(experiment),
                 "pin": pin,
                 "pin_error": pin_error,
@@ -1181,9 +1155,7 @@ def _register_kill_switch(app: FastAPI) -> None:
             )
         context = app.state.page_context
         if venue is None:
-            flipped = context.account.model_copy(
-                update={"kill_switch": action == "engage"}
-            )
+            flipped = context.account.model_copy(update={"kill_switch": action == "engage"})
         else:
             try:
                 venue_enum = Venue(venue)
@@ -1199,9 +1171,7 @@ def _register_kill_switch(app: FastAPI) -> None:
                 kill_switches[venue_enum] = True
             else:
                 kill_switches.pop(venue_enum, None)
-            flipped = context.account.model_copy(
-                update={"kill_switches": kill_switches}
-            )
+            flipped = context.account.model_copy(update={"kill_switches": kill_switches})
         app.state.account = flipped
         app.state.page_context = replace(context, account=flipped)
         return RedirectResponse("/kill-switch/control", status_code=303)
@@ -1221,9 +1191,7 @@ def _register_document_detail(app: FastAPI) -> None:
     def document_detail(request: Request, document_id: str) -> HTMLResponse:
         context = app.state.page_context
         if context.documents is None:
-            return _error_page(
-                app, request, "/audit", "no document index is bound"
-            )
+            return _error_page(app, request, "/audit", "no document index is bound")
         try:
             document = context.documents.get(document_id)
         except ValueError as error:
@@ -1232,9 +1200,7 @@ def _register_document_detail(app: FastAPI) -> None:
             request=request,
             name="document_detail.html",
             context={
-                **_base_context(
-                    f"QuantMesh — Document {document.id}", context.account
-                ),
+                **_base_context(f"QuantMesh — Document {document.id}", context.account),
                 "document": {
                     "id": document.id,
                     "kind": document.kind,
@@ -1246,14 +1212,40 @@ def _register_document_detail(app: FastAPI) -> None:
         )
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     """quantmesh-workstation: serve the workstation over loopback.
 
     Binds a fresh empty paper account as the safe local bootstrap;
     operators who want their real account/journal surfaces wired start
     the app programmatically with `create_workstation_app(account=...)`.
+    With ``--demo`` the labeled deterministic scenario is served
+    instead: `--demo-root` picks the demo root (default
+    ``~/.quantmesh/demo``), `--seed` overrides the scenario seed, and
+    the app exposes ``/api/demo/status`` plus the marker-guarded reset.
     """
+    import argparse
+
     import uvicorn  # deferred: only the console script touches it
+
+    parser = argparse.ArgumentParser(prog="quantmesh-workstation")
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="serve the labeled deterministic demo scenario instead of an empty paper account",
+    )
+    parser.add_argument(
+        "--demo-root",
+        type=Path,
+        default=None,
+        help="demo root (default: settings.demo_root, ~/.quantmesh/demo)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="demo scenario seed (default: settings.demo_seed)",
+    )
+    args = parser.parse_args(argv)
 
     host = settings.workstation_host
     if not _is_loopback(host):
@@ -1261,6 +1253,19 @@ def main() -> None:
             f"workstation host must be loopback, got {host!r} "
             "(non-loopback binds are refused at construction)"
         )
-    account = PaperAccount(cash=100_000.0)
-    app = create_workstation_app(account=account, host=host)
+    if args.demo:
+        from quantmesh.demo.runtime import create_demo_app
+
+        app = create_demo_app(
+            root=args.demo_root,
+            seed=args.seed,
+            host=host,
+        )
+    else:
+        account = PaperAccount(cash=100_000.0)
+        app = create_workstation_app(account=account, host=host)
     uvicorn.run(app, host=host, port=settings.workstation_port)
+
+
+if __name__ == "__main__":
+    main()
