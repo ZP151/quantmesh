@@ -17,8 +17,8 @@
     </header>
     <nav aria-label="Primary">
       <ul>
-        {% for route in nav_routes %}
-          <li><a href="{{ route }}">{{ route }}</a></li>
+        {% for route, label in nav_routes %}
+          <li><a href="{{ route }}">{{ label }}</a></li>
         {% endfor %}
         <li><a href="/account">Account (API)</a></li>
         <li><a href="/positions">Positions (API)</a></li>

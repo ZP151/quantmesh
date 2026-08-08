@@ -14,6 +14,7 @@ dependencies = [
   "httpx>=0.27,<1",
   "jinja2>=3.1,<4",  # M9 (ADR-0011): server-rendered workstation pages
   "numpy>=2,<3",
+  "python-multipart>=0.0.9,<1",  # M9 Phase B: native workstation forms
   "pandas>=2.2,<3",
   "pydantic>=2.9,<3",
   "pydantic-settings>=2.6,<3",

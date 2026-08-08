@@ -65,6 +65,34 @@ host is refused at construction, never env-escalable (Phase A, issue
   account as the safe local bootstrap; operators wire their real
   account/journal surfaces programmatically.
 
+### Decision 3 — The watchlist is the one UI-owned write surface,
+persisted as JSONL on the ADR-0006 discipline (Phase B, issue #52)
+
+- The workstation data plane is otherwise read-only; the only state
+  the UI owns is a single default watchlist of instrument symbols
+  (`quantmesh.api.watchlist.WatchlistStore`), stored as
+  `watchlist.jsonl` under `settings.watchlists_dir` (default
+  `~/.quantmesh/watchlists`).
+- The store follows the ADR-0006 discipline exactly: atomic
+  temp+replace writes (`mkstemp` in the store root, `os.replace`,
+  cleanup-unlink in `finally`), fail-closed reads with line
+  attribution (`watchlist <path> line N is invalid`,
+  `line N repeats symbol ...`), duplicate-symbol refusal on add and on
+  read, root-not-dir refusal, and a missing root or file reading as an
+  empty list — never an error. Symbols are shape-validated
+  (strip, refuse empty/whitespace, refuse internal whitespace) and
+  `added_at` is stamped aware-UTC.
+- Writes flow only through the form endpoints (`POST /watchlist/add`,
+  `POST /watchlist/remove`); both fail closed — a duplicate, absent,
+  or malformed symbol, or an unbound store, renders a typed error page
+  (`role="alert"`) instead of mutating or crashing. Success is a 303
+  redirect back to the watchlist page (PRG), so a refresh never
+  re-submits.
+- The overview screen renders a watchlist snapshot (mark resolved
+  through the first sorted venue, or "no mark"), and the watchlist
+  page is the editing surface; hostile symbols are escaped by the
+  autoescape posture in both.
+
 ## Consequences
 
 - The workstation adds one core dependency (jinja2, BSD-3) and no
@@ -76,6 +104,10 @@ host is refused at construction, never env-escalable (Phase A, issue
 - The HTML layer renders the same account state the M1 JSON endpoints
   serve, computed by the same code path; understated or missing data
   (positions without marks) is named in the UI, never silent.
+- The UI owns exactly one persisted surface (the watchlist); its
+  JSONL file is on the same discipline as the experiment and audit
+  journals, so a corrupted or hostile watchlist file fails closed
+  with attribution instead of rendering attacker state into the UI.
 - Later phases append screens to the page registry and extend the
   injected context; the registry tests keep the route/template/
   provider triple pinned.

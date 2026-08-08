@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     # never env-escalable (the ADR-0010 loopback discipline).
     workstation_host: str = "127.0.0.1"
     workstation_port: int = Field(default=8765, ge=1, le=65535)
+    # Watchlists (M9 Phase B, ADR-0011 decision 3): the one UI-owned
+    # write surface, JSONL on the ADR-0006 discipline.
+    watchlists_dir: Path = Path.home() / ".quantmesh" / "watchlists"
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -37,4 +37,46 @@
   <p class="notice">Positions without a mark (excluded from equity): {{ missing_marks|join(", ") }}.</p>
   {% endif %}
 </section>
+
+<section aria-labelledby="venues-heading">
+  <h2 id="venues-heading">Venues</h2>
+  {% if venues %}
+  {% for venue in venues %}
+  <h3>{{ venue.venue }} ({{ venue.instruments|length }} instruments)</h3>
+  <table>
+    <thead>
+      <tr><th scope="col">Symbol</th><th scope="col">Mark</th></tr>
+    </thead>
+    <tbody>
+      {% for instrument in venue.instruments %}
+      <tr><th scope="row">{{ instrument.symbol }}</th><td>{{ "%.4f"|format(instrument.mark) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+  {% else %}
+  <p>No market data injected.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="watchlist-heading">
+  <h2 id="watchlist-heading">Watchlist</h2>
+  {% if watchlist %}
+  <table>
+    <thead>
+      <tr><th scope="col">Symbol</th><th scope="col">Mark</th></tr>
+    </thead>
+    <tbody>
+      {% for entry in watchlist %}
+      <tr>
+        <th scope="row"><a href="/watchlist">{{ entry.symbol }}</a></th>
+        <td>{% if entry.mark is not none %}{{ "%.4f"|format(entry.mark) }}{% else %}no mark{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Watchlist is empty — <a href="/watchlist">add symbols</a>.</p>
+  {% endif %}
+</section>
 {% endblock %}

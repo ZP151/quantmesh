@@ -288,6 +288,32 @@ rendering, markup escaping end-to-end, M1 endpoints byte-identical to
 `create_app`, console-script loopback/refusal drills). ADR-0011
 decisions 1-2 recorded.
 
+**Issue #52 (Phase B, market overview, watchlists, cross-venue
+instruments) committed 2026-08-08**
+— `quantmesh.api.watchlist`: `WatchlistStore`/`WatchlistRecord`/
+`WatchlistError` on the exact ADR-0006 discipline (atomic
+temp+replace writes, fail-closed reads with line attribution,
+duplicate refusal on add and on read, root-not-dir refusal, missing
+store → `[]`), symbols shape-validated (strip, refuse empty and
+internal whitespace), `added_at` aware-UTC, `settings.watchlists_dir`
+default `~/.quantmesh/watchlists`; the one UI-owned write surface
+(ADR-0011 decision 3). `workstation.py`: `PageContext` gains injected
+`markets` (venue → symbol → mark) and `watchlist`; registry grows the
+Instruments and Watchlist pages (labels in nav); overview renders
+venue cards + a watchlist snapshot with mark resolved through the
+first sorted venue; form endpoints `POST /watchlist/add` and
+`/watchlist/remove` (python-multipart 0.0.32) — fail-closed typed
+error pages (`role="alert"`) on duplicate/absent/malformed/unbound,
+303 PRG on success; `_error_page`/`_render_page` refactor; templates
+`overview.html`/`instruments.html`/`watchlist.html`; `home.html`
+superseded and removed. 44 tests (15 store discipline incl.
+cross-instance persistence, corrupt-line and duplicate-in-file
+attribution, nothing-written-on-refusal; 13 Phase B screen drills
+incl. sorted venue/instrument rendering, add/remove round-trips
+through the forms with 303 + persistence, error pages, unbound-store
+refusal, hostile-symbol escaping on render). ADR-0011 decision 3
+recorded.
+
 ## Verification evidence
 
 (empty)
