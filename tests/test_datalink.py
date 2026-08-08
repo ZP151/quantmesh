@@ -22,7 +22,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-from quantmesh.demo.datalink import DatalinkService, datalink_router
+from quantmesh.demo.datalink import DatalinkService
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.hyperliquid.errors import (

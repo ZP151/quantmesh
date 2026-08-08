@@ -49,11 +49,11 @@ from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 
 from quantmesh.api.workstation import _json_guard_origin
-from quantmesh.data.layout import validate_dataset_name, validate_symbol
 from quantmesh.data.lake import Lake
+from quantmesh.data.layout import validate_dataset_name, validate_symbol
 from quantmesh.data.manifest import MANIFEST_NAME, DatasetManifest, ManifestWriter
 from quantmesh.domain.market_data import Bar, interval_to_timedelta
-from quantmesh.domain.models import Instrument, InstrumentType, Side, Venue
+from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.hyperliquid.errors import (
     HyperliquidError,
     HyperliquidSDKMissingError,
@@ -440,7 +440,10 @@ class DatalinkService:
                 read_only=True,
                 wired=True,
                 state="ok",
-                detail=f"Testnet answers; l2Book for BTC carries {len(payload.get('levels', []))} level arrays.",
+                detail=(
+                    "Testnet answers; l2Book for BTC carries "
+                    f"{len(payload.get('levels', []))} level arrays."
+                ),
                 last_checked_at=_utc_now().isoformat(),
                 latency_ms=round((time.perf_counter() - start) * 1000, 1),
             )

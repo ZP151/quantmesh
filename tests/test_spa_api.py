@@ -132,7 +132,10 @@ def test_kill_switch_json_refusals(demo_client) -> None:
         "/api/kill-switch", json={"action": "engage"}, headers={"Origin": "https://evil.example"}
     )
     assert cross_origin.status_code == 403
-    assert client.post("/api/kill-switch", json={"action": "engage", "venue": "not-a-venue"}).status_code == 422
+    bad_venue = client.post(
+        "/api/kill-switch", json={"action": "engage", "venue": "not-a-venue"}
+    )
+    assert bad_venue.status_code == 422
 
 
 # ---------------------------------------------------------------------------
@@ -146,7 +149,8 @@ def test_demo_order_fills_through_the_seeded_pipeline(demo_client) -> None:
     positions_before = client.get("/api/positions").json()
 
     response = client.post(
-        "/api/demo/order", json={"venue": "hyperliquid", "symbol": "SOL-USD", "side": "BUY", "quantity": 10}
+        "/api/demo/order",
+        json={"venue": "hyperliquid", "symbol": "SOL-USD", "side": "BUY", "quantity": 10},
     )
     assert response.status_code == 200
     payload = response.json()
@@ -172,7 +176,10 @@ def test_demo_order_resting_limit_accepts_without_fill(demo_client) -> None:
     positions_before = len(client.get("/api/positions").json())
     response = client.post(
         "/api/demo/order",
-        json={"venue": "moomoo", "symbol": "MSFT", "side": "BUY", "quantity": 1, "limit_price": 0.5},
+        json={
+            "venue": "moomoo", "symbol": "MSFT", "side": "BUY",
+            "quantity": 1, "limit_price": 0.5,
+        },
     )
     assert response.status_code == 200
     payload = response.json()
@@ -213,7 +220,8 @@ def test_demo_order_idempotency_key_replays(demo_client) -> None:
 def test_demo_order_refusals(demo_client) -> None:
     client, _app = demo_client
     outside = client.post(
-        "/api/demo/order", json={"venue": "moomoo", "symbol": "DOES-NOT-EXIST", "side": "BUY", "quantity": 1}
+        "/api/demo/order",
+        json={"venue": "moomoo", "symbol": "DOES-NOT-EXIST", "side": "BUY", "quantity": 1},
     )
     assert outside.status_code == 404
     cross_origin = client.post(
@@ -242,7 +250,8 @@ def test_reset_restores_the_pristine_root_after_orders(demo_client) -> None:
     client, _app = demo_client
     seeded_cash = client.get("/api/account").json()["cash"]
     client.post(
-        "/api/demo/order", json={"venue": "hyperliquid", "symbol": "SOL-USD", "side": "BUY", "quantity": 10}
+        "/api/demo/order",
+        json={"venue": "hyperliquid", "symbol": "SOL-USD", "side": "BUY", "quantity": 10},
     )
     client.post(
         "/api/demo/order", json={"venue": "moomoo", "symbol": "AAPL", "side": "BUY", "quantity": 2}
@@ -260,6 +269,7 @@ def test_no_demo_order_on_a_plain_app() -> None:
     app = create_app(account=None)  # type: ignore[arg-type]
     with TestClient(app) as client:
         response = client.post(
-            "/api/demo/order", json={"venue": "moomoo", "symbol": "AAPL", "side": "BUY", "quantity": 1}
+            "/api/demo/order",
+            json={"venue": "moomoo", "symbol": "AAPL", "side": "BUY", "quantity": 1},
         )
         assert response.status_code == 404
