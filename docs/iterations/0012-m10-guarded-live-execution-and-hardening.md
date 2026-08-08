@@ -505,6 +505,20 @@ recorded live gate) complete — 2026-08-08.**
   live-enablement gate recorded verbatim; the workstation screen is
   read-only).
 
+**CI advisory remediation — 2026-08-08.**
+
+- GitHub Actions Security run `31258964613` found `pytest 8.4.2`
+  affected by `PYSEC-2026-1845` (fixed in `9.0.3`). The dev extra now
+  requires `pytest>=9.0.3,<10` and `pytest-asyncio>=1,<2`; the audit
+  lock records `pytest 9.1.1` and `pytest-asyncio 1.4.0`.
+- The Security workflow reviews the project environment before
+  installing `pip-audit`, keeping the scanner's own CLI dependencies
+  out of the application license inventory while still scanning the
+  frozen project closure.
+- The latest main CI run `31258964567` was green (1774 passed, 1
+  skipped); local lock audit and the project-environment license review
+  both pass with the updated constraints.
+
 ## Verification evidence
 
 - `tests/test_ops.py`: 37 passed (2026-08-08).
