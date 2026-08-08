@@ -92,7 +92,7 @@ Out of scope (recorded, not deferred silently):
       observation grid, so no "current implied probability" can be
       rendered honestly — the card is the evaluation (ADR-0011
       decision 5).*
-4. [ ] Risk alerts and the audit explorer render the M7 alert ledger,
+4. [x] Risk alerts and the audit explorer render the M7 alert ledger,
       the M5 risk posture, the M2 order journal, the M6 mapping ledger
       and the M8 decision log in one chronological view; the global
       kill switch control flips the paper kernel's flag and the UI
@@ -408,6 +408,48 @@ mid-derived probabilities — a current probability would be
 fabricated. Acceptance criterion 3 checked off. Full suite 1617
 passed / 3 skipped. ADR-0011 decision 5 recorded (the planned
 kill-switch and Playwright decisions shift to 6 and 7).
+
+**Issue #55 (Phase E, risk alerts, audit explorer, global kill switch)
+committed 2026-08-08** — `workstation.py`: `PageContext` gains the
+injected `alerts` (M7 `AlertLedger`), `journal` (M2 `OrderJournal`),
+`mappings` (M6 `MappingLedger`), `decisions` (M8 `DecisionLog`),
+`documents` (M8 `DocumentIndex`) and `hl_posture` (the M5
+`hyperliquid.RiskLimits`, optional) surfaces; PAGES grows three
+screens — `/risk`, `/audit` and `/kill-switch/control` (M1 owns GET
+`/kill-switch` on the same app object, so the HTML control lives at
+`/kill-switch/control` and shares the POST by method; route
+no-shadowing pinned by the registry test). The risk screen renders
+two limit surfaces and never merges them: the accounting
+`RiskLimits` the paper kernel enforces (from the injected account,
+unset limits render an en dash) and the M5 posture as a typed
+optional surface ("No M5 posture is bound."); the alert ledger
+renders with source attribution, newest first, the deterministic id
+as tie-break. The audit explorer merges the journal (event streams
+with fills highlighted), the mapping ledger (verdict, commit,
+evidence sorted by kind) and the decision log (model metadata,
+schema, digests, refusals) into one chronological view — every entry
+anchors to its source record and the `kind:id` citations render as
+resolvable links (experiments and documents get their detail routes;
+the document detail screen serves the index record's content;
+audit citations jump to the order anchor), ids URL-quoted. The kill
+switch is the workstation's second write surface: a confirm-gated
+form POST flips the injected account's `kill_switch` through
+`dataclasses.replace` so the M1 JSON surface and the page context
+never disagree (header state on every page, engaged state on the
+overview), and hostile POSTs (missing/wrong confirm, non-form body)
+are refused with a typed error page and no state change; the UI
+states that execution-plane enforcement is M10. 14 new tests: typed
+unbound/default-limit states, customized paper limits, M5 posture
+bound (defaults and customized), alert sources newest-first, audit
+unbound, the three-ledger chronological merge (order → decision →
+mapping), resolvable citation links, document detail (record,
+unknown id, unbound index), kill-switch engage/disarm round trips
+(303 to the control page; JSON and HTML surfaces agree) and hostile
+POSTs. Operator drill: 16/16 checks passed over real ledger data
+(risk surfaces, audit merge, citation links, engage → disarm round
+trip, hostile POST refused with state untouched). Acceptance
+criterion 4 checked off. Full suite 1631 passed / 3 skipped (79
+workstation tests). ADR-0011 decision 6 recorded.
 
 ## Verification evidence
 

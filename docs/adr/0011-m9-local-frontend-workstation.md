@@ -154,6 +154,40 @@ surfaces by the same code path, under `/portfolio/*` (Phase D, issue
   unbound registry renders a typed empty state (decision 4 applied to
   the forecast surface).
 
+### Decision 6 — Risk screen, audit explorer and the paper kill-switch
+control (Phase E, issue #55)
+
+- The risk screen renders two distinct limit surfaces and never merges
+  them: the accounting `RiskLimits` the paper kernel enforces (read
+  from the injected account; an unset limit renders an en dash, never
+  a fabricated number) and the M5 Hyperliquid pre-submission posture
+  as an optional injected surface with a typed "No M5 posture is
+  bound" state. The two are different types (`execution.accounting`
+  vs `hyperliquid.risk`) with different semantics, so they are
+  separate sections. The M7 alert ledger renders beneath them with
+  source attribution (`feature:`/`index:`/`nan` sources), newest
+  first, the deterministic id as tie-break.
+- The audit explorer is one read-only chronological view over the M2
+  `OrderJournal` (with event streams and fills), the M6
+  `MappingLedger` (verdict, commit, evidence) and the M8 `DecisionLog`
+  (model metadata, schema, digests, refusals, citations), merged
+  newest-first with the id as tie-break per ledger. Every entry
+  anchors to its source record, and the M8 `kind:id` citations render
+  as resolvable links — experiments and documents get their detail
+  routes, audit citations jump to the order's anchor — with ids
+  URL-quoted against injection.
+- The paper-level kill switch is the workstation's second write
+  surface: a confirm-gated POST flips the injected paper account's
+  `kill_switch` flag through `dataclasses.replace`, so the M1 JSON
+  surface and the page context never disagree; the header of every
+  page reflects the state. A hostile POST (missing or wrong confirm,
+  non-form body) is refused with a typed error page and no state
+  change. The control lives at `/kill-switch/control` because M1 owns
+  GET `/kill-switch` on the same app object (route-shadowing
+  discipline: first-registered wins; different methods coexist).
+  Enforcement across the wider execution plane is M10 — the UI states
+  this.
+
 ## Consequences
 
 - The workstation adds one core dependency (jinja2, BSD-3) and no
@@ -183,3 +217,11 @@ surfaces by the same code path, under `/portfolio/*` (Phase D, issue
 - Later phases append screens to the page registry and extend the
   injected context; the registry tests keep the route/template/
   provider triple pinned.
+- The workstation's write surfaces are exactly two: the watchlist
+  (persisted JSONL) and the paper kill switch (the injected account's
+  in-memory flag). Nothing else in the UI mutates state; the audit
+  explorer and the risk screen are read-only views.
+- The paper kill switch is display-and-enforce for the paper surface
+  only. The paper kernel's own risk gate refuses order submissions
+  while the flag is engaged; wiring the flag into the wider execution
+  plane is M10, and the control page names that boundary.
