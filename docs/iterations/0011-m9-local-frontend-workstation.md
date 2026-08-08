@@ -267,7 +267,26 @@ documented in Risks and gates below).
 
 ## Work log
 
-(empty)
+**Issue #51 (Phase A, workstation server shell) committed 2026-08-08**
+— `quantmesh.api.workstation`: `create_workstation_app` supersets the
+M1 `create_app` on the same app object (JSON observability and HTML
+screens cannot drift apart — pinned by a comparison test); `PAGES`
+registry (route → template → data provider, `PageContext` = injected
+account + marks, rendered as data); jinja2 (3.1.6) the only new core
+dependency; base layout with the accessibility posture from the first
+screen (skip link, header/nav/main landmarks, tables with `scope`,
+`:focus-visible` in the local stylesheet — no CDN, no external fonts);
+loopback-only bind refused at construction with a typed
+`WorkstationConfigError` (localhost/::1/127.0.0.0/8 accepted;
+0.0.0.0/192.168.x/example.com/:: refused — the ADR-0010 loopback
+discipline); `workstation_host`/`workstation_port` settings;
+`quantmesh-workstation` console script (uvicorn deferred-imported,
+same fail-closed check, empty-paper bootstrap); static CSS served
+locally. 26 tests (construction matrix, page-registry pins incl.
+autoescape-on-html, landmarks/skip-link, account/marks/missing-marks
+rendering, markup escaping end-to-end, M1 endpoints byte-identical to
+`create_app`, console-script loopback/refusal drills). ADR-0011
+decisions 1-2 recorded.
 
 ## Verification evidence
 

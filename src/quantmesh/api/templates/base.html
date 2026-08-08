@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ page_title }} · {{ app_name }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <header>
+      <p class="brand">{{ app_name }} <span class="environment">{{ environment }}</span></p>
+      <p class="kill-switch" data-kill-switch="{{ "true" if kill_switch else "false" }}">
+        Paper kernel kill switch:
+        {% if kill_switch %}<strong class="engaged">ENGAGED</strong>{% else %}disarmed{% endif %}
+      </p>
+    </header>
+    <nav aria-label="Primary">
+      <ul>
+        {% for route in nav_routes %}
+          <li><a href="{{ route }}">{{ route }}</a></li>
+        {% endfor %}
+        <li><a href="/account">Account (API)</a></li>
+        <li><a href="/positions">Positions (API)</a></li>
+        <li><a href="/orders">Orders (API)</a></li>
+        <li><a href="/pnl">P&amp;L (API)</a></li>
+        <li><a href="/kill-switch">Kill switch (API)</a></li>
+      </ul>
+    </nav>
+    <main id="main">
+      {% block content %}{% endblock %}
+    </main>
+    <footer>{{ app_name }} {{ version }} — local workstation</footer>
+  </body>
+</html>

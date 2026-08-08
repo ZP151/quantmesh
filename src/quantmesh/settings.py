@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     # Content-addressed research decision log (M8 Phase D): append-only
     # JSONL on the ADR-0006 discipline.
     decisions_dir: Path = Path.home() / ".quantmesh" / "decisions"
+    # Local workstation (M9, ADR-0011): loopback-only bind — a
+    # non-loopback workstation_host is refused at app construction,
+    # never env-escalable (the ADR-0010 loopback discipline).
+    workstation_host: str = "127.0.0.1"
+    workstation_port: int = Field(default=8765, ge=1, le=65535)
 
     model_config = SettingsConfigDict(
         env_file=".env",
