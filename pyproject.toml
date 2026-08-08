@@ -12,7 +12,9 @@ dependencies = [
   "duckdb>=1.1,<2",
   "fastapi>=0.115,<1",
   "httpx>=0.27,<1",
+  "jinja2>=3.1,<4",  # M9 (ADR-0011): server-rendered workstation pages
   "numpy>=2,<3",
+  "python-multipart>=0.0.9,<1",  # M9 Phase B: native workstation forms
   "pandas>=2.2,<3",
   "pydantic>=2.9,<3",
   "pydantic-settings>=2.6,<3",
@@ -37,10 +39,17 @@ dev = [
   "pytest-asyncio>=0.24,<1",
   "ruff>=0.8,<1",
 ]
+e2e = [
+  # M9 Phase F (ADR-0011 decision 7): dev-only browser E2E. Browser
+  # binaries are installed separately (`playwright install chromium`);
+  # the suite skips cleanly when the package or the browser is missing.
+  "playwright>=1.44,<2",
+]
 
 [project.scripts]
 quantmesh-iteration = "quantmesh.dev.iterations:main"
 quantmesh-moomoo = "quantmesh.moomoo.cli:main"
+quantmesh-workstation = "quantmesh.api.workstation:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

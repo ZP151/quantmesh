@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Risk</h1>
+<section aria-labelledby="paper-limits-heading">
+  <h2 id="paper-limits-heading">Paper kernel pre-trade limits</h2>
+  <dl>
+    <div><dt>Kill switch</dt><dd>{% if paper_limits.kill_switch %}<strong class="engaged">ENGAGED</strong>{% else %}disarmed{% endif %}</dd></div>
+    <div><dt>Max order quantity</dt><dd>{{ paper_limits.max_order_quantity if paper_limits.max_order_quantity is not none else "—" }}</dd></div>
+    <div><dt>Max notional</dt><dd>{{ paper_limits.max_notional if paper_limits.max_notional is not none else "—" }}</dd></div>
+    <div><dt>Max position quantity</dt><dd>{{ paper_limits.max_position_quantity if paper_limits.max_position_quantity is not none else "—" }}</dd></div>
+  </dl>
+</section>
+<section aria-labelledby="hl-posture-heading">
+  <h2 id="hl-posture-heading">Hyperliquid pre-submission posture (M5)</h2>
+  {% if hl_posture is none %}
+  <p class="notice">No M5 posture is bound.</p>
+  {% else %}
+  <dl>
+    <div><dt>Max leverage</dt><dd>{{ hl_posture.max_leverage }}</dd></div>
+    <div><dt>Min liquidation distance (bps)</dt><dd>{{ hl_posture.min_liquidation_distance_bps }}</dd></div>
+    <div><dt>Reduce-only</dt><dd>{{ "true" if hl_posture.reduce_only else "false" }}</dd></div>
+    <div><dt>Stale data window (s)</dt><dd>{{ hl_posture.stale_data_window_s }}</dd></div>
+  </dl>
+  {% endif %}
+</section>
+<section aria-labelledby="alerts-heading">
+  <h2 id="alerts-heading">Detected conditions (M7 alert ledger)</h2>
+  {% if not alerts_bound %}
+  <p class="notice">No alert ledger is bound.</p>
+  {% elif not alerts %}
+  <p>No alerts recorded.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Kind</th>
+        <th scope="col">Source</th>
+        <th scope="col">Detected at</th>
+        <th scope="col">Message</th>
+        <th scope="col">Observed</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for alert in alerts %}
+      <tr>
+        <th scope="row"><code>{{ alert.kind }}</code></th>
+        <td><code>{{ alert.source }}</code></td>
+        <td>{{ alert.detected_at }}</td>
+        <td>{{ alert.message }}</td>
+        <td>{% if alert.observed %}{% for name, value in alert.observed.items() %}<code>{{ name }}</code>: {{ value }}{% if not loop.last %}; {% endif %}{% endfor %}{% else %}<span class="missing-mark">—</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

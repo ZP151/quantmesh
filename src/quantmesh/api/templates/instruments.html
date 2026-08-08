@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Instruments</h1>
+
+<section aria-labelledby="instruments-heading">
+  <h2 id="instruments-heading">Cross-venue instruments</h2>
+  {% if instruments %}
+  <table>
+    <thead>
+      <tr><th scope="col">Venue</th><th scope="col">Symbol</th><th scope="col">Mark</th></tr>
+    </thead>
+    <tbody>
+      {% for instrument in instruments %}
+      <tr>
+        <th scope="row">{{ instrument.venue }}</th>
+        <td>{{ instrument.symbol }}</td>
+        <td>{{ "%.4f"|format(instrument.mark) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No market data injected.</p>
+  {% endif %}
+</section>
+{% endblock %}

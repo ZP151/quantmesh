@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Experiments</h1>
+
+{% if error %}
+<p class="notice" role="alert">{{ error }}</p>
+{% endif %}
+
+{% if not registry_bound %}
+<p class="notice">No experiment registry is bound.</p>
+{% else %}
+<p>{{ experiments|length }} experiment record{{ "s" if experiments|length != 1 }}.</p>
+<section aria-labelledby="experiments-heading">
+  <h2 id="experiments-heading">Side by side</h2>
+  {% if experiments %}
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Experiment</th>
+        <th scope="col">Dataset</th>
+        <th scope="col">Revision</th>
+        <th scope="col">Commit</th>
+        <th scope="col">Parameters</th>
+        <th scope="col">Metrics</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for experiment in experiments %}
+      <tr>
+        <th scope="row"><a href="/experiments/{{ experiment.id }}">{{ experiment.id }}</a></th>
+        <td>{{ experiment.dataset }}</td>
+        <td>{{ experiment.revision }}</td>
+        <td><code>{{ experiment.commit }}</code></td>
+        <td>
+          {% for key, value in experiment.parameters.items() %}
+            <code>{{ key }}={{ value }}</code>{% if not loop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+        <td>
+          {% for key, value in experiment.metrics.items() %}
+            <code>{{ key }}={{ value }}</code>{% if not loop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>The experiment registry is empty.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

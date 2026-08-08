@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Watchlist</h1>
+
+{% if error %}
+<p class="notice" role="alert">{{ error }}</p>
+{% endif %}
+
+<section aria-labelledby="add-heading">
+  <h2 id="add-heading">Add a symbol</h2>
+  <form action="/watchlist/add" method="post">
+    <label for="symbol">Symbol</label>
+    <input id="symbol" name="symbol" type="text" autocomplete="off" required>
+    <button type="submit">Add to watchlist</button>
+  </form>
+</section>
+
+<section aria-labelledby="entries-heading">
+  <h2 id="entries-heading">Entries</h2>
+  {% if entries %}
+  <table>
+    <thead>
+      <tr><th scope="col">Symbol</th><th scope="col">Mark</th><th scope="col">Remove</th></tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+      <tr>
+        <th scope="row">{{ entry.symbol }}</th>
+        <td>{% if entry.mark is not none %}{{ "%.4f"|format(entry.mark) }}{% else %}no mark{% endif %}</td>
+        <td>
+          <form action="/watchlist/remove" method="post">
+            <input type="hidden" name="symbol" value="{{ entry.symbol }}">
+            <button type="submit" aria-label="Remove {{ entry.symbol }} from watchlist">Remove</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>The watchlist is empty.</p>
+  {% endif %}
+</section>
+{% endblock %}

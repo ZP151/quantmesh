@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>P&amp;L</h1>
+<section aria-labelledby="account-heading">
+  <h2 id="account-heading">Account</h2>
+  <table>
+    <tbody>
+      <tr><th scope="row">Cash</th><td>{{ cash }}</td></tr>
+      <tr><th scope="row">Starting cash</th><td>{{ starting_cash }}</td></tr>
+      <tr><th scope="row">Total fees</th><td>{{ total_fees }}</td></tr>
+      <tr><th scope="row">Order sequence</th><td>{{ order_sequence }}</td></tr>
+    </tbody>
+  </table>
+</section>
+<section aria-labelledby="pnl-heading">
+  <h2 id="pnl-heading">P&amp;L</h2>
+  <table>
+    <tbody>
+      <tr><th scope="row">Realized</th><td>{{ realized_pnl }}</td></tr>
+      <tr><th scope="row">Unrealized</th><td>{{ unrealized_pnl }}</td></tr>
+      <tr><th scope="row">Equity</th><td>{{ equity }}</td></tr>
+      <tr><th scope="row">Total</th><td>{{ total_pnl }}</td></tr>
+    </tbody>
+  </table>
+</section>
+<section aria-labelledby="marks-heading">
+  <h2 id="marks-heading">Marks</h2>
+  {% if marks %}
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Position</th>
+        <th scope="col">Mark</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for key, mark in marks.items() %}
+      <tr>
+        <th scope="row"><code>{{ key }}</code></th>
+        <td>{{ mark }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No marks injected.</p>
+  {% endif %}
+  {% if missing_marks %}
+  <p class="notice">No mark for: {{ missing_marks|join(", ") }} — equity-based numbers above are understated.</p>
+  {% endif %}
+</section>
+{% endblock %}

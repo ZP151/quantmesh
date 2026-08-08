@@ -1,0 +1,204 @@
+/* QuantMesh workstation — local stylesheet, no CDN, no external fonts. */
+
+:root {
+  color-scheme: light dark;
+  --fg: #1a1a1a;
+  --bg: #fafafa;
+  --panel: #ffffff;
+  --border: #d0d0d0;
+  --accent: #1a5fb4;
+  --danger: #a51d2d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e6e6e6;
+    --bg: #1e1e1e;
+    --panel: #262626;
+    --border: #404040;
+    --accent: #62a0ea;
+    --danger: #f66151;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 64rem;
+  padding: 1rem;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+/* Visible focus on every interactive element (keyboard posture). */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--panel);
+  padding: 0.5rem 1rem;
+}
+
+.skip-link:focus-visible {
+  left: 0;
+}
+
+header,
+main,
+footer {
+  margin-bottom: 1rem;
+}
+
+.brand {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.environment {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.kill-switch .engaged {
+  color: var(--danger);
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0;
+  margin: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel);
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  background: var(--panel);
+}
+
+th[scope="row"] {
+  font-weight: 500;
+}
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.notice {
+  color: var(--danger);
+}
+
+.missing-evidence {
+  color: var(--danger);
+  font-style: italic;
+}
+
+.missing-mark,
+.pending {
+  color: var(--danger);
+  font-style: italic;
+}
+
+.venue {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.fill-event th,
+.fill-event td {
+  background: var(--panel);
+}
+
+details {
+  margin-bottom: 0.5rem;
+}
+
+.forecast-market {
+  border-left: 3px solid var(--border);
+  border-radius: 0;
+  margin-top: 1rem;
+}
+
+dl div {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.15rem 0;
+}
+
+dt {
+  font-weight: 600;
+  min-width: 12rem;
+}
+
+dd {
+  margin: 0;
+}
+
+.audit-entry {
+  border-left: 3px solid var(--border);
+  border-radius: 0;
+  margin-top: 1rem;
+}
+
+.audit-entry h2 {
+  margin-top: 0;
+}
+
+.ledger-bindings {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.citations {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.document-content {
+  overflow-x: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.kill-switch-current {
+  font-weight: 600;
+}
+
+footer {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}

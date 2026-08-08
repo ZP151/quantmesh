@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Overview</h1>
+
+<section aria-labelledby="account-heading">
+  <h2 id="account-heading">Paper account</h2>
+  <table>
+    <thead>
+      <tr><th scope="col">Field</th><th scope="col">Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><th scope="row">Cash</th><td>{{ "%.2f"|format(account.cash) }}</td></tr>
+      <tr><th scope="row">Starting cash</th><td>{{ "%.2f"|format(account.starting_cash) }}</td></tr>
+      <tr><th scope="row">Equity (marked)</th><td>{{ "%.2f"|format(account.equity) }}</td></tr>
+      <tr><th scope="row">Kill switch</th><td>{% if account.kill_switch %}engaged{% else %}disarmed{% endif %}</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="marks-heading">
+  <h2 id="marks-heading">Injected marks</h2>
+  {% if marks %}
+  <table>
+    <thead>
+      <tr><th scope="col">Key</th><th scope="col">Mark</th></tr>
+    </thead>
+    <tbody>
+      {% for key, mark in marks.items() %}
+      <tr><th scope="row">{{ key }}</th><td>{{ "%.4f"|format(mark) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No marks injected.</p>
+  {% endif %}
+  {% if missing_marks %}
+  <p class="notice">Positions without a mark (excluded from equity): {{ missing_marks|join(", ") }}.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="venues-heading">
+  <h2 id="venues-heading">Venues</h2>
+  {% if venues %}
+  {% for venue in venues %}
+  <h3>{{ venue.venue }} ({{ venue.instruments|length }} instruments)</h3>
+  <table>
+    <thead>
+      <tr><th scope="col">Symbol</th><th scope="col">Mark</th></tr>
+    </thead>
+    <tbody>
+      {% for instrument in venue.instruments %}
+      <tr><th scope="row">{{ instrument.symbol }}</th><td>{{ "%.4f"|format(instrument.mark) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+  {% else %}
+  <p>No market data injected.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="watchlist-heading">
+  <h2 id="watchlist-heading">Watchlist</h2>
+  {% if watchlist %}
+  <table>
+    <thead>
+      <tr><th scope="col">Symbol</th><th scope="col">Mark</th></tr>
+    </thead>
+    <tbody>
+      {% for entry in watchlist %}
+      <tr>
+        <th scope="row"><a href="/watchlist">{{ entry.symbol }}</a></th>
+        <td>{% if entry.mark is not none %}{{ "%.4f"|format(entry.mark) }}{% else %}no mark{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Watchlist is empty — <a href="/watchlist">add symbols</a>.</p>
+  {% endif %}
+</section>
+{% endblock %}

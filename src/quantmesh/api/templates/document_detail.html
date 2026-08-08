@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Document {{ document.id }}</h1>
+<dl>
+  <div><dt>Kind</dt><dd>{{ document.kind }}</dd></div>
+  <div><dt>Source path</dt><dd><code>{{ document.source_path }}</code></dd></div>
+  <div><dt>Ingested</dt><dd>{{ document.ingested_at }}</dd></div>
+</dl>
+<h2>Content</h2>
+<pre class="document-content">{{ document.content }}</pre>
+{% endblock %}

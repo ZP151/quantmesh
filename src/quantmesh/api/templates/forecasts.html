@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Forecasts</h1>
+
+{% if not registry_bound %}
+<p class="notice">No forecast report registry is bound.</p>
+{% else %}
+<p>{{ reports|length }} forecast report{{ "s" if reports|length != 1 }}.</p>
+{% for report in reports %}
+<section class="forecast-report" aria-labelledby="forecast-{{ report.id }}">
+  <h2 id="forecast-{{ report.id }}">Forecast {{ report.id }}</h2>
+  <table>
+    <tbody>
+      <tr><th scope="row">Commit</th><td><code>{{ report.commit }}</code></td></tr>
+      <tr><th scope="row">Created</th><td>{{ report.created_at }}</td></tr>
+      <tr><th scope="row">Windows</th><td>train {{ report.window_spec.train }}, test {{ report.window_spec.test }}, step {{ report.window_spec.step }}</td></tr>
+      <tr><th scope="row">Bins</th><td>{{ report.n_bins }}</td></tr>
+    </tbody>
+  </table>
+  <dl>
+    {% for key, value in report.metrics.items() %}
+    <div><dt>{{ key }}</dt><dd><code>{{ value }}</code></dd></div>
+    {% endfor %}
+  </dl>
+  {% if report.artifacts_present %}
+  <p>Artifacts present: report.json, windows.csv, calibration.csv.</p>
+  {% else %}
+  <p class="missing-evidence">Forecast artifacts missing:
+    {% for name, present in report.artifacts.items() %}{% if not present %}{{ name }}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}.</p>
+  {% endif %}
+  {% for market in report.markets %}
+  <article class="forecast-market">
+    <h3>{{ market.title }}</h3>
+    <p class="market-meta">
+      <span class="venue">{{ market.venue }}</span> · {{ market.venue_market_id }} ·
+      {{ market.event_ticker }}
+      {% if market.expiry_at %} · expires {{ market.expiry_at }}{% endif %}
+      {% if market.resolved %} · <strong>resolved</strong>{% endif %}
+    </p>
+    <p class="evaluation-note">
+      Evaluation of this venue's mid-derived implied probabilities (M6 forecast report):
+      {{ market.n_evaluated_windows }} of {{ market.windows|length }} window{{ "s" if market.windows|length != 1 }} evaluated.
+    </p>
+    <h4>Windows</h4>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Train end</th>
+          <th scope="col">Test start</th>
+          <th scope="col">Test end</th>
+          <th scope="col">Brier</th>
+          <th scope="col">Liquidity Brier</th>
+          <th scope="col">Observations</th>
+          <th scope="col">Resolved</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for window in market.windows %}
+        <tr>
+          <th scope="row">{{ window.index }}</th>
+          <td>{{ window.train_end }}</td>
+          <td>{{ window.test_start }}</td>
+          <td>{{ window.test_end }}</td>
+          <td>{% if window.brier is none %}<span class="pending">pending</span>{% else %}{{ window.brier }}{% endif %}</td>
+          <td>{% if window.liquidity_weighted_brier is none %}<span class="pending">pending</span>{% else %}{{ window.liquidity_weighted_brier }}{% endif %}</td>
+          <td>{{ window.n_observations }}</td>
+          <td>{{ window.n_resolved }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <h4>Calibration</h4>
+    {% for window in market.windows %}
+    <details>
+      <summary>Window {{ window.index }} — {{ window.calibration_bins|length }} bins</summary>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Bin</th>
+            <th scope="col">Range</th>
+            <th scope="col">Count</th>
+            <th scope="col">Mean prediction</th>
+            <th scope="col">Observed frequency</th>
+            <th scope="col">Brier</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bin_row in window.calibration_bins %}
+          <tr>
+            <th scope="row">{{ bin_row.bin }}</th>
+            <td>{{ bin_row.lo }}–{{ bin_row.hi }}</td>
+            <td>{{ bin_row.count }}</td>
+            <td>{{ bin_row.mean_prediction if bin_row.mean_prediction is not none else "—" }}</td>
+            <td>{{ bin_row.observed_frequency if bin_row.observed_frequency is not none else "—" }}</td>
+            <td>{{ bin_row.brier if bin_row.brier is not none else "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+    {% endfor %}
+  </article>
+  {% endfor %}
+</section>
+{% endfor %}
+{% endif %}
+{% endblock %}
