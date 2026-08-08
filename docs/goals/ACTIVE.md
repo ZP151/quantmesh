@@ -26,8 +26,15 @@ makes the business workflow directly testable. Do not promote RC1 to
 1. ~~Approve ADR-0013 through implementation evidence~~ (done, checkpoint
    bfa097c): the SPA spike is served from the packaged bundle with the
    rollback switch, `/api` double mount and a green 1811-test suite.
-2. Build deterministic `--demo` runtime assembly with provenance, freshness,
-   reset/replay and representative cross-market/research/paper/risk/audit data.
+2. ~~Build deterministic `--demo` runtime assembly with provenance, freshness,
+   reset/replay and representative cross-market/research/paper/risk/audit
+   data.~~ (done, Phase B boundary): `src/quantmesh/demo/` seeds a labeled
+   deterministic root under an operator-selected path — real fixture-provider
+   market data with a reproducible cross-market cluster, forecast/report/
+   experiment/promotion/alert/citation/audit surfaces through the public
+   services, byte-identical replay and marker-guarded reset, provenance
+   contract in `/api/demo/status` and response headers; `tests/test_demo.py`
+   18/18 green.
 3. Deliver one browser tracer bullet from market evidence to paper fill,
    portfolio, risk and audit before migrating the remaining legacy pages.
 4. Add one public-data connector path and validated file import, then complete
