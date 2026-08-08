@@ -35,8 +35,13 @@ makes the business workflow directly testable. Do not promote RC1 to
    services, byte-identical replay and marker-guarded reset, provenance
    contract in `/api/demo/status` and response headers; `tests/test_demo.py`
    18/18 green.
-3. Deliver one browser tracer bullet from market evidence to paper fill,
-   portfolio, risk and audit before migrating the remaining legacy pages.
+3. ~~Deliver one browser tracer bullet from market evidence to paper fill,
+   portfolio, risk and audit before migrating the remaining legacy pages.~~
+   (done, Phase C boundary): the SPA shell, command palette and responsive
+   navigation are live, the full research→paper-order→fill→position/P&L→
+   risk/audit loop was verified over HTTP end to end (including kill-switch
+   409, idempotent replay and reset), all 12 legacy routes 302 to `/app`,
+   and the backend suite is 1,840/1,840 green.
 4. Add one public-data connector path and validated file import, then complete
    bounded design, accessibility, E2E and clean-checkout verification.
 5. Publish `v0.1.0-rc2` from one integration PR and obtain explicit human
