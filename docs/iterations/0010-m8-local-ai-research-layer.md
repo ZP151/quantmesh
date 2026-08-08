@@ -81,7 +81,7 @@ Out of scope (recorded, not deferred silently):
       returns passages with resolvable citations; a citation that
       cannot be resolved to a source fails closed. — Phase C (issue
       #47).
-4. [ ] Tool calls are enforced per role against a registry that
+4. [x] Tool calls are enforced per role against a registry that
       contains no execution surface; prompt data is redacted before it
       leaves the boundary with a redaction report; every research
       decision is recorded with model metadata and citations on the
@@ -248,24 +248,32 @@ Vendored trees read at the file level; both remain reference-only
 
 `quantmesh.ai.tools` / `quantmesh.ai.redact` / `quantmesh.ai.decisions`:
 
-- `ToolSpec{name, surface, description, allowed_roles}` registry with
-  read-only research tools only: `retrieve_documents`,
-  `read_experiment`, `read_report`, `read_risk_context`,
-  `read_portfolio_snapshot`. Enforcement at call time: a tool call is
-  dispatched only when the calling role is in `allowed_roles`, with a
-  typed refusal naming the role and the tool. **The registry contains
-  no execution surface** — no order, no kernel entry, no adapter call
-  exists as a tool; a hostile model that "calls" one gets the unknown-
-  tool refusal. A structural test proves the tool dispatch module
-  cannot import the execution adapters.
-- `redact_context(context) -> (redacted, RedactionReport)`: scrubs
-  secret material (private-key shapes, `QUANTMESH_*` env values, API
-  tokens, signer bytes) and applies data minimization (only requested
-  fields serialized) BEFORE anything is sent to the gateway; the
-  report counts and classifies redactions. Tests follow the M5
-  wallet-isolation discipline: the raw secret never appears in the
-  redacted payload, and a secret smuggled inside *retrieved document
-  text* is also scrubbed (prompt-injection containment).
+- `ToolPolicy{name, description, allowed_roles}` pinned data plus a
+  `ToolRegistry` over injected surface callables (fail-closed
+  construction: missing/unknown surfaces, unknown tool policies,
+  policies naming unknown roles), with read-only research tools only:
+  `retrieve_documents`, `read_experiment`, `read_report`,
+  `read_risk_context`, `read_portfolio_snapshot`. Enforcement at call
+  time: a tool call is dispatched only when the calling role is in
+  `allowed_roles`, with a typed `ToolRefusalError` naming the role and
+  the tool; unknown tools are typed `UnknownToolError`s. **The registry
+  contains no execution surface** — no order, no kernel entry, no
+  adapter call exists as a tool; a hostile model that "calls" one gets
+  the unknown-tool refusal. A structural test proves the tool dispatch
+  module cannot import the execution adapters, and a consistency test
+  pins `TOOL_POLICIES.allowed_roles` to the Phase B charter `tools`
+  tuples.
+- `redact_context(context, *, secrets=None) -> (redacted,
+  RedactionReport)`: scrubs secret material BEFORE anything is sent to
+  the gateway — known values (the `QUANTMESH_*KEY/SECRET/TOKEN`
+  environment values or an explicit `secrets=` mapping, longest-first)
+  and shape scans (0x-prefixed/bare 64-hex key runs, `Bearer`/`sk-`
+  tokens, long opaque non-hex runs; pure 40-hex commits and 16-hex ids
+  survive — over-redaction is the safe direction); the report counts
+  and classifies redactions. Tests follow the M5 wallet-isolation
+  discipline: the raw secret never appears in the redacted payload, and
+  a secret smuggled inside *retrieved document text* is also scrubbed
+  (prompt-injection containment).
 - `DecisionLog` JSONL under `settings.decisions_dir` on ADR-0006:
   every pipeline stage records `DecisionRecord{run_id, role, model{
   name, version, endpoint_kind}, prompt_digest (sha256 of the redacted
@@ -351,12 +359,19 @@ the M5 operator drill).
   record, or out-of-range span); documents are ingested on the
   ADR-0006 manifest discipline under `settings.documents_dir`. Decision
   3 written into ADR-0010 on 2026-08-08.
-- ADR-0010 extension **to record** (Phase D): the tool registry
-  contains no execution surface (structural, proven by test);
-  prompt data is redacted before the wire with a report; decision
-  records are content-addressed audit entries on the ADR-0006
-  discipline (identical replay refused, any difference is a new
-  entry).
+- ADR-0010 **recorded** (Phase D, issue #48, decision 4): the tool
+  registry is pinned policy data plus runtime enforcement over injected
+  read-only surfaces — no execution surface (structural, proven by
+  test), typed refusals naming role and tool, policy table pinned to
+  the charter tools tuples; prompt data is redacted before the wire
+  (known values + shape scans, over-redaction the safe direction,
+  injection containment over retrieved text) with a deterministic
+  report; decision records are content-addressed audit entries
+  (16-hex sha256 over all content except recorded_at — identical
+  replay refused as a duplicate, any difference a new entry) with
+  `for_stage` digest building and a consistency validator, on the
+  ADR-0006 discipline under `settings.decisions_dir`. Decision 4
+  written into ADR-0010 on 2026-08-08.
 - ADR-0010 extension **to record** (Phase E): acceptance evidence is
   scripted-fixture-based; a live local model (e.g. Ollama) is an
   optional operator drill with exact steps, never a merge gate.
@@ -468,6 +483,46 @@ the M5 operator drill).
   discipline with line attribution, per-source search/resolve over
   fixture documents/experiments/orders, every citation-refusal path);
   ruff clean across src and tests.
+- 2026-08-08 (issue #48, Phase D): implemented `ai/tools.py` —
+  `ToolPolicy{name, description, allowed_roles}` pinned data
+  (`TOOL_POLICIES`, five read-only research tools whose `allowed_roles`
+  match the Phase B charter `tools` tuples exactly — pinned by a
+  consistency test so the two tables cannot diverge),
+  `bind_default_surfaces` (five injected reader callables — documents/
+  experiments via `RetrievalSource`, reports/risk/portfolio via
+  injected callables; every surface a reader, none can place or modify
+  an order), `ToolRegistry` (fail-closed construction: missing/unknown
+  surfaces, unknown tool policies → `UnknownToolError`, policies naming
+  unknown roles → `UnknownRoleError`; `allowed()` fail-closed on
+  unknown tools; `dispatch()` → typed `ToolRefusalError` naming role
+  and tool, surfaces never touched on refusal). `ai/redact.py` —
+  `redact_context` with known-value replacement (`QUANTMESH_*KEY/
+  SECRET/TOKEN` env values or explicit `secrets=` mapping, longest-first
+  so nested secrets leave no partial artifacts) then shape scans
+  (0x-prefixed and bare 64-hex key runs, `Bearer`/`sk-` tokens, long
+  opaque non-hex runs) — over-redaction the safe direction: pure 40-hex
+  commits and 16-hex ids survive — plus a deterministic
+  `RedactionReport`; non-string context/secret entries are typed
+  `RedactionError`s; retrieved document text is scrubbed too
+  (prompt-injection containment). `ai/decisions.py` —
+  `DecisionRecord` content-addressed (16-hex sha256 over all content
+  fields except `recorded_at` — identical replay refused as a
+  duplicate, any difference a new audit entry), `for_stage` computes
+  prompt/output digests from exactly the redacted prompt and validated
+  output (verdict = output's `verdict`, else its `posture`, else
+  canonical JSON), a consistency validator recomputes the id so a
+  tampered id/digest is refused; `DecisionLog` on the ADR-0006
+  discipline under the new `settings.decisions_dir`. `errors.py` gained
+  `ToolError`/`UnknownToolError`/`ToolRefusalError`/`RedactionError`;
+  `ai/__init__.py` exports the full Phase D surface. First test run
+  caught three test-side defects (the `_record` helper collided with
+  `for_stage`'s explicit kwargs, my redaction count arithmetic, and
+  RiskReview/PortfolioReview carrying their verdict as `posture` —
+  `for_stage` now extracts it) plus one dead-code residue (an unused
+  `sources` map in `bind_default_surfaces`). 69 Phase D tests green
+  (25 tools + 14 redact + 30 decisions); ruff clean across src and
+  tests; full suite 1526 passed / 3 skipped (see Last verification in
+  ACTIVE.md).
 
 ## Verification evidence
 
@@ -561,8 +616,64 @@ the M5 operator drill).
   refused — every refusal path a typed `CitationResolutionError`.
   Full suite green after the issue #47 commit (see Last verification
   in ACTIVE.md).
-- Phase D slice (issue #48): pending.
-- Phase E slice (issue #49): pending.
+- Phase D slice (issue #48): `tests/test_ai_tools.py` +
+  `test_ai_redact.py` + `test_ai_decisions.py` — 69 passed in ~1.5s
+  (161 AI tests total across gateway 66 + roles 40 + retrieval 52 +
+  Phase D 69, minus the three pre-existing skips none of these are).
+  Tools: canonical five-tool tuple, policy shape (description + roles,
+  roles ⊆ ROLE_ORDER), **charter consistency** — for every role,
+  `charter(role).tools` == the policy `allowed_roles` computed from
+  `TOOL_POLICIES` (the two tables cannot diverge), no order/trade/
+  cancel/position-shaped tool names. Construction fail-closed:
+  missing surfaces ("missing tool surfaces"), unknown surface, unknown
+  tool policy → `UnknownToolError`, policy naming unknown role →
+  `UnknownRoleError`. Dispatch: allowed calls reach the surface with
+  args intact; the permission matrix is asserted per role (analyst:
+  retrieve/read_experiment/read_report, critic: retrieve only,
+  risk: read_risk_context only, portfolio: read_portfolio_snapshot
+  only); forbidden calls raise `ToolRefusalError` naming role *and*
+  tool and never touch the surface (calls list stays empty); unknown
+  tool and unknown role refusals. Default surfaces over a real
+  `DocumentIndex` fixture: `[document:d-1] BTC rally momentum` render,
+  "no passages matched" on zero overlap, read_tools delegate to the
+  injected callables in order, non-str args typed ValueError. Structural:
+  `inspect.getsource(tools_module)` contains none of
+  `quantmesh.paper`/`execution`/`hyperliquid.exchange`/`moomoo`.
+  Redaction: clean text untouched (report total 0), 0x-prefixed and
+  bare 64-hex scrubbed as private_key, **pure 40-hex commit and 16-hex
+  id survive** (safe-direction negatives), `Bearer ...` (incl. dots and
+  base64 chars) and `sk-...` scrubbed as token, long opaque non-hex
+  run scrubbed, occurrences counted per class (two occurrences → 2),
+  input never mutated; env secrets: `QUANTMESH_MODEL_API_KEY` value
+  scrubbed with env_secret count, unrelated `QUANTMESH_` vars and
+  non-matching values ignored, explicit `secrets=` override wins over
+  the environment, nested values replaced longest-first with no
+  partial artifacts; refusals: non-str context content/name and
+  non-str secret entries are typed `RedactionError`s; **injection
+  containment** — a key embedded in retrieved document text is
+  scrubbed, the raw secret is absent from the joined output, counts
+  deterministic (private_key 3, env_secret 1). Decisions: `ModelMeta`
+  extra/empty-name/bad-endpoint-kind refusals; `for_stage` digests
+  equal sha256 of the redacted prompt and `output.model_dump_json()`
+  respectively, critic `verdict="pass"` and risk/portfolio `posture`
+  extracted as the verdict (AnalystReport falls back to canonical
+  JSON), unknown role refused, refusal and citations recorded;
+  content addressing: same content + different `recorded_at` → same
+  id, any content difference (prompt/schema/refusal/role/output) →
+  new id, ids are 16-hex, identical replay refused as "already
+  recorded" with the log length unchanged; validation: tampered
+  `decision_id` and tampered `output_digest` both refused ("does not
+  match the record's content"), extra fields refused, shape refusals
+  (non-hex run_id, unknown role literal, empty verdict/refusal, naive
+  recorded_at), recorded_at normalized to UTC; ledger: round-trip,
+  cross-instance persistence, `get`/missing refusal, missing root →
+  [], corrupt line attributed ("line 1 is invalid"), duplicate ids
+  across lines attributed ("share a decision id"), root-not-dir
+  refusal, unreadable file refusal, append order preserved, file is
+  one JSON record per line. Adversarial review before commit caught
+  the RiskReview/PortfolioReview posture-verdict gap (extraction
+  extended) and the unused `sources` map. ADR-0010 decision 4
+  recorded; acceptance criterion 4 checked off.
 
 ## Risks and gates
 

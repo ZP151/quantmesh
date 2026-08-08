@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     # Ingestion manifest for retrieval documents (M8 Phase C): append-only
     # JSONL on the ADR-0006 discipline.
     documents_dir: Path = Path.home() / ".quantmesh" / "documents"
+    # Content-addressed research decision log (M8 Phase D): append-only
+    # JSONL on the ADR-0006 discipline.
+    decisions_dir: Path = Path.home() / ".quantmesh" / "decisions"
 
     model_config = SettingsConfigDict(
         env_file=".env",

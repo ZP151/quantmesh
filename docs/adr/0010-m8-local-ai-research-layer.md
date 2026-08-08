@@ -139,7 +139,50 @@ identities (Phase C, issue #47)
 prompt data is redacted before the wire; decision records are
 content-addressed (Phase D, issue #48)
 
-(Recorded when Phase D lands.)
+`quantmesh.ai.tools` / `quantmesh.ai.redact` / `quantmesh.ai.decisions`:
+
+- The tool registry is two layers: pinned policy data
+  (`TOOL_POLICIES`: five read-only research tools with per-role
+  `allowed_roles`) and a runtime `ToolRegistry` over injected surface
+  callables (`bind_default_surfaces`). Enforcement is deterministic
+  code at call time: an unknown tool is a typed `UnknownToolError`, a
+  role calling a tool outside its set a typed `ToolRefusalError`
+  naming the role and the tool, and construction fails closed on
+  missing surfaces, unknown surfaces, unknown tool policies, and
+  policies naming unknown roles. The policy table is pinned to the
+  Phase B charter `tools` tuples by a consistency test — the two
+  tables cannot diverge without a failure. There is no execution
+  surface among the five tools (read-only by construction), and the
+  module imports none (source-scanned test, re-run in Phase E).
+- Prompt data is redacted before the wire: `redact_context` scrubs
+  known secret values (the `QUANTMESH_*KEY/SECRET/TOKEN` environment
+  values, or an explicit `secrets=` mapping — longest-first, so a
+  value containing another leaves no partial artifacts) and then shape
+  scans (0x-prefixed and bare 64-hex key runs, `Bearer`/`sk-` tokens,
+  long opaque non-hex runs). Over-redaction is the safe direction and
+  deliberate: pure 40-hex commit hashes and 16-hex ids survive; a
+  bare 64-hex run is key-shaped and is removed. The redaction covers
+  *retrieved document text* too — a secret embedded in a document
+  (prompt-injection containment) never reaches the gateway — and
+  returns a deterministic `RedactionReport` of what was removed.
+  Non-string context or secret entries are typed `RedactionError`s.
+- Decision records are content-addressed audit entries: `decision_id`
+  is a 16-hex sha256 over every content field except `recorded_at` (an
+  identical replay is the same decision and is refused as a duplicate;
+  any difference is a new entry — the FundingLedger precedent).
+  `DecisionRecord.for_stage` computes the prompt/output digests from
+  exactly the redacted prompt and the validated output (verdict =
+  the output's `verdict`, else its `posture`, else canonical JSON), so
+  digests cannot drift from the wire, and a consistency validator
+  recomputes the id at validation — a tampered id or digest is
+  refused. `DecisionLog` is the ADR-0006 discipline under
+  `settings.decisions_dir`: atomic temp+replace appends, fail-closed
+  reads with line attribution, duplicate-id refusal, root-not-dir
+  refusal.
+
+### Decision 5 — Acceptance evidence is scripted-fixture-based; a live
+local model is an optional operator drill, never a merge gate
+(Phase E, issue #49)
 
 ### Decision 5 — Acceptance evidence is scripted-fixture-based; a live
 local model is an optional operator drill, never a merge gate

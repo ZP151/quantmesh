@@ -1,5 +1,6 @@
 """Local AI research layer integration points (M8)."""
 
+from quantmesh.ai.decisions import DECISIONS_FILE, DecisionLog, DecisionRecord, ModelMeta
 from quantmesh.ai.errors import (
     CitationResolutionError,
     ModelConfigurationError,
@@ -8,10 +9,21 @@ from quantmesh.ai.errors import (
     ModelProtocolError,
     ModelUnavailableError,
     PipelineError,
+    RedactionError,
     RetrievalError,
+    ToolError,
+    ToolRefusalError,
     UnknownRoleError,
+    UnknownToolError,
 )
 from quantmesh.ai.gateway import ModelGateway
+from quantmesh.ai.redact import (
+    REDACTED_ENV_SECRET,
+    REDACTED_PRIVATE_KEY,
+    REDACTED_TOKEN,
+    RedactionReport,
+    redact_context,
+)
 from quantmesh.ai.retrieval import (
     DOCUMENTS_FILE,
     AuditSource,
@@ -44,6 +56,13 @@ from quantmesh.ai.roles import (
     RoleCharter,
     charter,
 )
+from quantmesh.ai.tools import (
+    TOOL_NAMES,
+    TOOL_POLICIES,
+    ToolPolicy,
+    ToolRegistry,
+    bind_default_surfaces,
+)
 from quantmesh.ai.transport import (
     DEFAULT_CHAT_PATH,
     MODEL_API_KEY_ENV,
@@ -69,8 +88,11 @@ __all__ = [
     "Claim",
     "CriticGateResult",
     "CriticVerdict",
+    "DECISIONS_FILE",
     "DEFAULT_CHAT_PATH",
     "DOCUMENTS_FILE",
+    "DecisionLog",
+    "DecisionRecord",
     "Document",
     "DocumentIndex",
     "DocumentSource",
@@ -81,6 +103,7 @@ __all__ = [
     "ModelConfigurationError",
     "ModelError",
     "ModelGateway",
+    "ModelMeta",
     "ModelOutputError",
     "ModelProtocolError",
     "ModelRequest",
@@ -89,7 +112,12 @@ __all__ = [
     "ModelUnavailableError",
     "PipelineError",
     "PortfolioReview",
+    "REDACTED_ENV_SECRET",
+    "REDACTED_PRIVATE_KEY",
+    "REDACTED_TOKEN",
     "ROLE_ORDER",
+    "RedactionError",
+    "RedactionReport",
     "ResearchPipeline",
     "ResearchResult",
     "ResolvedSource",
@@ -100,12 +128,21 @@ __all__ = [
     "RiskReview",
     "RoleCharter",
     "ScriptedModelTransport",
+    "TOOL_NAMES",
+    "TOOL_POLICIES",
+    "ToolError",
+    "ToolPolicy",
+    "ToolRefusalError",
+    "ToolRegistry",
     "UnknownRoleError",
+    "UnknownToolError",
+    "bind_default_surfaces",
     "build_chat_body",
     "charter",
     "idf_weights",
     "parse_completion",
     "rank_texts",
+    "redact_context",
     "resolve_citation",
     "tokenize",
 ]

@@ -35,3 +35,19 @@ class RetrievalError(ModelError):
 
 class CitationResolutionError(ModelError):
     """A citation failed to resolve (unknown kind, missing id, bad span)."""
+
+
+class ToolError(ModelError):
+    """A tool-registry violation (unknown tool, forbidden call)."""
+
+
+class UnknownToolError(ToolError):
+    """A tool name is not registered in the tool policy table."""
+
+
+class ToolRefusalError(ToolError):
+    """A role tried to call a tool its allowed_roles do not permit."""
+
+
+class RedactionError(ModelError):
+    """A redaction violation (non-string context, invalid secret input)."""
