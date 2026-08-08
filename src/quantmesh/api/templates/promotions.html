@@ -7,8 +7,9 @@
 {% else %}
 <p>
   {{ promotions|length }} promotion record{{ "s" if promotions|length != 1 }}.
-  Promotion approval is registry/CLI-owned; the kill-switch flag is
-  report-only until M10 enforces it.
+  Promotion approval is registry/CLI-owned; the kill-switch flag records
+  the posture at promotion time (live enforcement is the paper kernel's
+  global and per-venue kill switch, M10).
 </p>
 <section aria-labelledby="promotions-heading">
   <h2 id="promotions-heading">Promotion ledger</h2>
@@ -59,7 +60,7 @@
         </td>
         <td>
           {% if promotion.kill_switch %}
-            <strong class="engaged">gate</strong> (report-only)
+            <strong class="engaged">gate</strong> (recorded)
           {% else %}
             none
           {% endif %}

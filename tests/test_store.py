@@ -261,6 +261,60 @@ def test_kill_switch_survives_restart(tmp_path) -> None:
     assert restored.account.kill_switch is True
 
 
+def test_kill_switches_survive_restart(tmp_path) -> None:
+    account_ = base_account().model_copy(
+        update={"kill_switches": {Venue.MOOMOO: True, Venue.KALSHI: False}}
+    )
+    path = tmp_path / "book.sqlite"
+    EventStore(path).save(account_)
+
+    restored = EventStore(path).restore()
+
+    assert restored.divergences == []
+    assert restored.account.kill_switches == {
+        Venue.MOOMOO: True,
+        Venue.KALSHI: False,
+    }
+
+
+def test_legacy_store_without_kill_switches_column_migrates(tmp_path) -> None:
+    # A store created before M10 Phase C has no kill_switches column;
+    # opening it adds the column additively with the empty-map default
+    # (disarmed everywhere) — never a destructive migration.
+    path = tmp_path / "book.sqlite"
+    EventStore(path).save(base_account())
+    conn = open_raw(path)
+    conn.execute("ALTER TABLE account_meta DROP COLUMN kill_switches")
+    conn.commit()
+    conn.close()
+
+    restored = EventStore(path).restore()
+
+    assert restored.divergences == []
+    assert restored.account.kill_switches == {}
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "not json",
+        '{"unknown-venue": true}',
+        '{"moomoo": "false"}',
+        "[true]",
+    ],
+)
+def test_corrupt_kill_switches_fails_closed(tmp_path, payload: str) -> None:
+    path = tmp_path / "book.sqlite"
+    EventStore(path).save(base_account())
+    conn = open_raw(path)
+    conn.execute("UPDATE account_meta SET kill_switches = ? WHERE id = 1", (payload,))
+    conn.commit()
+    conn.close()
+
+    with pytest.raises(StoreCorruptionError, match="kill_switches"):
+        EventStore(path).restore()
+
+
 def test_partially_filled_order_round_trip(tmp_path) -> None:
     account = base_account().submit(
         make_request(Side.BUY, 10), make_quote(volume=4), now=NOW

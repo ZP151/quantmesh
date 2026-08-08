@@ -158,6 +158,111 @@ def test_kill_switch_blocks_submission() -> None:
     assert result.account.cash == 10_000.0
 
 
+def _instrument_on(venue: Venue) -> Instrument:
+    return Instrument(symbol="AAA", venue=venue, instrument_type=InstrumentType.EQUITY)
+
+
+class TestKillSwitchEnforcement:
+    """M10 Phase C (issue #60): the global bit and the per-venue map
+    both refuse in the accounting risk gate — a submission cannot route
+    around the switch, and no model surface is involved (the gate is in
+    the accounting path, not in any AI path)."""
+
+    def _request(self, venue: Venue) -> OrderRequest:
+        return OrderRequest(
+            instrument=_instrument_on(venue), side=Side.BUY, quantity=10
+        )
+
+    def _quote(self, venue: Venue) -> Quote:
+        return Quote(
+            instrument=_instrument_on(venue),
+            timestamp=NOW,
+            bid=99.0,
+            ask=100.0,
+            volume=100,
+        )
+
+    def test_per_venue_switch_refuses_only_its_venue(self) -> None:
+        account_ = account(kill_switches={Venue.MOOMOO: True})
+
+        refused = account_.submit(
+            self._request(Venue.MOOMOO), self._quote(Venue.MOOMOO), now=NOW
+        )
+
+        assert refused.rejection == "kill switch enabled for venue moomoo"
+        assert refused.order.status is OrderStatus.REJECTED
+        assert refused.fills == []
+        # Other venues are untouched by the venue switch.
+        accepted = refused.account.submit(
+            self._request(Venue.HYPERLIQUID),
+            self._quote(Venue.HYPERLIQUID),
+            now=NOW,
+        )
+        assert accepted.rejection is None
+        assert accepted.fills
+
+    def test_global_switch_overrides_a_disarmed_venue(self) -> None:
+        account_ = account(kill_switch=True, kill_switches={Venue.MOOMOO: False})
+
+        result = account_.submit(
+            self._request(Venue.MOOMOO), self._quote(Venue.MOOMOO), now=NOW
+        )
+
+        assert result.rejection == "kill switch enabled"
+        assert result.order.status is OrderStatus.REJECTED
+        assert result.fills == []
+
+    def test_disarming_a_venue_restores_submission_there(self) -> None:
+        account_ = account(kill_switches={Venue.MOOMOO: True})
+        refused = account_.submit(
+            self._request(Venue.MOOMOO), self._quote(Venue.MOOMOO), now=NOW
+        )
+        assert refused.rejection == "kill switch enabled for venue moomoo"
+
+        disarmed = refused.account.model_copy(update={"kill_switches": {}})
+        result = disarmed.submit(
+            self._request(Venue.MOOMOO), self._quote(Venue.MOOMOO), now=NOW
+        )
+
+        assert result.rejection is None
+        assert result.fills
+
+    def test_refusal_records_the_rejection_and_nothing_else(self) -> None:
+        account_ = account(kill_switches={Venue.MOOMOO: True})
+
+        result = account_.submit(
+            self._request(Venue.MOOMOO), self._quote(Venue.MOOMOO), now=NOW
+        )
+
+        # The refusal is recorded as the rejected order (the journal
+        # must be able to replay the refusal); cash, positions and the
+        # account sequence beyond that record are untouched.
+        assert result.account.cash == 10_000.0
+        assert result.account.positions == {}
+        assert list(result.account.orders) == [result.order.order_id]
+        assert result.account.order_sequence == 1
+        assert result.order.status is OrderStatus.REJECTED
+
+    def test_venue_not_in_map_is_open(self) -> None:
+        account_ = account(kill_switches={Venue.MOOMOO: True})
+
+        result = account_.submit(
+            self._request(Venue.INTERNAL), self._quote(Venue.INTERNAL), now=NOW
+        )
+
+        assert result.rejection is None
+
+    def test_absent_venue_reads_disarmed(self) -> None:
+        account_ = account()
+        assert account_.kill_switches.get(Venue.MOOMOO) is None
+
+        result = account_.submit(
+            self._request(Venue.MOOMOO), self._quote(Venue.MOOMOO), now=NOW
+        )
+
+        assert result.rejection is None
+
+
 def test_max_order_quantity_is_enforced() -> None:
     account_ = account(risk_limits=RiskLimits(max_order_quantity=10))
 

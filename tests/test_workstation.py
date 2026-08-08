@@ -739,13 +739,13 @@ class TestPhaseCResearchScreens:
         assert "no report registry is bound" in html
         assert 'class="missing-evidence"' in html
 
-    def test_promotions_kill_switch_flag_renders_report_only(self, tmp_path) -> None:
+    def test_promotions_kill_switch_flag_renders_recorded(self, tmp_path) -> None:
         ledger, reports = promotion_setup(tmp_path, kill_switch=True)
 
         html = client(promotions=ledger, reports=reports).get("/promotions").text
 
         assert "gate" in html
-        assert "report-only" in html
+        assert "(recorded)" in html
 
     def test_promotions_unbound_and_empty_ledger_states(self, tmp_path) -> None:
         assert "No promotion ledger is bound." in client().get("/promotions").text
@@ -1324,7 +1324,10 @@ class TestPhaseERiskAuditAndKillSwitch:
         assert response.status_code == 303
         assert response.headers["location"] == "/kill-switch/control"
         # The M1 JSON surface and the page context agree.
-        assert app_client.get("/kill-switch").json() == {"kill_switch": True}
+        assert app_client.get("/kill-switch").json() == {
+            "kill_switch": True,
+            "kill_switches": {},
+        }
         context = app_client.app.state.page_context
         assert context.account.kill_switch is True
         assert app_client.app.state.account.kill_switch is True
@@ -1348,7 +1351,10 @@ class TestPhaseERiskAuditAndKillSwitch:
         )
 
         assert response.status_code == 303
-        assert app_client.get("/kill-switch").json() == {"kill_switch": False}
+        assert app_client.get("/kill-switch").json() == {
+            "kill_switch": False,
+            "kill_switches": {},
+        }
         assert 'data-kill-switch="false"' in app_client.get("/").text
 
     def test_kill_switch_hostile_posts_refused(self) -> None:
@@ -1373,5 +1379,104 @@ class TestPhaseERiskAuditAndKillSwitch:
         assert 'role="alert"' in response.text
         assert "refused" in response.text
         # The account was never touched.
-        assert app_client.get("/kill-switch").json() == {"kill_switch": False}
+        assert app_client.get("/kill-switch").json() == {
+            "kill_switch": False,
+            "kill_switches": {},
+        }
         assert app_client.app.state.page_context.account.kill_switch is False
+
+
+class TestPhaseCPerVenueKillSwitch:
+    """M10 Phase C (issue #60): the kill-switch control flips per-venue
+    switches on the same account object — same confirm-gated POST
+    contract, one `venue` field. The M1 JSON surface, the page context
+    and the kernel gate agree on the state (ADR-0012 decision 3)."""
+
+    MARKETS = {"moomoo": {"AAA": 100.0}, "hyperliquid": {"BTC": 100.0}}
+
+    def test_per_venue_rows_render_from_markets(self) -> None:
+        app_client = client(markets=self.MARKETS)
+
+        html = app_client.get("/kill-switch/control").text
+
+        assert "Per-venue kill switches" in html
+        assert 'name="venue" value="hyperliquid"' in html
+        assert 'name="venue" value="moomoo"' in html
+        # Everything disarmed, the global form untouched.
+        assert "Block moomoo paper orders" in html
+        assert 'name="action" value="engage" checked' in html
+
+    def test_per_venue_engage_round_trip(self) -> None:
+        app_client = client(markets=self.MARKETS)
+
+        response = app_client.post(
+            "/kill-switch",
+            data={"action": "engage", "confirm": "confirm", "venue": "moomoo"},
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 303
+        assert response.headers["location"] == "/kill-switch/control"
+        # Only the venue flipped: global bit and the other venue are
+        # untouched, and the surfaces agree.
+        assert app_client.get("/kill-switch").json() == {
+            "kill_switch": False,
+            "kill_switches": {"moomoo": True},
+        }
+        context = app_client.app.state.page_context
+        assert context.account.kill_switches == {Venue.MOOMOO: True}
+        # The header still shows the global state; the control page
+        # names the venue as refused.
+        assert 'data-kill-switch="false"' in app_client.get("/").text
+        control = app_client.get("/kill-switch/control").text
+        assert "REFUSED" in control
+        assert 'value="disarm" checked' in control
+        assert "moomoo" in control
+
+    def test_per_venue_disarm_leaves_other_venues_engaged(self) -> None:
+        account = sample_account().model_copy(
+            update={"kill_switches": {Venue.MOOMOO: True, Venue.HYPERLIQUID: True}}
+        )
+        app_client = client(account=account, markets=self.MARKETS)
+
+        response = app_client.post(
+            "/kill-switch",
+            data={"action": "disarm", "confirm": "confirm", "venue": "moomoo"},
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 303
+        assert app_client.get("/kill-switch").json() == {
+            "kill_switch": False,
+            "kill_switches": {"hyperliquid": True},
+        }
+        assert app_client.app.state.page_context.account.kill_switches == {
+            Venue.HYPERLIQUID: True
+        }
+
+    def test_hostile_venue_refused_without_touching_state(self) -> None:
+        app_client = client(markets=self.MARKETS)
+
+        response = app_client.post(
+            "/kill-switch",
+            data={"action": "engage", "confirm": "confirm", "venue": "not-a-venue"},
+        )
+
+        assert response.status_code == 200
+        assert 'role="alert"' in response.text
+        assert "unknown venue" in response.text
+        assert app_client.get("/kill-switch").json() == {
+            "kill_switch": False,
+            "kill_switches": {},
+        }
+
+    def test_account_flags_render_without_markets(self) -> None:
+        account = sample_account().model_copy(
+            update={"kill_switches": {Venue.MOOMOO: True}}
+        )
+
+        html = client(account=account).get("/kill-switch/control").text
+
+        assert "Per-venue kill switches" in html
+        assert "Block moomoo paper orders" in html
+        assert "REFUSED" in html

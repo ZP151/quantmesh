@@ -11,7 +11,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
 
-from quantmesh.domain.models import Instrument, OrderRequest, Quote, Side
+from quantmesh.domain.models import Instrument, OrderRequest, Quote, Side, Venue
 from quantmesh.domain.orders import (
     Fill,
     Order,
@@ -80,6 +80,10 @@ class PaperAccount(BaseModel):
     risk_limits: RiskLimits = Field(default_factory=RiskLimits)
     matcher: PaperMatcher = Field(default_factory=PaperMatcher)
     kill_switch: bool = False
+    # M10 Phase C (issue #60): per-venue switches on the same account
+    # object — the global bit overrides, a venue switch blocks only its
+    # venue. Absence from the map reads as disarmed.
+    kill_switches: dict[Venue, bool] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def capture_starting_cash(self) -> "PaperAccount":
@@ -141,8 +145,15 @@ class PaperAccount(BaseModel):
 
     def _risk_reasons(self, request: OrderRequest, quote: Quote) -> list[str]:
         reasons: list[str] = []
+        # M10 Phase C (issue #60): global and per-venue switches both
+        # refuse here, in the accounting risk gate — a submission cannot
+        # route around the switch, and no model surface is involved.
         if self.kill_switch:
             reasons.append("kill switch enabled")
+        if self.kill_switches.get(request.instrument.venue):
+            reasons.append(
+                f"kill switch enabled for venue {request.instrument.venue.value}"
+            )
         limits = self.risk_limits
         if (
             limits.max_order_quantity is not None

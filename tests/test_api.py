@@ -133,7 +133,7 @@ def test_kill_switch_status_is_observable() -> None:
     response = client(account).get("/kill-switch")
 
     assert response.status_code == 200
-    assert response.json() == {"kill_switch": True}
+    assert response.json() == {"kill_switch": True, "kill_switches": {}}
 
 
 def test_pnl_names_positions_without_marks() -> None:

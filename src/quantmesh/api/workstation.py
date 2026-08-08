@@ -14,9 +14,10 @@ workstation is a local surface, never env-escalable (ADR-0011 decision
 except two named surfaces (ADR-0011 decisions 3 and 6): the watchlist
 store (the one UI-owned write surface, on the ADR-0006 discipline) and
 the paper-level kill switch, a form control that flips the injected
-paper account's flag — while engaged the paper kernel refuses new
-order submissions; enforcement across the wider execution plane is
-M10. Page providers receive injected read surfaces — account, marks,
+paper account's global flag or one venue's flag (M10 Phase C) — the
+accounting risk gate refuses new order submissions while the global
+switch or the order's venue switch is engaged, with no model
+involvement. Page providers receive injected read surfaces — account, marks,
 markets, watchlist, the research registries (experiments, promotions,
 reports), the forecast report registry (Phase D), and the Phase E
 surfaces (the alert ledger, the audit journals — orders, mappings,
@@ -53,6 +54,7 @@ from quantmesh.ai.decisions import DecisionLog
 from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.watchlist import WatchlistError, WatchlistStore
+from quantmesh.domain.models import Venue
 from quantmesh.domain.orders import Order
 from quantmesh.events.forecast import ForecastReportRegistry, forecast_artifact_paths
 from quantmesh.events.mapping import MappingLedger
@@ -612,8 +614,25 @@ def _audit_provider(context: PageContext) -> dict[str, object]:
 
 
 def _kill_switch_provider(context: PageContext) -> dict[str, object]:
-    """The kill-switch page: current state plus the confirmation form."""
-    return {"kill_switch": context.account.kill_switch}
+    """The kill-switch page: the global flag, the per-venue flags over
+    the venues the workstation knows (the injected markets; the
+    account's own flags when markets is empty), and the confirmation
+    forms. Global and per-venue live on the same account object the
+    form flips, so the JSON surface, the page context and the kernel
+    gate cannot disagree (ADR-0012 decision 3)."""
+    account = context.account
+    names = {venue.value for venue in account.kill_switches}
+    names.update(context.markets)
+    kill_switches: dict[str, bool] = {}
+    for name in sorted(names):
+        try:
+            venue = Venue(name)
+        except ValueError:
+            # A markets key that is not a venue cannot be engaged; it is
+            # never rendered as a control.
+            continue
+        kill_switches[name] = account.kill_switches.get(venue, False)
+    return {"kill_switch": account.kill_switch, "kill_switches": kill_switches}
 
 
 # The page registry, pinned by the page-registry test (every route
@@ -892,17 +911,22 @@ def _register_experiment_detail(app: FastAPI) -> None:
 
 
 def _register_kill_switch(app: FastAPI) -> None:
-    """POST /kill-switch: the paper-level kill switch (ADR-0011 decision
-    6, the second UI-owned write surface).
+    """POST /kill-switch: the global and per-venue kill switches
+    (ADR-0011 decision 6, ADR-0012 decision 3, the second UI-owned
+    write surface).
 
     The confirmation is part of the form itself: the submit must carry
     `action` in {engage, disarm} AND the literal `confirm=confirm`
     field — a hostile POST (non-form body, missing or wrong fields) is
     refused with a typed error page and the account is never touched.
-    A successful flip replaces the injected account (the paper kernel
-    refuses new submissions while engaged; enforcement across the wider
-    execution plane is M10) in both `app.state` and the page context,
-    so the M1 JSON surface and every page agree on the state.
+    An optional `venue` field targets the per-venue map: a named venue
+    flips only that venue's switch (disarm removes it — absence reads
+    disarmed), leaving the global bit and every other venue untouched;
+    a venue that is not a known `Venue` is refused with a typed error
+    page. A successful flip replaces the injected account in both
+    `app.state` and the page context, so the M1 JSON surface, every
+    page and the kernel gate agree on the state. Enforcement lives in
+    the accounting risk gate, not in any AI surface.
     """
 
     @app.post("/kill-switch", response_class=HTMLResponse)
@@ -910,6 +934,7 @@ def _register_kill_switch(app: FastAPI) -> None:
         request: Request,
         action: str | None = Form(default=None),
         confirm: str | None = Form(default=None),
+        venue: str | None = Form(default=None),
     ) -> Response:
         if action not in ("engage", "disarm") or confirm != "confirm":
             return _error_page(
@@ -920,9 +945,28 @@ def _register_kill_switch(app: FastAPI) -> None:
                 "(action=engage|disarm and confirm=confirm)",
             )
         context = app.state.page_context
-        flipped = context.account.model_copy(
-            update={"kill_switch": action == "engage"}
-        )
+        if venue is None:
+            flipped = context.account.model_copy(
+                update={"kill_switch": action == "engage"}
+            )
+        else:
+            try:
+                venue_enum = Venue(venue)
+            except ValueError:
+                return _error_page(
+                    app,
+                    request,
+                    "/kill-switch/control",
+                    f"kill-switch POST refused: unknown venue {venue!r}",
+                )
+            kill_switches = dict(context.account.kill_switches)
+            if action == "engage":
+                kill_switches[venue_enum] = True
+            else:
+                kill_switches.pop(venue_enum, None)
+            flipped = context.account.model_copy(
+                update={"kill_switches": kill_switches}
+            )
         app.state.account = flipped
         app.state.page_context = replace(context, account=flipped)
         return RedirectResponse("/kill-switch/control", status_code=303)

@@ -138,8 +138,19 @@ def create_app(
         }
 
     @app.get("/kill-switch")
-    def kill_switch() -> dict[str, bool]:
-        return {"kill_switch": app.state.account.kill_switch}
+    def kill_switch() -> dict[str, object]:
+        # M10 Phase C (issue #60): the global bit plus the per-venue
+        # map, both read from the account object the control flips —
+        # the JSON surface, the page context and the kernel gate are
+        # the same state by construction.
+        current = app.state.account
+        return {
+            "kill_switch": current.kill_switch,
+            "kill_switches": {
+                venue.value: engaged
+                for venue, engaged in sorted(current.kill_switches.items())
+            },
+        }
 
     return app
 
