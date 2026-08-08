@@ -210,6 +210,51 @@ runtime features:
   and the workstation only ever binds loopback (Decision 2 of
   ADR-0011). An absent Origin stays allowed (the CLI/drill path).
 
+### Decision 5 — Live enablement is a recorded approval state
+machine; secrets live in the OS keyring behind a drill-gated store;
+the workstation's enablement screen is read-only (Phase E, issue #62)
+
+The long-running goal's gate — **"real-money trading, wallet signing,
+live broker orders, credentials, paid infrastructure, and AI order
+authority all require explicit human approval"** — is enforced as a
+recorded process, not a flag:
+
+- **`quantmesh.ops.enablement`** is a per-venue state machine
+  (disabled → pending → enabled, with withdraw and revoke) persisted
+  as append-only JSONL on the ADR-0006 discipline
+  (`~/.quantmesh/enablement/` by default). State is *derived* from
+  the ledger (the target state of the latest record per venue), so
+  the ledger and the reported state can never disagree. The only
+  legal edges are fixed (`request`, `approval`, `withdraw`,
+  `revoke`); anything else is a typed refusal before anything is
+  written, and an identical replay at the same instant is refused by
+  record identity.
+- **The only path to `enabled` is an approval record** carrying the
+  recorded gate text verbatim (`GATE_TEXT` above). The record names
+  who approved, when (timezone-aware, normalized to UTC), and which
+  gate text was presented; a stale, watered-down or missing gate is
+  refused by both the model and the ledger before anything is
+  written. In M10 the approvals exist only in fixtures and drills —
+  no live execution surface exists, and nothing in the code path can
+  fabricate a real approval.
+- **Transitions are CLI/operator-owned** (`quantmesh ops enable
+  <venue> <kind> --actor <name>`): the CLI prints the live-enablement
+  gate to stderr on every `approve` and requires `--gate-text` to
+  match verbatim. The M9 workstation gains a **read-only enablement
+  screen** (`/enablement`): per-venue state, the gate text, and a
+  bound-ledger indicator — no form, no POST (a POST is refused
+  405), because the state machine refuses any transition not backed
+  by a recorded approval record and no UI transition exists.
+- **`quantmesh.ops.secrets`** wraps the OS keyring behind a typed
+  `KeyringStore` (base64-encoded bytes, safe-name enforcement) with a
+  fixture backend for tests. Construction **refuses without an
+  explicit drill flag**: the OS keyring holds real credentials, and
+  the recorded gate requires explicit human approval before any
+  credential store is used — so the suite never touches the OS
+  keyring, and the real backend constructs only under `drill=True`
+  (construction only; a missing keyring fails closed as
+  `KeyringUnavailableError`).
+
 ## Consequences
 
 - Metrics, alerts and logs are local files on the same discipline as
@@ -260,5 +305,16 @@ runtime features:
   browser-vector hole on the loopback bind without disturbing the
   CLI/drill path (absent Origin stays allowed) — pinned by the
   five-test `TestWriteSurfaceOriginGuard`.
-- Later M10 decision (live-enablement gate) appends to this ADR as
-  its phase lands.
+- Enablement is a recorded process, not a flag: every transition is
+  an audit entry naming who, when and (for approvals) which gate text
+  was presented, state is derived from the ledger so ledger and state
+  cannot disagree, and the gate text itself is pinned verbatim by a
+  test. The read-only screen makes enablement visible without making
+  it UI-ownable — the same pattern as the M9 promotion screen, and
+  the write surface is absent by construction (405).
+- Secrets stay behind the recorded gate: the keyring backend refuses
+  construction outside a drill flag, so no code path can reach real
+  credentials without a human approval record first, and the suite
+  pins the refusal (T-07). This is the documented path any future
+  live operation must walk: the release process's human-gate
+  checklist and this decision together record the exact gate.

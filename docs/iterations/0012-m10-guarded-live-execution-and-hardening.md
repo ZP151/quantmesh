@@ -83,7 +83,7 @@ Out of scope (recorded, not deferred silently):
 5. [x] The threat model is recorded, the CI dependency/license
       scanning job is green (no incompatible licenses), and the
       release process is documented. — Phase D (issue #61).
-6. [ ] The per-venue enablement approval workflow and secret-store
+6. [x] The per-venue enablement approval workflow and secret-store
       integration are implemented and fixture-tested against the
       paper surface; the real live-enablement gate is recorded in
       this iteration, ADR-0012 and ACTIVE.md, and every safe
@@ -449,6 +449,62 @@ release process) complete — 2026-08-08.**
   frozen closure + deterministic license review; the Origin guard;
   the vectorbt removal as the enforcement precedent).
 
+**Issue #62 (Phase E, enablement approval workflow + secret store +
+recorded live gate) complete — 2026-08-08.**
+
+- `quantmesh.ops.enablement`: a per-venue state machine
+  (disabled/pending/enabled) with fixed legal edges — request
+  (disabled→pending), approval (pending→enabled), withdraw
+  (pending→disabled), revoke (enabled→disabled) — persisted as
+  append-only JSONL on the ADR-0006 discipline
+  (`settings.enablement_dir`, default `~/.quantmesh/enablement`).
+  State is *derived* from the ledger (the target state of the latest
+  record per venue), so the ledger and the reported state can never
+  disagree; an identical replay at the same instant is refused by
+  record identity (sha256 over the canonical JSON of every field);
+  records name who, when (timezone-aware, normalized to UTC) and —
+  for approvals — which gate text was presented. **The only path to
+  `enabled` is an approval record carrying `GATE_TEXT` verbatim**;
+  a stale, watered-down or missing gate is refused by both the model
+  validator and `ledger.approve` before anything is written.
+  Debugging note: `_record` initially called `.astimezone(UTC)` on
+  the raw argument, which silently interpreted a naive datetime as
+  local time and bypassed the model's awareness refusal — an explicit
+  `tzinfo` check now refuses naive timestamps at the ledger edge.
+- `quantmesh.ops.secrets`: `KeyringStore` — typed get/put/delete over
+  a `KeyringBackend` protocol (base64-encoded bytes, safe-name
+  enforcement); `FixtureKeyringBackend` for tests; a lazy real
+  backend that refuses construction outside an explicit drill flag
+  (the OS keyring holds real credentials, and the recorded gate
+  requires explicit human approval before any credential store is
+  used), failing closed as `KeyringUnavailableError` when keyring
+  cannot be imported.
+- CLI: `quantmesh ops enable <venue> <kind> --actor <name>`
+  [--at ISO] [--gate-text TEXT] [--root PATH] — prints the
+  live-enablement gate to stderr on every approve and requires
+  `--gate-text` to match verbatim (missing or wrong → exit 1, state
+  untouched); illegal transitions exit 1 with the state the
+  transition requires; unknown venue exits 2.
+- Workstation: the M9 app gains a **read-only** `/enablement`
+  screen (Page registry entry, nav reachable): per-venue states,
+  the gate text rendered verbatim, a bound/unbound indicator — no
+  form, no POST (a POST is refused 405), because transitions are
+  CLI/operator-owned exactly like M9 promotion approval. E2E
+  accessibility snapshots extended to the new screen.
+- Dependency closure: keyring 25.7.0 (MIT) + 5 transitives added to
+  the `dev` extra; the venv was upgraded to the fresh resolution;
+  `requirements-audit.txt` regenerated to 55 pins; `docs/licenses.md`
+  inventory regenerated — 100 packages reviewed, all allowed.
+- `tests/test_security.py` `_token_resolves` tightened: an
+  `ADR-00NN decision N` citation now resolves only against a real
+  `### Decision N` header in exactly one matching `docs/adr/` file
+  (this enforcement caught ADR-0012 decision 5 before it was
+  recorded — the doc test is a living contract for Phase E too).
+- ADR-0012 decision 5 recorded (enablement = recorded approval state
+  machine; secrets = keyring behind a drill-gated store; the real
+  live-enablement gate recorded verbatim; the workstation screen is
+  read-only).
+
 ## Verification evidence
 
 - `tests/test_ops.py`: 37 passed (2026-08-08).
@@ -471,5 +527,34 @@ release process) complete — 2026-08-08.**
   licenses-doc ↔ script agreement, audit-lock parseability.
 - `tools/license_review.py`: 94 packages reviewed, all allowed
   (2026-08-08).
-- Full suite: recorded in ACTIVE.md after the M10-4 commit.
-- `ruff check src tests tools`: clean on the M10-4 surface.
+- `tests/test_enablement.py`: 37 passed (2026-08-08) — approval
+  record model (gate text verbatim on approvals only, naive
+  timestamps refused, forged ids refused), the full state machine
+  (round-trip drill with who/when/gate-text assertions, 11 illegal
+  transitions each leaving the ledger atomic, wrong-gate refusals,
+  states derived from the ledger only, venue independence), ledger
+  discipline (missing → empty, root-not-dir, corrupt-line and
+  duplicate-id attribution, cross-instance persistence, replay
+  refusal), keyring store (construction refusal outside a drill even
+  with a fixture backend, fixture round-trip with arbitrary bytes,
+  service separation, safe names, import-guard fails closed,
+  drill-only real-backend construction — never read/write), and the
+  CLI drill (full workflow exit 0, missing/wrong gate text exit 1
+  with state untouched, illegal transition exit 1, unknown venue
+  exit 2, gate text presented to the operator on stderr).
+- `tests/test_workstation.py` `TestEnablementScreen`: 5 passed
+  (2026-08-08) — unbound typed empty state, bound per-venue states,
+  empty ledger, read-only (POST refused 405, no form in markup),
+  nav reachable; the gate text renders verbatim on every state.
+- `tests/test_workstation_e2e.py`: 16 passed (2026-08-08) — the
+  accessibility-snapshot screen list extended to the enablement
+  screen (13 screens).
+- `tests/test_security.py`: 14 passed (2026-08-08) — the ADR
+  decision-citation checker now resolves `ADR-00NN decision N`
+  against a real `### Decision N` header in exactly one
+  `docs/adr/` file (it caught ADR-0012 decision 5 before the
+  decision was recorded).
+- Full suite: `pytest -q` 1787 passed, 3 skipped (2026-08-08) —
+  recorded in ACTIVE.md after the M10-5 commit.
+- `ruff check src tests tools`, `git diff --check`, `git submodule
+  status`: clean on the M10-5 surface.
