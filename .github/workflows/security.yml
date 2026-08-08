@@ -52,6 +52,9 @@ jobs:
       - name: Advisory scan (pip-audit over the locked environment)
         # requirements-audit.txt pins the resolved install closure
         # (regenerate via `pip install --dry-run --report` after a
-        # dependency change — see docs/release-process.md). A newly
-        # published advisory fails this job loudly.
-        run: python -m pip_audit -r requirements-audit.txt --no-deps
+        # dependency change — see docs/release-process.md). The lock IS
+        # the resolution, so --disable-pip audits the pins directly
+        # with no re-resolution (the pip resolver would try to rebuild
+        # the Linux-only closure members on Windows, where CI must not
+        # differ). A newly published advisory fails this job loudly.
+        run: python -m pip_audit -r requirements-audit.txt --no-deps --disable-pip

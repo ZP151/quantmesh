@@ -17,7 +17,10 @@ Steps, all under a temporary root:
      installed and allowed, nothing untracked installed).
   6. pip-audit over ``requirements-audit.txt`` from an *isolated*
      tooling venv, so the scanner's own CLI dependencies never enter
-     the release environment.
+     the release environment. ``--disable-pip``: the lock is already
+     the frozen resolution, so the audit reads the pins directly with
+     no re-resolution (pip's resolver would try to rebuild the
+     Linux-only closure members on Windows).
   7. Full pytest suite (E2E tests use the shared Playwright browser
      cache and are reported as skipped when it is unavailable).
   8. The golden path (``tools/golden_path.py``: fixture -> data lake
@@ -45,6 +48,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -219,6 +223,10 @@ def main() -> int:
                 "-r",
                 "requirements-audit.txt",
                 "--no-deps",
+                # The lock IS the resolution; --disable-pip audits the
+                # pins directly instead of re-resolving (which would
+                # try to build uvloop on Windows).
+                "--disable-pip",
             ],
             checkout,
             900,
@@ -243,23 +251,29 @@ def main() -> int:
         ),
     )
 
-    results: dict[str, tuple[bool, float]] = {}
-    for name, cmd, cwd, timeout in steps:
-        ok, elapsed = run_step(name, cmd, cwd, logs, timeout)
-        results[name] = (ok, elapsed)
-        if not ok:
-            break
+    try:
+        results: dict[str, tuple[bool, float]] = {}
+        for name, cmd, cwd, timeout in steps:
+            ok, elapsed = run_step(name, cmd, cwd, logs, timeout)
+            results[name] = (ok, elapsed)
+            if not ok:
+                break
 
-    summary = _git(["status", "--porcelain"], checkout)
-    clean = not summary.stdout.strip()
-    clone_head = _git(["rev-parse", "HEAD"], checkout).stdout.strip()
-    if clone_head and clone_head != commit:
-        # The clone must prove the exact source commit; a mismatch is
-        # treated as a failed clone.
-        elapsed = results.get("clone current commit", (False, 0.0))[1]
-        results["clone current commit"] = (False, elapsed)
-        print(f"clone HEAD {clone_head[:12]} does not match source {commit[:12]}")
-    passed = all(results.get(name, (False, 0.0))[0] for name, _ in steps)
+        summary = _git(["status", "--porcelain"], checkout)
+        clean = not summary.stdout.strip()
+        clone_head = _git(["rev-parse", "HEAD"], checkout).stdout.strip()
+        if clone_head and clone_head != commit:
+            # The clone must prove the exact source commit; a mismatch
+            # is treated as a failed clone.
+            elapsed = results.get("clone current commit", (False, 0.0))[1]
+            results["clone current commit"] = (False, elapsed)
+            print(f"clone HEAD {clone_head[:12]} does not match source {commit[:12]}")
+        passed = all(results.get(name, (False, 0.0))[0] for name, *_ in steps)
+    except Exception:
+        # Never die silently: any crash keeps the diagnostics root.
+        traceback.print_exc()
+        print(f"\nRELEASE GATE CRASHED — diagnostics kept at {temp}", flush=True)
+        return 1
 
     print("\n=== release gate summary ===")
     print(f"branch: {branch}   commit: {commit}")

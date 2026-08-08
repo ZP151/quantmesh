@@ -52,7 +52,10 @@ python tools/release_gate.py
 It clones the current commit into a temporary directory, creates a
 fresh venv there, installs the release extras `.[dev,research,e2e]`,
 then runs Ruff, the license review (closure contract), pip-audit over
-the audit lock (from an isolated tooling venv), the full pytest suite
+the audit lock from an isolated tooling venv (``--disable-pip``: the
+lock is the frozen resolution, so the pins are audited directly with
+no re-resolution — the pip resolver would otherwise try to rebuild
+the Linux-only closure members on Windows), the full pytest suite
 and the 51-check golden path (fixture -> data lake -> strategy reports
 -> internal paper -> all 13 workstation screens -> restart recovery
 with audit-ledger rereads), and finally proves the checkout is clean.
