@@ -130,6 +130,45 @@ reconciliation discipline (Phase B, issue #59)
   history), and the reconciliation against a replay is all-matched
   with zero findings.
 
+### Decision 3 — The kill switch is a global bit plus a per-venue map
+on the account object; enforcement lives in the accounting risk gate
+(Phase C, issue #60)
+
+The kill switch is **not** a page flag, a model instruction or a
+surface-local state: `PaperAccount` carries `kill_switch: bool` and
+`kill_switches: dict[Venue, bool]`, and that one object is the single
+source of truth the M9 control flips, the REST surface reports and
+the enforcement gate reads — the JSON surface, the page context and
+the kernel gate cannot disagree.
+
+- **Semantics**: the global bit overrides every venue; a venue map
+  entry engages a switch for exactly that venue; a venue absent from
+  the map reads as disarmed (a disarm pops the entry rather than
+  storing `False`, so "no entry" and "disarmed" are the same fact).
+- **Enforcement lives in the accounting risk gate** (`_risk_reasons`),
+  which every submission crosses before sequence consumption: while
+  engaged, the submission returns a typed rejection
+  (`"kill switch enabled"` / `"kill switch enabled for venue <v>"`),
+  recorded as the rejected order — the journal replays the refusal.
+  No model, page or adapter cooperation is required, and no AI
+  surface can set or clear the switch: the gate is in the accounting
+  path by construction, so "without model cooperation" is a property
+  of the architecture, not a behavioral test promise.
+- **Persistence**: `kill_switches` joins `account_meta` as a JSON
+  column; an existing (pre-Phase-C) store is migrated additively
+  (`ALTER TABLE ... ADD COLUMN`, default `'{}'`) on open — never a
+  destructive migration. Reads are fail-closed like every other
+  ADR-0006 surface: non-JSON, non-dict, unknown-venue or non-bool
+  payloads raise `StoreCorruptionError`, so a hostile or corrupted
+  meta row cannot silently disarm the switch.
+- **Control surface**: the M9 kill-switch page renders the per-venue
+  switches on the same confirm-gated POST contract (the `confirm`
+  field the operator checkboxes), each venue form carrying a hidden
+  `venue` field; a POST naming an unknown venue is refused with a
+  typed error and leaves state untouched. The venue options come from
+  the union of the account's engaged venues and the bound markets —
+  never a free-text injection surface.
+
 ## Consequences
 
 - Metrics, alerts and logs are local files on the same discipline as
@@ -159,5 +198,14 @@ reconciliation discipline (Phase B, issue #59)
   and the exit status is 0 only for a fully clean read, replay and
   reconciliation — a corrupt journal or a divergent snapshot names its
   findings and exits 1.
-- Later M10 decisions (kill-switch enforcement, scanning gate,
-  live-enablement gate) append to this ADR as their phases land.
+- The kill switch is enforced where submissions actually cross — the
+  accounting risk gate — so it cannot be bypassed by any route that
+  cannot bypass the risk gate itself; a refused submission is
+  journaled as a rejected order and replays as a refusal, never as a
+  silent drop. The single account object keeps the REST status, the
+  page controls and the gate provably in agreement (pinned by the
+  status/round-trip API tests and the keyboard-only E2E drill), and
+  a corrupt persisted payload fails the read closed instead of
+  disarming anything.
+- Later M10 decisions (scanning gate, live-enablement gate) append to
+  this ADR as their phases land.

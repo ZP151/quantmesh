@@ -68,7 +68,7 @@ Out of scope (recorded, not deferred silently):
       paper operation and alerted on breach (alerts via the M7
       `AlertLedger`), and incident runbooks exist and are tested for
       content. — Phases A/B (issues #58/#59).
-2. [ ] Global and per-venue kill switches disable the execution plane
+2. [x] Global and per-venue kill switches disable the execution plane
       without model cooperation: an order submission is refused while
       the switch is engaged, per venue and globally, proven by
       enforcement tests over the paper kernel. — Phase C (issue #60).
@@ -357,9 +357,67 @@ store integration (issue #62)
   path; recovery is journal replay verified by the ADR-0006
   reconciliation discipline).
 
+**Issue #60 (Phase C, global + per-venue kill-switch enforcement)
+complete — 2026-08-08.**
+
+- `PaperAccount` gains `kill_switch: bool` and
+  `kill_switches: dict[Venue, bool]` — the same account object the M9
+  control flips is the single source of truth for the REST surface,
+  the page context and the gate. The global bit overrides every
+  venue; a venue absent from the map reads as disarmed (a disarm pops
+  the entry). Enforcement is in the accounting risk gate
+  (`_risk_reasons`), which every submission crosses before sequence
+  consumption: engaged → typed rejection `"kill switch enabled"` /
+  `"kill switch enabled for venue <v>"`, recorded as the rejected
+  order (the journal replays the refusal; cash/positions untouched).
+  The gate sits in the accounting path by construction, so "without
+  model cooperation" is architectural — no model surface can set or
+  clear the switch.
+- `EventStore`: `account_meta.kill_switches` JSON column; a
+  pre-Phase-C store is migrated additively on open (PRAGMA
+  table_info + `ALTER TABLE ... ADD COLUMN ... DEFAULT '{}'` — never
+  destructive); reads fail closed (`StoreCorruptionError` for
+  non-JSON, non-dict, unknown-venue or non-bool payloads) so a
+  corrupted meta row cannot silently disarm anything.
+- API: `GET /kill-switch` reports `{"kill_switch", "kill_switches"}`
+  with venue keys sorted. Workstation: the kill-switch page renders
+  one confirm-gated form per venue (hidden `venue` field, radios
+  "Block/Allow {venue} paper orders", venue-scoped confirm checkbox),
+  options from the account's engaged venues ∪ bound markets (never a
+  free-text injection surface); a POST naming an unknown venue is
+  refused with a typed error page and leaves state untouched; global
+  and per-venue engage/disarm all replace the account in state +
+  page context (303). Promotions copy updated: the flag now records
+  the posture at promotion time (the enforcement line "until M10
+  enforces it" removed — it is now true).
+- Tests: `TestKillSwitchEnforcement` (6: per-venue refuses only its
+  venue, global overrides a disarmed venue, disarming restores,
+  refusal records the rejection and nothing else, venue-not-in-map
+  open, absent venue reads disarmed), store (map survives restart,
+  legacy store migrates additively, 4 corrupt payloads fail closed),
+  API (status observable with the map), workstation (per-venue rows,
+  engage/disarm round trips, hostile-venue refusal with state
+  untouched, account flags without markets), E2E keyboard-only drill
+  extended with a per-venue engage→disarm round trip through the same
+  confirm-gated POST (15 E2E passed). 17 new tests in Phase C; full
+  suite 1725 passed / 3 skipped. Ruff E/F/I/UP clean.
+- ADR-0012 decision 3 recorded (kill switch = global bit + per-venue
+  map on the account object; enforcement in the accounting risk
+  gate, never an AI surface).
+
 ## Verification evidence
 
 - `tests/test_ops.py`: 37 passed (2026-08-08).
-- `tests/test_recovery.py`: 24 passed (2026-08-08).
-- `ruff check src tests`: clean on the M10-2 surface.
-- Full-suite run recorded in ACTIVE.md after the M10-2 commit.
+- `tests/test_recovery.py`: 24 passed (2026-08-08) + 1 key-replay
+  regression test (same key, regenerated client id — still a replay).
+- `tests/test_accounting.py` `TestKillSwitchEnforcement`: 6 passed;
+  `tests/test_store.py` kill-switch suite: 6 passed (map restart,
+  legacy migration, 4 corrupt payloads); `tests/test_api.py`
+  kill-switch status: 1 passed; `tests/test_workstation.py`
+  `TestPhaseCPerVenueKillSwitch`: 5 passed (2026-08-08).
+- `tests/test_workstation_e2e.py`: 15 passed (2026-08-08) — the
+  keyboard-only drill covers the global engage/disarm round trip and
+  a per-venue engage→disarm round trip through the confirm-gated POST.
+- Full suite: 1725 passed / 3 skipped (2026-08-08).
+- `ruff check src tests`: clean on the M10-3 surface.
+- Full-suite run recorded in ACTIVE.md after the M10-3 commit.
