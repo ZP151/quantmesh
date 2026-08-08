@@ -72,7 +72,7 @@ Out of scope (recorded, not deferred silently):
       without model cooperation: an order submission is refused while
       the switch is engaged, per venue and globally, proven by
       enforcement tests over the paper kernel. — Phase C (issue #60).
-3. [ ] Recovery drills demonstrate no duplicate or orphaned orders:
+3. [x] Recovery drills demonstrate no duplicate or orphaned orders:
       journal replay with an idempotency key replays to the same
       state, and the reconciliation identity/tolerance discipline
       (ADR-0006) verifies it. — Phase B (issue #59).
@@ -313,8 +313,53 @@ store integration (issue #62)
 - ADR-0012 decision 1 recorded (metrics/logs on ADR-0006, alerts via
   the M7 ledger, local HMAC-signed exports).
 
+**Issue #59 (Phase B, idempotency + recovery drills) complete —
+2026-08-08.**
+
+- `OrderRequest`/`Order` carry an `idempotency_key` (URL-safe shape,
+  1-64 chars, `IDEMPOTENCY_KEY_PATTERN`); a keyed submission derives
+  its order id as `paper-<key>` (when no `client_order_id` is given),
+  and `PaperAccount.submit` detects the replay by key BEFORE the
+  sequence is consumed or the risk gate runs, returning the original
+  order in a typed `SubmissionResult.replay_of` — never duplicated,
+  never re-gated, never consuming state (a rejected order replays as
+  rejected; a filled order replays without re-applying fills).
+- The order journal's read identity now includes idempotency keys:
+  two records sharing a key are refused with line attribution,
+  exactly like duplicate order ids — a duplicate in the file fails
+  closed instead of replaying a duplicate.
+- Implemented `quantmesh.ops.recover`: `read_journal_lines` (fail-
+  closed, ALL refusals collected with line attribution — partial
+  append/truncated tail named, nothing partially replayed; missing
+  root/file reads empty), `replay_orders` (pure event fold into a
+  fresh account — no risk gate, no matcher, no kill switch re-run;
+  mid-lifecycle orders stay unacknowledged), `verify_event_history`
+  (event history re-applied through `OrderStateMachine`, comparing
+  status/filled_quantity/event count), `reconcile_recovered`
+  (ADR-0006 discipline: identity match, qty/price/status tolerances,
+  missing-internal, orphaned account orders → divergent, position
+  surface with position_qty_bps), `recover` (report `clean` only with
+  zero refusals, zero missing and zero ERROR findings); CLI
+  `quantmesh ops recover --journal --cash [--against] [--*-bps]`
+  exits 0 only when clean, 1 with findings named otherwise.
+- Tests: `tests/test_recovery.py` — 24 passed: 8 idempotency (typed
+  replay, rejected replayed without re-gate, fills never re-applied,
+  key collision with an unkeyed `paper-2` order refused, invalid
+  shape refused, journal duplicate-key refusal), 12 drills (replay
+  == live account exactly; crash-mid-stream mid-lifecycle preserved;
+  partial append/truncated tail/duplicate-key refusals all collected;
+  event-history inconsistency named; unbookable SELL fill → "replay
+  refused"; empty journal clean; missing snapshot order; orphaned
+  account order; position divergence + tolerance), 4 CLI (round-trip
+  exit 0; corrupt exit 1; divergent snapshot exit 1; qty tolerance
+  0 vs 100 bps). Ruff E/F/I/UP clean (I001 auto-fixed in recover.py).
+- ADR-0012 decision 2 recorded (idempotency keys on the submission
+  path; recovery is journal replay verified by the ADR-0006
+  reconciliation discipline).
+
 ## Verification evidence
 
 - `tests/test_ops.py`: 37 passed (2026-08-08).
-- `ruff check src tests`: clean on the Phase A surface.
-- Full-suite run recorded in ACTIVE.md after the M10-1 commit.
+- `tests/test_recovery.py`: 24 passed (2026-08-08).
+- `ruff check src tests`: clean on the M10-2 surface.
+- Full-suite run recorded in ACTIVE.md after the M10-2 commit.

@@ -89,6 +89,47 @@ locally (Phase A, issue #58)
   `record-metric`, `export-audit`, `verify-export` — all local
   computation; missing key file exits 2, verification failure exits 1.
 
+### Decision 2 — Idempotency keys on the paper-kernel submission
+path; recovery is journal replay verified by the ADR-0006
+reconciliation discipline (Phase B, issue #59)
+
+- `OrderRequest` and `Order` carry an `idempotency_key`
+  (URL-safe shape, 1-64 chars). A keyed submission derives its order
+  id from the key (`paper-<key>` when no `client_order_id` is given),
+  and `PaperAccount.submit` detects a replay by key BEFORE the
+  sequence is consumed or the risk gate runs: the replay returns the
+  original order in a typed `SubmissionResult` with `replay_of`
+  naming it — never duplicated, never re-gated, never consuming state.
+  A keyed order that was originally rejected replays as that rejected
+  order; a filled order replays without re-applying its fills. The
+  account is unchanged by a replay.
+- Keys are recorded in the order journal and participate in its
+  identity: the journal read refuses two records sharing a key with
+  line attribution, exactly like two order ids — a duplicate key in
+  the file fails closed instead of replaying a duplicate.
+- `quantmesh.ops.recover` (CLI: `quantmesh ops recover --journal <root>
+  --cash <amount> [--against <account.json>] [--*-bps tolerances]`)
+  is the recovery drill: it reads the journal with the fail-closed
+  discipline (all refusals collected with line attribution — a partial
+  append or truncated tail exits 1 and nothing is replayed), replays
+  the valid records into a fresh account by pure event application
+  (no risk gate, no matcher, no kill switch — the executed history
+  re-books exactly as it ran; a mid-lifecycle order stays
+  unacknowledged, never fabricated), verifies each order's event
+  history re-applies cleanly through the state machine (no orphaned
+  fills, no fabricated state), and reconciles the result against the
+  surviving account snapshot with the ADR-0006 vocabulary: order
+  identity (missing / orphaned-divergent), filled quantity and average
+  fill price and status under the declared qty/price tolerances, and
+  the position surface under the position_qty tolerance. The report is
+  `clean` only with zero refusals, zero missing orders and zero ERROR
+  findings; any divergence exits 1 with the findings named.
+- The drill's evidence: replay with the same declared configuration
+  produces the account state that ran live (equality proven by test
+  across cash, fees, realized P&L, positions and every order's event
+  history), and the reconciliation against a replay is all-matched
+  with zero findings.
+
 ## Consequences
 
 - Metrics, alerts and logs are local files on the same discipline as
@@ -105,6 +146,18 @@ locally (Phase A, issue #58)
 - Real credentials never enter the M10 code path: Phase A operates on
   an operator-named key file behind the `KeyStore` protocol, and
   Phase E's keyring backend is only exercised against a fixture.
-- Later M10 decisions (idempotency/recovery discipline, kill-switch
-  enforcement, scanning gate, live-enablement gate) append to this
-  ADR as their phases land.
+- The submission surface is now idempotent: retrying a keyed request
+  returns the original order typed as a replay and consumes nothing,
+  so a client crash between kernel commit and journal write cannot
+  duplicate an order, and a replayed rejected order cannot slip past
+  the risk gate a second time.
+- The journal's identity is keyed twice (order id and idempotency
+  key): a duplicate key in the file is refused on read like a
+  duplicate id, so recovery can never replay a duplicate.
+- Recovery is a verification drill, not a re-execution: the replay
+  re-books the recorded history without re-gating or re-matching it,
+  and the exit status is 0 only for a fully clean read, replay and
+  reconciliation — a corrupt journal or a divergent snapshot names its
+  findings and exits 1.
+- Later M10 decisions (kill-switch enforcement, scanning gate,
+  live-enablement gate) append to this ADR as their phases land.
