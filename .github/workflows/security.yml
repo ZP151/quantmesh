@@ -1,20 +1,25 @@
 name: Security
 
-# Runs only when a push to main touches the audit surface: the frozen
-# install closure, the license-review script or the license inventory.
-# The python job in ci.yml runs on every PR to main; the security scan
-# is deliberately NOT on the PR path — the audit lock and the review
-# script only exist on main after the M10 merge, so earlier milestone
-# merges must not fail a job on missing files, and a green scan after
-# the final main PR lands is the recorded coverage.
+# Runs only when a push to main touches the audit surface: any
+# dependency declaration (pyproject.toml — including its extras), the
+# frozen install closure, the license-review script, the license
+# inventory or this workflow definition itself (so a trigger-surface
+# change cannot silently defuse the job). The python job in ci.yml
+# runs on every PR to main; the security scan is deliberately NOT on
+# the PR path — the audit lock and the review script only exist on
+# main after the M10 merge, so earlier milestone merges must not fail a
+# job on missing files, and a green scan after the final main PR lands
+# is the recorded coverage (iteration 0013 Phase B).
 
 on:
   push:
     branches: [main]
     paths:
+      - pyproject.toml
       - requirements-audit.txt
       - tools/license_review.py
       - docs/licenses.md
+      - .github/workflows/security.yml
 
 permissions:
   contents: read
@@ -30,11 +35,16 @@ jobs:
           cache: pip
       - name: Install project environment
         # The license review reads the installed distributions'
-        # metadata, so the environment must be the real CI install
-        # (`.[dev,research]`, exactly like the python job). The audit
-        # tool is installed separately so its own CLI dependencies do
-        # not contaminate the application's license inventory.
-        run: python -m pip install -e ".[dev,research]"
+        # metadata, so the environment must be the deterministic
+        # release closure: `.[dev,research,e2e]`, the same install the
+        # release gate and operator acceptance use (iteration 0013
+        # Phase B). The review refuses any installed distribution that
+        # is not pinned in requirements-audit.txt, so the environment
+        # must contain exactly the closure. The audit tool runs from a
+        # separate step/environment so its own CLI dependencies
+        # (license-expression, boolean.py, ...) never contaminate the
+        # application's license inventory.
+        run: python -m pip install -e ".[dev,research,e2e]"
       - name: License review (deterministic inventory check)
         run: python tools/license_review.py
       - name: Install audit tooling

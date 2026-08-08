@@ -12,8 +12,9 @@
 - Pull request: none at the starting checkpoint
 - GitHub frontier: zero open issues and zero open pull requests at the
   starting checkpoint
-- Blockers: none external; the current ambient `.venv` license inventory drift
-  is an actionable RC gate recorded in iteration 0013
+- Blockers: none external; iteration 0013 Phase B resolved the ambient
+  `.venv` license drift with the deterministic release-closure contract
+  (ambient environments now fail the gate with a precise message)
 
 ## Current state
 
@@ -43,16 +44,15 @@ audit and guarded enablement. No external live operation is enabled.
 
 ## Immediate frontier
 
-1. Complete release metadata and dependency-security contract work in
-   iteration 0013 Phase B, including deterministic handling of the current
-   `license-expression`/`boolean.py` ambient-environment drift.
-2. Build the clean-checkout, one-command release verification path and ensure
-   it leaves no generated `golden-root/` in the checkout.
-3. Produce release notes, installation/start/stop/reset instructions and a
+1. Build the clean-checkout, one-command release verification path
+   (`tools/release_gate.py` + repo `tools/golden_path.py`) and ensure it
+   leaves no generated `golden-root/` in the checkout.
+2. Produce release notes, installation/start/stop/reset instructions and a
    short English/Chinese acceptance checklist.
-4. Merge one coherent RC PR after CI, Security and fresh-clone verification;
+3. Merge one coherent RC PR (everything lives on `release/v0.1.0-rc1` @
+   5708e72 + Phase B/D work) after CI, Security and fresh-clone verification;
    tag the verified main commit `v0.1.0-rc1` and hand it to the operator.
-5. After the RC is available, deepen architecture in this order: durable JSONL
+4. After the RC is available, deepen architecture in this order: durable JSONL
    persistence, cross-venue reconciliation, then numeric-policy
    characterization plus ADR. Runtime assembly remains secondary.
 

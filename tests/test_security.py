@@ -4,9 +4,15 @@ scanning surface, pinned by doc tests.
 The threat model is a *contract*: every register row names a control
 and a test that pins it, and this file verifies those citations
 resolve to real tests, files and ADRs in the repo. The license
-inventory is the same kind of contract: docs/licenses.md must agree
-with tools/license_review.py's classification of the installed
-environment, and the audit lock must be a parseable pinned closure.
+inventory is the same kind of contract (iteration 0013 Phase B made
+it closure-deterministic): docs/licenses.md must inventory exactly the
+pinned release closure in requirements-audit.txt and agree with
+tools/license_review.py's classification of every installed member;
+the audit lock must be a parseable pinned closure; and the review
+must refuse installed packages outside the closure, so ambient
+environment drift (e.g. pip-audit's license-expression/boolean.py
+toolchain in a development venv) can never silently enter the
+inventory.
 """
 
 import importlib.util
@@ -140,19 +146,35 @@ class TestLicenseReview:
         assert review._from_expression("GPL-3.0-only") is None
         assert review._from_expression("MIT OR GPL-3.0-only") is None
 
-    def test_every_installed_dist_classifies_to_an_allowed_license(
+    def test_every_installed_closure_member_classifies_allowed(
         self,
     ) -> None:
+        """The closure contract: classification covers the pinned
+        release closure (requirements-audit.txt), never the ambient
+        environment. Installed closure members must classify to an
+        allowed license; members absent on this platform (the
+        documented Linux-only set) are tolerated."""
         review = _load_license_review()
-        for dist in review.md.distributions():
-            if dist.metadata["Name"] in review.PROJECT_NAMES:
+        installed = {d.metadata["Name"]: d for d in review.md.distributions()}
+        closure = review.read_closure()
+        assert len(closure) >= 40, "the audit lock is suspiciously thin"
+        for name in closure:
+            if name in review.PLATFORM_TOLERATED and name not in installed:
                 continue
-            key = review.classify(dist)
+            assert name in installed, (
+                f"{name} is pinned in requirements-audit.txt but not "
+                "installed — incomplete release environment"
+            )
+            key = review.classify(installed[name])
             assert not key.startswith("UNKNOWN"), (
-                f"{dist.metadata['Name']} {dist.version}: {key}"
+                f"{name} {installed[name].version}: {key}"
             )
 
-    def test_licenses_doc_lists_every_installed_distribution(self) -> None:
+    def test_licenses_doc_inventories_exactly_the_closure(self) -> None:
+        """docs/licenses.md is the closure inventory: its rows must
+        match the pins in requirements-audit.txt exactly (names), and
+        each installed member's row must agree with the review's
+        classification of it."""
         review = _load_license_review()
         doc = LICENSES.read_text(encoding="utf-8")
         # A row is inventory when its middle cell is a version number
@@ -166,16 +188,137 @@ class TestLicenseReview:
             if match and any(ch.isdigit() for ch in match.group(2)):
                 doc_rows[match.group(1).strip()] = match.group(3).strip()
         assert doc_rows, "no inventory rows parsed from docs/licenses.md"
-        for dist in review.md.distributions():
-            name = dist.metadata["Name"]
-            if name in review.PROJECT_NAMES:
+        closure = review.read_closure()
+        assert set(doc_rows) == set(closure), (
+            f"docs/licenses.md inventories {sorted(set(doc_rows) ^ set(closure))}"
+            " — it must match requirements-audit.txt exactly"
+        )
+        installed = {d.metadata["Name"]: d for d in review.md.distributions()}
+        for name, pinned in closure.items():
+            if name not in installed:
                 continue
-            key = review.classify(dist)
+            key = review.classify(installed[name])
             # Version numbers drift with the environment; the license
             # key is the contract.
-            assert name in doc_rows, f"{name} is not in docs/licenses.md"
             assert doc_rows[name] == key, (
                 f"{name}: docs say {doc_rows[name]}, review says {key}"
+            )
+
+
+class _FakeMetadata(dict):
+    def get_all(self, key: str, default=()) -> list[str]:
+        value = self.get(key)
+        if value is None:
+            return list(default)
+        return value if isinstance(value, list) else [value]
+
+
+class _FakeDist:
+    def __init__(self, name: str, version: str, **metadata) -> None:
+        self.name = name
+        self.version = version
+        self.metadata = _FakeMetadata({"Name": name, **metadata})
+
+
+class _FakeMetaModule:
+    def __init__(self, dists: list[_FakeDist]) -> None:
+        self._dists = dists
+
+    def distributions(self):
+        return self._dists
+
+
+class TestClosureContract:
+    """The deterministic-environment contract (iteration 0013 Phase B):
+    the review refuses any installed distribution outside the pinned
+    closure, and refuses pinned members that are not installed — so an
+    ambient development environment (pip-audit's toolchain, leftover
+    experiments) fails with a precise message instead of silently
+    drifting into the inventory."""
+
+    def test_untracked_installed_package_is_refused(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        review = _load_license_review()
+        monkeypatch.setattr(
+            review,
+            "md",
+            _FakeMetaModule(
+                [
+                    _FakeDist("pinnedpkg", "1.0", **{"License-Expression": "MIT"}),
+                    # pip-audit 2.10.1's transitive toolchain, exactly
+                    # the documented ambient drift:
+                    _FakeDist(
+                        "license-expression", "30.4.4",
+                        **{"License-Expression": "Apache-2.0"},
+                    ),
+                    _FakeDist(
+                        "boolean.py", "5.0",
+                        **{"License-Expression": "BSD-2-Clause"},
+                    ),
+                ]
+            ),
+        )
+        _, failures, untracked, _ = review.review({"pinnedpkg": "1.0"})
+        assert not failures
+        assert len(untracked) == 2
+        assert any("license-expression" in line for line in untracked)
+        assert any("boolean.py" in line for line in untracked)
+        # The CLI refuses the drift end to end.
+        closure_file = tmp_path / "closure.txt"
+        closure_file.write_text("pinnedpkg==1.0\n", encoding="utf-8")
+        assert review.main(["--closure", str(closure_file)]) == 1
+
+    def test_pinned_but_missing_package_is_refused(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        review = _load_license_review()
+        monkeypatch.setattr(
+            review,
+            "md",
+            _FakeMetaModule(
+                [_FakeDist("pinnedpkg", "1.0", **{"License-Expression": "MIT"})]
+            ),
+        )
+        _, failures, _, _ = review.review(
+            {"pinnedpkg": "1.0", "never-installed": "9.9.9"}
+        )
+        assert len(failures) == 1
+        assert "never-installed" in failures[0]
+
+    def test_platform_tolerated_members_may_be_absent(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        review = _load_license_review()
+        monkeypatch.setattr(
+            review,
+            "md",
+            _FakeMetaModule(
+                [
+                    _FakeDist("pinnedpkg", "1.0", **{"License-Expression": "MIT"}),
+                    _FakeDist("cffi", "2.1.1", **{"License-Expression": "GPL-3.0-only"}),
+                ]
+            ),
+        )
+        closure = {"pinnedpkg": "1.0", "uvloop": "0.22.1"}
+        _, failures, _, missing = review.review(closure)
+        assert not failures
+        assert len(missing) == 1 and "uvloop" in missing[0]
+        # The tolerance covers absence only: a tolerated name that IS
+        # installed gets classified like any closure member, and can
+        # fail the gate; the still-absent member stays tolerated.
+        closure["cffi"] = "2.1.1"
+        _, failures, _, missing = review.review(closure)
+        assert len(failures) == 1 and "cffi" in failures[0]
+        assert len(missing) == 1 and "uvloop" in missing[0]
+
+    def test_platform_tolerated_matches_the_documented_set(self) -> None:
+        review = _load_license_review()
+        doc = LICENSES.read_text(encoding="utf-8")
+        for name in sorted(review.PLATFORM_TOLERATED):
+            assert name in doc, (
+                f"{name} is platform-tolerated in the tool but missing from "
+                "docs/licenses.md's Linux-only closure record"
             )
 
 

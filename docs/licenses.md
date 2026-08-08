@@ -1,12 +1,22 @@
 # License inventory and policy
 
-Deterministic inventory check (M10 Phase D, issue #61): every
-distribution in the installed environment is classified from its PEP
-639 / PEP 345 metadata by `tools/license_review.py` (stdlib only, no
-network) and must land on the documented allowlist. The CI `security`
-job runs it over the real install of `.[dev,research]`; exit 0 only
-when every package is allowed — an incompatible or unclassifiable
-license names its package and fails the job.
+Deterministic inventory check (M10 Phase D, issue #61; iteration 0013
+Phase B): every distribution in the **pinned release closure** —
+`requirements-audit.txt`, the frozen install of `.[dev,research,e2e]`
+— is classified from its PEP 639 / PEP 345 metadata by
+`tools/license_review.py` (stdlib only, no network) and must land on
+the documented allowlist. The CI `security` job runs it over a fresh
+install of the release extras; exit 0 only when every closure package
+is allowed and **no package outside the closure is installed** — an
+incompatible, unclassifiable or untracked package names itself and
+fails the job.
+
+The closure contract is what makes the gate deterministic: the review
+never scans the ambient environment, so a development venv's leftover
+packages (older research experiments, or the audit tool's own
+dependencies) cannot silently drift into the inventory. Run the gate
+in the deterministic release environment (`tools/release_gate.py`
+creates one).
 
 ## Policy
 
@@ -18,6 +28,10 @@ license names its package and fails the job.
   OSI-approved; cffi declares it).
 - **Refused**: GPL/AGPL, LGPL, proprietary licenses, source-available
   restrictions such as the Commons Clause, and anything unclassified.
+- **Untracked installed packages are refused**: the installed
+  third-party set must equal the pinned closure (plus the venv's own
+  pip/setuptools/wheel build tooling). This is the iteration-0013
+  resolution of the ambient `license-expression`/`boolean.py` drift.
 - **`WITH <exception>` SPDX qualifiers relax** the license
   (e.g. `BSD-2-Clause AND Apache-2.0 WITH LLVM-exception` for
   llvmlite) and are stripped, never treated as restricting members.
@@ -28,18 +42,52 @@ license names its package and fails the job.
   would credit a bundled third-party text as the project's license.
   The Commons Clause check still runs first, so a
   Commons-Clause package can never slip through via a bundled text.
-- **Documented exceptions** cover packages whose metadata carries no
-  usable license field; each must name the license the package
-  actually ships under:
+- **Documented exceptions** cover closure packages whose metadata
+  carries no usable license field; each must name the license the
+  package actually ships under. Only closure members belong in this
+  table (the review never classifies anything outside
+  `requirements-audit.txt`):
 
 | Package | License | Justification |
 | --- | --- | --- |
-| asttokens | MIT | full MIT text ships in the sdist; metadata omits it |
 | certifi | MPL-2.0 | MPL-2.0 is on the allowlist; metadata omits it |
-| charset-normalizer | MIT | metadata omits the license |
-| fonttools | MIT | metadata omits the license |
-| tqdm | MPL-2.0 | MPL-2.0 is on the allowlist; metadata omits it |
 | tzdata | Apache-2.0 | the IANA timezone database under Apache-2.0 |
+
+## Security toolchain (outside the release closure)
+
+The advisory scanner is not part of the release install. It runs in a
+separate step (CI) or a separate environment (release gate) so its own
+CLI dependencies never contaminate the application's license
+inventory. Recorded for reference, verified permissive:
+
+- `pip-audit 2.10.1` — Apache-2.0 (its own license)
+- `license-expression 30.4.4` — Apache-2.0 (pip-audit transitive)
+- `boolean.py 5.0` — BSD-2-Clause (pip-audit transitive)
+
+These are the packages whose ambient presence tripped the pre-0013
+gate in the development venv (iteration 0013 "Verified starting
+point"). Under the closure contract they are isolated from the product
+inventory by design; installing them into a release environment
+refuses the license gate with a precise message.
+
+## Linux-only closure members
+
+Six closure packages are pinned for every platform but installable
+only on some. On non-Linux machines the license review tolerates their
+*absence* (they are pinned in the lock, documented here, and verified
+from the Linux CI run):
+
+- `uvloop` — MIT — `uvicorn[standard]`'s loop on CPython/Linux
+- `jeepney` — MIT — keyring's Linux D-Bus backend
+- `SecretStorage` — BSD-3-Clause — jeepney's Secret Service binding
+- `cryptography` — Apache-2.0 | BSD-3-Clause — SecretStorage's crypto
+- `cffi` — MIT-0 — cryptography's CFFI backend
+- `pycparser` — BSD-3-Clause — CFFI's parser
+
+If a dependency change adds a new platform-restricted member, the lock
+regeneration (see `docs/release-process.md`) and
+`PLATFORM_TOLERATED` in the review tool must grow together; the gate
+fails loudly otherwise.
 
 ## Decisions recorded on this surface
 
@@ -55,96 +103,62 @@ license names its package and fails the job.
   `KeyStore` protocol. The suite exercises only the fixture backend;
   the real backend refuses construction outside an explicit drill
   flag, so the OS keyring is never touched (T-07).
+- **The closure includes the `e2e` extra (iteration 0013 Phase B)** —
+  playwright (Apache-2.0) with pyee and greenlet are part of the
+  release extras install, so the audit lock, the license gate and the
+  CI security job cover the full release closure, not just
+  `.[dev,research]`.
 
-## Inventory (generated 2026-08-08; 100 packages in this environment,
-plus 6 Linux-only closure packages)
+## Inventory (generated 2026-08-08; 64 packages in the release
+closure `.[dev,research,e2e]`)
 
-The CI-relevant closure is the 61 packages pinned in
-`requirements-audit.txt` (a fresh `.[dev,research]` install,
-quantmesh itself excluded); the table below is the review output
-over the working environment (superset — includes leftover
-transitives of the removed vectorbt and of earlier dev experiments,
-all permissively licensed) plus the 6 Linux-only closure packages
-CI's Linux runner installs (`uvloop` from `uvicorn[standard]`;
-`jeepney`, `SecretStorage`, `cryptography`, `cffi`, `pycparser`
-from keyring), so the documented coverage holds on both platforms.
-Regenerate with `python tools/license_review.py`.
+Regenerate with `python tools/license_review.py` in an environment
+that is exactly the release closure (the release gate creates one).
+Version numbers drift with the lock; the license key is the contract.
 
 | Package | Version | License |
 | --- | --- | --- |
 | annotated-doc | 0.0.5 | MIT |
 | annotated-types | 0.8.0 | MIT |
 | anyio | 4.14.2 | MIT |
-| anywidget | 0.11.0 | MIT |
 | arch | 7.2.0 | BSD-2-Clause |
-| asttokens | 3.0.2 | MIT (documented exception) |
 | certifi | 2026.7.22 | MPL-2.0 (documented exception) |
-| cffi | 2.1.1 | MIT-0 |
-| charset-normalizer | 3.4.9 | MIT (documented exception) |
+| cffi | 2.1.1 (Linux-only) | MIT-0 |
 | click | 8.4.2 | BSD-3-Clause |
 | colorama | 0.4.6 | BSD-3-Clause |
-| comm | 0.2.3 | BSD-3-Clause |
-| contourpy | 1.3.3 | BSD-3-Clause |
-| cryptography | 50.0.0 | Apache-2.0 | BSD-3-Clause |
-| cycler | 0.12.1 | BSD-3-Clause |
-| dateparser | 1.4.2 | BSD-3-Clause |
-| dill | 0.4.1 | BSD-3-Clause |
+| cryptography | 50.0.0 (Linux-only) | Apache-2.0 | BSD-3-Clause |
 | duckdb | 1.5.5 | MIT |
-| executing | 2.2.1 | MIT |
 | fastapi | 0.141.1 | MIT |
-| fonttools | 4.63.0 | MIT (documented exception) |
 | greenlet | 3.5.4 | MIT | PSF-2.0 |
 | h11 | 0.16.0 | MIT |
-| hmmlearn | 0.3.3 | BSD-3-Clause |
 | httpcore | 1.0.9 | BSD-3-Clause |
 | httptools | 0.8.0 | MIT |
 | httpx | 0.28.1 | BSD-3-Clause |
 | idna | 3.18 | BSD-3-Clause |
-| ImageIO | 2.37.4 | BSD-2-Clause |
 | iniconfig | 2.3.0 | MIT |
-| ipython | 9.16.1 | BSD-3-Clause |
-| ipython_pygments_lexers | 1.1.1 | BSD-3-Clause |
-| ipywidgets | 8.1.8 | BSD-3-Clause |
 | jaraco.classes | 3.4.0 | MIT |
 | jaraco.context | 6.1.2 | MIT |
 | jaraco.functools | 4.6.0 | MIT |
-| jedi | 0.20.0 | MIT |
-| jeepney | 0.9.0 | MIT |
+| jeepney | 0.9.0 (Linux-only) | MIT |
 | Jinja2 | 3.1.6 | BSD-3-Clause |
 | joblib | 1.5.3 | BSD-3-Clause |
-| jupyterlab_widgets | 3.0.16 | BSD-2-Clause |
 | keyring | 25.7.0 | MIT |
-| kiwisolver | 1.5.0 | BSD-3-Clause |
 | lightgbm | 4.7.0 | MIT |
-| llvmlite | 0.48.0 | Apache-2.0 | BSD-2-Clause |
 | MarkupSafe | 3.0.3 | BSD-3-Clause |
-| matplotlib | 3.11.1 | Apache-2.0 |
-| matplotlib-inline | 0.2.2 | BSD-3-Clause |
 | more-itertools | 11.1.0 | MIT |
-| mypy_extensions | 1.1.0 | MIT |
 | narwhals | 2.24.0 | MIT |
-| numba | 0.66.0 | BSD-3-Clause |
-| numpy | 2.4.6 | 0BSD | BSD-3-Clause | CC0-1.0 | MIT | Zlib |
+| numpy | 2.5.1 | 0BSD | BSD-3-Clause | CC0-1.0 | MIT | Zlib |
 | packaging | 26.3 | Apache-2.0 | BSD-2-Clause |
 | pandas | 2.3.3 | BSD-3-Clause |
-| parso | 0.8.7 | MIT |
 | patsy | 1.0.2 | BSD-3-Clause |
-| pillow | 12.3.0 | MIT-CMU |
-| pip | 26.2.1 | MIT |
 | playwright | 1.62.0 | Apache-2.0 |
-| plotly | 6.9.0 | MIT |
 | pluggy | 1.6.0 | MIT |
-| prompt_toolkit | 3.0.53 | BSD-3-Clause |
-| psutil | 7.2.2 | BSD-3-Clause |
-| psygnal | 0.15.1 | BSD-3-Clause |
-| pure_eval | 0.2.3 | MIT |
+| pycparser | 3.0 (Linux-only) | BSD-3-Clause |
 | pydantic | 2.13.4 | MIT |
-| pydantic-settings | 2.14.2 | MIT |
+| pydantic-settings | 2.15.0 | MIT |
 | pydantic_core | 2.46.4 | MIT |
-| pycparser | 3.0 | BSD-3-Clause |
 | pyee | 13.0.1 | MIT |
 | Pygments | 2.20.0 | BSD-2-Clause |
-| pyparsing | 3.3.2 | MIT |
 | pytest | 9.1.1 | MIT |
 | pytest-asyncio | 1.4.0 | Apache-2.0 |
 | python-dateutil | 2.9.0.post0 | BSD-3-Clause |
@@ -153,28 +167,18 @@ Regenerate with `python tools/license_review.py`.
 | pytz | 2026.3.post1 | MIT |
 | pywin32-ctypes | 0.2.3 | BSD-3-Clause |
 | PyYAML | 6.0.3 | MIT |
-| regex | 2026.7.19 | Apache-2.0 | CNRI-Python |
-| requests | 2.34.2 | Apache-2.0 |
-| ruff | 0.16.1 | MIT |
-| schedule | 1.2.2 | MIT |
+| ruff | 0.16.2 | MIT |
 | scikit-learn | 1.9.0 | BSD-3-Clause |
 | scipy | 1.18.0 | BSD-3-Clause |
-| SecretStorage | 3.5.0 | BSD-3-Clause |
+| SecretStorage | 3.5.0 (Linux-only) | BSD-3-Clause |
 | six | 1.17.0 | MIT |
-| stack-data | 0.6.3 | MIT |
-| starlette | 1.4.1 | BSD-3-Clause |
+| starlette | 1.5.0 | BSD-3-Clause |
 | statsmodels | 0.14.6 | BSD-3-Clause |
 | threadpoolctl | 3.6.0 | BSD-3-Clause |
-| tqdm | 4.70.0 | MPL-2.0 (documented exception) |
-| traitlets | 5.16.1 | BSD-3-Clause |
 | typing-inspection | 0.4.2 | MIT |
 | typing_extensions | 4.16.0 | PSF-2.0 |
 | tzdata | 2026.3 | Apache-2.0 (documented exception) |
-| tzlocal | 5.4.4 | MIT |
-| urllib3 | 2.7.0 | MIT |
 | uvicorn | 0.52.1 | BSD-3-Clause |
-| uvloop | 0.22.1 | MIT |
+| uvloop | 0.22.1 (Linux-only) | MIT |
 | watchfiles | 1.2.0 | MIT |
-| wcwidth | 0.8.2 | MIT |
 | websockets | 17.0.1 | BSD-3-Clause |
-| widgetsnbextension | 4.0.15 | BSD-3-Clause |

@@ -1,28 +1,30 @@
-"""Deterministic license review (M10 Phase D, issue #61).
+"""Deterministic license review (M10 Phase D, issue #61; iteration 0013
+Phase B makes it closure-deterministic).
 
-Classifies the license of every installed distribution from its PEP 639
-(License-Expression) or PEP 345 (License / Classifier) metadata and
-refuses anything outside the documented allowlist in docs/licenses.md.
-The check is deterministic over the installed environment (the CI
-install of `.[dev,research]`), needs no network, and exits 0 only when
-every package is allowed — exit 1 names the offenders.
+The review evaluates the *release closure* — the packages pinned in
+``requirements-audit.txt`` — not whatever an ambient development
+environment happens to contain:
 
-Classification order (fail-closed at each step):
-1. PEP 639 ``License-Expression`` (SPDX) — the authoritative source
-   when present; ``X OR Y`` alternations pass if any member is allowed.
-2. The ``License`` free-text field — the first line is authoritative
-   when it names a known license (wheels sometimes inline the entire
-   ``LICENSES/`` folder into one field — e.g. pandas 2.3.3 Linux
-   builds — where scanning the whole blob would credit a bundled
-   third-party text as the project's license); otherwise keyword
-   detection for MIT, BSD-2/3-Clause and Apache-2.0 covers the
-   packages that embed the full text instead of an expression.
-3. ``Classifier`` declarations of the OSI-Approved family.
-4. ``LICENSE_EXCEPTIONS`` — hand-verified overrides for packages whose
-   metadata carries no usable license; every entry must also appear in
-   docs/licenses.md with its reason.
-Anything still unclassified is a refusal: an unknown license is not
-silently allowed.
+1. Every pinned package must be installed in this environment, or it is
+   refused ("pinned but not installed"); the documented Linux-only
+   closure members (uvloop from ``uvicorn[standard]``; the keyring
+   backend chain jeepney/SecretStorage/cryptography/cffi/pycparser)
+   are tolerated as absent on non-Linux platforms.
+2. Every installed third-party distribution outside the closure is
+   refused ("installed but not pinned") — except the build tooling pip/
+   setuptools/wheel that a venv itself provides. This is what makes the
+   gate deterministic: pip-audit's own CLI dependencies
+   (license-expression, boolean.py, ...) or an old environment's
+   leftovers can no longer drift into the inventory; the gate must run
+   in the deterministic release environment (``tools/release_gate.py``
+   creates one), exactly as iteration 0013 records.
+3. Each closure package is classified from its PEP 639
+   (License-Expression) or PEP 345 (License / Classifier) metadata and
+   must land on the documented allowlist in docs/licenses.md.
+
+The check is stdlib-only (no network), deterministic over the release
+closure, and exits 0 only when every closure package is allowed and
+nothing untracked is installed — exit 1 names the offenders.
 
 Run: ``python tools/license_review.py``
 """
@@ -32,10 +34,38 @@ from __future__ import annotations
 import importlib.metadata as md
 import re
 import sys
+from pathlib import Path
 
 # The distribution names of the project itself — the review covers
 # third-party dependencies, not the package under review.
 PROJECT_NAMES = {"quantmesh"}
+
+# Packages a venv itself provides. They are never part of the release
+# closure (pip's own resolution depends on them, not the project's) and
+# are allowed to be installed without being pinned.
+BUILD_TOOLING = {"pip", "setuptools", "wheel"}
+
+# Closure members pinned for every platform but installable only on
+# some: uvloop (`uvicorn[standard]` is cpython/Linux-only) and the
+# keyring backend chain that resolves on Linux (jeepney ->
+# SecretStorage -> cryptography -> cffi -> pycparser). On non-Linux
+# platforms they are tolerated as *absent*; docs/licenses.md records
+# them as the Linux-only closure. If a real dependency change adds a
+# new platform-restricted member, the lock regeneration (release
+# process) and this set must grow together — the gate fails loudly
+# otherwise.
+PLATFORM_TOLERATED = {
+    "uvloop",
+    "jeepney",
+    "SecretStorage",
+    "cryptography",
+    "cffi",
+    "pycparser",
+}
+
+# The frozen install closure the review evaluates. The default is the
+# repo's requirements-audit.txt; tests may point elsewhere.
+CLOSURE_FILE = Path(__file__).resolve().parents[1] / "requirements-audit.txt"
 
 # Documented allowlist (docs/licenses.md mirrors it). A license outside
 # this set — GPL/AGPL, LGPL, proprietary, source-available
@@ -58,16 +88,14 @@ ALLOWED = {
     "MIT-0",  # MIT No Attribution (OSI-approved; cffi declares it)
 }
 
-# Hand-verified overrides for packages whose metadata carries no
-# usable license expression/classifier. The key is the distribution
+# Hand-verified overrides for closure members whose metadata carries
+# no usable license expression/classifier. The key is the distribution
 # name (normalized), the value the license the package actually ships
-# under. docs/licenses.md must list each with its justification.
+# under. docs/licenses.md must list each with its justification. Only
+# closure members belong here: under the closure contract nothing
+# outside requirements-audit.txt is ever classified.
 LICENSE_EXCEPTIONS = {
-    "asttokens": "MIT",
     "certifi": "MPL-2.0",
-    "charset-normalizer": "MIT",
-    "fonttools": "MIT",
-    "tqdm": "MPL-2.0",
     "tzdata": "Apache-2.0",
 }
 
@@ -191,25 +219,88 @@ def classify(dist: md.Distribution) -> str:
     return "UNKNOWN"
 
 
-def main() -> int:
-    rows: list[tuple[str, str, str]] = []
-    failures: list[str] = []
-    for dist in sorted(md.distributions(), key=lambda d: d.metadata["Name"].lower()):
-        name = dist.metadata["Name"]
-        if name in PROJECT_NAMES:
+def read_closure(path: Path = CLOSURE_FILE) -> dict[str, str]:
+    """The pinned closure {name: version} from requirements-audit.txt."""
+    closure: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
             continue
-        version = dist.version
+        name, _, version = line.partition("==")
+        assert name.strip() and version.strip(), f"malformed pin: {line!r}"
+        closure[name.strip()] = version.strip()
+    return closure
+
+
+def review(closure: dict[str, str]) -> tuple[list[str], list[str], list[str], list[str]]:
+    """Review the closure against the installed environment.
+
+    Returns ``(rows, failures, untracked, missing)`` where ``rows`` are
+    printable ``name==version  license`` lines for reviewed closure
+    members, ``failures`` the refusal lines, ``untracked`` the installed
+    packages outside the closure, and ``missing`` the pinned closure
+    members not installed on this platform.
+    """
+    rows: list[str] = []
+    failures: list[str] = []
+    untracked: list[str] = []
+    missing: list[str] = []
+
+    installed = {d.metadata["Name"]: d for d in md.distributions()}
+    for name in sorted(closure):
+        version = closure[name]
+        dist = installed.get(name)
+        if dist is None:
+            if name in PLATFORM_TOLERATED:
+                missing.append(f"{name}=={version}  (pinned for Linux; not installed here)")
+            else:
+                failures.append(
+                    f"{name}=={version}  pinned in requirements-audit.txt but not "
+                    "installed — incomplete release environment"
+                )
+            continue
         key = classify(dist)
-        rows.append((name, version, key))
+        rows.append(f"{name}=={version}  {key}")
         if key == "UNKNOWN" or key.startswith("UNKNOWN ("):
             failures.append(f"{name} {version}: {key}")
-    for name, version, key in rows:
-        print(f"{name}=={version}  {key}")
-    print(f"\n{len(rows)} packages reviewed")
+
+    for name in sorted(installed):
+        if name in PROJECT_NAMES or name in closure or name in BUILD_TOOLING:
+            continue
+        untracked.append(
+            f"{name}=={installed[name].version}  installed but not pinned in "
+            "requirements-audit.txt — ambient environment package; run the license "
+            "gate in the deterministic release environment (tools/release_gate.py)"
+        )
+    return rows, failures, untracked, missing
+
+
+def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    closure_path = CLOSURE_FILE
+    if argv and argv[0] == "--closure":
+        closure_path = Path(argv[1])
+        argv = argv[2:]
+    if argv:
+        print(f"usage: python {Path(__file__).name} [--closure PATH]")
+        return 2
+    closure = read_closure(closure_path)
+    rows, failures, untracked, missing = review(closure)
+
+    print(f"release closure: {len(closure)} packages from {closure_path.name}")
+    for line in rows:
+        print(line)
+    for line in missing:
+        print(line)
+    print(f"\n{len(rows)} closure packages reviewed on this platform")
+    if untracked:
+        print(f"\nREFUSED — {len(untracked)} installed package(s) outside the closure:")
+        print("\n".join(untracked))
     if failures:
-        print(f"FAILED: {len(failures)} unclassified or incompatible:\n" + "\n".join(failures))
+        print(f"\nFAILED: {len(failures)} unclassified or incompatible:\n" + "\n".join(failures))
         return 1
-    print("all licenses allowed (docs/licenses.md)")
+    if untracked:
+        return 1
+    print("all licenses allowed (docs/licenses.md); environment is the release closure")
     return 0
 
 

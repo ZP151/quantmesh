@@ -29,7 +29,7 @@ without tribal knowledge.
 
 ```text
 pytest -q                    # full suite, must stay green
-ruff check src tests         # E/F/I/UP @ 100 cols
+ruff check src tests tools   # E/F/I/UP @ 100 cols
 git diff --check             # no whitespace errors
 git submodule status         # clean (vendored components pinned)
 ```
@@ -37,6 +37,30 @@ git submodule status         # clean (vendored components pinned)
 Clean-checkout baseline on 2026-08-08: 1,790 passed / 0 skipped with the
 `.[dev,research,e2e]` extras and Chromium available. A release checkpoint must
 record its own current count; do not copy this historical number as proof.
+Release checkpoints additionally run the one-command clean-checkout
+release gate (next section) before publication.
+
+## The release gate (iteration 0013 Phase C)
+
+One command, run from any checkout of the release commit, that proves
+the release in a fresh deterministic environment:
+
+```text
+python tools/release_gate.py
+```
+
+It clones the current commit into a temporary directory, creates a
+fresh venv there, installs the release extras `.[dev,research,e2e]`,
+then runs Ruff, the license review (closure contract), pip-audit over
+the audit lock (from an isolated tooling venv), the full pytest suite
+and the 51-check golden path (fixture -> data lake -> strategy reports
+-> internal paper -> all 13 workstation screens -> restart recovery
+with audit-ledger rereads), and finally proves the checkout is clean.
+All generated state lives under the temporary root and is removed on
+success; on failure the root is kept and its path printed for
+diagnostics. The Playwright E2E tests run when the browser cache is
+available (shared user cache) and are reported as skipped otherwise —
+the golden path walk does not depend on the browser.
 
 ## Drill evidence requirements
 
@@ -55,18 +79,36 @@ records counts, dates and any debugging detours.
   closure the CI security job audits), `docs/licenses.md` (the
   inventory) — and, when the change is a removal, ADR-0009-style
   dependency-contract decisions.
+- The release closure is the full release extras install
+  `.[dev,research,e2e]` (iteration 0013 Phase B): the audit lock, the
+  license gate and the CI security job all cover it, so playwright's
+  own dependencies are audited too.
 - Regenerate the audit lock after any dependency change:
 
   ```text
-  python -m pip install --dry-run --ignore-installed -e ".[dev,research]" \
+  python -m pip install --dry-run --ignore-installed -e ".[dev,research,e2e]" \
       --report audit-report.json
-  # then convert the report's install set (name==version) to
-  # requirements-audit.txt, excluding quantmesh itself.
   ```
 
+  then convert the report's install set (name==version) to
+  `requirements-audit.txt`, excluding `quantmesh` itself and sorting
+  the lines. The Windows resolver cannot resolve the documented
+  Linux-only closure members, so keep the six platform-restricted pins
+  from the previous lock: `uvloop`, `jeepney`, `SecretStorage`,
+  `cryptography`, `cffi`, `pycparser` (uvicorn[standard]'s loop and
+  keyring's Linux backend chain — see docs/licenses.md). If a real
+  dependency change adds a new platform-restricted member, extend
+  `PLATFORM_TOLERATED` in `tools/license_review.py` together with this
+  list and the docs; the gate fails loudly otherwise.
+
   `pip-audit` in CI checks the pinned file (`--no-deps`, no
-  re-resolution); the license review classifies the installed
-  environment.
+  re-resolution). The license review evaluates the same closure:
+  every pinned package must be installed and classify to an allowed
+  license, and no third-party package outside the closure may be
+  installed (pip/setuptools/wheel are the venv's own tooling and are
+  exempt). Run it in the deterministic release environment
+  (`tools/release_gate.py` creates one) — an ambient development venv
+  fails with a precise message by design.
 - A license outside the allowlist (docs/licenses.md) or a
   Commons-Clause-style source-available restriction fails the
   `security` CI job. Removing the dependency is the preferred
