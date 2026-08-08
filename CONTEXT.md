@@ -6,16 +6,18 @@ QuantMesh is a local-first workstation for cross-market quantitative research, f
 
 ## Current stage
 
-M0 through M10 are implemented and merged. The repository now contains a
-fixture-verified local workstation spanning normalized market data,
+M0 through M10 are implemented and merged, and `v0.1.0-rc1` is published as a
+fixture-verified engineering baseline. It spans normalized market data,
 reproducible research, paper execution, Moomoo and Hyperliquid adapters,
 prediction-market intelligence, local AI research, risk controls, recovery,
-audit and guarded enablement. A clean checkout passed 1,790 tests and the
-51-check golden path on 2026-08-08. The current delivery target is
-`v0.1.0-rc1`: reconcile release metadata, harden dependency-audit triggers,
-package a repeatable local acceptance path and publish an RC for operator
-validation. Real-money execution remains disabled behind the explicit human
-gate.
+audit and guarded enablement. Its clean-checkout release gate passed 1,801
+tests and a 53-check golden path. Operator browser review nevertheless rejected
+RC1 as a product release because the runtime starts empty and the minimally
+styled server-rendered UI does not expose a demonstrable business workflow.
+Iteration 0014 now targets `v0.1.0-rc2`: a React/shadcn-based interface,
+deterministic demo runtime, visible provider/import paths and an end-to-end
+paper-trading acceptance flow. Real-money execution remains disabled behind
+the explicit human gate.
 
 ## Bounded context
 

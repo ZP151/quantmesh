@@ -87,3 +87,12 @@ The repository uses the five canonical labels `needs-triage`, `needs-info`, `rea
 ### Domain docs
 
 This is a single-context repository with `CONTEXT.md` at the root and system decisions under `docs/adr/`. See `docs/agents/domain.md`.
+
+### Product interface design
+
+For operator-facing frontend work, read `PRODUCT.md` and invoke the
+project-scoped `impeccable` skill before shaping or changing a surface. Use
+`design-taste-frontend` as an anti-template and design-system-selection guard,
+but respect its explicit exclusion of dashboards and data tables. Dense tables
+and financial charts require purpose-built components. Record durable visual
+decisions only after implementation evidence exists.

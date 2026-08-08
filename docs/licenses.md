@@ -121,6 +121,19 @@ fails loudly otherwise.
   CI security job cover the full release closure, not just
   `.[dev,research]`.
 
+## Project-scoped development skills
+
+These agent-development resources are vendored documentation/tools and are not
+part of the Python runtime dependency closure:
+
+- `Leonxlnx/taste-skill` at
+  `e988add20dab0fa97d7a76781c48961c8184288e`, MIT. The upstream license is
+  preserved in `docs/third-party/taste-skill-LICENSE`.
+- `pbakaus/impeccable` at
+  `aee6ce9352b842217b3f57c78296a7a4fa35a7f3`, Apache-2.0. The repository root
+  carries the Apache-2.0 license and the upstream notice is preserved in
+  `docs/third-party/impeccable-NOTICE.md`.
+
 ## Inventory (generated 2026-08-08; 64 packages in the release
 closure `.[dev,research,e2e]`)
 

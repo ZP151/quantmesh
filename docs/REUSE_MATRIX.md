@@ -17,10 +17,20 @@ This document records which open-source projects are reused, why they are used, 
 | LLM trading research | `TauricResearch/TradingAgents` | Analyst/researcher/risk/portfolio agent workflow and persistent decision logs | Optional research submodule; adapter around QuantMesh signals | Medium | Apache-2.0; treat output as research, not execution authority |
 | Execution engine candidate | `QuantConnect/Lean` | Event-driven simulation and future live execution | Deferred reference | Medium to high | Apache-2.0 |
 | Execution engine candidate | `nautechsystems/nautilus_trader` | Deterministic multi-venue execution | Deferred reference | High | LGPL-3.0; trademark and attribution rules apply |
+| UI component source | `shadcn-ui/ui` | Accessible React primitives owned and themed by QuantMesh | CLI-copy selected components; never copy the full repository | Medium | MIT; preserve generated component notices where supplied |
+| Data grid candidate | `TanStack/table` | Dense positions, orders, instruments and audit tables | Package behind QuantMesh table components | Light to medium | MIT; verify selected release during ADR spike |
+| Market chart candidate | `tradingview/lightweight-charts` | Candlestick and time-series market views | Package behind a chart adapter | Light | Apache-2.0; preserve notice |
+| Analytics chart candidate | `apache/echarts` | P&L, exposure, calibration and scenario visualizations | Package behind a chart adapter | Light to medium | Apache-2.0; preserve notice |
+| Frontend design skill | `Leonxlnx/taste-skill` @ `e988add20dab0fa97d7a76781c48961c8184288e` | Anti-template design and design-system selection | Project-scoped Codex/Claude skill; advisory outside dashboards | None | MIT; license preserved under `docs/third-party/` |
+| Product UI skill | `pbakaus/impeccable` @ `aee6ce9352b842217b3f57c78296a7a4fa35a7f3` | Product context, UX shaping and bounded visual QA | Project-scoped Codex/Claude skill | None | Apache-2.0; upstream notice preserved under `docs/third-party/` |
 
 ## Selection rule
 
 QuantMesh owns the normalized domain models, connector contracts, risk engine, orchestration, audit trail and product UI. Upstream projects remain isolated behind adapters whenever possible.
+
+For the RC2 frontend, “reuse shadcn/ui” means copying selected components with
+the official CLI and then owning their source and visual treatment. It does not
+mean forking the full showcase application or shipping its default theme.
 
 ## Similar-project lessons
 

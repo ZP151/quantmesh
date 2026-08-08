@@ -1,75 +1,61 @@
 # Active Goal
 
 - Status: active
-- Objective: publish a reproducible `v0.1.0-rc1` for local operator
-  acceptance, then harden the highest-leverage pre-live architecture modules
-  without widening product scope
-- Started: 2026-08-08
+- Objective: deliver `v0.1.0-rc2` as a populated, coherent and browser-testable
+  local quantitative workstation, then obtain explicit operator acceptance
+- Started: 2026-08-09
 - Active iteration:
-  `docs/iterations/0013-v0.1.0-rc1-and-architecture-hardening.md`
-- Branch: `main` at the starting checkpoint; new work must branch from
-  `origin/main`
-- Pull request: none at the starting checkpoint
-- GitHub frontier: zero open issues and zero open pull requests at the
-  starting checkpoint
-- Blockers: none external; iteration 0013 Phase B resolved the ambient
-  `.venv` license drift with the deterministic release-closure contract
-  (ambient environments now fail the gate with a precise message)
+  `docs/iterations/0014-v0.1.0-rc2-interactive-product-acceptance.md`
+- Branch: `0014-rc2-product-acceptance`, based on `origin/main`; RC1 publication
+  checkpoint `0fea221` was preserved as cherry-pick `e0f9c3d`
+- Pull request: none; solo fast lane authorizes one integration PR for RC2
+- Blockers: none external for deterministic demo and UI work
 
 ## Current state
 
-**v0.1.0-rc1 is published.** Iteration 0013 Phases A-D done on
-`release/v0.1.0-rc1`; PR #74 (the one RC PR) CI green on `0eb1c6e`
-and squash-merged to `main` @ `fb37fcd`; the Security job is green
-on the merged main; tag `v0.1.0-rc1` points at the exact verified
-commit `fb37fcd` and is pushed. Operator acceptance checklist
-delivered in `docs/release-notes/v0.1.0-rc1.zh-CN.md`; gate evidence
-in `docs/release-notes/v0.1.0-rc1.md` (1801 tests, golden path
-53/53, pip-audit clean, clean clone proof on `206fc49`).
-
-The product is a fixture-verified local workstation. It includes normalized
-market data and a local lake, reproducible research and forecasts, paper
-execution, Moomoo and Hyperliquid adapters, prediction-market intelligence,
-local AI research, portfolio/risk controls, a frontend workstation, recovery,
-audit and guarded enablement. No external live operation is enabled.
-
-## Last verified baseline
-
-- Fresh clone of main at `e259341`.
-- `pip install -e ".[dev,research,e2e]"`: passed.
-- Full suite: 1,790 passed, 0 failed, 0 skipped in 385 seconds.
-- Workstation/E2E/ingestion rerun: 135 passed.
-- Golden path: 51/51 passed, including fixture ingestion, lake manifests,
-  research/forecast artifacts, internal paper execution, all 13 workstation
-  screens over loopback, restart recovery and audit-ledger rereads.
-- License review and Ruff: passed.
-- CI and Security: green after the dependency advisory fix.
+`v0.1.0-rc1` is published at `fb37fcd` and remains the immutable engineering
+baseline. Its clean-checkout release gate, 1,801-test suite, 53/53 golden path,
+CI and Security checks passed. Human browser review did not accept it as a
+product release: the server-rendered UI is minimally styled, startup state is
+empty, raw APIs occupy primary navigation and no demo/provider/import path
+makes the business workflow directly testable. Do not promote RC1 to
+`v0.1.0`.
 
 ## Immediate frontier
 
-1. Operator acceptance of `v0.1.0-rc1` per the zh-CN checklist; on
-   acceptance promote metadata/tag to `v0.1.0`, otherwise record
-   defects for a later RC.
-2. Phase E in the documented order, one short-lived branch per slice
-   (current branch: `0013-phase-e-jsonl`): durable JSONL persistence,
-   then cross-venue reconciliation, then numeric-policy
-   characterization plus ADR. Runtime assembly remains secondary.
+1. Approve ADR-0013 through implementation evidence: React/TypeScript/Vite,
+   selectively owned shadcn/ui components, typed FastAPI client and a packaged
+   one-process production build.
+2. Build deterministic `--demo` runtime assembly with provenance, freshness,
+   reset/replay and representative cross-market/research/paper/risk/audit data.
+3. Deliver one browser tracer bullet from market evidence to paper fill,
+   portfolio, risk and audit before migrating the remaining legacy pages.
+4. Add one public-data connector path and validated file import, then complete
+   bounded design, accessibility, E2E and clean-checkout verification.
+5. Publish `v0.1.0-rc2` from one integration PR and obtain explicit human
+   acceptance before a final release.
 
-## External gates
+## Standing authority
 
-Moomoo OpenD simulated-account and Hyperliquid testnet drills remain optional
-operator-dependent validation. They do not block the local fixture-verified
-RC and do not authorize mainnet/live operation.
+Use the solo-developer fast lane in iteration 0014: one integration branch,
+tested commits at phase boundaries and one final PR. Do not pause for routine
+issue creation, branch pushes or merging a green RC2 PR. Preserve protected
+main, branch from `origin/main`, never force-push, and record every checkpoint
+in the iteration file. Major language, database, financial representation or
+process-boundary changes still require an ADR.
 
-Real-money trading, mainnet wallet signing, live broker orders, credentials,
-paid infrastructure and AI order authority require explicit human approval.
-Do not create, request, store or use any such authority while pursuing this
-goal.
+## External and safety gates
+
+Moomoo OpenD simulated access and Hyperliquid testnet drills are optional
+operator-dependent checks. Real-money orders, mainnet wallet signing,
+credentials, paid infrastructure and AI order authority require separate
+explicit approval and are outside this goal. Demo and imported data must be
+labeled and isolated from non-demo operator state.
 
 ## Resume instruction
 
-Run `/goal` with the long-running command supplied for iteration 0013. Read
-this file, the active iteration and `git status` first. Prioritize getting the
-RC into the operator's hands; do not let post-RC refactors delay publishing a
-green, reproducible candidate. Record implementation detail and checkpoint
-evidence in iteration 0013 and keep this file limited to the current frontier.
+Run `/goal`, then read this file, `PRODUCT.md`, iteration 0014, the roadmap,
+relevant ADRs, Git state and GitHub state. Continue through the documented
+phases until RC2 is tagged and the isolated browser acceptance checklist is
+ready for the operator. Implementation details and evidence belong in the
+iteration record; keep this file limited to current truth and frontier.
