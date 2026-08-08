@@ -40,6 +40,7 @@ from quantmesh.api.workstation import (
     _json_guard_origin,
     create_workstation_app,
 )
+from quantmesh.demo.datalink import DatalinkService, datalink_router
 from quantmesh.demo.manifest import MARKER_NAME, DemoScenario
 from quantmesh.demo.seeder import (
     DemoRootError,
@@ -161,6 +162,12 @@ def demo_router() -> APIRouter:
             raise HTTPException(status_code=409, detail=str(error)) from error
         runtime.seeded = seeded
         _apply_seeded(request.app, seeded)
+        # The datalink session (connector probes, import sessions, the
+        # public-data cache) is part of the demo session: reset restores
+        # the pristine root, so it clears too.
+        datalink = getattr(request.app.state, "datalink", None)
+        if isinstance(datalink, DatalinkService):
+            datalink.reset()
         return _status(runtime)
 
     @router.post("/demo/order")
@@ -282,6 +289,14 @@ def create_demo_app(
     app.include_router(router)
     app.include_router(
         router,
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
+    # Phase D: connector panel, the credential-free public data path and
+    # file import — mounted under /api only (the SPA's surface).
+    app.state.datalink = DatalinkService(root=root)
+    app.include_router(
+        datalink_router(),
         prefix="/api",
         generate_unique_id_function=lambda route: f"api_{route.name}",
     )

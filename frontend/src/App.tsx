@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/shell/AppShell'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AuditScreen } from '@/screens/Audit'
+import { ConnectorsScreen } from '@/screens/Connectors'
+import { ImportsScreen } from '@/screens/Imports'
 import { MarketsScreen } from '@/screens/Markets'
 import { OrderScreen } from '@/screens/Order'
 import { EnablementScreen, KillSwitchScreen } from '@/screens/Ops'
@@ -46,6 +48,8 @@ export default function App() {
         <Route path="trading/orders" element={<OrdersScreen />} />
         <Route path="trading/pnl" element={<PnLScreen />} />
         <Route path="risk" element={<RiskScreen />} />
+        <Route path="ops/connectors" element={<ConnectorsScreen />} />
+        <Route path="ops/imports" element={<ImportsScreen />} />
         <Route path="ops/audit" element={<AuditScreen />} />
         <Route path="ops/kill-switch" element={<KillSwitchScreen />} />
         <Route path="ops/enablement" element={<EnablementScreen />} />

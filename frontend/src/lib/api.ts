@@ -257,6 +257,92 @@ export interface DemoOrderResult {
   account: { cash: number; equity: number }
 }
 
+// --- Phase D: connectors, public data and imports -----------------------
+
+export interface ConnectorState {
+  venue: string
+  kind: 'fixture' | 'public-data' | 'execution-sim' | 'unwired'
+  mode: string
+  credentials_required: boolean
+  read_only: boolean
+  wired: boolean
+  state: 'ok' | 'degraded' | 'unavailable' | 'unwired' | 'unprobed'
+  detail: string
+  last_checked_at: string | null
+  latency_ms: number | null
+}
+
+export interface FetchRow {
+  symbol: string
+  coin: string
+  source: 'hyperliquid-public' | 'fixture-fallback'
+  synthetic: boolean
+  fallback_of?: string
+  degraded?: 'missing-software' | 'network' | 'rate-limited'
+  best_bid: number | null
+  best_ask: number | null
+  levels: number
+  fetched_at: string
+  cache: string | null
+  reason: string | null
+}
+
+export interface FetchReport {
+  venue: 'hyperliquid'
+  read_only: boolean
+  synthetic: boolean
+  rows: FetchRow[]
+  cached_entries: { coin: string; symbol: string; source: string; synthetic: boolean; fetched_at: string; cache: string }[]
+  fetched_at: string
+}
+
+export interface ImportColumn {
+  name: string
+  inferred: string
+  samples: (string | number | boolean | null)[]
+}
+
+export interface ImportPreview {
+  session_id: string
+  filename: string
+  format: string
+  rows: number
+  columns: ImportColumn[]
+  preview: Record<string, string | number | boolean | null>[]
+  suggested_mapping: Record<string, string>
+}
+
+export interface ImportCommitResult {
+  dataset: string
+  source: string
+  license: string
+  revision: number
+  generated_at: string
+  accepted: number
+  rejected: number
+  rejections: { row: number; reason: string }[]
+  coverage: {
+    interval: string
+    venue: string
+    symbol: string
+    rows: number
+    start: string
+    end: string
+  }[]
+}
+
+export interface ImportedDataset {
+  dataset: string
+  source: string
+  license: string
+  revision: number
+  generated_at: string
+  series: number
+  rows: number
+  start: string | null
+  end: string | null
+}
+
 // --- Client --------------------------------------------------------------
 
 export class ApiError extends Error {
@@ -339,4 +425,43 @@ export const api = {
   async demoReset(): Promise<DemoStatus> {
     return request('/api/demo/reset', { method: 'POST' })
   },
+
+  // Phase D — connector panel, public data, imports (all read-only
+  // against the seeded tree; fetches land in the .datalink cache).
+  connectors: () => request<ConnectorState[]>('/api/demo/connectors'),
+  probeConnectors: () =>
+    request<ConnectorState[]>('/api/demo/connectors/probe', { method: 'POST' }),
+  datalinkFetch: (symbols: string[]) =>
+    request<FetchReport>('/api/demo/datalink/fetch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbols }),
+    }),
+  datalinkCache: () => request<FetchReport['cached_entries']>('/api/demo/datalink/cache'),
+  importUpload: (file: File) =>
+    request<ImportPreview>('/api/demo/import', {
+      method: 'POST',
+      // No Content-Type: the browser sets the multipart boundary.
+      body: (() => {
+        const form = new FormData()
+        form.append('file', file)
+        return form
+      })(),
+    }),
+  importCommit: (body: {
+    session_id: string
+    dataset: string
+    interval: string
+    venue: string
+    symbol: string
+    instrument_type?: string
+    license?: string
+    mapping: Record<string, string>
+  }): Promise<ImportCommitResult> =>
+    request('/api/demo/import/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  imports: () => request<ImportedDataset[]>('/api/demo/imports'),
 }
