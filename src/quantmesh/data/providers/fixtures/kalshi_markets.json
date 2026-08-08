@@ -1,0 +1,38 @@
+[
+  {
+    "ticker": "KXELONMARS-99",
+    "event_ticker": "KXELONMARS-99",
+    "title": "Will Elon Musk visit Mars before Aug 1, 2099?",
+    "status": "active",
+    "market_type": "binary",
+    "result": "",
+    "expiry_at": "2099-08-08T15:00:00+00:00",
+    "last_price": 0.09,
+    "volume": 116747.31,
+    "open_interest": 39964.72
+  },
+  {
+    "ticker": "KXFED-27APR-T3.50",
+    "event_ticker": "KXFED-27APR",
+    "title": "Will the upper bound of the federal funds rate be above 3.50% following the Fed's Apr 28, 2027 meeting?",
+    "status": "active",
+    "market_type": "binary",
+    "result": "",
+    "expiry_at": "2027-05-05T18:05:00+00:00",
+    "last_price": 0.77,
+    "volume": 22417.09,
+    "open_interest": 2179.22
+  },
+  {
+    "ticker": "KXMVECROSSCATEGORY-S2026B117AD0234B-20FD2D82A98",
+    "event_ticker": "KXMVECROSSCATEGORY-S2026B117AD0234B",
+    "title": "yes Ben Shelton,yes Joao Fonseca,yes Jakub Mensik,yes Hubert Hurkacz,yes Timo Legout,yes Arthur Nagel,yes Reese Brantmeier,yes Mai Hontama,yes Anne Christine Lutkemeyer,yes Eunhye Lee,yes Mirra Andreeva,yes Naomi Osaka,yes Coco Gauff,yes Jessica Pegula,yes Aryna Sabalenka",
+    "status": "finalized",
+    "market_type": "binary",
+    "result": "no",
+    "expiry_at": "2026-08-22T16:00:00+00:00",
+    "last_price": 0.0,
+    "volume": 0.0,
+    "open_interest": 0.0
+  }
+]
