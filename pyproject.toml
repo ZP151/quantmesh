@@ -58,7 +58,14 @@ where = ["src"]
 quantmesh = ["data/providers/fixtures/*.json"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+# The repo root is on the path so both test import styles resolve under
+# bare `pytest` (CI) and `python -m pytest` alike: helper modules are
+# imported both bare (`from moomoo_wire import ...` — pytest's basedir
+# insertion puts tests/ on the path) and package-qualified
+# (`from tests.research_fixtures import ...` — tests/ resolves as a
+# namespace package from the root). tests/ intentionally has no
+# __init__.py; a package marker would break the bare style.
+pythonpath = ["src", "."]
 testpaths = ["tests"]
 
 [tool.ruff]
