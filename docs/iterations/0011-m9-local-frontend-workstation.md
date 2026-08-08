@@ -306,7 +306,7 @@ first sorted venue; form endpoints `POST /watchlist/add` and
 error pages (`role="alert"`) on duplicate/absent/malformed/unbound,
 303 PRG on success; `_error_page`/`_render_page` refactor; templates
 `overview.html`/`instruments.html`/`watchlist.html`; `home.html`
-superseded and removed. 44 tests (15 store discipline incl.
+superseded and removed. 30 new tests (17 store discipline incl.
 cross-instance persistence, corrupt-line and duplicate-in-file
 attribution, nothing-written-on-refusal; 13 Phase B screen drills
 incl. sorted venue/instrument rendering, add/remove round-trips
