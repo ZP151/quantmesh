@@ -93,6 +93,36 @@ persisted as JSONL on the ADR-0006 discipline (Phase B, issue #52)
   page is the editing surface; hostile symbols are escaped by the
   autoescape posture in both.
 
+### Decision 4 — The research screens (experiments, promotions) are
+read-only views over injected registries; unbound registries and
+unresolvable evidence render typed states, never crashes (Phase C,
+issue #53)
+
+- `PageContext` gains `experiments` (`ExperimentRegistry`),
+  `promotions` (`PromotionLedger`) and `reports` (`ReportRegistry`) as
+  optional injections — read-only views, exactly like `marks` and
+  `markets`. None is default-bound: the console bootstrap serves a
+  paper account and the watchlist; the operator wires registries in
+  programmatically. An unbound registry renders a typed empty state
+  ("No experiment registry is bound."), never a 500.
+- The experiments page renders the M3 registry's records side by side
+  (dataset, revision, commit, parameters, metrics) newest-first with
+  byte-stable value formatting (`repr` floats, lowercased bools, en
+  dash for None) and links each row to its detail page, which shows
+  the record plus its lake pin resolved through the registry's own
+  gate. A pin that no longer holds (missing lake, stale revision,
+  moved manifest) renders a typed "Lake pin unavailable" state with
+  the failure named — the record still renders.
+- The promotions page renders the M7 ledger with the full evidence
+  bundle (benchmark ids, ablation ids, OOS report id) resolved through
+  the report registry. A missing report, or an unbound report
+  registry, renders a typed `missing-evidence` state naming the id —
+  never a crash. The kill-switch flag renders report-only ("gate
+  (report-only)"), matching the M7 identity: display today,
+  enforcement in M10.
+- No write surface is added: experiment, promotion, decision and
+  alert writes remain CLI/registry-owned.
+
 ## Consequences
 
 - The workstation adds one core dependency (jinja2, BSD-3) and no
@@ -108,6 +138,10 @@ persisted as JSONL on the ADR-0006 discipline (Phase B, issue #52)
   JSONL file is on the same discipline as the experiment and audit
   journals, so a corrupted or hostile watchlist file fails closed
   with attribution instead of rendering attacker state into the UI.
+- The research screens stay honest about their bindings: an unbound
+  registry or a missing evidence link is named in the UI as a typed
+  state, never rendered as data it cannot see and never raised as an
+  error the page cannot explain.
 - Later phases append screens to the page registry and extend the
   injected context; the registry tests keep the route/template/
   provider triple pinned.

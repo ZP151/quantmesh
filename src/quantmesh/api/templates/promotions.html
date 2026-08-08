@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Promotions</h1>
+
+{% if not registry_bound %}
+<p class="notice">No promotion ledger is bound.</p>
+{% else %}
+<p>
+  {{ promotions|length }} promotion record{{ "s" if promotions|length != 1 }}.
+  Promotion approval is registry/CLI-owned; the kill-switch flag is
+  report-only until M10 enforces it.
+</p>
+<section aria-labelledby="promotions-heading">
+  <h2 id="promotions-heading">Promotion ledger</h2>
+  {% if promotions %}
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Signal</th>
+        <th scope="col">Promotion</th>
+        <th scope="col">Promoted</th>
+        <th scope="col">Benchmark evidence</th>
+        <th scope="col">Ablation evidence</th>
+        <th scope="col">Out-of-sample</th>
+        <th scope="col">Kill switch</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for promotion in promotions %}
+      <tr>
+        <th scope="row">{{ promotion.signal_name }}</th>
+        <td><code>{{ promotion.id }}</code></td>
+        <td>{{ promotion.promoted_at }}</td>
+        <td>
+          {% for link in promotion.benchmarks %}
+            {% if link.resolved %}
+              <code>{{ link.strategy }} @ {{ link.dataset }} (rev {{ link.revision }})</code>
+            {% else %}
+              <span class="missing-evidence">{{ link.id }} — {{ link.reason }}</span>
+            {% endif %}{% if not loop.last %}<br>{% endif %}
+          {% endfor %}
+        </td>
+        <td>
+          {% for link in promotion.ablations %}
+            {% if link.resolved %}
+              <code>{{ link.strategy }} @ {{ link.dataset }} (rev {{ link.revision }})</code>
+            {% else %}
+              <span class="missing-evidence">{{ link.id }} — {{ link.reason }}</span>
+            {% endif %}{% if not loop.last %}<br>{% endif %}
+          {% endfor %}
+        </td>
+        <td>
+          {% if promotion.oos.resolved %}
+            <code>{{ promotion.oos.strategy }} @ {{ promotion.oos.dataset }} (rev {{ promotion.oos.revision }})</code>
+            {% if promotion.oos.windows_oos %}<br><small>windows_oos: yes</small>{% endif %}
+          {% else %}
+            <span class="missing-evidence">{{ promotion.oos.id }} — {{ promotion.oos.reason }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if promotion.kill_switch %}
+            <strong class="engaged">gate</strong> (report-only)
+          {% else %}
+            none
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>The promotion ledger is empty.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

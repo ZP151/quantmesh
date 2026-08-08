@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Experiment {{ experiment.id }}</h1>
+
+<section aria-labelledby="record-heading">
+  <h2 id="record-heading">Record</h2>
+  <table>
+    <tbody>
+      <tr><th scope="row">Dataset</th><td>{{ experiment.dataset }}</td></tr>
+      <tr><th scope="row">Revision</th><td>{{ experiment.revision }}</td></tr>
+      <tr><th scope="row">Commit</th><td><code>{{ experiment.commit }}</code></td></tr>
+      <tr><th scope="row">Created</th><td>{{ experiment.created_at }}</td></tr>
+      <tr>
+        <th scope="row">Parameters</th>
+        <td>
+          {% for key, value in experiment.parameters.items() %}
+            <code>{{ key }}={{ value }}</code>{% if not loop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">Metrics</th>
+        <td>
+          {% for key, value in experiment.metrics.items() %}
+            <code>{{ key }}={{ value }}</code>{% if not loop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="pin-heading">
+  <h2 id="pin-heading">Lake pin</h2>
+  {% if pin %}
+  <table>
+    <tbody>
+      <tr><th scope="row">Dataset</th><td>{{ pin.name }}</td></tr>
+      <tr><th scope="row">Manifest revision</th><td>{{ pin.revision }}</td></tr>
+      <tr><th scope="row">Series</th><td>{{ pin.series }}</td></tr>
+    </tbody>
+  </table>
+  {% elif pin_error %}
+  <p class="notice" role="alert">Lake pin unavailable: {{ pin_error }}</p>
+  {% endif %}
+</section>
+{% endblock %}

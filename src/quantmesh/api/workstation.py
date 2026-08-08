@@ -1,4 +1,4 @@
-"""Local frontend workstation (M9, issues #51-#52).
+"""Local frontend workstation (M9, issues #51-#53).
 
 `create_workstation_app` supersets the M1 read-only `create_app` with
 server-rendered Jinja2 pages: a strict route -> template -> data
@@ -11,11 +11,16 @@ Construction is fail-closed on the bind surface: a non-loopback
 `settings.workstation_host` is a typed `WorkstationConfigError` — the
 workstation is a local surface, never env-escalable (ADR-0011 decision
 2, the ADR-0010 loopback discipline). The data plane is read-only
-except two named surfaces (ADR-0011 decisions 3-4): the watchlist
+except two named surfaces (ADR-0011 decisions 3 and 5): the watchlist
 store (the one UI-owned write surface, on the ADR-0006 discipline) and
 the paper-level kill switch (Phase E). Page providers receive injected
-read surfaces — account, marks, markets, watchlist — and render them
-as data; no provider is ever constructed inside a route.
+read surfaces — account, marks, markets, watchlist, and the research
+registries (experiments, promotions, reports) — and render them as
+data; no provider is ever constructed inside a route. Research
+registries are optional injections: an unbound registry renders a
+typed empty state, and a promotion evidence link that cannot resolve
+renders a typed "missing evidence" state — never a crash
+(ADR-0011 decision 4).
 """
 
 from __future__ import annotations
@@ -33,6 +38,9 @@ from quantmesh import __version__
 from quantmesh.api.app import create_app
 from quantmesh.api.watchlist import WatchlistError, WatchlistStore
 from quantmesh.execution.accounting import PaperAccount
+from quantmesh.research.drift import PromotionLedger
+from quantmesh.research.experiments import ExperimentRegistry
+from quantmesh.research.reports import ReportRegistry
 from quantmesh.settings import settings
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -56,6 +64,9 @@ class PageContext:
     marks: Mapping[str, float] = field(default_factory=dict)
     markets: Mapping[str, Mapping[str, float]] = field(default_factory=dict)
     watchlist: WatchlistStore | None = None
+    experiments: ExperimentRegistry | None = None
+    promotions: PromotionLedger | None = None
+    reports: ReportRegistry | None = None
 
 
 @dataclass(frozen=True)
@@ -126,6 +137,116 @@ def _watchlist_provider(context: PageContext) -> dict[str, object]:
     return {"entries": entries}
 
 
+def _fmt_parameter(value: object) -> str:
+    """Byte-stable display of a registry parameter/metric value.
+
+    The registries accept str | int | float | bool | None; every value
+    renders to one deterministic string: floats via ``repr`` (shortest
+    round-trip), bools lowercased, None as an en dash.
+    """
+    if value is None:
+        return "—"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, float):
+        return repr(value)
+    return str(value)
+
+
+def _fmt_map(values: Mapping[str, object]) -> dict[str, str]:
+    return {key: _fmt_parameter(value) for key, value in values.items()}
+
+
+def _experiment_view(experiment: object) -> dict[str, object]:
+    """One experiment record as render data; shared by the comparison
+    page and the detail page so the two views can never disagree."""
+    return {
+        "id": experiment.id,
+        "dataset": experiment.dataset,
+        "revision": experiment.revision,
+        "commit": experiment.commit,
+        "created_at": experiment.created_at.isoformat(),
+        "parameters": _fmt_map(experiment.parameters),
+        "metrics": _fmt_map(experiment.metrics),
+    }
+
+
+def _experiments_provider(context: PageContext) -> dict[str, object]:
+    registry = context.experiments
+    experiments = []
+    if registry is not None:
+        # Newest first, id as the deterministic tie-break.
+        ordered = sorted(registry.all(), key=lambda e: (e.created_at, e.id), reverse=True)
+        experiments = [_experiment_view(experiment) for experiment in ordered]
+    return {"experiments": experiments, "registry_bound": registry is not None}
+
+
+def _resolve_report_links(
+    report_ids: list[str], registry: ReportRegistry | None
+) -> list[dict[str, object]]:
+    """Resolve evidence ids through the report registry; a missing
+    report renders as a typed unresolved state, never a crash."""
+    links = []
+    for report_id_value in report_ids:
+        if registry is None:
+            links.append(
+                {
+                    "id": report_id_value,
+                    "resolved": False,
+                    "reason": "no report registry is bound",
+                }
+            )
+            continue
+        try:
+            report = registry.get(report_id_value)
+        except ValueError:
+            links.append(
+                {"id": report_id_value, "resolved": False, "reason": "missing evidence"}
+            )
+            continue
+        links.append(
+            {
+                "id": report_id_value,
+                "resolved": True,
+                "strategy": report.strategy,
+                "dataset": report.dataset,
+                "revision": report.revision,
+                "interval": report.interval,
+                "metrics": _fmt_map(report.metrics),
+                "windows_oos": report.evidence.get("windows_oos") is True,
+            }
+        )
+    return links
+
+
+def _promotions_provider(context: PageContext) -> dict[str, object]:
+    ledger = context.promotions
+    promotions = []
+    if ledger is not None:
+        # Newest first, id as the deterministic tie-break.
+        ordered = sorted(
+            ledger.all(), key=lambda record: (record.promoted_at, record.id), reverse=True
+        )
+        for record in ordered:
+            oos = _resolve_report_links([record.oos_report_id], context.reports)[0]
+            promotions.append(
+                {
+                    "id": record.id,
+                    "signal_name": record.signal_name,
+                    "promoted_at": record.promoted_at.isoformat(),
+                    "kill_switch": record.kill_switch,
+                    "benchmarks": _resolve_report_links(
+                        record.benchmark_report_ids, context.reports
+                    ),
+                    "ablations": _resolve_report_links(
+                        record.ablation_report_ids, context.reports
+                    ),
+                    "oos": oos,
+                }
+            )
+    return {"promotions": promotions, "registry_bound": ledger is not None}
+
+
 # The page registry, pinned by the page-registry test (every route
 # registered, every template loadable, autoescape on, every page
 # renders through its provider). Later phases append screens here.
@@ -145,6 +266,20 @@ PAGES: tuple[Page, ...] = (
         _watchlist_provider,
         "Watchlist",
     ),
+    Page(
+        "/experiments",
+        "experiments.html",
+        "QuantMesh — Experiments",
+        _experiments_provider,
+        "Experiments",
+    ),
+    Page(
+        "/promotions",
+        "promotions.html",
+        "QuantMesh — Promotions",
+        _promotions_provider,
+        "Promotions",
+    ),
 )
 
 
@@ -158,6 +293,9 @@ def create_workstation_app(
     marks: dict[str, float] | None = None,
     markets: Mapping[str, Mapping[str, float]] | None = None,
     watchlist: WatchlistStore | None = None,
+    experiments: ExperimentRegistry | None = None,
+    promotions: PromotionLedger | None = None,
+    reports: ReportRegistry | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -168,6 +306,9 @@ def create_workstation_app(
     the operator supplies updated mark prices. `markets` maps venue to
     symbol -> mark and is injected by the operator; `watchlist` binds
     the UI-owned watchlist store (defaults to `settings.watchlists_dir`).
+    The research registries (`experiments`, `promotions`, `reports`)
+    are optional read-only injections: unbound, their pages render a
+    typed empty state (ADR-0011 decision 4).
     """
     host = settings.workstation_host if host is None else host
     if not _is_loopback(host):
@@ -184,6 +325,9 @@ def create_workstation_app(
         marks=marks if marks is not None else {},
         markets=markets if markets is not None else {},
         watchlist=watchlist if watchlist is not None else WatchlistStore(),
+        experiments=experiments,
+        promotions=promotions,
+        reports=reports,
     )
 
     for page in PAGES:
@@ -195,6 +339,7 @@ def create_workstation_app(
         )
 
     _register_watchlist_forms(app)
+    _register_experiment_detail(app)
 
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     return app
@@ -238,6 +383,18 @@ def _error_page(
     return _render_page(app, page, request, {"error": message})
 
 
+def _base_context(page_title: str, account: PaperAccount) -> dict[str, object]:
+    """The shared layout context every screen starts from."""
+    return {
+        "page_title": page_title,
+        "nav_routes": _page_routes(),
+        "app_name": settings.app_name,
+        "environment": settings.environment,
+        "version": __version__,
+        "kill_switch": account.kill_switch,
+    }
+
+
 def _render_page(
     app: FastAPI, page: Page, request: Request, extra: dict[str, object]
 ) -> HTMLResponse:
@@ -246,16 +403,57 @@ def _render_page(
         request=request,
         name=page.template,
         context={
-            "page_title": page.title,
-            "nav_routes": _page_routes(),
-            "app_name": settings.app_name,
-            "environment": settings.environment,
-            "version": __version__,
-            "kill_switch": context.account.kill_switch,
+            **_base_context(page.title, context.account),
             **page.provider(context),
             **extra,
         },
     )
+
+
+def _register_experiment_detail(app: FastAPI) -> None:
+    """GET /experiments/{id}: one experiment record with its lake pin.
+
+    Read-only, outside the page registry (a parameterized route does
+    not fit the pinned route -> template -> provider triple). The pin
+    is resolved through the registry's lake gate and rendered as a
+    typed state: unavailable (missing lake, stale pin, moved manifest)
+    is named, never a crash.
+    """
+
+    @app.get("/experiments/{experiment_id}", response_class=HTMLResponse)
+    def experiment_detail(request: Request, experiment_id: str) -> HTMLResponse:
+        context = app.state.page_context
+        if context.experiments is None:
+            return _error_page(app, request, "/experiments", "no experiment registry is bound")
+        try:
+            experiment = context.experiments.get(experiment_id)
+        except ValueError as error:
+            return _error_page(app, request, "/experiments", str(error))
+
+        pin: dict[str, object] | None = None
+        pin_error: str | None = None
+        try:
+            dataset = context.experiments.resolve(experiment_id)
+            pin = {
+                "name": dataset.name,
+                "revision": dataset.manifest.revision,
+                "series": len(dataset.manifest.coverage),
+            }
+        except ValueError as error:
+            pin_error = str(error)
+
+        return app.state.templates.TemplateResponse(
+            request=request,
+            name="experiment_detail.html",
+            context={
+                **_base_context(
+                    f"QuantMesh — Experiment {experiment.id}", context.account
+                ),
+                "experiment": _experiment_view(experiment),
+                "pin": pin,
+                "pin_error": pin_error,
+            },
+        )
 
 
 def main() -> None:

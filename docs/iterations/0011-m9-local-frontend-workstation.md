@@ -77,7 +77,7 @@ Out of scope (recorded, not deferred silently):
       operator can reach market overview, a watchlist, an instrument
       view, positions, orders (with events/fills) and P&L purely
       through the web UI. — Phases A/B/D (issues #51/#52/#54).
-2. [ ] Experiment comparison and strategy promotion are visible in the
+2. [x] Experiment comparison and strategy promotion are visible in the
       UI: the M3 registry's experiments render side by side with
       metrics, and the M7 promotion ledger renders with its evidence
       links resolved. — Phase C (issue #53).
@@ -313,6 +313,38 @@ incl. sorted venue/instrument rendering, add/remove round-trips
 through the forms with 303 + persistence, error pages, unbound-store
 refusal, hostile-symbol escaping on render). ADR-0011 decision 3
 recorded.
+
+**Issue #53 (Phase C, experiment comparison + strategy promotion
+screens) committed 2026-08-08** — `workstation.py`: `PageContext`
+gains injected `experiments`/`promotions`/`reports` registries
+(optional read-only injections, like `marks`/`markets` — none is
+default-bound); registry grows the Experiments and Promotions pages;
+`_fmt_parameter` byte-stable value formatting (repr floats, lowercased
+bools, en dash for None); `_experiment_view` shared by the comparison
+page and the detail page so the two views cannot disagree;
+`_resolve_report_links` resolves evidence ids through the report
+registry with a typed `missing-evidence` state (unbound registry or
+absent report — never a crash); `GET /experiments/{id}` detail route
+outside the page registry (parameterized routes do not fit the pinned
+triple) rendering the record plus its lake pin through the registry's
+own gate — a stale/missing pin renders a typed "Lake pin unavailable"
+state with the record intact; `_base_context` refactor so the detail
+route shares the layout context. Templates `experiments.html`
+(side-by-side table, newest-first, per-row link to the detail page),
+`experiment_detail.html` (record + pin section), `promotions.html`
+(full evidence bundle: benchmarks, ablations, OOS with
+`windows_oos`, kill-switch flag rendered "gate (report-only)");
+`.missing-evidence` style. No write surface added — promotion
+approval stays registry/CLI-owned. 13 new tests (side-by-side
+rendering with byte-stable formatting incl. bool/None, newest-first
+ordering, detail page with lake pin resolved, stale-pin typed state,
+unknown-id error page, unbound typed empty states, promotions with
+resolved evidence incl. windows_oos, missing-evidence state with the
+id named, unbound report registry, kill-switch report-only flag,
+empty-ledger states); the drill's first run caught the benchmark/OOS
+duplicate-report-id premise (two reports with identical setup are
+refused by the registry by design — the OOS report now uses a
+distinct interval). ADR-0011 decision 4 recorded.
 
 ## Verification evidence
 

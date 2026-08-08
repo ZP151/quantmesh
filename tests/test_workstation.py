@@ -11,7 +11,8 @@ import dataclasses
 import sys
 import types
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import pytest
 from fastapi.routing import APIRoute
@@ -27,6 +28,9 @@ from quantmesh.api.workstation import (
     WorkstationConfigError,
     create_workstation_app,
 )
+from quantmesh.data.lake import Lake
+from quantmesh.data.manifest import ManifestWriter
+from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import (
     Instrument,
     InstrumentType,
@@ -36,6 +40,16 @@ from quantmesh.domain.models import (
     Venue,
 )
 from quantmesh.execution.accounting import FeeModel, PaperAccount, PaperMatcher
+from quantmesh.research.drift import PromotionLedger, PromotionRecord, promotion_id
+from quantmesh.research.experiments import Experiment, ExperimentRegistry, experiment_id
+from quantmesh.research.reports import (
+    CostModel,
+    ReportRegistry,
+    StrategyReport,
+    UniverseMember,
+    WalkForwardSpec,
+    report_id,
+)
 from quantmesh.settings import settings
 
 INSTRUMENT = Instrument(
@@ -81,6 +95,9 @@ def client(
     marks: dict[str, float] | None = None,
     markets: Mapping[str, Mapping[str, float]] | None = None,
     watchlist: WatchlistStore | None = None,
+    experiments: ExperimentRegistry | None = None,
+    promotions: PromotionLedger | None = None,
+    reports: ReportRegistry | None = None,
 ) -> TestClient:
     return TestClient(
         create_workstation_app(
@@ -88,8 +105,129 @@ def client(
             marks=marks,
             markets=markets,
             watchlist=watchlist,
+            experiments=experiments,
+            promotions=promotions,
+            reports=reports,
         )
     )
+
+
+COMMIT = "a" * 40
+CRYPTO = Instrument(
+    symbol="BTC-PERP", venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL
+)
+SPEC = WalkForwardSpec(train_bars=10, test_bars=5, step_bars=10)
+COSTS = CostModel(fee_bps=5, half_spread_bps=2, slippage_bps=1)
+UNIVERSE = [UniverseMember(venue=Venue.INTERNAL, symbol="AAPL")]
+
+
+def _bars(count: int = 3) -> list[Bar]:
+    return [
+        Bar(
+            instrument=CRYPTO,
+            timestamp=NOW - timedelta(hours=1) + timedelta(minutes=index),
+            interval="1m",
+            open=100.0 + index,
+            high=101.0 + index,
+            low=99.0 + index,
+            close=100.5 + index,
+            volume=10.0 + index,
+        )
+        for index in range(count)
+    ]
+
+
+def pinned_lake(tmp_path) -> Path:
+    lake_root = tmp_path / "lake"
+    Lake(lake_root).write_bars("algo", _bars())
+    ManifestWriter(lake_root).generate("algo", source="fixture", license="test")
+    return lake_root
+
+
+def experiment_registry(tmp_path) -> tuple[ExperimentRegistry, Path]:
+    """A real registry: lake-pinned records through the record() gate."""
+    lake_root = pinned_lake(tmp_path)
+    registry = ExperimentRegistry(root=tmp_path / "experiments", lake_root=lake_root)
+    registry.record(
+        dataset="algo",
+        revision=1,
+        commit=COMMIT,
+        parameters={"lookback": 20, "rebalance": "daily"},
+        metrics={"sharpe": 1.5, "max_drawdown": -0.12, "optimized": True, "note": None},
+    )
+    return registry, lake_root
+
+
+def make_report(
+    *, strategy: str, interval: str = "1d", evidence=None, metrics=None
+) -> StrategyReport:
+    report_id_value = report_id(
+        dataset="algo",
+        revision=1,
+        commit=COMMIT,
+        strategy=strategy,
+        interval=interval,
+        universe=UNIVERSE,
+        window_spec=SPEC,
+        costs=COSTS,
+    )
+    return StrategyReport(
+        id=report_id_value,
+        dataset="algo",
+        revision=1,
+        commit=COMMIT,
+        strategy=strategy,
+        interval=interval,
+        universe=UNIVERSE,
+        window_spec=SPEC,
+        costs=COSTS,
+        created_at=NOW,
+        metrics=metrics or {},
+        evidence=evidence or {},
+    )
+
+
+def promotion_setup(
+    tmp_path, *, kill_switch: bool = False
+) -> tuple[PromotionLedger, ReportRegistry]:
+    """A promotion with its full evidence bundle, hand-written as JSONL."""
+    benchmark = make_report(strategy="momentum", metrics={"sharpe": 1.4})
+    ablation = make_report(strategy="mean_reversion", metrics={"sharpe": 0.9})
+    # A different interval gives the OOS report a distinct setup — the
+    # registry refuses two reports sharing an id.
+    oos = make_report(
+        strategy="momentum", interval="1h", evidence={"windows_oos": True}
+    )
+    reports_root = tmp_path / "reports"
+    reports_root.mkdir()
+    (reports_root / "reports.jsonl").write_text(
+        "\n".join(
+            report.model_dump_json() for report in (benchmark, ablation, oos)
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    promotion = PromotionRecord(
+        id=promotion_id(
+            signal_name="momentum_plus",
+            benchmark_report_ids=[benchmark.id],
+            ablation_report_ids=[ablation.id],
+            oos_report_id=oos.id,
+            kill_switch=kill_switch,
+        ),
+        signal_name="momentum_plus",
+        benchmark_report_ids=[benchmark.id],
+        ablation_report_ids=[ablation.id],
+        oos_report_id=oos.id,
+        kill_switch=kill_switch,
+        promoted_at=NOW,
+    )
+    promotions_root = tmp_path / "promotions"
+    promotions_root.mkdir()
+    (promotions_root / "promotions.jsonl").write_text(
+        promotion.model_dump_json() + "\n", encoding="utf-8"
+    )
+    return PromotionLedger(root=promotions_root), ReportRegistry(root=reports_root)
 
 
 class TestConstruction:
@@ -406,3 +544,162 @@ class TestPhaseBScreens:
         html = app_client.get("/watchlist").text
         assert "&lt;b&gt;bad&lt;/b&gt;" in html
         assert "<b>bad</b>" not in html
+
+
+class TestPhaseCResearchScreens:
+    """Phase C screens (issue #53): experiment comparison and strategy
+    promotion.
+
+    The research registries are injected read surfaces (ADR-0011
+    decision 4): unbound registries render typed empty states, a
+    promotion evidence id that cannot resolve renders a typed "missing
+    evidence" state, and the experiment detail page links its lake pin
+    (with a typed state when the pin is stale or the lake is gone).
+    """
+
+    def test_experiments_page_renders_records_side_by_side(self, tmp_path) -> None:
+        registry, _ = experiment_registry(tmp_path)
+        recorded = registry.all()[0]
+
+        html = client(experiments=registry).get("/experiments").text
+
+        assert recorded.id in html
+        assert "algo" in html
+        assert "lookback=20" in html
+        assert "rebalance=daily" in html
+        assert "sharpe=1.5" in html
+        assert "max_drawdown=-0.12" in html
+        assert "optimized=true" in html
+        assert "note=—" in html
+        assert "1 experiment record." in html
+
+    def test_experiments_newest_first(self, tmp_path) -> None:
+        first = Experiment(
+            id=experiment_id(
+                dataset="algo", revision=1, commit=COMMIT, parameters={"lookback": 10}
+            ),
+            dataset="algo",
+            revision=1,
+            commit=COMMIT,
+            parameters={"lookback": 10},
+            metrics={"sharpe": 1.0},
+            created_at=NOW,
+        )
+        second = Experiment(
+            id=experiment_id(
+                dataset="algo", revision=1, commit=COMMIT, parameters={"lookback": 20}
+            ),
+            dataset="algo",
+            revision=1,
+            commit=COMMIT,
+            parameters={"lookback": 20},
+            metrics={"sharpe": 1.5},
+            created_at=NOW + timedelta(hours=1),
+        )
+        root = tmp_path / "experiments"
+        root.mkdir()
+        (root / "experiments.jsonl").write_text(
+            first.model_dump_json() + "\n" + second.model_dump_json() + "\n",
+            encoding="utf-8",
+        )
+
+        html = client(experiments=ExperimentRegistry(root=root)).get("/experiments").text
+
+        assert html.index(f">{second.id}<") < html.index(f">{first.id}<")
+
+    def test_experiment_detail_renders_record_and_lake_pin(self, tmp_path) -> None:
+        registry, _ = experiment_registry(tmp_path)
+        recorded = registry.all()[0]
+
+        html = client(experiments=registry).get(f"/experiments/{recorded.id}").text
+
+        assert recorded.id in html
+        assert "lookback=20" in html
+        assert "Lake pin" in html
+        assert '<th scope="row">Manifest revision</th><td>1</td>' in html
+        assert '<th scope="row">Series</th><td>1</td>' in html
+
+    def test_experiment_detail_stale_pin_renders_typed_state(self, tmp_path) -> None:
+        registry, lake_root = experiment_registry(tmp_path)
+        recorded = registry.all()[0]
+        # Advance the manifest: the pinned revision no longer describes
+        # the data on disk, so the pin refuses to resolve.
+        ManifestWriter(lake_root).generate("algo", source="fixture", license="test")
+
+        html = client(experiments=registry).get(f"/experiments/{recorded.id}").text
+
+        assert "Lake pin unavailable" in html
+        assert 'role="alert"' in html
+        assert "lookback=20" in html  # the record itself still renders
+
+    def test_experiment_detail_unknown_id_renders_error_page(self, tmp_path) -> None:
+        registry, _ = experiment_registry(tmp_path)
+
+        html = client(experiments=registry).get("/experiments/ffffffffffffffff").text
+
+        assert 'role="alert"' in html
+        assert "no experiment recorded" in html
+
+    def test_experiment_pages_unbound_typed_empty_states(self) -> None:
+        html = client().get("/experiments").text
+        assert "No experiment registry is bound." in html
+
+        detail = client().get("/experiments/ffffffffffffffff").text
+        assert "no experiment registry is bound" in detail
+
+    def test_experiments_empty_registry_state(self, tmp_path) -> None:
+        registry = ExperimentRegistry(root=tmp_path / "experiments")
+        html = client(experiments=registry).get("/experiments").text
+        assert "The experiment registry is empty." in html
+
+    def test_promotions_page_renders_resolved_evidence(self, tmp_path) -> None:
+        ledger, reports = promotion_setup(tmp_path)
+
+        html = client(promotions=ledger, reports=reports).get("/promotions").text
+
+        assert "momentum_plus" in html
+        assert "momentum @ algo (rev 1)" in html
+        assert "mean_reversion @ algo (rev 1)" in html
+        assert "windows_oos: yes" in html
+        assert "none" in html  # kill-switch column, report-only flag not set
+
+    def test_promotions_missing_evidence_renders_typed_state(self, tmp_path) -> None:
+        ledger, reports = promotion_setup(tmp_path)
+        path = tmp_path / "reports" / "reports.jsonl"
+        lines = path.read_text(encoding="utf-8").splitlines()
+        oos_line = next(line for line in lines if "windows_oos" in line)
+        path.write_text(
+            "\n".join(line for line in lines if line != oos_line) + "\n",
+            encoding="utf-8",
+        )
+
+        html = client(promotions=ledger, reports=reports).get("/promotions").text
+
+        assert 'class="missing-evidence"' in html
+        assert "missing evidence" in html
+        assert "windows_oos: yes" not in html
+        # The rest of the bundle still resolves.
+        assert "momentum @ algo (rev 1)" in html
+
+    def test_promotions_without_report_registry_typed_state(self, tmp_path) -> None:
+        ledger, _ = promotion_setup(tmp_path)
+
+        html = client(promotions=ledger).get("/promotions").text
+
+        assert "no report registry is bound" in html
+        assert 'class="missing-evidence"' in html
+
+    def test_promotions_kill_switch_flag_renders_report_only(self, tmp_path) -> None:
+        ledger, reports = promotion_setup(tmp_path, kill_switch=True)
+
+        html = client(promotions=ledger, reports=reports).get("/promotions").text
+
+        assert "gate" in html
+        assert "report-only" in html
+
+    def test_promotions_unbound_and_empty_ledger_states(self, tmp_path) -> None:
+        assert "No promotion ledger is bound." in client().get("/promotions").text
+
+        empty = PromotionLedger(root=tmp_path / "promotions")
+        html = client(promotions=empty).get("/promotions").text
+        assert "The promotion ledger is empty." in html
