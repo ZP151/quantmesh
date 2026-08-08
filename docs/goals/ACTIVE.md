@@ -61,11 +61,18 @@ makes the business workflow directly testable. Do not promote RC1 to
    and the frontend build (`npm ci` → bundle-freshness check →
    vitest) added to the clean-checkout release gate; release notes
    (EN + zh-CN) written. Evidence in iteration 0014 Checkpoint 4.
-6. Run the full release gate from a clean checkout, merge the single
-   RC2 PR, tag the verified merge commit `v0.1.0-rc2`, reproduce the
-   install in an isolated directory and hand the operator the browser
-   acceptance checklist — promote to `v0.1.0` only after explicit
-   human acceptance.
+6. ~~Run the full release gate from a clean checkout, merge the single
+   RC2 PR, tag the verified merge commit `v0.1.0-rc2`~~ (done, Phase F):
+   gate run 4 PASSED on HEAD `737f8c9` (14/14 steps, 1865 tests /
+   0 failed, golden path 53/53, clone clean; real numbers in
+   `docs/release-notes/v0.1.0-rc2.md`), PR #75 squash-merged into main
+   at `710a931`, tag `v0.1.0-rc2` pushed on the merge commit, CI green
+   on the PR; the two gate-caught E2E interleaving defects were fixed
+   and recorded (iteration 0014 Checkpoint 5). Remaining: reproduce
+   the install in an isolated directory
+   (`C:\Users\15492\Develop\quantmesh-rc2-acceptance`), hand the
+   operator the browser acceptance checklist, and promote to `v0.1.0`
+   only after explicit human acceptance.
 
 ## Standing authority
 
