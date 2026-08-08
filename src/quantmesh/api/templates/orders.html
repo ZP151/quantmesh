@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Orders</h1>
+{% if orders %}
+<table>
+  <thead>
+    <tr>
+      <th scope="col">Order</th>
+      <th scope="col">Instrument</th>
+      <th scope="col">Side</th>
+      <th scope="col">Quantity</th>
+      <th scope="col">Type</th>
+      <th scope="col">Limit</th>
+      <th scope="col">Status</th>
+      <th scope="col">Filled</th>
+      <th scope="col">Fills</th>
+      <th scope="col">Created</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in orders %}
+    <tr>
+      <th scope="row"><code>{{ order.order_id }}</code></th>
+      <td>{{ order.instrument.symbol }} <span class="venue">{{ order.instrument.venue }}</span></td>
+      <td>{{ order.side }}</td>
+      <td>{{ order.quantity }}</td>
+      <td>{{ order.order_type }}</td>
+      <td>{{ order.limit_price if order.limit_price is not none else "—" }}</td>
+      <td>{{ order.status }}</td>
+      <td>{{ order.filled_quantity }}</td>
+      <td>{{ order.fills|length }}</td>
+      <td>{{ order.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<section aria-label="Order event streams">
+  {% for order in orders %}
+  <details>
+    <summary>Order {{ order.order_id }} — {{ order.events|length }} event{{ "s" if order.events|length != 1 }}</summary>
+    {% if order.events %}
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Sequence</th>
+          <th scope="col">Timestamp</th>
+          <th scope="col">Event</th>
+          <th scope="col">Status</th>
+          <th scope="col">Quantity</th>
+          <th scope="col">Price</th>
+          <th scope="col">Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in order.events %}
+        <tr{% if event.event_type == "fill" %} class="fill-event"{% endif %}>
+          <th scope="row">{{ event.sequence }}</th>
+          <td>{{ event.timestamp }}</td>
+          <td>{{ event.event_type }}</td>
+          <td>{{ event.status }}</td>
+          <td>{{ event.quantity if event.quantity is not none else "—" }}</td>
+          <td>{{ event.price if event.price is not none else "—" }}</td>
+          <td>{{ event.reason if event.reason is not none else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No events recorded for this order.</p>
+    {% endif %}
+  </details>
+  {% endfor %}
+</section>
+{% else %}
+<p>No orders.</p>
+{% endif %}
+{% endblock %}

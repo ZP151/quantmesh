@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Positions</h1>
+{% if positions %}
+<table>
+  <thead>
+    <tr>
+      <th scope="col">Position</th>
+      <th scope="col">Instrument</th>
+      <th scope="col">Quantity</th>
+      <th scope="col">Average cost</th>
+      <th scope="col">Realized P&amp;L</th>
+      <th scope="col">Unrealized P&amp;L</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for position in positions %}
+    <tr>
+      <th scope="row"><code>{{ position.key }}</code></th>
+      <td>{{ position.instrument.symbol }} <span class="venue">{{ position.instrument.venue }}</span></td>
+      <td>{{ position.quantity }}</td>
+      <td>{{ position.average_cost }}</td>
+      <td>{{ position.realized_pnl }}</td>
+      <td>
+        {% if position.unrealized_pnl is none %}
+        <span class="missing-mark">no mark</span>
+        {% else %}{{ position.unrealized_pnl }}{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No positions.</p>
+{% endif %}
+{% endblock %}

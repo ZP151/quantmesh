@@ -39,7 +39,23 @@ from quantmesh.domain.models import (
     Side,
     Venue,
 )
-from quantmesh.execution.accounting import FeeModel, PaperAccount, PaperMatcher
+from quantmesh.events.forecast import (
+    ForecastMarket,
+    ForecastObservation,
+    ForecastReport,
+    ForecastReportRegistry,
+    ForecastWindowSpec,
+    forecast_report_id,
+    run_forecast,
+    run_forecast_report,
+)
+from quantmesh.events.models import EventMarket, EventVenue, Outcome, ResolutionRule
+from quantmesh.execution.accounting import (
+    FeeModel,
+    PaperAccount,
+    PaperMatcher,
+    RiskLimits,
+)
 from quantmesh.research.drift import PromotionLedger, PromotionRecord, promotion_id
 from quantmesh.research.experiments import Experiment, ExperimentRegistry, experiment_id
 from quantmesh.research.reports import (
@@ -98,6 +114,7 @@ def client(
     experiments: ExperimentRegistry | None = None,
     promotions: PromotionLedger | None = None,
     reports: ReportRegistry | None = None,
+    forecasts: ForecastReportRegistry | None = None,
 ) -> TestClient:
     return TestClient(
         create_workstation_app(
@@ -108,6 +125,7 @@ def client(
             experiments=experiments,
             promotions=promotions,
             reports=reports,
+            forecasts=forecasts,
         )
     )
 
@@ -703,3 +721,290 @@ class TestPhaseCResearchScreens:
         empty = PromotionLedger(root=tmp_path / "promotions")
         html = client(promotions=empty).get("/promotions").text
         assert "The promotion ledger is empty." in html
+
+
+_EVENT_T0 = datetime(2026, 8, 1, 0, 0, tzinfo=UTC)
+_HOUR = timedelta(hours=1)
+_FORECAST_SPEC = ForecastWindowSpec(
+    train_observations=10, test_observations=5, step_observations=10
+)
+
+
+def _event_market(
+    venue_market_id: str,
+    *,
+    venue: EventVenue = EventVenue.KALSHI,
+    resolution: list[str] | None = None,
+    resolved_at: datetime | None = None,
+) -> EventMarket:
+    return EventMarket(
+        venue=venue,
+        venue_market_id=venue_market_id,
+        event_ticker=f"event-{venue_market_id}",
+        title=f"Will {venue_market_id} happen?",
+        category="test",
+        outcomes=[
+            Outcome(name="Yes", venue_outcome_id="yes"),
+            Outcome(name="No", venue_outcome_id="no"),
+        ],
+        resolution_rule=ResolutionRule.of("fixture rule text"),
+        resolution=list(resolution or []),
+        resolved_at=resolved_at,
+    )
+
+
+def _observation(index: int) -> ForecastObservation:
+    return ForecastObservation(
+        timestamp=_EVENT_T0 + index * _HOUR,
+        probability=0.4 + 0.01 * index,
+        liquidity_confidence=0.8,
+    )
+
+
+def _observation_grid(count: int = 30) -> list[ForecastObservation]:
+    return [_observation(index) for index in range(count)]
+
+
+def _forecast_registry(tmp_path: Path) -> ForecastReportRegistry:
+    return ForecastReportRegistry(root=tmp_path / "forecasts")
+
+
+def forecast_setup(tmp_path: Path) -> tuple[ForecastReportRegistry, ForecastReport]:
+    """One registry with a two-market report: the first market resolved
+    (windows evaluated), the second unresolved (windows render
+    'pending')."""
+    registry = _forecast_registry(tmp_path)
+    report = run_forecast_report(
+        [
+            ForecastMarket(
+                market=_event_market(
+                    "mkt-r", resolution=["Yes"], resolved_at=_EVENT_T0 + 3 * _HOUR
+                ),
+                observations=_observation_grid(),
+            ),
+            ForecastMarket(
+                market=_event_market("mkt-u"), observations=_observation_grid()
+            ),
+        ],
+        window_spec=_FORECAST_SPEC,
+        n_bins=5,
+        commit=COMMIT,
+        registry=registry,
+    )
+    return registry, report
+
+
+def _forecast_report(*, market_id: str, created_at: datetime) -> ForecastReport:
+    """A record without artifacts (record-only, like a ledger replay);
+    its page renders the typed missing-artifacts state."""
+    universe = [_event_market(market_id)]
+    metrics, per_market = run_forecast(
+        [
+            ForecastMarket(
+                market=_event_market(market_id), observations=_observation_grid(20)
+            )
+        ],
+        window_spec=_FORECAST_SPEC,
+        n_bins=5,
+    )
+    return ForecastReport(
+        id=forecast_report_id(
+            commit=COMMIT, universe=universe, window_spec=_FORECAST_SPEC, n_bins=5
+        ),
+        commit=COMMIT,
+        universe=universe,
+        window_spec=_FORECAST_SPEC,
+        n_bins=5,
+        created_at=created_at,
+        metrics=metrics,
+        markets=per_market,
+    )
+
+
+class TestPhaseDPortfolioAndPredictionScreens:
+    """M9-4 (#54): portfolio screens over the M1 surface and the M6
+    forecast prediction views. The prediction views render only what the
+    report records — unresolved windows render 'pending' and a current
+    probability is never fabricated from a record that holds window
+    results (ADR-0011 decision 4)."""
+
+    # --- portfolio screens ---
+
+    def test_positions_render_unrealized_pnl_matching_json(self) -> None:
+        account = sample_account()
+        app_client = client(account, marks=dict(MARKS))
+
+        html = app_client.get("/portfolio/positions").text
+        body = app_client.get("/positions").json()
+
+        assert len(body) == 1
+        position = body[0]
+        assert position["key"] in html
+        assert str(position["quantity"]) in html
+        assert str(position["average_cost"]) in html
+        assert str(position["unrealized_pnl"]) in html
+
+    def test_portfolio_html_routes_never_shadow_the_json_surface(self) -> None:
+        app_client = client(marks=dict(MARKS))
+        for route in ("/positions", "/orders", "/pnl"):
+            response = app_client.get(route)
+            assert response.headers["content-type"].startswith("application/json"), route
+        for route in ("/portfolio/positions", "/portfolio/orders", "/portfolio/pnl"):
+            response = app_client.get(route)
+            assert response.headers["content-type"].startswith("text/html"), route
+            assert "<!doctype html>" in response.text
+
+    def test_positions_without_marks_name_the_missing_mark(self) -> None:
+        html = client(marks={}).get("/portfolio/positions").text
+
+        assert "no mark" in html
+        assert "internal:AAPL" in html
+
+    def test_positions_empty_state(self) -> None:
+        html = client(PaperAccount(cash=10_000.0)).get("/portfolio/positions").text
+
+        assert "No positions." in html
+
+    def test_orders_render_event_streams_and_fills_matching_json(self) -> None:
+        account = sample_account()
+        app_client = client(account, marks=dict(MARKS))
+
+        html = app_client.get("/portfolio/orders").text
+        body = app_client.get("/orders").json()
+
+        assert len(body) == 3
+        for order in body:
+            assert order["order_id"] in html
+            assert str(order["filled_quantity"]) in html
+            for event in order["events"]:
+                assert event["event_type"] in html
+                assert str(event["sequence"]) in html
+        # The two market orders carry one fill each; the resting limit
+        # order carries none (its fills cell renders 0).
+        assert "fill" in html
+        assert ">0</td>" in html
+
+    def test_rejected_order_renders_reason(self) -> None:
+        rejected = PaperAccount(
+            cash=10_000.0,
+            fee_model=FeeModel(fee_bps=10),
+            matcher=PaperMatcher(slippage_bps=0.0),
+            risk_limits=RiskLimits(max_order_quantity=10),
+        ).submit(make_request(Side.BUY, 15), make_quote(), now=NOW).account
+
+        html = client(rejected).get("/portfolio/orders").text
+
+        assert "rejected" in html
+        assert "exceeds limit" in html
+
+    def test_orders_empty_state(self) -> None:
+        html = client(PaperAccount(cash=10_000.0)).get("/portfolio/orders").text
+
+        assert "No orders." in html
+
+    def test_pnl_page_matches_json_surface(self) -> None:
+        account = sample_account()
+        app_client = client(account, marks=dict(MARKS))
+
+        html = app_client.get("/portfolio/pnl").text
+        body = app_client.get("/pnl").json()
+
+        for key in (
+            "starting_cash",
+            "realized_pnl",
+            "unrealized_pnl",
+            "equity",
+            "total_pnl",
+        ):
+            assert str(body[key]) in html, key
+        assert "Cash" in html
+        assert "Total fees" in html
+        assert str(body["marks"][POSITION_KEY]) in html
+
+    def test_pnl_names_positions_without_marks(self) -> None:
+        html = client(marks={}).get("/portfolio/pnl").text
+
+        assert "No mark for: internal:AAPL" in html
+        assert "understated" in html
+
+    # --- prediction views ---
+
+    def test_forecasts_unbound_typed_empty_state(self) -> None:
+        html = client().get("/forecasts").text
+
+        assert "No forecast report registry is bound." in html
+
+    def test_forecasts_empty_registry_state(self, tmp_path) -> None:
+        registry = _forecast_registry(tmp_path)
+
+        html = client(forecasts=registry).get("/forecasts").text
+
+        assert "0 forecast reports." in html
+
+    def test_forecast_report_renders_cards_windows_and_calibration(self, tmp_path) -> None:
+        registry, report = forecast_setup(tmp_path)
+
+        html = client(forecasts=registry).get("/forecasts").text
+
+        # Report identity, setup and aggregate metrics.
+        assert report.id in html
+        assert report.commit in html
+        assert "train 10, test 5, step 10" in html
+        assert "n_windows_total" in html
+        assert str(report.metrics["n_windows_total"]) in html
+
+        # Market cards: identity plus the evaluation note.
+        assert "Will mkt-r happen?" in html
+        assert "kalshi" in html
+        assert "mkt-r" in html
+        assert "event-mkt-r" in html
+        assert "resolved" in html
+        assert "mid-derived implied probabilities" in html
+
+        # Evaluated windows carry the recorded Brier numbers...
+        evaluated = report.markets[0].windows[1]
+        assert evaluated.brier is not None
+        assert str(evaluated.brier) in html
+        assert str(evaluated.liquidity_weighted_brier) in html
+        # ...and unresolved windows render pending, never a number.
+        # (count the rendered text, not the class attribute)
+        unresolved = report.markets[1]
+        assert all(window.brier is None for window in unresolved.windows)
+        assert html.count(">pending</span>") == 2 * len(unresolved.windows)
+
+        # Calibration bins render the model's numbers; empty bins render
+        # an en dash, never "None".
+        populated = report.markets[0].windows[0].calibration_bins[2]
+        assert populated.count > 0
+        assert str(populated.observed_frequency) in html
+        assert "—" in html
+        assert "None" not in html
+
+        # run_forecast_report writes the artifacts; the page says so.
+        assert "Artifacts present: report.json, windows.csv, calibration.csv." in html
+
+    def test_forecast_missing_artifacts_render_typed_state(self, tmp_path) -> None:
+        registry, report = forecast_setup(tmp_path)
+        (tmp_path / "forecasts" / report.id / "calibration.csv").unlink()
+
+        html = client(forecasts=registry).get("/forecasts").text
+
+        assert "Forecast artifacts missing" in html
+        assert "calibration.csv" in html
+        assert "Artifacts present" not in html
+        # The record still renders.
+        assert report.id in html
+        assert "pending" in html
+
+    def test_forecast_reports_render_newest_first(self, tmp_path) -> None:
+        registry = _forecast_registry(tmp_path)
+        older = _forecast_report(market_id="mkt-a", created_at=_EVENT_T0 + _HOUR)
+        newer = _forecast_report(market_id="mkt-b", created_at=_EVENT_T0 + 2 * _HOUR)
+        registry.record(older)
+        registry.record(newer)
+
+        html = client(forecasts=registry).get("/forecasts").text
+
+        assert html.index(newer.id) < html.index(older.id)
+        # record() writes no artifacts: the typed state renders.
+        assert "Forecast artifacts missing" in html

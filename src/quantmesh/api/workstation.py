@@ -1,4 +1,4 @@
-"""Local frontend workstation (M9, issues #51-#53).
+"""Local frontend workstation (M9, issues #51-#54).
 
 `create_workstation_app` supersets the M1 read-only `create_app` with
 server-rendered Jinja2 pages: a strict route -> template -> data
@@ -11,16 +11,25 @@ Construction is fail-closed on the bind surface: a non-loopback
 `settings.workstation_host` is a typed `WorkstationConfigError` — the
 workstation is a local surface, never env-escalable (ADR-0011 decision
 2, the ADR-0010 loopback discipline). The data plane is read-only
-except two named surfaces (ADR-0011 decisions 3 and 5): the watchlist
+except two named surfaces (ADR-0011 decisions 3 and 6): the watchlist
 store (the one UI-owned write surface, on the ADR-0006 discipline) and
 the paper-level kill switch (Phase E). Page providers receive injected
-read surfaces — account, marks, markets, watchlist, and the research
-registries (experiments, promotions, reports) — and render them as
-data; no provider is ever constructed inside a route. Research
-registries are optional injections: an unbound registry renders a
-typed empty state, and a promotion evidence link that cannot resolve
-renders a typed "missing evidence" state — never a crash
-(ADR-0011 decision 4).
+read surfaces — account, marks, markets, watchlist, the research
+registries (experiments, promotions, reports) and the forecast report
+registry (Phase D) — and render them as data; no provider is ever
+constructed inside a route. Research registries are optional
+injections: an unbound registry renders a typed empty state, a
+promotion evidence link that cannot resolve renders a typed "missing
+evidence" state, an unresolved forecast window renders "pending", and
+a missing forecast artifact renders a typed state — never a crash and
+never a fabricated number (ADR-0011 decisions 4-5).
+
+Portfolio screens (positions, orders, P&L) render the M1 surface:
+positions compute unrealized P&L exactly like the `/positions`
+endpoint, orders serialize through the same `_order_summary` the JSON
+endpoint uses, and the P&L page mirrors `/pnl`. The screens live under
+`/portfolio/*` so they never shadow the M1 JSON routes on the same app
+object (ADR-0011 decision 5).
 """
 
 from __future__ import annotations
@@ -35,8 +44,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from quantmesh import __version__
-from quantmesh.api.app import create_app
+from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.watchlist import WatchlistError, WatchlistStore
+from quantmesh.domain.orders import Order
+from quantmesh.events.forecast import ForecastReportRegistry, forecast_artifact_paths
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.research.drift import PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
@@ -67,6 +78,7 @@ class PageContext:
     experiments: ExperimentRegistry | None = None
     promotions: PromotionLedger | None = None
     reports: ReportRegistry | None = None
+    forecasts: ForecastReportRegistry | None = None
 
 
 @dataclass(frozen=True)
@@ -247,6 +259,179 @@ def _promotions_provider(context: PageContext) -> dict[str, object]:
     return {"promotions": promotions, "registry_bound": ledger is not None}
 
 
+def _positions_provider(context: PageContext) -> dict[str, object]:
+    """Portfolio positions over the M1 surface: unrealized P&L computed
+    exactly like the `/positions` endpoint, missing marks named."""
+    marks = dict(context.marks)
+    positions = [
+        {
+            "key": key,
+            "instrument": position.instrument.model_dump(mode="json"),
+            "quantity": position.quantity,
+            "average_cost": position.average_cost,
+            "realized_pnl": position.realized_pnl,
+            "unrealized_pnl": (
+                (marks[key] - position.average_cost) * position.quantity
+                if key in marks
+                else None
+            ),
+        }
+        for key, position in context.account.positions.items()
+    ]
+    return {"positions": positions}
+
+
+def _order_view(order: Order) -> dict:
+    """One order as render data: the exact M1 summary plus its fills.
+
+    `_order_summary` is the same function the JSON `/orders` endpoint
+    serializes with, so the HTML screen and the API surface cannot
+    drift apart (ADR-0011 decision 1); fills are the order's own
+    fill events, extracted here for the screen.
+    """
+    view = _order_summary(order)
+    view["fills"] = [
+        event for event in view["events"] if event["event_type"] == "fill"
+    ]
+    return view
+
+
+def _orders_provider(context: PageContext) -> dict[str, object]:
+    orders = [
+        _order_view(order)
+        for order in sorted(
+            context.account.orders.values(),
+            key=lambda item: (item.created_at, item.order_id),
+            reverse=True,
+        )
+    ]
+    return {"orders": orders}
+
+
+def _pnl_provider(context: PageContext) -> dict[str, object]:
+    """Account summary and P&L, mirroring the `/pnl` endpoint exactly:
+    equity-based numbers consume only the injected marks, and positions
+    without a mark are named so understated equity is never silent."""
+    account = context.account
+    marks = dict(context.marks)
+    return {
+        "starting_cash": (
+            account.starting_cash if account.starting_cash is not None else account.cash
+        ),
+        "cash": account.cash,
+        "total_fees": account.total_fees,
+        "order_sequence": account.order_sequence,
+        "realized_pnl": account.realized_pnl,
+        "unrealized_pnl": account.unrealized_pnl(marks),
+        "equity": account.equity(marks),
+        "total_pnl": account.total_pnl(marks),
+        "marks": marks,
+        "missing_marks": sorted(
+            key for key in account.positions if key not in marks
+        ),
+    }
+
+
+def _window_view(window: object) -> dict[str, object]:
+    """One evaluation window as render data. Unresolved windows keep
+    ``brier=None`` — the template renders "pending", never a number."""
+    return {
+        "index": window.index,
+        "train_end": window.train_end.isoformat(),
+        "test_start": window.test_start.isoformat(),
+        "test_end": window.test_end.isoformat(),
+        "brier": window.brier,
+        "liquidity_weighted_brier": window.liquidity_weighted_brier,
+        "n_observations": window.n_observations,
+        "n_resolved": window.n_resolved,
+        "calibration_bins": [
+            {
+                "bin": bin_row.bin,
+                "lo": repr(bin_row.lo),
+                "hi": repr(bin_row.hi),
+                "count": bin_row.count,
+                "mean_prediction": bin_row.mean_prediction,
+                "observed_frequency": bin_row.observed_frequency,
+                "brier": bin_row.brier,
+            }
+            for bin_row in window.calibration_bins
+        ],
+    }
+
+
+def _market_view(report: object, market: object) -> dict[str, object]:
+    """One market's evaluation card: identity plus the windows that
+    evaluate its implied probabilities.
+
+    A forecast report records window results, not the observation grid,
+    so a "current probability" cannot be rendered from it — the card
+    shows the evaluation of the venue's mid-derived probabilities, and
+    an unresolved window renders "pending", never a fabricated number.
+    The universe member is matched back by composite id.
+    """
+    member = next(
+        (
+            candidate
+            for candidate in report.universe
+            if f"{candidate.venue.value}:{candidate.venue_market_id}"
+            == market.market_id
+        ),
+        None,
+    )
+    windows = [_window_view(window) for window in market.windows]
+    return {
+        "market_id": market.market_id,
+        "title": member.title if member is not None else market.market_id,
+        "event_ticker": member.event_ticker if member is not None else None,
+        "venue": member.venue.value if member is not None else None,
+        "venue_market_id": member.venue_market_id if member is not None else None,
+        "expiry_at": (
+            member.expiry_at.isoformat()
+            if member is not None and member.expiry_at is not None
+            else None
+        ),
+        "resolved": bool(member.resolution) if member is not None else False,
+        "n_evaluated_windows": sum(1 for window in windows if window["brier"] is not None),
+        "windows": windows,
+    }
+
+
+def _forecast_view(registry: ForecastReportRegistry, report: object) -> dict[str, object]:
+    """One forecast report as render data: setup, aggregate metrics, the
+    per-market cards and the artifact state on disk. A report whose
+    artifacts are missing renders a typed state naming the absent files
+    — the record still renders."""
+    paths = forecast_artifact_paths(registry.root, report)
+    present = {name: path.exists() for name, path in paths.items()}
+    return {
+        "id": report.id,
+        "commit": report.commit,
+        "created_at": report.created_at.isoformat(),
+        "window_spec": {
+            "train": report.window_spec.train_observations,
+            "test": report.window_spec.test_observations,
+            "step": report.window_spec.step_observations,
+        },
+        "n_bins": report.n_bins,
+        "metrics": _fmt_map(report.metrics),
+        "markets": [_market_view(report, market) for market in report.markets],
+        "artifacts_present": all(present.values()),
+        "artifacts": present,
+    }
+
+
+def _forecasts_provider(context: PageContext) -> dict[str, object]:
+    registry = context.forecasts
+    reports = []
+    if registry is not None:
+        # Newest first, id as the deterministic tie-break.
+        ordered = sorted(
+            registry.all(), key=lambda item: (item.created_at, item.id), reverse=True
+        )
+        reports = [_forecast_view(registry, report) for report in ordered]
+    return {"reports": reports, "registry_bound": registry is not None}
+
+
 # The page registry, pinned by the page-registry test (every route
 # registered, every template loadable, autoescape on, every page
 # renders through its provider). Later phases append screens here.
@@ -280,6 +465,36 @@ PAGES: tuple[Page, ...] = (
         _promotions_provider,
         "Promotions",
     ),
+    # Portfolio screens under /portfolio/* so the M1 JSON endpoints
+    # (/positions, /orders, /pnl) stay served on the same app object.
+    Page(
+        "/portfolio/positions",
+        "positions.html",
+        "QuantMesh — Positions",
+        _positions_provider,
+        "Positions",
+    ),
+    Page(
+        "/portfolio/orders",
+        "orders.html",
+        "QuantMesh — Orders",
+        _orders_provider,
+        "Orders",
+    ),
+    Page(
+        "/portfolio/pnl",
+        "pnl.html",
+        "QuantMesh — PnL",
+        _pnl_provider,
+        "P&L",
+    ),
+    Page(
+        "/forecasts",
+        "forecasts.html",
+        "QuantMesh — Forecasts",
+        _forecasts_provider,
+        "Forecasts",
+    ),
 )
 
 
@@ -296,6 +511,7 @@ def create_workstation_app(
     experiments: ExperimentRegistry | None = None,
     promotions: PromotionLedger | None = None,
     reports: ReportRegistry | None = None,
+    forecasts: ForecastReportRegistry | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -307,8 +523,9 @@ def create_workstation_app(
     symbol -> mark and is injected by the operator; `watchlist` binds
     the UI-owned watchlist store (defaults to `settings.watchlists_dir`).
     The research registries (`experiments`, `promotions`, `reports`)
-    are optional read-only injections: unbound, their pages render a
-    typed empty state (ADR-0011 decision 4).
+    and the forecast report registry (`forecasts`) are optional
+    read-only injections: unbound, their pages render a typed empty
+    state (ADR-0011 decision 4).
     """
     host = settings.workstation_host if host is None else host
     if not _is_loopback(host):
@@ -328,6 +545,7 @@ def create_workstation_app(
         experiments=experiments,
         promotions=promotions,
         reports=reports,
+        forecasts=forecasts,
     )
 
     for page in PAGES:

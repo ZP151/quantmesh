@@ -125,6 +125,47 @@ section {
   font-style: italic;
 }
 
+.missing-mark,
+.pending {
+  color: var(--danger);
+  font-style: italic;
+}
+
+.venue {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.fill-event th,
+.fill-event td {
+  background: var(--panel);
+}
+
+details {
+  margin-bottom: 0.5rem;
+}
+
+.forecast-market {
+  border-left: 3px solid var(--border);
+  border-radius: 0;
+  margin-top: 1rem;
+}
+
+dl div {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.15rem 0;
+}
+
+dt {
+  font-weight: 600;
+  min-width: 12rem;
+}
+
+dd {
+  margin: 0;
+}
+
 footer {
   font-size: 0.8rem;
   opacity: 0.7;
