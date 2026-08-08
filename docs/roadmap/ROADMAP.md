@@ -88,7 +88,7 @@ Exit criteria:
 - A pinned dataset can reproduce an experiment on a clean checkout.
 - Missing, duplicated and out-of-order observations are detected.
 
-### M4 — Equity workflow with Moomoo (`NEXT`, start per frontier item 9 in `docs/goals/ACTIVE.md`)
+### M4 — Equity workflow with Moomoo (`ACTIVE`, plan: `docs/iterations/0006-m4-moomoo-equity-workflow.md`)
 
 Outcome: research and paper-trade a small US/HK equity universe through one workflow.
 
@@ -213,7 +213,9 @@ Exit criteria:
 - Live execution can be disabled globally and per venue without model cooperation.
 - Recovery drills demonstrate no duplicate or orphaned orders.
 
-## Current next slice
+## Current delivery plan
 
-M3 (data foundation and experiment registry) is planned in `docs/iterations/0005-m3-data-foundation.md` as a six-slice chain: normalized market-data schemas, Parquet/DuckDB lake with quality checks, dataset manifests, provider registry (fixture-only adapters), experiment registry, then scheduled ingestion and gap detection. M2's slice chain (PRs #7-#11) merged to main 2026-08-07; start M3 with issue #14 (normalized market-data schemas).
-
+M4 is active. Its implementation detail is versioned in
+`docs/iterations/0006-m4-moomoo-equity-workflow.md`; the long-running goal
+governs outcomes and safety boundaries, while that iteration document governs
+phases, tickets, contracts, reuse, evidence, and the simulated-account gate.

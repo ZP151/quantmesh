@@ -29,15 +29,28 @@ class OrderEventType(StrEnum):
 
 
 class Fill(BaseModel):
-    """A venue-confirmed or simulator-generated execution event."""
+    """A venue-confirmed or simulator-generated execution event.
+
+    ``broker_fill_id`` stamps the venue's own fill/deal identifier at
+    adoption time, so fill-level reconciliation can map deals to internal
+    fills by id (ADR-0006 decision 4). ``fee`` is the venue-reported
+    execution fee in currency units, when the venue reports one.
+    """
 
     timestamp: datetime
     quantity: float = Field(gt=0)
     price: float = Field(gt=0)
+    broker_fill_id: str | None = None
+    fee: float | None = Field(default=None, ge=0)
 
 
 class OrderEvent(BaseModel):
-    """One append-only lifecycle record; state is derived from this history."""
+    """One append-only lifecycle record; state is derived from this history.
+
+    Fill events carry the venue's own deal id and fee when the venue
+    reported them, so fills can be re-derived from the history for
+    fill-level reconciliation (ADR-0006 decision 4).
+    """
 
     sequence: int
     timestamp: datetime
@@ -46,6 +59,8 @@ class OrderEvent(BaseModel):
     quantity: float | None = None
     price: float | None = None
     reason: str | None = None
+    broker_fill_id: str | None = None
+    fee: float | None = Field(default=None, ge=0)
 
 
 class Order(BaseModel):
@@ -59,6 +74,7 @@ class Order(BaseModel):
     limit_price: float | None = Field(default=None, gt=0)
     created_at: datetime
     client_order_id: str | None = None
+    broker_order_id: str | None = None
     status: OrderStatus = OrderStatus.PENDING
     filled_quantity: float = Field(default=0, ge=0)
     events: list[OrderEvent] = Field(default_factory=list)
@@ -95,18 +111,29 @@ class Order(BaseModel):
         return max(0.0, self.quantity - self.filled_quantity)
 
     @property
-    def average_fill_price(self) -> float | None:
-        fills = [
-            (event.quantity, event.price)
+    def fills(self) -> list[Fill]:
+        """The order's fill history, re-derived from its events."""
+        return [
+            Fill(
+                timestamp=event.timestamp,
+                quantity=event.quantity,
+                price=event.price,
+                broker_fill_id=event.broker_fill_id,
+                fee=event.fee,
+            )
             for event in self.events
             if event.event_type is OrderEventType.FILL
             and event.quantity is not None
             and event.price is not None
         ]
+
+    @property
+    def average_fill_price(self) -> float | None:
+        fills = self.fills
         if not fills:
             return None
-        notional = sum(quantity * price for quantity, price in fills)
-        return notional / sum(quantity for quantity, _ in fills)
+        notional = sum(fill.quantity * fill.price for fill in fills)
+        return notional / sum(fill.quantity for fill in fills)
 
 
 class OrderStateMachine:
@@ -180,5 +207,7 @@ class OrderStateMachine:
             quantity=fill.quantity if fill is not None else None,
             price=fill.price if fill is not None else None,
             reason=reason,
+            broker_fill_id=fill.broker_fill_id if fill is not None else None,
+            fee=fill.fee if fill is not None else None,
         )
         return order.model_copy(update={"status": status, "events": [*order.events, event]})
