@@ -1,10 +1,11 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-08-08
+Last updated: 2026-08-09
 
 ## Status legend
 
 - `DONE`: exit criteria are met and evidence is recorded.
+- `REOPENED`: code landed, but operator evidence disproved an exit criterion.
 - `ACTIVE`: current iteration target.
 - `NEXT`: committed near-term scope.
 - `LATER`: sequenced but not committed to the next iteration.
@@ -177,7 +178,7 @@ Exit criteria:
 - AI output is schema-validated and cannot bypass risk APIs.
 - Research claims link to source data and reproducible experiments.
 
-### M9 — Local frontend workstation (`DONE`, merged via PR #70)
+### M9 — Local frontend workstation (`REOPENED`, implementation merged via PR #70)
 
 Outcome: operate research, paper portfolios and risk from a local web interface.
 
@@ -194,6 +195,10 @@ Exit criteria:
 
 - Core paper workflow is usable without direct database or CLI access.
 - Critical controls pass keyboard, accessibility and end-to-end tests.
+
+Operator evidence on 2026-08-09 showed that route-level E2E coverage did not
+prove these product criteria: startup state was empty and the minimally styled
+HTML shell did not expose a usable end-to-end workflow. M11 owns the correction.
 
 ### M10 — Guarded live execution and hardening (`DONE`, merged via PR #71)
 
@@ -215,13 +220,34 @@ Exit criteria:
 
 ## Current delivery plan
 
-M0 through M10 are complete and merged. Iteration 0013 is active and moves
-the integrated product to `v0.1.0-rc1` for local operator acceptance. The
-release-critical path is documentation truth-sync, dependency-audit trigger
-hardening, consistent release metadata, a one-command clean-checkout
-verification path, release notes and an RC tag. Architecture deepening follows
-the RC baseline in small behavior-preserving slices: durable JSONL persistence
-first, cross-venue reconciliation second, then numeric-policy characterization
-and an ADR before any representation change. Moomoo simulated-account and
-Hyperliquid testnet drills remain optional post-merge enablement gates; they do
-not enable live or mainnet operation.
+### M11 — Interactive workstation acceptance (`ACTIVE`)
+
+Outcome: turn the RC1 engineering shell into a populated, coherent and
+operator-testable local product and publish `v0.1.0-rc2`.
+
+Deliverables:
+
+- React/TypeScript/Vite frontend selectively reusing customized shadcn/ui
+- One-process packaged launch through the existing FastAPI application
+- Deterministic, labeled and resettable cross-market demo runtime
+- Consolidated operator navigation and a complete research-to-paper-trade flow
+- Provider health, one credential-free public feed and validated file import
+- Data provenance/freshness, actionable degraded states and visual/a11y review
+- Clean-checkout RC2 packaging and human browser acceptance evidence
+
+Exit criteria:
+
+- A fresh user can exercise the full demo paper workflow without CLI, database
+  access, credentials or direct API navigation.
+- The application has coherent responsive product styling, populated business
+  state, keyboard access and explicit loading/empty/error behavior.
+- RC2 passes the release gate and is explicitly accepted by the operator before
+  any `v0.1.0` promotion.
+
+M0 through M10 and the RC1 engineering release are merged. Iteration 0014 and
+M11 are active because operator evidence invalidated M9's usability exit
+criterion. RC2 product acceptance is the critical path; JSONL persistence,
+cross-venue reconciliation and numeric-policy deepening return to the backlog
+unless they block the accepted workflow. Moomoo simulated-account and
+Hyperliquid testnet drills remain optional gates and do not enable live or
+mainnet operation.

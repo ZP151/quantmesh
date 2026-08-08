@@ -165,6 +165,7 @@ class ManifestWriter:
         license: str,
         revision: int | None = None,
         rewritten: frozenset[tuple[str, Venue, str]] = frozenset(),
+        generated_at: datetime | None = None,
     ) -> DatasetManifest:
         """Scan the dataset's shards and write a fresh manifest.
 
@@ -183,6 +184,8 @@ class ManifestWriter:
         recovery, not silent overwrite. Concurrent generation is not
         supported — the last writer wins — but a unique temp file per
         call means a race can never corrupt or mix manifest bytes.
+        ``generated_at`` defaults to the current time; pin it explicitly
+        when the manifest must be byte-reproducible (demo seed, replay).
         """
         validate_dataset_name(dataset)
         if not (self.root / dataset).is_dir():
@@ -203,7 +206,7 @@ class ManifestWriter:
             timezone="UTC",
             license=license,
             revision=revision,
-            generated_at=datetime.now(UTC),
+            generated_at=generated_at or datetime.now(UTC),
             coverage=[
                 SeriesCoverage(
                     interval=interval,

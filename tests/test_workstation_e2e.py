@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 import pytest
 import uvicorn
 
+from quantmesh.api import workstation
 from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.api.workstation import create_workstation_app
 from quantmesh.domain.models import (
@@ -37,6 +38,25 @@ pytest.importorskip(
     "playwright.sync_api",
     reason="playwright is not installed (dev-only e2e extra: pip install -e '.[dev,e2e]')",
 )
+
+# This suite walks the RC1 Jinja2 pages (ADR-0013 decision 6, the
+# rollback switch): the SPA is the default surface now, so the walk
+# pins legacy mode for the whole module. The SPA walk lands with the
+# app shell in Phase C, and the Phase E Playwright pass exercises the
+# demo workflow in the browser.
+workstation.settings.legacy_ui = True
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _restore_legacy_ui() -> None:
+    """The RC1 E2E exercises the legacy Jinja2 surface. Re-pin the flag
+    at setup: an autouse session fixture from an earlier-imported module
+    (test_spa_e2e.py) runs after this module's import-time pin and would
+    otherwise leave the SPA mounted on the E2E port. Restore the default
+    once the module's tests are done."""
+    workstation.settings.legacy_ui = True
+    yield
+    workstation.settings.legacy_ui = False
 
 HOST = "127.0.0.1"
 PORT = 8642
@@ -111,8 +131,13 @@ def base_url(tmp_path_factory) -> str:
         thread.join(timeout=15)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def browser():
+    """Module scope: an open ``sync_playwright()`` context keeps its
+    asyncio loop running on the main thread, which makes any *later*
+    ``sync_playwright()`` entry raise "Sync API inside the asyncio
+    loop". Closing the context with this module keeps later E2E
+    modules safe (see the identical fixture in test_spa_e2e.py)."""
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:

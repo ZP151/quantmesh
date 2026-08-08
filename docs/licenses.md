@@ -121,6 +121,62 @@ fails loudly otherwise.
   CI security job cover the full release closure, not just
   `.[dev,research]`.
 
+## Project-scoped development skills
+
+These agent-development resources are vendored documentation/tools and are not
+part of the Python runtime dependency closure:
+
+- `Leonxlnx/taste-skill` at
+  `e988add20dab0fa97d7a76781c48961c8184288e`, MIT. The upstream license is
+  preserved in `docs/third-party/taste-skill-LICENSE`.
+- `pbakaus/impeccable` at
+  `aee6ce9352b842217b3f57c78296a7a4fa35a7f3`, Apache-2.0. The repository root
+  carries the Apache-2.0 license and the upstream notice is preserved in
+  `docs/third-party/impeccable-NOTICE.md`.
+
+## Frontend npm closure (Phase E, checked 2026-08-09)
+
+ADR-0013 Decision 5 budget: permissive licenses only; any dependency
+outside the adopted set enters through a license/maintenance check
+recorded here and in `docs/REUSE_MATRIX.md`. The check: `npm audit`
+for advisories plus an allowlist scan of `package-lock.json`
+(`node -e` walk of `lock.packages` — no network). **624 packages**
+(lockfile v3, all platform variants included), **every license
+allowlisted**: MIT 545, ISC 24, MPL-2.0 24, Apache-2.0 9,
+BSD-3-Clause 8, BSD-2-Clause 7, BlueOak-1.0.0 2, 0BSD 1, MIT-0 1,
+OFL-1.1 1, CC-BY-4.0 1, Python-2.0 1. No GPL/AGPL/LGPL, no
+source-available restriction, no untracked package.
+
+- MPL-2.0 ×24 is one project: `lightningcss` (Tailwind 4's CSS
+  engine) plus its platform binaries — file-level copyleft,
+  permissive for redistribution (same policy as the Python
+  allowlist's certifi/tqdm).
+- Notable non-MIT: `typescript` (Apache-2.0), `lightningcss`
+  (MPL-2.0), `@fontsource-variable/geist` (OFL-1.1 font license),
+  `caniuse-lite` (CC-BY-4.0 data), `argparse` JS port (Python-2.0),
+  `tslib` (0BSD), `dotenv`/`esprima`/`entities` (BSD-2-Clause),
+  `qs`/`source-map`/`tough-cookie`/`diff` (BSD-3-Clause),
+  `aria-query`/`xml-name-validator`/`human-signals` (Apache-2.0),
+  `isexe`/`minimatch` (BlueOak-1.0.0), `class-variance-authority`
+  (Apache-2.0), `expect-type` (Apache-2.0).
+- Phase E additions (`frontend/package.json` devDependencies):
+  `vitest` 3.2.7 (MIT), `jsdom` 26.1.0 (MIT),
+  `@testing-library/react` 16.3.2 (MIT),
+  `@testing-library/jest-dom` 6.9.1 (MIT),
+  `@testing-library/user-event` 14.6.3 (MIT) — all already present
+  in the closure scan above; recorded in `docs/REUSE_MATRIX.md`.
+- Runtime `dependencies` (direct): `react`/`react-dom` 19.2.8,
+  `react-router-dom` 7.18.2, `@tanstack/react-query` 5.101.4,
+  `@base-ui/react` 1.7.0, `tailwindcss` 4.3.3 + `@tailwindcss/vite`,
+  `tw-animate-css`, `class-variance-authority`, `clsx`,
+  `tailwind-merge`, `lucide-react`, `shadcn` 4.16.2 (CLI),
+  `@fontsource-variable/geist`, `@rolldown/binding-win32-x64-msvc`
+  (Vite's bundler binary) — all permissive (MIT / Apache-2.0 /
+  BSD-3-Clause / OFL-1.1 as scanned above).
+- Maintenance: `npm audit` runs as part of the release gate; a
+  dependency change beyond patch level triggers a re-check of this
+  section and the lockfile scan.
+
 ## Inventory (generated 2026-08-08; 64 packages in the release
 closure `.[dev,research,e2e]`)
 

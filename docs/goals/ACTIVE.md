@@ -1,81 +1,93 @@
 # Active Goal
 
 - Status: active
-- Objective: publish a reproducible `v0.1.0-rc1` for local operator
-  acceptance, then harden the highest-leverage pre-live architecture modules
-  without widening product scope
-- Started: 2026-08-08
+- Objective: deliver `v0.1.0-rc2` as a populated, coherent and browser-testable
+  local quantitative workstation, then obtain explicit operator acceptance
+- Started: 2026-08-09
 - Active iteration:
-  `docs/iterations/0013-v0.1.0-rc1-and-architecture-hardening.md`
-- Branch: `main` at the starting checkpoint; new work must branch from
-  `origin/main`
-- Pull request: none at the starting checkpoint
-- GitHub frontier: zero open issues and zero open pull requests at the
-  starting checkpoint
-- Blockers: none external; iteration 0013 Phase B resolved the ambient
-  `.venv` license drift with the deterministic release-closure contract
-  (ambient environments now fail the gate with a precise message)
+  `docs/iterations/0014-v0.1.0-rc2-interactive-product-acceptance.md`
+- Branch: `0014-rc2-product-acceptance`, based on `origin/main`; RC1 publication
+  checkpoint `0fea221` was preserved as cherry-pick `e0f9c3d`
+- Pull request: none; solo fast lane authorizes one integration PR for RC2
+- Blockers: none external for deterministic demo and UI work
 
 ## Current state
 
-M0-M10 are complete and merged through PRs #65-#71; PR #72 fixed
-PYSEC-2026-1845; PR #73 recorded clean-checkout release-candidate
-verification. Iteration 0013 Phase A-C are done on
-`release/v0.1.0-rc1` (from `origin/main` @ `5708e72`): package
-metadata `0.1.0rc1`, the closure-deterministic license gate and
-audit-lock contract, the repo golden-path walk and the one-command
-clean-checkout release gate — `python tools/release_gate.py`
-PASSED on `206fc49` (1801 tests, golden path 53/53, clean clone
-proof, temp root removed).
-
-The product is a fixture-verified local workstation. It includes normalized
-market data and a local lake, reproducible research and forecasts, paper
-execution, Moomoo and Hyperliquid adapters, prediction-market intelligence,
-local AI research, portfolio/risk controls, a frontend workstation, recovery,
-audit and guarded enablement. No external live operation is enabled.
-
-## Last verified baseline
-
-- Fresh clone of main at `e259341`.
-- `pip install -e ".[dev,research,e2e]"`: passed.
-- Full suite: 1,790 passed, 0 failed, 0 skipped in 385 seconds.
-- Workstation/E2E/ingestion rerun: 135 passed.
-- Golden path: 51/51 passed, including fixture ingestion, lake manifests,
-  research/forecast artifacts, internal paper execution, all 13 workstation
-  screens over loopback, restart recovery and audit-ledger rereads.
-- License review and Ruff: passed.
-- CI and Security: green after the dependency advisory fix.
+`v0.1.0-rc1` is published at `fb37fcd` and remains the immutable engineering
+baseline. Its clean-checkout release gate, 1,801-test suite, 53/53 golden path,
+CI and Security checks passed. Human browser review did not accept it as a
+product release: the server-rendered UI is minimally styled, startup state is
+empty, raw APIs occupy primary navigation and no demo/provider/import path
+makes the business workflow directly testable. Do not promote RC1 to
+`v0.1.0`.
 
 ## Immediate frontier
 
-1. Open the one RC PR from `release/v0.1.0-rc1` (Phase A-C + release
-   notes), wait for CI (release-contract tests on the PR) and the
-   Security job (fires on the main push), then squash-merge with the
-   standing authority, verify `origin/main` and tag the exact commit
-   `v0.1.0-rc1`.
-2. Hand the operator the acceptance checklist in
-   `docs/release-notes/v0.1.0-rc1.zh-CN.md` (install/start/demo/
-   stop-reset/safety/limitations + `python tools/release_gate.py`).
-3. After the RC tag is immutable, deepen architecture in this order:
-   durable JSONL persistence, cross-venue reconciliation, then
-   numeric-policy characterization plus ADR, one short-lived branch
-   per slice. Runtime assembly remains secondary.
+1. ~~Approve ADR-0013 through implementation evidence~~ (done, checkpoint
+   bfa097c): the SPA spike is served from the packaged bundle with the
+   rollback switch, `/api` double mount and a green 1811-test suite.
+2. ~~Build deterministic `--demo` runtime assembly with provenance, freshness,
+   reset/replay and representative cross-market/research/paper/risk/audit
+   data.~~ (done, Phase B boundary): `src/quantmesh/demo/` seeds a labeled
+   deterministic root under an operator-selected path — real fixture-provider
+   market data with a reproducible cross-market cluster, forecast/report/
+   experiment/promotion/alert/citation/audit surfaces through the public
+   services, byte-identical replay and marker-guarded reset, provenance
+   contract in `/api/demo/status` and response headers; `tests/test_demo.py`
+   18/18 green.
+3. ~~Deliver one browser tracer bullet from market evidence to paper fill,
+   portfolio, risk and audit before migrating the remaining legacy pages.~~
+   (done, Phase C boundary): the SPA shell, command palette and responsive
+   navigation are live, the full research→paper-order→fill→position/P&L→
+   risk/audit loop was verified over HTTP end to end (including kill-switch
+   409, idempotent replay and reset), all 12 legacy routes 302 to `/app`,
+   and the backend suite is 1,840/1,840 green.
+4. ~~Add one public-data connector path and validated file import~~ (done,
+   Phase D boundary): `src/quantmesh/demo/datalink.py` adds a 5-connector
+   diagnostics panel, a credential-free testnet-pinned Hyperliquid l2Book
+   path with rate-limit retry, `.datalink` caching, provenance and labeled
+   synthetic fallback, and CSV/JSON/Parquet import with preview, mapping,
+   per-row rejection reasons and `operator-import` manifests — missing
+   software/credentials/network are instructive states, never blank pages.
+   `tests/test_datalink.py` 20/20 green; live smoke on 8794 verified the
+   fallback path, rejections and reset isolation.
+5. ~~Complete bounded design, accessibility, E2E and clean-checkout
+   verification~~ (done, Phase E boundary): 18/18 frontend unit tests
+   (vitest), 5/5 SPA Playwright E2E, Impeccable one-pass detector
+   `[]` with a programmatic visual audit clean at 28 route×viewport
+   combos (0 overflow/clip/contrast/focus failures), real Tab-press
+   keyboard walks, WCAG 2.2 AA contrast, non-color status cues,
+   `prefers-reduced-motion` support, compact/desktop/tablet layouts,
+   and the frontend build (`npm ci` → bundle-freshness check →
+   vitest) added to the clean-checkout release gate; release notes
+   (EN + zh-CN) written. Evidence in iteration 0014 Checkpoint 4.
+6. Run the full release gate from a clean checkout, merge the single
+   RC2 PR, tag the verified merge commit `v0.1.0-rc2`, reproduce the
+   install in an isolated directory and hand the operator the browser
+   acceptance checklist — promote to `v0.1.0` only after explicit
+   human acceptance.
 
-## External gates
+## Standing authority
 
-Moomoo OpenD simulated-account and Hyperliquid testnet drills remain optional
-operator-dependent validation. They do not block the local fixture-verified
-RC and do not authorize mainnet/live operation.
+Use the solo-developer fast lane in iteration 0014: one integration branch,
+tested commits at phase boundaries and one final PR. Do not pause for routine
+issue creation, branch pushes or merging a green RC2 PR. Preserve protected
+main, branch from `origin/main`, never force-push, and record every checkpoint
+in the iteration file. Major language, database, financial representation or
+process-boundary changes still require an ADR.
 
-Real-money trading, mainnet wallet signing, live broker orders, credentials,
-paid infrastructure and AI order authority require explicit human approval.
-Do not create, request, store or use any such authority while pursuing this
-goal.
+## External and safety gates
+
+Moomoo OpenD simulated access and Hyperliquid testnet drills are optional
+operator-dependent checks. Real-money orders, mainnet wallet signing,
+credentials, paid infrastructure and AI order authority require separate
+explicit approval and are outside this goal. Demo and imported data must be
+labeled and isolated from non-demo operator state.
 
 ## Resume instruction
 
-Run `/goal` with the long-running command supplied for iteration 0013. Read
-this file, the active iteration and `git status` first. Prioritize getting the
-RC into the operator's hands; do not let post-RC refactors delay publishing a
-green, reproducible candidate. Record implementation detail and checkpoint
-evidence in iteration 0013 and keep this file limited to the current frontier.
+Run `/goal`, then read this file, `PRODUCT.md`, iteration 0014, the roadmap,
+relevant ADRs, Git state and GitHub state. Continue through the documented
+phases until RC2 is tagged and the isolated browser acceptance checklist is
+ready for the operator. Implementation details and evidence belong in the
+iteration record; keep this file limited to current truth and frontier.

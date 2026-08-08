@@ -1,0 +1,315 @@
+"""The deterministic demo runtime (iteration 0014 Phase B).
+
+``create_demo_app`` assembles a full workstation app over one labeled
+demo root: it seeds the root on first start (or loads an existing one),
+binds every injected surface — account, marks, markets, watchlist,
+registries, ledgers — to files under that root (never the operator's
+data dirs), and attaches the demo control surface:
+
+- ``GET /api/demo/status`` — the provenance contract: mode, marker,
+  scenario, per-surface source/synthetic/updated_at/rows, health. All
+  deterministic, all derived from the root's own ``provenance.json``.
+- ``POST /api/demo/reset`` — marker-guarded wipe and re-seed through
+  ``reset_demo_root``; the fresh assembly replaces ``app.state`` in
+  place, so the JSON surface, every page and the kernel gate agree on
+  the new state (the kill-switch precedent, ADR-0012 decision 3). A
+  root without the marker is refused — the demo runtime never touches
+  a non-demo root.
+- Provenance headers on every response while the runtime is attached:
+  ``X-QuantMesh-Source: demo``, ``X-QuantMesh-Synthetic: true`` and
+  the fixed scenario anchor, so a mixed client sees the label without
+  asking.
+
+Both endpoints are double-mounted at the root and under ``/api`` like
+the observability router (one registration, ``api_`` operation id
+prefix), so the SPA and the RC1 contract call the same handlers.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, replace
+from pathlib import Path
+from typing import Literal
+
+from fastapi import APIRouter, FastAPI, HTTPException, Request
+from pydantic import BaseModel, Field
+
+from quantmesh.api.app import _order_summary
+from quantmesh.api.workstation import (
+    PageContext,
+    _json_guard_origin,
+    create_workstation_app,
+)
+from quantmesh.demo.datalink import DatalinkService, datalink_router
+from quantmesh.demo.manifest import MARKER_NAME, DemoScenario
+from quantmesh.demo.seeder import (
+    DemoRootError,
+    DemoSeeded,
+    is_demo_root,
+    load_demo_root,
+    reset_demo_root,
+    seed_demo_root,
+)
+from quantmesh.domain.models import OrderRequest, Quote, Side
+from quantmesh.settings import settings
+
+
+class _DemoOrderBody(BaseModel):
+    """One demo paper order: the SPA's simulated submit (the Phase C
+    tracer bullet). Gated exactly like the workstation's other write
+    surfaces and filled through the seeded provider pipeline, so the
+    browser places an order through the real domain services — never a
+    UI-only fixture. ``idempotency_key`` is the M10 replay guard: a
+    retry with the same key returns the original order, never a
+    duplicate."""
+
+    venue: str
+    symbol: str
+    side: Literal["BUY", "SELL"]
+    quantity: float = Field(gt=0)
+    limit_price: float | None = Field(default=None, gt=0)
+    idempotency_key: str | None = None
+
+
+@dataclass
+class DemoRuntime:
+    """The mutable runtime handle: the root, the scenario it was seeded
+    with (re-loaded from provenance on an existing root), and the
+    current in-memory assembly. ``seeded`` is replaced on reset; the
+    root and scenario are the identity of the demo session."""
+
+    root: Path
+    scenario: DemoScenario
+    seeded: DemoSeeded
+
+
+def _status(runtime: DemoRuntime) -> dict[str, object]:
+    """The provenance contract: everything derives from the root's own
+    records, never from the wall clock."""
+    seeded = runtime.seeded
+    return {
+        "mode": "demo",
+        "root": str(runtime.root),
+        "marker": MARKER_NAME,
+        "source": "demo",
+        "synthetic": True,
+        "scenario": seeded.provenance["scenario"],
+        "surfaces": seeded.provenance["surfaces"],
+        "last_update": runtime.scenario.anchor.isoformat(),
+        "health": {"status": "ok", "seed": runtime.scenario.seed},
+    }
+
+
+def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
+    """Swap every injected surface for the fresh assembly, in place.
+
+    Replaces ``app.state.account``, ``app.state.marks`` and the page
+    context so the M1 JSON routes, every page provider and the kernel
+    gate read the reset state (the kill-switch precedent). All
+    registries stay bound to the same files under the demo root, which
+    reset rewrote in place.
+    """
+    app.state.account = seeded.account
+    app.state.marks = seeded.marks
+    app.state.page_context = PageContext(
+        account=seeded.account,
+        marks=seeded.marks,
+        markets=seeded.markets,
+        watchlist=seeded.watchlist,
+        experiments=seeded.experiments,
+        promotions=seeded.promotions,
+        reports=seeded.reports,
+        forecasts=seeded.forecasts,
+        alerts=seeded.alerts,
+        journal=seeded.journal,
+        mappings=seeded.mappings,
+        decisions=seeded.decisions,
+        documents=seeded.documents,
+        hl_posture=None,
+        enablement=seeded.enablement,
+    )
+
+
+def demo_router() -> APIRouter:
+    """The demo control surface: status + marker-guarded reset.
+
+    Mounted at the root (``/demo/status``) and under ``/api`` (the SPA
+    surface, ``/api/demo/status``) like the observability router.
+    Handlers read ``request.app.state.demo``, so both mounts share the
+    same runtime handle.
+    """
+    router = APIRouter()
+
+    @router.get("/demo/status")
+    def demo_status(request: Request) -> dict[str, object]:
+        runtime = getattr(request.app.state, "demo", None)
+        if runtime is None:
+            raise HTTPException(status_code=404, detail="no demo runtime is attached")
+        return _status(runtime)
+
+    @router.post("/demo/reset")
+    def demo_reset(request: Request) -> dict[str, object]:
+        runtime = getattr(request.app.state, "demo", None)
+        if runtime is None:
+            raise HTTPException(status_code=404, detail="no demo runtime is attached")
+        _json_guard_origin(request, "demo reset")
+        try:
+            # Reset with the scenario the root was seeded with (loaded
+            # from its provenance on restart), so a reset reproduces
+            # the exact same root — byte-identical replay.
+            seeded = reset_demo_root(runtime.root, runtime.seeded.scenario)
+        except DemoRootError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        runtime.seeded = seeded
+        _apply_seeded(request.app, seeded)
+        # The datalink session (connector probes, import sessions, the
+        # public-data cache) is part of the demo session: reset restores
+        # the pristine root, so it clears too.
+        datalink = getattr(request.app.state, "datalink", None)
+        if isinstance(datalink, DatalinkService):
+            datalink.reset()
+        return _status(runtime)
+
+    @router.post("/demo/order")
+    def demo_order(request: Request, body: _DemoOrderBody) -> dict[str, object]:
+        """One simulated paper order through the real pipeline.
+
+        The SPA tracer bullet: submit against the seeded order book's
+        touch (the providers serve the same walk the board renders),
+        through the paper account's own risk gate — a kill switch or a
+        broken limit refuses with the gate's own message. The order is
+        recorded in the seeded journal (a public service append) and
+        the fresh account replaces ``app.state`` and the page context,
+        so the JSON surface, every page and the kernel gate agree.
+        Timestamps derive from the scenario anchor, never the wall
+        clock, so a replay session can reproduce the same session.
+        Reset restores the pristine root.
+        """
+        runtime = getattr(request.app.state, "demo", None)
+        if runtime is None:
+            raise HTTPException(status_code=404, detail="no demo runtime is attached")
+        _json_guard_origin(request, "demo order")
+        context = request.app.state.page_context
+        providers = runtime.seeded.providers
+        if (body.venue, body.symbol) not in providers.universe():
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"demo order refused: {body.venue}:{body.symbol} is outside the seeded universe"
+                ),
+            )
+        instrument = providers.instrument(body.venue, body.symbol)
+        book = providers.order_books(body.venue, body.symbol)[0]
+        best_bid = book.bids[0].price if book.bids else None
+        best_ask = book.asks[0].price if book.asks else None
+        quote = Quote(
+            instrument=instrument,
+            timestamp=runtime.scenario.anchor,
+            bid=best_bid,
+            ask=best_ask,
+            last=(
+                (best_bid + best_ask) / 2
+                if best_bid is not None and best_ask is not None
+                else best_bid
+            ),
+            # The available liquidity is the depth the board renders —
+            # the matcher's "missing volume" gate needs a real number.
+            volume=sum(level.quantity for level in (*book.bids, *book.asks)),
+        )
+        result = context.account.submit(
+            OrderRequest(
+                instrument=instrument,
+                side=Side.BUY if body.side == "BUY" else Side.SELL,
+                quantity=body.quantity,
+                limit_price=body.limit_price,
+                idempotency_key=body.idempotency_key,
+            ),
+            quote,
+            now=runtime.scenario.anchor,
+        )
+        if result.rejection is not None:
+            raise HTTPException(status_code=409, detail=result.rejection)
+        # A replay returns the original order and a fresh account copy;
+        # the journal already holds it (and refuses duplicates), so only
+        # first-time submissions append.
+        if context.journal is not None and result.replay_of is None:
+            context.journal.record(result.order)
+        request.app.state.account = result.account
+        request.app.state.page_context = replace(context, account=result.account)
+        return {
+            "order": _order_summary(result.order),
+            "account": {
+                "cash": result.account.cash,
+                "equity": result.account.equity(runtime.seeded.marks),
+            },
+        }
+
+    return router
+
+
+def create_demo_app(
+    *,
+    root: Path | None = None,
+    seed: int | None = None,
+    host: str | None = None,
+) -> FastAPI:
+    """A workstation app bound to one labeled demo root.
+
+    Seeds ``root`` on first start; an existing marker-carrying root is
+    loaded (a restart is a read, never a re-seed) with its scenario
+    reconstructed from provenance, so a mismatched default seed can
+    never misread the root. Every injected surface is bound under
+    ``root`` — the operator's lake, orders, reports and other non-demo
+    dirs are never opened.
+    """
+    root = Path(root) if root is not None else Path(settings.demo_root)
+    scenario = DemoScenario(seed=seed if seed is not None else settings.demo_seed)
+    seeded = (
+        load_demo_root(root, scenario) if is_demo_root(root) else seed_demo_root(root, scenario)
+    )
+    app = create_workstation_app(
+        account=seeded.account,
+        marks=seeded.marks,
+        markets=seeded.markets,
+        watchlist=seeded.watchlist,
+        experiments=seeded.experiments,
+        promotions=seeded.promotions,
+        reports=seeded.reports,
+        forecasts=seeded.forecasts,
+        alerts=seeded.alerts,
+        journal=seeded.journal,
+        mappings=seeded.mappings,
+        decisions=seeded.decisions,
+        documents=seeded.documents,
+        enablement=seeded.enablement,
+        host=host,
+    )
+    app.state.demo = DemoRuntime(root=root, scenario=seeded.scenario, seeded=seeded)
+    router = demo_router()
+    app.include_router(router)
+    app.include_router(
+        router,
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
+    # Phase D: connector panel, the credential-free public data path and
+    # file import — mounted under /api only (the SPA's surface).
+    app.state.datalink = DatalinkService(root=root)
+    app.include_router(
+        datalink_router(),
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
+
+    @app.middleware("http")
+    async def demo_provenance_headers(request: Request, call_next):
+        """Label every response with the demo provenance while attached."""
+        response = await call_next(request)
+        runtime = getattr(request.app.state, "demo", None)
+        if runtime is not None:
+            response.headers["X-QuantMesh-Source"] = "demo"
+            response.headers["X-QuantMesh-Synthetic"] = "true"
+            response.headers["X-QuantMesh-Anchor"] = runtime.scenario.anchor.isoformat()
+        return response
+
+    return app

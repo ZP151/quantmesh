@@ -232,6 +232,24 @@ def main() -> int:
             900,
         ),
         step(
+            "npm ci (frontend deps)",
+            ["cmd", "/c", "npm", "ci"],
+            checkout / "frontend",
+            1800,
+        ),
+        step(
+            "frontend bundle current (build_frontend --check)",
+            [_venv_python(temp / "release-venv"), "tools/build_frontend.py", "--check"],
+            checkout,
+            1800,
+        ),
+        step(
+            "frontend unit tests (vitest)",
+            ["cmd", "/c", "npx", "vitest", "run"],
+            checkout / "frontend",
+            900,
+        ),
+        step(
             "full pytest suite",
             [_venv_python(temp / "release-venv"), "-m", "pytest", "-q"],
             checkout,

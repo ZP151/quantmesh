@@ -70,6 +70,17 @@ class Settings(BaseSettings):
     # JSONL on the ADR-0006 discipline.
     metrics_dir: Path = Path.home() / ".quantmesh" / "metrics"
     enablement_dir: Path = Path.home() / ".quantmesh" / "enablement"
+    # Frontend (M11, ADR-0013): the React SPA is the default operator
+    # surface. QUANTMESH_LEGACY_UI=1 mounts the RC1 Jinja2 pages again
+    # (the ADR's same-release rollback switch); unset/false/0 serves
+    # the SPA. Never env-escalable to anything else.
+    legacy_ui: bool = False
+    # Deterministic demo runtime (iteration 0014 Phase B): the labeled
+    # scenario lives under its own root, always separate from the
+    # operator's data dirs above — reset only ever writes beneath this
+    # root, and never touches a non-demo root (marker-guarded).
+    demo_root: Path = Path.home() / ".quantmesh" / "demo"
+    demo_seed: int = 20260809
 
     model_config = SettingsConfigDict(
         env_file=".env",

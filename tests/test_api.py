@@ -207,12 +207,29 @@ def test_marks_update_is_reflected() -> None:
     assert response.json()["total_pnl"] == pytest.approx(-1.0)
 
 
+def _api_routes(app) -> list[APIRoute]:
+    """Every APIRoute on the app, including those under included
+    routers (FastAPI >= 0.14x registers an include as a lazy
+    `_IncludedRouter` entry instead of flattening the routes; the
+    inner routes live on its `original_router`)."""
+    flattened = []
+    for route in app.routes:
+        if isinstance(route, APIRoute):
+            flattened.append(route)
+        elif hasattr(route, "original_router"):
+            flattened.extend(
+                item
+                for item in route.original_router.routes
+                if isinstance(item, APIRoute)
+            )
+    return flattened
+
+
 def test_api_is_read_only() -> None:
     app = create_app(account=sample_account())
     methods = {
         method
-        for route in app.routes
-        if isinstance(route, APIRoute)
+        for route in _api_routes(app)
         for method in route.methods
     }
 

@@ -1,11 +1,16 @@
-"""Local frontend workstation (M9, issues #51-#55).
+"""Local frontend workstation (M9, issues #51-#55; M11, ADR-0013).
 
 `create_workstation_app` supersets the M1 read-only `create_app` with
-server-rendered Jinja2 pages: a strict route -> template -> data
-provider registry, a shared layout with keyboard/accessibility posture
-(skip link, landmarks, visible focus, local stylesheet — no CDN), and
-static assets served by the same process. No node toolchain, no build
-step.
+the operator surface. Since ADR-0013 that surface is the React SPA by
+default: the committed bundle is served under `/app`, every legacy
+route 302s to its SPA counterpart, and `/app/{path:path}` falls
+through to `index.html` so react-router deep links work on refresh —
+no node toolchain at serve time. With `QUANTMESH_LEGACY_UI=1` the RC1
+Jinja2 pages mount instead (the ADR's same-release rollback switch): a
+strict route -> template -> data provider registry, a shared layout
+with keyboard/accessibility posture (skip link, landmarks, visible
+focus, local stylesheet — no CDN), and static assets served by the
+same process.
 
 Construction is fail-closed on the bind surface: a non-loopback
 `settings.workstation_host` is a typed `WorkstationConfigError` — the
@@ -17,7 +22,8 @@ the paper-level kill switch, a form control that flips the injected
 paper account's global flag or one venue's flag (M10 Phase C) — the
 accounting risk gate refuses new order submissions while the global
 switch or the order's venue switch is engaged, with no model
-involvement. Page providers receive injected read surfaces — account, marks,
+involvement. Both write surfaces stay registered in SPA mode: the SPA
+calls the same loopback POSTs. Page providers receive injected read surfaces — account, marks,
 markets, watchlist, the research registries (experiments, promotions,
 reports), the forecast report registry (Phase D), and the Phase E
 surfaces (the alert ledger, the audit journals — orders, mappings,
@@ -42,12 +48,14 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
+from typing import Literal
 from urllib.parse import quote, urlsplit
 
-from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi import APIRouter, FastAPI, Form, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 
 from quantmesh import __version__
 from quantmesh.ai.decisions import DecisionLog
@@ -69,6 +77,69 @@ from quantmesh.settings import settings
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 STATIC_DIR = Path(__file__).parent / "static"
+# The committed SPA bundle (ADR-0013 decision 2): vite builds with
+# base "/app/" into frontend/dist, and tools/build_frontend.py copies
+# the result here so the Python package serves it — no node runtime at
+# serve time. The bundle is part of the package data, so a missing
+# directory means a checkout predating the build.
+SPA_DIR = STATIC_DIR / "app"
+SPA_INDEX = SPA_DIR / "index.html"
+SPA_ASSETS = SPA_DIR / "assets"
+# The bundle's root-level files (vite public/) are the only non-asset
+# paths served directly; everything else under /app falls through to
+# index.html for react-router. A whitelist stays fail-closed — no
+# filesystem traversal surface on the loopback bind.
+_BUNDLE_ROOT_FILES = frozenset({"favicon.svg", "icons.svg"})
+
+# ADR-0013 decision 3: in SPA mode every legacy route 302s to the /app
+# path whose SPA screen supersedes it; react-router owns deep links
+# from there. The parameterized detail pages redirect to their SPA
+# listing until Phase C adds the real detail routes.
+LEGACY_TO_SPA: dict[str, str] = {
+    "/": "/app/",
+    "/instruments": "/app/markets",
+    "/watchlist": "/app/markets/watchlist",
+    "/experiments": "/app/research/experiments",
+    "/promotions": "/app/research/promotions",
+    "/forecasts": "/app/research/forecasts",
+    "/portfolio/positions": "/app/trading/positions",
+    "/portfolio/orders": "/app/trading/orders",
+    "/portfolio/pnl": "/app/trading/pnl",
+    "/risk": "/app/risk",
+    "/audit": "/app/ops/audit",
+    "/kill-switch/control": "/app/ops/kill-switch",
+    "/enablement": "/app/ops/enablement",
+}
+
+
+def _spa_missing_page() -> str:
+    """The instructive 503 body served when the SPA bundle is absent.
+
+    The bundle is committed to the package, so a missing bundle means
+    the checkout predates the frontend build (or the package was
+    trimmed). Name the recovery paths: build once, or set
+    QUANTMESH_LEGACY_UI=1 to remount the RC1 pages from this same
+    release. Never a blank page.
+    """
+    return (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        "<title>QuantMesh — frontend bundle missing</title>"
+        "<style>body{font-family:system-ui,sans-serif;max-width:44rem;"
+        "margin:3rem auto;padding:0 1rem;line-height:1.5}"
+        "code{background:#f2f2f2;padding:.1em .35em;border-radius:4px}"
+        "</style></head><body>"
+        "<h1>Frontend bundle missing</h1>"
+        "<p>This workstation serves the QuantMesh web app (ADR-0013), but "
+        f"<code>{SPA_DIR}</code> does not contain a build. The bundle is "
+        "committed to the package, so this usually means the checkout "
+        "predates the frontend build.</p>"
+        "<p>Recovery:</p><ul>"
+        "<li>Run <code>python tools/build_frontend.py</code> and restart.</li>"
+        "<li>Or set <code>QUANTMESH_LEGACY_UI=1</code> and restart to "
+        "remount the RC1 server-rendered pages from this same release "
+        "(the ADR-0013 rollback switch).</li>"
+        "</ul></body></html>"
+    )
 
 
 class WorkstationConfigError(ValueError):
@@ -80,9 +151,7 @@ def _is_loopback(host: str) -> bool:
     return host in {"localhost", "::1"} or host.startswith("127.")
 
 
-def _guard_origin(
-    app: FastAPI, request: Request, redirect: str, surface: str
-) -> Response | None:
+def _guard_origin(app: FastAPI, request: Request, redirect: str, surface: str) -> Response | None:
     """Refuse a write-surface POST whose Origin is present but not
     loopback (threat model T-14, docs/threat-model.md).
 
@@ -107,8 +176,7 @@ def _guard_origin(
         app,
         request,
         redirect,
-        f"{surface} POST refused: cross-origin send (Origin {origin!r} "
-        "is not loopback)",
+        f"{surface} POST refused: cross-origin send (Origin {origin!r} is not loopback)",
     )
 
 
@@ -161,10 +229,14 @@ def _overview_provider(context: PageContext) -> dict[str, object]:
             for symbol in sorted(context.markets[venue])
         ]
         venues.append({"venue": venue, "instruments": instruments})
-    watchlist_entries = [
-        {"symbol": record.symbol, "mark": _mark_for(context.markets, record.symbol)}
-        for record in sorted(context.watchlist.all(), key=lambda item: item.symbol)
-    ] if context.watchlist is not None else []
+    watchlist_entries = (
+        [
+            {"symbol": record.symbol, "mark": _mark_for(context.markets, record.symbol)}
+            for record in sorted(context.watchlist.all(), key=lambda item: item.symbol)
+        ]
+        if context.watchlist is not None
+        else []
+    )
     return {
         "account": {
             "cash": account.cash,
@@ -175,9 +247,7 @@ def _overview_provider(context: PageContext) -> dict[str, object]:
             "kill_switch": account.kill_switch,
         },
         "marks": dict(context.marks),
-        "missing_marks": sorted(
-            key for key in account.positions if key not in context.marks
-        ),
+        "missing_marks": sorted(key for key in account.positions if key not in context.marks),
         "venues": venues,
         "watchlist": watchlist_entries,
     }
@@ -264,9 +334,7 @@ def _resolve_report_links(
         try:
             report = registry.get(report_id_value)
         except ValueError:
-            links.append(
-                {"id": report_id_value, "resolved": False, "reason": "missing evidence"}
-            )
+            links.append({"id": report_id_value, "resolved": False, "reason": "missing evidence"})
             continue
         links.append(
             {
@@ -302,9 +370,7 @@ def _promotions_provider(context: PageContext) -> dict[str, object]:
                     "benchmarks": _resolve_report_links(
                         record.benchmark_report_ids, context.reports
                     ),
-                    "ablations": _resolve_report_links(
-                        record.ablation_report_ids, context.reports
-                    ),
+                    "ablations": _resolve_report_links(record.ablation_report_ids, context.reports),
                     "oos": oos,
                 }
             )
@@ -323,9 +389,7 @@ def _positions_provider(context: PageContext) -> dict[str, object]:
             "average_cost": position.average_cost,
             "realized_pnl": position.realized_pnl,
             "unrealized_pnl": (
-                (marks[key] - position.average_cost) * position.quantity
-                if key in marks
-                else None
+                (marks[key] - position.average_cost) * position.quantity if key in marks else None
             ),
         }
         for key, position in context.account.positions.items()
@@ -342,9 +406,7 @@ def _order_view(order: Order) -> dict:
     fill events, extracted here for the screen.
     """
     view = _order_summary(order)
-    view["fills"] = [
-        event for event in view["events"] if event["event_type"] == "fill"
-    ]
+    view["fills"] = [event for event in view["events"] if event["event_type"] == "fill"]
     return view
 
 
@@ -378,9 +440,7 @@ def _pnl_provider(context: PageContext) -> dict[str, object]:
         "equity": account.equity(marks),
         "total_pnl": account.total_pnl(marks),
         "marks": marks,
-        "missing_marks": sorted(
-            key for key in account.positions if key not in marks
-        ),
+        "missing_marks": sorted(key for key in account.positions if key not in marks),
     }
 
 
@@ -425,8 +485,7 @@ def _market_view(report: object, market: object) -> dict[str, object]:
         (
             candidate
             for candidate in report.universe
-            if f"{candidate.venue.value}:{candidate.venue_market_id}"
-            == market.market_id
+            if f"{candidate.venue.value}:{candidate.venue_market_id}" == market.market_id
         ),
         None,
     )
@@ -477,9 +536,7 @@ def _forecasts_provider(context: PageContext) -> dict[str, object]:
     reports = []
     if registry is not None:
         # Newest first, id as the deterministic tie-break.
-        ordered = sorted(
-            registry.all(), key=lambda item: (item.created_at, item.id), reverse=True
-        )
+        ordered = sorted(registry.all(), key=lambda item: (item.created_at, item.id), reverse=True)
         reports = [_forecast_view(registry, report) for report in ordered]
     return {"reports": reports, "registry_bound": registry is not None}
 
@@ -567,9 +624,7 @@ def _decision_view(record: object) -> dict[str, object]:
                 "source_kind": citation.source_kind,
                 "source_id": citation.source_id,
                 "span": (
-                    f"{citation.span[0]}–{citation.span[1]}"
-                    if citation.span is not None
-                    else None
+                    f"{citation.span[0]}–{citation.span[1]}" if citation.span is not None else None
                 ),
                 "href": _citation_href(citation),
             }
@@ -679,14 +734,107 @@ def _enablement_provider(context: PageContext) -> dict[str, object]:
     states = []
     if ledger is not None:
         for venue in sorted(ledger.states()):
-            states.append(
-                {"venue": venue.value, "state": ledger.state(venue).value}
-            )
+            states.append({"venue": venue.value, "state": ledger.state(venue).value})
     return {
         "states": states,
         "bound": ledger is not None,
         "gate_text": GATE_TEXT,
     }
+
+
+def _json_context(request: Request) -> PageContext:
+    """The page context every JSON route renders; a plain M1 app (no
+    workstation context) is a typed 404, never an attribute error."""
+    context = getattr(request.app.state, "page_context", None)
+    if context is None:
+        raise HTTPException(status_code=404, detail="no workstation context is attached")
+    return context
+
+
+def _json_guard_origin(request: Request, surface: str) -> None:
+    """Refuse a JSON write POST whose Origin is present but not
+    loopback (threat model T-14), as a typed 403 for the JSON surface
+    instead of the HTML error page the form endpoints render."""
+    origin = request.headers.get("origin")
+    if origin is None:
+        return
+    try:
+        hostname = urlsplit(origin).hostname
+    except ValueError:
+        hostname = None
+    if hostname is not None and _is_loopback(hostname):
+        return
+    raise HTTPException(
+        status_code=403,
+        detail=f"{surface} refused: cross-origin send (Origin {origin!r} is not loopback)",
+    )
+
+
+class _KillSwitchBody(BaseModel):
+    """The JSON kill-switch flip the SPA shell calls. The form endpoint
+    stays the RC1 contract; both flip the same account object and
+    replace it in app.state and the page context, so the JSON surface,
+    every page and the kernel gate agree (ADR-0011 decision 6)."""
+
+    action: Literal["engage", "disarm"]
+    venue: str | None = None
+
+
+def spa_router() -> APIRouter:
+    """The SPA JSON read surface (iteration 0014 Phase C).
+
+    One route per screen, rendering through the exact page providers
+    the RC1 templates use — the same functions, the same dicts — so
+    the browser and the legacy screens can never disagree. The surface
+    is a strict superset of the M1 API: /api/overview, /api/markets,
+    /api/watchlist, /api/experiments, /api/promotions, /api/forecasts,
+    /api/risk, /api/audit and /api/enablement, plus the JSON
+    kill-switch POST the shell's persistent control calls.
+    """
+    router = APIRouter()
+
+    def read(route: str, name: str, provider: Callable[[PageContext], dict[str, object]]) -> None:
+        def handle(request: Request) -> dict[str, object]:
+            return provider(_json_context(request))
+
+        router.add_api_route(route, handle, methods=["GET"], name=name)
+
+    read("/overview", "overview", _overview_provider)
+    read("/markets", "markets", _instruments_provider)
+    read("/watchlist", "watchlist", _watchlist_provider)
+    read("/experiments", "experiments", _experiments_provider)
+    read("/promotions", "promotions", _promotions_provider)
+    read("/forecasts", "forecasts", _forecasts_provider)
+    read("/risk", "risk", _risk_provider)
+    read("/audit", "audit", _audit_provider)
+    read("/enablement", "enablement", _enablement_provider)
+
+    @router.post("/kill-switch")
+    def kill_switch_json(request: Request, body: _KillSwitchBody) -> dict[str, object]:
+        _json_guard_origin(request, "kill-switch")
+        context = _json_context(request)
+        if body.venue is None:
+            flipped = context.account.model_copy(update={"kill_switch": body.action == "engage"})
+        else:
+            try:
+                venue_enum = Venue(body.venue)
+            except ValueError:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"kill-switch POST refused: unknown venue {body.venue!r}",
+                ) from None
+            kill_switches = dict(context.account.kill_switches)
+            if body.action == "engage":
+                kill_switches[venue_enum] = True
+            else:
+                kill_switches.pop(venue_enum, None)
+            flipped = context.account.model_copy(update={"kill_switches": kill_switches})
+        flipped_context = replace(context, account=flipped)
+        request.app.state.account = flipped
+        request.app.state.page_context = flipped_context
+        return _kill_switch_provider(flipped_context)
+
+    return router
 
 
 # The page registry, pinned by the page-registry test (every route
@@ -850,21 +998,116 @@ def create_workstation_app(
         enablement=enablement,
     )
 
-    for page in PAGES:
-        app.add_api_route(
-            page.route,
-            _renderer(app, page),
-            methods=["GET"],
-            response_class=HTMLResponse,
-        )
+    # The SPA JSON surface (Phase C) in both modes: a strict superset
+    # of the M1 API, so a client that wants JSON has one source of
+    # truth regardless of the render mode. Same api_ operation-id
+    # discipline as the observability router.
+    app.include_router(
+        spa_router(),
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
 
-    _register_watchlist_forms(app)
-    _register_experiment_detail(app)
-    _register_kill_switch(app)
-    _register_document_detail(app)
+    if settings.legacy_ui:
+        # RC1 rollback mode (ADR-0013 decision 6): the Jinja2 pages
+        # mount exactly as they did in RC1, including the detail pages.
+        for page in PAGES:
+            app.add_api_route(
+                page.route,
+                _renderer(app, page),
+                methods=["GET"],
+                response_class=HTMLResponse,
+            )
+        _register_watchlist_forms(app)
+        _register_experiment_detail(app)
+        _register_kill_switch(app)
+        _register_document_detail(app)
+    else:
+        # SPA mode (default): every legacy route 302s to its SPA
+        # counterpart and the compiled bundle is served under /app.
+        # The two write surfaces stay registered — the SPA calls the
+        # same loopback POSTs behind the same origin guard.
+        _register_spa_redirects(app)
+        _register_watchlist_forms(app)
+        _register_kill_switch(app)
+        _register_spa_serving(app)
 
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     return app
+
+
+def _spa_redirect(route: str) -> Callable[[Request], RedirectResponse]:
+    """302 to the SPA path superseding one legacy page (ADR-0013)."""
+    target = LEGACY_TO_SPA[route]
+
+    def redirect(request: Request) -> RedirectResponse:
+        return RedirectResponse(target, status_code=302)
+
+    return redirect
+
+
+def _register_spa_redirects(app: FastAPI) -> None:
+    """Legacy page routes -> SPA deep links (ADR-0013 decision 3).
+
+    Every RC1 page route 302s to the /app path whose SPA screen
+    supersedes it. The parameterized detail pages (experiment,
+    document) redirect to their SPA listing — the SPA gains the real
+    detail routes in Phase C, at which point these targets move.
+    """
+
+    for page in PAGES:
+        app.add_api_route(
+            page.route,
+            _spa_redirect(page.route),
+            methods=["GET"],
+            response_class=RedirectResponse,
+        )
+
+    @app.get("/experiments/{experiment_id}", include_in_schema=False)
+    def experiment_detail_redirect(request: Request, experiment_id: str) -> RedirectResponse:
+        return RedirectResponse(LEGACY_TO_SPA["/experiments"], status_code=302)
+
+    @app.get("/documents/{document_id}", include_in_schema=False)
+    def document_detail_redirect(request: Request, document_id: str) -> RedirectResponse:
+        return RedirectResponse(LEGACY_TO_SPA["/audit"], status_code=302)
+
+
+def _register_spa_serving(app: FastAPI) -> None:
+    """Serve the committed SPA bundle (ADR-0013 decision 2).
+
+    ``/app/assets/*`` is the bundle's asset directory (vite ``base:
+    "/app/"``); every other ``/app`` path falls through to
+    ``index.html`` so react-router deep links work on refresh. The
+    mount is skipped when the bundle directory is absent (StaticFiles
+    refuses a missing directory) — the fallback then serves the
+    instructive 503, never a blank page.
+    """
+    if SPA_ASSETS.is_dir():
+        app.mount(
+            "/app/assets",
+            StaticFiles(directory=str(SPA_ASSETS)),
+            name="app-assets",
+        )
+    else:
+        # No bundle on disk (checkout predates the frontend build);
+        # /app/assets 404s and the fallback below names the problem.
+        pass
+
+    @app.get("/app", include_in_schema=False)
+    def spa_root(request: Request) -> Response:
+        # The catch-all matches "/app/" (path=""), not "/app" — make
+        # the bare path resolve so a bookmarked URL never 404s.
+        return RedirectResponse("/app/", status_code=302)
+
+    @app.get("/app/{path:path}", include_in_schema=False)
+    def spa_fallback(request: Request, path: str) -> Response:
+        if not SPA_INDEX.is_file():
+            return HTMLResponse(_spa_missing_page(), status_code=503)
+        if path in _BUNDLE_ROOT_FILES:
+            file = SPA_DIR / path
+            if file.is_file():
+                return FileResponse(file)
+        return HTMLResponse(SPA_INDEX.read_bytes())
 
 
 def _register_watchlist_forms(app: FastAPI) -> None:
@@ -904,9 +1147,7 @@ def _renderer(app: FastAPI, page: Page) -> Callable[[Request], HTMLResponse]:
     return render
 
 
-def _error_page(
-    app: FastAPI, request: Request, route: str, message: str
-) -> HTMLResponse:
+def _error_page(app: FastAPI, request: Request, route: str, message: str) -> HTMLResponse:
     page = next(item for item in PAGES if item.route == route)
     return _render_page(app, page, request, {"error": message})
 
@@ -974,9 +1215,7 @@ def _register_experiment_detail(app: FastAPI) -> None:
             request=request,
             name="experiment_detail.html",
             context={
-                **_base_context(
-                    f"QuantMesh — Experiment {experiment.id}", context.account
-                ),
+                **_base_context(f"QuantMesh — Experiment {experiment.id}", context.account),
                 "experiment": _experiment_view(experiment),
                 "pin": pin,
                 "pin_error": pin_error,
@@ -1023,9 +1262,7 @@ def _register_kill_switch(app: FastAPI) -> None:
             )
         context = app.state.page_context
         if venue is None:
-            flipped = context.account.model_copy(
-                update={"kill_switch": action == "engage"}
-            )
+            flipped = context.account.model_copy(update={"kill_switch": action == "engage"})
         else:
             try:
                 venue_enum = Venue(venue)
@@ -1041,9 +1278,7 @@ def _register_kill_switch(app: FastAPI) -> None:
                 kill_switches[venue_enum] = True
             else:
                 kill_switches.pop(venue_enum, None)
-            flipped = context.account.model_copy(
-                update={"kill_switches": kill_switches}
-            )
+            flipped = context.account.model_copy(update={"kill_switches": kill_switches})
         app.state.account = flipped
         app.state.page_context = replace(context, account=flipped)
         return RedirectResponse("/kill-switch/control", status_code=303)
@@ -1063,9 +1298,7 @@ def _register_document_detail(app: FastAPI) -> None:
     def document_detail(request: Request, document_id: str) -> HTMLResponse:
         context = app.state.page_context
         if context.documents is None:
-            return _error_page(
-                app, request, "/audit", "no document index is bound"
-            )
+            return _error_page(app, request, "/audit", "no document index is bound")
         try:
             document = context.documents.get(document_id)
         except ValueError as error:
@@ -1074,9 +1307,7 @@ def _register_document_detail(app: FastAPI) -> None:
             request=request,
             name="document_detail.html",
             context={
-                **_base_context(
-                    f"QuantMesh — Document {document.id}", context.account
-                ),
+                **_base_context(f"QuantMesh — Document {document.id}", context.account),
                 "document": {
                     "id": document.id,
                     "kind": document.kind,
@@ -1088,14 +1319,40 @@ def _register_document_detail(app: FastAPI) -> None:
         )
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     """quantmesh-workstation: serve the workstation over loopback.
 
     Binds a fresh empty paper account as the safe local bootstrap;
     operators who want their real account/journal surfaces wired start
     the app programmatically with `create_workstation_app(account=...)`.
+    With ``--demo`` the labeled deterministic scenario is served
+    instead: `--demo-root` picks the demo root (default
+    ``~/.quantmesh/demo``), `--seed` overrides the scenario seed, and
+    the app exposes ``/api/demo/status`` plus the marker-guarded reset.
     """
+    import argparse
+
     import uvicorn  # deferred: only the console script touches it
+
+    parser = argparse.ArgumentParser(prog="quantmesh-workstation")
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="serve the labeled deterministic demo scenario instead of an empty paper account",
+    )
+    parser.add_argument(
+        "--demo-root",
+        type=Path,
+        default=None,
+        help="demo root (default: settings.demo_root, ~/.quantmesh/demo)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="demo scenario seed (default: settings.demo_seed)",
+    )
+    args = parser.parse_args(argv)
 
     host = settings.workstation_host
     if not _is_loopback(host):
@@ -1103,6 +1360,19 @@ def main() -> None:
             f"workstation host must be loopback, got {host!r} "
             "(non-loopback binds are refused at construction)"
         )
-    account = PaperAccount(cash=100_000.0)
-    app = create_workstation_app(account=account, host=host)
+    if args.demo:
+        from quantmesh.demo.runtime import create_demo_app
+
+        app = create_demo_app(
+            root=args.demo_root,
+            seed=args.seed,
+            host=host,
+        )
+    else:
+        account = PaperAccount(cash=100_000.0)
+        app = create_workstation_app(account=account, host=host)
     uvicorn.run(app, host=host, port=settings.workstation_port)
+
+
+if __name__ == "__main__":
+    main()

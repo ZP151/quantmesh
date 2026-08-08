@@ -1,0 +1,7 @@
+// Vitest jsdom setup: jest-dom matchers and testing-library cleanup
+// (auto-cleanup only registers with vitest globals, which are off).
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach } from 'vitest'
+
+afterEach(cleanup)

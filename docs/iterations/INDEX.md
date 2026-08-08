@@ -16,6 +16,7 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0010 | completed | 2026-08-08 | 2026-08-08 | M8 local AI research layer | [PR #69](https://github.com/ZP151/quantmesh/pull/69) |
 | 0011 | completed | 2026-08-08 | 2026-08-08 | M9 local frontend workstation | [PR #70](https://github.com/ZP151/quantmesh/pull/70) |
 | 0012 | completed | 2026-08-08 | 2026-08-08 | M10 guarded live execution and hardening | [PR #71](https://github.com/ZP151/quantmesh/pull/71) |
-| 0013 | active | 2026-08-08 | | v0.1.0 release candidate and architecture hardening | [Plan](0013-v0.1.0-rc1-and-architecture-hardening.md) |
+| 0013 | completed | 2026-08-08 | 2026-08-09 | v0.1.0-rc1 engineering release; operator acceptance deferred | [Plan](0013-v0.1.0-rc1-and-architecture-hardening.md) |
+| 0014 | active | 2026-08-09 | | v0.1.0-rc2 interactive product acceptance | [Plan](0014-v0.1.0-rc2-interactive-product-acceptance.md) |
 
 <!-- quantmesh-iterations:append-above -->
