@@ -1,12 +1,12 @@
 # Iteration 0007 — M5 Hyperliquid testnet workflow
 
-- Status: active
+- Status: completed
 - Started: 2026-08-08
-- Completed:
+- Completed: 2026-08-08
 - Owner: Claude (solo delivery lane)
 - GitHub issue: #29-#33 (Phases A-E)
-- Pull request: pending (opened after acceptance criteria and operator evidence)
-- Roadmap milestone: M5 (`LATER` → `ACTIVE`)
+- Pull request: [#66](https://github.com/ZP151/quantmesh/pull/66) (merged)
+- Roadmap milestone: M5 (`DONE`)
 
 ## Outcome
 

@@ -88,7 +88,7 @@ Exit criteria:
 - A pinned dataset can reproduce an experiment on a clean checkout.
 - Missing, duplicated and out-of-order observations are detected.
 
-### M4 — Equity workflow with Moomoo (`ACTIVE`, plan: `docs/iterations/0006-m4-moomoo-equity-workflow.md`)
+### M4 — Equity workflow with Moomoo (`DONE`, merged via PR #65)
 
 Outcome: research and paper-trade a small US/HK equity universe through one workflow.
 
@@ -105,7 +105,7 @@ Exit criteria:
 - At least three baseline strategies have walk-forward, cost-aware reports.
 - Moomoo paper orders reconcile with internal order state.
 
-### M5 — Hyperliquid crypto workflow (`ACTIVE`, plan: `docs/iterations/0007-m5-hyperliquid-testnet-workflow.md`)
+### M5 — Hyperliquid crypto workflow (`DONE`, merged via PR #66)
 
 Outcome: analyze spot/perpetual markets and execute safely on testnet.
 
@@ -124,7 +124,7 @@ Exit criteria:
 - Testnet execution survives disconnect/reconnect without duplicate orders.
 - Risk limits prevent excess leverage and stale-data execution.
 
-### M6 — Prediction-market intelligence (`ACTIVE`, plan: `docs/iterations/0008-m6-prediction-market-intelligence.md`)
+### M6 — Prediction-market intelligence (`DONE`, merged via PR #67)
 
 Outcome: normalize event markets into calibrated probability signals.
 
@@ -141,7 +141,7 @@ Exit criteria:
 - Point-in-time replay prevents look-ahead from market resolution data.
 - Forecast reports include Brier score, calibration and liquidity confidence.
 
-### M7 — Unified research and portfolio engine (`ACTIVE`, plan: `docs/iterations/0009-m7-unified-research-and-portfolio-engine.md`)
+### M7 — Unified research and portfolio engine (`DONE`, merged via PR #68)
 
 Outcome: combine equity, crypto and event signals under one risk budget.
 
@@ -158,7 +158,7 @@ Exit criteria:
 - Every promoted signal has benchmark, ablation and out-of-sample evidence.
 - Portfolio construction respects venue, asset and event-risk constraints.
 
-### M8 — Local AI research layer (`ACTIVE`, plan: `docs/iterations/0010-m8-local-ai-research-layer.md`)
+### M8 — Local AI research layer (`DONE`, merged via PR #69)
 
 Outcome: use AI to accelerate research while preserving deterministic execution authority.
 
@@ -177,7 +177,7 @@ Exit criteria:
 - AI output is schema-validated and cannot bypass risk APIs.
 - Research claims link to source data and reproducible experiments.
 
-### M9 — Local frontend workstation (`LATER`)
+### M9 — Local frontend workstation (`DONE`, merged via PR #70)
 
 Outcome: operate research, paper portfolios and risk from a local web interface.
 
@@ -195,7 +195,7 @@ Exit criteria:
 - Core paper workflow is usable without direct database or CLI access.
 - Critical controls pass keyboard, accessibility and end-to-end tests.
 
-### M10 — Guarded live execution and hardening (`LATER`)
+### M10 — Guarded live execution and hardening (`DONE`, merged via PR #71)
 
 Outcome: permit limited live trading with explicit user control and production-grade observability.
 
@@ -215,14 +215,13 @@ Exit criteria:
 
 ## Current delivery plan
 
-M8 is active. Its implementation detail is versioned in
-`docs/iterations/0010-m8-local-ai-research-layer.md`; the long-running
-goal governs outcomes and safety boundaries, while that iteration
-document governs phases, tickets, contracts, reuse, evidence, and the
-stacked-PR constraint. M7's final PR #44 is open with its acceptance
-criteria complete and stacks behind M6's final PR #38; both stack
-behind the M5 PR, which awaits the M5 operator testnet drill gate. M8
-itself has no human gate — every surface is fixture-driven local
-computation with no credentials and no execution authority (an optional
-live-local-model operator drill is recorded in iteration 0010, not a
-blocker).
+M0 through M10 are complete and merged. Iteration 0013 is active and moves
+the integrated product to `v0.1.0-rc1` for local operator acceptance. The
+release-critical path is documentation truth-sync, dependency-audit trigger
+hardening, consistent release metadata, a one-command clean-checkout
+verification path, release notes and an RC tag. Architecture deepening follows
+the RC baseline in small behavior-preserving slices: durable JSONL persistence
+first, cross-venue reconciliation second, then numeric-policy characterization
+and an ADR before any representation change. Moomoo simulated-account and
+Hyperliquid testnet drills remain optional post-merge enablement gates; they do
+not enable live or mainnet operation.

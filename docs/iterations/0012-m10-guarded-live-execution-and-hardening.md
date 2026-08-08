@@ -1,12 +1,12 @@
 # Iteration 0012 — M10: Guarded live execution and hardening
 
-- Status: active
+- Status: completed
 - Started: 2026-08-08
-- Completed:
+- Completed: 2026-08-08
 - Owner: Claude
 - GitHub issue: issues #58-#62 (Phases A-E, dependency-ordered: #59/#60/#61 block on #58, #62 blocks on #58-#61)
-- Pull request: (opened after acceptance criteria complete; base = `feat/m9-local-frontend-workstation`, stacked — merges after the M9 PR #57, which stacks behind the M8 PR #50, which stacks behind the M7 PR #44, which stacks behind the M6 PR #38, which awaits the M5 PR, which awaits the M5 operator drill)
-- Roadmap milestone: M10 (`LATER`)
+- Pull request: [#71](https://github.com/ZP151/quantmesh/pull/71) (merged)
+- Roadmap milestone: M10 (`DONE`)
 
 ## Outcome
 

@@ -1,12 +1,12 @@
 # Iteration 0010 — M8: Local AI research layer
 
-- Status: active
+- Status: completed
 - Started: 2026-08-08
-- Completed:
+- Completed: 2026-08-08
 - Owner: Claude
 - GitHub issue: issues #45-#49 (Phases A-E, dependency-ordered: #46/#47/#48/#49 block on #45, #48/#49 block on #46, #48/#49 block on #47, #49 blocks on #48)
-- Pull request: (opened after acceptance criteria complete; base = `feat/m7-unified-research-and-portfolio-engine`, stacked — merges after the M7 PR #44, which stacks behind the M6 PR #38, which awaits the M5 PR, which awaits the M5 operator drill)
-- Roadmap milestone: M8 (`LATER` → `ACTIVE`)
+- Pull request: [#69](https://github.com/ZP151/quantmesh/pull/69) (merged)
+- Roadmap milestone: M8 (`DONE`)
 
 ## Outcome
 

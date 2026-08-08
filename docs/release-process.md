@@ -7,23 +7,22 @@ without tribal knowledge.
 
 ## Branch and PR conventions (the solo fast lane)
 
-- One integration branch per milestone: `feat/m<M>-<name>`, branched
-  from the previous milestone's tip, stacked behind the previous
-  milestone's PR until it merges.
-- One tested and reviewed commit per issue (`M<M>-<N> (#issue):
-  <summary>`), plus a records commit per phase (`ADR-00NN decision K
-  and Phase X evidence`) when the phase closes ADRs/iteration/state.
-  Every commit carries `Co-Authored-By: Claude <noreply@anthropic.com>`.
-- Every checkpoint is pushed (`git push origin feat/...`).
-- One final milestone PR: base = the previous milestone branch, body
-  lists the closed issues (`Closes #x #y #z`), opened only after the
-  milestone's acceptance criteria **and** operator-validation
-  evidence are complete.
-- Issues close only when their commits land in the merged milestone
-  PR. `main` is protected; merges are squash merges.
-- Milestone state lives in `docs/goals/ACTIVE.md` (last checkpoint,
-  frontier, resume instructions) and the milestone's iteration
-  document (`docs/iterations/00NN-...md`); durable decisions live in
+- Use one short-lived branch per coherent release or architecture slice,
+  always created from `origin/main`. Do not stack branches by default; stacking
+  is reserved for a documented dependency that cannot be delivered safely in
+  one slice.
+- Group related implementation, tests and records in the same PR. Do not create
+  an issue or PR for every checkbox; create an issue only when durable external
+  tracking or independent pickup is useful.
+- Checkpoint commits are tested and intentionally scoped. Push the branch when
+  a checkpoint needs remote durability or CI evidence.
+- Open one PR when its acceptance criteria and proportional verification are
+  complete. `main` is protected and merges are squash merges.
+- After a squash merge, branch future work from `origin/main` and reconcile
+  local `main` by fast-forward only; never force a divergent local history over
+  the remote.
+- Current state lives in `docs/goals/ACTIVE.md`; detailed work and evidence live
+  in the active iteration document. Durable architectural decisions live in
   ADRs under `docs/adr/`.
 
 ## The full-suite gate (every phase, before the checkpoint push)
@@ -35,10 +34,9 @@ git diff --check             # no whitespace errors
 git submodule status         # clean (vendored components pinned)
 ```
 
-The suite currently: 1725 passed / 3 skipped (symlink creation not
-permitted on Windows — the lake's symlink tests run only on Linux CI),
-1 pre-existing warning, 15 Playwright E2E tests (skip cleanly when the
-`e2e` extra or chromium is missing — ADR-0011 decision 7).
+Clean-checkout baseline on 2026-08-08: 1,790 passed / 0 skipped with the
+`.[dev,research,e2e]` extras and Chromium available. A release checkpoint must
+record its own current count; do not copy this historical number as proof.
 
 ## Drill evidence requirements
 
@@ -77,12 +75,20 @@ records counts, dates and any debugging detours.
 
 ## Versioning
 
-`quantmesh 0.x` follows the project milestone structure: a milestone
-PR merge bumps the minor (M3 → 0.3, M4 → 0.4, ...); patch bumps fix
-issues on main without a milestone. Versions are tags on main
-(`v0.M.n`); the version string lives in `pyproject.toml` and
-`quantmesh/__init__.py` (they must agree — the package data test
-pins it).
+Roadmap milestone identifiers are delivery-history labels, not package
+versions. The first operator-facing product release line is `0.1.x`:
+
+- release-candidate package metadata uses the PEP 440 form `0.1.0rcN`;
+- the corresponding Git tag uses the readable form `v0.1.0-rcN`;
+- operator acceptance promotes the same verified line to package version
+  `0.1.0` and tag `v0.1.0`;
+- later compatible fixes increment the patch; a deliberately incompatible
+  product release increments the minor.
+
+Tags are created only from a verified main commit. The version string lives in
+`pyproject.toml` and `quantmesh/__init__.py`; they must agree, and the package
+data test pins that invariant. Release notes must identify the commit, install
+extras, verification counts, known limitations and external gates.
 
 ## The human gate checklist (live operation — THE gate)
 

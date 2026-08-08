@@ -1,12 +1,12 @@
 # Iteration 0008 — M6 prediction-market intelligence
 
-- Status: active
+- Status: completed
 - Started: 2026-08-08
-- Completed:
+- Completed: 2026-08-08
 - Owner: Claude (solo delivery lane)
 - GitHub issue: #34-#37 (Phases A-D)
-- Pull request: [#38](https://github.com/ZP151/quantmesh/pull/38) (opened 2026-08-08 after acceptance criteria complete; base = `feat/m5-hyperliquid-testnet-workflow`, stacked — merges after the M5 PR, which awaits the M5 operator drill)
-- Roadmap milestone: M6 (`LATER` → `ACTIVE`)
+- Pull request: [#67](https://github.com/ZP151/quantmesh/pull/67) (merged)
+- Roadmap milestone: M6 (`DONE`)
 
 ## Outcome
 
