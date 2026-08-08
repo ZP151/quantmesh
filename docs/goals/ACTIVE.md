@@ -18,11 +18,15 @@
 
 ## Current state
 
-M0-M10 are complete and merged through PRs #65-#71. PR #72 fixed
-PYSEC-2026-1845, and PR #73 recorded clean-checkout release-candidate
-verification. The repository review reconciled CONTEXT.md, ROADMAP.md, the
-iteration index and iterations 0006-0012 with that merged reality and opened
-iteration 0013 as the release frontier.
+M0-M10 are complete and merged through PRs #65-#71; PR #72 fixed
+PYSEC-2026-1845; PR #73 recorded clean-checkout release-candidate
+verification. Iteration 0013 Phase A-C are done on
+`release/v0.1.0-rc1` (from `origin/main` @ `5708e72`): package
+metadata `0.1.0rc1`, the closure-deterministic license gate and
+audit-lock contract, the repo golden-path walk and the one-command
+clean-checkout release gate — `python tools/release_gate.py`
+PASSED on `206fc49` (1801 tests, golden path 53/53, clean clone
+proof, temp root removed).
 
 The product is a fixture-verified local workstation. It includes normalized
 market data and a local lake, reproducible research and forecasts, paper
@@ -44,17 +48,18 @@ audit and guarded enablement. No external live operation is enabled.
 
 ## Immediate frontier
 
-1. Build the clean-checkout, one-command release verification path
-   (`tools/release_gate.py` + repo `tools/golden_path.py`) and ensure it
-   leaves no generated `golden-root/` in the checkout.
-2. Produce release notes, installation/start/stop/reset instructions and a
-   short English/Chinese acceptance checklist.
-3. Merge one coherent RC PR (everything lives on `release/v0.1.0-rc1` @
-   5708e72 + Phase B/D work) after CI, Security and fresh-clone verification;
-   tag the verified main commit `v0.1.0-rc1` and hand it to the operator.
-4. After the RC is available, deepen architecture in this order: durable JSONL
-   persistence, cross-venue reconciliation, then numeric-policy
-   characterization plus ADR. Runtime assembly remains secondary.
+1. Open the one RC PR from `release/v0.1.0-rc1` (Phase A-C + release
+   notes), wait for CI (release-contract tests on the PR) and the
+   Security job (fires on the main push), then squash-merge with the
+   standing authority, verify `origin/main` and tag the exact commit
+   `v0.1.0-rc1`.
+2. Hand the operator the acceptance checklist in
+   `docs/release-notes/v0.1.0-rc1.zh-CN.md` (install/start/demo/
+   stop-reset/safety/limitations + `python tools/release_gate.py`).
+3. After the RC tag is immutable, deepen architecture in this order:
+   durable JSONL persistence, cross-venue reconciliation, then
+   numeric-policy characterization plus ADR, one short-lived branch
+   per slice. Runtime assembly remains secondary.
 
 ## External gates
 
