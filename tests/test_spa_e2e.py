@@ -79,8 +79,15 @@ def base_url(tmp_path_factory) -> str:
         thread.join(timeout=15)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def browser():
+    """Module scope on purpose: an open ``sync_playwright()`` context
+    keeps its asyncio loop *running* on the main thread (the dispatcher
+    greenlet parks inside ``run_until_complete``), so a session-scoped
+    context would still be open when a later test module enters
+    ``sync_playwright()`` — which then refuses "Sync API inside the
+    asyncio loop" (the Phase F gate caught exactly this). Closing the
+    context with this module keeps every later E2E module safe."""
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:

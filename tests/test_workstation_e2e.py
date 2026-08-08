@@ -49,7 +49,12 @@ workstation.settings.legacy_ui = True
 
 @pytest.fixture(scope="session", autouse=True)
 def _restore_legacy_ui() -> None:
-    """Restore the default surface once the module's tests are done."""
+    """The RC1 E2E exercises the legacy Jinja2 surface. Re-pin the flag
+    at setup: an autouse session fixture from an earlier-imported module
+    (test_spa_e2e.py) runs after this module's import-time pin and would
+    otherwise leave the SPA mounted on the E2E port. Restore the default
+    once the module's tests are done."""
+    workstation.settings.legacy_ui = True
     yield
     workstation.settings.legacy_ui = False
 
@@ -126,8 +131,13 @@ def base_url(tmp_path_factory) -> str:
         thread.join(timeout=15)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def browser():
+    """Module scope: an open ``sync_playwright()`` context keeps its
+    asyncio loop running on the main thread, which makes any *later*
+    ``sync_playwright()`` entry raise "Sync API inside the asyncio
+    loop". Closing the context with this module keeps later E2E
+    modules safe (see the identical fixture in test_spa_e2e.py)."""
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
