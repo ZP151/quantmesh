@@ -1,0 +1,45 @@
+name: Security
+
+# Runs only when a push to main touches the audit surface: the frozen
+# install closure, the license-review script or the license inventory.
+# The python job in ci.yml runs on every PR to main; the security scan
+# is deliberately NOT on the PR path — the audit lock and the review
+# script only exist on main after the M10 merge, so earlier milestone
+# merges must not fail a job on missing files, and a green scan after
+# the final main PR lands is the recorded coverage.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - requirements-audit.txt
+      - tools/license_review.py
+      - docs/licenses.md
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install audit tooling and project environment
+        # The license review reads the installed distributions'
+        # metadata, so the environment must be the real CI install
+        # (`.[dev,research]`, exactly like the python job).
+        run: |
+          python -m pip install pip-audit
+          python -m pip install -e ".[dev,research]"
+      - name: Advisory scan (pip-audit over the locked environment)
+        # requirements-audit.txt pins the resolved install closure
+        # (regenerate via `pip install --dry-run --report` after a
+        # dependency change — see docs/release-process.md). A newly
+        # published advisory fails this job loudly.
+        run: python -m pip_audit -r requirements-audit.txt --no-deps
+      - name: License review (deterministic inventory check)
+        run: python tools/license_review.py
