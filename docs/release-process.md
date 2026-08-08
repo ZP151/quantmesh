@@ -7,38 +7,63 @@ without tribal knowledge.
 
 ## Branch and PR conventions (the solo fast lane)
 
-- One integration branch per milestone: `feat/m<M>-<name>`, branched
-  from the previous milestone's tip, stacked behind the previous
-  milestone's PR until it merges.
-- One tested and reviewed commit per issue (`M<M>-<N> (#issue):
-  <summary>`), plus a records commit per phase (`ADR-00NN decision K
-  and Phase X evidence`) when the phase closes ADRs/iteration/state.
-  Every commit carries `Co-Authored-By: Claude <noreply@anthropic.com>`.
-- Every checkpoint is pushed (`git push origin feat/...`).
-- One final milestone PR: base = the previous milestone branch, body
-  lists the closed issues (`Closes #x #y #z`), opened only after the
-  milestone's acceptance criteria **and** operator-validation
-  evidence are complete.
-- Issues close only when their commits land in the merged milestone
-  PR. `main` is protected; merges are squash merges.
-- Milestone state lives in `docs/goals/ACTIVE.md` (last checkpoint,
-  frontier, resume instructions) and the milestone's iteration
-  document (`docs/iterations/00NN-...md`); durable decisions live in
+- Use one short-lived branch per coherent release or architecture slice,
+  always created from `origin/main`. Do not stack branches by default; stacking
+  is reserved for a documented dependency that cannot be delivered safely in
+  one slice.
+- Group related implementation, tests and records in the same PR. Do not create
+  an issue or PR for every checkbox; create an issue only when durable external
+  tracking or independent pickup is useful.
+- Checkpoint commits are tested and intentionally scoped. Push the branch when
+  a checkpoint needs remote durability or CI evidence.
+- Open one PR when its acceptance criteria and proportional verification are
+  complete. `main` is protected and merges are squash merges.
+- After a squash merge, branch future work from `origin/main` and reconcile
+  local `main` by fast-forward only; never force a divergent local history over
+  the remote.
+- Current state lives in `docs/goals/ACTIVE.md`; detailed work and evidence live
+  in the active iteration document. Durable architectural decisions live in
   ADRs under `docs/adr/`.
 
 ## The full-suite gate (every phase, before the checkpoint push)
 
 ```text
 pytest -q                    # full suite, must stay green
-ruff check src tests         # E/F/I/UP @ 100 cols
+ruff check src tests tools   # E/F/I/UP @ 100 cols
 git diff --check             # no whitespace errors
 git submodule status         # clean (vendored components pinned)
 ```
 
-The suite currently: 1725 passed / 3 skipped (symlink creation not
-permitted on Windows — the lake's symlink tests run only on Linux CI),
-1 pre-existing warning, 15 Playwright E2E tests (skip cleanly when the
-`e2e` extra or chromium is missing — ADR-0011 decision 7).
+Clean-checkout baseline on 2026-08-08: 1,790 passed / 0 skipped with the
+`.[dev,research,e2e]` extras and Chromium available. A release checkpoint must
+record its own current count; do not copy this historical number as proof.
+Release checkpoints additionally run the one-command clean-checkout
+release gate (next section) before publication.
+
+## The release gate (iteration 0013 Phase C)
+
+One command, run from any checkout of the release commit, that proves
+the release in a fresh deterministic environment:
+
+```text
+python tools/release_gate.py
+```
+
+It clones the current commit into a temporary directory, creates a
+fresh venv there, installs the release extras `.[dev,research,e2e]`,
+then runs Ruff, the license review (closure contract), pip-audit over
+the audit lock from an isolated tooling venv (``--disable-pip``: the
+lock is the frozen resolution, so the pins are audited directly with
+no re-resolution — the pip resolver would otherwise try to rebuild
+the Linux-only closure members on Windows), the full pytest suite
+and the 51-check golden path (fixture -> data lake -> strategy reports
+-> internal paper -> all 13 workstation screens -> restart recovery
+with audit-ledger rereads), and finally proves the checkout is clean.
+All generated state lives under the temporary root and is removed on
+success; on failure the root is kept and its path printed for
+diagnostics. The Playwright E2E tests run when the browser cache is
+available (shared user cache) and are reported as skipped otherwise —
+the golden path walk does not depend on the browser.
 
 ## Drill evidence requirements
 
@@ -57,18 +82,40 @@ records counts, dates and any debugging detours.
   closure the CI security job audits), `docs/licenses.md` (the
   inventory) — and, when the change is a removal, ADR-0009-style
   dependency-contract decisions.
+- The release closure is the full release extras install
+  `.[dev,research,e2e]` (iteration 0013 Phase B): the audit lock, the
+  license gate and the CI security job all cover it, so playwright's
+  own dependencies are audited too.
 - Regenerate the audit lock after any dependency change:
 
   ```text
-  python -m pip install --dry-run --ignore-installed -e ".[dev,research]" \
+  python -m pip install --dry-run --ignore-installed -e ".[dev,research,e2e]" \
       --report audit-report.json
-  # then convert the report's install set (name==version) to
-  # requirements-audit.txt, excluding quantmesh itself.
   ```
 
+  then convert the report's install set (name==version) to
+  `requirements-audit.txt`, excluding `quantmesh` itself and sorting
+  the lines. The Windows resolver cannot resolve the documented
+  Linux-only closure members, so keep the six platform-restricted pins
+  from the previous lock: `uvloop`, `jeepney`, `SecretStorage`,
+  `cryptography`, `cffi`, `pycparser` (uvicorn[standard]'s loop and
+  keyring's Linux backend chain — see docs/licenses.md). Conversely,
+  this Windows-generated lock also contains win32-marker entries
+  (`colorama`, `pywin32-ctypes`) that a Linux-generated lock would
+  omit — which would fail the Windows gate, so keep the canonical lock
+  Windows-generated. If a real dependency change adds a new
+  platform-restricted member, extend `PLATFORM_TOLERATED` in
+  `tools/license_review.py` together with this list and the docs; the
+  gate fails loudly otherwise.
+
   `pip-audit` in CI checks the pinned file (`--no-deps`, no
-  re-resolution); the license review classifies the installed
-  environment.
+  re-resolution). The license review evaluates the same closure:
+  every pinned package must be installed and classify to an allowed
+  license, and no third-party package outside the closure may be
+  installed (pip/setuptools/wheel are the venv's own tooling and are
+  exempt). Run it in the deterministic release environment
+  (`tools/release_gate.py` creates one) — an ambient development venv
+  fails with a precise message by design.
 - A license outside the allowlist (docs/licenses.md) or a
   Commons-Clause-style source-available restriction fails the
   `security` CI job. Removing the dependency is the preferred
@@ -77,12 +124,20 @@ records counts, dates and any debugging detours.
 
 ## Versioning
 
-`quantmesh 0.x` follows the project milestone structure: a milestone
-PR merge bumps the minor (M3 → 0.3, M4 → 0.4, ...); patch bumps fix
-issues on main without a milestone. Versions are tags on main
-(`v0.M.n`); the version string lives in `pyproject.toml` and
-`quantmesh/__init__.py` (they must agree — the package data test
-pins it).
+Roadmap milestone identifiers are delivery-history labels, not package
+versions. The first operator-facing product release line is `0.1.x`:
+
+- release-candidate package metadata uses the PEP 440 form `0.1.0rcN`;
+- the corresponding Git tag uses the readable form `v0.1.0-rcN`;
+- operator acceptance promotes the same verified line to package version
+  `0.1.0` and tag `v0.1.0`;
+- later compatible fixes increment the patch; a deliberately incompatible
+  product release increments the minor.
+
+Tags are created only from a verified main commit. The version string lives in
+`pyproject.toml` and `quantmesh/__init__.py`; they must agree, and the package
+data test pins that invariant. Release notes must identify the commit, install
+extras, verification counts, known limitations and external gates.
 
 ## The human gate checklist (live operation — THE gate)
 

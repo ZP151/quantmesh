@@ -6,7 +6,16 @@ QuantMesh is a local-first workstation for cross-market quantitative research, f
 
 ## Current stage
 
-The repository contains the foundation skeleton, shared domain models, a minimal paper connector, open-source component pins and project-level agent collaboration infrastructure. The next product milestone is a deterministic paper-trading kernel.
+M0 through M10 are implemented and merged. The repository now contains a
+fixture-verified local workstation spanning normalized market data,
+reproducible research, paper execution, Moomoo and Hyperliquid adapters,
+prediction-market intelligence, local AI research, risk controls, recovery,
+audit and guarded enablement. A clean checkout passed 1,790 tests and the
+51-check golden path on 2026-08-08. The current delivery target is
+`v0.1.0-rc1`: reconcile release metadata, harden dependency-audit triggers,
+package a repeatable local acceptance path and publish an RC for operator
+validation. Real-money execution remains disabled behind the explicit human
+gate.
 
 ## Bounded context
 
@@ -35,8 +44,8 @@ QuantMesh currently uses one bounded context: quantitative research and guarded 
 - `domain` owns venue-neutral models and invariants.
 - `connectors` isolate external SDKs and protocols.
 - `research` orchestrates datasets, features, experiments and backtests.
-- `risk` will own deterministic pre-trade and portfolio controls.
-- `execution` will own order orchestration, persistence and reconciliation; order state-transition invariants live in `domain`.
+- `risk` owns deterministic pre-trade and portfolio controls.
+- `execution` owns order orchestration, persistence and reconciliation; order state-transition invariants live in `domain`.
 - `api` exposes local control and observability surfaces.
 - `vendor` contains pinned upstream components and reference projects, not QuantMesh-owned code.
 
@@ -56,4 +65,3 @@ QuantMesh currently uses one bounded context: quantitative research and guarded 
 - Custody of user funds
 - Training a foundation model from scratch
 - Supporting every broker or prediction market at launch
-

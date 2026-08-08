@@ -1,12 +1,12 @@
 # Iteration 0011 — M9: Local frontend workstation
 
-- Status: active
+- Status: completed
 - Started: 2026-08-08
-- Completed:
+- Completed: 2026-08-08
 - Owner: Claude
 - GitHub issue: issues #51-#56 (Phases A-F, dependency-ordered: #52/#53/#54/#55 block on #51, #56 blocks on #52-#55)
-- Pull request: (opened after acceptance criteria complete; base = `feat/m8-local-ai-research-layer`, stacked — merges after the M8 PR #50, which stacks behind the M7 PR #44, which stacks behind the M6 PR #38, which awaits the M5 PR, which awaits the M5 operator drill)
-- Roadmap milestone: M9 (`LATER` → `ACTIVE`)
+- Pull request: [#70](https://github.com/ZP151/quantmesh/pull/70) (merged)
+- Roadmap milestone: M9 (`DONE`)
 
 ## Outcome
 

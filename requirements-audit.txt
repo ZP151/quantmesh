@@ -14,6 +14,7 @@ colorama==0.4.6
 cryptography==50.0.0
 duckdb==1.5.5
 fastapi==0.141.1
+greenlet==3.5.4
 h11==0.16.0
 httpcore==1.0.9
 httptools==0.8.0
@@ -32,12 +33,14 @@ narwhals==2.24.0
 numpy==2.5.1
 packaging==26.3
 pandas==2.3.3
-pycparser==3.0
 patsy==1.0.2
+playwright==1.62.0
 pluggy==1.6.0
+pycparser==3.0
 pydantic-settings==2.15.0
 pydantic==2.13.4
 pydantic_core==2.46.4
+pyee==13.0.1
 pytest-asyncio==1.4.0
 pytest==9.1.1
 python-dateutil==2.9.0.post0
@@ -49,7 +52,7 @@ ruff==0.16.2
 scikit-learn==1.9.0
 scipy==1.18.0
 six==1.17.0
-starlette==1.4.1
+starlette==1.5.0
 statsmodels==0.14.6
 threadpoolctl==3.6.0
 typing-inspection==0.4.2

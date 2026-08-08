@@ -1,11 +1,11 @@
 # Iteration 0006 — M4 Moomoo Equity Workflow
 
-- Status: active
+- Status: completed
 - Started: 2026-08-07
-- Completed:
+- Completed: 2026-08-08
 - Owner: solo delivery fast lane
-- GitHub issue: to be split from this plan before implementation
-- Pull request: one final M4 integration PR from `feat/m4-moomoo-equity-workflow`
+- GitHub issue: #25-#28
+- Pull request: [#65](https://github.com/ZP151/quantmesh/pull/65) (merged)
 - Roadmap milestone: M4
 
 ## Outcome
