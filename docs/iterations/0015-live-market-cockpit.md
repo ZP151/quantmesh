@@ -321,9 +321,51 @@ stale/degraded and blocks paper orders on its instruments.
 
 ### Phase F — Moomoo OpenD streaming
 
-- [ ] OpenD realtime subscription when locally available (AAPL, NVDA,
+- [x] OpenD realtime subscription when locally available (AAPL, NVDA,
       MSFT, TSLA + watchlist); honest delayed/unavailable otherwise.
-- [ ] Never fabricated real-time; label and block per the status model.
+- [x] Never fabricated real-time; label and block per the status model.
+
+> **Checkpoint F1 (2026-08-09)** — Phase F landed on branch
+> `0015-phase-f`. The Moomoo surface is a poll-driven read-only venue
+> over the same supervisor protocol: `MoomooVenueTransport` turns the
+> request/response OpenD boundary into the venue wire — `probe()` at
+> connect (a missing daemon, or a quote capability that is off, raises
+> and the pump's disconnect path surfaces the honest state), `send()`
+> collects the subscription specs, and a poll task on the pump's loop
+> calls the sync M4 client off-thread, queueing one frame per payload
+> (the stock-quote batch / one rt_ticker per code); a failed poll call
+> is queued as a `poll_error` frame → dispatch raises → the pump
+> disconnects and the backoff loop retries, so the surface recovers on
+> its own when the local daemon returns. `MoomooVenueSupervisor`
+> subscribes bare symbols (`AAPL,NVDA,MSFT,TSLA` + watchlist) and
+> derives market-qualified SDK codes via `sdk_code` (an instrument
+> without a known market fails closed at subscribe); OpenD has no wire
+> envelope, so the subscription spec itself is the message. Dispatch:
+> the quote batch is split per row → METRICS (last + volume) with the
+> venue's own data_date/data_time as the honest timestamp — no bid/ask
+> exists on the wire, so no QUOTE is ever emitted and paper orders are
+> impossible for Moomoo instruments by construction; `rt_ticker` rows
+> → TRADE ticks with the venue-reported aggressor side and sequence,
+> deduped over the overlapping poll windows (a tick is never replayed)
+> and neutral-direction rows accepted-but-skipped (no invented side).
+> Fail-closed dispatch: unsubscribed symbols, unknown frame kinds and
+> poll errors raise. The venue-clock gate blocks any answer whose own
+> timestamp is outside the realtime window (`lag`) — a closed market
+> or delayed feed is never labeled real: the last real numbers age to
+> Stale through the feed's freshness machine and the tracker walks
+> LAGGING → STALE; on disconnect the poll task is stopped (no
+> double-poll behind a reconnect) and the dedup set reset. Wiring is
+> explicit and keyless: `QUANTMESH_MOOMOO_WATCHLIST` +
+> `QUANTMESH_MOOMOO_MARKET` + `QUANTMESH_MOOMOO_POLL_INTERVAL_S`
+> settings, and the `--live` assembly attaches the supervisor when the
+> watchlist is set — the cockpit renders the surface generically (zero
+> frontend changes). Gates: 13/13 F drills (normalized surface,
+> fail-closed dispatch, transport probe/poll contracts, and the live
+> honest-availability ladder — real labels from a fresh daemon, Stale
+> when the venue clock stops, DISCONNECTED after a mid-stream poll
+> failure with the last real numbers visible, UNAVAILABLE with no
+> metrics/trade surface when the daemon never answers), 2066/2066
+> backend regression, ruff clean.
 
 ### Phase G — verification, gate, acceptance
 

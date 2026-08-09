@@ -131,7 +131,13 @@ makes the business workflow directly testable. Do not promote RC1 to
    depth/liquidity per venue, signed cross-venue diff, honest
    distinct states; 71/71 board drills, 226/226 regression, 47/47
    vitest, 5/5 browser E2E on port 8646) landed on branch
-   `0015-phase-e`; Phases F–G per the iteration record.
+   `0015-phase-e`; Phase F (Moomoo OpenD — poll-driven read-only venue
+   supervisor + transport, METRICS last/volume + TRADE ticks with
+   venue sequences and side, the venue-clock gate so a closed market
+   or delayed feed is never labeled real, honest unavailable/
+   disconnected/stale ladder; 13/13 F drills, 2066/2066 regression,
+   ruff clean) landed on branch `0015-phase-f`; Phase G per the
+   iteration record.
 
 ## Standing authority
 

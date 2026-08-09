@@ -100,6 +100,15 @@ class Settings(BaseSettings):
     # keeps live feeds on public surfaces, like ADR-0007/ADR-0008).
     polymarket_ws_url: str = "wss://ws-subscriptions-clob.polymarket.com/ws/market"
     kalshi_ws_url: str = "wss://api.elections.kalshi.com/trade-api/ws/v2"
+    # Moomoo OpenD equities watchlist (iteration 0015 Phase F): bare
+    # symbols ("AAPL,NVDA,MSFT,TSLA") polled from a local OpenD daemon
+    # when it answers; empty means no Moomoo surface is attached. The
+    # market qualifies the SDK codes (sdk_code requires it). All reads
+    # are read-only polls of the local daemon — never a real-time
+    # fabricator: stale/absent data renders honestly unavailable.
+    moomoo_watchlist: str = ""
+    moomoo_market: str = "US"
+    moomoo_poll_interval_s: float = Field(default=5.0, gt=0)
 
     model_config = SettingsConfigDict(
         env_file=".env",
