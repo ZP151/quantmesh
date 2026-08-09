@@ -1,16 +1,18 @@
 # Active Goal
 
-- Status: active
-- Objective: resolve the RC3 browser-acceptance defects, cut a new
-  reproducible release candidate, then obtain explicit operator acceptance
+- Status: active (two threads — rc4 acceptance pending, Live Market Cockpit in flight)
+- Objective: obtain explicit operator acceptance of `v0.1.0-rc4` (promotion
+  to v0.1.0 only after the recorded "accept RC4, promote to v0.1.0" reply),
+  then deliver the Live Market Cockpit prototype (iteration 0015)
 - Started: 2026-08-09
 - Active iteration:
-  `docs/iterations/0014-v0.1.0-rc2-interactive-product-acceptance.md`
-- Branch: `0014-rc4-acceptance-surface`, based on `origin/main`; RC1
+  `docs/iterations/0015-live-market-cockpit.md`
+  (rc4 acceptance evidence: `docs/iterations/0014-...md` Checkpoint 10)
+- Branch: `0015-live-market-cockpit`, based on `origin/main`; RC1
   publication checkpoint `0fea221` was preserved as cherry-pick `e0f9c3d`;
-  RC2 is the historical tag `v0.1.0-rc2` @ `710a931` (rejected, not rewritten)
-- Pull request: one integration PR per RC; do not create the next release PR
-  until this acceptance-surface fix has its release version and gate evidence
+  RC2 is the historical tag `v0.1.0-rc2` @ `710a931` (rejected, not rewritten);
+  RC3 `e83e30c` (rejected, not rewritten); RC4 `c9444ba` (awaiting acceptance)
+- Pull request: one integration PR per phase, CI green, squash-merge
 - Blockers: none external for deterministic demo and UI work
 
 ## Current state
@@ -94,10 +96,31 @@ makes the business workflow directly testable. Do not promote RC1 to
    browser review and found two product defects: Forecasts exposed neither a
    probability nor a calibration explanation, and the SPA chrome displayed
    `rc2` despite API/package RC3 metadata. RC3 must not be promoted.**
-8. Fix the two acceptance-surface defects, package a new RC, and re-run the
-   clean-checkout release gate before asking for human sign-off. The local
-   fix is browser-verified and has 1,862 passed / 3 skipped tests; evidence is
-   in iteration 0014 Checkpoint 9. The existing `v0.1.0-rc3` tag is immutable.
+8. ~~Fix the two acceptance-surface defects, package a new RC, and re-run
+   the clean-checkout release gate before asking for human sign-off.~~
+   (done, rc4 cycle, iteration 0014 Checkpoint 10): the operator's locally
+   fixed candidate (commit `8f462de`, both defects re-verified) was
+   packaged as `v0.1.0-rc4`; gate run 1 PASSED 15/15 on the branch head,
+   PR #83 squash-merged at `c9444ba`, tag `v0.1.0-rc4` pushed with the
+   tag==version invariant verified at the tag; gate run 2 failed on the
+   port-8643 environment flake (5 E2E setup errors, 0 product failures),
+   gate run 3 PASSED 15/15 on the exact tagged tree; the isolated
+   acceptance environment was regenerated from the tag (fresh clone +
+   venv + install: import `0.1.0rc4`, golden path 53/53); the tag-build
+   workstation is live at http://127.0.0.1:8766/app/ (PID 13196) with
+   `OPERATOR-ACCEPTANCE-rc4.md` at the acceptance root. **Promotion to
+   `v0.1.0` remains forbidden until the operator replies "accept RC4,
+   promote to v0.1.0".**
+9. Deliver iteration 0015 — Live Market Cockpit (operator `/goal`,
+   2026-08-09): a local, read-only, replayable multi-venue real-time
+   research workstation for a bounded watchlist (4–8 Hyperliquid perps,
+   read-only Polymarket/Kalshi, Moomoo OpenD when locally available),
+   built on the `MarketUpdate` contract, venue supervisors, DuckDB replay
+   lake, local WS/SSE feed, cockpit screens, deterministic quote fence —
+   all venues read-only, no credentials, no autonomous execution. Phase
+   A (ADR-0014, contract, buffer, fixture WS server) is implemented and
+   tested on branch `0015-live-market-cockpit`; Phases B–G per the
+   iteration record.
 
 ## Standing authority
 
