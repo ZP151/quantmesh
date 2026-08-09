@@ -369,10 +369,34 @@ stale/degraded and blocks paper orders on its instruments.
 
 ### Phase G — verification, gate, acceptance
 
-- [ ] Replay determinism tests, periodic live read-only smoke drill
+- [x] Replay determinism tests, periodic live read-only smoke drill
       (opt-in), full E2E/a11y.
+      - `tests/test_live_replay.py` 8/8: point-in-time (as-of) replay
+        reconstructs the live surface at every cutoff; replay order is
+        append order (local_seq), not timestamp order; fresh connections
+        replay byte-identical rows; backpressure gap marks and mixed
+        provenance survive the round trip; replay never resurrects old
+        data as fresh. Found and fixed a real determinism defect: the
+        lake read TIMESTAMPTZ rows back in the host session timezone
+        (the lake now pins `SET TimeZone = 'UTC'`), so replayed ISO
+        representations were host-dependent.
+      - `tools/live_smoke.py` (opt-in read-only drill) + 20/20 checker
+        drills: GET-only health/latest-state/connector-health checks,
+        honest ladder + schema + connected-flag agreement + optional
+        `--watchlist` presence, timeout-bounded, per-check PASS/FAIL,
+        non-zero exit on failure; `--period-minutes` loop for scheduled
+        smoke. End-to-end verified against a live station with a fake
+        OpenD client (10/10 PASS) and against a station whose probe
+        fails (10/10 PASS with the honest unavailable surface).
+      - Full E2E/a11y: browser suites 31/31 (spa + workstation + live +
+        prediction, ports 8643–8646, 0 skipped); frontend gate green —
+        lint clean (pre-existing fast-refresh warnings only), `tsc -b`
+        clean, vitest 47/47 (6 files), `npm run build` ✓, bundle
+        rebuilt and copied by `tools/build_frontend.py` (byte-identical
+        to the committed bundle).
+- [x] Operator checklist (`docs/runbooks/live-cockpit-operator-checklist.md`).
 - [ ] Clean-checkout release gate, isolated demo/live-read-only
-      acceptance environment, operator checklist, checkpoint record.
+      acceptance environment, checkpoint record.
 
 ## Safety (unchanged invariants)
 
