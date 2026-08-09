@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Menu, Power, RotateCcw, Search, ShieldCheck, X } from 'lucide-react'
+import { Menu, Power, RotateCcw, Search, Settings, ShieldCheck, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -9,17 +9,20 @@ import { CommandPalette } from '@/components/shell/CommandPalette'
 import { useSurface } from '@/components/state'
 import { api } from '@/lib/api'
 import { dateTime } from '@/lib/format'
-import { NAV_GROUPS, NAV_ITEMS, isNavActive, navLabel } from '@/lib/nav'
+import { NAV_GROUPS, NAV_ITEMS, isNavActive } from '@/lib/nav'
+import { usePreferences } from '@/lib/preferences'
 import { cn } from '@/lib/utils'
 
 function SidebarContent({
   onNavigate,
   version,
   runtimeMode,
+  t,
 }: {
   onNavigate?: () => void
   version: string
   runtimeMode: 'demo' | 'live' | 'operator'
+  t: ReturnType<typeof usePreferences>['t']
 }) {
   const location = useLocation()
   return (
@@ -34,7 +37,7 @@ function SidebarContent({
         {NAV_GROUPS.map((group) => (
           <div key={group}>
             <p className="px-2 pb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-              {group}
+              {t(NAV_ITEMS.find((item) => item.group === group)?.groupKey ?? 'group.ops')}
             </p>
             <ul className="space-y-0.5">
               {NAV_ITEMS.filter((item) => item.group === group).map((item) => {
@@ -55,7 +58,7 @@ function SidebarContent({
                       aria-current={active ? 'page' : undefined}
                     >
                       <Icon className="size-4 shrink-0" aria-hidden />
-                      {item.label}
+                      {t(item.labelKey)}
                     </NavLink>
                   </li>
                 )
@@ -67,10 +70,10 @@ function SidebarContent({
       <p className="border-t border-border px-4 py-3 text-[10px] leading-relaxed text-muted-foreground">
         Loopback workstation · the kernel gates every write.{' '}
         {runtimeMode === 'demo'
-          ? 'Demo surfaces are synthetic and labeled.'
+          ? t('shell.footerDemo')
           : runtimeMode === 'live'
-            ? 'Venue feeds are read-only; freshness is shown per source.'
-            : 'No live or demo feed is attached.'}
+            ? t('shell.footerLive')
+            : t('shell.footerOperator')}
       </p>
     </div>
   )
@@ -90,6 +93,7 @@ export function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { t } = usePreferences()
 
   const health = useSurface(['health'], api.health)
   const runtimeMode = health.data?.runtime_mode ?? 'operator'
@@ -126,13 +130,13 @@ export function AppShell() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const title = navLabel(location.pathname)
+  const title = t(NAV_ITEMS.find((item) => isNavActive(location.pathname, item))?.labelKey ?? 'shell.workstation')
 
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-border bg-sidebar lg:block">
-        <SidebarContent version={healthVersion} runtimeMode={runtimeMode} />
+        <SidebarContent version={healthVersion} runtimeMode={runtimeMode} t={t} />
       </aside>
 
       {/* Mobile drawer */}
@@ -152,6 +156,7 @@ export function AppShell() {
               onNavigate={() => setMobileNav(false)}
               version={healthVersion}
               runtimeMode={runtimeMode}
+              t={t}
             />
           </div>
         </div>
@@ -190,7 +195,7 @@ export function AppShell() {
               aria-pressed={engaged}
             >
               <Power className="size-3.5" aria-hidden />
-              {engaged ? `Kill switch on${engagedVenues.length ? ` · ${engagedVenues.join(', ')}` : ''}` : 'Kill switch off'}
+              {engaged ? `${t('shell.killSwitchOn')}${engagedVenues.length ? ` · ${engagedVenues.join(', ')}` : ''}` : t('shell.killSwitchOff')}
             </Button>
 
             {demoAttached && (
@@ -212,7 +217,7 @@ export function AppShell() {
               >
                 <RotateCcw className="size-3.5" aria-hidden />
                 <span className="hidden sm:inline">
-                  {resetArmed ? 'Confirm reset' : 'Reset demo'}
+                  {resetArmed ? t('shell.confirmReset') : t('shell.demoReset')}
                 </span>
               </Button>
             )}
@@ -227,7 +232,7 @@ export function AppShell() {
               aria-label="Open command palette"
             >
               <Search className="size-3.5" aria-hidden />
-              <span className="text-[11px]">Search…</span>
+              <span className="text-[11px]">{t('shell.search')}</span>
               <kbd className="rounded border border-border bg-muted px-1 font-sans text-[10px]">⌘K</kbd>
             </Button>
             <Button
@@ -239,6 +244,14 @@ export function AppShell() {
             >
               <Search className="size-4" aria-hidden />
             </Button>
+            <NavLink
+              to="/settings"
+              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={t('shell.openSettings')}
+              title={t('shell.openSettings')}
+            >
+              <Settings className="size-4" aria-hidden />
+            </NavLink>
           </div>
         </header>
 
@@ -247,10 +260,10 @@ export function AppShell() {
             <ShieldCheck className="size-3.5" aria-hidden />
             <span>
               {runtimeMode === 'demo'
-                ? 'Deterministic paper session — every surface is synthetic and labeled, every order gated by the kernel.'
+                ? t('shell.demoSession')
                 : runtimeMode === 'live'
-                  ? 'Live read-only session — venue freshness and provenance are explicit; paper writes remain kernel-gated.'
-                  : 'Operator mode — no live or demo feed is attached.'}
+                  ? t('shell.liveSession')
+                  : t('shell.operatorSession')}
             </span>
           </div>
           <Outlet />

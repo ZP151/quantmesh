@@ -19,6 +19,8 @@ import {
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
+import { Settings } from 'lucide-react'
+import type { MessageKey } from '@/lib/preferences'
 
 // The target IA (iteration 0014 Phase C): the 13 legacy screens
 // consolidated into the app shell, one entry per LEGACY_TO_SPA route.
@@ -29,27 +31,30 @@ export interface NavItem {
   path: string
   icon: LucideIcon
   group: string
+  labelKey: MessageKey
+  groupKey: MessageKey
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Overview', path: '/', icon: LayoutGrid, group: 'Overview' },
-  { label: 'Markets', path: '/markets', icon: Activity, group: 'Markets' },
-  { label: 'Watchlist', path: '/markets/watchlist', icon: Star, group: 'Markets' },
-  { label: 'Live cockpit', path: '/cockpit', icon: Radio, group: 'Markets' },
-  { label: 'Prediction markets', path: '/prediction', icon: Scale, group: 'Markets' },
-  { label: 'Experiments', path: '/research/experiments', icon: FlaskConical, group: 'Research' },
-  { label: 'Promotions', path: '/research/promotions', icon: Rocket, group: 'Research' },
-  { label: 'Forecasts', path: '/research/forecasts', icon: Gauge, group: 'Research' },
-  { label: 'Paper order', path: '/trading/order', icon: Send, group: 'Trading' },
-  { label: 'Positions', path: '/trading/positions', icon: Wallet, group: 'Trading' },
-  { label: 'Orders', path: '/trading/orders', icon: ClipboardList, group: 'Trading' },
-  { label: 'P&L', path: '/trading/pnl', icon: TrendingUp, group: 'Trading' },
-  { label: 'Risk', path: '/risk', icon: ShieldAlert, group: 'Risk & ops' },
-  { label: 'Connectors', path: '/ops/connectors', icon: Plug, group: 'Risk & ops' },
-  { label: 'Data imports', path: '/ops/imports', icon: Database, group: 'Risk & ops' },
-  { label: 'Audit', path: '/ops/audit', icon: ScrollText, group: 'Risk & ops' },
-  { label: 'Kill switch', path: '/ops/kill-switch', icon: Power, group: 'Risk & ops' },
-  { label: 'Enablement', path: '/ops/enablement', icon: KeyRound, group: 'Risk & ops' },
+  { label: 'Overview', labelKey: 'nav.overview', path: '/', icon: LayoutGrid, group: 'Overview', groupKey: 'group.overview' },
+  { label: 'Markets', labelKey: 'nav.markets', path: '/markets', icon: Activity, group: 'Markets', groupKey: 'group.markets' },
+  { label: 'Watchlist', labelKey: 'nav.watchlist', path: '/markets/watchlist', icon: Star, group: 'Markets', groupKey: 'group.markets' },
+  { label: 'Live cockpit', labelKey: 'nav.cockpit', path: '/cockpit', icon: Radio, group: 'Markets', groupKey: 'group.markets' },
+  { label: 'Prediction markets', labelKey: 'nav.prediction', path: '/prediction', icon: Scale, group: 'Markets', groupKey: 'group.markets' },
+  { label: 'Experiments', labelKey: 'nav.experiments', path: '/research/experiments', icon: FlaskConical, group: 'Research', groupKey: 'group.research' },
+  { label: 'Promotions', labelKey: 'nav.promotions', path: '/research/promotions', icon: Rocket, group: 'Research', groupKey: 'group.research' },
+  { label: 'Forecasts', labelKey: 'nav.forecasts', path: '/research/forecasts', icon: Gauge, group: 'Research', groupKey: 'group.research' },
+  { label: 'Paper order', labelKey: 'nav.paperOrder', path: '/trading/order', icon: Send, group: 'Trading', groupKey: 'group.trading' },
+  { label: 'Positions', labelKey: 'nav.positions', path: '/trading/positions', icon: Wallet, group: 'Trading', groupKey: 'group.trading' },
+  { label: 'Orders', labelKey: 'nav.orders', path: '/trading/orders', icon: ClipboardList, group: 'Trading', groupKey: 'group.trading' },
+  { label: 'P&L', labelKey: 'nav.pnl', path: '/trading/pnl', icon: TrendingUp, group: 'Trading', groupKey: 'group.trading' },
+  { label: 'Risk', labelKey: 'nav.risk', path: '/risk', icon: ShieldAlert, group: 'Risk & ops', groupKey: 'group.ops' },
+  { label: 'Connectors', labelKey: 'nav.connectors', path: '/ops/connectors', icon: Plug, group: 'Risk & ops', groupKey: 'group.ops' },
+  { label: 'Data imports', labelKey: 'nav.imports', path: '/ops/imports', icon: Database, group: 'Risk & ops', groupKey: 'group.ops' },
+  { label: 'Audit', labelKey: 'nav.audit', path: '/ops/audit', icon: ScrollText, group: 'Risk & ops', groupKey: 'group.ops' },
+  { label: 'Kill switch', labelKey: 'nav.killSwitch', path: '/ops/kill-switch', icon: Power, group: 'Risk & ops', groupKey: 'group.ops' },
+  { label: 'Enablement', labelKey: 'nav.enablement', path: '/ops/enablement', icon: KeyRound, group: 'Risk & ops', groupKey: 'group.ops' },
+  { label: 'Settings', labelKey: 'nav.settings', path: '/settings', icon: Settings, group: 'Risk & ops', groupKey: 'group.ops' },
 ]
 
 export const NAV_GROUPS = ['Overview', 'Markets', 'Research', 'Trading', 'Risk & ops']

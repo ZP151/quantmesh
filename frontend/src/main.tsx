@@ -4,10 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
-
-// QuantMesh is a dark-technical product (PRODUCT.md); the class also
-// sits on <html> in index.html so the first paint is already dark.
-document.documentElement.classList.add('dark')
+import { PreferencesProvider } from '@/lib/preferences'
 
 // The FastAPI server hosts the bundle under /app (ADR-0013 decision 2);
 // the router lives on that base so deep links like /app/markets resolve
@@ -27,9 +24,11 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename={ROUTER_BASE}>
-        <App />
-      </BrowserRouter>
+      <PreferencesProvider>
+        <BrowserRouter basename={ROUTER_BASE}>
+          <App />
+        </BrowserRouter>
+      </PreferencesProvider>
     </QueryClientProvider>
   </StrictMode>,
 )

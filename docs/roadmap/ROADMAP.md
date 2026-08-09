@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 
 ## Status legend
 
@@ -220,7 +220,7 @@ Exit criteria:
 
 ## Current delivery plan
 
-### M11 — Interactive workstation acceptance (`ACTIVE`)
+### M11 — Interactive workstation acceptance (`DONE`, RC5 baseline)
 
 Outcome: turn the RC1 engineering shell into a populated, coherent and
 operator-testable local product and publish `v0.1.0-rc2`.
@@ -244,10 +244,35 @@ Exit criteria:
 - RC2 passes the release gate and is explicitly accepted by the operator before
   any `v0.1.0` promotion.
 
-M0 through M10 and the RC1 engineering release are merged. Iteration 0014 and
-M11 are active because operator evidence invalidated M9's usability exit
-criterion. RC2 product acceptance is the critical path; JSONL persistence,
-cross-venue reconciliation and numeric-policy deepening return to the backlog
-unless they block the accepted workflow. Moomoo simulated-account and
-Hyperliquid testnet drills remain optional gates and do not enable live or
-mainnet operation.
+M0 through M10 and the RC1 engineering release are merged. Iterations 0014
+and 0015 converted the former empty shell into a populated, replayable,
+read-only multi-venue workstation and produced the RC5 baseline. Iteration
+0016 is active for global language/theme continuity and the next frontend
+acceptance pass. JSONL persistence, cross-venue reconciliation and
+numeric-policy deepening remain backlog items unless they block the accepted
+workflow. Moomoo simulated-account and Hyperliquid testnet drills remain
+optional gates and do not enable live or mainnet operation.
+
+### M12 — Global preferences and live research continuity (`ACTIVE`)
+
+Outcome: make the local workstation comfortable for long-running personal use
+while increasing the density and trustworthiness of live research surfaces.
+
+Initial deliverables:
+
+- Persistent English/Simplified Chinese UI language selection.
+- System/light/dark theme selection with no-flash startup behavior.
+- Localized shell, navigation, command palette and settings controls.
+- Reviewed translations for the highest-value domain screens.
+- Real-time cockpit charting and quote/book/trade freshness views over the
+  existing read-only MarketUpdate, sequence and replay contracts.
+- AI advisory summaries with citations and no order authority.
+
+Exit criteria:
+
+- Locale/theme survive reload and pass keyboard, compact-width and browser
+  acceptance checks.
+- Every displayed live value has venue, source, sequence/age and degraded
+  state semantics; synthetic/demo data remains unmistakably labeled.
+- A clean checkout can run the demo and read-only live/replay workflows with
+  reproducible tests and a documented acceptance station.

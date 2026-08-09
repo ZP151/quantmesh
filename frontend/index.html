@@ -4,8 +4,20 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
     <title>QuantMesh — Workstation</title>
+    <script>
+      try {
+        const preference = JSON.parse(localStorage.getItem('quantmesh.preferences') || 'null')
+        const theme = preference && ['system', 'light', 'dark'].includes(preference.theme)
+          ? preference.theme
+          : 'dark'
+        const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+        document.documentElement.lang = preference && preference.locale === 'zh-CN' ? 'zh-CN' : 'en'
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
