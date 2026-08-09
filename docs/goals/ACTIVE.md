@@ -121,7 +121,9 @@ makes the business workflow directly testable. Do not promote RC1 to
    Phase A (ADR-0014, contract, buffer, fixture WS server) merged via
    PR #85 (f48d4fd); Phase B (supervisor protocol + Hyperliquid venue
    supervisor, drill-tested 84/84 on the live surface) merged via
-   PR #86 (641f3c6); Phases C–G per the iteration record.
+   PR #86 (641f3c6); Phase C (feed + cockpit screens + browser E2E,
+   1983/1983 backend, 5/5 E2E) merged via PR #87 (553e944); Phases D–G
+   per the iteration record.
 
 ## Standing authority
 
