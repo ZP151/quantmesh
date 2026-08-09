@@ -133,7 +133,39 @@ stale/degraded and blocks paper orders on its instruments.
 - [x] React: Market Cockpit watchlist (real/delayed/stale/synthetic/
       unavailable states), instrument detail (chart, order book, trade
       tape), connector-health panel.
-- [ ] Browser E2E + accessibility/mobile checks for the cockpit.
+- [x] Browser E2E + accessibility/mobile checks for the cockpit.
+
+> **Checkpoint C3 (2026-08-09)** — Phase C landed on main via PR #87
+> (`553e944`). The cockpit E2E (`tests/test_live_e2e.py`) runs the
+> whole stack for real, loopback-only: uvicorn serves the workstation
+> with the live feed attached (the `--live` assembly), the Hyperliquid
+> supervisor talks through `LiveHyperliquidTransport` to the scripted
+> fixture venue on its own asyncio loop (burst at connect, 4 s
+> keep-alive cycles for ~40 s, then an hour of silence with the socket
+> still open — the deterministic quiet-venue condition), and Playwright
+> walks the watchlist streaming (Real badge, quote numbers, connector
+> health, live banner), the instrument detail (hand-drawn SVG chart
+> once two closes arrive, per-side book, trade tape, back link), the
+> stale transition (badge flips to Stale while the transport and banner
+> stay live, no sequence-gap flag), the keyboard-only walk (Tab →
+> Enter → detail → Back link) and the 390×844 viewport (the quote
+> table scrolls inside its overflow container, the body never
+> overflows). Skips cleanly without playwright/chromium or with the
+> pinned port taken. Two real defects found by the E2E, both fixed
+> with drills: the order book never rendered — the frontend
+> `bookSide()` parsed levels as `{price, size}` objects while the
+> ADR-0014 contract (`_validate_l2`) emits `[price, size]` pairs, so
+> every level failed silently (the parse now lives in `lib/live.ts`
+> matching the contract — finite-checked, malformed levels dropped —
+> and is unit-drilled on the real wire shape, closing the client-side
+> gap that had zero l2 coverage; vitest 43/43); and reconnect findings
+> keyed on the venue name fabricated a phantom watchlist row via
+> STATUS — `_surface_findings` now surfaces only watchlist-symbol
+> findings as LAGGING, with a dedicated drill. Green: E2E 5/5, full
+> backend suite 1983/1983, vitest 43/43, `tsc -b` clean, oxlint only
+> pre-existing warnings, ruff clean, bundle repackaged via
+> `tools/build_frontend.py`. Phase D (quote fence) starts from this
+> checkpoint.
 
 > **Checkpoint C2 (2026-08-09)** — Phase C-2 landed on branch
 > `0015-phase-c` atop C1. `src/lib/live.ts` owns the client side: the
