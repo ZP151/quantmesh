@@ -125,8 +125,13 @@ makes the business workflow directly testable. Do not promote RC1 to
    1983/1983 backend, 5/5 E2E) merged via PR #87 (553e944); Phase D
    (deterministic quote fence — provenance/age/sequence gates with
    explicit rejections over paper-order consumption, demo unchanged;
-   2003/2003 backend, ruff clean) merged via PR #89; Phases D–G
-   per the iteration record.
+   2003/2003 backend, ruff clean) merged via PR #89; Phase E
+   (read-only Polymarket + Kalshi public WS supervisors and the
+   prediction comparison board — implied probability/bid-ask/spread/
+   depth/liquidity per venue, signed cross-venue diff, honest
+   distinct states; 71/71 board drills, 226/226 regression, 47/47
+   vitest, 5/5 browser E2E on port 8646) landed on branch
+   `0015-phase-e`; Phases F–G per the iteration record.
 
 ## Standing authority
 

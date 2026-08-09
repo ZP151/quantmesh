@@ -73,6 +73,7 @@ from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
 from quantmesh.live.api import live_router
 from quantmesh.live.feed import LiveFeed
+from quantmesh.live.prediction import PredictionBoard
 from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
@@ -980,6 +981,7 @@ def create_workstation_app(
     hl_posture: HyperliquidRiskLimits | None = None,
     enablement: ApprovalLedger | None = None,
     live_feed: LiveFeed | None = None,
+    prediction: PredictionBoard | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1008,7 +1010,11 @@ def create_workstation_app(
     decision 6). `live_feed` (iteration 0015 Phase C) attaches the live
     read-only feed: the /api/live surface mounts either way (404
     without a feed), and an attached feed starts its pump with the app
-    lifespan and stops it on shutdown.
+    lifespan and stops it on shutdown. `prediction` (iteration 0015
+    Phase E) attaches the prediction comparison board: /live/prediction
+    mounts either way (404 without a board), and an attached board
+    renders the cross-venue comparison from the feed's latest state —
+    no board without its feed, no fabricated probability.
     """
     host = settings.workstation_host if host is None else host
     if not _is_loopback(host):
@@ -1063,6 +1069,12 @@ def create_workstation_app(
     if live_feed is not None:
         app.state.live = live_feed
         app.router.lifespan_context = _feed_lifespan(live_feed)
+    if prediction is not None:
+        # The comparison surface (Phase E): the board renders the
+        # feed's latest state; without an attached feed the handler
+        # still answers "no live feed is attached" — never a board
+        # fabricating numbers from an empty state.
+        app.state.prediction = prediction
 
     if settings.legacy_ui:
         # RC1 rollback mode (ADR-0013 decision 6): the Jinja2 pages
@@ -1389,9 +1401,13 @@ def main(argv: list[str] | None = None) -> None:
     Hyperliquid WS (ADR-0014): the watchlist is
     ``QUANTMESH_LIVE_WATCHLIST`` (comma-separated perp coins), the
     replay lake lives under the operator's data root, and the cockpit
-    renders real, freshness-labeled quotes. ``--demo`` and ``--live``
-    are mutually exclusive — the demo session stays the labeled
-    deterministic runtime, live stays labeled real.
+    renders real, freshness-labeled quotes. When
+    ``QUANTMESH_PREDICTION_WATCHLIST`` is also set (Phase E), the
+    prediction comparison screen attaches with read-only Polymarket
+    and Kalshi supervisors over their public WebSockets — every venue
+    stays read-only market data, never order paths. ``--demo`` and
+    ``--live`` are mutually exclusive — the demo session stays the
+    labeled deterministic runtime, live stays labeled real.
     """
     import argparse
 
@@ -1420,7 +1436,8 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help=(
             "attach the live read-only market feed "
-            "(QUANTMESH_LIVE_WATCHLIST = comma-separated perp coins)"
+            "(QUANTMESH_LIVE_WATCHLIST = comma-separated perp coins; "
+            "QUANTMESH_PREDICTION_WATCHLIST adds the prediction board)"
         ),
     )
     args = parser.parse_args(argv)
@@ -1470,7 +1487,55 @@ def main(argv: list[str] | None = None) -> None:
             )
             supervisor.subscribe(watchlist)
             feed.attach(supervisor)
-            app = create_workstation_app(account=account, live_feed=feed, host=host)
+            prediction = None
+            if settings.prediction_watchlist:
+                # The prediction comparison surface (Phase E): the board
+                # parses the operator's event pairs; each configured
+                # venue gets a read-only supervisor over its public WS,
+                # with the REST book boundaries as resync sources (the
+                # Polymarket CLOB SDK is keyless by construction and the
+                # Kalshi transport pins the public host). A venue with
+                # no pairs is not attached at all — no idle sockets, no
+                # fabricated health rows for an unconfigured venue.
+                from quantmesh.kalshi.transport import HttpxKalshiTransport
+                from quantmesh.live.kalshi import (
+                    KalshiOrderbookSource,
+                    KalshiVenueSupervisor,
+                )
+                from quantmesh.live.polymarket import (
+                    ClobBookSource,
+                    PolymarketVenueSupervisor,
+                )
+                from quantmesh.live.prediction import (
+                    PredictionBoard,
+                    parse_prediction_watchlist,
+                )
+                from quantmesh.polymarket.transport import SdkPolyTransport
+
+                board = PredictionBoard(
+                    parse_prediction_watchlist(settings.prediction_watchlist)
+                )
+                watchlists = board.venues()
+                pm_watchlist = watchlists[Venue.POLYMARKET]
+                if pm_watchlist:
+                    pm = PolymarketVenueSupervisor(
+                        LiveHyperliquidTransport(settings.polymarket_ws_url),
+                        book_source=ClobBookSource(SdkPolyTransport()),
+                    )
+                    pm.subscribe(pm_watchlist)
+                    feed.attach(pm)
+                ks_watchlist = watchlists[Venue.KALSHI]
+                if ks_watchlist:
+                    ks = KalshiVenueSupervisor(
+                        LiveHyperliquidTransport(settings.kalshi_ws_url),
+                        book_source=KalshiOrderbookSource(HttpxKalshiTransport()),
+                    )
+                    ks.subscribe(ks_watchlist)
+                    feed.attach(ks)
+                prediction = board
+            app = create_workstation_app(
+                account=account, live_feed=feed, prediction=prediction, host=host
+            )
         else:
             app = create_workstation_app(account=account, host=host)
     uvicorn.run(app, host=host, port=settings.workstation_port)

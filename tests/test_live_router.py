@@ -33,6 +33,7 @@ from quantmesh.execution.accounting import PaperAccount
 from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import MarketUpdate, Provenance, SourceState, UpdateKind
 from quantmesh.live.feed import LiveFeed
+from quantmesh.live.prediction import demo_board
 
 SSE_HOST = "127.0.0.1"
 SSE_PORT = 8644  # pinned like the other E2E ports; skip when taken
@@ -47,6 +48,7 @@ def _upd(
     instrument: str = "BTC",
     kind: UpdateKind = UpdateKind.QUOTE,
     *,
+    venue: Venue = Venue.HYPERLIQUID,
     provenance: Provenance = Provenance.REAL,
     received_at: datetime | None = None,
     state: SourceState | None = None,
@@ -58,7 +60,7 @@ def _upd(
     # expected outcome unless the test makes the update deliberately old.
     received_at = received_at if received_at is not None else datetime.now(UTC)
     return MarketUpdate(
-        venue=Venue.HYPERLIQUID,
+        venue=venue,
         instrument=instrument,
         kind=kind,
         provenance=provenance,
@@ -129,6 +131,21 @@ def live_app(tmp_path):
         yield client, app, feed
 
 
+@pytest.fixture()
+def prediction_app(tmp_path):
+    """A workstation app with the feed and the demo prediction board
+    attached (Phase E): the comparison surface over the live state."""
+    feed = LiveFeed(lake=LiveBuffer(root=tmp_path), lag=LAG, stale=STALE)
+    app = create_workstation_app(
+        account=PaperAccount(cash=100_000.0),
+        live_feed=feed,
+        prediction=demo_board(),
+        host="127.0.0.1",
+    )
+    with TestClient(app) as client:
+        yield client, app, feed
+
+
 class TestStateEndpoint:
     def test_state_reflects_published_updates(self, live_app) -> None:
         client, _app, feed = live_app
@@ -191,6 +208,7 @@ class TestStateEndpoint:
         # WebSocket routes are not part of OpenAPI — only the HTTP surface.
         assert "/api/live/state" in paths and "/live/state" in paths
         assert "/api/live/stream" in paths and "/live/stream" in paths
+        assert "/api/live/prediction" in paths and "/live/prediction" in paths
 
 
 class TestStatusEndpoint:
@@ -259,6 +277,98 @@ class TestWebSocketStream:
             feed.publish_threadsafe(_upd(sequence=11))
             assert first.receive_json()["sequence"] == 11
             assert second.receive_json()["sequence"] == 11
+
+
+class TestPredictionEndpoint:
+    """The Phase E comparison surface: per-pair venue rows (implied
+    probability, spread, depth, liquidity, freshness label) plus the
+    cross-venue diff — folded from the feed's latest state at one
+    explicit clock, never a fabricated number."""
+
+    def test_full_surface_with_both_venues(self, prediction_app) -> None:
+        client, _app, feed = prediction_app
+        feed.publish_threadsafe(
+            _upd(
+                venue=Venue.POLYMARKET,
+                instrument="0xasset-btc-100k",
+                payload={
+                    "bid": 0.60,
+                    "ask": 0.65,
+                    "bid_size": 100.0,
+                    "ask_size": 75.0,
+                },
+            )
+        )
+        feed.publish_threadsafe(
+            _upd(
+                venue=Venue.KALSHI,
+                instrument="KXBTD-26JUN26-1000-C",
+                payload={"bid": 0.62, "ask": 0.68, "bid_size": 20.0, "ask_size": 80.0},
+            )
+        )
+        rows = client.get("/api/live/prediction").json()
+        pair = next(row for row in rows if row["event_key"] == "btc-100k")
+        assert pair["title"] == "BTC above $100k on 2026-06-26"
+        assert pair["expiry"] == "2026-06-26T00:00:00+00:00"
+        by_venue = {row["venue"]: row for row in pair["venues"]}
+        pm = by_venue["polymarket"]
+        assert pm["probability"] == 62.5
+        assert pm["bid"] == 0.6 and pm["ask"] == 0.65
+        assert pm["spread_bps"] == 800.0
+        assert pm["depth"] == 175.0
+        assert pm["label"] == "real"
+        ks = by_venue["kalshi"]
+        assert ks["probability"] == 65.0
+        assert pair["diff"] == -2.5
+
+    def test_unconfigured_venue_renders_unavailable(self, prediction_app) -> None:
+        client, _app, feed = prediction_app
+        feed.publish_threadsafe(
+            _upd(
+                venue=Venue.POLYMARKET,
+                instrument="0xasset-solo",
+                payload={"bid": 0.3, "ask": 0.34, "bid_size": 10.0, "ask_size": 20.0},
+            )
+        )
+        rows = client.get("/api/live/prediction").json()
+        pair = next(row for row in rows if row["event_key"] == "solo-pm")
+        by_venue = {row["venue"]: row for row in pair["venues"]}
+        assert by_venue["polymarket"]["probability"] == 32.0
+        assert by_venue["kalshi"]["label"] == "unavailable"
+        assert by_venue["kalshi"]["probability"] is None
+        assert pair["diff"] is None
+
+    def test_mounts_agree(self, prediction_app) -> None:
+        client, _app, feed = prediction_app
+        feed.publish_threadsafe(
+            _upd(
+                venue=Venue.POLYMARKET,
+                instrument="0xasset-eth-5k",
+                payload={"bid": 0.5, "ask": 0.54, "bid_size": 1.0, "ask_size": 1.0},
+            )
+        )
+        root = client.get("/live/prediction").json()
+        api = client.get("/api/live/prediction").json()
+        assert root == api
+
+    def test_404_without_a_board(self, live_app) -> None:
+        client, _app, _feed = live_app
+        response = client.get("/api/live/prediction")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "no prediction board is attached"
+
+    def test_404_without_a_feed(self, tmp_path) -> None:
+        # A board without its feed renders nothing: the handler answers
+        # the feed's typed 404, never a fabricated comparison.
+        app = create_workstation_app(
+            account=PaperAccount(cash=100_000.0),
+            prediction=demo_board(),
+            host="127.0.0.1",
+        )
+        with TestClient(app) as client:
+            response = client.get("/api/live/prediction")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "no live feed is attached"
 
 
 class TestNotConfigured:

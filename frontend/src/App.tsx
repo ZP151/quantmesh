@@ -9,6 +9,7 @@ import { ImportsScreen } from '@/screens/Imports'
 import { MarketsScreen } from '@/screens/Markets'
 import { OrderScreen } from '@/screens/Order'
 import { EnablementScreen, KillSwitchScreen } from '@/screens/Ops'
+import { PredictionScreen } from '@/screens/Prediction'
 import { OverviewScreen } from '@/screens/Overview'
 import { ExperimentsScreen, ForecastsScreen, PromotionsScreen } from '@/screens/Research'
 import { RiskScreen } from '@/screens/Risk'
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="markets/watchlist" element={<WatchlistScreen />} />
         <Route path="cockpit" element={<CockpitScreen />} />
         <Route path="cockpit/:symbol" element={<CockpitDetailScreen />} />
+        <Route path="prediction" element={<PredictionScreen />} />
         <Route path="research/experiments" element={<ExperimentsScreen />} />
         <Route path="research/promotions" element={<PromotionsScreen />} />
         <Route path="research/forecasts" element={<ForecastsScreen />} />
