@@ -67,7 +67,13 @@ class TestVersionMetadata:
         # accepted release promotes this to 0.1.0 in the same verified
         # line (docs/release-process.md); an accidental plain 0.1.0 or
         # milestone-coupled number is caught here.
-        assert __version__ == "0.1.0rc1"
+        #
+        # rc3: the rc2 rejection (operator, 2026-08-09) exposed that a
+        # hardcoded pin cannot catch tag/notes/metadata drift — the gate
+        # step tools/check_release_version.py now owns that cross-check;
+        # this test pins the current RC line and keeps the prerelease
+        # contract.
+        assert __version__ == "0.1.0rc3"
         assert Version(__version__).is_prerelease
 
     def test_workstation_footer_shows_the_package_version(self) -> None:

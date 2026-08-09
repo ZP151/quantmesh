@@ -1,14 +1,17 @@
 # Active Goal
 
 - Status: active
-- Objective: deliver `v0.1.0-rc2` as a populated, coherent and browser-testable
+- Objective: deliver `v0.1.0-rc3` (rc2 rejected by the operator on
+  version-metadata drift) as a populated, coherent and browser-testable
   local quantitative workstation, then obtain explicit operator acceptance
 - Started: 2026-08-09
 - Active iteration:
   `docs/iterations/0014-v0.1.0-rc2-interactive-product-acceptance.md`
-- Branch: `0014-rc2-product-acceptance`, based on `origin/main`; RC1 publication
-  checkpoint `0fea221` was preserved as cherry-pick `e0f9c3d`
-- Pull request: none; solo fast lane authorizes one integration PR for RC2
+- Branch: `0014-rc3-version-gate`, based on `origin/main`; RC1 publication
+  checkpoint `0fea221` was preserved as cherry-pick `e0f9c3d`; RC2 is the
+  historical tag `v0.1.0-rc2` @ `710a931` (rejected, not rewritten)
+- Pull request: one integration PR per RC; the current one is the rc3
+  version-gate fix (iteration 0014 Checkpoint 6)
 - Blockers: none external for deterministic demo and UI work
 
 ## Current state
@@ -64,18 +67,25 @@ makes the business workflow directly testable. Do not promote RC1 to
 6. ~~Run the full release gate from a clean checkout, merge the single
    RC2 PR, tag the verified merge commit `v0.1.0-rc2`~~ (done, Phase F):
    gate run 4 PASSED on HEAD `737f8c9` (14/14 steps, 1865 tests /
-   0 failed, golden path 53/53, clone clean; real numbers in
-   `docs/release-notes/v0.1.0-rc2.md`), PR #75 squash-merged into main
-   at `710a931`, tag `v0.1.0-rc2` pushed on the merge commit, CI green
-   on the PR; the two gate-caught E2E interleaving defects were fixed
-   and recorded (iteration 0014 Checkpoint 5). Isolated install
-   reproduced from the tag under
-   `C:\Users\15492\Develop\quantmesh-rc2-acceptance`: golden path
-   53/53 PASSED on that tree and `quantmesh-workstation --demo` is
-   live at http://127.0.0.1:8766/app/ (seeded scenario with full
-   provenance). Remaining: the operator runs the browser acceptance
-   checklist against that install, then promotion to `v0.1.0` happens
-   only after explicit human acceptance.
+   0 failed, golden path 53/53, clone clean), PR #75 squash-merged
+   into main at `710a931`, tag `v0.1.0-rc2` pushed, isolated install
+   reproduced and the workstation live on 8766. **The operator then
+   rejected RC2 (2026-08-09): the tag claimed `v0.1.0-rc2` while the
+   package still reported `0.1.0rc1` in pyproject.toml, `__init__.py`
+   and the pinned test — the gate could not see it because the test
+   pinned rc1. Promotion to `v0.1.0` is forbidden.** The published rc2
+   tag is the historical record and is not rewritten (iteration 0014
+   Checkpoint 6).
+7. ~~Fix the version drift and release `v0.1.0-rc3`~~ (in progress,
+   rc3 cycle): the three version locations read `0.1.0rc3`; new gate
+   step `tools/check_release_version.py` asserts Git tag == package
+   version == newest release notes and is verified failing on the old
+   rc2 commit; rc3 release notes (EN + zh-CN) written; rc2 notes
+   corrected. Remaining: PR → full release gate on the branch HEAD →
+   squash-merge → tag `v0.1.0-rc3` on the merge commit → regenerate
+   the isolated acceptance environment from the tag → golden path
+   53/53 → workstation on 8766 → full browser acceptance checklist →
+   promotion to `v0.1.0` only after explicit operator acceptance.
 
 ## Standing authority
 

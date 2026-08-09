@@ -10,23 +10,28 @@ Steps, all under a temporary root:
   1. Refuse to run from a dirty source checkout (the release commit
      must be exactly what Git records).
   2. Clone the current commit into the temporary root.
-  3. Create a fresh venv there and install the release extras
+  3. Release-version consistency (``tools/check_release_version.py``):
+     pyproject and ``__init__`` agree, the newest release-notes file
+     declares the same version, and any version tag at HEAD matches —
+     the rc2 rejection (tag ``v0.1.0-rc2`` vs metadata ``0.1.0rc1``)
+     closed this hole in the gate.
+  4. Create a fresh venv there and install the release extras
      ``.[dev,research,e2e]``.
-  4. Ruff over ``src tests tools``.
-  5. License review (the closure contract: every pinned package
+  5. Ruff over ``src tests tools``.
+  6. License review (the closure contract: every pinned package
      installed and allowed, nothing untracked installed).
-  6. pip-audit over ``requirements-audit.txt`` from an *isolated*
+  7. pip-audit over ``requirements-audit.txt`` from an *isolated*
      tooling venv, so the scanner's own CLI dependencies never enter
      the release environment. ``--disable-pip``: the lock is already
      the frozen resolution, so the audit reads the pins directly with
      no re-resolution (pip's resolver would try to rebuild the
      Linux-only closure members on Windows).
-  7. Full pytest suite (E2E tests use the shared Playwright browser
+  8. Full pytest suite (E2E tests use the shared Playwright browser
      cache and are reported as skipped when it is unavailable).
-  8. The golden path (``tools/golden_path.py``: fixture -> data lake
+  9. The golden path (``tools/golden_path.py``: fixture -> data lake
      -> strategy reports -> internal paper -> all 13 workstation
      screens -> restart recovery with every audit ledger re-read).
-  9. Clean-checkout proof: ``git status --porcelain`` in the clone
+ 10. Clean-checkout proof: ``git status --porcelain`` in the clone
      must be empty after all of the above.
 
 All generated state lives under the temporary root. On success it is
@@ -154,6 +159,12 @@ def main() -> int:
             ["git", "clone", "--no-hardlinks", "-q", ".", str(checkout)],
             REPO,
             600,
+        ),
+        step(
+            "release version consistent (metadata, notes, tag)",
+            [sys.executable, "tools/check_release_version.py"],
+            checkout,
+            120,
         ),
         step(
             "fresh venv",
