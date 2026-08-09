@@ -177,11 +177,15 @@ class TestRunForecast:
 
     def test_unresolved_market_never_evaluates(self):
         market = _market(resolution=None)
+        grid = _grid(10)
         _, per_market = run_forecast(
-            [ForecastMarket(market=market, observations=_grid(10))],
+            [ForecastMarket(market=market, observations=grid)],
             window_spec=_spec(train=5, test=5),
         )
         assert all(window.brier is None for window in per_market[0].windows)
+        assert per_market[0].latest_probability == grid[-1].probability
+        assert per_market[0].latest_probability_at == grid[-1].timestamp
+        assert per_market[0].latest_liquidity_confidence == grid[-1].liquidity_confidence
 
     def test_resolved_market_evaluates_with_calibration_bins(self):
         market = _market(resolution=["Yes"], resolved_at=_T0 + 20 * _HOUR)

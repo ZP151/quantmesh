@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api, type EvaluationRow, type ForecastReport } from '@/lib/api'
-import { dateTime, shortHash, venueLabel } from '@/lib/format'
+import { dateTime, percent, shortHash, venueLabel } from '@/lib/format'
 
 const paperOrderAction = (
   <Button variant="outline" size="sm" render={<Link to="/trading/order" />}>
@@ -148,6 +148,16 @@ export function PromotionsScreen() {
 // --- Forecasts -----------------------------------------------------------
 
 function ReportCard({ report }: { report: ForecastReport }) {
+  const calibrationSummary = (market: ForecastReport['markets'][number]) => {
+    if (market.n_evaluated_windows > 0) {
+      return `Measured on ${market.n_evaluated_windows} resolved window${market.n_evaluated_windows === 1 ? '' : 's'} with Brier scoring.`
+    }
+    if (market.resolved) {
+      return 'Calibration pending: no resolved test observations are available in this window.'
+    }
+    return 'Calibration pending: market is open; Brier scoring begins after resolution.'
+  }
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -194,8 +204,35 @@ function ReportCard({ report }: { report: ForecastReport }) {
                   {market.resolved ? 'resolved' : 'open'}
                 </Badge>
               </div>
+              <div className="mt-3 grid grid-cols-2 gap-3 rounded-lg bg-muted/30 px-3 py-2 text-xs sm:grid-cols-3">
+                <div>
+                  <p className="text-muted-foreground">Probability</p>
+                  <p className="font-mono text-base font-semibold tabular-nums">
+                    {percent(market.latest_probability)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Observed</p>
+                  <p className="font-mono tabular-nums">
+                    {market.latest_probability_at ? dateTime(market.latest_probability_at) : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Liquidity confidence</p>
+                  <p className="font-mono tabular-nums">
+                    {percent(market.latest_liquidity_confidence)}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Calibration:</span>{' '}
+                {calibrationSummary(market)}
+              </p>
               <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                 {market.market_id} · {venueLabel(market.venue)} · expires {dateTime(market.expiry_at)}
+              </p>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Source: {venueLabel(market.venue)} implied probability · deterministic seeded observation
               </p>
             </div>
           ))}

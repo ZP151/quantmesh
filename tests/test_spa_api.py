@@ -69,6 +69,10 @@ def test_read_surface_serves_the_demo_screens(demo_client) -> None:
     forecasts = client.get("/api/forecasts").json()
     assert len(forecasts["reports"]) == SCENARIO.surface_counts["forecasts"]
     assert all(report["artifacts_present"] for report in forecasts["reports"])
+    first_market = forecasts["reports"][0]["markets"][0]
+    assert 0 < first_market["latest_probability"] < 1
+    assert first_market["latest_probability_at"]
+    assert 0 <= first_market["latest_liquidity_confidence"] <= 1
 
     risk = client.get("/api/risk").json()
     assert len(risk["alerts"]) == SCENARIO.surface_counts["alerts"]

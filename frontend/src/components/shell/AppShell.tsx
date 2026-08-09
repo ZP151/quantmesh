@@ -12,14 +12,14 @@ import { dateTime } from '@/lib/format'
 import { NAV_GROUPS, NAV_ITEMS, isNavActive, navLabel } from '@/lib/nav'
 import { cn } from '@/lib/utils'
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ onNavigate, version }: { onNavigate?: () => void; version: string }) {
   const location = useLocation()
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center gap-2 px-4">
         <span className="text-base font-semibold tracking-tight">QuantMesh</span>
         <Badge variant="outline" className="font-mono text-[10px]">
-          rc2
+          {version}
         </Badge>
       </div>
       <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2" aria-label="Screens">
@@ -80,6 +80,8 @@ export function AppShell() {
   const queryClient = useQueryClient()
 
   const demoStatus = useSurface(['demo-status'], api.demoStatus)
+  const health = useSurface(['health'], api.health)
+  const healthVersion = health.data?.version ? `v${health.data.version}` : 'local'
   const demoAttached =
     demoStatus.data !== undefined ||
     (demoStatus.isError && !(demoStatus.error instanceof ApiError && demoStatus.error.status === 404))
@@ -115,7 +117,7 @@ export function AppShell() {
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-border bg-sidebar lg:block">
-        <SidebarContent />
+        <SidebarContent version={healthVersion} />
       </aside>
 
       {/* Mobile drawer */}
@@ -131,7 +133,7 @@ export function AppShell() {
             >
               <X className="size-4" aria-hidden />
             </button>
-            <SidebarContent onNavigate={() => setMobileNav(false)} />
+            <SidebarContent onNavigate={() => setMobileNav(false)} version={healthVersion} />
           </div>
         </div>
       )}

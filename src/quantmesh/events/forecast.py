@@ -172,10 +172,25 @@ class ForecastWindowResult(BaseModel):
 
 
 class MarketForecast(BaseModel):
-    """One market's evaluation windows, in window order."""
+    """One market's latest probability and evaluation windows.
+
+    The latest observation is retained alongside the evaluation output so
+    operator surfaces can show the probability that was actually observed
+    without reconstructing or inventing a current quote from a report that
+    only contains historical windows.
+    """
 
     market_id: str = Field(min_length=1)
+    latest_probability: float | None = Field(default=None, ge=0, le=1)
+    latest_probability_at: datetime | None = None
+    latest_liquidity_confidence: float | None = Field(default=None, ge=0, le=1)
     windows: list[ForecastWindowResult] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def latest_timestamp_is_aware(self) -> "MarketForecast":
+        if self.latest_probability_at is not None and self.latest_probability_at.tzinfo is None:
+            raise ValueError("latest_probability_at must be timezone-aware")
+        return self
 
 
 def _market_identity(market: EventMarket) -> dict:
@@ -328,6 +343,9 @@ def run_forecast(
         per_market.append(
             MarketForecast(
                 market_id=f"{market.venue.value}:{market.venue_market_id}",
+                latest_probability=entry.observations[-1].probability,
+                latest_probability_at=entry.observations[-1].timestamp,
+                latest_liquidity_confidence=entry.observations[-1].liquidity_confidence,
                 windows=windows,
             )
         )

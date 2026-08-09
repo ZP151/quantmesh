@@ -1,17 +1,16 @@
 # Active Goal
 
 - Status: active
-- Objective: deliver `v0.1.0-rc3` (rc2 rejected by the operator on
-  version-metadata drift) as a populated, coherent and browser-testable
-  local quantitative workstation, then obtain explicit operator acceptance
+- Objective: resolve the RC3 browser-acceptance defects, cut a new
+  reproducible release candidate, then obtain explicit operator acceptance
 - Started: 2026-08-09
 - Active iteration:
   `docs/iterations/0014-v0.1.0-rc2-interactive-product-acceptance.md`
-- Branch: `0014-rc3-version-gate`, based on `origin/main`; RC1 publication
-  checkpoint `0fea221` was preserved as cherry-pick `e0f9c3d`; RC2 is the
-  historical tag `v0.1.0-rc2` @ `710a931` (rejected, not rewritten)
-- Pull request: one integration PR per RC; the current one is the rc3
-  version-gate fix (iteration 0014 Checkpoint 6)
+- Branch: `0014-rc4-acceptance-surface`, based on `origin/main`; RC1
+  publication checkpoint `0fea221` was preserved as cherry-pick `e0f9c3d`;
+  RC2 is the historical tag `v0.1.0-rc2` @ `710a931` (rejected, not rewritten)
+- Pull request: one integration PR per RC; do not create the next release PR
+  until this acceptance-surface fix has its release version and gate evidence
 - Blockers: none external for deterministic demo and UI work
 
 ## Current state
@@ -91,9 +90,14 @@ makes the business workflow directly testable. Do not promote RC1 to
    `0.1.0rc3`, `/api/health` → `0.1.0rc3`); golden path 53/53 on the
    rc3 tree; workstation live at http://127.0.0.1:8766/app/ (PID
    41852) with `OPERATOR-ACCEPTANCE.md` at the acceptance root.
-   **Remaining: the operator runs the full browser acceptance
-   checklist against that install, then promotion to `v0.1.0`
-   happens only after explicit human acceptance.**
+   **RC3 acceptance was subsequently re-run by an authorized automated
+   browser review and found two product defects: Forecasts exposed neither a
+   probability nor a calibration explanation, and the SPA chrome displayed
+   `rc2` despite API/package RC3 metadata. RC3 must not be promoted.**
+8. Fix the two acceptance-surface defects, package a new RC, and re-run the
+   clean-checkout release gate before asking for human sign-off. The local
+   fix is browser-verified and has 1,862 passed / 3 skipped tests; evidence is
+   in iteration 0014 Checkpoint 9. The existing `v0.1.0-rc3` tag is immutable.
 
 ## Standing authority
 
@@ -115,7 +119,8 @@ labeled and isolated from non-demo operator state.
 ## Resume instruction
 
 Run `/goal`, then read this file, `PRODUCT.md`, iteration 0014, the roadmap,
-relevant ADRs, Git state and GitHub state. Continue through the documented
-phases until RC2 is tagged and the isolated browser acceptance checklist is
-ready for the operator. Implementation details and evidence belong in the
-iteration record; keep this file limited to current truth and frontier.
+relevant ADRs, Git state and GitHub state. Deliver the next RC through its
+clean-checkout gate and a regenerated isolated acceptance environment; promote
+only after explicit human acceptance. Implementation details and evidence
+belong in the iteration record; keep this file limited to current truth and
+frontier.

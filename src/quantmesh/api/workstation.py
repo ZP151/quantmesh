@@ -475,11 +475,11 @@ def _market_view(report: object, market: object) -> dict[str, object]:
     """One market's evaluation card: identity plus the windows that
     evaluate its implied probabilities.
 
-    A forecast report records window results, not the observation grid,
-    so a "current probability" cannot be rendered from it — the card
-    shows the evaluation of the venue's mid-derived probabilities, and
-    an unresolved window renders "pending", never a fabricated number.
-    The universe member is matched back by composite id.
+    The forecast report retains its latest observed probability explicitly;
+    expose that value and its timestamp rather than fabricating a current
+    quote from window results. An unresolved window renders "pending", never
+    a fabricated calibration score. The universe member is matched back by
+    composite id.
     """
     member = next(
         (
@@ -502,6 +502,13 @@ def _market_view(report: object, market: object) -> dict[str, object]:
             else None
         ),
         "resolved": bool(member.resolution) if member is not None else False,
+        "latest_probability": market.latest_probability,
+        "latest_probability_at": (
+            market.latest_probability_at.isoformat()
+            if market.latest_probability_at is not None
+            else None
+        ),
+        "latest_liquidity_confidence": market.latest_liquidity_confidence,
         "n_evaluated_windows": sum(1 for window in windows if window["brier"] is not None),
         "windows": windows,
     }
