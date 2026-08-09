@@ -8,6 +8,8 @@ import { Page } from '@/components/page'
 import { Notice, Surface, useSurface } from '@/components/state'
 import { api, ApiError, type ConnectorState, type FetchReport } from '@/lib/api'
 import { dateTime, moneyPrecise, quantity, venueLabel } from '@/lib/format'
+import type { MessageKey } from '@/lib/messages'
+import { usePreferences } from '@/lib/preferences'
 import { cn } from '@/lib/utils'
 
 const STATE_VARIANT: Record<ConnectorState['state'], 'default' | 'outline' | 'destructive' | 'secondary'> = {
@@ -18,11 +20,11 @@ const STATE_VARIANT: Record<ConnectorState['state'], 'default' | 'outline' | 'de
   unprobed: 'secondary',
 }
 
-const KIND_LABEL: Record<ConnectorState['kind'], string> = {
-  fixture: 'Deterministic demo fixture',
-  'public-data': 'Credential-free public data',
-  'execution-sim': 'Execution simulator',
-  unwired: 'Fixture-only in this release',
+const KIND_KEY: Record<ConnectorState['kind'], MessageKey> = {
+  fixture: 'screen.connectors.kind.fixture',
+  'public-data': 'screen.connectors.kind.public',
+  'execution-sim': 'screen.connectors.kind.execution',
+  unwired: 'screen.connectors.kind.unwired',
 }
 
 /** Connectors: explicit diagnostics for every data surface. The panel
@@ -35,6 +37,8 @@ export function ConnectorsScreen() {
   const queryClient = useQueryClient()
   const panel = useSurface(['connectors'], api.connectors)
   const overview = useSurface(['overview'], api.overview)
+
+  const { t } = usePreferences()
 
   const probe = useMutation({
     mutationFn: api.probeConnectors,
@@ -52,21 +56,23 @@ export function ConnectorsScreen() {
 
   return (
     <Page
-      title="Connectors"
-      description="Read-only diagnostics for every data surface. Only the demo fixture and the credential-free Hyperliquid testnet path are wired in this release; everything else is an explicit unwired or degraded state."
+      title={t('screen.connectors.title')}
+      description={t('screen.connectors.description')}
       actions={
         <Button variant="outline" size="sm" onClick={() => probe.mutate()} disabled={probe.isPending}>
           <RefreshCw className={cn('size-3.5', probe.isPending && 'animate-spin')} aria-hidden />
-          Probe all
+          {t('screen.connectors.probeAll')}
         </Button>
       }
     >
-      <Surface query={panel} title="Connectors">
+      <Surface query={panel} title={t('screen.connectors.title')}>
         {(connectors) => (
           <div className="space-y-5">
             {probe.isError && (
               <Notice>
-                Probe refused: {probe.error instanceof ApiError ? probe.error.message : String(probe.error)}
+                {t('screen.connectors.probeRefused', {
+                  detail: probe.error instanceof ApiError ? probe.error.message : String(probe.error),
+                })}
               </Notice>
             )}
             <div className="grid gap-4 md:grid-cols-2">
@@ -86,6 +92,7 @@ export function ConnectorsScreen() {
 }
 
 function ConnectorCard({ connector }: { connector: ConnectorState }) {
+  const { t } = usePreferences()
   const badge = (
     <Badge variant={STATE_VARIANT[connector.state] ?? 'outline'} className="font-mono text-[10px]">
       {connector.state}
@@ -100,22 +107,27 @@ function ConnectorCard({ connector }: { connector: ConnectorState }) {
           {badge}
         </CardTitle>
         <CardDescription>
-          {KIND_LABEL[connector.kind]} · {connector.mode} · {connector.read_only ? 'read-only' : 'writable'}
-          {connector.credentials_required ? ' · credentials required' : ' · credential-free'}
+          {t(KIND_KEY[connector.kind])} · {connector.mode} ·{' '}
+          {connector.read_only ? t('screen.connectors.readOnly') : t('screen.connectors.writable')}
+          {connector.credentials_required
+            ? ` · ${t('screen.connectors.credentialsRequired')}`
+            : ` · ${t('screen.connectors.credentialFree')}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         <p className="text-muted-foreground">{connector.detail}</p>
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-[11px] text-muted-foreground">
-          <dt>wired</dt>
-          <dd className="text-right">{connector.wired ? 'yes' : 'no'}</dd>
-          <dt>last probe</dt>
+          <dt>{t('screen.connectors.dl.wired')}</dt>
           <dd className="text-right">
-            {connector.last_checked_at ? dateTime(connector.last_checked_at) : 'never'}
+            {connector.wired ? t('screen.connectors.dl.yes') : t('screen.connectors.dl.no')}
+          </dd>
+          <dt>{t('screen.connectors.dl.lastProbe')}</dt>
+          <dd className="text-right">
+            {connector.last_checked_at ? dateTime(connector.last_checked_at) : t('screen.connectors.dl.never')}
           </dd>
           {connector.latency_ms !== null && (
             <>
-              <dt>latency</dt>
+              <dt>{t('screen.connectors.dl.latency')}</dt>
               <dd className="text-right">{connector.latency_ms.toFixed(0)} ms</dd>
             </>
           )}
@@ -132,6 +144,7 @@ function PublicFetchCard({
   symbols: string[]
   onFetched: () => void
 }) {
+  const { t } = usePreferences()
   const [selection, setSelection] = useState<string[]>([])
   const [report, setReport] = useState<FetchReport | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -150,16 +163,12 @@ function PublicFetchCard({
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          Hyperliquid public fetch
+          {t('screen.connectors.fetch.title')}
           <Badge variant="outline" className="font-mono text-[10px]">
-            read-only · testnet pinned
+            {t('screen.connectors.fetch.pinned')}
           </Badge>
         </CardTitle>
-        <CardDescription>
-          One credential-free l2Book snapshot per symbol, cached under <code className="font-mono">.datalink</code>.
-          A missing SDK, unreachable venue or rate-limit answer falls back to the seeded demo book — labeled
-          synthetic, never a blank row.
-        </CardDescription>
+        <CardDescription>{t('screen.connectors.fetch.description', { cache: '.datalink' })}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -187,7 +196,7 @@ function PublicFetchCard({
             )
           })}
           {symbols.length === 0 && (
-            <p className="text-xs text-muted-foreground">No Hyperliquid instruments in the demo universe.</p>
+            <p className="text-xs text-muted-foreground">{t('screen.connectors.fetch.noInstruments')}</p>
           )}
         </div>
         <Button
@@ -200,7 +209,11 @@ function PublicFetchCard({
           }
         >
           <RefreshCw className={cn('size-3.5', fetch.isPending && 'animate-spin')} aria-hidden />
-          {fetch.isPending ? 'Fetching…' : `Fetch ${selection.length} snapshot${selection.length === 1 ? '' : 's'}`}
+          {fetch.isPending
+            ? t('screen.connectors.fetch.fetching')
+            : selection.length === 1
+              ? t('screen.connectors.fetch.fetchOne')
+              : t('screen.connectors.fetch.fetchMany', { count: String(selection.length) })}
         </Button>
         {error && (
           <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
@@ -212,12 +225,12 @@ function PublicFetchCard({
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  <th className="py-1.5 pr-3 font-medium">Symbol</th>
-                  <th className="py-1.5 pr-3 font-medium">Best bid</th>
-                  <th className="py-1.5 pr-3 font-medium">Best ask</th>
-                  <th className="py-1.5 pr-3 font-medium">Levels</th>
-                  <th className="py-1.5 pr-3 font-medium">Source</th>
-                  <th className="py-1.5 font-medium">Provenance</th>
+                  <th className="py-1.5 pr-3 font-medium">{t('table.symbol')}</th>
+                  <th className="py-1.5 pr-3 font-medium">{t('screen.connectors.col.bestBid')}</th>
+                  <th className="py-1.5 pr-3 font-medium">{t('screen.connectors.col.bestAsk')}</th>
+                  <th className="py-1.5 pr-3 font-medium">{t('screen.connectors.col.levels')}</th>
+                  <th className="py-1.5 pr-3 font-medium">{t('screen.connectors.col.source')}</th>
+                  <th className="py-1.5 font-medium">{t('screen.connectors.col.provenance')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -242,7 +255,8 @@ function PublicFetchCard({
                         </span>
                       ) : (
                         <>
-                          {dateTime(row.fetched_at)} · {quantity(row.levels)} levels
+                          {dateTime(row.fetched_at)} ·{' '}
+                          {t('screen.connectors.levelsCount', { count: quantity(row.levels) })}
                           {row.cache && <> · <code>{row.cache}</code></>}
                         </>
                       )}

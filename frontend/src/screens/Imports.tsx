@@ -10,6 +10,7 @@ import { Page } from '@/components/page'
 import { Notice, Surface, useSurface } from '@/components/state'
 import { api, ApiError, type ImportCommitResult, type ImportPreview } from '@/lib/api'
 import { dateTime } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
 // The canonical OHLCV fields the lake accepts; the required four are
 // exactly what commit_import enforces on the backend.
@@ -40,6 +41,7 @@ function cell(value: string | number | boolean | null): string {
 export function ImportsScreen() {
   const queryClient = useQueryClient()
   const committed = useSurface(['imports'], api.imports)
+  const { t } = usePreferences()
 
   // Upload form state.
   const fileInput = useRef<HTMLInputElement>(null)
@@ -114,12 +116,12 @@ export function ImportsScreen() {
 
   return (
     <Page
-      title="Data imports"
-      description="CSV, JSON or Parquet → preview, field mapping, per-row validation with rejection reasons, and a dataset manifest under the demo lake. Imports only create new datasets — seeded state is never overwritten."
+      title={t('screen.imports.title')}
+      description={t('screen.imports.description')}
       actions={
         preview !== null ? (
           <Button variant="ghost" size="sm" onClick={resetForm}>
-            Discard preview
+            {t('screen.imports.discard')}
           </Button>
         ) : undefined
       }
@@ -128,12 +130,9 @@ export function ImportsScreen() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Upload className="size-4" aria-hidden /> Import a file
+              <Upload className="size-4" aria-hidden /> {t('screen.imports.importFile')}
             </CardTitle>
-            <CardDescription>
-              At most 25 MiB and 100,000 rows. Timestamps may be ISO-8601 or epoch seconds/millis; OHLCV
-              values must be numeric.
-            </CardDescription>
+            <CardDescription>{t('screen.imports.limits')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
@@ -160,7 +159,7 @@ export function ImportsScreen() {
                 <span>{uploadError}</span>
               </p>
             )}
-            {upload.isPending && <Notice>Parsing the file…</Notice>}
+            {upload.isPending && <Notice>{t('screen.imports.parsing')}</Notice>}
           </CardContent>
         </Card>
 
@@ -173,13 +172,10 @@ export function ImportsScreen() {
                   {preview.format}
                 </Badge>
                 <Badge variant="outline" className="font-mono text-[10px]">
-                  {preview.rows} rows
+                  {t('screen.imports.rowsBadge', { count: String(preview.rows) })}
                 </Badge>
               </CardTitle>
-              <CardDescription>
-                Map each canonical field to a file column. Suggested mappings were inferred from the
-                column names; required fields are marked.
-              </CardDescription>
+              <CardDescription>{t('screen.imports.mapHint')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -197,7 +193,7 @@ export function ImportsScreen() {
                         setMapping((current) => ({ ...current, [field]: event.target.value }))
                       }
                     >
-                      <option value="">Not mapped</option>
+                      <option value="">{t('screen.imports.notMapped')}</option>
                       {preview.columns.map((column) => (
                         <option key={column.name} value={column.name}>
                           {column.name} · {column.inferred}
@@ -209,13 +205,13 @@ export function ImportsScreen() {
               </div>
               {missing.length > 0 && (
                 <p className="text-xs text-destructive">
-                  Required fields without a column: {missing.join(', ')}
+                  {t('screen.imports.missingRequired', { fields: missing.join(', ') })}
                 </p>
               )}
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="import-dataset">Dataset name</Label>
+                  <Label htmlFor="import-dataset">{t('screen.imports.datasetName')}</Label>
                   <Input
                     id="import-dataset"
                     value={dataset}
@@ -224,7 +220,7 @@ export function ImportsScreen() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="import-symbol">Symbol</Label>
+                  <Label htmlFor="import-symbol">{t('table.symbol')}</Label>
                   <Input
                     id="import-symbol"
                     value={symbol}
@@ -233,7 +229,7 @@ export function ImportsScreen() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="import-interval">Interval</Label>
+                  <Label htmlFor="import-interval">{t('screen.imports.interval')}</Label>
                   <select
                     id="import-interval"
                     className="h-8 w-full rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -249,7 +245,7 @@ export function ImportsScreen() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="import-venue">Venue</Label>
+                    <Label htmlFor="import-venue">{t('table.venue')}</Label>
                     <select
                       id="import-venue"
                       className="h-8 w-full rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -264,7 +260,7 @@ export function ImportsScreen() {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="import-type">Type</Label>
+                    <Label htmlFor="import-type">{t('screen.imports.type')}</Label>
                     <select
                       id="import-type"
                       className="h-8 w-full rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -285,7 +281,7 @@ export function ImportsScreen() {
                 <table className="w-full min-w-[640px] text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                      <th className="py-1.5 pr-3 font-medium">Row</th>
+                      <th className="py-1.5 pr-3 font-medium">{t('screen.imports.col.row')}</th>
                       {preview.columns.map((column) => (
                         <th key={column.name} className="py-1.5 pr-3 font-medium">
                           {column.name}{' '}
@@ -323,12 +319,11 @@ export function ImportsScreen() {
                 }
               >
                 <CircleCheck className="size-4" aria-hidden />
-                {commit.isPending ? 'Committing…' : `Commit dataset (${preview.rows} rows)`}
+                {commit.isPending
+                  ? t('screen.imports.committing')
+                  : t('screen.imports.commitDataset', { count: String(preview.rows) })}
               </Button>
-              <p className="text-[11px] text-muted-foreground">
-                Rows that fail validation are rejected with their reason — the file is never
-                half-imported. An existing dataset name is refused (imports create new datasets only).
-              </p>
+              <p className="text-[11px] text-muted-foreground">{t('screen.imports.commitNote')}</p>
             </CardContent>
           </Card>
         )}
@@ -337,19 +332,20 @@ export function ImportsScreen() {
           <Card className="border-emerald-500/40">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base text-emerald-500">
-                <CircleCheck className="size-4" aria-hidden /> {lastCommit.dataset} committed
+                <CircleCheck className="size-4" aria-hidden />{' '}
+                {t('screen.imports.committed', { dataset: lastCommit.dataset })}
               </CardTitle>
               <CardDescription>
-                Source <code className="font-mono">{lastCommit.source}</code> · license{' '}
-                <code className="font-mono">{lastCommit.license}</code> · revision{' '}
-                {lastCommit.revision} · {dateTime(lastCommit.generated_at)}
+                {t('screen.imports.meta.source')} <code className="font-mono">{lastCommit.source}</code> ·{' '}
+                {t('screen.imports.meta.license')} <code className="font-mono">{lastCommit.license}</code> ·{' '}
+                {t('screen.imports.meta.revision')} {lastCommit.revision} · {dateTime(lastCommit.generated_at)}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex flex-wrap gap-2">
-                <Badge variant="default">{lastCommit.accepted} accepted</Badge>
+                <Badge variant="default">{t('screen.imports.accepted', { count: String(lastCommit.accepted) })}</Badge>
                 {lastCommit.rejected > 0 && (
-                  <Badge variant="destructive">{lastCommit.rejected} rejected</Badge>
+                  <Badge variant="destructive">{t('screen.imports.rejected', { count: String(lastCommit.rejected) })}</Badge>
                 )}
               </div>
               {lastCommit.rejections.length > 0 && (
@@ -357,8 +353,8 @@ export function ImportsScreen() {
                   <table className="w-full min-w-[480px] text-sm">
                     <thead>
                       <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                        <th className="py-1.5 pr-3 font-medium">Row</th>
-                        <th className="py-1.5 font-medium">Reason</th>
+                        <th className="py-1.5 pr-3 font-medium">{t('screen.imports.col.row')}</th>
+                        <th className="py-1.5 font-medium">{t('screen.imports.col.reason')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -376,8 +372,14 @@ export function ImportsScreen() {
               )}
               {lastCommit.coverage.map((entry) => (
                 <p key={`${entry.interval}-${entry.venue}-${entry.symbol}`} className="font-mono text-xs text-muted-foreground">
-                  {entry.interval} · {entry.venue}:{entry.symbol} · {entry.rows} bars ·{' '}
-                  {dateTime(entry.start)} → {dateTime(entry.end)}
+                  {t('screen.imports.coverage', {
+                    interval: entry.interval,
+                    venue: entry.venue,
+                    symbol: entry.symbol,
+                    count: String(entry.rows),
+                    start: dateTime(entry.start),
+                    end: dateTime(entry.end),
+                  })}
                 </p>
               ))}
             </CardContent>
@@ -387,21 +389,15 @@ export function ImportsScreen() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Database className="size-4" aria-hidden /> Committed imports
+              <Database className="size-4" aria-hidden /> {t('screen.imports.committedList')}
             </CardTitle>
-            <CardDescription>
-              Datasets created through this import path, from their manifests under the demo lake.
-            </CardDescription>
+            <CardDescription>{t('screen.imports.committedDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Surface
               query={committed}
-              title="Imports"
-              empty={
-                <Notice>
-                  No operator-imported datasets yet — upload a CSV, JSON or Parquet file above.
-                </Notice>
-              }
+              title={t('screen.imports.title')}
+              empty={<Notice>{t('screen.imports.emptyAbove')}</Notice>}
             >
               {(datasets) => (
                 <div className="space-y-2">
@@ -413,9 +409,15 @@ export function ImportsScreen() {
                       <div className="min-w-0">
                         <p className="font-mono">{entry.dataset}</p>
                         <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-                          {entry.source} · {entry.license} · revision {entry.revision} ·{' '}
-                          {entry.series} series · {entry.rows} rows · {entry.start ?? '—'} →{' '}
-                          {entry.end ?? '—'}
+                          {t('screen.imports.meta.line', {
+                            source: entry.source,
+                            license: entry.license,
+                            revision: String(entry.revision),
+                            series: String(entry.series),
+                            rows: String(entry.rows),
+                            start: entry.start ?? '—',
+                            end: entry.end ?? '—',
+                          })}
                         </p>
                       </div>
                       <Badge variant="outline" className="font-mono text-[10px]">
@@ -423,9 +425,7 @@ export function ImportsScreen() {
                       </Badge>
                     </div>
                   ))}
-                  {datasets.length === 0 && (
-                    <Notice>No operator-imported datasets yet — upload a file to create one.</Notice>
-                  )}
+                  {datasets.length === 0 && <Notice>{t('screen.imports.emptyBelow')}</Notice>}
                 </div>
               )}
             </Surface>

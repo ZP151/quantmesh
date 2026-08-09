@@ -7,35 +7,40 @@ import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api, type EvaluationRow, type ForecastReport } from '@/lib/api'
 import { dateTime, percent, shortHash, venueLabel } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
-const paperOrderAction = (
-  <Button variant="outline" size="sm" render={<Link to="/trading/order" />}>
-    <Rocket className="size-3.5" aria-hidden /> Paper order
-  </Button>
-)
+function PaperOrderAction() {
+  const { t } = usePreferences()
+  return (
+    <Button variant="outline" size="sm" render={<Link to="/trading/order" />}>
+      <Rocket className="size-3.5" aria-hidden /> {t('nav.paperOrder')}
+    </Button>
+  )
+}
 
 // --- Experiments ---------------------------------------------------------
 
 export function ExperimentsScreen() {
   const query = useSurface(['experiments'], api.experiments)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Experiments"
-      description="Seeded research registry — deterministic baseline experiments over the demo universe, with their out-of-sample metrics."
+      title={t('screen.experiments.title')}
+      description={t('screen.experiments.description')}
     >
-      <Surface query={query} title="Experiments">
+      <Surface query={query} title={t('screen.experiments.title')}>
         {(data) => (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  <th className="py-2 pr-4 font-medium">Experiment</th>
-                  <th className="py-2 pr-4 font-medium">Dataset</th>
-                  <th className="py-2 pr-4 text-right font-medium">Revision</th>
-                  <th className="py-2 pr-4 text-right font-medium">OOS RMSE</th>
-                  <th className="py-2 pr-4 text-right font-medium">OOS MAE</th>
-                  <th className="py-2 text-right font-medium">Created</th>
+                  <th className="py-2 pr-4 font-medium">{t('screen.experiments.col.experiment')}</th>
+                  <th className="py-2 pr-4 font-medium">{t('screen.experiments.col.dataset')}</th>
+                  <th className="py-2 pr-4 text-right font-medium">{t('screen.experiments.col.revision')}</th>
+                  <th className="py-2 pr-4 text-right font-medium">{t('screen.experiments.col.oosRmse')}</th>
+                  <th className="py-2 pr-4 text-right font-medium">{t('screen.experiments.col.oosMae')}</th>
+                  <th className="py-2 text-right font-medium">{t('screen.experiments.col.created')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -64,18 +69,19 @@ export function ExperimentsScreen() {
 // --- Promotions ----------------------------------------------------------
 
 function EvaluationTable({ rows, title }: { rows: EvaluationRow[]; title: string }) {
+  const { t } = usePreferences()
   return (
     <div>
       <p className="mb-1 text-xs font-medium text-muted-foreground">{title}</p>
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border text-left text-muted-foreground">
-            <th className="py-1 pr-3 font-medium">Strategy</th>
-            <th className="py-1 pr-3 font-medium">Dataset</th>
-            <th className="py-1 pr-3 text-right font-medium">Return</th>
-            <th className="py-1 pr-3 text-right font-medium">Sharpe</th>
-            <th className="py-1 pr-3 text-right font-medium">Max DD</th>
-            <th className="py-1 text-right font-medium">OOS</th>
+            <th className="py-1 pr-3 font-medium">{t('screen.promotions.col.strategy')}</th>
+            <th className="py-1 pr-3 font-medium">{t('screen.promotions.col.dataset')}</th>
+            <th className="py-1 pr-3 text-right font-medium">{t('screen.promotions.col.return')}</th>
+            <th className="py-1 pr-3 text-right font-medium">{t('screen.promotions.col.sharpe')}</th>
+            <th className="py-1 pr-3 text-right font-medium">{t('screen.promotions.col.maxDd')}</th>
+            <th className="py-1 text-right font-medium">{t('screen.promotions.col.oos')}</th>
           </tr>
         </thead>
         <tbody>
@@ -88,7 +94,7 @@ function EvaluationTable({ rows, title }: { rows: EvaluationRow[]; title: string
               <td className="py-1 pr-3 text-right font-mono tabular-nums">{row.metrics['max_drawdown'] ?? '—'}</td>
               <td className="py-1 text-right">
                 <Badge variant={row.windows_oos ? 'default' : 'outline'} className="font-mono text-[10px]">
-                  {row.windows_oos ? 'oos' : 'in-sample'}
+                  {row.windows_oos ? t('screen.promotions.badge.oos') : t('screen.promotions.badge.inSample')}
                 </Badge>
               </td>
             </tr>
@@ -104,14 +110,15 @@ function EvaluationTable({ rows, title }: { rows: EvaluationRow[]; title: string
  * paper-order loop reads before submitting. */
 export function PromotionsScreen() {
   const query = useSurface(['promotions'], api.promotions)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Promotions"
-      description="Promoted signals with benchmark/ablation evaluations — the strategy evidence side of the paper-order loop. Nothing here trades."
-      actions={paperOrderAction}
+      title={t('screen.promotions.title')}
+      description={t('screen.promotions.description')}
+      actions={<PaperOrderAction />}
     >
-      <Surface query={query} title="Promotions">
+      <Surface query={query} title={t('screen.promotions.title')}>
         {(data) => (
           <div className="space-y-4">
             {data.promotions.map((promotion) => (
@@ -125,16 +132,16 @@ export function PromotionsScreen() {
                     </Badge>
                     {promotion.kill_switch && (
                       <Badge variant="destructive" className="text-[10px]">
-                        signal kill-switched
+                        {t('screen.promotions.killSwitched')}
                       </Badge>
                     )}
                   </CardTitle>
-                  <CardDescription>Promoted {dateTime(promotion.promoted_at)}</CardDescription>
+                  <CardDescription>{t('screen.promotions.promoted', { time: dateTime(promotion.promoted_at) })}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <EvaluationTable rows={promotion.benchmarks} title="Benchmarks" />
-                  <EvaluationTable rows={promotion.ablations} title="Ablations" />
-                  <EvaluationTable rows={[promotion.oos]} title="Out-of-sample" />
+                  <EvaluationTable rows={promotion.benchmarks} title={t('screen.promotions.eval.benchmarks')} />
+                  <EvaluationTable rows={promotion.ablations} title={t('screen.promotions.eval.ablations')} />
+                  <EvaluationTable rows={[promotion.oos]} title={t('screen.promotions.eval.oos')} />
                 </CardContent>
               </Card>
             ))}
@@ -148,14 +155,17 @@ export function PromotionsScreen() {
 // --- Forecasts -----------------------------------------------------------
 
 function ReportCard({ report }: { report: ForecastReport }) {
+  const { t } = usePreferences()
   const calibrationSummary = (market: ForecastReport['markets'][number]) => {
     if (market.n_evaluated_windows > 0) {
-      return `Measured on ${market.n_evaluated_windows} resolved window${market.n_evaluated_windows === 1 ? '' : 's'} with Brier scoring.`
+      return market.n_evaluated_windows === 1
+        ? t('screen.forecasts.calibration.measuredOne')
+        : t('screen.forecasts.calibration.measuredMany', { count: String(market.n_evaluated_windows) })
     }
     if (market.resolved) {
-      return 'Calibration pending: no resolved test observations are available in this window.'
+      return t('screen.forecasts.calibration.pendingNoObs')
     }
-    return 'Calibration pending: market is open; Brier scoring begins after resolution.'
+    return t('screen.forecasts.calibration.pendingOpen')
   }
 
   return (
@@ -165,33 +175,38 @@ function ReportCard({ report }: { report: ForecastReport }) {
           <Gauge className="size-4" aria-hidden />
           <span className="font-mono text-sm">{shortHash(report.id)}</span>
           <Badge variant="outline" className="font-mono text-[10px]">
-            {report.n_bins} bins
+            {t('screen.forecasts.bins', { count: String(report.n_bins) })}
           </Badge>
           <Badge variant={report.artifacts_present ? 'default' : 'outline'} className="font-mono text-[10px]">
-            {report.artifacts_present ? 'artifacts on disk' : 'no artifacts'}
+            {report.artifacts_present ? t('screen.forecasts.artifactsOnDisk') : t('screen.forecasts.noArtifacts')}
           </Badge>
         </CardTitle>
         <CardDescription>
-          {dateTime(report.created_at)} · commit {shortHash(report.commit)} · train/test/step{' '}
-          {report.window_spec.train}/{report.window_spec.test}/{report.window_spec.step}
+          {t('screen.forecasts.meta', {
+            time: dateTime(report.created_at),
+            hash: shortHash(report.commit),
+            train: String(report.window_spec.train),
+            test: String(report.window_spec.test),
+            step: String(report.window_spec.step),
+          })}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
           <div>
-            <p className="text-muted-foreground">Windows</p>
+            <p className="text-muted-foreground">{t('screen.forecasts.metric.windows')}</p>
             <p className="font-mono tabular-nums">{report.metrics['n_windows_total'] ?? '—'}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Observations</p>
+            <p className="text-muted-foreground">{t('screen.forecasts.metric.observations')}</p>
             <p className="font-mono tabular-nums">{report.metrics['n_observations'] ?? '—'}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Mean Brier</p>
+            <p className="text-muted-foreground">{t('screen.forecasts.metric.meanBrier')}</p>
             <p className="font-mono tabular-nums">{report.metrics['mean_brier'] ?? '—'}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Resolved</p>
+            <p className="text-muted-foreground">{t('screen.forecasts.metric.resolved')}</p>
             <p className="font-mono tabular-nums">{report.metrics['n_resolved'] ?? '—'}</p>
           </div>
         </div>
@@ -201,38 +216,38 @@ function ReportCard({ report }: { report: ForecastReport }) {
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm">{market.title}</p>
                 <Badge variant={market.resolved ? 'default' : 'outline'} className="shrink-0 font-mono text-[10px]">
-                  {market.resolved ? 'resolved' : 'open'}
+                  {market.resolved ? t('screen.forecasts.market.resolved') : t('screen.forecasts.market.open')}
                 </Badge>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-3 rounded-lg bg-muted/30 px-3 py-2 text-xs sm:grid-cols-3">
                 <div>
-                  <p className="text-muted-foreground">Probability</p>
+                  <p className="text-muted-foreground">{t('screen.forecasts.market.probability')}</p>
                   <p className="font-mono text-base font-semibold tabular-nums">
                     {percent(market.latest_probability)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Observed</p>
+                  <p className="text-muted-foreground">{t('screen.forecasts.market.observed')}</p>
                   <p className="font-mono tabular-nums">
                     {market.latest_probability_at ? dateTime(market.latest_probability_at) : '—'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Liquidity confidence</p>
+                  <p className="text-muted-foreground">{t('screen.forecasts.market.liquidity')}</p>
                   <p className="font-mono tabular-nums">
                     {percent(market.latest_liquidity_confidence)}
                   </p>
                 </div>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Calibration:</span>{' '}
+                <span className="font-medium text-foreground">{t('screen.forecasts.calibration.label')}</span>{' '}
                 {calibrationSummary(market)}
               </p>
               <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-                {market.market_id} · {venueLabel(market.venue)} · expires {dateTime(market.expiry_at)}
+                {market.market_id} · {venueLabel(market.venue)} · {t('screen.forecasts.expires', { date: dateTime(market.expiry_at) })}
               </p>
               <p className="mt-1 text-[10px] text-muted-foreground">
-                Source: {venueLabel(market.venue)} implied probability · deterministic seeded observation
+                {t('screen.forecasts.source', { venue: venueLabel(market.venue) })}
               </p>
             </div>
           ))}
@@ -246,14 +261,15 @@ function ReportCard({ report }: { report: ForecastReport }) {
  * reports over prediction markets, windows, bins, artifacts. */
 export function ForecastsScreen() {
   const query = useSurface(['forecasts'], api.forecasts)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Forecasts"
-      description="Calibration reports over the seeded prediction markets — the prediction evidence the paper-order loop reads. Prediction markets are read-only in this demo."
-      actions={paperOrderAction}
+      title={t('screen.forecasts.title')}
+      description={t('screen.forecasts.description')}
+      actions={<PaperOrderAction />}
     >
-      <Surface query={query} title="Forecasts">
+      <Surface query={query} title={t('screen.forecasts.title')}>
         {(data) => (
           <div className="space-y-4">
             {data.reports.map((report) => (
