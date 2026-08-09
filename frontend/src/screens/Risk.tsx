@@ -7,6 +7,7 @@ import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api } from '@/lib/api'
 import { dateTime, quantity } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
 const KIND_VARIANT: Record<string, 'default' | 'outline' | 'destructive' | 'secondary'> = {
   failure: 'destructive',
@@ -21,58 +22,58 @@ const KIND_VARIANT: Record<string, 'default' | 'outline' | 'destructive' | 'seco
  * same account object this screen mirrors. */
 export function RiskScreen() {
   const query = useSurface(['risk'], api.risk)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Risk"
-      description="Paper limits and the alert ledger — everything the kernel gate reads, mirrored read-only."
+      title={t('screen.risk.title')}
+      description={t('screen.risk.description')}
       actions={
         <Button variant="outline" size="sm" render={<Link to="/ops/kill-switch" />}>
-          <ShieldAlert className="size-3.5" aria-hidden /> Kill switch
+          <ShieldAlert className="size-3.5" aria-hidden /> {t('nav.killSwitch')}
         </Button>
       }
     >
-      <Surface query={query} title="Risk">
+      <Surface query={query} title={t('screen.risk.title')}>
         {(risk) => (
           <div className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Paper limits</CardTitle>
-                  <CardDescription>Enforced by the accounting risk gate on every submit.</CardDescription>
+                  <CardTitle className="text-base">{t('screen.risk.limits.title')}</CardTitle>
+                  <CardDescription>{t('screen.risk.limits.description')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex items-center justify-between gap-4">
-                    <span className="text-muted-foreground">Kill switch</span>
+                    <span className="text-muted-foreground">{t('nav.killSwitch')}</span>
                     <Badge variant={risk.paper_limits.kill_switch ? 'destructive' : 'outline'}>
-                      {risk.paper_limits.kill_switch ? 'engaged' : 'disarmed'}
+                      {risk.paper_limits.kill_switch
+                        ? t('screen.overview.account.engaged')
+                        : t('screen.overview.account.disarmed')}
                     </Badge>
                   </div>
                   {(
                     [
-                      ['Max order quantity', risk.paper_limits.max_order_quantity],
-                      ['Max notional', risk.paper_limits.max_notional],
-                      ['Max position quantity', risk.paper_limits.max_position_quantity],
+                      ['screen.risk.limit.orderQuantity', risk.paper_limits.max_order_quantity],
+                      ['screen.risk.limit.notional', risk.paper_limits.max_notional],
+                      ['screen.risk.limit.positionQuantity', risk.paper_limits.max_position_quantity],
                     ] as const
-                  ).map(([label, value]) => (
-                    <div key={label} className="flex items-center justify-between gap-4">
-                      <span className="text-muted-foreground">{label}</span>
-                      <span className="font-mono tabular-nums">{value === null ? 'unset' : quantity(value)}</span>
+                  ).map(([key, value]) => (
+                    <div key={key} className="flex items-center justify-between gap-4">
+                      <span className="text-muted-foreground">{t(key)}</span>
+                      <span className="font-mono tabular-nums">{value === null ? t('screen.risk.unset') : quantity(value)}</span>
                     </div>
                   ))}
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Live posture</CardTitle>
-                  <CardDescription>Read-only; live enablement is operator-owned.</CardDescription>
+                  <CardTitle className="text-base">{t('screen.risk.posture.title')}</CardTitle>
+                  <CardDescription>{t('screen.risk.posture.description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {risk.hl_posture === null ? (
-                    <p className="text-sm text-muted-foreground">
-                      No Hyperliquid live risk posture is attached — live trading is not enabled for
-                      this session.
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t('screen.risk.posture.none')}</p>
                   ) : (
                     <pre className="overflow-x-auto rounded-lg bg-muted/40 p-3 text-xs">
                       {JSON.stringify(risk.hl_posture, null, 2)}
@@ -85,14 +86,14 @@ export function RiskScreen() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <ShieldAlert className="size-4" aria-hidden /> Alerts
+                  <ShieldAlert className="size-4" aria-hidden /> {t('screen.risk.alerts.title')}
                   {!risk.alerts_bound && (
                     <Badge variant="outline" className="text-[10px]">
-                      ledger not bound
+                      {t('screen.risk.alerts.notBound')}
                     </Badge>
                   )}
                 </CardTitle>
-                <CardDescription>The seeded alert ledger — drift, staleness, failure, reliability.</CardDescription>
+                <CardDescription>{t('screen.risk.alerts.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 {risk.alerts.map((alert) => (

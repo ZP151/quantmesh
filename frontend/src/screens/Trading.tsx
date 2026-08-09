@@ -7,26 +7,31 @@ import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api, type OrderSummary } from '@/lib/api'
 import { dateTime, money, moneyPrecise, pnlClass, quantity } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
-const orderAction = (
-  <Button variant="outline" size="sm" render={<Link to="/trading/order" />}>
-    <Send className="size-3.5" aria-hidden /> Paper order
-  </Button>
-)
+function OrderAction() {
+  const { t } = usePreferences()
+  return (
+    <Button variant="outline" size="sm" render={<Link to="/trading/order" />}>
+      <Send className="size-3.5" aria-hidden /> {t('nav.paperOrder')}
+    </Button>
+  )
+}
 
 // --- Positions -----------------------------------------------------------
 
 export function PositionsScreen() {
   const query = useSurface(['positions'], api.positions)
   const marks = useSurface(['pnl'], api.pnl)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Positions"
-      description="Paper positions after the seeded replay — every fill that lands on the order screen appears here immediately, because both read the same account object."
-      actions={orderAction}
+      title={t('screen.positions.title')}
+      description={t('screen.positions.description')}
+      actions={<OrderAction />}
     >
-      <Surface query={query} title="Positions">
+      <Surface query={query} title={t('screen.positions.title')}>
         {(positions) => (
           <Card>
             <CardContent className="p-0">
@@ -34,12 +39,12 @@ export function PositionsScreen() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                      <th className="px-4 py-2.5 font-medium">Instrument</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Quantity</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Avg cost</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Mark</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Unrealized</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Realized</th>
+                      <th className="px-4 py-2.5 font-medium">{t('screen.positions.col.instrument')}</th>
+                      <th className="px-4 py-2.5 text-right font-medium">{t('screen.positions.col.quantity')}</th>
+                      <th className="px-4 py-2.5 text-right font-medium">{t('screen.positions.col.avgCost')}</th>
+                      <th className="px-4 py-2.5 text-right font-medium">{t('screen.positions.col.mark')}</th>
+                      <th className="px-4 py-2.5 text-right font-medium">{t('screen.positions.col.unrealized')}</th>
+                      <th className="px-4 py-2.5 text-right font-medium">{t('screen.positions.col.realized')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -114,14 +119,15 @@ function OrderRow({ order }: { order: OrderSummary }) {
 
 export function OrdersScreen() {
   const query = useSurface(['orders'], api.orders)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Orders"
-      description="The paper order journal — the account's own order book, including the resting seeded limit and every order the browser submits."
-      actions={orderAction}
+      title={t('screen.orders.title')}
+      description={t('screen.orders.description')}
+      actions={<OrderAction />}
     >
-      <Surface query={query} title="Orders">
+      <Surface query={query} title={t('screen.orders.title')}>
         {(orders) => (
           <Card>
             <CardContent className="p-0">
@@ -129,12 +135,12 @@ export function OrdersScreen() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                      <th className="px-4 py-2.5 font-medium">Order</th>
-                      <th className="px-4 py-2.5 font-medium">Instrument</th>
-                      <th className="px-4 py-2.5 font-medium">Side</th>
-                      <th className="px-4 py-2.5 font-medium">Type</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Avg fill</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Status</th>
+                      <th className="px-4 py-2.5 font-medium">{t('screen.orders.col.order')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('screen.orders.col.instrument')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('screen.orders.col.side')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('screen.orders.col.type')}</th>
+                      <th className="px-4 py-2.5 text-right font-medium">{t('screen.orders.col.avgFill')}</th>
+                      <th className="px-4 py-2.5 text-right font-medium">{t('screen.orders.col.status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -156,26 +162,27 @@ export function OrdersScreen() {
 
 export function PnLScreen() {
   const query = useSurface(['pnl'], api.pnl)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="P&L"
-      description="Performance over the paper account — realized from the seeded fills, unrealized against the seeded marks."
-      actions={orderAction}
+      title={t('screen.pnl.title')}
+      description={t('screen.pnl.description')}
+      actions={<OrderAction />}
     >
-      <Surface query={query} title="P&L">
+      <Surface query={query} title={t('screen.pnl.title')}>
         {(pnl) => (
           <div className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="pb-1">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">Equity</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground">{t('screen.overview.account.equity')}</CardTitle>
                 </CardHeader>
                 <CardContent className="font-mono text-lg tabular-nums">{money(pnl.equity)}</CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-1">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">Total P&L</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground">{t('screen.pnl.total')}</CardTitle>
                 </CardHeader>
                 <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(pnl.total_pnl)}`}>
                   {money(pnl.total_pnl)}
@@ -183,7 +190,7 @@ export function PnLScreen() {
               </Card>
               <Card>
                 <CardHeader className="pb-1">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">Realized</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground">{t('screen.pnl.realized')}</CardTitle>
                 </CardHeader>
                 <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(pnl.realized_pnl)}`}>
                   {money(pnl.realized_pnl)}
@@ -191,7 +198,7 @@ export function PnLScreen() {
               </Card>
               <Card>
                 <CardHeader className="pb-1">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">Unrealized</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground">{t('screen.pnl.unrealized')}</CardTitle>
                 </CardHeader>
                 <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(pnl.unrealized_pnl)}`}>
                   {money(pnl.unrealized_pnl)}
@@ -200,10 +207,12 @@ export function PnLScreen() {
             </div>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Marked to seeded marks</CardTitle>
+                <CardTitle className="text-base">{t('screen.pnl.marks.title')}</CardTitle>
                 <CardDescription>
-                  {Object.keys(pnl.marks).length} instruments ·{' '}
-                  {pnl.missing_marks.length > 0 ? `${pnl.missing_marks.length} missing` : 'no missing marks'}
+                  {t('screen.pnl.marks.instruments', { count: String(Object.keys(pnl.marks).length) })} ·{' '}
+                  {pnl.missing_marks.length > 0
+                    ? t('screen.pnl.marks.missingCount', { count: String(pnl.missing_marks.length) })
+                    : t('screen.pnl.marks.noMissing')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
