@@ -165,10 +165,17 @@ tree.
     live smoke 14/14, desktop browser review with zero console errors, and a
     390 px walk with no horizontal overflow. The first PR CI run also exposed
     and fixed a fixed-port E2E bootstrap race (2,085 tests had passed before
-    the setup-only collision; the repaired workstation E2E is 16/16). Next:
-    merge the single
-    integration PR, run the clean-checkout release gate, and cut a replacement
-    RC; do not promote RC4.
+    the setup-only collision; the repaired workstation E2E is 16/16). The
+    single integration PR merged at `c47b83d` (PR #95), and the
+    clean-checkout release gate on the merged tree PASSED 15/15 (pytest
+    761.4 s, golden path 53/53; a first gate attempt was killed by the host
+    mid-pytest with zero test failures — the passing run was detached and
+    used the repo venv interpreter, since the version-consistency step runs
+    before the gate's own venv exists). The replacement candidate
+    `v0.1.0-rc5` is being cut: version metadata and tests pinned, release
+    notes (EN + zh-CN) written, then tag, tagged-tree gate run and a
+    regenerated isolated acceptance environment. Do not promote RC4; do not
+    promote `v0.1.0` without the recorded operator verdict.
 
 ## Standing authority
 
