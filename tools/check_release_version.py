@@ -26,6 +26,8 @@ import sys
 import tomllib
 from pathlib import Path
 
+from packaging.version import Version
+
 REPO = Path(__file__).resolve().parents[1]
 NOTES_DIR = REPO / "docs" / "release-notes"
 
@@ -78,11 +80,12 @@ def main() -> int:
         return 1
 
     for tag in _head_version_tags():
-        if tag.removeprefix("v") != version:
+        # PEP 440 comparison, not string comparison: the tag spells
+        # v0.1.0-rc3 while the package reports 0.1.0rc3 — hyphenated
+        # and non-hyphenated forms are the same release.
+        if Version(tag.removeprefix("v")) != Version(version):
             print(f"FAIL: tag {tag} at HEAD, package metadata says {version}")
             return 1
-
-    from packaging.version import Version  # noqa: PLC0415 — heavy import kept lazy
 
     if not Version(version).is_prerelease:
         print(f"FAIL: {version} is not a prerelease while the RC line is open")
