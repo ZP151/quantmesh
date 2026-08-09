@@ -136,8 +136,17 @@ makes the business workflow directly testable. Do not promote RC1 to
    venue sequences and side, the venue-clock gate so a closed market
    or delayed feed is never labeled real, honest unavailable/
    disconnected/stale ladder; 13/13 F drills, 2066/2066 regression,
-   ruff clean) landed on branch `0015-phase-f`; Phase G per the
-   iteration record.
+   ruff clean) landed on branch `0015-phase-f`; Phase G (replay
+   determinism + live smoke drill + gate + acceptance, 8/8 replay
+   drills including the TZ-determinism fix, 20/20 smoke checks E2E-
+   verified healthy and degraded, full E2E 31/31 + frontend gate
+   green, release gate 15/15 on the branch head `90c1d9c`, isolated
+   acceptance env with degraded-state live station verified honestly
+   unavailable and the smoke drill PASS/FAIL both proven) landed on
+   branch `0015-phase-g`; **Phase G complete — the cockpit prototype
+   is delivered and accepted per `OPERATOR-ACCEPTANCE-0015.md`;
+   `v0.1.0` promotion still waits on the operator's separate
+   "accept RC4, promote to v0.1.0" verdict.**
 
 ## Standing authority
 
