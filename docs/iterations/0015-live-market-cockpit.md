@@ -554,6 +554,39 @@ stale/degraded and blocks paper orders on its instruments.
 > `v0.1.0` remains gated on the operator's explicit acceptance of the
 > replacement RC.
 
+> **Checkpoint H3 (2026-08-10, rc5 tagged-tree gate run 4)** — The gate
+> on the exact tagged tree `v0.1.0-rc5` (`cc8bde8`) **FAILED 15/15**:
+> steps 1–13 passed (clone, version consistency, fresh venv, install,
+> ruff, license, audit venv, pip-audit install, pip-audit, npm ci,
+> bundle, vitest), and the full pytest step FAILED at 892.2 s with
+> **2 failed / 2114 passed**. Both failures were in `tests/test_live_e2e.py`
+> (watchlist + instrument detail) on 30 s locator timeouts for
+> `page.get_by_text("Real", exact=True)` at port 8645 — the freshness
+> phase never appeared to the browser.
+>
+> Diagnosis: the venue plan's freshness window was clock-bound —
+> `KEEPALIVE_CYCLES=10` × 4 s ≈ 40 s from the venue connection — and
+> under full-suite load the module setup (uvicorn boot, feed attach,
+> chromium launch; run 4's install 405.1 s vs 312.2 s and pytest
+> 887.4 s vs 761.4 s in the passing run 3) consumed the window before
+> the browser tests started; once past window + lag, "Real" can never
+> appear. This is fixture/timing flakiness, not a product defect: a
+> standalone re-run on the identical tagged tree passed 5/5 in 51.5 s,
+> and the suite had passed 15/15 at the rc5 branch head and on run 3.
+>
+> Fix (lands in the rc6 tree, iteration 0016): `KEEPALIVE_CYCLES`
+> 10 → 300 (a 20-min window no slow full-suite run can outrun) and a
+> test-triggered `quiet` event on `ScriptedVenue` — the stale-transition
+> test flips it deterministically instead of racing the plan's wall
+> clock. Verified: live E2E 5/5 in 40.9 s (faster than pre-fix),
+> venue supervisor + feed 49 passed, ruff clean.
+>
+> Verdict: the `v0.1.0-rc5` code is sound; the gate failure is an
+> environment-timing artifact, and the rc5 tree is superseded by the
+> rc6 cycle anyway (PR #97 changed the release surface). rc5 remains
+> immutable; the rc6 tagged-tree gate run will re-verify the fixed
+> fixture under full-suite load.
+
 ## Safety (unchanged invariants)
 
 All external venues read-only; no credentials; no mainnet, real-money
