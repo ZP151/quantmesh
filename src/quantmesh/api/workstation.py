@@ -49,6 +49,7 @@ import asyncio
 from collections.abc import Callable, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field, replace
+from datetime import timedelta
 from pathlib import Path
 from typing import Literal
 from urllib.parse import quote, urlsplit
@@ -1405,7 +1406,12 @@ def main(argv: list[str] | None = None) -> None:
     ``QUANTMESH_PREDICTION_WATCHLIST`` is also set (Phase E), the
     prediction comparison screen attaches with read-only Polymarket
     and Kalshi supervisors over their public WebSockets — every venue
-    stays read-only market data, never order paths. ``--demo`` and
+    stays read-only market data, never order paths. When
+    ``QUANTMESH_MOOMOO_WATCHLIST`` is set (Phase F), the cockpit
+    attaches the Moomoo OpenD surface: read-only polls of a local
+    OpenD daemon (``US.AAPL``-style codes), whose venue timestamps
+    drive the real/stale labels — a quiet or absent daemon renders
+    honestly unavailable, never fabricated real-time. ``--demo`` and
     ``--live`` are mutually exclusive — the demo session stays the
     labeled deterministic runtime, live stays labeled real.
     """
@@ -1533,6 +1539,34 @@ def main(argv: list[str] | None = None) -> None:
                     ks.subscribe(ks_watchlist)
                     feed.attach(ks)
                 prediction = board
+            if settings.moomoo_watchlist:
+                # The Moomoo OpenD surface (Phase F): read-only polls of
+                # a local OpenD daemon for the operator's equity
+                # watchlist. Availability is decided by the daemon
+                # itself — a probe failure keeps the surface honestly
+                # unavailable (the pump's disconnect path; stale venue
+                # clocks are blocked at dispatch), never fabricated.
+                # Last price + volume only: no bid/ask on the wire, so
+                # no QUOTE is emitted and paper orders stay impossible
+                # for these instruments by construction.
+                from quantmesh.live.moomoo import (
+                    MoomooVenueSupervisor,
+                    MoomooVenueTransport,
+                )
+                from quantmesh.moomoo.opend import MoomooOpenDClient
+
+                symbols = [s.strip() for s in settings.moomoo_watchlist.split(",") if s.strip()]
+                moomoo = MoomooVenueSupervisor(
+                    MoomooVenueTransport(
+                        MoomooOpenDClient.from_settings(settings),
+                        poll_interval=timedelta(
+                            seconds=settings.moomoo_poll_interval_s
+                        ),
+                    ),
+                    market=settings.moomoo_market,
+                )
+                moomoo.subscribe(symbols)
+                feed.attach(moomoo)
             app = create_workstation_app(
                 account=account, live_feed=feed, prediction=prediction, host=host
             )
