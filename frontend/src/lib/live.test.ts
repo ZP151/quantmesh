@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LiveInstrumentState, LiveKind, LiveLabel, LiveView, MarketUpdate } from '@/lib/api'
 import {
   ageText,
+  bookSide,
   candleCloses,
   dataViews,
   instrumentLabel,
@@ -143,6 +144,42 @@ describe('age and chart helpers', () => {
     const candles = [10, 11, 10.5].map((close) => quote('BTC', 0, 0, { kind: 'candle', payload: { open: 10, high: 11, low: 9, close, volume: 5 } }))
     expect(candleCloses(candles)).toEqual([10, 11, 10.5])
     expect(candleCloses([quote('BTC', 1, 2)])).toEqual([])
+  })
+})
+
+describe('bookSide', () => {
+  // The wire contract (ADR-0014 _validate_l2) emits levels as
+  // [price, size] pairs, strictly monotonic in price — this pins the
+  // client parse to that shape so the two sides cannot drift again.
+  it('parses [price, size] level pairs from an l2 snapshot view', () => {
+    const bid = quote('BTC', 0, 0, {
+      kind: 'l2_snapshot',
+      payload: { side: 'bid', levels: [[100.0, 1.0], [99.5, 2.0]] },
+    })
+    expect(bookSide(bid)).toEqual([
+      { price: 100.0, size: 1.0 },
+      { price: 99.5, size: 2.0 },
+    ])
+  })
+
+  it('returns an empty side when the view has no levels', () => {
+    expect(bookSide(undefined)).toEqual([])
+    expect(bookSide(quote('BTC', 100, 100.5))).toEqual([])
+    expect(bookSide(quote('BTC', 0, 0, { kind: 'l2_snapshot', payload: { side: 'ask' } }))).toEqual([])
+  })
+
+  it('drops malformed levels instead of rendering them', () => {
+    const bid = quote('BTC', 0, 0, {
+      kind: 'l2_snapshot',
+      payload: {
+        side: 'bid',
+        levels: [[100.0, 1.0], [99.5], [98.5, 3.0, 4], '99', { price: 97.5, size: 5 }, [NaN, 1], [97.0, 2.0]],
+      },
+    })
+    expect(bookSide(bid)).toEqual([
+      { price: 100.0, size: 1.0 },
+      { price: 97.0, size: 2.0 },
+    ])
   })
 })
 

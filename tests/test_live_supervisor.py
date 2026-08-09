@@ -21,6 +21,7 @@ from quantmesh.live.hyperliquid import (
 )
 from quantmesh.live.supervisor import (
     BackpressureGate,
+    GapFinding,
     SourceStatusTracker,
     next_backoff,
 )
@@ -367,6 +368,27 @@ class TestDisconnectDrill:
         assert all(u.sequence_gap for u in gapped)
         messages = " ".join(f.message for f in findings)
         assert "cannot be REST re-synced" in messages  # trades gap reported
+
+    def test_venue_level_findings_never_become_phantom_rows(self) -> None:
+        """``_surface_findings`` is the live pump's surfacing step (the
+        pump itself is drill-gated), so the drill drives it directly: a
+        reconnect finding keyed on the venue (resync without a REST
+        transport) is reported but must never fabricate a watchlist row
+        — only per-source findings surface as LAGGING statuses."""
+        supervisor, _ = _setup()
+        supervisor.on_open(T0)
+        supervisor.drain()
+        supervisor._surface_findings(
+            [
+                GapFinding("hyperliquid", "no REST transport; reconnect gaps reported only"),
+                GapFinding("BTC", "book re-sync unavailable: boom"),
+            ],
+            T0 + timedelta(seconds=1),
+        )
+        statuses = supervisor.drain()
+        assert len(statuses) == 1
+        assert statuses[0].instrument == "BTC"
+        assert statuses[0].state is SourceState.LAGGING
 
     def test_freshness_transitions_emit_status(self) -> None:
         supervisor, _ = _setup(lag=timedelta(seconds=10), stale=timedelta(seconds=20))

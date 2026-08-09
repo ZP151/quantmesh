@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Page } from '@/components/page'
 import {
+  bookSide,
   candleCloses,
   LABEL_TEXT,
   labelTone,
@@ -25,24 +26,6 @@ import { dateTime, money, quantity } from '@/lib/format'
 
 const TAPE_LIMIT = 40
 const CHART_LIMIT = 120
-
-interface BookSide {
-  price: number
-  size: number
-}
-
-function bookSide(view: MarketUpdate | undefined): BookSide[] {
-  const levels = view?.payload.levels
-  if (!Array.isArray(levels)) return []
-  return levels
-    .map((level) => {
-      if (typeof level !== 'object' || level === null) return undefined
-      const { price, size } = level as { price?: unknown; size?: unknown }
-      if (typeof price !== 'number' || typeof size !== 'number') return undefined
-      return { price, size }
-    })
-    .filter((level): level is BookSide => level !== undefined)
-}
 
 function Sparkline({ closes }: { closes: number[] }) {
   if (closes.length < 2) {

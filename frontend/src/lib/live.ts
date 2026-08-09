@@ -157,6 +157,30 @@ export function candleCloses(updates: readonly MarketUpdate[]): number[] {
   return closes
 }
 
+export interface BookLevel {
+  price: number
+  size: number
+}
+
+/** The per-side order book from an L2 snapshot view. The wire contract
+ * (ADR-0014, ``_validate_l2``) emits levels as ``[price, size]`` pairs,
+ * strictly monotonic in price — a malformed level is dropped, never
+ * rendered. */
+export function bookSide(
+  view: { payload: Record<string, unknown> } | undefined,
+): BookLevel[] {
+  const levels = view?.payload.levels
+  if (!Array.isArray(levels)) return []
+  return levels
+    .map((level) => {
+      if (!Array.isArray(level) || level.length !== 2) return undefined
+      const [price, size] = level
+      if (!Number.isFinite(price) || !Number.isFinite(size)) return undefined
+      return { price, size }
+    })
+    .filter((level): level is BookLevel => level !== undefined)
+}
+
 // --- Connection (WS first, SSE fallback) ----------------------------------
 
 export type LiveConnectionStatus = 'connecting' | 'live' | 'fallback' | 'down'
