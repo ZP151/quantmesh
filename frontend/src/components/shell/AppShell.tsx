@@ -1,18 +1,26 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Menu, Power, RotateCcw, Search, ShieldCheck, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { CommandPalette } from '@/components/shell/CommandPalette'
 import { useSurface } from '@/components/state'
-import { api, ApiError } from '@/lib/api'
+import { api } from '@/lib/api'
 import { dateTime } from '@/lib/format'
 import { NAV_GROUPS, NAV_ITEMS, isNavActive, navLabel } from '@/lib/nav'
 import { cn } from '@/lib/utils'
 
-function SidebarContent({ onNavigate, version }: { onNavigate?: () => void; version: string }) {
+function SidebarContent({
+  onNavigate,
+  version,
+  runtimeMode,
+}: {
+  onNavigate?: () => void
+  version: string
+  runtimeMode: 'demo' | 'live' | 'operator'
+}) {
   const location = useLocation()
   return (
     <div className="flex h-full flex-col">
@@ -57,8 +65,12 @@ function SidebarContent({ onNavigate, version }: { onNavigate?: () => void; vers
         ))}
       </nav>
       <p className="border-t border-border px-4 py-3 text-[10px] leading-relaxed text-muted-foreground">
-        Loopback workstation · the kernel gates every write. Demo surfaces are synthetic and
-        labeled.
+        Loopback workstation · the kernel gates every write.{' '}
+        {runtimeMode === 'demo'
+          ? 'Demo surfaces are synthetic and labeled.'
+          : runtimeMode === 'live'
+            ? 'Venue feeds are read-only; freshness is shown per source.'
+            : 'No live or demo feed is attached.'}
       </p>
     </div>
   )
@@ -79,12 +91,15 @@ export function AppShell() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const demoStatus = useSurface(['demo-status'], api.demoStatus)
   const health = useSurface(['health'], api.health)
+  const runtimeMode = health.data?.runtime_mode ?? 'operator'
+  const demoStatus = useQuery({
+    queryKey: ['demo-status'],
+    queryFn: api.demoStatus,
+    enabled: runtimeMode === 'demo',
+  })
   const healthVersion = health.data?.version ? `v${health.data.version}` : 'local'
-  const demoAttached =
-    demoStatus.data !== undefined ||
-    (demoStatus.isError && !(demoStatus.error instanceof ApiError && demoStatus.error.status === 404))
+  const demoAttached = runtimeMode === 'demo' && demoStatus.data !== undefined
 
   const killSwitch = useSurface(['kill-switch'], api.killSwitch)
   const engaged = killSwitch.data?.kill_switch ?? false
@@ -117,7 +132,7 @@ export function AppShell() {
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-border bg-sidebar lg:block">
-        <SidebarContent version={healthVersion} />
+        <SidebarContent version={healthVersion} runtimeMode={runtimeMode} />
       </aside>
 
       {/* Mobile drawer */}
@@ -133,7 +148,11 @@ export function AppShell() {
             >
               <X className="size-4" aria-hidden />
             </button>
-            <SidebarContent onNavigate={() => setMobileNav(false)} version={healthVersion} />
+            <SidebarContent
+              onNavigate={() => setMobileNav(false)}
+              version={healthVersion}
+              runtimeMode={runtimeMode}
+            />
           </div>
         </div>
       )}
@@ -227,9 +246,11 @@ export function AppShell() {
           <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
             <ShieldCheck className="size-3.5" aria-hidden />
             <span>
-              {demoAttached
+              {runtimeMode === 'demo'
                 ? 'Deterministic paper session — every surface is synthetic and labeled, every order gated by the kernel.'
-                : 'Operator mode — no demo session attached.'}
+                : runtimeMode === 'live'
+                  ? 'Live read-only session — venue freshness and provenance are explicit; paper writes remain kernel-gated.'
+                  : 'Operator mode — no live or demo feed is attached.'}
             </span>
           </div>
           <Outlet />

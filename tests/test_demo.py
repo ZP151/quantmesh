@@ -276,6 +276,7 @@ def test_status_exposes_the_provenance_contract(demo_client) -> None:
 def test_every_response_carries_the_demo_label(demo_client) -> None:
     client, _app = demo_client
     response = client.get("/api/health")
+    assert response.json()["runtime_mode"] == "demo"
     assert response.headers["X-QuantMesh-Source"] == "demo"
     assert response.headers["X-QuantMesh-Synthetic"] == "true"
     assert response.headers["X-QuantMesh-Anchor"] == ANCHOR.isoformat()

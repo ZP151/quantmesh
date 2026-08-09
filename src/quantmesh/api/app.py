@@ -70,8 +70,16 @@ def observability_router() -> APIRouter:
     router = APIRouter()
 
     @router.get("/health")
-    def health() -> dict[str, str | bool]:
-        return _health()
+    def health(request: Request) -> dict[str, str | bool]:
+        payload = _health()
+        payload["runtime_mode"] = (
+            "demo"
+            if hasattr(request.app.state, "demo")
+            else "live"
+            if hasattr(request.app.state, "live")
+            else "operator"
+        )
+        return payload
 
     @router.get("/account")
     def account_summary(request: Request) -> dict:

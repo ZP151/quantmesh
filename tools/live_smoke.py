@@ -34,6 +34,7 @@ import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable
+from datetime import datetime
 
 HOST = "127.0.0.1"
 DEFAULT_URL = f"http://{HOST}:8766"
@@ -46,6 +47,16 @@ SOURCE_STATES = {"connected", "lagging", "stale", "disconnected", "unavailable"}
 _LIVE_STATES = {"connected", "lagging"}  # matches feed._LIVE_STATES
 
 Getter = Callable[[str, float], str]
+
+
+def _timezone_timestamp(value: object) -> bool:
+    if not isinstance(value, str) or not value:
+        return False
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return parsed.tzinfo is not None and parsed.utcoffset() is not None
 
 
 def http_get(url: str, timeout: float) -> str:
@@ -98,6 +109,11 @@ def _kind_errors(kind: object) -> list[str]:
     age = kind.get("age_ms")
     if not isinstance(age, int) or age < 0:
         errors.append(f"age_ms {age!r} is not a non-negative int")
+    for field in ("data_time", "received_at"):
+        if not _timezone_timestamp(kind.get(field)):
+            errors.append(f"{field} is not a timezone-aware timestamp")
+    if not isinstance(kind.get("payload"), dict):
+        errors.append("payload is not an object")
     return errors
 
 
@@ -113,12 +129,23 @@ def check_state(getter: Getter, url: str, timeout: float) -> list[SmokeCheck]:
     if not isinstance(instruments, dict):
         return [SmokeCheck("latest-state instruments present", False, "missing instruments")]
     checks.append(SmokeCheck("latest-state instruments present", True))
+    if not _timezone_timestamp(data.get("generated_at")):
+        checks.append(
+            SmokeCheck(
+                "latest-state generation time is valid",
+                False,
+                "generated_at is not a timezone-aware timestamp",
+            )
+        )
     for instrument, entry in sorted(instruments.items()):
         prefix = f"instrument {instrument}"
         if not isinstance(entry, dict):
             checks.append(SmokeCheck(f"{prefix} is an object", False))
             continue
         badge = entry.get("label")
+        venue = entry.get("venue")
+        if not isinstance(venue, str) or not venue.strip():
+            checks.append(SmokeCheck(f"{prefix} venue is present", False))
         if badge not in LABELS:
             checks.append(
                 SmokeCheck(
@@ -129,7 +156,23 @@ def check_state(getter: Getter, url: str, timeout: float) -> list[SmokeCheck]:
         if not isinstance(kinds, dict):
             checks.append(SmokeCheck(f"{prefix} has kinds", False))
             continue
+        if badge != "unavailable" and not kinds:
+            checks.append(
+                SmokeCheck(
+                    f"{prefix} has market data",
+                    False,
+                    f"label {badge!r} cannot have empty kinds",
+                )
+            )
         for kind_name, kind in kinds.items():
+            if isinstance(kind, dict) and kind.get("kind") != kind_name:
+                checks.append(
+                    SmokeCheck(
+                        f"{prefix} {kind_name} view is honest",
+                        False,
+                        f"map key {kind_name!r} disagrees with kind {kind.get('kind')!r}",
+                    )
+                )
             for error in _kind_errors(kind):
                 checks.append(
                     SmokeCheck(f"{prefix} {kind_name} view is honest", False, error)
@@ -159,12 +202,26 @@ def check_status(getter: Getter, url: str, timeout: float) -> list[SmokeCheck]:
     if not isinstance(venues, list):
         return [SmokeCheck("connector-health venues present", False, "missing venues")]
     checks.append(SmokeCheck("connector-health venues present", True))
+    if not venues:
+        checks.append(
+            SmokeCheck("connector-health surface is non-empty", False, "no venues reported")
+        )
+    if not _timezone_timestamp(data.get("generated_at")):
+        checks.append(
+            SmokeCheck(
+                "connector-health generation time is valid",
+                False,
+                "generated_at is not a timezone-aware timestamp",
+            )
+        )
     for venue in venues:
         if not isinstance(venue, dict):
             checks.append(SmokeCheck("venue row is an object", False))
             continue
         name = venue.get("venue", "?")
         prefix = f"venue {name}"
+        if not isinstance(name, str) or not name.strip():
+            checks.append(SmokeCheck("venue name is present", False))
         connected = venue.get("connected")
         if not isinstance(connected, bool):
             checks.append(SmokeCheck(f"{prefix} connected flag is a boolean", False))
@@ -178,6 +235,8 @@ def check_status(getter: Getter, url: str, timeout: float) -> list[SmokeCheck]:
                 checks.append(SmokeCheck(f"{prefix} source row is an object", False))
                 continue
             instrument = source.get("instrument", "?")
+            if not isinstance(instrument, str) or not instrument.strip():
+                checks.append(SmokeCheck(f"{prefix} source instrument is present", False))
             state = source.get("state")
             if state not in SOURCE_STATES:
                 checks.append(
@@ -194,6 +253,16 @@ def check_status(getter: Getter, url: str, timeout: float) -> list[SmokeCheck]:
                 checks.append(
                     SmokeCheck(f"{prefix} {instrument} age is honest", False, f"age_ms {age!r}")
                 )
+            for field in ("data_time", "received_at"):
+                timestamp = source.get(field)
+                if timestamp is not None and not _timezone_timestamp(timestamp):
+                    checks.append(
+                        SmokeCheck(
+                            f"{prefix} {instrument} {field} is valid",
+                            False,
+                            "not a timezone-aware timestamp",
+                        )
+                    )
         if isinstance(connected, bool) and connected != (live_sources > 0):
             checks.append(
                 SmokeCheck(
@@ -214,10 +283,20 @@ def check_health(getter: Getter, url: str, timeout: float) -> list[SmokeCheck]:
         data = _json_get(getter, url, "/health", timeout)
     except (urllib.error.URLError, OSError, ValueError, AssertionError) as error:
         return [SmokeCheck("health answers", False, str(error))]
+    if data.get("status") != "ok":
+        return [
+            SmokeCheck(
+                "health reports ok", False, f"status {data.get('status')!r}"
+            )
+        ]
     version = data.get("version")
     if not isinstance(version, str) or not version:
         return [SmokeCheck("health reports a version", False, f"version {version!r}")]
-    return [SmokeCheck("health answers", True), SmokeCheck("health reports a version", True)]
+    return [
+        SmokeCheck("health answers", True),
+        SmokeCheck("health reports ok", True),
+        SmokeCheck("health reports a version", True),
+    ]
 
 
 def check_watchlist(

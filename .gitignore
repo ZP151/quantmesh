@@ -16,6 +16,7 @@ data/cache/
 data/models/
 logs/
 artifacts/
+output/
 .idea/
 .vscode/
 *.sqlite3
@@ -23,4 +24,3 @@ artifacts/
 dist/
 build/
 *.egg-info/
-

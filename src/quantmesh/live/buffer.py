@@ -144,13 +144,17 @@ class LiveBuffer:
         kinds: set[str] | None = None,
         start: datetime | None = None,
         end: datetime | None = None,
+        through_local_seq: int | None = None,
         limit: int = 1000,
     ) -> list[MarketUpdate]:
         """Replay appended updates in ``local_seq`` order, oldest first.
 
         All filters are optional; ``start``/``end`` filter inclusively on
-        ``received_at`` and must be timezone-aware. Corrupt or invalid
-        rows raise instead of being silently skipped.
+        ``received_at`` and must be timezone-aware. ``through_local_seq``
+        is the inclusive append boundary returned by :meth:`append`, so
+        callers can reproduce every intermediate state even when several
+        updates share the same timestamp. Corrupt or invalid rows raise
+        instead of being silently skipped.
         """
         clauses: list[str] = []
         params: list[object] = []
@@ -170,6 +174,11 @@ class LiveBuffer:
         if end is not None:
             clauses.append("received_at <= ?")
             params.append(end)
+        if through_local_seq is not None:
+            if through_local_seq < 1:
+                raise ValueError("through_local_seq must be a positive integer")
+            clauses.append("local_seq <= ?")
+            params.append(through_local_seq)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         rows = self._con.execute(
             f"SELECT {_UPDATE_COLUMNS} FROM market_updates {where} "

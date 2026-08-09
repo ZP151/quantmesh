@@ -144,7 +144,7 @@ export function CockpitScreen() {
 
   const banner =
     streamStatus === 'live'
-      ? 'Streaming live over WebSocket.'
+      ? 'Local stream connected over WebSocket — venue freshness is shown below.'
       : streamStatus === 'fallback'
         ? 'WebSocket unavailable — streaming over the SSE fallback.'
         : streamStatus === 'down'

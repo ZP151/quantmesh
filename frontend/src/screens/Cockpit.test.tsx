@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { LiveState, LiveStatus, LiveView, MarketUpdate } from '@/lib/api'
 import { CockpitScreen } from './Cockpit'
+import { CockpitDetailScreen } from './CockpitDetail'
 
 // The watchlist renders against the snapshot endpoints and the stream
 // hook. The api client is mocked for the two snapshot queries; the
@@ -99,6 +100,21 @@ function renderScreen() {
   )
 }
 
+function renderDetail(symbol = 'SOL') {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={[`/cockpit/${symbol}`]}>
+        <Routes>
+          <Route path="/cockpit/:symbol" element={<CockpitDetailScreen />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   mocked.liveState.mockResolvedValue(STATE)
@@ -162,7 +178,7 @@ describe('CockpitScreen', () => {
       state_note: null,
     })
     await waitFor(() => expect(screen.getByText('HYPE')).toBeInTheDocument())
-    expect(screen.getByText(/Streaming live over WebSocket/)).toBeInTheDocument()
+    expect(screen.getByText(/Local stream connected over WebSocket/)).toBeInTheDocument()
   })
 
   it('shows the fallback banner when the stream is on SSE', async () => {
@@ -178,5 +194,18 @@ describe('CockpitScreen', () => {
       expect(screen.getByText(/no live feed is attached/)).toBeInTheDocument(),
     )
     expect(screen.getByText(/start the workstation with --live/)).toBeInTheDocument()
+  })
+})
+
+describe('CockpitDetailScreen', () => {
+  it('hydrates the latest quote and trade from the snapshot before a new frame arrives', async () => {
+    renderDetail()
+
+    await waitFor(() => expect(screen.getByText('$30.10')).toBeInTheDocument())
+    expect(screen.getByText('Stale')).toBeInTheDocument()
+    expect(screen.queryByText('Unavailable')).not.toBeInTheDocument()
+    expect(screen.getByText(/mid \$30\.10/)).toBeInTheDocument()
+    expect(screen.getByText('buy')).toBeInTheDocument()
+    expect(screen.queryByText(/Waiting for the first update/)).not.toBeInTheDocument()
   })
 })

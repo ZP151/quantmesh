@@ -199,7 +199,15 @@ def venue_url() -> str:
                 ready.set()
                 await held
 
-        loop.run_until_complete(serve())
+        try:
+            loop.run_until_complete(serve())
+        except asyncio.CancelledError:
+            # Fixture teardown cancels the held future to release the
+            # scripted venue. That is the expected shutdown signal, not
+            # an unhandled thread failure.
+            pass
+        finally:
+            loop.close()
 
     thread = threading.Thread(target=runner, daemon=True)
     thread.start()
@@ -320,7 +328,7 @@ def test_watchlist_populates_and_streams(page, base_url) -> None:
     assert "Connector health" in text
     # the venue badge and the BTC source chip both report connected
     assert page.locator("main").get_by_text("connected", exact=True).count() >= 2
-    assert "Streaming live over WebSocket." in text
+    assert "Local stream connected over WebSocket" in text
 
 
 def test_instrument_detail_chart_book_and_tape(page, base_url) -> None:
@@ -356,7 +364,7 @@ def test_stale_transition_when_the_venue_goes_quiet(page, base_url) -> None:
     main = page.locator("main")
     main.get_by_text("Stale", exact=True).first.wait_for(timeout=60_000)
     text = main.inner_text()
-    assert "Streaming live over WebSocket." in text
+    assert "Local stream connected over WebSocket" in text
     assert "gap" not in text.lower()
 
 

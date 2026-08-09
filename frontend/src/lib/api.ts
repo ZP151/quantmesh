@@ -234,6 +234,7 @@ export interface Health {
   version: string
   paper_mode: boolean
   live_trading: boolean
+  runtime_mode: 'demo' | 'live' | 'operator'
 }
 
 export interface DemoSurfaceRow {
