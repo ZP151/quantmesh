@@ -1,7 +1,7 @@
 """Phase F E2E (issue #56): the workstation over real uvicorn, driven
 by Playwright chromium.
 
-The suite boots uvicorn on a pinned loopback port over a fixture
+The suite boots uvicorn on an OS-reserved loopback socket over a fixture
 universe (built exactly like the unit-drill universes) and walks the
 core paper workflow — overview, watchlist add, instruments, positions,
 orders, P&L — then drives the critical controls (navigation, kill
@@ -59,8 +59,6 @@ def _restore_legacy_ui() -> None:
     workstation.settings.legacy_ui = False
 
 HOST = "127.0.0.1"
-PORT = 8642
-BASE_URL = f"http://{HOST}:{PORT}"
 NOW = datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)
 INSTRUMENT = Instrument(
     symbol="AAPL", venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY
@@ -98,37 +96,36 @@ def _build_app(root) -> object:
     )
 
 
-def _port_in_use() -> bool:
-    with socket.socket() as probe:
-        try:
-            probe.bind((HOST, PORT))
-        except OSError:
-            return True
-    return False
-
-
-def _wait_for_server() -> None:
+def _wait_for_server(server: uvicorn.Server) -> None:
     for _ in range(200):  # 10 s of 50 ms polls
-        if _port_in_use():
+        if server.started:
             return
         threading.Event().wait(0.05)
-    raise AssertionError(f"uvicorn never came up on {HOST}:{PORT}")
+    raise AssertionError("uvicorn never came up on its reserved loopback socket")
 
 
 @pytest.fixture(scope="session")
 def base_url(tmp_path_factory) -> str:
-    if _port_in_use():
-        pytest.skip(f"port {PORT} is already bound — the pinned E2E port must be free")
+    listener = socket.socket()
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listener.bind((HOST, 0))
+    listener.listen(128)
+    port = listener.getsockname()[1]
     app = _build_app(tmp_path_factory.mktemp("e2e"))
-    server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=PORT, log_level="warning"))
-    thread = threading.Thread(target=server.run, daemon=True)
+    server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=port, log_level="warning"))
+    thread = threading.Thread(
+        target=server.run,
+        kwargs={"sockets": [listener]},
+        daemon=True,
+    )
     thread.start()
     try:
-        _wait_for_server()
-        yield BASE_URL
+        _wait_for_server(server)
+        yield f"http://{HOST}:{port}"
     finally:
         server.should_exit = True
         thread.join(timeout=15)
+        listener.close()
 
 
 @pytest.fixture(scope="module")

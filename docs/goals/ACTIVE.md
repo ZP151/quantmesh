@@ -163,7 +163,10 @@ tree.
     browser evidence. The repaired candidate passed 82 targeted backend
     tests, 48 frontend tests, 5/5 live browser E2E, bundle freshness, Ruff,
     live smoke 14/14, desktop browser review with zero console errors, and a
-    390 px walk with no horizontal overflow. Next: merge the single
+    390 px walk with no horizontal overflow. The first PR CI run also exposed
+    and fixed a fixed-port E2E bootstrap race (2,085 tests had passed before
+    the setup-only collision; the repaired workstation E2E is 16/16). Next:
+    merge the single
     integration PR, run the clean-checkout release gate, and cut a replacement
     RC; do not promote RC4.
 

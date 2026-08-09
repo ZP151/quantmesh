@@ -485,7 +485,11 @@ stale/degraded and blocks paper orders on its instruments.
 > append boundary returned by `append`. The DuckDB timezone regression was
 > strengthened by opening the connection in `America/New_York` and proving
 > the constructor pins UTC. Expected fixture cancellation no longer leaks as
-> a pytest thread warning.
+> a pytest thread warning. The first PR CI run then exposed an independent
+> E2E bootstrap race after 2,085 tests passed: the legacy workstation suite
+> checked fixed port 8642 and released the probe before uvicorn bound it.
+> The fixture now hands uvicorn an already-bound OS-reserved loopback socket;
+> its 16/16 browser tests pass without a check-then-bind window.
 >
 > Verification: Ruff clean; targeted backend acceptance 82/82 (the repeated
 > live E2E teardown check is 5/5 with no warning); frontend Vitest 48/48;
