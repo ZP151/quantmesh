@@ -71,30 +71,58 @@ stale/degraded and blocks paper orders on its instruments.
 
 ### Phase A — ADR-0014, MarketUpdate contract, replay buffer, fixture server
 
-- [ ] Record ADR-0014 and open iteration 0015; branch
+- [x] Record ADR-0014 and open iteration 0015; branch
       `0015-live-market-cockpit` from the released main.
-- [ ] `quantmesh/live/contract.py`: the owned `MarketUpdate` model
+- [x] `quantmesh/live/contract.py`: the owned `MarketUpdate` model
       (venue, instrument, kind, typed payload, data_time, received_at,
       sequence, provenance, gap flags) and the source status model.
-- [ ] `quantmesh/live/buffer.py`: append-only DuckDB replay lake
+- [x] `quantmesh/live/buffer.py`: append-only DuckDB replay lake
       (day/venue partitions, provenance persisted, bounded retention,
       range and point-in-time queries).
-- [ ] Fixture-first WebSocket test server (asyncio fake venue playing
+- [x] Fixture-first WebSocket test server (asyncio fake venue playing
       scripted frames incl. DROP/RESUME/reorder/gap) in the test tree.
-- [ ] Tests: contract validation, buffer round-trip/replay/retention,
-      fixture server determinism.
+- [x] Tests: contract validation, buffer round-trip/replay/retention,
+      fixture server determinism. (53/53, merged via PR #85, f48d4fd.)
 
 ### Phase B — supervisor protocol and Hyperliquid live supervisor
 
-- [ ] `quantmesh/live/supervisor.py`: reconnect/backoff, snapshot
+- [x] `quantmesh/live/supervisor.py`: reconnect/backoff, snapshot
       resync, sequence/gap detection, freshness monitor, bounded
       backpressure with explicit gap marking (generalizing the M5
       HyperliquidStream pattern).
-- [ ] Hyperliquid supervisor for the 4–8 perp watchlist: candles,
+- [x] Hyperliquid supervisor for the 4–8 perp watchlist: candles,
       l2Book, trades, allMids/BBO, assetCtx subscriptions; REST
       resync on reconnect; normalized MarketUpdates.
-- [ ] Fixture-driven tests: disconnect/resume, resync, gap marking,
-      freshness transitions, backpressure.
+- [x] Fixture-driven tests: disconnect/resume, resync, gap marking,
+      freshness transitions, backpressure. (31/31 in
+      `tests/test_live_supervisor.py`, 84/84 on the live surface.)
+
+> **Checkpoint B1 (2026-08-09)** — Phase B landed on branch
+> `0015-phase-b` (based on post-#85 main), PR pending. The generic
+> protocol (ADR-0014 decision 2) is a deterministic state machine:
+> every transition takes an explicit clock, `SourceStatusTracker`
+> emits STATUS only on freshness transitions
+> (connected → lagging → stale → disconnected), `BackpressureGate`
+> drops oldest on overflow with explicit gap marking carried by the
+> first surviving update of the dropped stream (never silent loss),
+> and the asyncio pump is the only wall-clock path — drills drive the
+> scripted transport (`ScriptedHyperliquidTransport`, mirroring the
+> M5 stream drills) and never touch the network. The Hyperliquid
+> supervisor subscribes candle/l2Book/trades/bbo per watchlist coin
+> plus allMids/activeAssetCtx, normalizes every frame into
+> `MarketUpdate`s (fail-closed: unsubscribed identifiers, unknown
+> channels, unknown coins and malformed frames raise
+> `HyperliquidProtocolError`), detects per-coin trade-sequence
+> continuity (first trade after subscribe/reconnect is never a gap),
+> and heals on reconnect via REST candle backfill over the dark
+> window + book snapshot replace, reporting unhealable trades gaps as
+> findings. Review fixes folded in before commit: the gate's drop
+> path was dead code in draft form (eager auto-flush could never
+> overflow) — emission is now explicit; the freshness tracker keys
+> off the watchlist, not subscription identifiers (which embed
+> interval text); and `datetime.UTC` was replaced with the module
+> `UTC` import (it is not a class attribute). Phase A merged to main
+> first (PR #85), so Phase B sits on the full live surface.
 
 ### Phase C — feed surface and cockpit screens
 
