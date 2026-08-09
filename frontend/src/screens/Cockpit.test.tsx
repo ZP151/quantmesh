@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { LiveState, LiveStatus, LiveView, MarketUpdate } from '@/lib/api'
+import { PreferencesProvider } from '@/lib/preferences'
 import { CockpitScreen } from './Cockpit'
 import { CockpitDetailScreen } from './CockpitDetail'
 
@@ -93,9 +94,11 @@ function renderScreen() {
   })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter>
-        <CockpitScreen />
-      </MemoryRouter>
+      <PreferencesProvider>
+        <MemoryRouter>
+          <CockpitScreen />
+        </MemoryRouter>
+      </PreferencesProvider>
     </QueryClientProvider>,
   )
 }
@@ -106,11 +109,13 @@ function renderDetail(symbol = 'SOL') {
   })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[`/cockpit/${symbol}`]}>
-        <Routes>
-          <Route path="/cockpit/:symbol" element={<CockpitDetailScreen />} />
-        </Routes>
-      </MemoryRouter>
+      <PreferencesProvider>
+        <MemoryRouter initialEntries={[`/cockpit/${symbol}`]}>
+          <Routes>
+            <Route path="/cockpit/:symbol" element={<CockpitDetailScreen />} />
+          </Routes>
+        </MemoryRouter>
+      </PreferencesProvider>
     </QueryClientProvider>,
   )
 }

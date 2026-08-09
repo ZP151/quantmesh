@@ -7,6 +7,7 @@ import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api } from '@/lib/api'
 import { money, venueLabel } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 import { cn } from '@/lib/utils'
 
 /**
@@ -18,27 +19,26 @@ import { cn } from '@/lib/utils'
 export function MarketsScreen() {
   const query = useSurface(['markets'], api.markets)
   const venues = useSurface(['overview'], api.overview)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Markets"
-      description="Cross-venue instrument board — the market evidence the paper-order loop starts from. Every row carries its demo provenance; nothing here is live market data."
+      title={t('screen.markets.title')}
+      description={t('screen.markets.description')}
       actions={
         <Button variant="outline" size="sm" render={<Link to="/trading/order" />}>
-          <Activity className="size-3.5" aria-hidden /> Paper order
+          <Activity className="size-3.5" aria-hidden /> {t('screen.markets.paperOrder')}
         </Button>
       }
     >
       <Surface
         query={query}
-        title="Markets"
+        title={t('screen.markets.title')}
         empty={
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">No instruments mounted</CardTitle>
-              <CardDescription>
-                The demo universe is empty — the workstation has no venues to render.
-              </CardDescription>
+              <CardTitle className="text-base">{t('screen.markets.empty.title')}</CardTitle>
+              <CardDescription>{t('screen.markets.empty.description')}</CardDescription>
             </CardHeader>
           </Card>
         }
@@ -51,13 +51,13 @@ export function MarketsScreen() {
                   <CardTitle className="flex items-center gap-2 text-base">
                     {venueLabel(entry.venue)}
                     <Badge variant="outline" className="font-mono text-[10px]">
-                      {entry.instruments.length} instruments
+                      {t('screen.markets.instruments', { count: String(entry.instruments.length) })}
                     </Badge>
                   </CardTitle>
                   <CardDescription>
                     {entry.venue === 'hyperliquid'
-                      ? 'Perpetual futures — synthetic marks from the seeded walk.'
-                      : 'Equities — synthetic marks from the seeded walk.'}
+                      ? t('screen.markets.hyperliquid.description')
+                      : t('screen.markets.equities.description')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -65,10 +65,10 @@ export function MarketsScreen() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                          <th className="py-2 pr-4 font-medium">Symbol</th>
-                          <th className="py-2 pr-4 text-right font-medium">Mark</th>
-                          <th className="py-2 pr-4 font-medium">Venue</th>
-                          <th className="py-2 text-right font-medium">Action</th>
+                          <th className="py-2 pr-4 font-medium">{t('table.symbol')}</th>
+                          <th className="py-2 pr-4 text-right font-medium">{t('table.mark')}</th>
+                          <th className="py-2 pr-4 font-medium">{t('table.venue')}</th>
+                          <th className="py-2 text-right font-medium">{t('table.action')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -90,7 +90,7 @@ export function MarketsScreen() {
                                   }
                                   className={cn('font-mono text-[11px]')}
                                 >
-                                  Trade
+                                  {t('table.trade')}
                                 </Button>
                               </td>
                             </tr>

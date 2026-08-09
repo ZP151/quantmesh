@@ -16,6 +16,7 @@ import type {
   LiveView,
   MarketUpdate,
 } from '@/lib/api'
+import type { MessageKey } from '@/lib/messages'
 
 // --- Labels --------------------------------------------------------------
 
@@ -52,12 +53,14 @@ export function instrumentLabel(instrument: LiveInstrumentState): LiveLabel {
   return views[views.length - 1].label
 }
 
-export const LABEL_TEXT: Record<LiveLabel, string> = {
-  real: 'Real',
-  delayed: 'Delayed',
-  stale: 'Stale',
-  synthetic: 'Synthetic',
-  unavailable: 'Unavailable',
+/** Instrument badge text keys — screens render t(LABEL_TEXT[label]); the
+ * label identity itself (LiveLabel) stays raw on the wire and in state. */
+export const LABEL_TEXT: Record<LiveLabel, MessageKey> = {
+  real: 'live.label.real',
+  delayed: 'live.label.delayed',
+  stale: 'live.label.stale',
+  synthetic: 'live.label.synthetic',
+  unavailable: 'live.label.unavailable',
 }
 
 export function labelTone(label: LiveLabel): string {

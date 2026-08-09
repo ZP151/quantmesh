@@ -19,6 +19,7 @@ import {
 } from '@/lib/live'
 import { api, type LiveInstrumentState, type LiveSourceState, type LiveStatus } from '@/lib/api'
 import { money } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
 // The Live Market Cockpit watchlist (iteration 0015 Phase C): every
 // instrument the feed knows, with the provenance+age label the server
@@ -46,12 +47,13 @@ function sourceTone(state: LiveSourceState): string {
 }
 
 function ConnectorPanel({ venues }: { venues: LiveStatus['venues'] }) {
+  const { t } = usePreferences()
   if (venues.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Connector health</CardTitle>
-          <CardDescription>No venue reported a status yet.</CardDescription>
+          <CardTitle className="text-base">{t('screen.cockpit.connectorHealth')}</CardTitle>
+          <CardDescription>{t('screen.cockpit.connectorEmpty')}</CardDescription>
         </CardHeader>
       </Card>
     )
@@ -59,10 +61,8 @@ function ConnectorPanel({ venues }: { venues: LiveStatus['venues'] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Connector health</CardTitle>
-        <CardDescription>
-          Per-source connection and freshness states from the supervisors' STATUS transitions.
-        </CardDescription>
+        <CardTitle className="text-base">{t('screen.cockpit.connectorHealth')}</CardTitle>
+        <CardDescription>{t('screen.cockpit.connectorDesc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {venues.map((venue) => (
@@ -72,7 +72,7 @@ function ConnectorPanel({ venues }: { venues: LiveStatus['venues'] }) {
               <Badge
                 className={venue.connected ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'}
               >
-                {venue.connected ? 'connected' : 'disconnected'}
+                {venue.connected ? t('screen.cockpit.connected') : t('screen.cockpit.disconnected')}
               </Badge>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -97,6 +97,7 @@ function ConnectorPanel({ venues }: { venues: LiveStatus['venues'] }) {
 }
 
 export function CockpitScreen() {
+  const { t } = usePreferences()
   const snapshot = useQuery({
     queryKey: ['live', 'state'],
     queryFn: api.liveState,
@@ -131,12 +132,12 @@ export function CockpitScreen() {
       snapshot.error instanceof Error ? snapshot.error.message : String(snapshot.error)
     return (
       <Page
-        title="Live cockpit"
-        description="A bounded watchlist of real, sourced, freshness-labeled quotes from the attached live feed."
+        title={t('screen.cockpit.title')}
+        description={t('screen.cockpit.description')}
       >
         <ErrorState
-          title="Live cockpit unavailable"
-          detail={`${detail} — start the workstation with --live and a QUANTMESH_LIVE_WATCHLIST.`}
+          title={t('surface.unavailable', { title: t('screen.cockpit.title') })}
+          detail={t('screen.cockpit.liveHint', { detail })}
         />
       </Page>
     )
@@ -144,17 +145,17 @@ export function CockpitScreen() {
 
   const banner =
     streamStatus === 'live'
-      ? 'Local stream connected over WebSocket — venue freshness is shown below.'
+      ? t('screen.cockpit.banner.live')
       : streamStatus === 'fallback'
-        ? 'WebSocket unavailable — streaming over the SSE fallback.'
+        ? t('screen.cockpit.banner.fallback')
         : streamStatus === 'down'
-          ? 'Stream down — showing the latest snapshot, refreshed every 10 s.'
-          : 'Connecting to the live stream…'
+          ? t('screen.cockpit.banner.down')
+          : t('screen.cockpit.banner.connecting')
 
   return (
     <Page
-      title="Live cockpit"
-      description="A bounded watchlist of real, sourced, freshness-labeled quotes from the attached live feed."
+      title={t('screen.cockpit.title')}
+      description={t('screen.cockpit.description')}
       actions={
         <span className="flex items-center gap-2 text-xs text-muted-foreground">
           <Radio className="size-3.5" aria-hidden />
@@ -168,15 +169,15 @@ export function CockpitScreen() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  <th className="px-4 py-2.5 font-medium">Symbol</th>
-                  <th className="px-4 py-2.5 font-medium">Venue</th>
-                  <th className="px-4 py-2.5 font-medium">State</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Bid</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Ask</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Mid</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Spread bps</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Last</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Age</th>
+                  <th className="px-4 py-2.5 font-medium">{t('table.symbol')}</th>
+                  <th className="px-4 py-2.5 font-medium">{t('table.venue')}</th>
+                  <th className="px-4 py-2.5 font-medium">{t('screen.cockpit.col.state')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.bid')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.ask')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.mid')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.spreadBps')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.last')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.age')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -201,7 +202,7 @@ export function CockpitScreen() {
                         {instrument.venue}
                       </td>
                       <td className="px-4 py-2.5">
-                        <Badge className={labelTone(label)}>{LABEL_TEXT[label]}</Badge>
+                        <Badge className={labelTone(label)}>{t(LABEL_TEXT[label])}</Badge>
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
                         {quote.bid !== undefined ? money(quote.bid) : '—'}
@@ -231,7 +232,7 @@ export function CockpitScreen() {
                           }
                         >
                           {worst ? ageText(worst.age_ms) : '—'}
-                          {worst?.sequence_gap ? ' ⚠ gap' : ''}
+                          {worst?.sequence_gap ? ` ${t('screen.cockpit.gap')}` : ''}
                         </span>
                       </td>
                     </tr>

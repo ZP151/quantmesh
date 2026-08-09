@@ -8,6 +8,7 @@ import { ErrorState, LoadingState } from '@/components/state'
 import { api, type PredictionRow, type PredictionVenueRow } from '@/lib/api'
 import { LABEL_TEXT, labelTone } from '@/lib/live'
 import { money } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
 // The prediction comparison board (iteration 0015 Phase E): the same
 // event priced on Polymarket and Kalshi, side by side — implied
@@ -34,11 +35,12 @@ function diffTone(diff: number | null): string {
 }
 
 function VenueBlock({ row }: { row: PredictionVenueRow }) {
+  const { t } = usePreferences()
   return (
     <div className="rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium capitalize">{row.venue}</span>
-        <Badge className={labelTone(row.label)}>{LABEL_TEXT[row.label]}</Badge>
+        <Badge className={labelTone(row.label)}>{t(LABEL_TEXT[row.label])}</Badge>
       </div>
       <p className="mt-2 text-2xl font-semibold tabular-nums">
         {row.probability !== null ? `${row.probability.toFixed(1)}%` : '—'}

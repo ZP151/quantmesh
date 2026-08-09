@@ -5,12 +5,14 @@ import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api } from '@/lib/api'
 import { money } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
 /** The watchlist: the seeded favorites with their marks. The venue for
  * a "Trade" link is resolved from the overview board — never guessed. */
 export function WatchlistScreen() {
   const query = useSurface(['watchlist'], api.watchlist)
   const venues = useSurface(['overview'], api.overview)
+  const { t } = usePreferences()
 
   const venueOf = (symbol: string): string | undefined => {
     for (const entry of venues.data?.venues ?? []) {
@@ -21,16 +23,16 @@ export function WatchlistScreen() {
 
   return (
     <Page
-      title="Watchlist"
-      description="Seeded favorites — AAPL, BTC-USD, NVDA, SOL-USD — with their deterministic marks."
+      title={t('screen.watchlist.title')}
+      description={t('screen.watchlist.description')}
     >
       <Surface
         query={query}
-        title="Watchlist"
+        title={t('screen.watchlist.title')}
         empty={
           <Card>
             <CardHeader>
-              <CardTitle className="text-base text-muted-foreground">Watchlist empty</CardTitle>
+              <CardTitle className="text-base text-muted-foreground">{t('screen.watchlist.empty')}</CardTitle>
             </CardHeader>
           </Card>
         }
@@ -42,9 +44,9 @@ export function WatchlistScreen() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                      <th className="px-4 py-2.5 font-medium">Symbol</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Mark</th>
-                      <th className="px-4 py-2.5 text-right font-medium">Action</th>
+                      <th className="px-4 py-2.5 font-medium">{t('table.symbol')}</th>
+                      <th className="px-4 py-2.5 text-right font-medium">{t('table.mark')}</th>
+                      <th className="px-4 py-2.5 text-right font-medium">{t('table.action')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -66,10 +68,10 @@ export function WatchlistScreen() {
                                   />
                                 }
                               >
-                                Trade
+                                {t('table.trade')}
                               </Button>
                             ) : (
-                              <span className="text-xs text-muted-foreground">not in universe</span>
+                              <span className="text-xs text-muted-foreground">{t('screen.watchlist.notInUniverse')}</span>
                             )}
                           </td>
                         </tr>

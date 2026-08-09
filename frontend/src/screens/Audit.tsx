@@ -5,6 +5,7 @@ import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api, type AuditEntry } from '@/lib/api'
 import { dateTime, moneyPrecise, quantity } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
 const KIND_VARIANT: Record<AuditEntry['kind'], 'default' | 'outline' | 'secondary'> = {
   order: 'default',
@@ -13,15 +14,19 @@ const KIND_VARIANT: Record<AuditEntry['kind'], 'default' | 'outline' | 'secondar
 }
 
 function EntryCard({ entry }: { entry: AuditEntry }) {
+  const { t } = usePreferences()
   let summary: string
   if (entry.kind === 'order' && entry.order) {
     summary = `${entry.order.instrument.venue}:${entry.order.instrument.symbol} · ${entry.order.side.toUpperCase()} ${quantity(entry.order.quantity)} · ${entry.order.status}${entry.order.average_fill_price !== null ? ` @ ${moneyPrecise(entry.order.average_fill_price)}` : ''}`
   } else if (entry.kind === 'mapping' && entry.mapping) {
-    summary = `mapping ${entry.mapping['pair_key'] ?? ''} · ${entry.mapping['status'] ?? 'unknown'}`
+    summary = t('screen.audit.summary.mapping', {
+      pair: String(entry.mapping['pair_key'] ?? ''),
+      status: String(entry.mapping['status'] ?? t('screen.audit.unknown')),
+    })
   } else if (entry.kind === 'decision' && entry.decision) {
-    const verdict = entry.decision['verdict'] ?? 'unknown'
-    const role = entry.decision['role'] ?? 'unknown'
-    summary = `${role} verdict: ${String(verdict)}`
+    const verdict = entry.decision['verdict'] ?? t('screen.audit.unknown')
+    const role = entry.decision['role'] ?? t('screen.audit.unknown')
+    summary = t('screen.audit.summary.decision', { role: String(role), verdict: String(verdict) })
   } else {
     summary = entry.anchor
   }
@@ -43,7 +48,7 @@ function EntryCard({ entry }: { entry: AuditEntry }) {
       {payload && (
         <details className="mt-2">
           <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
-            Payload
+            {t('screen.audit.payload')}
           </summary>
           <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-muted/40 p-3 font-mono text-[10px] leading-relaxed">
             {JSON.stringify(payload, null, 2)}
@@ -59,27 +64,38 @@ function EntryCard({ entry }: { entry: AuditEntry }) {
  * order wrote into the journal. */
 export function AuditScreen() {
   const query = useSurface(['audit'], api.audit)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Audit"
-      description="The journal, mapping and decision ledgers as one ordered trail. Every browser order appends here with its full event history."
+      title={t('screen.audit.title')}
+      description={t('screen.audit.description')}
     >
-      <Surface query={query} title="Audit">
+      <Surface query={query} title={t('screen.audit.title')}>
         {(audit) => (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
-                <ScrollText className="size-4" aria-hidden /> Trail
+                <ScrollText className="size-4" aria-hidden /> {t('screen.audit.trail')}
                 {!audit.journal_bound && (
                   <Badge variant="outline" className="text-[10px]">
-                    journal unbound
+                    {t('screen.audit.journalUnbound')}
                   </Badge>
                 )}
               </CardTitle>
               <CardDescription>
-                {audit.entries.length} entries · journal {audit.journal_bound ? 'bound' : 'unbound'} · mappings{' '}
-                {audit.mappings_bound ? 'bound' : 'unbound'} · decisions {audit.decisions_bound ? 'bound' : 'unbound'}
+                {t('screen.audit.entries', { count: String(audit.entries.length) })} ·{' '}
+                {t('screen.audit.journal', {
+                  state: audit.journal_bound ? t('screen.audit.bound') : t('screen.audit.unbound'),
+                })}{' '}
+                ·{' '}
+                {t('screen.audit.mappings', {
+                  state: audit.mappings_bound ? t('screen.audit.bound') : t('screen.audit.unbound'),
+                })}{' '}
+                ·{' '}
+                {t('screen.audit.decisions', {
+                  state: audit.decisions_bound ? t('screen.audit.bound') : t('screen.audit.unbound'),
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
