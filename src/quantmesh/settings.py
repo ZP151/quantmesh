@@ -81,6 +81,13 @@ class Settings(BaseSettings):
     # root, and never touches a non-demo root (marker-guarded).
     demo_root: Path = Path.home() / ".quantmesh" / "demo"
     demo_seed: int = 20260809
+    # Live read-only market feed (iteration 0015 Phase C): the public
+    # Hyperliquid WS is pinned — market data only, never order paths
+    # (ADR-0007 keeps the order adapter on the testnet URL).
+    hyperliquid_ws_url: str = "wss://api.hyperliquid.xyz/ws"
+    # The bounded live watchlist (comma-separated perp coins); empty
+    # means no live feed is attached and the workstation runs unchanged.
+    live_watchlist: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

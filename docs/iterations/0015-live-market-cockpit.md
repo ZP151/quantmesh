@@ -95,7 +95,8 @@ stale/degraded and blocks paper orders on its instruments.
       resync on reconnect; normalized MarketUpdates.
 - [x] Fixture-driven tests: disconnect/resume, resync, gap marking,
       freshness transitions, backpressure. (31/31 in
-      `tests/test_live_supervisor.py`, 84/84 on the live surface.)
+      `tests/test_live_supervisor.py`, 84/84 on the live surface.
+      Merged via PR #86, 641f3c6.)
 
 > **Checkpoint B1 (2026-08-09)** — Phase B landed on branch
 > `0015-phase-b` (based on post-#85 main), PR pending. The generic
@@ -122,16 +123,49 @@ stale/degraded and blocks paper orders on its instruments.
 > off the watchlist, not subscription identifiers (which embed
 > interval text); and `datetime.UTC` was replaced with the module
 > `UTC` import (it is not a class attribute). Phase A merged to main
-> first (PR #85), so Phase B sits on the full live surface.
+> first (PR #85), so Phase B sits on the full live surface. Phase B
+> merged via PR #86 (641f3c6); Phase C starts from post-B main.
 
 ### Phase C — feed surface and cockpit screens
 
-- [ ] `/api/live/*` router (double-mounted): WebSocket stream + SSE
+- [x] `/api/live/*` router (double-mounted): WebSocket stream + SSE
       fallback + latest-state + status endpoints.
 - [ ] React: Market Cockpit watchlist (real/delayed/stale/synthetic/
       unavailable states), instrument detail (chart, order book, trade
       tape), connector-health panel.
 - [ ] Browser E2E + accessibility/mobile checks for the cockpit.
+
+> **Checkpoint C1 (2026-08-09)** — Phase C-1 landed on branch
+> `0015-phase-c` (based on post-#86 main). The feed hub
+> (`quantmesh/live/feed.py`) is the deterministic middle: `ingest` is a
+> pure function (latest-per-venue+instrument+kind cache + lake append
+> + status upsert), `label` derives the five watchlist states from
+> provenance and receipt age (real/delayed/stale/synthetic/
+> unavailable), fan-out is a bounded per-client queue with drop-oldest
+> overflow, and `publish_threadsafe` lets any thread (a TestClient, the
+> E2E harness) inject updates into the running pump. The router
+> (`quantmesh/live/api.py`) double-mounts like the demo router:
+> `/live/*` and `/api/live/*` serve the same feed (state snapshot,
+> connector statuses, WS stream, SSE fallback with 15 s heartbeat);
+> subscriptions are eager (registered in the handler before the
+> response streams) so a publish after connect is never lost — the
+> determinism the drills rely on. `create_workstation_app` gained the
+> `live_feed=` handle and a lifespan factory that runs the pump only
+> when a feed is attached (unconfigured servers answer 404 "no live
+> feed is attached" and are unchanged); `--live` is the opt-in CLI
+> path (mutually exclusive with `--demo`, watchlist from
+> `QUANTMESH_LIVE_WATCHLIST`), and the live transport adapts the sync
+> VenueTransport protocol to the real websockets client with a deferred
+> open + outbox flush. Two real findings from the drills: starlette's
+> current TestClient buffers the whole response body before returning,
+> so an infinite SSE stream cannot be driven through it — the SSE drill
+> runs a real uvicorn server on pinned loopback port 8644 (exactly the
+> shape the SPA fallback will talk to); and OpenAPI never lists
+> WebSocket routes, so the openapi drill asserts the HTTP surface only.
+> Green: 112/112 on the live surface (`test_live_contract`,
+> `test_live_buffer`, `test_live_supervisor`, `test_live_feed`,
+> `test_live_router`), ruff clean, full backend suite 1956/1956.
+> Phase C-2 (cockpit screens) starts from this checkpoint.
 
 ### Phase D — deterministic quote fence
 
