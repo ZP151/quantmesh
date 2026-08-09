@@ -76,16 +76,24 @@ makes the business workflow directly testable. Do not promote RC1 to
    pinned rc1. Promotion to `v0.1.0` is forbidden.** The published rc2
    tag is the historical record and is not rewritten (iteration 0014
    Checkpoint 6).
-7. ~~Fix the version drift and release `v0.1.0-rc3`~~ (in progress,
-   rc3 cycle): the three version locations read `0.1.0rc3`; new gate
-   step `tools/check_release_version.py` asserts Git tag == package
-   version == newest release notes and is verified failing on the old
-   rc2 commit; rc3 release notes (EN + zh-CN) written; rc2 notes
-   corrected. Remaining: PR → full release gate on the branch HEAD →
-   squash-merge → tag `v0.1.0-rc3` on the merge commit → regenerate
-   the isolated acceptance environment from the tag → golden path
-   53/53 → workstation on 8766 → full browser acceptance checklist →
-   promotion to `v0.1.0` only after explicit operator acceptance.
+7. ~~Fix the version drift and release `v0.1.0-rc3`~~ (done, rc3
+   cycle, iteration 0014 Checkpoints 6–8): the three version
+   locations read `0.1.0rc3`; new gate step
+   `tools/check_release_version.py` asserts Git tag == package
+   version == newest release notes (fails on the old rc2 commit,
+   passes at the rc3 tag; PEP 440 tag comparison fixed post-tag,
+   Checkpoint 7); gate run 5 PASSED 15/15, PR #80 merged, tag
+   pushed; gate run 6 PASSED 15/15 on the exact tagged tree
+   `e83e30c` after the checker fix; the isolated acceptance
+   environment was regenerated from the tag (rejected rc2 build and
+   workstation removed) and all four rejection items re-verified
+   (`git describe` → `v0.1.0-rc3`, pip show → `0.1.0rc3`, import →
+   `0.1.0rc3`, `/api/health` → `0.1.0rc3`); golden path 53/53 on the
+   rc3 tree; workstation live at http://127.0.0.1:8766/app/ (PID
+   41852) with `OPERATOR-ACCEPTANCE.md` at the acceptance root.
+   **Remaining: the operator runs the full browser acceptance
+   checklist against that install, then promotion to `v0.1.0`
+   happens only after explicit human acceptance.**
 
 ## Standing authority
 
