@@ -184,6 +184,47 @@ class VenueTransport(Protocol):
     async def recv(self) -> object: ...
 
 
+class ScriptedVenueTransport:
+    """Generic scripted wire for the venue drills (any venue).
+
+    ``send`` records messages so a drill can assert exactly what the
+    supervisor subscribed; ``next_event`` plays the script with
+    ``DROP``/``RESUME`` driving connection state — the same contract
+    as ``ScriptedHyperliquidTransport``, without the Hyperliquid
+    error type (the protocol errors belong to each venue module).
+    """
+
+    def __init__(self, script: list[object]) -> None:
+        self._script = list(script)
+        self._index = 0
+        self.connected = False
+        self.sent: list[dict] = []
+
+    def connect(self) -> None:
+        self.connected = True
+
+    def close(self) -> None:
+        self.connected = False
+
+    def send(self, message: dict) -> None:
+        if not self.connected:
+            raise RuntimeError("socket is closed; message was not delivered")
+        self.sent.append(message)
+
+    async def recv(self) -> object:
+        raise AssertionError("scripted transports are driven by drills, not the pump")
+
+    def next_event(self) -> object | None:
+        """Next scripted event; ``DROP``/``RESUME`` drive connection state."""
+        if self._index >= len(self._script):
+            return None
+        event = self._script[self._index]
+        self._index += 1
+        if event == "DROP":
+            self.connected = False
+        return event
+
+
 class VenueSupervisor(ABC):
     """Deterministic multi-venue stream state machine.
 
@@ -280,11 +321,21 @@ class VenueSupervisor(ABC):
         self._watchlist = list(watchlist)
         self._subscribed = self.specs(watchlist)
 
+    def _subscribe_message(self, spec: dict) -> dict:
+        """The wire envelope for one subscription (overridable).
+
+        Hyperliquid's wire is ``{"method": "subscribe", "subscription":
+        spec}``; venues with a different envelope (Kalshi's
+        ``cmd``/``params``/``id``) override this without touching the
+        open/resync flow.
+        """
+        return {"method": "subscribe", "subscription": spec}
+
     def on_open(self, now: datetime, *, reconnected: bool = False) -> list[GapFinding]:
         self._transport.connect()
         self.connected = True
         for spec in self._subscribed.values():
-            self._transport.send({"method": "subscribe", "subscription": spec})
+            self._transport.send(self._subscribe_message(spec))
         findings: list[GapFinding] = []
         if reconnected:
             for update in self.resync(now):

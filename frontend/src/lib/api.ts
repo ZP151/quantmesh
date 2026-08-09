@@ -407,6 +407,35 @@ export interface LiveStatus {
   venues: LiveVenueStatus[]
 }
 
+// --- Phase E (iteration 0015): the prediction comparison surface --------
+
+/** One venue row on the prediction comparison board. The probability is
+ * the venue's own implied mid in percent, or null while no real quote
+ * has arrived — an unconfigured or quiet venue renders "—", never a
+ * fabricated number. */
+export interface PredictionVenueRow {
+  venue: string
+  symbol: string | null
+  label: LiveLabel
+  probability: number | null
+  bid: number | null
+  ask: number | null
+  spread_bps: number | null
+  depth: number | null
+  liquidity: number | null
+}
+
+/** One event pair across the prediction venues, with the cross-venue
+ * probability difference in percentage points (null unless both venues
+ * carry a probability). */
+export interface PredictionRow {
+  event_key: string
+  title: string
+  expiry: string | null
+  venues: PredictionVenueRow[]
+  diff: number | null
+}
+
 /** One normalized update pushed on the stream (WS or SSE fallback). */
 export interface MarketUpdate {
   venue: string
@@ -547,4 +576,5 @@ export const api = {
   // Phase C — the live feed surface (WS/SSE stream + snapshots).
   liveState: () => request<LiveState>('/api/live/state'),
   liveStatus: () => request<LiveStatus>('/api/live/status'),
+  prediction: () => request<PredictionRow[]>('/api/live/prediction'),
 }

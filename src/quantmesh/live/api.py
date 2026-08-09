@@ -1,14 +1,17 @@
-"""The local feed surface: stream + latest-state + connector health
-(iteration 0015 Phase C, ADR-0014 decision 4).
+"""The local feed surface: stream + latest-state + connector health +
+the prediction comparison board (iteration 0015 Phases C and E,
+ADR-0014 decision 4).
 
 The browser connects only to the local server: venue URLs, transports
 and supervisors live server-side; the SPA receives normalized
 ``MarketUpdate`` JSON over WebSocket (preferred) or SSE (fallback),
-plus the latest-state and connector-health snapshots over REST.
-Double-mounted like the demo router — one registration serves the root
-contract (``/live/*``) and the SPA surface (``/api/live/*``). Without an
-attached feed the handlers answer 404 ("no live feed is attached"), so
-the workstation is unchanged when no live watchlist is configured.
+plus the latest-state, connector-health and prediction snapshots over
+REST. Double-mounted like the demo router — one registration serves
+the root contract (``/live/*``) and the SPA surface (``/api/live/*``).
+Without an attached feed the handlers answer 404 ("no live feed is
+attached"), so the workstation is unchanged when no live watchlist is
+configured; without an attached prediction board the comparison
+handler answers 404 ("no prediction board is attached") the same way.
 
 Subscription is eager (in the handler, before the response is
 streamed): an SSE or WebSocket client that publishes before reading
@@ -20,12 +23,14 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 
 from quantmesh.live.feed import LiveFeed
+from quantmesh.live.prediction import PredictionBoard
 
 _HEARTBEAT_SECONDS = 15.0  # SSE comment heartbeat; keeps idle streams alive
 
@@ -53,6 +58,23 @@ def live_router() -> APIRouter:
         """Per-venue connector health from the supervisors' STATUS
         transitions (connected/lagging/stale/disconnected/unavailable)."""
         return _feed(request).statuses()
+
+    @router.get("/live/prediction")
+    def live_prediction(request: Request) -> list[dict[str, object]]:
+        """The prediction comparison surface (Phase E): per pair, per
+        venue the implied probability (mid), bid/ask, spread bps, touch
+        depth, book liquidity and the feed's freshness label, plus the
+        cross-venue probability difference — a pure fold of the feed's
+        latest state at one explicit clock, so the labels and the
+        numbers in one response always agree."""
+        board = getattr(request.app.state, "prediction", None)
+        if not isinstance(board, PredictionBoard):
+            raise HTTPException(
+                status_code=404, detail="no prediction board is attached"
+            )
+        feed = _feed(request)
+        now = datetime.now(UTC)
+        return board.render(feed.latest_state(now=now), now)
 
     @router.get("/live/stream")
     async def live_stream(request: Request) -> StreamingResponse:

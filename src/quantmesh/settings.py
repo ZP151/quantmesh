@@ -88,6 +88,18 @@ class Settings(BaseSettings):
     # The bounded live watchlist (comma-separated perp coins); empty
     # means no live feed is attached and the workstation runs unchanged.
     live_watchlist: str = ""
+    # Prediction comparison watchlist (iteration 0015 Phase E):
+    # comma-separated key[:title[:pm_token[:kalshi_ticker[:expiry_date]]]]
+    # event pairs (the board's own parsing rules). Empty means no
+    # prediction board is attached and /live/prediction answers 404
+    # like the rest of the unbound live surface.
+    prediction_watchlist: str = ""
+    # Public prediction-venue WebSockets (iteration 0015 Phase E): the
+    # Polymarket CLOB market channel and the Kalshi trade-api v2 WS are
+    # pinned — read-only market data only, never order paths (ADR-0014
+    # keeps live feeds on public surfaces, like ADR-0007/ADR-0008).
+    polymarket_ws_url: str = "wss://ws-subscriptions-clob.polymarket.com/ws/market"
+    kalshi_ws_url: str = "wss://api.elections.kalshi.com/trade-api/ws/v2"
 
     model_config = SettingsConfigDict(
         env_file=".env",

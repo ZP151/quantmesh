@@ -276,11 +276,48 @@ stale/degraded and blocks paper orders on its instruments.
 
 ### Phase E — prediction markets (read-only)
 
-- [ ] Polymarket public WS (market channel): implied probability,
+- [x] Polymarket public WS (market channel): implied probability,
       bid/ask, spread, depth, liquidity, expiry.
-- [ ] Kalshi public WS: same normalized surface.
-- [ ] Prediction comparison screen: cross-platform probability diff +
+- [x] Kalshi public WS: same normalized surface.
+- [x] Prediction comparison screen: cross-platform probability diff +
       calibration; distinct states.
+
+> **Checkpoint E1 (2026-08-09)** — Phase E landed on branch
+> `0015-phase-e` via PR #90. Both prediction venues are read-only
+> supervisors over the same supervisor protocol as the cockpit:
+> `PolymarketVenueSupervisor` drives the public CLOB market channel
+> (book snapshots → L2 both sides + touch QUOTE with sizes;
+> documented `price_change` single-sided frames are no-ops until a
+> complete touch, sizes composed from the last book; `tick_size_change`
+> benign; REST `ClobBookSource` → `SdkPolyTransport` re-seeds depth
+> on reconnect, keyless), and `KalshiVenueSupervisor` drives the
+> trade-api WS v2 three channels (market/orderbook_delta/trades) with
+> two cents-keyed bid ladders: QUOTE = (best YES bid, 1 − best NO
+> bid), the ask L2 is the NO ladder mirrored ascending, a crossed
+> book skips the QUOTE, and every open seeds the book from REST
+> (`KalshiOrderbookSource` → `HttpxKalshiTransport`, pinned host) —
+> deltas without the seed fail closed (KalshiProtocolError → reconnect
+> heals), ladders parsed ascending worst-first per the recorded wire.
+> The comparison board (`PredictionBoard` + `parse_prediction_watchlist`
+> "key[:title[:pm_symbol[:kalshi_symbol[:expiry_date]]]]") folds the
+> feed's latest state into per-pair venue rows — implied probability
+> (mid × 100), bid/ask, spread bps, touch depth, book liquidity, the
+> freshness label (real/stale/unavailable) and the signed cross-venue
+> diff in percentage points; a pair with only one venue renders the
+> absent side honestly (no fabricated number, no diff). Wiring is
+> explicit and keyless: `QUANTMESH_PREDICTION_WATCHLIST` +
+> `QUANTMESH_POLYMARKET_WS_URL` + `QUANTMESH_KALSHI_WS_URL` settings,
+> `GET /api/live/prediction`, and the `--live` assembly attaching the
+> board's per-venue watchlists — no registry, no credentials (ADR-0014
+> pinning holds). Frontend: Prediction markets screen (per-pair cards,
+> diff chip with tone at |Δ| ≥ 1 pp, calibration link to the existing
+> forecast surface — never re-fabricated), routed + nav'd under /app.
+> Gates: 71/71 router+board drills, 226/226 regression, 47/47 vitest,
+> lint/tsc/build clean, and the port-8646 browser E2E 5/5 — comparison
+> (62.5%/65.0%/−2.5 pp/+3.0 pp over two scripted venues + canned
+> Kalshi REST books), honest unavailable (solo pair), the stale
+> transition after the plans' quiet tail, keyboard walk into
+> "Forecasts", 390 px no body overflow.
 
 ### Phase F — Moomoo OpenD streaming
 
