@@ -17,6 +17,7 @@ deterministically, mirroring ``SimulatedStreamTransport``.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
 
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
@@ -384,3 +385,53 @@ class ScriptedHyperliquidTransport:
         if event == "DROP":
             self.connected = False
         return event
+
+
+class LiveHyperliquidTransport:
+    """The live wire for ``HyperliquidVenueSupervisor`` (ADR-0014).
+
+    The supervisor protocol is synchronous (drills), so this transport
+    defers the actual socket open to the first ``recv`` and queues the
+    subscription sends until the socket is up — the pump flushes them on
+    the wire before the first frame. Only the live pump constructs this
+    (or the browser E2E, pointed at the local fixture venue); drills use
+    ``ScriptedHyperliquidTransport``, and the live smoke drill is this
+    path's gate — never unit-tested against the network.
+    """
+
+    def __init__(self, url: str, *, connect_timeout_s: float = 10.0) -> None:
+        self._url = url
+        self._connect_timeout_s = connect_timeout_s
+        self._socket = None
+        self._outbox: list[str] = []
+
+    def connect(self) -> None:
+        """No-op: the socket opens on the first ``recv`` (the pump calls
+        this synchronously inside the running loop, so nothing here may
+        block or await)."""
+
+    def close(self) -> None:
+        """Best-effort close at shutdown; the pump is cancelled with us."""
+        self._socket = None
+
+    def send(self, message: dict) -> None:
+        """Queue a subscription; flushed to the wire once the socket
+        opens (each ``on_open`` rebuilds the outbox)."""
+        self._outbox.append(json.dumps(message))
+
+    async def recv(self) -> object:
+        socket = await self._ensure_open()
+        return json.loads(await socket.recv())
+
+    async def _ensure_open(self):
+        import websockets
+
+        if self._socket is None:
+            self._socket = await websockets.connect(
+                self._url, open_timeout=self._connect_timeout_s
+            )
+        if self._outbox:
+            pending, self._outbox = self._outbox, []
+            for message in pending:
+                await self._socket.send(message)
+        return self._socket

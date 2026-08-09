@@ -256,6 +256,21 @@ class VenueSupervisor(ABC):
             state_note=note,
         )
 
+    def _surface_findings(self, findings: list[GapFinding], now: datetime) -> None:
+        """Turn reconnect findings into per-source STATUS updates.
+
+        Findings keyed on a watchlist symbol (a channel that could not
+        heal) surface as LAGGING for that source; venue-level findings
+        (``resync`` without a REST transport keys on the venue name)
+        are reported through the ``on_open`` return value only — turning
+        them into updates would fabricate a watchlist row that has no
+        instrument.
+        """
+        for finding in findings:
+            if finding.key not in self._source_keys():
+                continue
+            self._push(self._status(finding.key, SourceState.LAGGING, finding.message, now))
+
     def drain(self) -> list[MarketUpdate]:
         """Everything staged since the last drain, in order."""
         return self._gate.flush()
@@ -324,15 +339,7 @@ class VenueSupervisor(ABC):
         while True:
             try:
                 findings = self.on_open(datetime.now(UTC), reconnected=attempt > 0)
-                for finding in findings:
-                    self._push(
-                        self._status(
-                            finding.key,
-                            SourceState.LAGGING,
-                            finding.message,
-                            datetime.now(UTC),
-                        )
-                    )
+                self._surface_findings(findings, datetime.now(UTC))
                 while True:
                     frame = await self._transport.recv()
                     now = datetime.now(UTC)

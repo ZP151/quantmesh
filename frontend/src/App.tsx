@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/shell/AppShell'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AuditScreen } from '@/screens/Audit'
+import { CockpitDetailScreen } from '@/screens/CockpitDetail'
+import { CockpitScreen } from '@/screens/Cockpit'
 import { ConnectorsScreen } from '@/screens/Connectors'
 import { ImportsScreen } from '@/screens/Imports'
 import { MarketsScreen } from '@/screens/Markets'
@@ -40,6 +42,8 @@ export default function App() {
         <Route index element={<OverviewScreen />} />
         <Route path="markets" element={<MarketsScreen />} />
         <Route path="markets/watchlist" element={<WatchlistScreen />} />
+        <Route path="cockpit" element={<CockpitScreen />} />
+        <Route path="cockpit/:symbol" element={<CockpitDetailScreen />} />
         <Route path="research/experiments" element={<ExperimentsScreen />} />
         <Route path="research/promotions" element={<PromotionsScreen />} />
         <Route path="research/forecasts" element={<ForecastsScreen />} />

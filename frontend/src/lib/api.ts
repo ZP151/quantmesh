@@ -346,6 +346,82 @@ export interface ImportedDataset {
   end: string | null
 }
 
+// --- Phase C (iteration 0015): the live feed surface ----------------------
+
+export type LiveLabel = 'real' | 'delayed' | 'stale' | 'synthetic' | 'unavailable'
+export type LiveKind =
+  | 'quote'
+  | 'trade'
+  | 'candle'
+  | 'l2_snapshot'
+  | 'l2_delta'
+  | 'metrics'
+  | 'status'
+export type LiveSourceState =
+  | 'connected'
+  | 'lagging'
+  | 'stale'
+  | 'disconnected'
+  | 'unavailable'
+
+export interface LiveView {
+  kind: LiveKind
+  provenance: string
+  data_time: string
+  received_at: string
+  age_ms: number
+  sequence: number | null
+  sequence_gap: boolean
+  label: LiveLabel
+  payload: Record<string, unknown>
+}
+
+export interface LiveInstrumentState {
+  venue: string
+  label: LiveLabel
+  kinds: Record<string, LiveView>
+}
+
+export interface LiveState {
+  generated_at: string
+  instruments: Record<string, LiveInstrumentState>
+}
+
+export interface LiveSource {
+  instrument: string
+  state: LiveSourceState
+  note: string | null
+  data_time: string | null
+  received_at: string | null
+  age_ms: number | null
+}
+
+export interface LiveVenueStatus {
+  venue: string
+  connected: boolean
+  sources: LiveSource[]
+}
+
+export interface LiveStatus {
+  generated_at: string
+  venues: LiveVenueStatus[]
+}
+
+/** One normalized update pushed on the stream (WS or SSE fallback). */
+export interface MarketUpdate {
+  venue: string
+  instrument: string
+  kind: LiveKind
+  provenance: string
+  data_time: string
+  received_at: string
+  sequence: number | null
+  sequence_gap: boolean
+  payload: Record<string, unknown>
+  state: LiveSourceState | null
+  state_note: string | null
+}
+
 // --- Client --------------------------------------------------------------
 
 export class ApiError extends Error {
@@ -467,4 +543,8 @@ export const api = {
       body: JSON.stringify(body),
     }),
   imports: () => request<ImportedDataset[]>('/api/demo/imports'),
+
+  // Phase C — the live feed surface (WS/SSE stream + snapshots).
+  liveState: () => request<LiveState>('/api/live/state'),
+  liveStatus: () => request<LiveStatus>('/api/live/status'),
 }

@@ -120,9 +120,8 @@ makes the business workflow directly testable. Do not promote RC1 to
    all venues read-only, no credentials, no autonomous execution.
    Phase A (ADR-0014, contract, buffer, fixture WS server) merged via
    PR #85 (f48d4fd); Phase B (supervisor protocol + Hyperliquid venue
-   supervisor, drill-tested 84/84 on the live surface) is on branch
-   `0015-phase-b` awaiting its phase PR; Phases C–G per the iteration
-   record.
+   supervisor, drill-tested 84/84 on the live surface) merged via
+   PR #86 (641f3c6); Phases C–G per the iteration record.
 
 ## Standing authority
 

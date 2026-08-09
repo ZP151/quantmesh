@@ -45,7 +45,9 @@ object (ADR-0011 decision 5).
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Mapping
+from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Literal
@@ -69,6 +71,8 @@ from quantmesh.events.mapping import MappingLedger
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
+from quantmesh.live.api import live_router
+from quantmesh.live.feed import LiveFeed
 from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
@@ -933,6 +937,31 @@ def _page_routes() -> list[tuple[str, str]]:
     return [(page.route, page.label) for page in PAGES]
 
 
+def _feed_lifespan(feed: LiveFeed) -> Callable[[FastAPI], object]:
+    """The app lifespan for an attached feed: start the pump with the
+    app and stop it on shutdown.
+
+    The pump's supervisor tasks reconnect forever; only this shutdown
+    cancels them. An attached feed is the live read-only path
+    (ADR-0014 decision 4); the deterministic drills drive the feed's
+    ingest surface directly and never start the pump against the
+    network. Starlette calls the returned callable with the app and
+    uses the resulting async context manager as the lifespan.
+    """
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        task = asyncio.create_task(feed.run())
+        try:
+            yield
+        finally:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+
+    return lifespan
+
+
 def create_workstation_app(
     *,
     account: PaperAccount,
@@ -950,6 +979,7 @@ def create_workstation_app(
     documents: DocumentIndex | None = None,
     hl_posture: HyperliquidRiskLimits | None = None,
     enablement: ApprovalLedger | None = None,
+    live_feed: LiveFeed | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -975,7 +1005,10 @@ def create_workstation_app(
     owned and never permitted from the UI. The kill-switch POST flips
     the injected account's flag in both `app.state` and the page
     context, so the JSON surface and every page agree (ADR-0011
-    decision 6).
+    decision 6). `live_feed` (iteration 0015 Phase C) attaches the live
+    read-only feed: the /api/live surface mounts either way (404
+    without a feed), and an attached feed starts its pump with the app
+    lifespan and stops it on shutdown.
     """
     host = settings.workstation_host if host is None else host
     if not _is_loopback(host):
@@ -1014,6 +1047,22 @@ def create_workstation_app(
         prefix="/api",
         generate_unique_id_function=lambda route: f"api_{route.name}",
     )
+
+    # The live feed surface (iteration 0015 Phase C, ADR-0014 decision
+    # 4): WebSocket + SSE stream, latest-state and connector health,
+    # double-mounted like the demo router. Without an attached feed the
+    # handlers answer 404 ("no live feed is attached"), so the
+    # workstation is unchanged when no live watchlist is configured.
+    router = live_router()
+    app.include_router(router)
+    app.include_router(
+        router,
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
+    if live_feed is not None:
+        app.state.live = live_feed
+        app.router.lifespan_context = _feed_lifespan(live_feed)
 
     if settings.legacy_ui:
         # RC1 rollback mode (ADR-0013 decision 6): the Jinja2 pages
@@ -1336,6 +1385,13 @@ def main(argv: list[str] | None = None) -> None:
     instead: `--demo-root` picks the demo root (default
     ``~/.quantmesh/demo``), `--seed` overrides the scenario seed, and
     the app exposes ``/api/demo/status`` plus the marker-guarded reset.
+    ``--live`` attaches the live read-only market feed over the public
+    Hyperliquid WS (ADR-0014): the watchlist is
+    ``QUANTMESH_LIVE_WATCHLIST`` (comma-separated perp coins), the
+    replay lake lives under the operator's data root, and the cockpit
+    renders real, freshness-labeled quotes. ``--demo`` and ``--live``
+    are mutually exclusive — the demo session stays the labeled
+    deterministic runtime, live stays labeled real.
     """
     import argparse
 
@@ -1359,6 +1415,14 @@ def main(argv: list[str] | None = None) -> None:
         default=None,
         help="demo scenario seed (default: settings.demo_seed)",
     )
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help=(
+            "attach the live read-only market feed "
+            "(QUANTMESH_LIVE_WATCHLIST = comma-separated perp coins)"
+        ),
+    )
     args = parser.parse_args(argv)
 
     host = settings.workstation_host
@@ -1366,6 +1430,11 @@ def main(argv: list[str] | None = None) -> None:
         raise WorkstationConfigError(
             f"workstation host must be loopback, got {host!r} "
             "(non-loopback binds are refused at construction)"
+        )
+    if args.demo and args.live:
+        raise SystemExit(
+            "--demo and --live are mutually exclusive: the demo runtime is the "
+            "labeled deterministic session"
         )
     if args.demo:
         from quantmesh.demo.runtime import create_demo_app
@@ -1377,7 +1446,33 @@ def main(argv: list[str] | None = None) -> None:
         )
     else:
         account = PaperAccount(cash=100_000.0)
-        app = create_workstation_app(account=account, host=host)
+        if args.live:
+            from quantmesh.live.buffer import LiveBuffer
+            from quantmesh.live.feed import LiveFeed
+            from quantmesh.live.hyperliquid import (
+                HyperliquidVenueSupervisor,
+                LiveHyperliquidTransport,
+            )
+
+            watchlist = [
+                coin.strip().upper()
+                for coin in settings.live_watchlist.split(",")
+                if coin.strip()
+            ]
+            if not watchlist:
+                raise SystemExit(
+                    "--live requires a watchlist: set QUANTMESH_LIVE_WATCHLIST "
+                    "(e.g. BTC,ETH,SOL,HYPE)"
+                )
+            feed = LiveFeed(lake=LiveBuffer(root=settings.lake_root))
+            supervisor = HyperliquidVenueSupervisor(
+                LiveHyperliquidTransport(settings.hyperliquid_ws_url)
+            )
+            supervisor.subscribe(watchlist)
+            feed.attach(supervisor)
+            app = create_workstation_app(account=account, live_feed=feed, host=host)
+        else:
+            app = create_workstation_app(account=account, host=host)
     uvicorn.run(app, host=host, port=settings.workstation_port)
 
 
