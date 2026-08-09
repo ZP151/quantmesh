@@ -122,7 +122,10 @@ makes the business workflow directly testable. Do not promote RC1 to
    PR #85 (f48d4fd); Phase B (supervisor protocol + Hyperliquid venue
    supervisor, drill-tested 84/84 on the live surface) merged via
    PR #86 (641f3c6); Phase C (feed + cockpit screens + browser E2E,
-   1983/1983 backend, 5/5 E2E) merged via PR #87 (553e944); Phases D–G
+   1983/1983 backend, 5/5 E2E) merged via PR #87 (553e944); Phase D
+   (deterministic quote fence — provenance/age/sequence gates with
+   explicit rejections over paper-order consumption, demo unchanged;
+   2003/2003 backend, ruff clean) merged via PR #89; Phases D–G
    per the iteration record.
 
 ## Standing authority

@@ -230,11 +230,49 @@ stale/degraded and blocks paper orders on its instruments.
 
 ### Phase D — deterministic quote fence
 
-- [ ] Quote fence: provenance + age + sequence continuity gate over
+- [x] Quote fence: provenance + age + sequence continuity gate over
       paper-order consumption; explicit rejection reasons; demo mode
       unchanged.
-- [ ] Unit + E2E drills: stale/gapped/unprovenanced quotes blocked,
+- [x] Unit + E2E drills: stale/gapped/unprovenanced quotes blocked,
       healthy quotes flow.
+
+> **Checkpoint D1 (2026-08-09)** — Phase D landed on branch
+> `0015-phase-d` via PR #89. The deterministic quote fence
+> (`quantmesh/live/fence.py`) is the pure gate between the live feed
+> and paper-order consumption: `evaluate(view, instrument, now)` is
+> wall-clock-free, and `resolve(snapshot, instrument, now)` binds it
+> to the same `latest_state` JSON the watchlist renders. Rejection
+> reasons are explicit and priority-ordered (the first defect wins):
+> `no-quote` ("no locally validated quote for {symbol}"), `not-real`
+> (provenance delayed/synthetic/unavailable — "only locally validated
+> real quotes may feed paper orders"), `gap` (sequence discontinuity —
+> the venue dropped updates), `stale` (quote is N s old; the fence
+> horizon is H s, default 30 s — the matcher's max-quote-age family),
+> `no-depth` (no usable bid/ask/sizes). A blessed quote carries the
+> local receipt anchor (timestamp=received_at), mid as last, and
+> bid+ask size as volume — the demo route's depth convention.
+> `PaperAccount.submit` gained `quote_fence=` + `snapshot=` kwargs:
+> the fence resolves and blesses before the risk gate; a rejection
+> lands as a REJECTED order with the explicit reason; a fence without
+> a snapshot fails closed (ValueError); the blessed quote replaces
+> any caller quote; and idempotency-key replays return the original
+> order before any gate — fence included (M10 Phase B semantics
+> preserved). Demo callers pass no fence, so demo mode is unchanged
+> by construction. Drills 20/20 in `tests/test_live_fence.py`: every
+> pure verdict + the priority order, snapshot-resolution shapes, the
+> consumption path (healthy quotes fill at the blessed ask, rejections
+> recorded with exact reasons, caller quote ignored, replay bypass,
+> fail-closed ValueErrors, no-fence demo path untouched), and the
+> real-stack drill — ScriptedVenue burst → HyperliquidVenueSupervisor
+> → LiveFeed pump on one daemon loop: a fresh quote flows to a fill
+> at 100.5, and the same venue going quiet ages the quote out
+> ("quote is 6 s old; the fence horizon is 5 s") with no fills. The
+> fence's E2E is this live-stack drill: the cockpit has no order-entry
+> surface (AI may not submit orders), so the gate's end-to-end path
+> is venue → supervisor → feed → fence → paper kernel. Green: full
+> backend suite 2003/2003 (1983 prior + 20 new), ruff clean (incl.
+> UP035 `typing.Mapping` → `collections.abc.Mapping`). Phase E
+> (prediction markets, read-only) starts from this checkpoint.
 
 ### Phase E — prediction markets (read-only)
 
