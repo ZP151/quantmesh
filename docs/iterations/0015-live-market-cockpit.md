@@ -369,10 +369,94 @@ stale/degraded and blocks paper orders on its instruments.
 
 ### Phase G — verification, gate, acceptance
 
-- [ ] Replay determinism tests, periodic live read-only smoke drill
+- [x] Replay determinism tests, periodic live read-only smoke drill
       (opt-in), full E2E/a11y.
-- [ ] Clean-checkout release gate, isolated demo/live-read-only
-      acceptance environment, operator checklist, checkpoint record.
+      - `tests/test_live_replay.py` 8/8: point-in-time (as-of) replay
+        reconstructs the live surface at every cutoff; replay order is
+        append order (local_seq), not timestamp order; fresh connections
+        replay byte-identical rows; backpressure gap marks and mixed
+        provenance survive the round trip; replay never resurrects old
+        data as fresh. Found and fixed a real determinism defect: the
+        lake read TIMESTAMPTZ rows back in the host session timezone
+        (the lake now pins `SET TimeZone = 'UTC'`), so replayed ISO
+        representations were host-dependent.
+      - `tools/live_smoke.py` (opt-in read-only drill) + 20/20 checker
+        drills: GET-only health/latest-state/connector-health checks,
+        honest ladder + schema + connected-flag agreement + optional
+        `--watchlist` presence, timeout-bounded, per-check PASS/FAIL,
+        non-zero exit on failure; `--period-minutes` loop for scheduled
+        smoke. End-to-end verified against a live station with a fake
+        OpenD client (10/10 PASS) and against a station whose probe
+        fails (10/10 PASS with the honest unavailable surface).
+      - Full E2E/a11y: browser suites 31/31 (spa + workstation + live +
+        prediction, ports 8643–8646, 0 skipped); frontend gate green —
+        lint clean (pre-existing fast-refresh warnings only), `tsc -b`
+        clean, vitest 47/47 (6 files), `npm run build` ✓, bundle
+        rebuilt and copied by `tools/build_frontend.py` (byte-identical
+        to the committed bundle).
+- [x] Operator checklist (`docs/runbooks/live-cockpit-operator-checklist.md`).
+- [x] Clean-checkout release gate, isolated demo/live-read-only
+      acceptance environment, checkpoint record.
+      - Release gate PASSED 15/15 on the branch head (`90c1d9c`): clean
+        clone in, clone clean out; fresh venv + `.[dev,research,e2e]`
+        install; ruff, license review, venv audit, pip-audit all clean;
+        npm ci + `build_frontend --check` (rebuilt bundle byte-identical
+        to the committed one); vitest 47/47; full pytest 442.8s
+        (incl. the 31/31 browser E2E suites, 0 skipped); golden path
+        PASSED; clean-checkout proof.
+      - The golden-path step is an HTTP-level walk (13 legacy Jinja
+        pages × first-boot/restart + in-memory fixture→lake→reports→
+        paper sections) — no browser, no screenshots — so its ~3.5s
+        gate duration is the genuine warm steady-state (pytest just
+        ran), independently reproduced 53/53 at 17.5s cold / 4.4s
+        warm.
+      - Isolated acceptance env `C:\Users\15492\Develop\
+        quantmesh-0015-acceptance` (fresh clone of `90c1d9c` + fresh
+        venv): golden path 53/53 reproduced; demo station on 8795
+        (`--demo`, `/api/demo/status` labels every surface demo/
+        synthetic, marker-guarded root); live read-only station on 8767
+        (`--live`, BTC,ETH + moomoo AAPL,NVDA): the degraded-state
+        check passed honestly — no OpenD daemon, moomoo `connected=false`
+        with AAPL/NVDA `unavailable` (probe failed), no invented
+        price/volume; genuine real Hyperliquid data observed while the
+        public WS was connected (l2/trade with exchange sequences,
+        including two organically recorded `sequence_gap=True` rows),
+        then an honest freshness disconnect; replay lake
+        `<env>\live\live\updates.duckdb` carries the same STATUS rows
+        the surface shows; `tools/live_smoke.py` → `LIVE SMOKE PASSED:
+        13 checks` (exit 0); dead-station drill fails honestly
+        (4 of 4 FAIL, exit 1); station restart rebinds the same lake.
+      - Acceptance record `OPERATOR-ACCEPTANCE-0015.md` at the
+        acceptance root with full drill evidence; operator walk in
+        `docs/runbooks/live-cockpit-operator-checklist.md`.
+
+> **Checkpoint G1 (2026-08-09)** — Phase G landed on branch
+> `0015-phase-g` (two commits: `9e3dab2` replay determinism + smoke
+> drill, `90c1d9c` E2E/frontend gate evidence + operator checklist).
+> Replay determinism: `tests/test_live_replay.py` 8/8 — as-of replay
+> reconstructs the live surface at every cutoff, append order governs
+> (not timestamp order), fresh connections replay byte-identical rows,
+> gap marks and mixed provenance survive the round trip, replay never
+> resurrects old data as fresh; the drills found a real determinism
+> defect — DuckDB read TIMESTAMPTZ back in the host session timezone
+> (instants equal, ISO representations host-dependent) — fixed by
+> pinning `SET TimeZone = 'UTC'` in the lake with a regression
+> assertion. Smoke drill: `tools/live_smoke.py`, 20/20 checker drills,
+> E2E-verified against healthy (fake OpenD, 10/10 PASS) and degraded
+> (probe fails, 10/10 PASS) live stations. Gate: 15/15 clean-checkout
+> release gate on `90c1d9c` (pytest 442.8s, E2E 31/31, vitest 47/47,
+> bundle byte-identical; golden-path step is an HTTP-level walk, not a
+> browser walk — 3.5s gate duration is genuine warm steady-state,
+> reproduced 53/53 at 17.5s cold / 4.4s warm). Acceptance env
+> `quantmesh-0015-acceptance` (fresh clone + venv): golden path 53/53,
+> demo station 8795 labeled demo/synthetic, live station 8767 degraded
+> acceptance passed honestly (moomoo unavailable without a daemon,
+> never fabricated; real HL data + organic gap marks observed), smoke
+> drill PASS 13 checks, dead-station FAIL 4/4 exit 1, replay lake
+> carries the surface's STATUS rows, restart rebinds the lake;
+> `OPERATOR-ACCEPTANCE-0015.md` records all drill evidence. Phase G
+> complete; v0.1.0 promotion still waits on the operator's separate
+> "accept RC4, promote to v0.1.0" verdict.
 
 ## Safety (unchanged invariants)
 

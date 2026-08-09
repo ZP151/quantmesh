@@ -67,6 +67,10 @@ class LiveBuffer:
         self.path = self.root / "live" / "updates.duckdb"
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._con = duckdb.connect(str(self.path))
+        # pin the session timezone so TIMESTAMPTZ rows read back as the
+        # UTC instants they were written with — replay output (and its
+        # ISO representations) must not depend on the host's TZ
+        self._con.execute("SET TimeZone = 'UTC'")
         self._con.execute(_SCHEMA)
 
     # -- writes -----------------------------------------------------------
