@@ -55,6 +55,20 @@ must never be sent to a venue or broker.
 - [ ] Run the full release gate from a clean checkout after integration.
 - [ ] Operator acceptance of the resulting RC.
 
+## Checkpoint H1 — integration and the rc6 cycle (2026-08-10)
+
+- PR #97 (the preference slice above) went through CI green, was reviewed
+  (type-safe i18n, local-only persistence, anti-flash bootstrap, accessible
+  Settings, safety copy preserved verbatim) and squash-merged at
+  `3514c18`. `v0.1.0-rc5` stays immutable; the merged tree changes the
+  packaged SPA, so the next candidate is cut from `origin/main`.
+- rc5 tagged-tree gate: run 4 on the exact `v0.1.0-rc5` tree
+  (`cc8bde8`): <RUN 4 RESULT — fill at completion>.
+- rc6 cycle (this branch): version metadata/tests pinned `0.1.0rc6`,
+  release notes (EN + zh-CN) written, then branch-head gate, one PR, tag
+  `v0.1.0-rc6`, tagged-tree gate, isolated acceptance environment
+  regeneration (superseding the rc4 build) and the operator checklist.
+
 ## Next slices
 
 1. Add reviewed translation dictionaries for the highest-value domain screens:

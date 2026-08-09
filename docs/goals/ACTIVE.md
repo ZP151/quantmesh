@@ -1,15 +1,15 @@
 # Active Goal
 
-- Status: active (RC5 published; global preferences iteration in progress)
-- Objective: complete and integrate the global language/theme preference layer
-  on top of the RC5 baseline, then run browser and clean-checkout release
-  verification. `v0.1.0-rc5` remains immutable and `v0.1.0` promotion still
-  requires explicit operator acceptance of the final candidate.
+- Status: active (rc6 candidate cycle in progress after PR #97)
+- Objective: publish the next replacement candidate from the merged
+  global-preferences tree and re-verify it through the clean-checkout gate.
+  `v0.1.0-rc5` remains immutable and `v0.1.0` promotion still requires
+  explicit operator acceptance of the final candidate.
 - Started: 2026-08-09
 - Active iteration: `docs/iterations/0016-global-preferences.md`
-- Branch: `0016-global-preferences`, based on `origin/main` at `v0.1.0-rc5`
-  (`cc8bde8`). RC2, RC3 and RC4 remain historical immutable candidates; RC5
-  is the current baseline awaiting operator acceptance.
+- Branch: `0016-rc6`, based on `origin/main` at `3514c18` (PR #97).
+  RC2, RC3, RC4 and RC5 remain historical immutable candidates; the next
+  acceptance candidate is `v0.1.0-rc6`.
 - Pull request: use one integration PR for this frontend slice and its
   evidence; do not create routine doc-only follow-up PRs.
 - Blockers: none for implementation; final release promotion remains an
@@ -169,16 +169,22 @@ of live-data density/visualization remain to be built.
     notes (EN + zh-CN) written, then tag, tagged-tree gate run and a
     regenerated isolated acceptance environment. Do not promote RC4; do not
     promote `v0.1.0` without the recorded operator verdict.~~ (done: PR #95
-    merged at `c47b83d`; replacement RC5 tagged at `cc8bde8` and awaiting
-    operator acceptance.)
+    merged at `c47b83d`; replacement RC5 tagged at `cc8bde8`; the rc5
+    tagged-tree gate run is recorded in iteration 0015 Checkpoint H2; RC5
+    awaits operator acceptance.)
 11. Deliver iteration 0016 — Global Preferences and Workstation Continuity:
     persist English/Simplified Chinese language and system/light/dark theme
     preferences, apply them to the shell/navigation/command palette/settings,
     preserve first-paint theme state, add responsive/accessibility regression
     tests, rebuild the packaged SPA, then integrate through one tested PR.
-    After integration, run the clean-checkout gate and prepare the next
-    acceptance candidate if the merged tree changes the release surface.
-    Detailed evidence is in `docs/iterations/0016-global-preferences.md`.
+    The single integration PR (#97) merged at `3514c18` with CI green, and
+    the rc6 candidate is being cut from the merged tree (version metadata
+    and tests pinned `0.1.0rc6`, release notes EN + zh-CN written; branch
+    `0016-rc6`). After the branch-head gate: tag `v0.1.0-rc6`, run the
+    tagged-tree gate, regenerate the isolated acceptance environment
+    (superseding the rc4 build) and prepare the operator checklist. RC5
+    remains immutable. Detailed evidence is in
+    `docs/iterations/0016-global-preferences.md`.
 
 ## Standing authority
 
