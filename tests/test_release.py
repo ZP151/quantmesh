@@ -68,11 +68,12 @@ class TestVersionMetadata:
         # line (docs/release-process.md); an accidental plain 0.1.0 or
         # milestone-coupled number is caught here.
         #
-        # rc5: the 2026-08-10 operator-authorized acceptance review found
-        # four post-Phase-G cockpit gaps (issue #94); rc4 predates the
-        # hardening and is not promoted. This pin tracks the RC line while
-        # the gate step tools/check_release_version.py owns the cross-check.
-        assert __version__ == "0.1.0rc5"
+        # rc6: the 2026-08-10 global-preferences integration (PR #97) merged
+        # into main after rc5 was tagged, so the release surface changed and
+        # the next candidate is cut from the merged tree; rc5 stays immutable.
+        # This pin tracks the RC line while the gate step
+        # tools/check_release_version.py owns the cross-check.
+        assert __version__ == "0.1.0rc6"
         assert Version(__version__).is_prerelease
 
     def test_workstation_footer_shows_the_package_version(self) -> None:
