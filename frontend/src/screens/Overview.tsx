@@ -7,6 +7,7 @@ import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api } from '@/lib/api'
 import { money, venueLabel } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
 function StatRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -22,30 +23,27 @@ export function OverviewScreen() {
   const query = useSurface(['overview'], api.overview)
   const health = useSurface(['health'], api.health)
   const liveMode = health.data?.runtime_mode === 'live'
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Overview"
+      title={t('screen.overview.title')}
       description={
-        liveMode
-          ? 'Paper account status and local marks. Open Live cockpit for real venue data, freshness and provenance.'
-          : 'The paper workstation at a glance — account, cross-venue marks, watchlist. Demo data is synthetic, labeled and deterministic.'
+        liveMode ? t('screen.overview.description.live') : t('screen.overview.description.demo')
       }
     >
-      <Surface query={query} title="Overview">
+      <Surface query={query} title={t('screen.overview.title')}>
         {(overview) => (
           <div className="space-y-5">
             {liveMode && (
               <Card className="border-emerald-500/30 bg-emerald-500/5">
                 <CardHeader>
-                  <CardTitle className="text-base">Live market data is in the cockpit</CardTitle>
-                  <CardDescription>
-                    This overview remains the paper-account ledger. It does not relabel venue data or paper marks as live.
-                  </CardDescription>
+                  <CardTitle className="text-base">{t('screen.overview.liveCard.title')}</CardTitle>
+                  <CardDescription>{t('screen.overview.liveCard.description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Link to="/cockpit" className="text-sm font-medium text-primary hover:underline">
-                    Open Live cockpit →
+                    {t('screen.overview.liveCard.cta')}
                   </Link>
                 </CardContent>
               </Card>
@@ -53,19 +51,21 @@ export function OverviewScreen() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Wallet className="size-4" aria-hidden /> Account
+                  <Wallet className="size-4" aria-hidden /> {t('screen.overview.account.title')}
                 </CardTitle>
-                <CardDescription>Paper account bound to this workstation.</CardDescription>
+                <CardDescription>{t('screen.overview.account.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <StatRow label="Cash">{money(overview.account.cash)}</StatRow>
-                <StatRow label="Starting cash">{money(overview.account.starting_cash)}</StatRow>
-                <StatRow label="Equity">{money(overview.account.equity)}</StatRow>
+                <StatRow label={t('screen.overview.account.cash')}>{money(overview.account.cash)}</StatRow>
+                <StatRow label={t('screen.overview.account.startingCash')}>{money(overview.account.starting_cash)}</StatRow>
+                <StatRow label={t('screen.overview.account.equity')}>{money(overview.account.equity)}</StatRow>
                 <Separator className="my-2" />
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">Kill switch</span>
+                  <span className="text-muted-foreground">{t('screen.overview.account.killSwitch')}</span>
                   <Badge variant={overview.account.kill_switch ? 'destructive' : 'outline'}>
-                    {overview.account.kill_switch ? 'engaged' : 'disarmed'}
+                    {overview.account.kill_switch
+                      ? t('screen.overview.account.engaged')
+                      : t('screen.overview.account.disarmed')}
                   </Badge>
                 </div>
               </CardContent>
@@ -74,11 +74,9 @@ export function OverviewScreen() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <LayoutGrid className="size-4" aria-hidden /> Venue boards
+                  <LayoutGrid className="size-4" aria-hidden /> {t('screen.overview.boards.title')}
                 </CardTitle>
-                <CardDescription>
-                  The same board the Markets screen renders, with provenance per surface.
-                </CardDescription>
+                <CardDescription>{t('screen.overview.boards.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {overview.venues.map((entry) => (
@@ -99,13 +97,11 @@ export function OverviewScreen() {
                   </div>
                 ))}
                 {overview.venues.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No paper marks are loaded. Live venue data is shown separately in the cockpit.
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t('screen.overview.boards.empty')}</p>
                 )}
                 {overview.missing_marks.length > 0 && (
                   <p className="text-xs text-destructive">
-                    Missing marks: {overview.missing_marks.join(', ')}
+                    {t('screen.overview.boards.missing', { symbols: overview.missing_marks.join(', ') })}
                   </p>
                 )}
               </CardContent>
@@ -114,11 +110,11 @@ export function OverviewScreen() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Star className="size-4" aria-hidden /> Watchlist
+                  <Star className="size-4" aria-hidden /> {t('screen.overview.watchlist.title')}
                 </CardTitle>
                 <CardDescription>
                   <Link to="/markets/watchlist" className="text-primary hover:underline">
-                    Open the watchlist screen →
+                    {t('screen.overview.watchlist.open')}
                   </Link>
                 </CardDescription>
               </CardHeader>
@@ -134,9 +130,7 @@ export function OverviewScreen() {
                     </span>
                   ))}
                   {overview.watchlist.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      No paper watchlist entries are loaded for this session.
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t('screen.overview.watchlist.empty')}</p>
                   )}
                 </div>
               </CardContent>

@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ImportsScreen } from './Imports'
 import type { ImportPreview } from '@/lib/api'
+import { PreferencesProvider } from '@/lib/preferences'
 
 // The screen talks to the kernel through the api client; the unit
 // surface mocks it so the mapping gate, required-field enforcement and
@@ -52,7 +53,9 @@ function renderScreen() {
   })
   return render(
     <QueryClientProvider client={client}>
-      <ImportsScreen />
+      <PreferencesProvider>
+        <ImportsScreen />
+      </PreferencesProvider>
     </QueryClientProvider>,
   )
 }

@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { ApiError, type PredictionRow } from '@/lib/api'
+import { PreferencesProvider } from '@/lib/preferences'
 import { PredictionScreen } from './Prediction'
 
 // The prediction comparison board renders the server's fold of the
@@ -95,9 +96,11 @@ function renderScreen() {
   })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter>
-        <PredictionScreen />
-      </MemoryRouter>
+      <PreferencesProvider>
+        <MemoryRouter>
+          <PredictionScreen />
+        </MemoryRouter>
+      </PreferencesProvider>
     </QueryClientProvider>,
   )
 }

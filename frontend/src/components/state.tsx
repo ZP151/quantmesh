@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiError } from '@/lib/api'
+import { usePreferences } from '@/lib/preferences'
 
 // Every screen shares the same four states: loading (skeleton),
 // error (typed failure with recovery hint), empty (kernel answered but
@@ -15,6 +16,7 @@ export function useSurface<T>(key: readonly unknown[], fetcher: () => Promise<T>
 }
 
 export function ErrorState({ title, detail }: { title: string; detail: string }) {
+  const { t } = usePreferences()
   return (
     <Card>
       <CardHeader>
@@ -25,10 +27,7 @@ export function ErrorState({ title, detail }: { title: string; detail: string })
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         <p className="text-muted-foreground">{detail}</p>
-        <p className="text-xs text-muted-foreground">
-          Disconnected or refused — check that the workstation is running (loopback only) and that
-          this screen's surface is mounted.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('surface.helper')}</p>
       </CardContent>
     </Card>
   )
@@ -94,14 +93,24 @@ export function Surface<T>({
   loading?: ReactNode
   children: (data: T) => ReactNode
 }) {
+  const { t } = usePreferences()
   if (query.isPending) return <>{loading ?? <LoadingState />}</>
   if (query.isError) {
     const detail = query.error instanceof ApiError ? query.error.message : String(query.error)
-    return <ErrorState title={`${title} unavailable`} detail={detail} />
+    return <ErrorState title={t('surface.unavailable', { title })} detail={detail} />
   }
   const data = query.data
   if (data === undefined || (empty !== undefined && isSurfaceEmpty(data))) {
-    return <>{empty ?? <EmptyState title={`No ${title.toLowerCase()} data`} detail="The kernel returned an empty surface." />}</>
+    return (
+      <>
+        {empty ?? (
+          <EmptyState
+            title={t('surface.empty', { title: title.toLowerCase() })}
+            detail={t('surface.emptyDetail')}
+          />
+        )}
+      </>
+    )
   }
   return <>{children(data)}</>
 }

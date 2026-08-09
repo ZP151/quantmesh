@@ -20,7 +20,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { Settings } from 'lucide-react'
-import type { MessageKey } from '@/lib/preferences'
+import type { MessageKey } from '@/lib/messages'
 
 // The target IA (iteration 0014 Phase C): the 13 legacy screens
 // consolidated into the app shell, one entry per LEGACY_TO_SPA route.
