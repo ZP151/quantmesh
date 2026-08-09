@@ -137,6 +137,9 @@ export interface ForecastMarket {
   venue_market_id: string
   expiry_at: string
   resolved: boolean
+  latest_probability: number | null
+  latest_probability_at: string | null
+  latest_liquidity_confidence: number | null
   n_evaluated_windows: number
   windows: ForecastWindow[]
 }
