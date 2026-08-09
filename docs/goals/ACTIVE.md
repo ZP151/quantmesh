@@ -117,10 +117,12 @@ makes the business workflow directly testable. Do not promote RC1 to
    read-only Polymarket/Kalshi, Moomoo OpenD when locally available),
    built on the `MarketUpdate` contract, venue supervisors, DuckDB replay
    lake, local WS/SSE feed, cockpit screens, deterministic quote fence —
-   all venues read-only, no credentials, no autonomous execution. Phase
-   A (ADR-0014, contract, buffer, fixture WS server) is implemented and
-   tested on branch `0015-live-market-cockpit`; Phases B–G per the
-   iteration record.
+   all venues read-only, no credentials, no autonomous execution.
+   Phase A (ADR-0014, contract, buffer, fixture WS server) merged via
+   PR #85 (f48d4fd); Phase B (supervisor protocol + Hyperliquid venue
+   supervisor, drill-tested 84/84 on the live surface) is on branch
+   `0015-phase-b` awaiting its phase PR; Phases C–G per the iteration
+   record.
 
 ## Standing authority
 

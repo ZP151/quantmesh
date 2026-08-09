@@ -254,6 +254,47 @@ def parse_all_mids(frame: object) -> dict[str, float]:
     return parsed
 
 
+def parse_bbo_frame(frame: object) -> dict[str, float]:
+    """A WS ``bbo`` frame's data payload → normalized best bid/ask quote.
+
+    Hyperliquid's BBO channel pushes one row per coin: ``{coin, time,
+    bid, bidSz, ask, askSz}`` where sizes are USD notional. The
+    supervisor normalizes this into the cockpit QUOTE contract.
+    """
+    row = _mapping(frame, "bbo frame")
+    bid = _num(row.get("bid"), "bbo bid")
+    ask = _num(row.get("ask"), "bbo ask")
+    if ask < bid:
+        raise HyperliquidProtocolError(f"bbo ask {ask} below bid {bid} for {row.get('coin')!r}")
+    return {
+        "bid": bid,
+        "ask": ask,
+        "bid_size": _num(row.get("bidSz"), "bbo bidSz"),
+        "ask_size": _num(row.get("askSz"), "bbo askSz"),
+    }
+
+
+def parse_asset_ctx_map(frame: object) -> dict[str, dict[str, float]]:
+    """A WS ``activeAssetCtx`` frame's data payload → coin → metrics.
+
+    Hyperliquid pushes one map per frame: ``{coin: {funding, markPx,
+    oraclePx, openInterest, premium, …}}``; only the fields the cockpit
+    renders are kept, and every value must be numeric or the frame is
+    rejected (fail-closed).
+    """
+    frame = _mapping(frame, "activeAssetCtx frame")
+    parsed: dict[str, dict[str, float]] = {}
+    for coin, ctx in frame.items():
+        ctx = _mapping(ctx, f"activeAssetCtx row for {coin}")
+        parsed[str(coin)] = {
+            "funding_rate": _num(ctx.get("funding"), f"funding for {coin}"),
+            "mark_price": _num(ctx.get("markPx"), f"markPx for {coin}"),
+            "index_price": _num(ctx.get("oraclePx"), f"oraclePx for {coin}"),
+            "open_interest": _num(ctx.get("openInterest"), f"openInterest for {coin}"),
+        }
+    return parsed
+
+
 class FundingRate(BaseModel):
     """One funding-history row (canonical shape; venue-agnostic fields)."""
 
