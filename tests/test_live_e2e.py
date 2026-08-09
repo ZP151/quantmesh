@@ -9,10 +9,13 @@ ephemeral port, and the browser walks the cockpit watchlist, the
 instrument detail (chart / per-side book / trade tape), the stale
 transition after the venue goes quiet, and the keyboard + mobile
 checks. The venue plan plays a burst of real frames at connect, then
-keeps every channel fresh on a 4 s cadence for ~40 s (the window these
-tests run in), then goes silent for an hour with the socket still
-open — the quiet-venue condition that deterministically flips the
-watchlist badge to Stale while the transport stays connected.
+keeps every channel fresh on a 4 s cadence for a long window (20 min)
+so the browser tests can never outrun the freshness phase, no matter
+how slow module setup is under full-suite load. The stale-transition
+test then flips the venue's ``quiet`` event — the venue stops sending
+frames but the socket stays open — which deterministically ages the
+last ``received_at`` past the feed's lag and flips the watchlist badge
+to Stale while the transport stays connected.
 
 The frame shapes mirror the canonical wire formats in
 ``test_live_supervisor`` (Phase B drilled them against this protocol).
@@ -27,6 +30,7 @@ import re
 import socket
 import threading
 import urllib.request
+from collections.abc import Callable
 from datetime import timedelta
 from typing import cast
 
@@ -69,9 +73,13 @@ FEED_LAG = timedelta(seconds=5)
 FEED_STALE = timedelta(seconds=10)
 
 # The venue plan: a burst at connect, then KEEPALIVE_CYCLES refresh
-# cycles every 4 s (the browser tests finish inside this window), then
-# an hour of silence with the socket still open.
-KEEPALIVE_CYCLES = 10
+# cycles every 4 s. The window is deliberately long (20 min): module
+# setup (uvicorn boot, feed attach, browser launch) and the browser
+# tests all happen inside it, so a slow full-suite run can never push
+# the freshness phase past. The quiet tail is NOT clock-bound: the
+# stale-transition test triggers the venue's ``quiet`` event, which
+# stops the frames with the socket still open.
+KEEPALIVE_CYCLES = 300
 KEEPALIVE_DELAY = 4.0
 
 
@@ -146,9 +154,11 @@ def _asset_ctx() -> dict:
 def _venue_plan() -> list[tuple[float, object]]:
     """Burst + keep-alive cycles + quiet tail (see module docstring).
 
-    Trade tids stay consecutive across the whole plan (1..12), so the
-    sequence-continuity drill never flags a gap. Quote prices are
-    constant, so every snapshot the browser sees carries the same row.
+    Trade tids stay consecutive across the whole plan (1..2 +
+    KEEPALIVE_CYCLES), so the sequence-continuity drill never flags a
+    gap. Quote prices are constant, so every snapshot the browser sees
+    carries the same row. The quiet tail is not clock-bound: the stale
+    test flips the venue's ``quiet`` event to stop the frames.
     """
     cycle_t0 = 1_750_000_120_000
     plan: list[tuple[float, object]] = [
@@ -181,9 +191,11 @@ def _venue_plan() -> list[tuple[float, object]]:
 
 
 @pytest.fixture(scope="module")
-def venue_url() -> str:
+def venue_url() -> tuple[str, Callable[[], None]]:
     """The ScriptedVenue on its own asyncio loop in a daemon thread (the
-    sync Playwright thread cannot run the venue's loop)."""
+    sync Playwright thread cannot run the venue's loop). Yields the URL
+    and a thread-safe trigger that flips the venue's ``quiet`` event —
+    the deterministic "venue went quiet" condition for the stale test."""
     loop = asyncio.new_event_loop()
     holder: dict[str, object] = {}
     ready = threading.Event()
@@ -192,7 +204,9 @@ def venue_url() -> str:
         asyncio.set_event_loop(loop)
 
         async def serve() -> None:
-            async with ScriptedVenue(plan=_venue_plan()) as venue:
+            quiet = asyncio.Event()
+            holder["quiet"] = quiet
+            async with ScriptedVenue(plan=_venue_plan(), quiet=quiet) as venue:
                 holder["url"] = venue.url
                 held: asyncio.Future[None] = asyncio.get_running_loop().create_future()
                 holder["held"] = held
@@ -213,8 +227,13 @@ def venue_url() -> str:
     thread.start()
     if not ready.wait(timeout=10):
         raise AssertionError("the scripted venue never came up")
+
+    def quiet_trigger() -> None:
+        quiet = cast(asyncio.Event, holder["quiet"])
+        loop.call_soon_threadsafe(quiet.set)
+
     try:
-        yield str(holder["url"])
+        yield (str(holder["url"]), quiet_trigger)
     finally:
         held = holder.get("held")
         if held is not None:
@@ -258,12 +277,13 @@ def _wait_for_feed() -> None:
 
 
 @pytest.fixture(scope="module")
-def base_url(venue_url: str) -> str:
+def base_url(venue_url: tuple[str, Callable[[], None]]) -> str:
+    url, _trigger = venue_url
     if _port_in_use():
         pytest.skip(f"port {PORT} is already bound — the pinned E2E port must be free")
     account = PaperAccount(cash=100_000.0)
     feed = LiveFeed(lag=FEED_LAG, stale=FEED_STALE)
-    supervisor = HyperliquidVenueSupervisor(LiveHyperliquidTransport(venue_url))
+    supervisor = HyperliquidVenueSupervisor(LiveHyperliquidTransport(url))
     supervisor.subscribe(["BTC"])
     feed.attach(supervisor)
     app = create_workstation_app(account=account, live_feed=feed, host=HOST)
@@ -353,13 +373,17 @@ def test_instrument_detail_chart_book_and_tape(page, base_url) -> None:
     page.get_by_role("heading", name="Live cockpit", exact=True).first.wait_for()
 
 
-def test_stale_transition_when_the_venue_goes_quiet(page, base_url) -> None:
-    """After the plan's quiet tail starts, no frame is newer than the
-    feed's 5 s lag, so a snapshot refetch flips the badge to Stale —
-    while the transport (and its banner) stays live and the trade
-    sequence shows no gap. No "Real first" precondition: the earlier
-    tests can push this one past the plan's ~40 s active window, and
-    the transition is still observed (or already observed) either way."""
+def test_stale_transition_when_the_venue_goes_quiet(
+    page, base_url, venue_url: tuple[str, Callable[[], None]]
+) -> None:
+    """The venue's ``quiet`` event stops the frames (socket stays open),
+    so no frame is newer than the feed's 5 s lag; a snapshot refetch
+    then flips the badge to Stale — while the transport (and its
+    banner) stays live and the trade sequence shows no gap. The
+    transition is deterministic: the trigger, not the wall clock,
+    starts the quiet tail."""
+    _url, quiet_trigger = venue_url
+    quiet_trigger()
     page.goto(f"{base_url}/app/cockpit")
     main = page.locator("main")
     main.get_by_text("Stale", exact=True).first.wait_for(timeout=60_000)

@@ -37,6 +37,10 @@ class ScriptedVenue:
     host: str = "127.0.0.1"
     #: per-connection handshake delay before the first frame (0 = none)
     first_delay: float = 0.0
+    #: optional client-set silence trigger (the "venue went quiet" drill).
+    #: While set, the handler sends no further frames but keeps the socket
+    #: open — the quiet tail without depending on the plan's wall clock.
+    quiet: asyncio.Event | None = None
 
     async def __aenter__(self) -> ScriptedVenue:
         self._server = await websockets.serve(
@@ -57,6 +61,9 @@ class ScriptedVenue:
             for delay, frame in self.plan:
                 if delay:
                     await asyncio.sleep(delay)
+                if self.quiet is not None and self.quiet.is_set():
+                    # Quiet venue: no further frames, socket stays open.
+                    continue
                 if isinstance(frame, dict) and set(frame) == _CONTROL_KEYS:
                     if frame["__cmd"] == "drop":
                         await socket.close(code=1006, reason="simulated network drop")
