@@ -19,7 +19,7 @@ from tools.live_smoke import (
 
 
 def _health_body() -> dict:
-    return {"version": "0.1.0rc4", "status": "ok"}
+    return {"version": "0.1.0rc5", "status": "ok"}
 
 
 def _kind(**overrides: object) -> dict:
@@ -122,7 +122,7 @@ class TestHealth:
         getter = _fake_getter(
             {
                 "http://127.0.0.1:8766/health": json.dumps(
-                    {"status": "error", "version": "0.1.0rc4"}
+                    {"status": "error", "version": "0.1.0rc5"}
                 )
             }
         )

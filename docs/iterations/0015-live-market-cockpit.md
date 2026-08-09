@@ -513,6 +513,47 @@ stale/degraded and blocks paper orders on its instruments.
 > repaired tree and remains immutable; the next release action is a replacement
 > RC, never promotion of RC4.
 
+> **Checkpoint H2 (2026-08-10, rc5 cycle)** — The replacement release
+> candidate is cut from the integrated tree. The hardening merged at
+> `c47b83d` (PR #95), issue #94 is closed, and the package metadata, pinned
+> tests and release notes now report `0.1.0rc5`.
+>
+> Clean-checkout release gate on the merged tree `c47b83d`:
+> **run 1** was killed by the host at 4:59 into the pytest step with zero
+> test failures (12/12 prior steps green) — an environment kill, not a gate
+> or product failure; **run 2** failed the version-consistency step in 0:00
+> with `ModuleNotFoundError: packaging` because that step executes before
+> the gate creates and installs its own fresh venv, so it depends on the
+> launching interpreter having `packaging`; **run 3**, launched detached
+> with the repo venv interpreter (`tools/release_gate.py` via
+> `Start-Process`, matching the rc3/rc4 gate-run pattern),
+> **PASSED 15/15**: clone 0.7 s, version consistency 0.3 s, fresh venv
+> 20.4 s, install 312.2 s, ruff 3.1 s, license 2.3 s, audit venv 24.9 s,
+> pip-audit install 44.0 s, pip-audit 14.0 s, npm ci 16.2 s, bundle
+> 106.3 s, vitest 87.6 s, **pytest 761.4 s** (full suite incl. Playwright
+> E2E; slower than the rc4 gate's 442.8 s — the suite grew and the host
+> was busy), **golden path 4.8 s** (the walk exits 0 only at 53/53),
+> clean-checkout proof 0.3 s; cloned checkout clean at the end.
+> (Gate-summary note: the `pytest:`/`golden path:` count lines are silently
+> absent because the summary block still hardcodes `09-full-pytest-suite.log`
+> and `10-golden-path.log` while pytest is now step 13 and golden path
+> step 14 — a pre-existing cosmetic gap in `tools/release_gate.py`'s
+> summary, noted for the P4 clean-up; it does not affect pass/fail
+> truthfulness.)
+>
+> Environment lessons recorded: long gate runs must be launched detached
+> (background tasks in this session have been killed mid-run), and the
+> gate's early steps need a launcher interpreter with `packaging` — the
+> repo venv provides it.
+>
+> Next (H-4/H-5/H-6): tag `v0.1.0-rc5` at the verified merge commit, run
+> the gate once more on the exact tagged tree, and regenerate the isolated
+> acceptance environment from the tag (superseding the rc4 build and its
+> 8766 workstation), recording `OPERATOR-ACCEPTANCE-rc5.md` and the
+> tagged-tree gate result there and in the iteration record. Promotion of
+> `v0.1.0` remains gated on the operator's explicit acceptance of the
+> replacement RC.
+
 ## Safety (unchanged invariants)
 
 All external venues read-only; no credentials; no mainnet, real-money

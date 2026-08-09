@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quantmesh"
-version = "0.1.0rc4"  # PEP 440 release candidate; the operator-accepted line promotes to 0.1.0 (see docs/release-process.md)
+version = "0.1.0rc5"  # PEP 440 release candidate; the operator-accepted line promotes to 0.1.0 (see docs/release-process.md)
 description = "Local-first cross-market quantitative research and trading workstation"
 readme = "README.md"
 requires-python = ">=3.11"
