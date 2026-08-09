@@ -7,6 +7,7 @@ of the kernel: submission is risk-gated, then matched, then applied.
 """
 
 import math
+from collections.abc import Mapping
 from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
@@ -19,6 +20,7 @@ from quantmesh.domain.orders import (
     OrderStateMachine,
 )
 from quantmesh.execution.matcher import PaperMatcher
+from quantmesh.live.fence import QuoteFence
 
 DEFAULT_FEE_BPS = 10.0
 
@@ -92,8 +94,27 @@ class PaperAccount(BaseModel):
         return self
 
     def submit(
-        self, request: OrderRequest, quote: Quote, *, now: datetime
+        self,
+        request: OrderRequest,
+        quote: Quote | None = None,
+        *,
+        now: datetime,
+        quote_fence: QuoteFence | None = None,
+        snapshot: Mapping[str, object] | None = None,
     ) -> SubmissionResult:
+        """Risk-gated paper submission.
+
+        Without a fence the caller supplies the quote (the demo path).
+        With ``quote_fence`` the order may only read the locally
+        validated latest quote: the fence resolves the instrument's
+        QUOTE view from the caller's ``latest_state`` snapshot and
+        rejects the order with the fence's explicit reason when the
+        quote is missing, unprovenanced, gapped, stale or depth-less
+        (iteration 0015 Phase D). The blessed quote replaces the
+        argument; a fence without a snapshot is a fail-closed
+        ``ValueError``. Idempotency-key replays return the original
+        order before any gate, fence included.
+        """
         # M10 Phase B (issue #59): the idempotency key is the replay unit.
         # A keyed submission first looks for any recorded order carrying
         # the same key — the retry returns that original order with
@@ -120,6 +141,24 @@ class PaperAccount(BaseModel):
         if order_id is None:
             order_id = f"paper-{sequence}"
         order = Order.from_request(request, order_id=order_id, created_at=now)
+
+        if quote_fence is not None:
+            if snapshot is None:
+                raise ValueError("a snapshot is required when a quote fence is enabled")
+            decision = quote_fence.resolve(
+                snapshot, instrument=request.instrument, now=now
+            )
+            if not decision.allowed:
+                return self._reject(
+                    order, [decision.reason or "quote fence rejected"], now, sequence
+                )
+            if decision.quote is None:
+                return self._reject(
+                    order, ["quote fence approved without a quote"], now, sequence
+                )
+            quote = decision.quote
+        elif quote is None:
+            raise ValueError("a quote or a quote_fence is required to submit")
 
         reasons = self._risk_reasons(request, quote)
         if reasons:
