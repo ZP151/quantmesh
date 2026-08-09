@@ -1,37 +1,30 @@
 # Active Goal
 
-- Status: active (iteration 0015 acceptance hardening complete; integration
-  and a replacement RC remain)
-- Objective: integrate the acceptance hardening from issue #94, run the
-  release gate on the merged tree, and publish a replacement release
-  candidate for explicit operator acceptance. `v0.1.0-rc4` must not be
-  promoted because the accepted fixes are newer than that immutable tag.
+- Status: active (RC5 published; global preferences iteration in progress)
+- Objective: complete and integrate the global language/theme preference layer
+  on top of the RC5 baseline, then run browser and clean-checkout release
+  verification. `v0.1.0-rc5` remains immutable and `v0.1.0` promotion still
+  requires explicit operator acceptance of the final candidate.
 - Started: 2026-08-09
-- Active iteration:
-  `docs/iterations/0015-live-market-cockpit.md`
-  (rc4 acceptance evidence: `docs/iterations/0014-...md` Checkpoint 10)
-- Branch: `0015-acceptance-hardening`, based on the completed Phase G tree; RC1
-  publication checkpoint `0fea221` was preserved as cherry-pick `e0f9c3d`;
-  RC2 is the historical tag `v0.1.0-rc2` @ `710a931` (rejected, not rewritten);
-  RC3 `e83e30c` (rejected, not rewritten); RC4 `c9444ba` (awaiting acceptance)
-- Pull request: one acceptance-hardening integration PR, CI green,
-  squash-merge; no doc-only follow-up PR
-- Blockers: none for integration; final `v0.1.0` promotion remains an explicit
-  operator gate
+- Active iteration: `docs/iterations/0016-global-preferences.md`
+- Branch: `0016-global-preferences`, based on `origin/main` at `v0.1.0-rc5`
+  (`cc8bde8`). RC2, RC3 and RC4 remain historical immutable candidates; RC5
+  is the current baseline awaiting operator acceptance.
+- Pull request: use one integration PR for this frontend slice and its
+  evidence; do not create routine doc-only follow-up PRs.
+- Blockers: none for implementation; final release promotion remains an
+  explicit operator gate.
 
 ## Current state
 
-Iteration 0015 Phase G is merged, but the 2026-08-10 operator-authorized
-browser review rejected its first acceptance result. The live detail route
-did not hydrate the latest snapshot, live pages emitted demo-only requests and
-copy, smoke checks accepted unhealthy/malformed contracts, and timestamp-only
-replay could not select between same-timestamp appends.
-[Issue #94](https://github.com/ZP151/quantmesh/issues/94) contains the bounded
-hardening work and evidence. The repaired candidate passes the targeted
-backend, frontend, live-smoke, desktop and 390 px browser checks.
-Because these fixes are newer than `v0.1.0-rc4`, RC4 remains historical and
-must not be promoted; publish and accept a replacement RC from the integrated
-tree.
+Iteration 0015 live-cockpit hardening is merged at `c47b83d` (PR #95), and the
+replacement candidate `v0.1.0-rc5` is published at `cc8bde8` (PR #96). The
+baseline has a deterministic demo workstation, live read-only cockpit,
+Hyperliquid/Polymarket/Kalshi/Moomoo connector surfaces, replay lake,
+provenance/freshness contracts and paper-only order authority. The current
+product gap is workstation continuity: global preferences exist only in the
+frontend today, while domain-screen translation coverage and the next round
+of live-data density/visualization remain to be built.
 
 ## Immediate frontier
 
@@ -155,7 +148,7 @@ tree.
    **Phase G complete — its original self-acceptance record is preserved in
    `OPERATOR-ACCEPTANCE-0015.md` but superseded by the operator-authorized
    review in item 10.**
-10. Integrate the post-Phase-G acceptance hardening
+10. ~~Integrate the post-Phase-G acceptance hardening
     ([issue #94](https://github.com/ZP151/quantmesh/issues/94)): hydrate
     instrument details from `/api/live/state`, make shell/overview behavior
     runtime-aware, strengthen the read-only smoke contract, add an inclusive
@@ -175,16 +168,26 @@ tree.
     `v0.1.0-rc5` is being cut: version metadata and tests pinned, release
     notes (EN + zh-CN) written, then tag, tagged-tree gate run and a
     regenerated isolated acceptance environment. Do not promote RC4; do not
-    promote `v0.1.0` without the recorded operator verdict.
+    promote `v0.1.0` without the recorded operator verdict.~~ (done: PR #95
+    merged at `c47b83d`; replacement RC5 tagged at `cc8bde8` and awaiting
+    operator acceptance.)
+11. Deliver iteration 0016 — Global Preferences and Workstation Continuity:
+    persist English/Simplified Chinese language and system/light/dark theme
+    preferences, apply them to the shell/navigation/command palette/settings,
+    preserve first-paint theme state, add responsive/accessibility regression
+    tests, rebuild the packaged SPA, then integrate through one tested PR.
+    After integration, run the clean-checkout gate and prepare the next
+    acceptance candidate if the merged tree changes the release surface.
+    Detailed evidence is in `docs/iterations/0016-global-preferences.md`.
 
 ## Standing authority
 
-Use the solo-developer fast lane in iteration 0014: one integration branch,
-tested commits at phase boundaries and one final PR. Do not pause for routine
-issue creation, branch pushes or merging a green RC2 PR. Preserve protected
-main, branch from `origin/main`, never force-push, and record every checkpoint
-in the iteration file. Major language, database, financial representation or
-process-boundary changes still require an ADR.
+Use the solo-developer fast lane: one integration branch, tested commits at
+phase boundaries and one final PR. Do not pause for routine issue creation,
+branch pushes or merging a green PR. Preserve protected main, branch from
+`origin/main`, never force-push, and record every checkpoint in the iteration
+file. Major language, database, financial representation or process-boundary
+changes still require an ADR.
 
 ## External and safety gates
 
@@ -196,9 +199,10 @@ labeled and isolated from non-demo operator state.
 
 ## Resume instruction
 
-Run `/goal`, then read this file, `PRODUCT.md`, iteration 0015 Checkpoint H1,
-the roadmap, relevant ADRs, Git state, issue #94 and the integration PR. Merge
-only with green CI, then deliver a replacement RC through the clean-checkout
-gate and a regenerated isolated acceptance environment; promote only after
-explicit human acceptance. Implementation details and evidence belong in the
-iteration record; keep this file limited to current truth and frontier.
+Run `/goal`, then read this file, `PRODUCT.md`, iteration 0016, the roadmap,
+relevant ADRs, Git state and the current RC5 release notes. Finish the global
+preference slice, run focused and full verification, integrate one green PR,
+then run the clean-checkout gate and prepare the next acceptance candidate if
+the merged tree changes the release surface. Promote only after explicit human
+acceptance. Implementation details and evidence belong in the iteration
+record; keep this file limited to current truth and frontier.
