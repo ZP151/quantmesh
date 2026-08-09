@@ -1,17 +1,16 @@
 # Active Goal
 
-- Status: active (rc6 candidate cycle in progress after PR #97)
-- Objective: publish the next replacement candidate from the merged
-  global-preferences tree and re-verify it through the clean-checkout gate.
-  `v0.1.0-rc5` remains immutable and `v0.1.0` promotion still requires
-  explicit operator acceptance of the final candidate.
+- Status: active (iteration 0017 domain translations merged after PR #99)
+- Objective: continue the roadmap in vertical slices from the merged
+  rc6 tree. `v0.1.0-rc6` remains the current immutable candidate;
+  `v0.1.0` promotion still requires explicit operator acceptance of the
+  final candidate.
 - Started: 2026-08-09
-- Active iteration: `docs/iterations/0016-global-preferences.md`
-- Branch: `0016-rc6`, based on `origin/main` at `3514c18` (PR #97).
-  RC2, RC3, RC4 and RC5 remain historical immutable candidates; the next
-  acceptance candidate is `v0.1.0-rc6`.
-- Pull request: use one integration PR for this frontend slice and its
-  evidence; do not create routine doc-only follow-up PRs.
+- Active iteration: `docs/iterations/0017-domain-translations.md`
+- Branch: `0017-translations`, merged into `origin/main` via PR #99
+  (slice 1 complete). RC2–RC6 remain historical immutable candidates.
+- Pull request: use one integration PR per slice and its evidence; do
+  not create routine doc-only follow-up PRs.
 - Blockers: none for implementation; final release promotion remains an
   explicit operator gate.
 
@@ -185,6 +184,27 @@ of live-data density/visualization remain to be built.
     (superseding the rc4 build) and prepare the operator checklist. RC5
     remains immutable. Detailed evidence is in
     `docs/iterations/0016-global-preferences.md`.
+12. Deliver iteration 0017 — roadmap vertical slice 1, domain-screen
+    translations: extend the reviewed en / 简体中文 preference layer to
+    all 12 scoped domain screens (Overview, Markets, Watchlist, Trading
+    Orders/Positions/P&L, Order form, Risk, Research
+    Experiments/Promotions/Forecasts, Connectors, Imports, Audit, Live
+    Cockpit watchlist + instrument detail + freshness labels) via a
+    standalone `screen.*` message table (`lib/messages.ts`), keeping
+    every English string byte-identical, API-facing values raw, and
+    provenance/freshness/paper-safety wording byte-exact in both
+    locales. Prediction comparison, Ops kill-switch/enablement and
+    legacy Jinja pages stay on the reviewed English fallback (safety-
+    critical copy awaits explicit review). Extracted in 5 tested
+    batches on one branch (`0017-translations`); locale coverage is now
+    pinned by compile-time (`MessageKey` as-const) and runtime tests
+    (en/zh-CN key parity, placeholder parity, zh-CN render smoke).
+    Verification: tsc clean, oxlint 0, vitest 57/57, build clean,
+    ruff clean, pytest 2116 passed (incl. browser E2E), clean-checkout
+    release gate 15/15 on the branch head `c913df0`, CI green, PR #99
+    squash-merged into main. No version bump; `v0.1.0-rc6` unchanged
+    and still awaiting operator acceptance. Detailed evidence in
+    `docs/iterations/0017-domain-translations.md`.
 
 ## Standing authority
 
@@ -205,10 +225,13 @@ labeled and isolated from non-demo operator state.
 
 ## Resume instruction
 
-Run `/goal`, then read this file, `PRODUCT.md`, iteration 0016, the roadmap,
-relevant ADRs, Git state and the current RC5 release notes. Finish the global
-preference slice, run focused and full verification, integrate one green PR,
-then run the clean-checkout gate and prepare the next acceptance candidate if
-the merged tree changes the release surface. Promote only after explicit human
+Run `/goal`, then read this file, `PRODUCT.md`, iteration 0017, the roadmap,
+relevant ADRs, Git state and the current rc6 release notes. Continue the
+roadmap in vertical slices: next are the live cockpit improvements (charts,
+metrics/density), adapter hardening, local quant analysis slices, AI
+advisory research layer, paper-trading acceptance expansion — one branch, one
+tested integration PR per milestone. Run focused and full verification,
+integrate one green PR, then run the clean-checkout gate when the merged
+tree changes the release surface. Promote only after explicit human
 acceptance. Implementation details and evidence belong in the iteration
 record; keep this file limited to current truth and frontier.
