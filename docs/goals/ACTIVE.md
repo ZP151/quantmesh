@@ -143,10 +143,11 @@ makes the business workflow directly testable. Do not promote RC1 to
    green, release gate 15/15 on the branch head `90c1d9c`, isolated
    acceptance env with degraded-state live station verified honestly
    unavailable and the smoke drill PASS/FAIL both proven) landed on
-   branch `0015-phase-g`; **Phase G complete — the cockpit prototype
-   is delivered and accepted per `OPERATOR-ACCEPTANCE-0015.md`;
-   `v0.1.0` promotion still waits on the operator's separate
-   "accept RC4, promote to v0.1.0" verdict.**
+   branch `0015-phase-g` and merged into main via PR #92 (`e7ade9d`);
+   **Phase G complete — the cockpit prototype is delivered and
+   accepted per `OPERATOR-ACCEPTANCE-0015.md`; `v0.1.0` promotion
+   still waits on the operator's separate "accept RC4, promote to
+   v0.1.0" verdict.**
 
 ## Standing authority
 
