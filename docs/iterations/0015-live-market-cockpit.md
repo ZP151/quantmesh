@@ -130,10 +130,39 @@ stale/degraded and blocks paper orders on its instruments.
 
 - [x] `/api/live/*` router (double-mounted): WebSocket stream + SSE
       fallback + latest-state + status endpoints.
-- [ ] React: Market Cockpit watchlist (real/delayed/stale/synthetic/
+- [x] React: Market Cockpit watchlist (real/delayed/stale/synthetic/
       unavailable states), instrument detail (chart, order book, trade
       tape), connector-health panel.
 - [ ] Browser E2E + accessibility/mobile checks for the cockpit.
+
+> **Checkpoint C2 (2026-08-09)** — Phase C-2 landed on branch
+> `0015-phase-c` atop C1. `src/lib/live.ts` owns the client side: the
+> connection ladder (`openLiveConnection` — WebSocket first, SSE
+> fallback on socket error, 2 s backoff retry of the whole chain;
+> injectable transports keep the ladder unit-drilled, since jsdom has
+> neither WebSocket nor EventSource), the pure reconciliation helpers
+> (mergeUpdate writes a streamed update into the snapshot and
+> recomputes the instrument badge; the badge is the worst of the
+> *data* kinds — status is connector health, never part of the
+> instrument label; mid/spread-bps/age-text/candle-close helpers), and
+> the `useLiveConnection` hook (ref-held callback so re-renders never
+> re-arm the socket). `src/screens/Cockpit.tsx` is the watchlist
+> (`/app/cockpit`): snapshot from `/api/live/state` every 10 s merged
+> with streamed updates, badge per instrument, bid/ask/mid/spread bps/
+> age + ⚠ gap marker, stream banner naming the active transport, and
+> the connector-health panel from `/api/live/status` below the board.
+> `CockpitDetail.tsx` (`/app/cockpit/:symbol`) subscribes to the same
+> stream filtered to the instrument: header badge + mid/spread/gap,
+> hand-drawn SVG close chart (no chart dependency), per-side L2 book
+> from the latest bid/ask snapshots (kept separately — the wire emits
+> one side per l2_snapshot), and the recent trade tape. Nav entry
+> "Live cockpit" (Radio icon) under Markets; `useSurface` untouched —
+> the cockpit uses react-query directly for its custom refetch cadence.
+> Green: vitest 40/40 (ladder fallback/retry/close, reconciliation,
+> label rank, watchlist rendering incl. mixed labels, panel states,
+> stream merge, 404 message), oxlint clean (only pre-existing
+> warnings), `tsc -b` clean, production build clean. Phase C-3
+> (browser E2E + a11y/mobile) starts from this checkpoint.
 
 > **Checkpoint C1 (2026-08-09)** — Phase C-1 landed on branch
 > `0015-phase-c` (based on post-#86 main). The feed hub
