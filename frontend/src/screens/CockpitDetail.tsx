@@ -19,6 +19,7 @@ import {
 import { api } from '@/lib/api'
 import type { LiveInstrumentState, LiveView, MarketUpdate } from '@/lib/api'
 import { dateTime, money, quantity } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
 // Instrument detail (iteration 0015 Phase C): the live chart (candle
 // closes, hand-drawn SVG — no chart dependency), the order book (the
@@ -52,11 +53,10 @@ function snapshotUpdate(
 }
 
 function Sparkline({ closes }: { closes: number[] }) {
+  const { t } = usePreferences()
   if (closes.length < 2) {
     return (
-      <p className="text-sm text-muted-foreground">
-        No candles yet — the chart draws once two closes arrive.
-      </p>
+      <p className="text-sm text-muted-foreground">{t('screen.cockpitDetail.noCandles')}</p>
     )
   }
   const width = 640
@@ -74,7 +74,7 @@ function Sparkline({ closes }: { closes: number[] }) {
       viewBox={`0 0 ${width} ${height}`}
       className="h-40 w-full"
       role="img"
-      aria-label={`Price chart of the latest ${closes.length} candle closes`}
+      aria-label={t('screen.cockpitDetail.chartAria', { count: String(closes.length) })}
     >
       <polyline
         points={points.join(' ')}
@@ -89,6 +89,7 @@ function Sparkline({ closes }: { closes: number[] }) {
 
 export function CockpitDetailScreen() {
   const { symbol = '' } = useParams<{ symbol: string }>()
+  const { t } = usePreferences()
   const [updates, setUpdates] = useState<MarketUpdate[]>([])
   const [instruments, setInstruments] = useState<Record<string, LiveInstrumentState>>({})
   const snapshot = useQuery({
@@ -166,9 +167,9 @@ export function CockpitDetailScreen() {
     return (
       <Page
         title={symbol}
-        description="Connecting to the live stream for this instrument…"
+        description={t('screen.cockpitDetail.connecting')}
       >
-        <p className="text-sm text-muted-foreground">Waiting for the first update.</p>
+        <p className="text-sm text-muted-foreground">{t('screen.cockpitDetail.waitingFirst')}</p>
       </Page>
     )
   }
@@ -178,35 +179,47 @@ export function CockpitDetailScreen() {
       title={symbol}
       description={
         instrument?.venue
-          ? `${instrument.venue} — latest local ${quote.bid !== undefined || quote.ask !== undefined ? 'quote' : 'data'} snapshot; freshness is shown below.`
-          : 'Waiting for the first update for this instrument.'
+          ? t('screen.cockpitDetail.description', {
+              venue: instrument.venue,
+              type:
+                quote.bid !== undefined || quote.ask !== undefined
+                  ? t('screen.cockpitDetail.quote')
+                  : t('screen.cockpitDetail.data'),
+            })
+          : t('screen.cockpitDetail.waitingInstrument')
       }
       actions={
         <Link
           to="/cockpit"
           className="text-xs text-muted-foreground underline-offset-4 hover:underline"
         >
-          Back to watchlist
+          {t('screen.cockpitDetail.back')}
         </Link>
       }
     >
       <div className="flex flex-wrap items-center gap-3">
-        <Badge className={labelTone(badgeLabel)}>{LABEL_TEXT[badgeLabel]}</Badge>
+        <Badge className={labelTone(badgeLabel)}>{t(LABEL_TEXT[badgeLabel])}</Badge>
         <span className="text-xs text-muted-foreground">
-          {newest ? `last update ${dateTime(newest.received_at)}` : 'no update yet'}
-          {newest?.sequence_gap ? ' — ⚠ sequence gap' : ''}
+          {newest
+            ? t('screen.cockpitDetail.lastUpdate', { time: dateTime(newest.received_at) })
+            : t('screen.cockpitDetail.noUpdate')}
+          {newest?.sequence_gap ? ` — ${t('screen.cockpitDetail.sequenceGap')}` : ''}
         </span>
         <span className="text-xs text-muted-foreground">
-          {mid !== undefined ? `mid ${money(mid)}` : ''}
-          {spread !== undefined ? ` · ${spread.toFixed(1)} bps` : ''}
+          {mid !== undefined ? t('screen.cockpitDetail.mid', { value: money(mid) }) : ''}
+          {spread !== undefined
+            ? ` · ${t('screen.cockpitDetail.spreadBps', { value: spread.toFixed(1) })}`
+            : ''}
         </span>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Chart</CardTitle>
-            <CardDescription>Candle closes, newest right — {closes.length} points.</CardDescription>
+            <CardTitle className="text-base">{t('screen.cockpitDetail.chart')}</CardTitle>
+            <CardDescription>
+              {t('screen.cockpitDetail.chartDesc', { count: String(closes.length) })}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Sparkline closes={closes} />
@@ -215,16 +228,16 @@ export function CockpitDetailScreen() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Order book</CardTitle>
-            <CardDescription>Latest per-side L2 snapshot from the feed.</CardDescription>
+            <CardTitle className="text-base">{t('screen.cockpitDetail.book')}</CardTitle>
+            <CardDescription>{t('screen.cockpitDetail.bookDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {bids.length === 0 && asks.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No book depth yet.</p>
+              <p className="text-sm text-muted-foreground">{t('screen.cockpitDetail.noBook')}</p>
             ) : (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">Bids</p>
+                  <p className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">{t('screen.cockpitDetail.bids')}</p>
                   <ul className="space-y-0.5 font-mono text-xs">
                     {bids.map((level, index) => (
                       <li key={index} className="flex justify-between tabular-nums">
@@ -235,7 +248,7 @@ export function CockpitDetailScreen() {
                   </ul>
                 </div>
                 <div>
-                  <p className="mb-1 text-xs font-medium text-destructive">Asks</p>
+                  <p className="mb-1 text-xs font-medium text-destructive">{t('screen.cockpitDetail.asks')}</p>
                   <ul className="space-y-0.5 font-mono text-xs">
                     {asks.map((level, index) => (
                       <li key={index} className="flex justify-between tabular-nums">
@@ -252,22 +265,22 @@ export function CockpitDetailScreen() {
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Trade tape</CardTitle>
-            <CardDescription>Most recent trades first, from the local feed.</CardDescription>
+            <CardTitle className="text-base">{t('screen.cockpitDetail.tape')}</CardTitle>
+            <CardDescription>{t('screen.cockpitDetail.tapeDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {tape.length === 0 ? (
-              <p className="px-4 pb-4 text-sm text-muted-foreground">No trades yet.</p>
+              <p className="px-4 pb-4 text-sm text-muted-foreground">{t('screen.cockpitDetail.noTrades')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                      <th className="px-4 py-2 font-medium">Time</th>
-                      <th className="px-4 py-2 text-right font-medium">Price</th>
-                      <th className="px-4 py-2 text-right font-medium">Size</th>
-                      <th className="px-4 py-2 text-right font-medium">Side</th>
-                      <th className="px-4 py-2 text-right font-medium">Seq</th>
+                      <th className="px-4 py-2 font-medium">{t('screen.cockpitDetail.col.time')}</th>
+                      <th className="px-4 py-2 text-right font-medium">{t('screen.cockpitDetail.col.price')}</th>
+                      <th className="px-4 py-2 text-right font-medium">{t('screen.cockpitDetail.col.size')}</th>
+                      <th className="px-4 py-2 text-right font-medium">{t('screen.cockpitDetail.col.side')}</th>
+                      <th className="px-4 py-2 text-right font-medium">{t('screen.cockpitDetail.col.seq')}</th>
                     </tr>
                   </thead>
                   <tbody>
