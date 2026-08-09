@@ -20,15 +20,36 @@ function StatRow({ label, children }: { label: string; children: React.ReactNode
 /** The workstation home: account + the per-venue boards + watchlist. */
 export function OverviewScreen() {
   const query = useSurface(['overview'], api.overview)
+  const health = useSurface(['health'], api.health)
+  const liveMode = health.data?.runtime_mode === 'live'
 
   return (
     <Page
       title="Overview"
-      description="The paper workstation at a glance — account, cross-venue marks, watchlist. All synthetic, all labeled, all deterministic."
+      description={
+        liveMode
+          ? 'Paper account status and local marks. Open Live cockpit for real venue data, freshness and provenance.'
+          : 'The paper workstation at a glance — account, cross-venue marks, watchlist. Demo data is synthetic, labeled and deterministic.'
+      }
     >
       <Surface query={query} title="Overview">
         {(overview) => (
           <div className="space-y-5">
+            {liveMode && (
+              <Card className="border-emerald-500/30 bg-emerald-500/5">
+                <CardHeader>
+                  <CardTitle className="text-base">Live market data is in the cockpit</CardTitle>
+                  <CardDescription>
+                    This overview remains the paper-account ledger. It does not relabel venue data or paper marks as live.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Link to="/cockpit" className="text-sm font-medium text-primary hover:underline">
+                    Open Live cockpit →
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -77,6 +98,11 @@ export function OverviewScreen() {
                     </div>
                   </div>
                 ))}
+                {overview.venues.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No paper marks are loaded. Live venue data is shown separately in the cockpit.
+                  </p>
+                )}
                 {overview.missing_marks.length > 0 && (
                   <p className="text-xs text-destructive">
                     Missing marks: {overview.missing_marks.join(', ')}
@@ -107,6 +133,11 @@ export function OverviewScreen() {
                       <span className="font-mono text-muted-foreground">{money(entry.mark)}</span>
                     </span>
                   ))}
+                  {overview.watchlist.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      No paper watchlist entries are loaded for this session.
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

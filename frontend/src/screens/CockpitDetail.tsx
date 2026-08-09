@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,6 +8,7 @@ import {
   bookSide,
   candleCloses,
   LABEL_TEXT,
+  instrumentLabel,
   labelTone,
   mergeUpdate,
   midOf,
@@ -14,7 +16,8 @@ import {
   spreadBps,
   useLiveConnection,
 } from '@/lib/live'
-import type { LiveInstrumentState, MarketUpdate } from '@/lib/api'
+import { api } from '@/lib/api'
+import type { LiveInstrumentState, LiveView, MarketUpdate } from '@/lib/api'
 import { dateTime, money, quantity } from '@/lib/format'
 
 // Instrument detail (iteration 0015 Phase C): the live chart (candle
@@ -26,6 +29,27 @@ import { dateTime, money, quantity } from '@/lib/format'
 
 const TAPE_LIMIT = 40
 const CHART_LIMIT = 120
+const SNAPSHOT_INTERVAL_MS = 10_000
+
+function snapshotUpdate(
+  symbol: string,
+  venue: string,
+  view: LiveView,
+): MarketUpdate {
+  return {
+    venue,
+    instrument: symbol,
+    kind: view.kind,
+    provenance: view.provenance,
+    data_time: view.data_time,
+    received_at: view.received_at,
+    sequence: view.sequence,
+    sequence_gap: view.sequence_gap,
+    payload: view.payload,
+    state: null,
+    state_note: null,
+  }
+}
 
 function Sparkline({ closes }: { closes: number[] }) {
   if (closes.length < 2) {
@@ -67,6 +91,30 @@ export function CockpitDetailScreen() {
   const { symbol = '' } = useParams<{ symbol: string }>()
   const [updates, setUpdates] = useState<MarketUpdate[]>([])
   const [instruments, setInstruments] = useState<Record<string, LiveInstrumentState>>({})
+  const snapshot = useQuery({
+    queryKey: ['live', 'state'],
+    queryFn: api.liveState,
+    refetchInterval: SNAPSHOT_INTERVAL_MS,
+  })
+
+  useEffect(() => {
+    const instrument = snapshot.data?.instruments[symbol]
+    if (!instrument) return
+    setInstruments((previous) => ({ ...previous, [symbol]: instrument }))
+    const seeded = Object.values(instrument.kinds).map((view) =>
+      snapshotUpdate(symbol, instrument.venue, view),
+    )
+    setUpdates((previous) => {
+      const known = new Set(
+        previous.map((update) => `${update.kind}:${update.received_at}:${update.sequence ?? ''}`),
+      )
+      const missing = seeded.filter(
+        (update) => !known.has(`${update.kind}:${update.received_at}:${update.sequence ?? ''}`),
+      )
+      const next = [...previous, ...missing]
+      return next.slice(-(TAPE_LIMIT + CHART_LIMIT))
+    })
+  }, [snapshot.data, symbol])
 
   const streamStatus = useLiveConnection((update) => {
     if (update.instrument !== symbol) return
@@ -79,7 +127,7 @@ export function CockpitDetailScreen() {
   })
 
   const instrument = instruments[symbol]
-  const badgeLabel = instrument?.label ?? 'unavailable'
+  const badgeLabel = instrument ? instrumentLabel(instrument) : 'unavailable'
 
   const byKind = useMemo(() => {
     const latest: Record<string, MarketUpdate | undefined> = {}
@@ -130,7 +178,7 @@ export function CockpitDetailScreen() {
       title={symbol}
       description={
         instrument?.venue
-          ? `${instrument.venue} — ${quote.bid !== undefined || quote.ask !== undefined ? 'quote' : 'data'} streaming from the local feed.`
+          ? `${instrument.venue} — latest local ${quote.bid !== undefined || quote.ask !== undefined ? 'quote' : 'data'} snapshot; freshness is shown below.`
           : 'Waiting for the first update for this instrument.'
       }
       actions={

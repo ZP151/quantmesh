@@ -19,7 +19,7 @@ from tools.live_smoke import (
 
 
 def _health_body() -> dict:
-    return {"version": "0.1.0rc4", "ok": True}
+    return {"version": "0.1.0rc4", "status": "ok"}
 
 
 def _kind(**overrides: object) -> dict:
@@ -110,11 +110,24 @@ class TestHealth:
         import json
 
         getter = _fake_getter(
-            {"http://127.0.0.1:8766/health": json.dumps({"ok": True})}
+            {"http://127.0.0.1:8766/health": json.dumps({"status": "ok"})}
         )
         checks = check_health(getter, "http://127.0.0.1:8766", 10.0)
         assert not all(check.ok for check in checks)
         assert any("version" in check.label for check in checks if not check.ok)
+
+    def test_unhealthy_status_fails_even_with_a_version(self) -> None:
+        import json
+
+        getter = _fake_getter(
+            {
+                "http://127.0.0.1:8766/health": json.dumps(
+                    {"status": "error", "version": "0.1.0rc4"}
+                )
+            }
+        )
+        checks = check_health(getter, "http://127.0.0.1:8766", 10.0)
+        assert any(not check.ok and "reports ok" in check.label for check in checks)
 
     def test_dead_server_fails(self) -> None:
         checks = check_health(_fake_getter({}), "http://127.0.0.1:8766", 10.0)
@@ -207,6 +220,42 @@ class TestLatestState:
         checks = check_state(getter, "http://127.0.0.1:8766", 10.0)
         assert all(check.ok for check in checks)
 
+    def test_real_badge_with_empty_kinds_fails(self) -> None:
+        import json
+
+        body = _state_body(
+            instruments={"BTC": {"venue": "hyperliquid", "label": "real", "kinds": {}}}
+        )
+        getter = _fake_getter(
+            {"http://127.0.0.1:8766/live/state": json.dumps(body)}
+        )
+        checks = check_state(getter, "http://127.0.0.1:8766", 10.0)
+        assert any(not check.ok and "market data" in check.label for check in checks)
+
+    def test_missing_venue_and_invalid_kind_shape_fail(self) -> None:
+        import json
+
+        body = _state_body(
+            instruments={
+                "BTC": {
+                    "venue": "",
+                    "label": "real",
+                    "kinds": {"quote": _kind(received_at="not-a-time", payload=[])},
+                }
+            }
+        )
+        getter = _fake_getter(
+            {"http://127.0.0.1:8766/live/state": json.dumps(body)}
+        )
+        failed = [
+            check
+            for check in check_state(getter, "http://127.0.0.1:8766", 10.0)
+            if not check.ok
+        ]
+        assert any("venue" in check.label for check in failed)
+        assert any("received_at" in check.detail for check in failed)
+        assert any("payload" in check.detail for check in failed)
+
 
 class TestConnectorHealth:
     def test_healthy_surface_passes(self) -> None:
@@ -253,6 +302,19 @@ class TestConnectorHealth:
         )
         checks = check_status(getter, "http://127.0.0.1:8766", 10.0)
         assert all(check.ok for check in checks)
+
+    def test_empty_venue_surface_fails(self) -> None:
+        import json
+
+        getter = _fake_getter(
+            {
+                "http://127.0.0.1:8766/live/status": json.dumps(
+                    _status_body(venues=[])
+                )
+            }
+        )
+        checks = check_status(getter, "http://127.0.0.1:8766", 10.0)
+        assert any(not check.ok and "non-empty" in check.label for check in checks)
 
 
 class TestWatchlist:

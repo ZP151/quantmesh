@@ -1,12 +1,13 @@
 # Iteration 0015 — Live Market Cockpit
 
-- Status: active
+- Status: completed (prototype implementation and acceptance hardening)
 - Started: 2026-08-09
-- Completed:
+- Completed: 2026-08-10
 - Owner: solo fast lane; primary agent acts as Tech Lead, Product
   Designer, Implementer, Reviewer and Verifier
-- GitHub issue: create a small milestone issue set only when
-  implementation begins; do not create a PR per checkbox
+- GitHub issue: [#94](https://github.com/ZP151/quantmesh/issues/94) records
+  post-Phase-G acceptance hardening; earlier phases are linked to their
+  integration PRs below
 - Pull request: one integration PR per phase, CI green, squash-merge
 - Roadmap target: live multi-venue read-only research terminal over the
   v0.1.0 RC line
@@ -457,6 +458,60 @@ stale/degraded and blocks paper orders on its instruments.
 > `OPERATOR-ACCEPTANCE-0015.md` records all drill evidence. Phase G
 > complete; v0.1.0 promotion still waits on the operator's separate
 > "accept RC4, promote to v0.1.0" verdict.
+
+### Phase H — operator-authorized acceptance hardening
+
+- [x] Review Phase G against repository standards and the product outcome.
+- [x] Run desktop/mobile browser acceptance against an actual live station.
+- [x] Fix every release-relevant defect found and add regression coverage.
+- [x] Rebuild the packaged SPA and record a truthful replacement-RC frontier.
+
+> **Checkpoint H1 (2026-08-10, issue #94)** — The first Phase G acceptance
+> result was rejected after code review and an authorized Playwright walk.
+> Four product/contract gaps were found and repaired on
+> `0015-acceptance-hardening`: (1) `/app/cockpit/:symbol` listened only for
+> future frames, so a disconnected source showed an empty detail page even
+> when `/api/live/state` held a latest quote/trade/book; detail now hydrates
+> and periodically reconciles that snapshot before stream updates. (2) The
+> shell always queried `/api/demo/status`, and Overview claimed all data was
+> synthetic even in live mode; `/api/health` now reports `runtime_mode`, the
+> demo query is disabled outside demo, shell/footer copy is mode-aware, and
+> live Overview explicitly separates the paper ledger from the cockpit.
+> (3) `tools/live_smoke.py` accepted an error health status and incomplete
+> state/status shapes; it now fails closed on health status, timestamps,
+> payloads, venue/instrument identity, empty non-unavailable kinds and empty
+> venue surfaces. (4) timestamp-only replay could not distinguish two appends
+> with the same `received_at`; `through_local_seq` now provides the inclusive
+> append boundary returned by `append`. The DuckDB timezone regression was
+> strengthened by opening the connection in `America/New_York` and proving
+> the constructor pins UTC. Expected fixture cancellation no longer leaks as
+> a pytest thread warning. The first PR CI run then exposed an independent
+> E2E bootstrap race after 2,085 tests passed: the legacy workstation suite
+> checked fixed port 8642 and released the probe before uvicorn bound it.
+> The fixture now hands uvicorn an already-bound OS-reserved loopback socket;
+> its 16/16 browser tests pass without a check-then-bind window.
+>
+> Verification: Ruff clean; targeted backend acceptance 82/82 (the repeated
+> live E2E teardown check is 5/5 with no warning); frontend Vitest 48/48;
+> TypeScript/Vite production build and `build_frontend.py --check` current;
+> a source-tree live read-only station on 8768 returned health
+> `runtime_mode=live`, and the stricter smoke drill passed 14/14 for BTC/ETH +
+> unavailable AAPL/NVDA. Desktop browser evidence shows the cockpit and BTC
+> detail hydrated from the stale snapshot, runtime-honest copy, and zero
+> console errors. At 390×844 the cockpit has `scrollWidth=clientWidth=390`,
+> no horizontal overflow. Evidence is under `output/playwright/` (screens 06
+> through 10); full audit at `output/playwright/ACCEPTANCE-AUDIT.md`.
+>
+> Role evidence: **Planner/Tech Lead** bounded the work to acceptance
+> truthfulness, snapshot continuity and fail-closed contracts; no architecture
+> or language change was needed. **Quant Researcher** marked model/strategy
+> review not applicable because no market calculation or execution semantics
+> changed. **Implementer** delivered the four fixes and packaged bundle.
+> **Reviewer** ran independent Standards and Spec reviews; their findings map
+> to the documentation, sequence cutoff and smoke hardening above.
+> **Verifier** ran contract, E2E, live-smoke and visual checks. RC4 is not the
+> repaired tree and remains immutable; the next release action is a replacement
+> RC, never promotion of RC4.
 
 ## Safety (unchanged invariants)
 

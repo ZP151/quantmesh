@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+import quantmesh.live.buffer as buffer_module
 from quantmesh.domain.models import Venue
 from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import (
@@ -138,6 +139,25 @@ class TestAppendReplayRoundTrip:
         assert buffer.append(first) == 1
         assert buffer.append(second) == 2
 
+    def test_constructor_pins_utc_even_when_connection_opens_non_utc(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        real_connect = buffer_module.duckdb.connect
+
+        def non_utc_connect(*args: object, **kwargs: object):
+            connection = real_connect(*args, **kwargs)
+            connection.execute("SET TimeZone = 'America/New_York'")
+            return connection
+
+        monkeypatch.setattr(buffer_module.duckdb, "connect", non_utc_connect)
+        lake = buffer_module.LiveBuffer(tmp_path)
+        try:
+            lake.append(_quote("BTC"))
+            [row] = lake.replay()
+            assert row.received_at.isoformat().endswith("+00:00")
+        finally:
+            lake.close()
+
 
 class TestReplayFilters:
     def _seed(self, buffer: LiveBuffer) -> None:
@@ -189,6 +209,23 @@ class TestReplayFilters:
         rows = buffer.replay(limit=2)
         assert len(rows) == 2
         assert [r.instrument for r in rows] == ["BTC", "ETH"]
+
+    def test_local_sequence_reconstructs_same_timestamp_cutoff(
+        self, buffer: LiveBuffer
+    ) -> None:
+        timestamp = datetime(2026, 8, 9, 12, 0, 0, tzinfo=UTC)
+        first_seq = buffer.append(_quote("BTC", bid=100.0, received_at=timestamp))
+        buffer.append(_quote("BTC", bid=101.0, received_at=timestamp))
+
+        rows = buffer.replay(through_local_seq=first_seq)
+
+        assert len(rows) == 1
+        assert rows[0].payload["bid"] == 100.0
+        assert len(buffer.replay(end=timestamp)) == 2
+
+    def test_local_sequence_cutoff_must_be_positive(self, buffer: LiveBuffer) -> None:
+        with pytest.raises(ValueError, match="positive integer"):
+            buffer.replay(through_local_seq=0)
 
 
 class TestLatest:

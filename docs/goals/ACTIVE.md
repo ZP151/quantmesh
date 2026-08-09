@@ -1,29 +1,37 @@
 # Active Goal
 
-- Status: active (two threads — rc4 acceptance pending, Live Market Cockpit in flight)
-- Objective: obtain explicit operator acceptance of `v0.1.0-rc4` (promotion
-  to v0.1.0 only after the recorded "accept RC4, promote to v0.1.0" reply),
-  then deliver the Live Market Cockpit prototype (iteration 0015)
+- Status: active (iteration 0015 acceptance hardening complete; integration
+  and a replacement RC remain)
+- Objective: integrate the acceptance hardening from issue #94, run the
+  release gate on the merged tree, and publish a replacement release
+  candidate for explicit operator acceptance. `v0.1.0-rc4` must not be
+  promoted because the accepted fixes are newer than that immutable tag.
 - Started: 2026-08-09
 - Active iteration:
   `docs/iterations/0015-live-market-cockpit.md`
   (rc4 acceptance evidence: `docs/iterations/0014-...md` Checkpoint 10)
-- Branch: `0015-live-market-cockpit`, based on `origin/main`; RC1
+- Branch: `0015-acceptance-hardening`, based on the completed Phase G tree; RC1
   publication checkpoint `0fea221` was preserved as cherry-pick `e0f9c3d`;
   RC2 is the historical tag `v0.1.0-rc2` @ `710a931` (rejected, not rewritten);
   RC3 `e83e30c` (rejected, not rewritten); RC4 `c9444ba` (awaiting acceptance)
-- Pull request: one integration PR per phase, CI green, squash-merge
-- Blockers: none external for deterministic demo and UI work
+- Pull request: one acceptance-hardening integration PR, CI green,
+  squash-merge; no doc-only follow-up PR
+- Blockers: none for integration; final `v0.1.0` promotion remains an explicit
+  operator gate
 
 ## Current state
 
-`v0.1.0-rc1` is published at `fb37fcd` and remains the immutable engineering
-baseline. Its clean-checkout release gate, 1,801-test suite, 53/53 golden path,
-CI and Security checks passed. Human browser review did not accept it as a
-product release: the server-rendered UI is minimally styled, startup state is
-empty, raw APIs occupy primary navigation and no demo/provider/import path
-makes the business workflow directly testable. Do not promote RC1 to
-`v0.1.0`.
+Iteration 0015 Phase G is merged, but the 2026-08-10 operator-authorized
+browser review rejected its first acceptance result. The live detail route
+did not hydrate the latest snapshot, live pages emitted demo-only requests and
+copy, smoke checks accepted unhealthy/malformed contracts, and timestamp-only
+replay could not select between same-timestamp appends.
+[Issue #94](https://github.com/ZP151/quantmesh/issues/94) contains the bounded
+hardening work and evidence. The repaired candidate passes the targeted
+backend, frontend, live-smoke, desktop and 390 px browser checks.
+Because these fixes are newer than `v0.1.0-rc4`, RC4 remains historical and
+must not be promoted; publish and accept a replacement RC from the integrated
+tree.
 
 ## Immediate frontier
 
@@ -144,10 +152,23 @@ makes the business workflow directly testable. Do not promote RC1 to
    acceptance env with degraded-state live station verified honestly
    unavailable and the smoke drill PASS/FAIL both proven) landed on
    branch `0015-phase-g` and merged into main via PR #92 (`e7ade9d`);
-   **Phase G complete — the cockpit prototype is delivered and
-   accepted per `OPERATOR-ACCEPTANCE-0015.md`; `v0.1.0` promotion
-   still waits on the operator's separate "accept RC4, promote to
-   v0.1.0" verdict.**
+   **Phase G complete — its original self-acceptance record is preserved in
+   `OPERATOR-ACCEPTANCE-0015.md` but superseded by the operator-authorized
+   review in item 10.**
+10. Integrate the post-Phase-G acceptance hardening
+    ([issue #94](https://github.com/ZP151/quantmesh/issues/94)): hydrate
+    instrument details from `/api/live/state`, make shell/overview behavior
+    runtime-aware, strengthen the read-only smoke contract, add an inclusive
+    `through_local_seq` replay boundary, rebuild the packaged SPA, and retain
+    browser evidence. The repaired candidate passed 82 targeted backend
+    tests, 48 frontend tests, 5/5 live browser E2E, bundle freshness, Ruff,
+    live smoke 14/14, desktop browser review with zero console errors, and a
+    390 px walk with no horizontal overflow. The first PR CI run also exposed
+    and fixed a fixed-port E2E bootstrap race (2,085 tests had passed before
+    the setup-only collision; the repaired workstation E2E is 16/16). Next:
+    merge the single
+    integration PR, run the clean-checkout release gate, and cut a replacement
+    RC; do not promote RC4.
 
 ## Standing authority
 
@@ -168,9 +189,9 @@ labeled and isolated from non-demo operator state.
 
 ## Resume instruction
 
-Run `/goal`, then read this file, `PRODUCT.md`, iteration 0014, the roadmap,
-relevant ADRs, Git state and GitHub state. Deliver the next RC through its
-clean-checkout gate and a regenerated isolated acceptance environment; promote
-only after explicit human acceptance. Implementation details and evidence
-belong in the iteration record; keep this file limited to current truth and
-frontier.
+Run `/goal`, then read this file, `PRODUCT.md`, iteration 0015 Checkpoint H1,
+the roadmap, relevant ADRs, Git state, issue #94 and the integration PR. Merge
+only with green CI, then deliver a replacement RC through the clean-checkout
+gate and a regenerated isolated acceptance environment; promote only after
+explicit human acceptance. Implementation details and evidence belong in the
+iteration record; keep this file limited to current truth and frontier.
