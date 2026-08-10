@@ -33,7 +33,7 @@ function SidebarContent({
           {version}
         </Badge>
       </div>
-      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2" aria-label="Screens">
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2" aria-label={t('shell.nav.screens')}>
         {NAV_GROUPS.map((group) => (
           <div key={group}>
             <p className="px-2 pb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
@@ -68,7 +68,7 @@ function SidebarContent({
         ))}
       </nav>
       <p className="border-t border-border px-4 py-3 text-[10px] leading-relaxed text-muted-foreground">
-        Loopback workstation · the kernel gates every write.{' '}
+        {t('shell.loopback')}{' '}
         {runtimeMode === 'demo'
           ? t('shell.footerDemo')
           : runtimeMode === 'live'
@@ -141,14 +141,14 @@ export function AppShell() {
 
       {/* Mobile drawer */}
       {mobileNav && (
-        <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label={t('shell.nav.navigation')}>
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileNav(false)} />
           <div className="absolute inset-y-0 left-0 w-72 border-r border-border bg-sidebar shadow-2xl">
             <button
               type="button"
               className="absolute top-3 right-3 rounded-lg p-2 text-muted-foreground hover:bg-muted"
               onClick={() => setMobileNav(false)}
-              aria-label="Close navigation"
+              aria-label={t('shell.nav.close')}
             >
               <X className="size-4" aria-hidden />
             </button>
@@ -169,7 +169,7 @@ export function AppShell() {
             size="icon"
             className="lg:hidden"
             onClick={() => setMobileNav(true)}
-            aria-label="Open navigation"
+            aria-label={t('shell.nav.open')}
           >
             <Menu className="size-4" aria-hidden />
           </Button>
@@ -179,11 +179,14 @@ export function AppShell() {
             {demoAttached && demoStatus.data && (
               <Badge
                 variant="outline"
-                title={`Demo root ${demoStatus.data.root} · anchored ${dateTime(demoStatus.data.scenario.anchor)} · all surfaces synthetic`}
+                title={t('shell.demoTitle', {
+                  root: demoStatus.data.root,
+                  anchor: dateTime(demoStatus.data.scenario.anchor),
+                })}
                 className="hidden font-mono text-[10px] md:inline-flex"
               >
                 <span className="mr-1 inline-block size-1.5 rounded-full bg-emerald-500" aria-hidden />
-                Paper demo · seed {demoStatus.data.scenario.seed}
+                {t('shell.demoBadge', { seed: String(demoStatus.data.scenario.seed) })}
               </Badge>
             )}
 
@@ -212,8 +215,8 @@ export function AppShell() {
                     window.setTimeout(() => setResetArmed(false), 3000)
                   }
                 }}
-                title="Restore the pristine seeded demo root (click twice)"
-                aria-label="Reset demo session"
+                title={t('palette.restoreDemo')}
+                aria-label={t('palette.resetDemo')}
               >
                 <RotateCcw className="size-3.5" aria-hidden />
                 <span className="hidden sm:inline">
@@ -229,7 +232,7 @@ export function AppShell() {
               size="sm"
               className="hidden gap-1.5 text-muted-foreground sm:flex"
               onClick={() => setPaletteOpen(true)}
-              aria-label="Open command palette"
+              aria-label={t('shell.palette.open')}
             >
               <Search className="size-3.5" aria-hidden />
               <span className="text-[11px]">{t('shell.search')}</span>
@@ -240,7 +243,7 @@ export function AppShell() {
               size="icon"
               className="sm:hidden"
               onClick={() => setPaletteOpen(true)}
-              aria-label="Open command palette"
+              aria-label={t('shell.palette.open')}
             >
               <Search className="size-4" aria-hidden />
             </Button>

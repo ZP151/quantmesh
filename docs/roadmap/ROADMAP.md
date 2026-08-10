@@ -245,10 +245,11 @@ Exit criteria:
   any `v0.1.0` promotion.
 
 M0 through M10 and the RC1 engineering release are merged. Iterations 0014
-and 0015 converted the former empty shell into a populated, replayable,
-read-only multi-venue workstation and produced the RC5 baseline. Iteration
-0016 is active for global language/theme continuity and the next frontend
-acceptance pass. JSONL persistence, cross-venue reconciliation and
+through 0017 converted the former empty shell into a populated, replayable,
+read-only multi-venue workstation, RC6 baseline and first domain-wide locale
+pass. Iteration 0018 closes the remaining global locale gaps; iteration 0019
+is the next vertical slice for live research continuity. JSONL persistence,
+cross-venue reconciliation and
 numeric-policy deepening remain backlog items unless they block the accepted
 workflow. Moomoo simulated-account and Hyperliquid testnet drills remain
 optional gates and do not enable live or mainnet operation.
@@ -262,7 +263,8 @@ Initial deliverables:
 
 - Persistent English/Simplified Chinese UI language selection.
 - System/light/dark theme selection with no-flash startup behavior.
-- Localized shell, navigation, command palette and settings controls.
+- Localized every SPA screen, shell, navigation, command palette and settings
+  controls with reviewed English/zh-CN copy.
 - Reviewed translations for the highest-value domain screens.
 - Real-time cockpit charting and quote/book/trade freshness views over the
   existing read-only MarketUpdate, sequence and replay contracts.
@@ -271,8 +273,13 @@ Initial deliverables:
 Exit criteria:
 
 - Locale/theme survive reload and pass keyboard, compact-width and browser
-  acceptance checks.
+  acceptance checks on every SPA route.
 - Every displayed live value has venue, source, sequence/age and degraded
   state semantics; synthetic/demo data remains unmistakably labeled.
 - A clean checkout can run the demo and read-only live/replay workflows with
   reproducible tests and a documented acceptance station.
+
+Iteration 0018 is the current integration candidate on PR #100. Once merged,
+cut a replacement RC from the merged tree; do not mutate RC6. Iteration 0019
+(`docs/iterations/0019-live-research-surface.md`) is the next implementation
+slice and must preserve the same read-only, provenance-first boundary.

@@ -48,8 +48,9 @@ export function EmptyState({ title, detail }: { title: string; detail: string })
 }
 
 export function LoadingState({ rows = 3 }: { rows?: number }) {
+  const { t } = usePreferences()
   return (
-    <div className="space-y-3" aria-busy="true" aria-label="Loading">
+    <div className="space-y-3" aria-busy="true" aria-label={t('state.loading')}>
       {Array.from({ length: rows }, (_, index) => (
         <Skeleton key={index} className="h-16 w-full" />
       ))}

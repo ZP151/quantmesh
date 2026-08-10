@@ -47,7 +47,7 @@ function VenueBlock({ row }: { row: PredictionVenueRow }) {
       </p>
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
         <div className="flex items-baseline justify-between gap-2">
-          <dt>Bid / Ask</dt>
+        <dt>{t('screen.prediction.bidAsk')}</dt>
           <dd className="font-mono tabular-nums text-foreground">
             {row.bid !== null && row.ask !== null
               ? `${money(row.bid)} / ${money(row.ask)}`
@@ -55,19 +55,19 @@ function VenueBlock({ row }: { row: PredictionVenueRow }) {
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-2">
-          <dt>Spread</dt>
+        <dt>{t('screen.prediction.spread')}</dt>
           <dd className="font-mono tabular-nums text-foreground">
             {row.spread_bps !== null ? `${row.spread_bps.toFixed(1)} bps` : '—'}
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-2">
-          <dt>Touch depth</dt>
+        <dt>{t('screen.prediction.touchDepth')}</dt>
           <dd className="font-mono tabular-nums text-foreground">
             {row.depth !== null ? row.depth.toFixed(0) : '—'}
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-2">
-          <dt>Liquidity</dt>
+        <dt>{t('screen.prediction.liquidity')}</dt>
           <dd className="font-mono tabular-nums text-foreground">
             {row.liquidity !== null ? row.liquidity.toFixed(0) : '—'}
           </dd>
@@ -78,6 +78,7 @@ function VenueBlock({ row }: { row: PredictionVenueRow }) {
 }
 
 function PairCard({ pair }: { pair: PredictionRow }) {
+  const { t } = usePreferences()
   return (
     <Card>
       <CardHeader>
@@ -85,12 +86,14 @@ function PairCard({ pair }: { pair: PredictionRow }) {
           <div className="space-y-1">
             <CardTitle className="text-base">{pair.title}</CardTitle>
             <CardDescription>
-              {pair.expiry !== null ? `Expires ${pair.expiry.slice(0, 10)}` : 'No expiry listed'}
+              {pair.expiry !== null
+                ? t('screen.prediction.expires', { date: pair.expiry.slice(0, 10) })
+                : t('screen.prediction.noExpiry')}
             </CardDescription>
           </div>
           <span className="flex items-center gap-1.5 text-sm">
             <ArrowLeftRight className="size-3.5 text-muted-foreground" aria-hidden />
-            <span className="text-muted-foreground">Polymarket − Kalshi</span>
+            <span className="text-muted-foreground">{t('screen.prediction.compare')}</span>
             <span className={diffTone(pair.diff)}>{diffText(pair.diff)}</span>
           </span>
         </div>
@@ -107,6 +110,7 @@ function PairCard({ pair }: { pair: PredictionRow }) {
 }
 
 export function PredictionScreen() {
+  const { t } = usePreferences()
   const query = useQuery({
     queryKey: ['live', 'prediction'],
     queryFn: api.prediction,
@@ -118,12 +122,12 @@ export function PredictionScreen() {
     const detail = query.error instanceof Error ? query.error.message : String(query.error)
     return (
       <Page
-        title="Prediction markets"
-        description="The same event priced on Polymarket and Kalshi — implied probability, spread, depth and liquidity from the attached read-only feed."
+        title={t('screen.prediction.title')}
+        description={t('screen.prediction.description')}
       >
         <ErrorState
-          title="Prediction board unavailable"
-          detail={`${detail} — start the workstation with --live and a QUANTMESH_PREDICTION_WATCHLIST.`}
+          title={t('screen.prediction.unavailable')}
+          detail={t('screen.prediction.errorDetail', { detail })}
         />
       </Page>
     )
@@ -131,14 +135,14 @@ export function PredictionScreen() {
 
   return (
     <Page
-      title="Prediction markets"
-      description="The same event priced on Polymarket and Kalshi — implied probability, spread, depth and liquidity from the attached read-only feed."
+      title={t('screen.prediction.title')}
+      description={t('screen.prediction.description')}
       actions={
         <Link
           to="/research/forecasts"
           className="text-sm font-medium text-primary hover:underline"
         >
-          Calibration & forecast history
+          {t('screen.prediction.calibration')}
         </Link>
       }
     >
