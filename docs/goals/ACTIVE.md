@@ -214,6 +214,13 @@ and shell accessibility copy before producing the next candidate.
     package-served SPA; merge one tested PR; then cut and verify a replacement
     RC because RC6 is immutable. Evidence belongs in
     `docs/iterations/0018-global-localization.md`.
+14. After PR #100 is merged and the replacement RC is verified, deliver
+    iteration 0019 — the bounded live research surface: quote/book/trade and
+    prediction-market metrics, freshness/sequence semantics, compact charts,
+    replay and degraded-stream drills. Reuse existing normalized contracts,
+    lake, cockpit primitives and smoke fixtures; keep all venues read-only,
+    bounded and provenance-first. Detailed scope is in
+    `docs/iterations/0019-live-research-surface.md`.
 
 ## Standing authority
 
@@ -234,7 +241,8 @@ labeled and isolated from non-demo operator state.
 
 ## Resume instruction
 
-Run `/goal`, then read this file, `PRODUCT.md`, iteration 0018, the roadmap,
+Run `/goal`, then read this file, `PRODUCT.md`, `docs/product-strategy.md`,
+iteration 0018, iteration 0019, the roadmap,
 relevant ADRs, Git state and the current rc6 release notes. Continue the
 global localization candidate first, then continue the roadmap in vertical slices: next are the live cockpit improvements (charts,
 metrics/density), adapter hardening, local quant analysis slices, AI

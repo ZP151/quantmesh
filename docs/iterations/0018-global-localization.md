@@ -36,7 +36,8 @@ would not satisfy a truly global language setting.
 ## Verification
 
 - Message-table parity and placeholder coverage: passed.
-- Frontend Vitest: 57/57 passed.
+- Frontend Vitest: 58/58 passed, including the zh-CN Prediction smoke test.
+- SPA browser E2E: 5/5 passed with a clean repository-local basetemp.
 - TypeScript/Vite build: passed.
 - `npm run lint`: passed with the repository's existing Fast Refresh warnings.
 - `python tools/build_frontend.py --check`: passed.
