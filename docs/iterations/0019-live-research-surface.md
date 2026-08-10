@@ -46,6 +46,30 @@ unavailable; no UI estimate is introduced.
   production TypeScript/Vite build passes; packaged SPA bundle rebuilt and
   `python tools/build_frontend.py --check` passes.
 
+### Checkpoint 2 — recorded replay workflow (slice 4)
+
+- Backend: `GET /api/live/replay/windows` returns the lake's recorded extent
+  (count, earliest/latest `received_at`, distinct venues); `GET /api/live/replay`
+  replays a bounded window in append order with provenance, sequence and gap
+  marks. Both fail closed with typed 404 details when no lake is attached or
+  the lake is empty; window bounds are required, ordered and UTC-pinned.
+  (Slice 1 already established the ingestion path into the lake.)
+- Frontend: a `Recorded replay` card on the cockpit renders the recorded
+  extent, offers 5 min / 15 min / all window actions, and shows the replayed
+  rows under an unmistakable violet `Replay mode` banner with window bounds,
+  update count and `source: lake`, plus a clear action. Replay is strictly
+  read-only: it never folds into the live cache or the paper surface.
+- Replay drills were already covered by iteration 0015's `test_live_replay.py`
+  (rebuild equivalence, append-order determinism, byte-identical replays
+  across connections, gap marks and provenance labels surviving the round
+  trip, age not resurrecting old data as fresh); slice 4 added endpoint-level
+  drills in `test_live_router.py` (`TestReplayEndpoint`).
+- Verification: Cockpit screen drill 14/14; complete frontend suite 71/71;
+  `tsc --noEmit` clean; `npm run lint` passes with the same four existing
+  Fast Refresh warnings; backend `tests/` full run 2124 passed (includes
+  `test_live_router.py` 49 passed with `test_live_replay.py` and
+  `test_live_feed.py`).
+
 ## Scope
 
 ### 1. Unified live board

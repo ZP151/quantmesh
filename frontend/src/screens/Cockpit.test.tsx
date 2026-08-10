@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { LiveState, LiveStatus, LiveView, MarketUpdate } from '@/lib/api'
@@ -19,6 +19,8 @@ vi.mock('@/lib/api', async (importOriginal) => {
       ...actual.api,
       liveState: vi.fn(),
       liveStatus: vi.fn(),
+      replayExtent: vi.fn(),
+      replayWindow: vi.fn(),
     },
   }
 })
@@ -234,6 +236,61 @@ describe('CockpitScreen', () => {
     mockedStream.mockReturnValue('fallback')
     renderScreen()
     await waitFor(() => expect(screen.getByText(/SSE fallback/)).toBeInTheDocument())
+  })
+
+  it('replays a recorded window from the lake under a visible banner', async () => {
+    mocked.replayExtent.mockResolvedValue({
+      source: 'lake',
+      count: 3,
+      earliest: T0,
+      latest: T0,
+      venues: ['hyperliquid'],
+    })
+    mocked.replayWindow.mockResolvedValue({
+      source: 'lake',
+      window: { start: T0, end: T0, count: 1 },
+      updates: [
+        {
+          venue: 'hyperliquid',
+          instrument: 'BTC',
+          kind: 'quote',
+          provenance: 'real',
+          data_time: T0,
+          received_at: T0,
+          sequence: 5,
+          sequence_gap: false,
+          payload: { bid: 100, ask: 100.5 },
+          state: null,
+          state_note: null,
+        },
+      ],
+    })
+    renderScreen()
+    await waitFor(() => expect(screen.getByText('Recorded replay')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText(/Recorded extent: 3 updates/)).toBeInTheDocument(),
+    )
+    await fireEvent.click(screen.getByRole('button', { name: 'Replay all' }))
+    await waitFor(() => expect(screen.getByText('Replay mode')).toBeInTheDocument())
+    expect(
+      screen.getByText(
+        (_, el) =>
+          el?.tagName === 'SPAN' && (el?.textContent?.includes('updates · source: lake') ?? false),
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText('BTC').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('real').length).toBeGreaterThan(0)
+    expect(screen.getByText('$100.00 / $100.50')).toBeInTheDocument()
+    await fireEvent.click(screen.getByRole('button', { name: 'Clear replay' }))
+    expect(screen.queryByText('Replay mode')).not.toBeInTheDocument()
+  })
+
+  it('explains honestly when no replay lake is attached', async () => {
+    mocked.replayExtent.mockRejectedValue(new Error('404: no replay lake is attached'))
+    renderScreen()
+    await waitFor(() =>
+      expect(screen.getByText(/No replay lake attached/)).toBeInTheDocument(),
+    )
   })
 
   it('explains when no live feed is attached', async () => {

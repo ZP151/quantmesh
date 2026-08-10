@@ -226,6 +226,24 @@ class LiveBuffer:
             for venue, instrument, state, note, changed_at in rows
         ]
 
+    def extent(self) -> dict[str, object]:
+        """The recorded extent: earliest/latest ``received_at``, row
+        count and distinct venues — the replay-window metadata (iteration
+        0019 slice 4). All bounds are UTC instants."""
+        row = self._con.execute(
+            "SELECT COUNT(*), MIN(received_at), MAX(received_at) FROM market_updates"
+        ).fetchone()
+        count, earliest, latest = row
+        venues = self._con.execute(
+            "SELECT DISTINCT venue FROM market_updates ORDER BY venue"
+        ).fetchall()
+        return {
+            "count": count,
+            "earliest": earliest.isoformat() if earliest is not None else None,
+            "latest": latest.isoformat() if latest is not None else None,
+            "venues": [venue for (venue,) in venues],
+        }
+
     def close(self) -> None:
         self._con.close()
 
