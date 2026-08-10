@@ -80,6 +80,42 @@ unavailable; no UI estimate is introduced.
   `test_live_feed.py`); live browser E2E 7/7; committed SPA bundle rebuilt
   and `python tools/build_frontend.py --check` passes.
 
+### Checkpoint 3 — watchlist price-trend sparklines (scope item 3)
+
+- Backend: `LiveBuffer.price_trail()` queries the DuckDB lake for the last
+  N candle closes per instrument in oldest-first order, using `QUALIFY
+  ROW_NUMBER()` for per-instrument limits. `LiveFeed.price_trail()` exposes
+  the same contract, and the API route `GET /api/live/price-trail?symbols=BTC,SOL`
+  returns `{"trail": {"BTC": [100.0, 100.5, 101.0], "SOL": [30.0, 30.2]}}`.
+  Fails closed: 404 without a lake, 422 on empty symbols, empty array for
+  a symbol with no candle data.
+- Frontend: a `SparklineCell` component renders a compact 80×24 SVG
+  `<polyline>` in each watchlist row — green line, scaling to the row's
+  price range, hiding when fewer than 2 points are available. Trail data
+  is fetched alongside the state snapshot (same `SNAPSHOT_INTERVAL_MS`,
+  `retry: false` so no-lake workstations silently skip the sparkline).
+  Column header shows a tiny trend icon; English/zh-CN copy uses "Trend"/"趋势".
+- Verification: Cockpit screen drill 16/16; complete frontend suite 73/73;
+  `tsc --noEmit` clean; `npm run lint` passes (same four pre-existing
+  warnings); backend endpoint drills 8/8 (`TestPriceTrail`); full backend
+  suite 2134 passed; committed SPA bundle rebuilt and
+  `python tools/build_frontend.py --check` passes.
+
+### Checkpoint 4 — watchlist filter model (scope item 1)
+
+- Frontend: a search bar with `Search` icon, a text input, and a clear
+  button sits above the watchlist table. The operator types into it to
+  filter by symbol or venue (case-insensitive, client-side). When no row
+  matches, an empty-state row with `colSpan` covers all columns. Cleared
+  filter restores every row. English/zh-CN placeholders use "Filter
+  instruments…" / "筛选品种…". The filter is safe for the unified board:
+  it never queries the server, never modifies the instrument state, and
+  clears instantly.
+- Verification: Cockpit screen drill 17/17; complete frontend suite 73/73;
+  `tsc --noEmit` clean; `npm run lint` passes; full backend suite 2134
+  passed (pure frontend change); committed SPA bundle rebuilt and
+  `python tools/build_frontend.py --check` passes.
+
 ## Scope
 
 ### 1. Unified live board

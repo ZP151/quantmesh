@@ -306,6 +306,23 @@ describe('CockpitScreen', () => {
     )
   })
 
+  it('filters the watchlist by symbol or venue text', async () => {
+    renderScreen()
+    await waitFor(() => expect(
+      screen.getByRole('link', { name: 'BTC' }),
+    ).toBeInTheDocument())
+    const input = screen.getByRole('searchbox', { name: 'Filter the watchlist by symbol or venue' })
+    fireEvent.change(input, { target: { value: 'zzz' } })
+    await waitFor(() => {
+      expect(screen.queryByRole('link', { name: 'BTC' })).not.toBeInTheDocument()
+    })
+    expect(screen.getByText('No instruments match the filter.')).toBeInTheDocument()
+    fireEvent.change(input, { target: { value: '' } })
+    await waitFor(() => expect(
+      screen.getByRole('link', { name: 'BTC' }),
+    ).toBeInTheDocument())
+  })
+
   it('explains when no live feed is attached', async () => {
     mocked.liveState.mockRejectedValue(new Error('404: no live feed is attached'))
     renderScreen()

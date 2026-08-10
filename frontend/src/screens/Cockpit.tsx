@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Radio } from 'lucide-react'
+import { Radio, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Page } from '@/components/page'
@@ -350,12 +350,24 @@ export function CockpitScreen() {
     setInstruments((previous) => mergeUpdate(previous, update))
   })
 
+  const [filter, setFilter] = useState('')
   const rows = useMemo(
     () =>
       Object.entries(instruments)
         .map(([symbol, instrument]) => ({ symbol, instrument }))
         .sort((a, b) => a.symbol.localeCompare(b.symbol)),
     [instruments],
+  )
+  const filteredRows = useMemo(
+    () =>
+      filter
+        ? rows.filter(
+            (r) =>
+              r.symbol.toLowerCase().includes(filter) ||
+              r.instrument.venue.toLowerCase().includes(filter),
+          )
+        : rows,
+    [rows, filter],
   )
 
   if (snapshot.isPending) return <LoadingState rows={4} />
@@ -397,6 +409,26 @@ export function CockpitScreen() {
     >
       <Card>
         <CardContent className="p-0">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-2">
+            <Search className="size-4 text-muted-foreground" aria-hidden />
+            <input
+              type="search"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value.toLowerCase())}
+              placeholder={t('screen.cockpit.filterPlaceholder')}
+              aria-label={t('screen.cockpit.filterAria')}
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+            {filter && (
+              <button
+                type="button"
+                onClick={() => setFilter('')}
+                className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+              >
+                {t('screen.cockpit.filterClear')}
+              </button>
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -421,7 +453,14 @@ export function CockpitScreen() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ symbol, instrument }) => {
+                {filteredRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={13} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                      {t('screen.cockpit.filterEmpty')}
+                    </td>
+                  </tr>
+                ) : null}
+                {filteredRows.map(({ symbol, instrument }) => {
                   const quote = quoteNumbers(instrument.kinds.quote)
                   const trade = instrument.kinds.trade
                   const label = instrumentLabel(instrument)
