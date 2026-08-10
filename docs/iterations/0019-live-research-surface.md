@@ -64,11 +64,21 @@ unavailable; no UI estimate is introduced.
   across connections, gap marks and provenance labels surviving the round
   trip, age not resurrecting old data as fresh); slice 4 added endpoint-level
   drills in `test_live_router.py` (`TestReplayEndpoint`).
+- Operator-drill coverage was audited against scope item 4: healthy and
+  dead-station live in `test_live_smoke.py`; delayed/provenance in the
+  supervisor and replay ladder drills; dropped frames in the backpressure
+  gate and sequence-gap drills; reconnect in `TestDisconnectDrill` and the
+  replay fold (the reconnect/backfill equivalence); browser acceptance at
+  desktop and 390 px was extended with a tablet (768 px) no-overflow walk
+  and a replay-card honesty drill — the E2E workstation runs without a
+  lake, so the card must fail closed over the real wire (`Replay 5 min`
+  never renders, honest no-lake copy shows).
 - Verification: Cockpit screen drill 14/14; complete frontend suite 71/71;
   `tsc --noEmit` clean; `npm run lint` passes with the same four existing
   Fast Refresh warnings; backend `tests/` full run 2124 passed (includes
   `test_live_router.py` 49 passed with `test_live_replay.py` and
-  `test_live_feed.py`).
+  `test_live_feed.py`); live browser E2E 7/7; committed SPA bundle rebuilt
+  and `python tools/build_frontend.py --check` passes.
 
 ## Scope
 
