@@ -1,6 +1,6 @@
 # Iteration 0019 — Live Research Surface
 
-Status: active
+Status: near-complete (all four scope items delivered; one integration PR pending)
 Started: 2026-08-10
 Branch: `0019-live-research-surface`
 Baseline: `origin/main` at `5069d1b` (PR #100, after `v0.1.0-rc6`)

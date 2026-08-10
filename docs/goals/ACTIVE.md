@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active (iteration 0019 live research surface in progress)
+- Status: active (iteration 0019 delivered, one integration PR into main pending)
 - Objective: make the existing read-only cockpit research-useful by exposing
   venue metrics and evidence boundaries, then add the remaining bounded live
   research and replay workflow without changing paper-only execution authority.
@@ -218,12 +218,17 @@ acceptance.
     RC because RC6 is immutable. Evidence belongs in
     `docs/iterations/0018-global-localization.md`.~~ (done: PR #100 merged at
     `5069d1b`; replacement candidate is deliberately deferred to include 0019.)
-14. Deliver iteration 0019 — the bounded live research surface: quote/book/trade and
-    prediction-market metrics, freshness/sequence semantics, compact charts,
-    replay and degraded-stream drills. Reuse existing normalized contracts,
-    lake, cockpit primitives and smoke fixtures; keep all venues read-only,
-    bounded and provenance-first. Detailed scope is in
-    `docs/iterations/0019-live-research-surface.md`.
+ 14. ~~Deliver iteration 0019 — the bounded live research surface: quote/book/trade and
+     prediction-market metrics, freshness/sequence semantics, compact charts,
+     replay and degraded-stream drills. Reuse existing normalized contracts,
+     lake, cockpit primitives and smoke fixtures; keep all venues read-only,
+     bounded and provenance-first. Detailed scope is in
+     `docs/iterations/0019-live-research-surface.md`.~~ (all four scope items
+     delivered on branch `0019-live-research-surface`: unified live board with
+     filter model, research-grade metrics, compact charts including price-trend
+     sparkline, recorded replay workflow with operator drills and browser
+     acceptance; 6 slices, full suite 2134 backend + 73 frontend, E2E 7/7,
+     SPA bundle current. One integration PR remains to merge into main.)
 
 ## Standing authority
 
