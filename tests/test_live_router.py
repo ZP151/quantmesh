@@ -555,7 +555,9 @@ class TestPriceTrail:
         client, _app, feed = live_app
         t0 = T0
         for i in range(30):
-            feed.publish_threadsafe(self._candle("BTC", 100.5 + i, at=t0 + timedelta(seconds=60 * i)))
+            feed.publish_threadsafe(
+                self._candle("BTC", 100.5 + i, at=t0 + timedelta(seconds=60 * i))
+            )
         response = client.get("/api/live/price-trail?symbols=BTC&limit=20")
         assert response.status_code == 200
         assert len(response.json()["trail"]["BTC"]) == 20
