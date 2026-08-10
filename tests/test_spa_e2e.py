@@ -1,15 +1,16 @@
 """Phase E SPA E2E (iteration 0014): the React app over a real demo
 runtime, driven by Playwright chromium.
 
-The suite boots uvicorn on a pinned loopback port over a fresh demo
+The suite boots uvicorn on an OS-reserved loopback socket over a fresh demo
 root (``create_demo_app`` — the same assembly the operator starts with
 ``--demo``, datalink routes included) and walks the Phase E checklist in
 the browser: the complete demo paper workflow, the provider-failure
 fallback on the connectors screen, CSV import validation with rejection
 reasons, and the two-click reset. It skips cleanly when playwright or
 chromium is missing (the ``e2e`` extra is dev-only, ADR-0011 decision 7)
-and when the pinned port is already bound, so a pipeline without the
-browser stays green.
+and when the browser is unavailable, so a pipeline without the browser
+stays green. Reserving the socket before starting uvicorn avoids a
+check-then-bind race with another process on shared CI runners.
 """
 
 import socket
@@ -41,42 +42,39 @@ def _restore_legacy_ui() -> None:
 
 
 HOST = "127.0.0.1"
-PORT = 8643
-BASE_URL = f"http://{HOST}:{PORT}"
 
 
-def _port_in_use() -> bool:
-    with socket.socket() as probe:
-        try:
-            probe.bind((HOST, PORT))
-        except OSError:
-            return True
-    return False
-
-
-def _wait_for_server() -> None:
+def _wait_for_server(server: uvicorn.Server) -> None:
     for _ in range(400):  # seeding a demo root can take ~40 s
-        if _port_in_use():
+        if server.started:
             return
         threading.Event().wait(0.1)
-    raise AssertionError(f"uvicorn never came up on {HOST}:{PORT}")
+    raise AssertionError("uvicorn never came up on its reserved loopback socket")
 
 
 @pytest.fixture(scope="session")
 def base_url(tmp_path_factory) -> str:
-    if _port_in_use():
-        pytest.skip(f"port {PORT} is already bound — the pinned E2E port must be free")
+    listener = socket.socket()
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listener.bind((HOST, 0))
+    listener.listen(128)
+    port = listener.getsockname()[1]
     root = Path(tmp_path_factory.mktemp("spa-e2e")) / "demo"
     app = create_demo_app(root=root, host=HOST)
-    server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=PORT, log_level="warning"))
-    thread = threading.Thread(target=server.run, daemon=True)
+    server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=port, log_level="warning"))
+    thread = threading.Thread(
+        target=server.run,
+        kwargs={"sockets": [listener]},
+        daemon=True,
+    )
     thread.start()
     try:
-        _wait_for_server()
-        yield BASE_URL
+        _wait_for_server(server)
+        yield f"http://{HOST}:{port}"
     finally:
         server.should_exit = True
         thread.join(timeout=15)
+        listener.close()
 
 
 @pytest.fixture(scope="module")
