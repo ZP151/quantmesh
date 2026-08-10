@@ -1,18 +1,17 @@
 # Active Goal
 
-- Status: active (iteration 0019 delivered, one integration PR into main pending)
-- Objective: make the existing read-only cockpit research-useful by exposing
-  venue metrics and evidence boundaries, then add the remaining bounded live
-  research and replay workflow without changing paper-only execution authority.
+- Status: iteration 0019 complete; ready to cut the next release candidate
+- Objective: cut and verify a replacement release candidate containing global
+  localization and the bounded live-research surface, without changing
+  paper-only execution authority.
 - Started: 2026-08-10
-- Active iteration: `docs/iterations/0019-live-research-surface.md`
-- Branch: `0019-live-research-surface`, based on `origin/main` at `5069d1b`
-  (PR #100, global-localization completion). RC2–RC6 remain historical
-  immutable candidates.
-- Pull request: use one integration PR per slice and its evidence; do
-  not create routine doc-only follow-up PRs.
-- Blockers: none for implementation; final release promotion remains an
-  explicit operator gate.
+- Completed iteration: `docs/iterations/0019-live-research-surface.md`
+- Baseline: `main` at `298825b` (PR #101). RC2–RC6 remain historical immutable
+  candidates.
+- Next delivery: replacement RC, clean-checkout gate, isolated operator
+  acceptance. Formal promotion remains an explicit operator gate.
+- Blockers: none for the RC work; no formal version promotion without operator
+  acceptance.
 
 ## Current state
 
@@ -29,6 +28,14 @@ will not cut an interim localization-only RC: the next candidate will include
 the bounded iteration-0019 live-research improvements. RC6 remains immutable;
 formal promotion still requires a clean tagged-tree gate and explicit operator
 acceptance.
+
+Iteration 0019 was squash-merged by PR #101 at `298825b` on 2026-08-10. It
+delivered the unified bounded live board, evidence/metric panels, compact
+charts including watchlist sparklines, recorded replay and truthful degraded
+state drills. Final evidence: backend `2131 passed, 3 skipped` from an
+external-temp run, SPA E2E `5 passed`, Ruff clean, and the GitHub CI run for
+the merged PR green. The fixed SPA E2E fixture reserves an OS-selected socket,
+eliminating the shared-runner fixed-port race caught by CI.
 
 ## Immediate frontier
 
@@ -224,11 +231,12 @@ acceptance.
      lake, cockpit primitives and smoke fixtures; keep all venues read-only,
      bounded and provenance-first. Detailed scope is in
      `docs/iterations/0019-live-research-surface.md`.~~ (all four scope items
-     delivered on branch `0019-live-research-surface`: unified live board with
+     merged by PR #101 at `298825b`: unified live board with
      filter model, research-grade metrics, compact charts including price-trend
      sparkline, recorded replay workflow with operator drills and browser
      acceptance; 6 slices, full suite 2134 backend + 73 frontend, E2E 7/7,
-     SPA bundle current. One integration PR remains to merge into main.)
+     SPA bundle current. The final GitHub CI is green after the E2E socket-race
+     fix; all behavior remains read-only or paper-only.)
 
 ## Standing authority
 
@@ -250,13 +258,13 @@ labeled and isolated from non-demo operator state.
 ## Resume instruction
 
 Run `/goal`, then read this file, `PRODUCT.md`, `docs/product-strategy.md`,
-iteration 0018, iteration 0019, the roadmap,
-relevant ADRs, Git state and the current rc6 release notes. Continue the
-iteration-0019 live cockpit improvements first (metrics/evidence, charts,
-density and replay), then adapter hardening, local quant analysis slices, AI
-advisory research layer, paper-trading acceptance expansion — one branch, one
-tested integration PR per milestone. Run focused and full verification,
-integrate one green PR, then run the clean-checkout gate when the merged
-tree changes the release surface. Promote only after explicit human
-acceptance. Implementation details and evidence belong in the iteration
-record; keep this file limited to current truth and frontier.
+iteration 0018, iteration 0019, the roadmap, relevant ADRs, Git state and the
+current rc6 release notes. First cut the replacement RC from the merged tree:
+update every version surface consistently, write English-first release notes
+with Chinese acceptance aid, run the clean-checkout gate against the exact tag,
+and create an isolated acceptance station. Do not promote to `v0.1.0` without
+explicit human acceptance. After acceptance, continue adapter hardening, local
+quant analysis slices, AI advisory research and paper-trading acceptance
+expansion — one tested integration PR per milestone. Implementation details
+and evidence belong in the iteration record; keep this file limited to current
+truth and frontier.
