@@ -286,6 +286,36 @@ function ReplayPanel() {
   )
 }
 
+function SparklineCell({ closes }: { closes: number[] }) {
+  if (closes.length < 2) return null
+  const width = 80
+  const height = 24
+  const min = Math.min(...closes)
+  const max = Math.max(...closes)
+  const span = max - min || 1
+  const points = closes.map((close, idx) => {
+    const x = (idx / (closes.length - 1)) * width
+    const y = height - ((close - min) / span) * (height - 4) - 2
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  })
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-6 w-20"
+      role="img"
+      aria-label={`Price trend: ${closes.length} data points`}
+    >
+      <polyline
+        points={points.join(' ')}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        className="text-emerald-500"
+      />
+    </svg>
+  )
+}
+
 export function CockpitScreen() {
   const { t } = usePreferences()
   const snapshot = useQuery({
@@ -303,6 +333,18 @@ export function CockpitScreen() {
     queryFn: api.liveStatus,
     refetchInterval: SNAPSHOT_INTERVAL_MS,
   })
+
+  const symbols = Object.keys(instruments).join(',')
+  const trailQuery = useQuery({
+    queryKey: ['live', 'price-trail', symbols],
+    queryFn: () =>
+      symbols.length > 0
+        ? api.priceTrail({ symbols, limit: 20 })
+        : Promise.resolve({ trail: {} }),
+    refetchInterval: SNAPSHOT_INTERVAL_MS,
+    retry: false,
+  })
+  const trails: Record<string, number[]> = trailQuery.data?.trail ?? {}
 
   const streamStatus = useLiveConnection((update) => {
     setInstruments((previous) => mergeUpdate(previous, update))
@@ -367,6 +409,11 @@ export function CockpitScreen() {
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.mid')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.spreadBps')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.last')}</th>
+                  <th className="px-2 py-2.5 text-right font-medium" aria-label={t('screen.cockpit.col.sparkline')}>
+                    <svg viewBox="0 0 24 12" className="inline-block h-3 w-6" aria-hidden>
+                      <polyline points="0,10 8,6 16,8 24,2" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground" />
+                    </svg>
+                  </th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.eventTime')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.received')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.seq')}</th>
@@ -409,14 +456,17 @@ export function CockpitScreen() {
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
                         {spread !== undefined ? spread.toFixed(1) : '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                        {trade && typeof trade.payload.price === 'number'
-                          ? money(trade.payload.price)
-                          : '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted-foreground">
-                        {worst ? timeOfDay(worst.data_time) : '—'}
-                      </td>
+                        <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                          {trade && typeof trade.payload.price === 'number'
+                            ? money(trade.payload.price)
+                            : '—'}
+                        </td>
+                        <td className="px-2 py-2.5">
+                          <SparklineCell closes={trails[symbol] ?? []} />
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                          {worst ? timeOfDay(worst.data_time) : '—'}
+                        </td>
                       <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted-foreground">
                         {worst ? timeOfDay(worst.received_at) : '—'}
                       </td>

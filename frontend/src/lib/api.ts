@@ -603,6 +603,10 @@ export const api = {
 
   // Slice 4 — the recorded replay surface over the local lake.
   replayExtent: () => request<ReplayExtent>('/api/live/replay/windows'),
+  priceTrail: (params: { symbols: string; limit?: number }) =>
+    request<{ trail: Record<string, number[]> }>(
+      `/api/live/price-trail?symbols=${encodeURIComponent(params.symbols)}&limit=${params.limit ?? 20}`,
+    ),
   replayWindow: (params: { start?: string; end?: string; limit?: number }) =>
     request<ReplayWindow>(
       `/api/live/replay?${new URLSearchParams(

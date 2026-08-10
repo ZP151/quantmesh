@@ -218,6 +218,13 @@ class LiveFeed:
             raise ValueError("no replay lake is attached")
         return self._lake.replay(start=start, end=end, limit=limit)
 
+    def price_trail(
+        self, symbols: list[str], limit: int = 20
+    ) -> dict[str, list[float]]:
+        if self._lake is None:
+            raise ValueError("no replay lake is attached")
+        return self._lake.price_trail(symbols, limit=limit)
+
     def replay_extent(self) -> dict[str, object] | None:
         """The recorded extent of the attached lake: earliest/latest
         received_at, row count and distinct venues — the metadata the

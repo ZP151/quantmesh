@@ -512,6 +512,93 @@ class TestReplayEndpoint:
         assert windows.json()["detail"] == "no replay lake is attached"
 
 
+class TestPriceTrail:
+    """Iteration 0019 slice 5: trailing closes per instrument from the
+    lake in oldest-first order — the watchlist sparkline data — with
+    correct fail-closed behavior and mount agreement."""
+
+    _TRAIL_LIMIT = 20
+
+    def _candle(self, instrument: str, close: float, *, at: datetime) -> MarketUpdate:
+        return MarketUpdate(
+            venue=Venue.HYPERLIQUID,
+            instrument=instrument,
+            kind=UpdateKind.CANDLE,
+            provenance=Provenance.REAL,
+            data_time=at,
+            received_at=at,
+            payload={"open": close, "high": close + 1, "low": close - 1, "close": close},
+        )
+
+    def test_returns_closes_per_instrument(self, live_app) -> None:
+        client, _app, feed = live_app
+        t0 = T0
+        feed.publish_threadsafe(self._candle("BTC", 100.5, at=t0))
+        feed.publish_threadsafe(self._candle("BTC", 101.5, at=t0 + timedelta(seconds=60)))
+        feed.publish_threadsafe(self._candle("SOL", 30.2, at=t0))
+        response = client.get("/api/live/price-trail?symbols=BTC,SOL&limit=10")
+        assert response.status_code == 200
+        trail = response.json()["trail"]
+        assert trail["BTC"] == [100.5, 101.5]
+        assert trail["SOL"] == [30.2]
+
+    def test_returns_oldest_first_order(self, live_app) -> None:
+        client, _app, feed = live_app
+        t0 = T0
+        for i, close in enumerate([100.0, 101.0, 102.0, 103.0]):
+            feed.publish_threadsafe(self._candle("BTC", close, at=t0 + timedelta(seconds=60 * i)))
+        response = client.get("/api/live/price-trail?symbols=BTC&limit=10")
+        assert response.status_code == 200
+        assert response.json()["trail"]["BTC"] == [100.0, 101.0, 102.0, 103.0]
+
+    def test_limits_per_instrument(self, live_app) -> None:
+        client, _app, feed = live_app
+        t0 = T0
+        for i in range(30):
+            feed.publish_threadsafe(self._candle("BTC", 100.5 + i, at=t0 + timedelta(seconds=60 * i)))
+        response = client.get("/api/live/price-trail?symbols=BTC&limit=20")
+        assert response.status_code == 200
+        assert len(response.json()["trail"]["BTC"]) == 20
+
+    def test_skips_non_candle_kinds(self, live_app) -> None:
+        client, _app, feed = live_app
+        t0 = T0
+        feed.publish_threadsafe(_upd())  # quote, not candle — must be ignored
+        feed.publish_threadsafe(self._candle("BTC", 100.5, at=t0))
+        response = client.get("/api/live/price-trail?symbols=BTC&limit=10")
+        assert response.status_code == 200
+        assert response.json()["trail"]["BTC"] == [100.5]
+
+    def test_missing_symbol_returns_empty_list(self, live_app) -> None:
+        client, _app, _feed = live_app
+        response = client.get("/api/live/price-trail?symbols=GHOST&limit=10")
+        assert response.status_code == 200
+        assert response.json()["trail"]["GHOST"] == []
+
+    def test_404_without_a_lake(self, tmp_path) -> None:
+        feed = LiveFeed(lag=LAG, stale=STALE)
+        app = create_workstation_app(
+            account=PaperAccount(cash=100_000.0), live_feed=feed, host="127.0.0.1"
+        )
+        with TestClient(app) as client:
+            response = client.get("/api/live/price-trail?symbols=BTC")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "no replay lake is attached"
+
+    def test_422_when_empty_symbols(self, live_app) -> None:
+        client, _app, _feed = live_app
+        response = client.get("/api/live/price-trail?symbols=&limit=10")
+        assert response.status_code == 422
+        assert response.json()["detail"] == "at least one symbol is required"
+
+    def test_mounts_agree(self, live_app) -> None:
+        client, _app, feed = live_app
+        feed.publish_threadsafe(self._candle("BTC", 100.5, at=T0))
+        root = client.get("/live/price-trail?symbols=BTC").json()
+        api = client.get("/api/live/price-trail?symbols=BTC").json()
+        assert root == api
+
+
 class TestLifespan:
     def test_pump_starts_with_the_app(self, tmp_path) -> None:
         feed = LiveFeed(lake=LiveBuffer(root=tmp_path), lag=LAG, stale=STALE)

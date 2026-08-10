@@ -21,6 +21,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
       liveStatus: vi.fn(),
       replayExtent: vi.fn(),
       replayWindow: vi.fn(),
+      priceTrail: vi.fn(),
     },
   }
 })
@@ -290,6 +291,18 @@ describe('CockpitScreen', () => {
     renderScreen()
     await waitFor(() =>
       expect(screen.getByText(/No replay lake attached/)).toBeInTheDocument(),
+    )
+  })
+
+  it('renders a price-trend sparkline per row when trail data is available', async () => {
+    mocked.priceTrail.mockResolvedValue({ trail: { BTC: [100.0, 100.5, 101.0], SOL: [30.0, 30.2] } })
+    mocked.replayExtent.mockRejectedValue(new Error('no lake'))
+    renderScreen()
+    await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(
+        screen.getByRole('img', { name: 'Price trend: 3 data points' }),
+      ).toBeInTheDocument(),
     )
   })
 

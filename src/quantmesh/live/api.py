@@ -147,6 +147,20 @@ def live_router() -> APIRouter:
             "updates": [update.model_dump(mode="json") for update in updates],
         }
 
+    @router.get("/live/price-trail")
+    def live_price_trail(
+        request: Request,
+        symbols: str = Query(description="Comma-separated instrument symbols"),
+        limit: int = Query(default=20, ge=1, le=100),
+    ) -> dict[str, object]:
+        feed = _feed(request)
+        if not feed.lake_attached:
+            raise HTTPException(status_code=404, detail="no replay lake is attached")
+        syms = [s.strip() for s in symbols.split(",") if s.strip()]
+        if not syms:
+            raise HTTPException(status_code=422, detail="at least one symbol is required")
+        return {"trail": feed.price_trail(syms, limit=limit)}
+
     @router.get("/live/stream")
     async def live_stream(request: Request) -> StreamingResponse:
         """SSE fallback: one ``data:`` event per normalized update,
