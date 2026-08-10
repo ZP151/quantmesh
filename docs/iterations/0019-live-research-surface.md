@@ -1,8 +1,8 @@
 # Iteration 0019 — Live Research Surface
 
-Status: near-complete (all four scope items delivered; one integration PR pending)
+Status: complete (PR #101 squash-merged to `main` at `298825b`, 2026-08-10)
 Started: 2026-08-10
-Branch: `0019-live-research-surface`
+Delivery: PR #101 — `feat: deliver iteration 0019 — live research surface`
 Baseline: `origin/main` at `5069d1b` (PR #100, after `v0.1.0-rc6`)
 
 ## Outcome
@@ -186,6 +186,7 @@ unavailable; no UI estimate is introduced.
 
 ## Handoff
 
-Use one vertical integration branch and one PR. Update `ACTIVE.md` only after
-PR #100 is merged; record all metric-contract, chart-library and replay-boundary
-decisions in this iteration and the relevant ADRs.
+Iteration 0019 is merged and ready for the replacement release-candidate gate.
+Use the exact merged tree, update every version surface consistently, and keep
+RC6 immutable. Record release-gate and operator-acceptance evidence separately;
+do not promote to `v0.1.0` without explicit human acceptance.
