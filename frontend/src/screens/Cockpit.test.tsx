@@ -282,6 +282,10 @@ describe('CockpitDetailScreen', () => {
       { kind: 'candle', sequence: 3 },
     )
     const trade = view({ price: 30.1, size: 2, side: 'buy' }, { kind: 'trade', sequence: 4 })
+    const l2Bid = view(
+      { side: 'bid', levels: [[30.0, 1.0], [29.5, 2.0]] },
+      { kind: 'l2_snapshot', sequence: 6 },
+    )
     mocked.liveState.mockResolvedValue({
       generated_at: T0,
       instruments: {
@@ -292,6 +296,7 @@ describe('CockpitDetailScreen', () => {
             quote: view({ bid: 30, ask: 30.2 }),
             candle,
             trade,
+            l2_snapshot: l2Bid,
             metrics: view(
               { funding_rate: 0.0001, mark_price: 100.2, index_price: 100, open_interest: 4567 },
               { kind: 'metrics', sequence: 2 },
@@ -332,5 +337,24 @@ describe('CockpitDetailScreen', () => {
     // The trade-size value sits in the dd of the "Last trade size" row.
     const tradeSizeRow = screen.getByText('Last trade size').closest('div')
     expect(tradeSizeRow?.querySelector('dd')).toHaveTextContent('2')
+    // The book depth chart needs both sides: the bid side seeded, the
+    // ask side streamed — until then it stays absent (never a guess).
+    expect(screen.queryByRole('img', { name: /Book depth chart/ })).not.toBeInTheDocument()
+    push({
+      venue: 'hyperliquid',
+      instrument: 'SOL',
+      kind: 'l2_snapshot',
+      provenance: 'real',
+      data_time: T0,
+      received_at: T0,
+      sequence: 8,
+      sequence_gap: false,
+      payload: { side: 'ask', levels: [[30.2, 0.5], [30.7, 1.5]] },
+      state: null,
+      state_note: null,
+    })
+    await waitFor(() =>
+      expect(screen.getByRole('img', { name: /Book depth chart/ })).toBeInTheDocument(),
+    )
   })
 })

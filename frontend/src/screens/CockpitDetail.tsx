@@ -157,6 +157,78 @@ function Sparkline({ closes }: { closes: number[] }) {
   )
 }
 
+interface DepthStep {
+  x: number
+  y: number
+}
+
+/** One side's cumulative depth steps (best price first). Each level
+ * contributes a vertical step at its price, so the polygon holds its
+ * resting size honestly per price level. */
+function depthSteps(
+  levels: BookLevel[],
+  span: { min: number; max: number },
+  maxDepth: number,
+  width: number,
+  height: number,
+): DepthStep[] {
+  const steps: DepthStep[] = []
+  let cumulative = 0
+  const x = (price: number) => ((price - span.min) / span.max) * width
+  const y = (depth: number) => height - (depth / maxDepth) * height
+  for (const level of levels) {
+    steps.push({ x: x(level.price), y: y(cumulative) })
+    cumulative += level.size
+    steps.push({ x: x(level.price), y: y(cumulative) })
+  }
+  return steps
+}
+
+/** The compact SVG book-depth view (iteration 0019 slice 3): cumulative
+ * resting size by price level for both sides, drawn with the same
+ * primitives as the sparkline — no chart dependency. */
+function DepthChart({ bids, asks }: { bids: BookLevel[]; asks: BookLevel[] }) {
+  const { t } = usePreferences()
+  if (bids.length === 0 || asks.length === 0) return null
+  const width = 640
+  const height = 160
+  const prices = [...bids.map((level) => level.price), ...asks.map((level) => level.price)]
+  const min = Math.min(...prices)
+  const max = Math.max(...prices)
+  const span = { min, max: max - min || 1 }
+  const totalBid = bids.reduce((sum, level) => sum + level.size, 0)
+  const totalAsk = asks.reduce((sum, level) => sum + level.size, 0)
+  const maxDepth = Math.max(totalBid, totalAsk) || 1
+  const bidSteps = depthSteps(bids, span, maxDepth, width, height)
+  const askSteps = depthSteps(asks, span, maxDepth, width, height)
+  const points = (steps: DepthStep[]) => steps.map((step) => `${step.x.toFixed(1)},${step.y.toFixed(1)}`).join(' ')
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-32 w-full"
+      role="img"
+      aria-label={t('screen.cockpitDetail.depthAria')}
+    >
+      <polygon
+        points={points(bidSteps)}
+        fill="currentColor"
+        fillOpacity="0.15"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        className="text-emerald-500"
+      />
+      <polygon
+        points={points(askSteps)}
+        fill="currentColor"
+        fillOpacity="0.15"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        className="text-destructive"
+      />
+    </svg>
+  )
+}
+
 export function CockpitDetailScreen() {
   const { symbol = '' } = useParams<{ symbol: string }>()
   const { t } = usePreferences()
@@ -403,7 +475,9 @@ export function CockpitDetailScreen() {
             {bids.length === 0 && asks.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t('screen.cockpitDetail.noBook')}</p>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <DepthChart bids={bids} asks={asks} />
+                <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">{t('screen.cockpitDetail.bids')}</p>
                   <ul className="space-y-0.5 font-mono text-xs">
@@ -426,6 +500,7 @@ export function CockpitDetailScreen() {
                     ))}
                   </ul>
                 </div>
+              </div>
               </div>
             )}
           </CardContent>
