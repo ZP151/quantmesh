@@ -30,9 +30,11 @@ unavailable; no UI estimate is introduced.
 
 ### Checkpoint 1 — research evidence and documentation
 
-- Rewrote the English-first README and Chinese companion around the executable
-  local workstation: real capabilities, demo and read-only-live commands,
-  safety model, architecture, reuse boundaries and the current roadmap.
+- Rewrote the English-first README and Chinese companion as concise developer
+  product pages: one-line hero, direct navigation, early demo start, product
+  loop, short capability/safety sections and links to detailed documentation.
+  No screenshot or badge is invented; a focused, tagged-build product capture
+  can be added later when it is reproducible.
 - Added a reviewed market-context card to cockpit instrument detail for the
   normalized Hyperliquid funding rate, mark price, index price and open
   interest fields. The card only renders finite venue-provided values.
