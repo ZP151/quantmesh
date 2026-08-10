@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Radio } from 'lucide-react'
+import { Radio, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Page } from '@/components/page'
@@ -17,8 +17,8 @@ import {
   spreadBps,
   useLiveConnection,
 } from '@/lib/live'
-import { api, type LiveInstrumentState, type LiveSourceState, type LiveStatus } from '@/lib/api'
-import { money } from '@/lib/format'
+import { api, type LiveInstrumentState, type LiveSourceState, type LiveStatus, type ReplayWindow } from '@/lib/api'
+import { dateTime, money, timeOfDay } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
 // The Live Market Cockpit watchlist (iteration 0015 Phase C): every
@@ -96,6 +96,226 @@ function ConnectorPanel({ venues }: { venues: LiveStatus['venues'] }) {
   )
 }
 
+/** The most informative payload number of one update, compactly. */
+function payloadSummary(update: ReplayWindow['updates'][number]): string {
+  const payload = update.payload
+  if (typeof payload.bid === 'number' && typeof payload.ask === 'number') {
+    return `${money(payload.bid)} / ${money(payload.ask)}`
+  }
+  const single =
+    payload.price ?? payload.close ?? payload.last ?? payload.mark_price
+  if (typeof single === 'number') return money(single)
+  if (update.kind === 'l2_snapshot' && Array.isArray(payload.levels)) {
+    return String(payload.levels.length)
+  }
+  return '—'
+}
+
+/** The recorded replay workflow (iteration 0019 slice 4): pick a window
+ * over the local lake, replay it below a visible provenance banner, and
+ * clear it again — a read-only display that never folds into the live
+ * cache or the paper surface. */
+function ReplayPanel() {
+  const { t } = usePreferences()
+  const [replay, setReplay] = useState<ReplayWindow | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const extent = useQuery({
+    queryKey: ['live', 'replay', 'extent'],
+    queryFn: api.replayExtent,
+    refetchInterval: SNAPSHOT_INTERVAL_MS,
+    retry: false,
+  })
+
+  const runWindow = async (start: string | null, end: string | null) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params: { start?: string; end?: string } = {}
+      if (start !== null) params.start = start
+      if (end !== null) params.end = end
+      setReplay(await api.replayWindow(params))
+    } catch (cause) {
+      setReplay(null)
+      setError(cause instanceof Error ? cause.message : String(cause))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const extentBody = extent.data
+  const noLake = extent.isError
+  const empty = extent.isSuccess && !extentBody
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{t('screen.cockpit.replay')}</CardTitle>
+        <CardDescription>{t('screen.cockpit.replayDesc')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {noLake || empty ? (
+          <p className="text-sm text-muted-foreground">
+            {noLake
+              ? t('screen.cockpit.replayNoLake')
+              : t('screen.cockpit.replayEmpty')}
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {extentBody && (
+              <p className="text-xs text-muted-foreground">
+                {t('screen.cockpit.replayExtent', {
+                  count: String(extentBody.count),
+                  earliest: dateTime(extentBody.earliest ?? ''),
+                  latest: dateTime(extentBody.latest ?? ''),
+                  venues: extentBody.venues.join(', '),
+                })}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() =>
+                  extentBody &&
+                  runWindow(
+                    new Date(new Date(extentBody.latest ?? Date.now()).getTime() - 5 * 60_000).toISOString(),
+                    extentBody.latest,
+                  )
+                }
+                className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted"
+              >
+                {t('screen.cockpit.replayWindow5m')}
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() =>
+                  extentBody &&
+                  runWindow(
+                    new Date(new Date(extentBody.latest ?? Date.now()).getTime() - 15 * 60_000).toISOString(),
+                    extentBody.latest,
+                  )
+                }
+                className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted"
+              >
+                {t('screen.cockpit.replayWindow15m')}
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() =>
+                  extentBody && runWindow(extentBody.earliest, extentBody.latest)
+                }
+                className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted"
+              >
+                {t('screen.cockpit.replayWindowAll')}
+              </button>
+              {loading && (
+                <span className="text-xs text-muted-foreground">
+                  {t('screen.cockpit.replayLoading')}
+                </span>
+              )}
+            </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            {replay && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
+                  <Badge className="bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                    {t('screen.cockpit.replayMode')}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {t('screen.cockpit.replayBanner', {
+                      start: dateTime(replay.window.start ?? ''),
+                      end: dateTime(replay.window.end ?? ''),
+                      count: String(replay.window.count),
+                    })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setReplay(null)}
+                    className="ml-auto text-xs text-muted-foreground underline-offset-4 hover:underline"
+                  >
+                    {t('screen.cockpit.replayClear')}
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                        <th className="px-3 py-2 font-medium">{t('screen.cockpit.replayCol.time')}</th>
+                        <th className="px-3 py-2 font-medium">{t('table.venue')}</th>
+                        <th className="px-3 py-2 font-medium">{t('table.symbol')}</th>
+                        <th className="px-3 py-2 font-medium">{t('screen.cockpit.replayCol.kind')}</th>
+                        <th className="px-3 py-2 text-right font-medium">{t('screen.cockpit.col.seq')}</th>
+                        <th className="px-3 py-2 font-medium">{t('screen.cockpit.replayCol.provenance')}</th>
+                        <th className="px-3 py-2 text-right font-medium">{t('screen.cockpit.replayCol.value')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {replay.updates.map((update, index) => (
+                        <tr key={index} className="border-b border-border/60 last:border-0">
+                          <td className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
+                            {timeOfDay(update.received_at)}
+                          </td>
+                          <td className="px-3 py-1.5 text-xs capitalize text-muted-foreground">
+                            {update.venue}
+                          </td>
+                          <td className="px-3 py-1.5 font-mono text-xs">{update.instrument}</td>
+                          <td className="px-3 py-1.5 text-xs">{update.kind}</td>
+                          <td className="px-3 py-1.5 text-right font-mono text-xs">
+                            <span className={update.sequence_gap ? 'text-destructive' : ''}>
+                              {update.sequence ?? '—'}
+                              {update.sequence_gap ? ` ${t('screen.cockpit.gap')}` : ''}
+                            </span>
+                          </td>
+                          <td className="px-3 py-1.5 text-xs">{update.provenance}</td>
+                          <td className="px-3 py-1.5 text-right font-mono text-xs tabular-nums">
+                            {payloadSummary(update)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function SparklineCell({ closes }: { closes: number[] }) {
+  if (closes.length < 2) return null
+  const width = 80
+  const height = 24
+  const min = Math.min(...closes)
+  const max = Math.max(...closes)
+  const span = max - min || 1
+  const points = closes.map((close, idx) => {
+    const x = (idx / (closes.length - 1)) * width
+    const y = height - ((close - min) / span) * (height - 4) - 2
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  })
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-6 w-20"
+      role="img"
+      aria-label={`Price trend: ${closes.length} data points`}
+    >
+      <polyline
+        points={points.join(' ')}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        className="text-emerald-500"
+      />
+    </svg>
+  )
+}
+
 export function CockpitScreen() {
   const { t } = usePreferences()
   const snapshot = useQuery({
@@ -114,16 +334,40 @@ export function CockpitScreen() {
     refetchInterval: SNAPSHOT_INTERVAL_MS,
   })
 
+  const symbols = Object.keys(instruments).join(',')
+  const trailQuery = useQuery({
+    queryKey: ['live', 'price-trail', symbols],
+    queryFn: () =>
+      symbols.length > 0
+        ? api.priceTrail({ symbols, limit: 20 })
+        : Promise.resolve({ trail: {} }),
+    refetchInterval: SNAPSHOT_INTERVAL_MS,
+    retry: false,
+  })
+  const trails: Record<string, number[]> = trailQuery.data?.trail ?? {}
+
   const streamStatus = useLiveConnection((update) => {
     setInstruments((previous) => mergeUpdate(previous, update))
   })
 
+  const [filter, setFilter] = useState('')
   const rows = useMemo(
     () =>
       Object.entries(instruments)
         .map(([symbol, instrument]) => ({ symbol, instrument }))
         .sort((a, b) => a.symbol.localeCompare(b.symbol)),
     [instruments],
+  )
+  const filteredRows = useMemo(
+    () =>
+      filter
+        ? rows.filter(
+            (r) =>
+              r.symbol.toLowerCase().includes(filter) ||
+              r.instrument.venue.toLowerCase().includes(filter),
+          )
+        : rows,
+    [rows, filter],
   )
 
   if (snapshot.isPending) return <LoadingState rows={4} />
@@ -165,6 +409,26 @@ export function CockpitScreen() {
     >
       <Card>
         <CardContent className="p-0">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-2">
+            <Search className="size-4 text-muted-foreground" aria-hidden />
+            <input
+              type="search"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value.toLowerCase())}
+              placeholder={t('screen.cockpit.filterPlaceholder')}
+              aria-label={t('screen.cockpit.filterAria')}
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+            {filter && (
+              <button
+                type="button"
+                onClick={() => setFilter('')}
+                className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+              >
+                {t('screen.cockpit.filterClear')}
+              </button>
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -177,11 +441,26 @@ export function CockpitScreen() {
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.mid')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.spreadBps')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.last')}</th>
+                  <th className="px-2 py-2.5 text-right font-medium" aria-label={t('screen.cockpit.col.sparkline')}>
+                    <svg viewBox="0 0 24 12" className="inline-block h-3 w-6" aria-hidden>
+                      <polyline points="0,10 8,6 16,8 24,2" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground" />
+                    </svg>
+                  </th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.eventTime')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.received')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.seq')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.age')}</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ symbol, instrument }) => {
+                {filteredRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={13} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                      {t('screen.cockpit.filterEmpty')}
+                    </td>
+                  </tr>
+                ) : null}
+                {filteredRows.map(({ symbol, instrument }) => {
                   const quote = quoteNumbers(instrument.kinds.quote)
                   const trade = instrument.kinds.trade
                   const label = instrumentLabel(instrument)
@@ -216,10 +495,36 @@ export function CockpitScreen() {
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
                         {spread !== undefined ? spread.toFixed(1) : '—'}
                       </td>
+                        <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                          {trade && typeof trade.payload.price === 'number'
+                            ? money(trade.payload.price)
+                            : '—'}
+                        </td>
+                        <td className="px-2 py-2.5">
+                          <SparklineCell closes={trails[symbol] ?? []} />
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                          {worst ? timeOfDay(worst.data_time) : '—'}
+                        </td>
+                      <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        {worst ? timeOfDay(worst.received_at) : '—'}
+                      </td>
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                        {trade && typeof trade.payload.price === 'number'
-                          ? money(trade.payload.price)
-                          : '—'}
+                        <span
+                          className={
+                            worst?.sequence_gap
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
+                          }
+                          title={
+                            worst?.sequence_gap
+                              ? t('screen.cockpit.gap')
+                              : undefined
+                          }
+                        >
+                          {worst?.sequence ?? '—'}
+                          {worst?.sequence_gap ? ` ${t('screen.cockpit.gap')}` : ''}
+                        </span>
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
                         <span
@@ -232,7 +537,6 @@ export function CockpitScreen() {
                           }
                         >
                           {worst ? ageText(worst.age_ms) : '—'}
-                          {worst?.sequence_gap ? ` ${t('screen.cockpit.gap')}` : ''}
                         </span>
                       </td>
                     </tr>
@@ -244,6 +548,7 @@ export function CockpitScreen() {
         </CardContent>
       </Card>
       <ConnectorPanel venues={statusQuery.data?.venues ?? []} />
+      <ReplayPanel />
     </Page>
   )
 }

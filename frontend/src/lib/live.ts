@@ -184,6 +184,61 @@ export function bookSide(
     .filter((level): level is BookLevel => level !== undefined)
 }
 
+// --- Research metrics (iteration 0019, slice 2) ---------------------------
+//
+// Every helper here is a pure fold of frames the venue already sent —
+// nothing is estimated, and an absent input yields undefined so the UI
+// renders unavailable rather than a guessed number.
+
+/** Total resting size of one book side (depth from the L2 snapshot). */
+export function bookDepth(levels: BookLevel[]): number | undefined {
+  if (levels.length === 0) return undefined
+  return levels.reduce((total, level) => total + level.size, 0)
+}
+
+/** The last-close vs previous-close return of the candle series. */
+export function candleReturn(closes: number[]): number | undefined {
+  if (closes.length < 2) return undefined
+  const previous = closes[closes.length - 2]
+  const last = closes[closes.length - 1]
+  if (!Number.isFinite(previous) || !Number.isFinite(last) || previous === 0) {
+    return undefined
+  }
+  return (last - previous) / previous
+}
+
+/** Realized volatility of the candle series: the standard deviation of
+ * the per-candle log returns, presented per candle (the frame carries
+ * no interval, so nothing is annualized). */
+export function realizedVol(closes: number[]): number | undefined {
+  if (closes.length < 2) return undefined
+  const returns: number[] = []
+  for (let index = 1; index < closes.length; index += 1) {
+    const previous = closes[index - 1]
+    const current = closes[index]
+    if (!Number.isFinite(previous) || !Number.isFinite(current) || previous <= 0) {
+      return undefined
+    }
+    returns.push(Math.log(current / previous))
+  }
+  if (returns.length === 0) return undefined
+  const mean = returns.reduce((sum, value) => sum + value, 0) / returns.length
+  const variance =
+    returns.reduce((sum, value) => sum + (value - mean) ** 2, 0) / returns.length
+  return Math.sqrt(variance)
+}
+
+/** Mark–index divergence from the metrics frame, as a fraction of the
+ * index price. Only finite venue-provided values qualify. */
+export function markIndexDivergence(
+  view: { payload: Record<string, unknown> } | undefined,
+): number | undefined {
+  const mark = asNumber(view?.payload.mark_price)
+  const index = asNumber(view?.payload.index_price)
+  if (mark === undefined || index === undefined || index === 0) return undefined
+  return (mark - index) / index
+}
+
 // --- Connection (WS first, SSE fallback) ----------------------------------
 
 export type LiveConnectionStatus = 'connecting' | 'live' | 'fallback' | 'down'

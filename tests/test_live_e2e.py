@@ -412,6 +412,33 @@ def test_keyboard_only_walk(page, base_url) -> None:
     page.get_by_role("link", name="Back to watchlist").wait_for()
 
 
+def test_replay_card_honestly_reports_no_lake(page, base_url) -> None:
+    """The E2E workstation runs without a replay lake (the ``--live``
+    assembly is what mounts one), so the recorded-replay card must fail
+    closed over the real wire: honest no-lake copy and no window
+    actions, never an empty table pretending a replay exists."""
+    page.goto(f"{base_url}/app/cockpit")
+    main = page.locator("main")
+    main.get_by_text("Recorded replay", exact=True).first.wait_for()
+    text = main.inner_text()
+    assert "No replay lake attached" in text
+    assert "Replay 5 min" not in text
+
+
+def test_tablet_viewport_has_no_horizontal_overflow(browser, base_url) -> None:
+    """768×1024: the cockpit board, connector health and recorded-replay
+    card fit the page without pushing the body horizontally."""
+    page = browser.new_page(viewport={"width": 768, "height": 1024})
+    try:
+        page.goto(f"{base_url}/app/cockpit")
+        page.get_by_role("heading", name="Live cockpit", exact=True).first.wait_for()
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), (
+            "the page body overflows horizontally at 768 px"
+        )
+    finally:
+        page.close()
+
+
 def test_mobile_viewport_scrolls_the_table_not_the_body(browser, base_url) -> None:
     """390×844: the board fits the page; the wide quote table scrolls
     inside its own overflow container instead of pushing the body."""

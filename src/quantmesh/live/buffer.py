@@ -136,6 +136,27 @@ class LiveBuffer:
 
     # -- reads ------------------------------------------------------------
 
+    def price_trail(
+        self, symbols: list[str], limit: int = 20
+    ) -> dict[str, list[float]]:
+        result: dict[str, list[float]] = {s: [] for s in symbols}
+        if not symbols:
+            return result
+        placeholders = ", ".join("?" for _ in symbols)
+        rows = self._con.execute(
+            f"SELECT instrument, payload_json FROM market_updates "
+            f"WHERE kind = 'candle' AND instrument IN ({placeholders}) "
+            f"QUALIFY ROW_NUMBER() OVER (PARTITION BY instrument ORDER BY local_seq DESC) <= ? "
+            f"ORDER BY instrument, local_seq",
+            [*symbols, limit],
+        ).fetchall()
+        for instrument, payload_json in rows:
+            payload = json.loads(payload_json)
+            close = payload.get("close")
+            if isinstance(close, (int, float)):
+                result[instrument].append(float(close))
+        return result
+
     def replay(
         self,
         *,
@@ -225,6 +246,24 @@ class LiveBuffer:
             }
             for venue, instrument, state, note, changed_at in rows
         ]
+
+    def extent(self) -> dict[str, object]:
+        """The recorded extent: earliest/latest ``received_at``, row
+        count and distinct venues — the replay-window metadata (iteration
+        0019 slice 4). All bounds are UTC instants."""
+        row = self._con.execute(
+            "SELECT COUNT(*), MIN(received_at), MAX(received_at) FROM market_updates"
+        ).fetchone()
+        count, earliest, latest = row
+        venues = self._con.execute(
+            "SELECT DISTINCT venue FROM market_updates ORDER BY venue"
+        ).fetchall()
+        return {
+            "count": count,
+            "earliest": earliest.isoformat() if earliest is not None else None,
+            "latest": latest.isoformat() if latest is not None else None,
+            "venues": [venue for (venue,) in venues],
+        }
 
     def close(self) -> None:
         self._con.close()

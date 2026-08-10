@@ -1,8 +1,9 @@
 # Iteration 0019 — Live Research Surface
 
-Status: planned
-Depends on: iteration 0018 / PR #100 merged
-Baseline: the next replacement RC after `v0.1.0-rc6`
+Status: near-complete (all four scope items delivered; one integration PR pending)
+Started: 2026-08-10
+Branch: `0019-live-research-surface`
+Baseline: `origin/main` at `5069d1b` (PR #100, after `v0.1.0-rc6`)
 
 ## Outcome
 
@@ -11,6 +12,109 @@ useful real-time research surface. The operator should be able to watch a
 bounded cross-market list, understand what changed, compare venue conditions,
 and replay the same evidence later without confusing live, stale, delayed or
 synthetic data.
+
+## Baseline audit and first slice
+
+The initial audit confirmed that iteration 0015 already supplies the normalized
+`MarketUpdate` contract, venue supervisors, DuckDB replay lake, stream
+fan-out, freshness/sequence labels, compact SVG candle chart, L2 depth and
+trade tape. Iteration 0019 must extend those owned seams rather than recreate
+them.
+
+The first remaining product gap is visible metrics and evidence: Hyperliquid
+already emits funding rate, mark price, index price and open interest in a
+normalized `metrics` frame, but the cockpit did not render them or show the
+frame's event/receive/sequence/age boundary. Slice 1 exposes those values in
+the instrument detail with reviewed en/zh-CN copy. Missing data renders as
+unavailable; no UI estimate is introduced.
+
+### Checkpoint 1 — research evidence and documentation
+
+- Rewrote the English-first README and Chinese companion as concise developer
+  product pages: one-line hero, direct navigation, early demo start, product
+  loop, short capability/safety sections and links to detailed documentation.
+  No screenshot or badge is invented; a focused, tagged-build product capture
+  can be added later when it is reproducible.
+- Added a reviewed market-context card to cockpit instrument detail for the
+  normalized Hyperliquid funding rate, mark price, index price and open
+  interest fields. The card only renders finite venue-provided values.
+- Added an evidence card for venue, freshness label, event time, local receive
+  time, sequence and age. It intentionally uses the normalized local view,
+  not an inferred wall-clock or provider-specific client calculation.
+- Verification: Cockpit screen drill 9/9; complete frontend suite 59/59;
+  `npm run lint` passes with four existing Fast Refresh warnings;
+  production TypeScript/Vite build passes; packaged SPA bundle rebuilt and
+  `python tools/build_frontend.py --check` passes.
+
+### Checkpoint 2 — recorded replay workflow (slice 4)
+
+- Backend: `GET /api/live/replay/windows` returns the lake's recorded extent
+  (count, earliest/latest `received_at`, distinct venues); `GET /api/live/replay`
+  replays a bounded window in append order with provenance, sequence and gap
+  marks. Both fail closed with typed 404 details when no lake is attached or
+  the lake is empty; window bounds are required, ordered and UTC-pinned.
+  (Slice 1 already established the ingestion path into the lake.)
+- Frontend: a `Recorded replay` card on the cockpit renders the recorded
+  extent, offers 5 min / 15 min / all window actions, and shows the replayed
+  rows under an unmistakable violet `Replay mode` banner with window bounds,
+  update count and `source: lake`, plus a clear action. Replay is strictly
+  read-only: it never folds into the live cache or the paper surface.
+- Replay drills were already covered by iteration 0015's `test_live_replay.py`
+  (rebuild equivalence, append-order determinism, byte-identical replays
+  across connections, gap marks and provenance labels surviving the round
+  trip, age not resurrecting old data as fresh); slice 4 added endpoint-level
+  drills in `test_live_router.py` (`TestReplayEndpoint`).
+- Operator-drill coverage was audited against scope item 4: healthy and
+  dead-station live in `test_live_smoke.py`; delayed/provenance in the
+  supervisor and replay ladder drills; dropped frames in the backpressure
+  gate and sequence-gap drills; reconnect in `TestDisconnectDrill` and the
+  replay fold (the reconnect/backfill equivalence); browser acceptance at
+  desktop and 390 px was extended with a tablet (768 px) no-overflow walk
+  and a replay-card honesty drill — the E2E workstation runs without a
+  lake, so the card must fail closed over the real wire (`Replay 5 min`
+  never renders, honest no-lake copy shows).
+- Verification: Cockpit screen drill 14/14; complete frontend suite 71/71;
+  `tsc --noEmit` clean; `npm run lint` passes with the same four existing
+  Fast Refresh warnings; backend `tests/` full run 2124 passed (includes
+  `test_live_router.py` 49 passed with `test_live_replay.py` and
+  `test_live_feed.py`); live browser E2E 7/7; committed SPA bundle rebuilt
+  and `python tools/build_frontend.py --check` passes.
+
+### Checkpoint 3 — watchlist price-trend sparklines (scope item 3)
+
+- Backend: `LiveBuffer.price_trail()` queries the DuckDB lake for the last
+  N candle closes per instrument in oldest-first order, using `QUALIFY
+  ROW_NUMBER()` for per-instrument limits. `LiveFeed.price_trail()` exposes
+  the same contract, and the API route `GET /api/live/price-trail?symbols=BTC,SOL`
+  returns `{"trail": {"BTC": [100.0, 100.5, 101.0], "SOL": [30.0, 30.2]}}`.
+  Fails closed: 404 without a lake, 422 on empty symbols, empty array for
+  a symbol with no candle data.
+- Frontend: a `SparklineCell` component renders a compact 80×24 SVG
+  `<polyline>` in each watchlist row — green line, scaling to the row's
+  price range, hiding when fewer than 2 points are available. Trail data
+  is fetched alongside the state snapshot (same `SNAPSHOT_INTERVAL_MS`,
+  `retry: false` so no-lake workstations silently skip the sparkline).
+  Column header shows a tiny trend icon; English/zh-CN copy uses "Trend"/"趋势".
+- Verification: Cockpit screen drill 16/16; complete frontend suite 73/73;
+  `tsc --noEmit` clean; `npm run lint` passes (same four pre-existing
+  warnings); backend endpoint drills 8/8 (`TestPriceTrail`); full backend
+  suite 2134 passed; committed SPA bundle rebuilt and
+  `python tools/build_frontend.py --check` passes.
+
+### Checkpoint 4 — watchlist filter model (scope item 1)
+
+- Frontend: a search bar with `Search` icon, a text input, and a clear
+  button sits above the watchlist table. The operator types into it to
+  filter by symbol or venue (case-insensitive, client-side). When no row
+  matches, an empty-state row with `colSpan` covers all columns. Cleared
+  filter restores every row. English/zh-CN placeholders use "Filter
+  instruments…" / "筛选品种…". The filter is safe for the unified board:
+  it never queries the server, never modifies the instrument state, and
+  clears instantly.
+- Verification: Cockpit screen drill 17/17; complete frontend suite 73/73;
+  `tsc --noEmit` clean; `npm run lint` passes; full backend suite 2134
+  passed (pure frontend change); committed SPA bundle rebuilt and
+  `python tools/build_frontend.py --check` passes.
 
 ## Scope
 

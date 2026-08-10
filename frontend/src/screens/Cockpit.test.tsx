@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { LiveState, LiveStatus, LiveView, MarketUpdate } from '@/lib/api'
@@ -19,6 +19,9 @@ vi.mock('@/lib/api', async (importOriginal) => {
       ...actual.api,
       liveState: vi.fn(),
       liveStatus: vi.fn(),
+      replayExtent: vi.fn(),
+      replayWindow: vi.fn(),
+      priceTrail: vi.fn(),
     },
   }
 })
@@ -60,7 +63,13 @@ const STATE: LiveState = {
     BTC: {
       venue: 'hyperliquid',
       label: 'real',
-      kinds: { quote: view({ bid: 100, ask: 100.5 }) },
+      kinds: {
+        quote: view({ bid: 100, ask: 100.5 }),
+        metrics: view(
+          { funding_rate: 0.0001, mark_price: 100.2, index_price: 100, open_interest: 4567 },
+          { kind: 'metrics', sequence: 2 },
+        ),
+      },
     },
     SOL: {
       venue: 'hyperliquid',
@@ -152,6 +161,44 @@ describe('CockpitScreen', () => {
     expect(screen.getByRole('link', { name: 'SOL' })).toHaveAttribute('href', '/cockpit/SOL')
   })
 
+  it('exposes the evidence boundary on every row: event time, received time and sequence', async () => {
+    renderScreen()
+    await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
+    // Column headers carry the evidence contract.
+    expect(screen.getByText('Event')).toBeInTheDocument()
+    expect(screen.getByText('Received')).toBeInTheDocument()
+    expect(screen.getByText('Seq')).toBeInTheDocument()
+    // The views carry data_time/received_at at T0 → the same clock time
+    // (rendered in the host timezone, so match the shape, not a literal).
+    expect(screen.getAllByText(/\d{2}:\d{2}:\d{2}/).length).toBeGreaterThanOrEqual(4)
+    expect(screen.getAllByText('1').length).toBeGreaterThan(0) // BTC quote sequence
+  })
+
+  it('marks a sequence gap on the row that carries it', async () => {
+    let push: (update: MarketUpdate) => void = () => {}
+    mockedStream.mockImplementation((onUpdate) => {
+      push = onUpdate
+      return 'live'
+    })
+    renderScreen()
+    await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
+    push({
+      venue: 'hyperliquid',
+      instrument: 'HYPE',
+      kind: 'quote',
+      provenance: 'real',
+      data_time: T0,
+      received_at: T0,
+      sequence: 7,
+      sequence_gap: true,
+      payload: { bid: 1.2, ask: 1.25 },
+      state: null,
+      state_note: null,
+    })
+    await waitFor(() => expect(screen.getByText('HYPE')).toBeInTheDocument())
+    expect(screen.getByText(/7 ⚠ gap/)).toBeInTheDocument()
+  })
+
   it('renders the connector health panel with source states', async () => {
     renderScreen()
     await waitFor(() => expect(screen.getByText('Connector health')).toBeInTheDocument())
@@ -192,6 +239,90 @@ describe('CockpitScreen', () => {
     await waitFor(() => expect(screen.getByText(/SSE fallback/)).toBeInTheDocument())
   })
 
+  it('replays a recorded window from the lake under a visible banner', async () => {
+    mocked.replayExtent.mockResolvedValue({
+      source: 'lake',
+      count: 3,
+      earliest: T0,
+      latest: T0,
+      venues: ['hyperliquid'],
+    })
+    mocked.replayWindow.mockResolvedValue({
+      source: 'lake',
+      window: { start: T0, end: T0, count: 1 },
+      updates: [
+        {
+          venue: 'hyperliquid',
+          instrument: 'BTC',
+          kind: 'quote',
+          provenance: 'real',
+          data_time: T0,
+          received_at: T0,
+          sequence: 5,
+          sequence_gap: false,
+          payload: { bid: 100, ask: 100.5 },
+          state: null,
+          state_note: null,
+        },
+      ],
+    })
+    renderScreen()
+    await waitFor(() => expect(screen.getByText('Recorded replay')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText(/Recorded extent: 3 updates/)).toBeInTheDocument(),
+    )
+    await fireEvent.click(screen.getByRole('button', { name: 'Replay all' }))
+    await waitFor(() => expect(screen.getByText('Replay mode')).toBeInTheDocument())
+    expect(
+      screen.getByText(
+        (_, el) =>
+          el?.tagName === 'SPAN' && (el?.textContent?.includes('updates · source: lake') ?? false),
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText('BTC').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('real').length).toBeGreaterThan(0)
+    expect(screen.getByText('$100.00 / $100.50')).toBeInTheDocument()
+    await fireEvent.click(screen.getByRole('button', { name: 'Clear replay' }))
+    expect(screen.queryByText('Replay mode')).not.toBeInTheDocument()
+  })
+
+  it('explains honestly when no replay lake is attached', async () => {
+    mocked.replayExtent.mockRejectedValue(new Error('404: no replay lake is attached'))
+    renderScreen()
+    await waitFor(() =>
+      expect(screen.getByText(/No replay lake attached/)).toBeInTheDocument(),
+    )
+  })
+
+  it('renders a price-trend sparkline per row when trail data is available', async () => {
+    mocked.priceTrail.mockResolvedValue({ trail: { BTC: [100.0, 100.5, 101.0], SOL: [30.0, 30.2] } })
+    mocked.replayExtent.mockRejectedValue(new Error('no lake'))
+    renderScreen()
+    await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(
+        screen.getByRole('img', { name: 'Price trend: 3 data points' }),
+      ).toBeInTheDocument(),
+    )
+  })
+
+  it('filters the watchlist by symbol or venue text', async () => {
+    renderScreen()
+    await waitFor(() => expect(
+      screen.getByRole('link', { name: 'BTC' }),
+    ).toBeInTheDocument())
+    const input = screen.getByRole('searchbox', { name: 'Filter the watchlist by symbol or venue' })
+    fireEvent.change(input, { target: { value: 'zzz' } })
+    await waitFor(() => {
+      expect(screen.queryByRole('link', { name: 'BTC' })).not.toBeInTheDocument()
+    })
+    expect(screen.getByText('No instruments match the filter.')).toBeInTheDocument()
+    fireEvent.change(input, { target: { value: '' } })
+    await waitFor(() => expect(
+      screen.getByRole('link', { name: 'BTC' }),
+    ).toBeInTheDocument())
+  })
+
   it('explains when no live feed is attached', async () => {
     mocked.liveState.mockRejectedValue(new Error('404: no live feed is attached'))
     renderScreen()
@@ -203,14 +334,114 @@ describe('CockpitScreen', () => {
 })
 
 describe('CockpitDetailScreen', () => {
+  it('renders venue metrics with their evidence boundary', async () => {
+    renderDetail('BTC')
+
+    await waitFor(() => expect(screen.getByText('Funding rate')).toBeInTheDocument())
+    expect(screen.getByText('Market context')).toBeInTheDocument()
+    expect(screen.getByText('0.01%')).toBeInTheDocument()
+    expect(screen.getByText('Mark price')).toBeInTheDocument()
+    expect(screen.getByText('$100.20')).toBeInTheDocument()
+    expect(screen.getByText('Open interest')).toBeInTheDocument()
+    expect(screen.getByText('4,567')).toBeInTheDocument()
+    expect(screen.getByText('Market evidence')).toBeInTheDocument()
+    expect(screen.getByText('Event time')).toBeInTheDocument()
+    expect(screen.getByText('Received')).toBeInTheDocument()
+    expect(screen.getByText('Sequence')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+  })
+
   it('hydrates the latest quote and trade from the snapshot before a new frame arrives', async () => {
     renderDetail()
 
     await waitFor(() => expect(screen.getByText('$30.10')).toBeInTheDocument())
-    expect(screen.getByText('Stale')).toBeInTheDocument()
+    expect(screen.getAllByText('Stale').length).toBeGreaterThan(0)
     expect(screen.queryByText('Unavailable')).not.toBeInTheDocument()
     expect(screen.getByText(/mid \$30\.10/)).toBeInTheDocument()
     expect(screen.getByText('buy')).toBeInTheDocument()
     expect(screen.queryByText(/Waiting for the first update/)).not.toBeInTheDocument()
+  })
+
+  it('renders derived research metrics from venue-provided frames', async () => {
+    const closes = Array.from({ length: 20 }, (_, index) => 100 + index * 0.5)
+    const candle = view(
+      { open: 100, high: 110, low: 99, close: closes[19], volume: 12_345 },
+      { kind: 'candle', sequence: 3 },
+    )
+    const trade = view({ price: 30.1, size: 2, side: 'buy' }, { kind: 'trade', sequence: 4 })
+    const l2Bid = view(
+      { side: 'bid', levels: [[30.0, 1.0], [29.5, 2.0]] },
+      { kind: 'l2_snapshot', sequence: 6 },
+    )
+    mocked.liveState.mockResolvedValue({
+      generated_at: T0,
+      instruments: {
+        SOL: {
+          venue: 'hyperliquid',
+          label: 'real',
+          kinds: {
+            quote: view({ bid: 30, ask: 30.2 }),
+            candle,
+            trade,
+            l2_snapshot: l2Bid,
+            metrics: view(
+              { funding_rate: 0.0001, mark_price: 100.2, index_price: 100, open_interest: 4567 },
+              { kind: 'metrics', sequence: 2 },
+            ),
+          },
+        },
+      },
+    })
+    let push: (update: MarketUpdate) => void = () => {}
+    mockedStream.mockImplementation((onUpdate) => {
+      push = onUpdate
+      return 'live'
+    })
+    renderDetail()
+    await waitFor(() => expect(screen.getByText('Derived metrics')).toBeInTheDocument())
+    // A single candle cannot carry a return — the rows appear only once
+    // a second candle close arrives on the stream.
+    expect(screen.queryByText('1-candle return')).not.toBeInTheDocument()
+    push({
+      venue: 'hyperliquid',
+      instrument: 'SOL',
+      kind: 'candle',
+      provenance: 'real',
+      data_time: T0,
+      received_at: T0,
+      sequence: 5,
+      sequence_gap: false,
+      payload: { open: 109, high: 110, low: 108, close: 109.5, volume: 12_345 },
+      state: null,
+      state_note: null,
+    })
+    await waitFor(() => expect(screen.getByText('1-candle return')).toBeInTheDocument())
+    expect(screen.getByText('Realized vol (per candle)')).toBeInTheDocument()
+    expect(screen.getByText('Last trade size')).toBeInTheDocument()
+    expect(screen.getByText('Candle volume')).toBeInTheDocument()
+    expect(screen.getByText('Mark–index divergence')).toBeInTheDocument()
+    expect(screen.getByText('12,345')).toBeInTheDocument()
+    // The trade-size value sits in the dd of the "Last trade size" row.
+    const tradeSizeRow = screen.getByText('Last trade size').closest('div')
+    expect(tradeSizeRow?.querySelector('dd')).toHaveTextContent('2')
+    // The book depth chart needs both sides: the bid side seeded, the
+    // ask side streamed — until then it stays absent (never a guess).
+    expect(screen.queryByRole('img', { name: /Book depth chart/ })).not.toBeInTheDocument()
+    push({
+      venue: 'hyperliquid',
+      instrument: 'SOL',
+      kind: 'l2_snapshot',
+      provenance: 'real',
+      data_time: T0,
+      received_at: T0,
+      sequence: 8,
+      sequence_gap: false,
+      payload: { side: 'ask', levels: [[30.2, 0.5], [30.7, 1.5]] },
+      state: null,
+      state_note: null,
+    })
+    await waitFor(() =>
+      expect(screen.getByRole('img', { name: /Book depth chart/ })).toBeInTheDocument(),
+    )
   })
 })

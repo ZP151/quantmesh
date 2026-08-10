@@ -195,6 +195,48 @@ class LiveFeed:
         ]
         return {"generated_at": now.isoformat(), "venues": venues}
 
+    # -- replay (iteration 0019 slice 4) --------------------------------------
+
+    @property
+    def lake_attached(self) -> bool:
+        """Whether the feed persists to a replay lake (the ``--live``
+        workstation always does; a feed built without a lake cannot
+        replay anything)."""
+        return self._lake is not None
+
+    def replay_window(
+        self,
+        *,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        limit: int = 5000,
+    ) -> list[MarketUpdate]:
+        """Replay appended updates in local_seq order (oldest first)
+        within an optional received_at window. Raises ``ValueError``
+        when no lake is attached or the window is malformed."""
+        if self._lake is None:
+            raise ValueError("no replay lake is attached")
+        return self._lake.replay(start=start, end=end, limit=limit)
+
+    def price_trail(
+        self, symbols: list[str], limit: int = 20
+    ) -> dict[str, list[float]]:
+        if self._lake is None:
+            raise ValueError("no replay lake is attached")
+        return self._lake.price_trail(symbols, limit=limit)
+
+    def replay_extent(self) -> dict[str, object] | None:
+        """The recorded extent of the attached lake: earliest/latest
+        received_at, row count and distinct venues — the metadata the
+        replay window workflow renders before replaying. ``None`` when
+        the lake holds nothing or no lake is attached."""
+        if self._lake is None:
+            return None
+        rows = self._lake.extent()
+        if rows["count"] == 0:
+            return None
+        return rows
+
     # -- fan-out ------------------------------------------------------------
 
     def subscribe(self) -> asyncio.Queue[MarketUpdate]:

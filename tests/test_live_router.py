@@ -380,6 +380,227 @@ class TestNotConfigured:
         assert response.json()["detail"] == "no live feed is attached"
 
 
+class TestReplayEndpoint:
+    """Iteration 0019 slice 4: the recorded replay surface over the
+    lake — window extent metadata and a window replay in append order,
+    with the full provenance contract preserved on every row. A feed
+    without a lake, or a lake that holds nothing, fails honestly."""
+
+    def test_windows_reports_the_recorded_extent(self, live_app) -> None:
+        client, _app, feed = live_app
+        t1 = T0 + timedelta(seconds=5)
+        t2 = T0 + timedelta(seconds=25)
+        feed.publish_threadsafe(
+            _upd(received_at=t1, sequence=1, payload={"bid": 100.0, "ask": 100.5})
+        )
+        feed.publish_threadsafe(
+            _upd(
+                received_at=t2,
+                sequence=2,
+                venue=Venue.MOOMOO,
+                kind=UpdateKind.METRICS,
+                payload={"last": 42.0},
+            )
+        )
+        response = client.get("/api/live/replay/windows")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["source"] == "lake"
+        assert body["count"] == 2
+        assert body["earliest"] == t1.isoformat()
+        assert body["latest"] == t2.isoformat()
+        assert body["venues"] == ["hyperliquid", "moomoo"]
+
+    def test_windows_404_when_the_lake_is_empty(self, live_app) -> None:
+        client, _app, _feed = live_app
+        response = client.get("/api/live/replay/windows")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "the replay lake holds no recorded updates yet"
+
+    def test_replay_returns_updates_in_append_order_with_provenance(
+        self, live_app
+    ) -> None:
+        client, _app, feed = live_app
+        # The second append carries an older received_at — append order
+        # (local_seq) must still win, exactly like the live cache fold.
+        t0 = T0 + timedelta(seconds=5)
+        feed.publish_threadsafe(_upd(received_at=t0, sequence=1))
+        feed.publish_threadsafe(
+            _upd(
+                received_at=T0,
+                sequence=2,
+                provenance=Provenance.SYNTHETIC,
+                sequence_gap=True,
+                payload={"bid": 99.0, "ask": 99.5},
+            )
+        )
+        response = client.get("/api/live/replay")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["source"] == "lake"
+        assert body["window"]["count"] == 2
+        updates = body["updates"]
+        assert [u["sequence"] for u in updates] == [1, 2]
+        assert updates[1]["provenance"] == "synthetic"
+        assert updates[1]["sequence_gap"] is True
+        # The lake stores UTC instants; the wire may render them with a
+        # trailing Z instead of +00:00 — same instant either way.
+        assert datetime.fromisoformat(
+            updates[1]["received_at"].replace("Z", "+00:00")
+        ) == T0
+
+    def test_replay_window_bounds_filter_on_received_at(self, live_app) -> None:
+        client, _app, feed = live_app
+        feed.publish_threadsafe(_upd(received_at=T0, sequence=1))
+        feed.publish_threadsafe(_upd(received_at=T0 + timedelta(seconds=30), sequence=2))
+        feed.publish_threadsafe(_upd(received_at=T0 + timedelta(seconds=60), sequence=3))
+        response = client.get(
+            "/api/live/replay",
+            params={
+                "start": (T0 + timedelta(seconds=10)).isoformat(),
+                "end": (T0 + timedelta(seconds=30)).isoformat(),
+            },
+        )
+        assert response.status_code == 200
+        updates = response.json()["updates"]
+        assert [u["sequence"] for u in updates] == [2]
+
+    def test_replay_mounts_agree(self, live_app) -> None:
+        client, _app, feed = live_app
+        feed.publish_threadsafe(_upd(sequence=4))
+        root = client.get("/live/replay").json()
+        api = client.get("/api/live/replay").json()
+        assert root == api
+
+    def test_replay_requires_both_window_bounds(self, live_app) -> None:
+        client, _app, _feed = live_app
+        response = client.get("/api/live/replay", params={"start": T0.isoformat()})
+        assert response.status_code == 422
+        assert response.json()["detail"] == "start and end must be provided together"
+
+    def test_replay_rejects_inverted_or_naive_bounds(self, live_app) -> None:
+        client, _app, _feed = live_app
+        inverted = client.get(
+            "/api/live/replay",
+            params={
+                "start": (T0 + timedelta(seconds=60)).isoformat(),
+                "end": T0.isoformat(),
+            },
+        )
+        assert inverted.status_code == 422
+        naive = client.get(
+            "/api/live/replay",
+            params={
+                "start": T0.isoformat().replace("+00:00", ""),
+                "end": (T0 + timedelta(seconds=60)).isoformat().replace("+00:00", ""),
+            },
+        )
+        assert naive.status_code == 422
+        assert naive.json()["detail"] == "start and end must be timezone-aware timestamps"
+
+    def test_replay_404_without_a_lake(self, tmp_path) -> None:
+        feed = LiveFeed(lag=LAG, stale=STALE)  # no lake on purpose
+        app = create_workstation_app(
+            account=PaperAccount(cash=100_000.0), live_feed=feed, host="127.0.0.1"
+        )
+        with TestClient(app) as client:
+            response = client.get("/api/live/replay")
+            windows = client.get("/api/live/replay/windows")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "no replay lake is attached"
+        assert windows.status_code == 404
+        assert windows.json()["detail"] == "no replay lake is attached"
+
+
+class TestPriceTrail:
+    """Iteration 0019 slice 5: trailing closes per instrument from the
+    lake in oldest-first order — the watchlist sparkline data — with
+    correct fail-closed behavior and mount agreement."""
+
+    _TRAIL_LIMIT = 20
+
+    def _candle(self, instrument: str, close: float, *, at: datetime) -> MarketUpdate:
+        return MarketUpdate(
+            venue=Venue.HYPERLIQUID,
+            instrument=instrument,
+            kind=UpdateKind.CANDLE,
+            provenance=Provenance.REAL,
+            data_time=at,
+            received_at=at,
+            payload={"open": close, "high": close + 1, "low": close - 1, "close": close},
+        )
+
+    def test_returns_closes_per_instrument(self, live_app) -> None:
+        client, _app, feed = live_app
+        t0 = T0
+        feed.publish_threadsafe(self._candle("BTC", 100.5, at=t0))
+        feed.publish_threadsafe(self._candle("BTC", 101.5, at=t0 + timedelta(seconds=60)))
+        feed.publish_threadsafe(self._candle("SOL", 30.2, at=t0))
+        response = client.get("/api/live/price-trail?symbols=BTC,SOL&limit=10")
+        assert response.status_code == 200
+        trail = response.json()["trail"]
+        assert trail["BTC"] == [100.5, 101.5]
+        assert trail["SOL"] == [30.2]
+
+    def test_returns_oldest_first_order(self, live_app) -> None:
+        client, _app, feed = live_app
+        t0 = T0
+        for i, close in enumerate([100.0, 101.0, 102.0, 103.0]):
+            feed.publish_threadsafe(self._candle("BTC", close, at=t0 + timedelta(seconds=60 * i)))
+        response = client.get("/api/live/price-trail?symbols=BTC&limit=10")
+        assert response.status_code == 200
+        assert response.json()["trail"]["BTC"] == [100.0, 101.0, 102.0, 103.0]
+
+    def test_limits_per_instrument(self, live_app) -> None:
+        client, _app, feed = live_app
+        t0 = T0
+        for i in range(30):
+            feed.publish_threadsafe(
+                self._candle("BTC", 100.5 + i, at=t0 + timedelta(seconds=60 * i))
+            )
+        response = client.get("/api/live/price-trail?symbols=BTC&limit=20")
+        assert response.status_code == 200
+        assert len(response.json()["trail"]["BTC"]) == 20
+
+    def test_skips_non_candle_kinds(self, live_app) -> None:
+        client, _app, feed = live_app
+        t0 = T0
+        feed.publish_threadsafe(_upd())  # quote, not candle — must be ignored
+        feed.publish_threadsafe(self._candle("BTC", 100.5, at=t0))
+        response = client.get("/api/live/price-trail?symbols=BTC&limit=10")
+        assert response.status_code == 200
+        assert response.json()["trail"]["BTC"] == [100.5]
+
+    def test_missing_symbol_returns_empty_list(self, live_app) -> None:
+        client, _app, _feed = live_app
+        response = client.get("/api/live/price-trail?symbols=GHOST&limit=10")
+        assert response.status_code == 200
+        assert response.json()["trail"]["GHOST"] == []
+
+    def test_404_without_a_lake(self, tmp_path) -> None:
+        feed = LiveFeed(lag=LAG, stale=STALE)
+        app = create_workstation_app(
+            account=PaperAccount(cash=100_000.0), live_feed=feed, host="127.0.0.1"
+        )
+        with TestClient(app) as client:
+            response = client.get("/api/live/price-trail?symbols=BTC")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "no replay lake is attached"
+
+    def test_422_when_empty_symbols(self, live_app) -> None:
+        client, _app, _feed = live_app
+        response = client.get("/api/live/price-trail?symbols=&limit=10")
+        assert response.status_code == 422
+        assert response.json()["detail"] == "at least one symbol is required"
+
+    def test_mounts_agree(self, live_app) -> None:
+        client, _app, feed = live_app
+        feed.publish_threadsafe(self._candle("BTC", 100.5, at=T0))
+        root = client.get("/live/price-trail?symbols=BTC").json()
+        api = client.get("/api/live/price-trail?symbols=BTC").json()
+        assert root == api
+
+
 class TestLifespan:
     def test_pump_starts_with_the_app(self, tmp_path) -> None:
         feed = LiveFeed(lake=LiveBuffer(root=tmp_path), lag=LAG, stale=STALE)

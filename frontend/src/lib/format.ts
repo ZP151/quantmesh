@@ -69,6 +69,21 @@ export function dateTime(value: string): string {
   return Number.isNaN(parsed.getTime()) ? value : dateTimeFormat.format(parsed)
 }
 
+const timeOfDayFormat = new Intl.DateTimeFormat('en-US', {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+})
+
+/** Compact HH:MM:SS for dense live tables; the raw string survives a
+ * parse failure (a non-ISO value is displayed, never silently dropped). */
+export function timeOfDay(value: string | null | undefined): string {
+  if (value === null || value === undefined) return '—'
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? value : timeOfDayFormat.format(parsed)
+}
+
 /** Stable title for a venue name shown on screens. */
 export function venueLabel(venue: string): string {
   return venue === 'hyperliquid' ? 'Hyperliquid' : venue === 'moomoo' ? 'Moomoo' : venue

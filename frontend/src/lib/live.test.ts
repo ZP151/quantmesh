@@ -2,14 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LiveInstrumentState, LiveKind, LiveLabel, LiveView, MarketUpdate } from '@/lib/api'
 import {
   ageText,
+  bookDepth,
   bookSide,
   candleCloses,
+  candleReturn,
   dataViews,
   instrumentLabel,
+  markIndexDivergence,
   mergeUpdate,
   midOf,
   openLiveConnection,
   quoteNumbers,
+  realizedVol,
   spreadBps,
 } from './live'
 
@@ -180,6 +184,61 @@ describe('bookSide', () => {
       { price: 100.0, size: 1.0 },
       { price: 97.0, size: 2.0 },
     ])
+  })
+})
+
+describe('derived research metrics', () => {
+  // Iteration 0019 slice 2: every value is a pure fold of frames the
+  // venue already sent — absent inputs yield undefined, never a guess.
+
+  it('computes the 1-candle return from the last two closes', () => {
+    expect(candleReturn([100, 110])).toBeCloseTo(0.1, 9)
+    expect(candleReturn([110, 99])).toBeCloseTo(-0.1, 9)
+  })
+
+  it('leaves the return undefined without two closes', () => {
+    expect(candleReturn([])).toBeUndefined()
+    expect(candleReturn([100])).toBeUndefined()
+  })
+
+  it('computes realized volatility as the per-candle log-return σ', () => {
+    // Log returns of +ln(1.01) / -ln(1.01) around a zero mean: σ equals
+    // the per-candle log-return magnitude.
+    const closes = [100, 101, 100, 101, 100]
+    const sigma = realizedVol(closes)
+    expect(sigma).not.toBeUndefined()
+    expect(sigma as number).toBeCloseTo(Math.log(1.01), 9)
+  })
+
+  it('leaves volatility undefined on a degenerate or too-short series', () => {
+    expect(realizedVol([])).toBeUndefined()
+    expect(realizedVol([100])).toBeUndefined()
+    expect(realizedVol([0, 100])).toBeUndefined()
+  })
+
+  it('sums the resting size of a book side as depth', () => {
+    expect(bookDepth([{ price: 100, size: 1 }, { price: 99.5, size: 2.5 }])).toBe(3.5)
+    expect(bookDepth([])).toBeUndefined()
+  })
+
+  it('derives mark–index divergence from the metrics frame', () => {
+    const metrics = quote('BTC', 0, 0, {
+      kind: 'metrics',
+      payload: { mark_price: 101, index_price: 100 },
+    })
+    expect(markIndexDivergence(metrics)).toBeCloseTo(0.01, 9)
+  })
+
+  it('leaves divergence undefined when either side is missing or zero', () => {
+    expect(markIndexDivergence(undefined)).toBeUndefined()
+    expect(
+      markIndexDivergence(quote('BTC', 0, 0, { kind: 'metrics', payload: { mark_price: 101 } })),
+    ).toBeUndefined()
+    expect(
+      markIndexDivergence(
+        quote('BTC', 0, 0, { kind: 'metrics', payload: { mark_price: 101, index_price: 0 } }),
+      ),
+    ).toBeUndefined()
   })
 })
 

@@ -25,7 +25,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 
@@ -33,6 +33,7 @@ from quantmesh.live.feed import LiveFeed
 from quantmesh.live.prediction import PredictionBoard
 
 _HEARTBEAT_SECONDS = 15.0  # SSE comment heartbeat; keeps idle streams alive
+_REPLAY_LIMIT_MAX = 10_000  # upper bound per replay request
 
 
 def _feed(request: Request) -> LiveFeed:
@@ -75,6 +76,90 @@ def live_router() -> APIRouter:
         feed = _feed(request)
         now = datetime.now(UTC)
         return board.render(feed.latest_state(now=now), now)
+
+    @router.get("/live/replay/windows")
+    def live_replay_windows(request: Request) -> dict[str, object]:
+        """The recorded replay extent (iteration 0019 slice 4): the
+        earliest/latest ``received_at``, row count and venues of the
+        attached replay lake. A feed without a lake, or a lake that
+        holds nothing yet, answers 404 with an honest reason — there is
+        no fabricated window."""
+        feed = _feed(request)
+        extent = feed.replay_extent()
+        if extent is None:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    "no replay lake is attached"
+                    if not feed.lake_attached
+                    else "the replay lake holds no recorded updates yet"
+                ),
+            )
+        return {"source": "lake", **extent}
+
+    @router.get("/live/replay")
+    def live_replay(
+        request: Request,
+        start: str | None = Query(default=None, description="ISO-8601 window start"),
+        end: str | None = Query(default=None, description="ISO-8601 window end"),
+        limit: int = Query(default=5000, ge=1, le=_REPLAY_LIMIT_MAX),
+    ) -> dict[str, object]:
+        """Replay a recorded window from the local lake in append
+        (``local_seq``) order. ``start``/``end`` bound the window on
+        ``received_at``; both must be timezone-aware ISO instants.
+        Every returned update keeps its venue, provenance, event time,
+        receive time, sequence and gap marks — the replay surface is the
+        same evidence contract the live surface uses, labeled as
+        replayed, never folded into the live cache."""
+        feed = _feed(request)
+        if not feed.lake_attached:
+            raise HTTPException(status_code=404, detail="no replay lake is attached")
+        if (start is None) != (end is None):
+            raise HTTPException(
+                status_code=422, detail="start and end must be provided together"
+            )
+        start_dt = end_dt = None
+        if start is not None:
+            try:
+                start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
+                end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
+            except ValueError as error:
+                raise HTTPException(
+                    status_code=422, detail="start and end must be ISO-8601 timestamps"
+                ) from error
+            if start_dt.tzinfo is None or end_dt.tzinfo is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="start and end must be timezone-aware timestamps",
+                )
+            if start_dt >= end_dt:
+                raise HTTPException(
+                    status_code=422, detail="start must precede end"
+                )
+        updates = feed.replay_window(start=start_dt, end=end_dt, limit=limit)
+        return {
+            "source": "lake",
+            "window": {
+                "start": start_dt.isoformat() if start_dt is not None else None,
+                "end": end_dt.isoformat() if end_dt is not None else None,
+                "count": len(updates),
+            },
+            "updates": [update.model_dump(mode="json") for update in updates],
+        }
+
+    @router.get("/live/price-trail")
+    def live_price_trail(
+        request: Request,
+        symbols: str = Query(description="Comma-separated instrument symbols"),
+        limit: int = Query(default=20, ge=1, le=100),
+    ) -> dict[str, object]:
+        feed = _feed(request)
+        if not feed.lake_attached:
+            raise HTTPException(status_code=404, detail="no replay lake is attached")
+        syms = [s.strip() for s in symbols.split(",") if s.strip()]
+        if not syms:
+            raise HTTPException(status_code=422, detail="at least one symbol is required")
+        return {"trail": feed.price_trail(syms, limit=limit)}
 
     @router.get("/live/stream")
     async def live_stream(request: Request) -> StreamingResponse:

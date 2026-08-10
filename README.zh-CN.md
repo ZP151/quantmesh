@@ -1,96 +1,115 @@
-# QuantMesh 中文说明
+<div align="center">
 
-QuantMesh 是一个本地优先的跨市场量化研究与交易工作台，目标是把股票、加密资产、预测市场、本地量化模型、AI 辅助研究、模拟盘和受控交易执行放进同一条可审计流程。
+# QuantMesh
 
-当前仓库处于 MVP 基础设施阶段。实现重点是快速复用成熟的开源组件，通过稳定的 QuantMesh 适配器集成数据供应商、回测引擎、交易 SDK 和 AI 工作流，而不是全部手动重写。
+**面向股票、加密货币和预测市场的本地优先研究与确定性模拟交易工作站。**
 
-## 产品范围
+[快速开始](#快速开始) · [文档](#文档) · [路线图](docs/roadmap/ROADMAP.md) · [English](README.md)
 
-- Moomoo 行情和模拟交易
-- Hyperliquid 永续合约、现货行情、测试网交易和风险控制
-- Polymarket、Kalshi 等预测市场数据
-- 因子模型、技术策略、机器学习和事件概率模型
-- 本地 AI 研究、新闻分析和交易决策解释
-- 统一回测、模拟盘、组合风险和审计日志
+<br />
 
-大语言模型不会拥有无限制的交易权限。AI 可以提出研究方向、解释信号、生成实验和识别异常；订单必须经过确定性的风险检查、仓位限制、流动性检查和执行控制。
+`本地优先` · `模拟盘优先` · `只读实时数据` · `Apache-2.0`
 
-## 快速启动
+</div>
+
+QuantMesh 为个人量化研究者提供一条可审计的闭环：查看有来源的市场证据，
+研究假设，演练模拟交易，并在之后回放和检查结果。
+
+## 为什么是 QuantMesh？
+
+市场证据往往散落在券商终端、交易所面板、预测市场和 Notebook 里。
+QuantMesh 将决策流程保留在本地，并让每一步可检查。
+
+- **证据先于行动**：每个实时值都包含市场、时间、序号和新鲜度状态。
+- **模拟盘先于资金**：确定性风控、报价围栏、仓位限制、熔断和审计约束订单路径。
+- **统一的本地研究界面**：比较股票、加密货币和事件概率，不把合成或过期数据伪装成实时数据。
+- **默认可复现**：从可重置的确定性演示开始；本地实时帧可写入回放数据湖。
+
+## 快速开始
+
+### Windows PowerShell
 
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -e ".[dev,research]"
-uvicorn quantmesh.api.app:app --reload
+pip install -e ".[dev,research,e2e]"
+quantmesh-workstation --demo
 ```
 
-启动后访问 `http://127.0.0.1:8000/health`。
+打开 <http://127.0.0.1:8765/app/>。演示模式完全本地、确定性且有明确标识；
+不会向外部市场发送订单或凭据。
 
-## 开源复用策略
+<details>
+<summary>可选只读实时模式</summary>
 
-QuantMesh 自己维护统一领域模型、连接器接口、风险引擎、编排、审计日志和产品界面。成熟能力优先通过 Python 包、适配器、Git submodule 或隔离的本地服务复用。
-
-适合直接集成的项目：
-
-- Qlib：因子研究、数据集、机器学习流程和回测
-- VectorBT：快速向量化实验和参数扫描
-- Hyperliquid 官方 Python SDK：REST、WebSocket 和签名交易
-- Polymarket 当前 CLOB SDK：预测市场接入
-- Moomoo OpenAPI Python SDK：券商行情和模拟盘
-
-适合作为参考或伴随服务的项目：
-
-- Hummingbot：连接器、订单追踪、重连和 Hyperliquid 支持
-- Freqtrade：dry-run、模拟钱包、策略生命周期、持久化和风控
-- OpenBB：数据供应商注册、数据路由和本地 AI 数据工具设计
-- VeighNa/vn.py：gateway/app 分层、CTA、组合策略和机器学习投研
-- TradingAgents：分析师、交易员、风险和组合管理 AI 角色编排
-
-详细许可证、集成方式和改造程度见 [`docs/REUSE_MATRIX.md`](docs/REUSE_MATRIX.md) 和 [`docs/REFERENCE_PROJECTS.md`](docs/REFERENCE_PROJECTS.md)。
-
-## Agent 协作与路线图
-
-Codex 和 Claude 共用 [`AGENTS.md`](AGENTS.md) 中的仓库协作协议，各自的平台资源和项目级技能位于 `.codex/` 与 `.claude/`。完整产品路线记录在 [`docs/roadmap/ROADMAP.md`](docs/roadmap/ROADMAP.md)，每轮可追踪记录位于 `docs/iterations/`。
-
-创建下一轮可写迭代记录：
+设置有限观察列表后，再单独启动实时工作站：
 
 ```powershell
-quantmesh-iteration "Paper Trading Kernel" --owner "your-name" --status active
+$env:QUANTMESH_LIVE_WATCHLIST = "BTC,ETH,SOL,HYPE"
+quantmesh-workstation --live
 ```
 
-在 Claude Code 中启动或恢复长期目标：
+接入可选 Moomoo 或预测市场数据前，请先阅读
+[实时驾驶舱操作清单](docs/runbooks/live-cockpit-operator-checklist.md)。
+
+</details>
+
+## 工作方式
 
 ```text
-/goal
+市场数据 / 研究 / 预测
+          ↓
+市场 · 来源 · 事件时间 · 接收时间 · 新鲜度
+          ↓
+本地研究工作站与回放数据湖
+          ↓
+确定性模拟风控检查与模拟下单决策
+          ↓
+持仓 · 盈亏 · 审计 · 回放
 ```
 
-也可以明确指定或替换目标：
+不可用、延迟、过期、合成和回放数据在产品中是不同状态；缺失市场值不会被估算后展示。
 
-```text
-/goal Advance M2 deterministic paper-trading kernel through issue #1
-```
+## 当前能力
 
-## 安全默认值
+- 一条命令启动、仅绑定回环地址的 React/FastAPI 工作站。
+- 确定性演示数据、可重置模拟账户、自选和研究页面。
+- 本地数据源配置后，可使用带健康状态、新鲜度和回放语义的只读行情连接器。
+- 模拟订单、持仓、盈亏、风控、熔断和审计记录。
+- 本地持久化的 English / 简体中文和系统 / 浅色 / 深色主题。
 
-- 默认启用模拟盘和测试网。
-- 实盘交易必须显式开启。
-- 密钥只能从本地环境变量或系统密钥存储加载。
-- 私钥、签名和原始账户凭据不得发送给 AI 模型。
-- 每个信号和订单应保存输入数据、模型版本、风险检查和执行结果。
+## 产品边界
 
-## 迭代路线
+QuantMesh 不是自动交易机器人。
 
-1. 完成领域模型、本地配置、健康检查和内部模拟连接器。
-2. 完成带手续费、价差、滑点、现金、持仓和审计记录的确定性模拟撮合。
-3. 接入 Moomoo 行情和模拟交易。
-4. 接入 Hyperliquid 行情和测试网执行。
-5. 接入 Polymarket 和 Kalshi 概率数据。
-6. 接入 Qlib/VectorBT，建立动量、均值回归和风险平价策略。
-7. 加入概率校准、组合风险和模型失效检测。
-8. 加入本地 AI 研究助手。
-9. 通过模拟盘晋级门槛后，再开放受控实盘交易。
+- AI 可以协助研究与质疑，但不能签名、下单、撤单或调整仓位。
+- 默认使用模拟盘。主网签名、钱包托管和真实资金交易不在当前产品边界内。
+- 密钥必须留在本地；不要把私钥、券商凭据或已签名载荷放进提示词、提交或 Issue。
 
-## 免责声明
+## 文档
 
-QuantMesh 是软件工程和量化研究项目，不构成投资、法律或税务建议。回测结果不代表未来表现，真实交易可能导致部分或全部本金损失。
+- [产品战略](docs/product-strategy.md)
+- [当前迭代](docs/iterations/0019-live-research-surface.md)
+- [路线图](docs/roadmap/ROADMAP.md)
+- [操作清单](docs/runbooks/live-cockpit-operator-checklist.md)
+- [开源复用矩阵](docs/REUSE_MATRIX.md)
+- [威胁模型](docs/threat-model.md)
+
+## 状态
+
+QuantMesh 正处于本地原型开发阶段。当前重点是有边界的实时研究面板：
+市场指标、证据边界、紧凑图表和确定性回放。长期交接状态见
+[ACTIVE.md](docs/goals/ACTIVE.md)。
+
+## 许可证
+
+[Apache License 2.0](LICENSE)
+
+---
+
+<div align="center">
+
+**有来源的证据 → 模拟决策 → 可回放的结果**
+
+</div>

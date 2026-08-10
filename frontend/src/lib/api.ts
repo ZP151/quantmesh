@@ -452,6 +452,28 @@ export interface MarketUpdate {
   state_note: string | null
 }
 
+// --- Replay surface (iteration 0019 slice 4) -------------------------------
+
+/** The recorded extent of the local replay lake. */
+export interface ReplayExtent {
+  source: 'lake'
+  count: number
+  earliest: string | null
+  latest: string | null
+  venues: string[]
+}
+
+/** One replayed window from the lake, with its own provenance boundary. */
+export interface ReplayWindow {
+  source: 'lake'
+  window: {
+    start: string | null
+    end: string | null
+    count: number
+  }
+  updates: MarketUpdate[]
+}
+
 // --- Client --------------------------------------------------------------
 
 export class ApiError extends Error {
@@ -578,4 +600,21 @@ export const api = {
   liveState: () => request<LiveState>('/api/live/state'),
   liveStatus: () => request<LiveStatus>('/api/live/status'),
   prediction: () => request<PredictionRow[]>('/api/live/prediction'),
+
+  // Slice 4 — the recorded replay surface over the local lake.
+  replayExtent: () => request<ReplayExtent>('/api/live/replay/windows'),
+  priceTrail: (params: { symbols: string; limit?: number }) =>
+    request<{ trail: Record<string, number[]> }>(
+      `/api/live/price-trail?symbols=${encodeURIComponent(params.symbols)}&limit=${params.limit ?? 20}`,
+    ),
+  replayWindow: (params: { start?: string; end?: string; limit?: number }) =>
+    request<ReplayWindow>(
+      `/api/live/replay?${new URLSearchParams(
+        Object.fromEntries(
+          Object.entries({ start: params.start ?? '', end: params.end ?? '', limit: String(params.limit ?? 5000) }).filter(
+            ([, value]) => value !== '',
+          ),
+        ),
+      )}`,
+    ),
 }

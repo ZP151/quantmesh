@@ -1,118 +1,134 @@
+<div align="center">
+
 # QuantMesh
 
-QuantMesh is a local-first cross-market quantitative research and trading workstation. It is designed to combine equities, crypto assets, prediction markets, local quantitative models, AI-assisted research, paper trading and guarded execution in one auditable workflow.
+**Local-first market research and deterministic paper trading — across equities, crypto and prediction markets.**
 
-The project is currently in the MVP infrastructure stage. The implementation strategy is to reuse mature open-source components behind stable QuantMesh adapters instead of rebuilding every data provider, backtester, exchange SDK and AI workflow from scratch.
+[Quick start](#quick-start) · [Documentation](#documentation) · [Roadmap](docs/roadmap/ROADMAP.md) · [中文](README.zh-CN.md)
 
-## Product scope
+<br />
 
-QuantMesh is intended to support:
+`Local-first` · `Paper-first` · `Read-only live data` · `Apache-2.0`
 
-- Moomoo market data and paper trading
-- Hyperliquid perpetual and spot market data, testnet execution and risk controls
-- Polymarket, Kalshi and other prediction-market data providers
-- Factor models, technical strategies, machine learning and event-probability models
-- Local AI research, news analysis and decision explanations
-- Unified backtesting, paper trading, portfolio risk and audit logs
+</div>
 
-The language model is not an unrestricted trader. AI may propose research, explain signals, generate experiments and identify anomalies. Orders must pass deterministic risk checks, position limits, liquidity checks and execution controls.
+QuantMesh gives a solo quantitative researcher one auditable loop: observe
+sourced market evidence, test a hypothesis, rehearse a paper decision, then
+replay and inspect the result.
+
+## Why QuantMesh?
+
+Research evidence is usually split between broker terminals, exchange
+dashboards, prediction-market pages and notebooks. QuantMesh keeps the
+decision loop local and inspectable.
+
+- **Evidence before action** — every live value carries its venue, timing,
+  sequence and freshness state.
+- **Paper before capital** — deterministic risk controls, quote fences,
+  position limits, a kill switch and an audit trail govern the order path.
+- **One local research surface** — compare equities, crypto and event
+  probabilities without turning synthetic or stale values into apparent live data.
+- **Reproducible by default** — start with a resettable deterministic demo;
+  write read-only live frames to the local replay lake when a feed is available.
 
 ## Quick start
+
+### Windows PowerShell
 
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -e ".[dev,research]"
-uvicorn quantmesh.api.app:app --reload
+pip install -e ".[dev,research,e2e]"
+quantmesh-workstation --demo
 ```
 
-Open `http://127.0.0.1:8000/health` after startup.
+Open <http://127.0.0.1:8765/app/>. The demo is local, deterministic and
+labelled; it never sends orders or credentials to an external venue.
 
-## Repository layout
+<details>
+<summary>Optional read-only live mode</summary>
 
-```text
-QuantMesh/
-├── src/quantmesh/
-│   ├── api/                 # Local API
-│   ├── connectors/          # Broker, crypto and prediction-market adapters
-│   ├── domain/              # Shared instrument, quote, order and signal models
-│   ├── research/            # Research and backtesting integration points
-│   └── settings.py          # Local configuration
-├── tests/                   # Regression tests
-├── docs/                    # Reuse matrix and iteration plan
-├── vendor/                  # Pinned open-source Git submodules
-├── configs/                 # Example configuration without secrets
-├── data/                    # Local data directory, ignored by Git
-└── pyproject.toml
-```
-
-## Open-source reuse strategy
-
-QuantMesh owns the normalized domain models, connector contracts, risk engine, orchestration, audit trail and product UI. Mature capabilities are reused through packages, adapters, Git submodules or isolated local services.
-
-Direct integration candidates:
-
-- Qlib for factor research, datasets, machine learning workflows and backtesting
-- VectorBT for fast vectorized experiments and parameter sweeps
-- Official Hyperliquid Python SDK for REST, WebSocket and signed actions
-- Current Polymarket CLOB SDK for prediction-market connectivity
-- Moomoo OpenAPI Python SDK for broker quotes and paper trading
-
-Reference and companion projects:
-
-- Hummingbot for connector contracts, order tracking, reconnects and Hyperliquid support
-- Freqtrade for dry-run, simulated wallets, strategy lifecycle, persistence and risk controls
-- OpenBB for provider registration, data routing and local AI/data-tool patterns
-- VeighNa/vn.py for gateway/application separation, CTA, portfolio and ML research modules
-- TradingAgents for analyst, trader, risk and portfolio-manager agent orchestration
-
-See [`docs/REUSE_MATRIX.md`](docs/REUSE_MATRIX.md) and [`docs/REFERENCE_PROJECTS.md`](docs/REFERENCE_PROJECTS.md) for licenses, integration modes and adaptation estimates.
-
-## Agent collaboration and roadmap
-
-Codex and Claude share the repository contract in [`AGENTS.md`](AGENTS.md). Platform resources and project-scoped skills live in `.codex/` and `.claude/`. The delivery path is tracked in [`docs/roadmap/ROADMAP.md`](docs/roadmap/ROADMAP.md), with append-only iteration records under `docs/iterations/`.
-
-Create the next writable iteration record with:
+Set a bounded local watchlist, then start the workstation separately from the
+demo runtime:
 
 ```powershell
-quantmesh-iteration "Paper Trading Kernel" --owner "your-name" --status active
+$env:QUANTMESH_LIVE_WATCHLIST = "BTC,ETH,SOL,HYPE"
+quantmesh-workstation --live
 ```
 
-In Claude Code, start or resume the long-running project goal with:
+Read the [live-cockpit operator checklist](docs/runbooks/live-cockpit-operator-checklist.md)
+before connecting optional Moomoo or prediction-market sources.
+
+</details>
+
+## How it works
 
 ```text
-/goal
+Market data / research / forecasts
+                ↓
+Venue · source · event time · receive time · freshness
+                ↓
+     Local research workstation and replay lake
+                ↓
+Deterministic paper-risk checks and paper-order decision
+                ↓
+     Positions · P&L · audit · replay
 ```
 
-Or replace the objective explicitly:
+The product treats unavailable, delayed, stale, synthetic and replayed data as
+different states. It never estimates missing market values for display.
 
-```text
-/goal Advance M2 deterministic paper-trading kernel through issue #1
-```
+## What you can use
 
-## Security defaults
+- A one-command, loopback-only React and FastAPI workstation.
+- Deterministic demo data, resettable paper account, watchlists and research
+  surfaces.
+- Read-only market-data connectors with explicit health, freshness and replay
+  semantics where local feeds are configured.
+- Paper orders, positions, P&L, risk controls, kill switch and audit records.
+- English / Simplified Chinese language and system / light / dark theme
+  preferences persisted locally in the browser.
 
-- Paper trading and testnet mode are enabled by default.
-- Live trading requires an explicit configuration change.
-- Secrets must be loaded from local environment variables or an OS secret store.
-- Private keys, signatures and raw account credentials must never be sent to an AI model.
-- Every signal and order should retain its input data, model version, risk checks and execution result.
+## Product boundary
 
-## Iteration plan
+QuantMesh is not an autonomous trading bot.
 
-1. Establish domain models, local configuration, health checks and the internal paper connector.
-2. Build deterministic internal paper matching with fees, spread, slippage, cash, positions and audit records.
-3. Add the Moomoo quote and paper-trading adapter.
-4. Add Hyperliquid market data and testnet execution.
-5. Add Polymarket and Kalshi probability data.
-6. Add Qlib/VectorBT experiments and initial momentum, mean-reversion and risk-parity strategies.
-7. Add probability calibration, portfolio risk and model-failure detection.
-8. Add a local AI research assistant.
-9. Enable guarded live execution only after paper-trading promotion gates pass.
+- AI may eventually summarize evidence and challenge research; it cannot sign,
+  place, cancel or resize orders.
+- Paper trading is the default. Mainnet signing, wallet custody and real-money
+  execution are outside the current product boundary.
+- Secrets remain local. Do not place private keys, broker credentials or
+  signed payloads in prompts, commits or issue descriptions.
 
-## Disclaimer
+## Documentation
 
-QuantMesh is a software engineering and quantitative research project. It is not investment, legal or tax advice. Backtest results do not guarantee future performance, and live trading can result in partial or total loss of capital.
+- [Product strategy](docs/product-strategy.md) — product position and final
+  shape.
+- [Current iteration](docs/iterations/0019-live-research-surface.md) — live
+  research surface delivery record.
+- [Roadmap](docs/roadmap/ROADMAP.md) — milestones and outcome criteria.
+- [Operator checklist](docs/runbooks/live-cockpit-operator-checklist.md) —
+  safe demo and read-only-live operation.
+- [Open-source reuse matrix](docs/REUSE_MATRIX.md) — integration, ownership
+  and licensing decisions.
+- [Threat model](docs/threat-model.md) — execution and credential boundaries.
 
-For the Chinese project overview, see [`README.zh-CN.md`](README.zh-CN.md).
+## Status
+
+QuantMesh is under active local-prototype development. The current focus is a
+bounded real-time research surface: market metrics, evidence boundaries,
+compact charts and deterministic replay. See
+[ACTIVE.md](docs/goals/ACTIVE.md) for the durable handoff state.
+
+## License
+
+[Apache License 2.0](LICENSE)
+
+---
+
+<div align="center">
+
+**Sourced evidence → paper decision → replayable result**
+
+</div>
