@@ -158,6 +158,44 @@ describe('CockpitScreen', () => {
     expect(screen.getByRole('link', { name: 'SOL' })).toHaveAttribute('href', '/cockpit/SOL')
   })
 
+  it('exposes the evidence boundary on every row: event time, received time and sequence', async () => {
+    renderScreen()
+    await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
+    // Column headers carry the evidence contract.
+    expect(screen.getByText('Event')).toBeInTheDocument()
+    expect(screen.getByText('Received')).toBeInTheDocument()
+    expect(screen.getByText('Seq')).toBeInTheDocument()
+    // The views carry data_time/received_at at T0 → the same clock time
+    // (rendered in the host timezone, so match the shape, not a literal).
+    expect(screen.getAllByText(/\d{2}:\d{2}:\d{2}/).length).toBeGreaterThanOrEqual(4)
+    expect(screen.getAllByText('1').length).toBeGreaterThan(0) // BTC quote sequence
+  })
+
+  it('marks a sequence gap on the row that carries it', async () => {
+    let push: (update: MarketUpdate) => void = () => {}
+    mockedStream.mockImplementation((onUpdate) => {
+      push = onUpdate
+      return 'live'
+    })
+    renderScreen()
+    await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
+    push({
+      venue: 'hyperliquid',
+      instrument: 'HYPE',
+      kind: 'quote',
+      provenance: 'real',
+      data_time: T0,
+      received_at: T0,
+      sequence: 7,
+      sequence_gap: true,
+      payload: { bid: 1.2, ask: 1.25 },
+      state: null,
+      state_note: null,
+    })
+    await waitFor(() => expect(screen.getByText('HYPE')).toBeInTheDocument())
+    expect(screen.getByText(/7 ⚠ gap/)).toBeInTheDocument()
+  })
+
   it('renders the connector health panel with source states', async () => {
     renderScreen()
     await waitFor(() => expect(screen.getByText('Connector health')).toBeInTheDocument())
@@ -235,5 +273,64 @@ describe('CockpitDetailScreen', () => {
     expect(screen.getByText(/mid \$30\.10/)).toBeInTheDocument()
     expect(screen.getByText('buy')).toBeInTheDocument()
     expect(screen.queryByText(/Waiting for the first update/)).not.toBeInTheDocument()
+  })
+
+  it('renders derived research metrics from venue-provided frames', async () => {
+    const closes = Array.from({ length: 20 }, (_, index) => 100 + index * 0.5)
+    const candle = view(
+      { open: 100, high: 110, low: 99, close: closes[19], volume: 12_345 },
+      { kind: 'candle', sequence: 3 },
+    )
+    const trade = view({ price: 30.1, size: 2, side: 'buy' }, { kind: 'trade', sequence: 4 })
+    mocked.liveState.mockResolvedValue({
+      generated_at: T0,
+      instruments: {
+        SOL: {
+          venue: 'hyperliquid',
+          label: 'real',
+          kinds: {
+            quote: view({ bid: 30, ask: 30.2 }),
+            candle,
+            trade,
+            metrics: view(
+              { funding_rate: 0.0001, mark_price: 100.2, index_price: 100, open_interest: 4567 },
+              { kind: 'metrics', sequence: 2 },
+            ),
+          },
+        },
+      },
+    })
+    let push: (update: MarketUpdate) => void = () => {}
+    mockedStream.mockImplementation((onUpdate) => {
+      push = onUpdate
+      return 'live'
+    })
+    renderDetail()
+    await waitFor(() => expect(screen.getByText('Derived metrics')).toBeInTheDocument())
+    // A single candle cannot carry a return — the rows appear only once
+    // a second candle close arrives on the stream.
+    expect(screen.queryByText('1-candle return')).not.toBeInTheDocument()
+    push({
+      venue: 'hyperliquid',
+      instrument: 'SOL',
+      kind: 'candle',
+      provenance: 'real',
+      data_time: T0,
+      received_at: T0,
+      sequence: 5,
+      sequence_gap: false,
+      payload: { open: 109, high: 110, low: 108, close: 109.5, volume: 12_345 },
+      state: null,
+      state_note: null,
+    })
+    await waitFor(() => expect(screen.getByText('1-candle return')).toBeInTheDocument())
+    expect(screen.getByText('Realized vol (per candle)')).toBeInTheDocument()
+    expect(screen.getByText('Last trade size')).toBeInTheDocument()
+    expect(screen.getByText('Candle volume')).toBeInTheDocument()
+    expect(screen.getByText('Mark–index divergence')).toBeInTheDocument()
+    expect(screen.getByText('12,345')).toBeInTheDocument()
+    // The trade-size value sits in the dd of the "Last trade size" row.
+    const tradeSizeRow = screen.getByText('Last trade size').closest('div')
+    expect(tradeSizeRow?.querySelector('dd')).toHaveTextContent('2')
   })
 })

@@ -18,7 +18,7 @@ import {
   useLiveConnection,
 } from '@/lib/live'
 import { api, type LiveInstrumentState, type LiveSourceState, type LiveStatus } from '@/lib/api'
-import { money } from '@/lib/format'
+import { money, timeOfDay } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
 // The Live Market Cockpit watchlist (iteration 0015 Phase C): every
@@ -177,6 +177,9 @@ export function CockpitScreen() {
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.mid')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.spreadBps')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.last')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.eventTime')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.received')}</th>
+                  <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.seq')}</th>
                   <th className="px-4 py-2.5 text-right font-medium">{t('screen.cockpit.col.age')}</th>
                 </tr>
               </thead>
@@ -221,6 +224,29 @@ export function CockpitScreen() {
                           ? money(trade.payload.price)
                           : '—'}
                       </td>
+                      <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        {worst ? timeOfDay(worst.data_time) : '—'}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        {worst ? timeOfDay(worst.received_at) : '—'}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-mono tabular-nums">
+                        <span
+                          className={
+                            worst?.sequence_gap
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
+                          }
+                          title={
+                            worst?.sequence_gap
+                              ? t('screen.cockpit.gap')
+                              : undefined
+                          }
+                        >
+                          {worst?.sequence ?? '—'}
+                          {worst?.sequence_gap ? ` ${t('screen.cockpit.gap')}` : ''}
+                        </span>
+                      </td>
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
                         <span
                           className={
@@ -232,7 +258,6 @@ export function CockpitScreen() {
                           }
                         >
                           {worst ? ageText(worst.age_ms) : '—'}
-                          {worst?.sequence_gap ? ` ${t('screen.cockpit.gap')}` : ''}
                         </span>
                       </td>
                     </tr>

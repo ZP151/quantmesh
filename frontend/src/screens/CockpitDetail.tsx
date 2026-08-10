@@ -6,19 +6,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Page } from '@/components/page'
 import {
   ageText,
+  bookDepth,
   bookSide,
   candleCloses,
+  candleReturn,
   LABEL_TEXT,
   instrumentLabel,
   labelTone,
+  markIndexDivergence,
   mergeUpdate,
   midOf,
   quoteNumbers,
+  realizedVol,
   spreadBps,
   useLiveConnection,
 } from '@/lib/live'
 import { api } from '@/lib/api'
 import type { LiveInstrumentState, LiveView, MarketUpdate } from '@/lib/api'
+import type { MessageKey } from '@/lib/messages'
+import type { BookLevel } from '@/lib/live'
 import { dateTime, money, number, percent, quantity } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
@@ -47,6 +53,53 @@ function metricRows(view: LiveView | undefined) {
       ? [{ ...definition, value: definition.format(value) }]
       : []
   })
+}
+
+// Derived research metrics (iteration 0019 slice 2): pure folds of the
+// venue-provided frames above. A row is present only when the underlying
+// source frame exists — there is no estimation path.
+
+interface DerivedRow {
+  key: string
+  label: MessageKey
+  value?: string
+}
+
+function derivedRows(closes: number[], byKind: Record<string, MarketUpdate | undefined>, bids: BookLevel[], asks: BookLevel[]): DerivedRow[] {
+  const rows: DerivedRow[] = []
+  const ret = candleReturn(closes)
+  if (ret !== undefined) {
+    rows.push({ key: 'return', label: 'screen.cockpitDetail.metric.return', value: percent(ret) })
+  }
+  const vol = realizedVol(closes)
+  if (vol !== undefined) {
+    rows.push({ key: 'realizedVol', label: 'screen.cockpitDetail.metric.realizedVol', value: percent(vol) })
+  }
+  const tradeSize = asFiniteNumber(byKind.trade?.payload.size)
+  if (tradeSize !== undefined) {
+    rows.push({ key: 'tradeSize', label: 'screen.cockpitDetail.metric.tradeSize', value: quantity(tradeSize) })
+  }
+  const candleVolume = asFiniteNumber(byKind.candle?.payload.volume)
+  if (candleVolume !== undefined) {
+    rows.push({ key: 'candleVolume', label: 'screen.cockpitDetail.metric.candleVolume', value: number(candleVolume) })
+  }
+  const bidDepth = bookDepth(bids)
+  if (bidDepth !== undefined) {
+    rows.push({ key: 'bidDepth', label: 'screen.cockpitDetail.metric.bidDepth', value: quantity(bidDepth) })
+  }
+  const askDepth = bookDepth(asks)
+  if (askDepth !== undefined) {
+    rows.push({ key: 'askDepth', label: 'screen.cockpitDetail.metric.askDepth', value: quantity(askDepth) })
+  }
+  const divergence = markIndexDivergence(byKind.metrics)
+  if (divergence !== undefined) {
+    rows.push({ key: 'markIndexDiv', label: 'screen.cockpitDetail.metric.markIndexDiv', value: percent(divergence) })
+  }
+  return rows
+}
+
+function asFiniteNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined
 }
 
 function snapshotUpdate(
@@ -169,15 +222,16 @@ export function CockpitDetailScreen() {
   const spread = spreadBps(quote)
   const metricsView = instrument?.kinds.metrics
   const metrics = metricRows(metricsView)
+  const closes = useMemo(() => candleCloses(updates.slice(-CHART_LIMIT)), [updates])
+  const bids = bookSide(l2Sides.bid)
+  const asks = bookSide(l2Sides.ask)
+  const derived = derivedRows(closes, byKind, bids, asks)
   const evidence =
     metricsView ??
     instrument?.kinds.quote ??
     instrument?.kinds.trade ??
     instrument?.kinds.candle ??
     instrument?.kinds.l2_snapshot
-  const closes = useMemo(() => candleCloses(updates.slice(-CHART_LIMIT)), [updates])
-  const bids = bookSide(l2Sides.bid)
-  const asks = bookSide(l2Sides.ask)
   const tape = useMemo(
     () =>
       updates
@@ -255,6 +309,29 @@ export function CockpitDetailScreen() {
                   <div key={metric.key} className="min-w-0">
                     <dt className="text-xs text-muted-foreground">{t(metric.label)}</dt>
                     <dd className="mt-0.5 font-mono tabular-nums">{metric.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t('screen.cockpitDetail.derived')}</CardTitle>
+            <CardDescription>{t('screen.cockpitDetail.derivedDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {derived.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t('screen.cockpitDetail.noMetrics')}
+              </p>
+            ) : (
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                {derived.map((row) => (
+                  <div key={row.key} className="min-w-0">
+                    <dt className="text-xs text-muted-foreground">{t(row.label)}</dt>
+                    <dd className="mt-0.5 font-mono tabular-nums">{row.value}</dd>
                   </div>
                 ))}
               </dl>
