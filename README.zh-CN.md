@@ -1,19 +1,25 @@
 # QuantMesh 中文说明
 
-QuantMesh 是一个本地优先的跨市场量化研究与交易工作台，目标是把股票、加密资产、预测市场、本地量化模型、AI 辅助研究、模拟盘和受控交易执行放进同一条可审计流程。
+> 面向个人量化研究者的本地优先、多市场研究、实时看盘与确定性模拟交易工作站。
 
-当前仓库处于 MVP 基础设施阶段。实现重点是快速复用成熟的开源组件，通过稳定的 QuantMesh 适配器集成数据供应商、回测引擎、交易 SDK 和 AI 工作流，而不是全部手动重写。
+**状态：** 预发布 · 仅本地 · 模拟盘优先 · 支持 English / 简体中文 · 禁止自主执行
 
-## 产品范围
+QuantMesh 将股票、加密永续合约和预测市场放进同一条可检查的工作流：查看有来源的数据，确认其新鲜度，研究假设，在模拟盘中演练决策，并在之后回放和审计结果。
 
-- Moomoo 行情和模拟交易
-- Hyperliquid 永续合约、现货行情、测试网交易和风险控制
-- Polymarket、Kalshi 等预测市场数据
-- 因子模型、技术策略、机器学习和事件概率模型
-- 本地 AI 研究、新闻分析和交易决策解释
-- 统一回测、模拟盘、组合风险和审计日志
+英文主文档见 [README.md](README.md)。产品边界见
+[产品战略](docs/product-strategy.md)，当前实施状态见
+[ACTIVE.md](docs/goals/ACTIVE.md)。
 
-大语言模型不会拥有无限制的交易权限。AI 可以提出研究方向、解释信号、生成实验和识别异常；订单必须经过确定性的风险检查、仓位限制、流动性检查和执行控制。
+## 当前可用能力
+
+| 模块 | 能力 | 真实性边界 |
+| --- | --- | --- |
+| 本地工作站 | 一条命令启动的 React/FastAPI 回环应用 | 不作为云端或托管服务暴露 |
+| 演示模式 | 可重置、确定性种子数据和模拟账户 | 演示/合成数据始终明确标识 |
+| 市场与研究 | 股票、加密、预测市场、自选、研究与预测页面 | 始终显示市场、来源、时间和新鲜度 |
+| 模拟交易 | 模拟下单、持仓、盈亏、风控、熔断和审计 | 确定性模拟内核是唯一订单权威 |
+| 实时研究 | 可选的只读连接器、健康检查和回放演练 | 数据缺失或过期时真实显示为不可用 |
+| 偏好设置 | 中英文和系统/浅色/深色主题持久化 | 偏好仅存于本地浏览器 |
 
 ## 快速启动
 
@@ -21,76 +27,95 @@ QuantMesh 是一个本地优先的跨市场量化研究与交易工作台，目�
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -e ".[dev,research]"
-uvicorn quantmesh.api.app:app --reload
+pip install -e ".[dev,research,e2e]"
+quantmesh-workstation --demo
 ```
 
-启动后访问 `http://127.0.0.1:8000/health`。
+打开 <http://127.0.0.1:8765/app/>。首次启动会创建带清晰标识的确定性本地演示数据；它不会向外部市场发送订单或凭据。
 
-## 开源复用策略
+## 可选只读实时模式
 
-QuantMesh 自己维护统一领域模型、连接器接口、风险引擎、编排、审计日志和产品界面。成熟能力优先通过 Python 包、适配器、Git submodule 或隔离的本地服务复用。
-
-适合直接集成的项目：
-
-- Qlib：因子研究、数据集、机器学习流程和回测
-- VectorBT：快速向量化实验和参数扫描
-- Hyperliquid 官方 Python SDK：REST、WebSocket 和签名交易
-- Polymarket 当前 CLOB SDK：预测市场接入
-- Moomoo OpenAPI Python SDK：券商行情和模拟盘
-
-适合作为参考或伴随服务的项目：
-
-- Hummingbot：连接器、订单追踪、重连和 Hyperliquid 支持
-- Freqtrade：dry-run、模拟钱包、策略生命周期、持久化和风控
-- OpenBB：数据供应商注册、数据路由和本地 AI 数据工具设计
-- VeighNa/vn.py：gateway/app 分层、CTA、组合策略和机器学习投研
-- TradingAgents：分析师、交易员、风险和组合管理 AI 角色编排
-
-详细许可证、集成方式和改造程度见 [`docs/REUSE_MATRIX.md`](docs/REUSE_MATRIX.md) 和 [`docs/REFERENCE_PROJECTS.md`](docs/REFERENCE_PROJECTS.md)。
-
-## Agent 协作与路线图
-
-Codex 和 Claude 共用 [`AGENTS.md`](AGENTS.md) 中的仓库协作协议，各自的平台资源和项目级技能位于 `.codex/` 与 `.claude/`。完整产品路线记录在 [`docs/roadmap/ROADMAP.md`](docs/roadmap/ROADMAP.md)，每轮可追踪记录位于 `docs/iterations/`。
-
-创建下一轮可写迭代记录：
+只有在设定有限观察列表后才启动实时模式。它与确定性演示模式分离，并且保持只读：
 
 ```powershell
-quantmesh-iteration "Paper Trading Kernel" --owner "your-name" --status active
+$env:QUANTMESH_LIVE_WATCHLIST = "BTC,ETH,SOL,HYPE"
+quantmesh-workstation --live
 ```
 
-在 Claude Code 中启动或恢复长期目标：
+接入可选的 Moomoo 或预测市场数据前，请先阅读
+[实时驾驶舱操作清单](docs/runbooks/live-cockpit-operator-checklist.md)。
+
+## 产品工作流
 
 ```text
-/goal
+观察有来源的市场证据
+        ↓
+检查市场 · 时间戳 · 序号 · 数据年龄 · 新鲜度
+        ↓
+研究 / 预测 / 比较假设
+        ↓
+确定性风控检查与模拟下单决策
+        ↓
+持仓 · 盈亏 · 风险 · 审计 · 回放
 ```
 
-也可以明确指定或替换目标：
+实时、延迟、过期、断开、回放、合成数据必须在界面上明显不同，不能伪装。
 
-```text
-/goal Advance M2 deterministic paper-trading kernel through issue #1
+## 安全边界
+
+- AI 可以总结证据、质疑假设和提出实验建议；不能签名、下单、撤单或调整仓位。
+- 默认是模拟盘。主网签名、真实资金交易和钱包托管不在当前产品边界内。
+- 所有订单路径必须经过确定性风控、报价围栏、仓位限制、熔断和审计记录。
+- 密钥必须留在本地；不要把私钥、券商凭据或已签名载荷放进提示词、提交或 Issue。
+
+在修改执行相关能力前，请阅读完整的
+[威胁模型](docs/threat-model.md) 和 [发布流程](docs/release-process.md)。
+
+## 当前路线
+
+| 阶段 | 目标 |
+| --- | --- |
+| 当前 | 可复现实验到模拟交易工作流、全局偏好与完整 SPA 多语言 |
+| 下一步：0019 | 有边界的实时研究面板：报价/盘口/成交/概率、真实新鲜度、紧凑图表和确定性回放 |
+| 量化研究实验室 | 特征、回测、Walk-forward、模型注册和完整血缘 |
+| 组合与风控 | 跨市场暴露、相关性、限额、回撤和对账 |
+| AI 研究助手 | 有来源引用的分析、质疑和风险审查输出 |
+| 受控执行 | 仅在独立批准、模拟/测试网门禁、幂等和对账演练之后考虑 |
+
+下一轮的可执行范围见
+[iteration 0019](docs/iterations/0019-live-research-surface.md)。
+
+## 开源复用
+
+QuantMesh 自己维护统一领域模型、数据来源/新鲜度语义、模拟交易内核、风控、回放证据和产品工作流；成熟能力通过适配器复用：
+
+- Qlib、LightGBM、scikit-learn：研究、因子和模型实验；
+- 官方市场 SDK：可审核的行情及模拟/测试网适配器；
+- DuckDB、Parquet：本地研究数据湖与可复现回放；
+- React、Vite、部分 shadcn/ui：本地操作工作台；
+- Hummingbot、Freqtrade、OpenBB、VeighNa、TradingAgents：设计参考，不复制其执行权限。
+
+许可证、所有权和改造决策见 [开源复用矩阵](docs/REUSE_MATRIX.md) 与
+[参考项目说明](docs/REFERENCE_PROJECTS.md)。
+
+## 开发与验证
+
+```powershell
+python -m pytest
+ruff check .
+
+Push-Location frontend
+npm ci
+npm run lint
+npx vitest run
+npm run build
+Pop-Location
+
+python tools/build_frontend.py --check
 ```
 
-## 安全默认值
-
-- 默认启用模拟盘和测试网。
-- 实盘交易必须显式开启。
-- 密钥只能从本地环境变量或系统密钥存储加载。
-- 私钥、签名和原始账户凭据不得发送给 AI 模型。
-- 每个信号和订单应保存输入数据、模型版本、风险检查和执行结果。
-
-## 迭代路线
-
-1. 完成领域模型、本地配置、健康检查和内部模拟连接器。
-2. 完成带手续费、价差、滑点、现金、持仓和审计记录的确定性模拟撮合。
-3. 接入 Moomoo 行情和模拟交易。
-4. 接入 Hyperliquid 行情和测试网执行。
-5. 接入 Polymarket 和 Kalshi 概率数据。
-6. 接入 Qlib/VectorBT，建立动量、均值回归和风险平价策略。
-7. 加入概率校准、组合风险和模型失效检测。
-8. 加入本地 AI 研究助手。
-9. 通过模拟盘晋级门槛后，再开放受控实盘交易。
+发布候选版本时，必须执行文档中的干净检出发布门禁；本地一次测试通过不等于发布证据。
 
 ## 免责声明
 
-QuantMesh 是软件工程和量化研究项目，不构成投资、法律或税务建议。回测结果不代表未来表现，真实交易可能导致部分或全部本金损失。
+QuantMesh 是量化研究与软件工程工具，不构成投资、法律或税务建议。回测、预测和模拟结果不保证未来表现；真实交易可能损失部分或全部本金。

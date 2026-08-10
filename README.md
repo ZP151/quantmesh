@@ -1,118 +1,190 @@
 # QuantMesh
 
-QuantMesh is a local-first cross-market quantitative research and trading workstation. It is designed to combine equities, crypto assets, prediction markets, local quantitative models, AI-assisted research, paper trading and guarded execution in one auditable workflow.
+> A local-first, evidence-driven workstation for cross-market quantitative
+> research, real-time monitoring and deterministic paper trading.
 
-The project is currently in the MVP infrastructure stage. The implementation strategy is to reuse mature open-source components behind stable QuantMesh adapters instead of rebuilding every data provider, backtester, exchange SDK and AI workflow from scratch.
+**Status:** pre-release · local-only · paper-first · English / 简体中文 · no
+autonomous execution
 
-## Product scope
+QuantMesh brings equities, crypto perpetuals and prediction markets into one
+inspectable workflow. It is built for a solo quantitative researcher who needs
+to see where a value came from, how fresh it is, test an idea, rehearse a
+paper decision and reproduce the result later.
 
-QuantMesh is intended to support:
+**[中文说明](README.zh-CN.md)** · **[Product strategy](docs/product-strategy.md)** ·
+**[Roadmap](docs/roadmap/ROADMAP.md)** · **[Active delivery state](docs/goals/ACTIVE.md)**
 
-- Moomoo market data and paper trading
-- Hyperliquid perpetual and spot market data, testnet execution and risk controls
-- Polymarket, Kalshi and other prediction-market data providers
-- Factor models, technical strategies, machine learning and event-probability models
-- Local AI research, news analysis and decision explanations
-- Unified backtesting, paper trading, portfolio risk and audit logs
+## What works today
 
-The language model is not an unrestricted trader. AI may propose research, explain signals, generate experiments and identify anomalies. Orders must pass deterministic risk checks, position limits, liquidity checks and execution controls.
+| Surface | Current capability | Truth boundary |
+| --- | --- | --- |
+| Local workstation | One-command, loopback-only React/FastAPI application | Never exposed as a hosted service |
+| Demo | Deterministic seeded data, resettable paper account and provenance labels | Demo and synthetic data are visibly labelled |
+| Markets | Equities, crypto and prediction-market views; watchlists and research screens | Venue/source/time/freshness remain visible |
+| Paper workflow | Paper orders, positions, P&L, risk controls, kill switch and audit trail | The deterministic paper kernel remains the order authority |
+| Live research | Read-only connectors, freshness states, smoke and replay drills where a local feed is available | Missing or stale feeds are unavailable, never fabricated |
+| Preferences | Persistent English / Simplified Chinese and system / light / dark themes | Preference data stays in the local browser |
 
 ## Quick start
+
+### Windows PowerShell
 
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -e ".[dev,research]"
-uvicorn quantmesh.api.app:app --reload
+pip install -e ".[dev,research,e2e]"
+quantmesh-workstation --demo
 ```
 
-Open `http://127.0.0.1:8000/health` after startup.
+Open <http://127.0.0.1:8765/app/>. The first demo start seeds a labelled,
+deterministic local scenario; it never sends an order or credential to an
+external venue.
 
-## Repository layout
+### Optional read-only live research
 
-```text
-QuantMesh/
-├── src/quantmesh/
-│   ├── api/                 # Local API
-│   ├── connectors/          # Broker, crypto and prediction-market adapters
-│   ├── domain/              # Shared instrument, quote, order and signal models
-│   ├── research/            # Research and backtesting integration points
-│   └── settings.py          # Local configuration
-├── tests/                   # Regression tests
-├── docs/                    # Reuse matrix and iteration plan
-├── vendor/                  # Pinned open-source Git submodules
-├── configs/                 # Example configuration without secrets
-├── data/                    # Local data directory, ignored by Git
-└── pyproject.toml
-```
-
-## Open-source reuse strategy
-
-QuantMesh owns the normalized domain models, connector contracts, risk engine, orchestration, audit trail and product UI. Mature capabilities are reused through packages, adapters, Git submodules or isolated local services.
-
-Direct integration candidates:
-
-- Qlib for factor research, datasets, machine learning workflows and backtesting
-- VectorBT for fast vectorized experiments and parameter sweeps
-- Official Hyperliquid Python SDK for REST, WebSocket and signed actions
-- Current Polymarket CLOB SDK for prediction-market connectivity
-- Moomoo OpenAPI Python SDK for broker quotes and paper trading
-
-Reference and companion projects:
-
-- Hummingbot for connector contracts, order tracking, reconnects and Hyperliquid support
-- Freqtrade for dry-run, simulated wallets, strategy lifecycle, persistence and risk controls
-- OpenBB for provider registration, data routing and local AI/data-tool patterns
-- VeighNa/vn.py for gateway/application separation, CTA, portfolio and ML research modules
-- TradingAgents for analyst, trader, risk and portfolio-manager agent orchestration
-
-See [`docs/REUSE_MATRIX.md`](docs/REUSE_MATRIX.md) and [`docs/REFERENCE_PROJECTS.md`](docs/REFERENCE_PROJECTS.md) for licenses, integration modes and adaptation estimates.
-
-## Agent collaboration and roadmap
-
-Codex and Claude share the repository contract in [`AGENTS.md`](AGENTS.md). Platform resources and project-scoped skills live in `.codex/` and `.claude/`. The delivery path is tracked in [`docs/roadmap/ROADMAP.md`](docs/roadmap/ROADMAP.md), with append-only iteration records under `docs/iterations/`.
-
-Create the next writable iteration record with:
+Use live mode only after configuring a bounded local watchlist. It remains
+read-only and is intentionally separate from the deterministic demo:
 
 ```powershell
-quantmesh-iteration "Paper Trading Kernel" --owner "your-name" --status active
+$env:QUANTMESH_LIVE_WATCHLIST = "BTC,ETH,SOL,HYPE"
+quantmesh-workstation --live
 ```
 
-In Claude Code, start or resume the long-running project goal with:
+See the [live-cockpit operator checklist](docs/runbooks/live-cockpit-operator-checklist.md)
+before connecting optional Moomoo or prediction-market sources.
+
+## The product loop
 
 ```text
-/goal
+Observe sourced market evidence
+        ↓
+Check venue · timestamp · sequence · age · freshness
+        ↓
+Research / forecast / compare a hypothesis
+        ↓
+Deterministic risk checks and paper-order decision
+        ↓
+Positions · P&L · risk · audit · replay
 ```
 
-Or replace the objective explicitly:
+The interface is intentionally dense but not opaque: a synthetic, delayed,
+stale, disconnected or replayed value must look different from a live value.
+
+## Safety model
+
+QuantMesh is a research and rehearsal environment, not an autonomous trading
+bot.
+
+- AI may summarize evidence, challenge a thesis and propose experiments; it
+  cannot sign, place, cancel or resize orders.
+- Paper trading is the default. Mainnet signing, real-money execution and
+  wallet custody are outside the current product boundary.
+- Every order path is governed by deterministic risk rules, quote fences,
+  position limits, kill switches and audit records.
+- Secrets stay local. Never put private keys, broker credentials or raw signed
+  payloads in prompts, commits or issue descriptions.
+
+Read the full [threat model](docs/threat-model.md) and
+[release process](docs/release-process.md) before any execution-related work.
+
+## Architecture
 
 ```text
-/goal Advance M2 deterministic paper-trading kernel through issue #1
+React + TypeScript + Vite workstation
+              │
+              ▼
+       FastAPI local API
+              │
+  ┌───────────┼────────────────┐
+  ▼           ▼                ▼
+Market    Research lake    Paper / risk / audit
+adapters  DuckDB + Parquet deterministic kernel
+  │
+  ├─ Hyperliquid (read-only public data)
+  ├─ Moomoo OpenD (optional local read-only / paper surface)
+  ├─ Polymarket and Kalshi (read-only probability data)
+  └─ Deterministic demo and replay fixtures
 ```
 
-## Security defaults
+QuantMesh owns the normalized contracts, provenance/freshness semantics,
+paper kernel, risk gates, replay evidence and operator workflow. It reuses
+mature libraries and official SDKs behind adapters rather than rebuilding
+commodity infrastructure.
 
-- Paper trading and testnet mode are enabled by default.
-- Live trading requires an explicit configuration change.
-- Secrets must be loaded from local environment variables or an OS secret store.
-- Private keys, signatures and raw account credentials must never be sent to an AI model.
-- Every signal and order should retain its input data, model version, risk checks and execution result.
+## Delivery roadmap
 
-## Iteration plan
+| Horizon | Outcome |
+| --- | --- |
+| Now | Local demo-to-paper workflow, auditability, global preferences and full SPA localization |
+| Next: iteration 0019 | Bounded live research board: quote/book/trade/probability metrics, honest freshness, compact charts and deterministic replay |
+| Research lab | Features, backtests, walk-forward evaluation, model registry and lineage |
+| Portfolio and risk | Cross-market exposure, correlations, limits, drawdown and reconciliation |
+| AI advisory | Local evidence-backed analyst, critic and risk-assistant outputs with citations |
+| Guarded execution | Only after separate approval, simulation/testnet gates, idempotency and reconciliation drills |
 
-1. Establish domain models, local configuration, health checks and the internal paper connector.
-2. Build deterministic internal paper matching with fees, spread, slippage, cash, positions and audit records.
-3. Add the Moomoo quote and paper-trading adapter.
-4. Add Hyperliquid market data and testnet execution.
-5. Add Polymarket and Kalshi probability data.
-6. Add Qlib/VectorBT experiments and initial momentum, mean-reversion and risk-parity strategies.
-7. Add probability calibration, portfolio risk and model-failure detection.
-8. Add a local AI research assistant.
-9. Enable guarded live execution only after paper-trading promotion gates pass.
+The current executable plan is [iteration 0019](docs/iterations/0019-live-research-surface.md).
+The longer-term product boundary is recorded in
+[the strategy document](docs/product-strategy.md).
+
+## Open-source reuse
+
+| Reuse target | Role in QuantMesh |
+| --- | --- |
+| Qlib / LightGBM / scikit-learn | Research, factor and model experimentation |
+| Official venue SDKs | Isolated, reviewable market-data and paper/testnet adapters |
+| DuckDB / Parquet | Local research lake and reproducible replay data |
+| React / Vite / selected shadcn/ui | Local operator workstation |
+| Hummingbot, Freqtrade, OpenBB, VeighNa, TradingAgents | Design references, not copied execution authority |
+
+Licensing, ownership and adaptation decisions live in
+[the reuse matrix](docs/REUSE_MATRIX.md) and
+[reference-project notes](docs/REFERENCE_PROJECTS.md).
+
+## Repository map
+
+```text
+src/quantmesh/       Python domain, API, data, research, risk and adapters
+frontend/            React/TypeScript workstation source
+tests/               Regression, integration and browser tests
+docs/                ADRs, runbooks, roadmap, iterations and release evidence
+tools/               Build, smoke, release and operational checks
+vendor/              Pinned upstream components and reference projects
+```
+
+## Development and verification
+
+```powershell
+# Python checks
+python -m pytest
+ruff check .
+
+# Frontend checks
+Push-Location frontend
+npm ci
+npm run lint
+npx vitest run
+npm run build
+Pop-Location
+
+# Confirm the committed SPA bundle is current
+python tools/build_frontend.py --check
+```
+
+For a release candidate, run the documented clean-checkout gate rather than
+treating a local green test run as release evidence.
+
+## Contributing with agents
+
+Read [AGENTS.md](AGENTS.md) first. The durable handoff is
+[ACTIVE.md](docs/goals/ACTIVE.md); implementation decisions and evidence live
+in the relevant iteration record. Use one integration branch, preserve
+protected `main`, and never force-push or mutate an existing release
+candidate.
 
 ## Disclaimer
 
-QuantMesh is a software engineering and quantitative research project. It is not investment, legal or tax advice. Backtest results do not guarantee future performance, and live trading can result in partial or total loss of capital.
-
-For the Chinese project overview, see [`README.zh-CN.md`](README.zh-CN.md).
+QuantMesh is software for quantitative research and engineering. It is not
+investment, legal or tax advice. Backtests, forecasts and paper results do
+not guarantee future performance. Real trading can result in partial or total
+loss of capital.

@@ -1,14 +1,14 @@
 # Active Goal
 
-- Status: active (iteration 0018 global localization in progress)
-- Objective: complete the global English/简体中文 experience on top of the
-  merged rc6 tree, publish a replacement candidate, and verify it in a fresh
-  acceptance station. `v0.1.0-rc6` remains immutable; `v0.1.0` promotion still
-  requires explicit operator acceptance of the final candidate.
-- Started: 2026-08-09
-- Active iteration: `docs/iterations/0018-global-localization.md`
-- Branch: `0018-global-localization`, based on `origin/main` at `7ceba59`.
-  RC2–RC6 remain historical immutable candidates.
+- Status: active (iteration 0019 live research surface in progress)
+- Objective: make the existing read-only cockpit research-useful by exposing
+  venue metrics and evidence boundaries, then add the remaining bounded live
+  research and replay workflow without changing paper-only execution authority.
+- Started: 2026-08-10
+- Active iteration: `docs/iterations/0019-live-research-surface.md`
+- Branch: `0019-live-research-surface`, based on `origin/main` at `5069d1b`
+  (PR #100, global-localization completion). RC2–RC6 remain historical
+  immutable candidates.
 - Pull request: use one integration PR per slice and its evidence; do
   not create routine doc-only follow-up PRs.
 - Blockers: none for implementation; final release promotion remains an
@@ -20,12 +20,15 @@ Iteration 0015 live-cockpit hardening is merged at `c47b83d` (PR #95), and the
 replacement candidate `v0.1.0-rc5` is published at `cc8bde8` (PR #96). The
 baseline has a deterministic demo workstation, live read-only cockpit,
 Hyperliquid/Polymarket/Kalshi/Moomoo connector surfaces, replay lake,
-provenance/freshness contracts and paper-only order authority. The current
-operator report exposed a stale deployment rather than a missing Markets
-implementation: the RC6 station at 8766 serves the pre-0017 bundle. The
-merged tree already translates the 12 iteration-0017 domain screens; this
-iteration closes the remaining global gaps in Prediction, Ops, shared states
-and shell accessibility copy before producing the next candidate.
+provenance/freshness contracts and paper-only order authority. PR #100 merged
+at `5069d1b`, completing global SPA localization; the old RC6 station remains
+a historical pre-0017 build and must not be used to verify the fix.
+
+The operator authorized immediate continuation after that merge. Therefore we
+will not cut an interim localization-only RC: the next candidate will include
+the bounded iteration-0019 live-research improvements. RC6 remains immutable;
+formal promotion still requires a clean tagged-tree gate and explicit operator
+acceptance.
 
 ## Immediate frontier
 
@@ -207,15 +210,15 @@ and shell accessibility copy before producing the next candidate.
     squash-merged into main. No version bump; `v0.1.0-rc6` unchanged
     and still awaiting operator acceptance. Detailed evidence in
     `docs/iterations/0017-domain-translations.md`.
-13. Deliver iteration 0018 — global localization completion: translate the
+13. ~~Deliver iteration 0018 — global localization completion: translate the
     remaining Prediction, Kill switch, Enablement, NotFound, Loading and shell
     accessibility/provenance copy using the shared en/zh-CN dictionary; keep
     API-facing values and server safety verdicts semantically raw; rebuild the
     package-served SPA; merge one tested PR; then cut and verify a replacement
     RC because RC6 is immutable. Evidence belongs in
-    `docs/iterations/0018-global-localization.md`.
-14. After PR #100 is merged and the replacement RC is verified, deliver
-    iteration 0019 — the bounded live research surface: quote/book/trade and
+    `docs/iterations/0018-global-localization.md`.~~ (done: PR #100 merged at
+    `5069d1b`; replacement candidate is deliberately deferred to include 0019.)
+14. Deliver iteration 0019 — the bounded live research surface: quote/book/trade and
     prediction-market metrics, freshness/sequence semantics, compact charts,
     replay and degraded-stream drills. Reuse existing normalized contracts,
     lake, cockpit primitives and smoke fixtures; keep all venues read-only,
@@ -244,8 +247,8 @@ labeled and isolated from non-demo operator state.
 Run `/goal`, then read this file, `PRODUCT.md`, `docs/product-strategy.md`,
 iteration 0018, iteration 0019, the roadmap,
 relevant ADRs, Git state and the current rc6 release notes. Continue the
-global localization candidate first, then continue the roadmap in vertical slices: next are the live cockpit improvements (charts,
-metrics/density), adapter hardening, local quant analysis slices, AI
+iteration-0019 live cockpit improvements first (metrics/evidence, charts,
+density and replay), then adapter hardening, local quant analysis slices, AI
 advisory research layer, paper-trading acceptance expansion — one branch, one
 tested integration PR per milestone. Run focused and full verification,
 integrate one green PR, then run the clean-checkout gate when the merged

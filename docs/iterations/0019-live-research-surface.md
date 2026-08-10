@@ -1,8 +1,9 @@
 # Iteration 0019 — Live Research Surface
 
-Status: planned
-Depends on: iteration 0018 / PR #100 merged
-Baseline: the next replacement RC after `v0.1.0-rc6`
+Status: active
+Started: 2026-08-10
+Branch: `0019-live-research-surface`
+Baseline: `origin/main` at `5069d1b` (PR #100, after `v0.1.0-rc6`)
 
 ## Outcome
 
@@ -11,6 +12,37 @@ useful real-time research surface. The operator should be able to watch a
 bounded cross-market list, understand what changed, compare venue conditions,
 and replay the same evidence later without confusing live, stale, delayed or
 synthetic data.
+
+## Baseline audit and first slice
+
+The initial audit confirmed that iteration 0015 already supplies the normalized
+`MarketUpdate` contract, venue supervisors, DuckDB replay lake, stream
+fan-out, freshness/sequence labels, compact SVG candle chart, L2 depth and
+trade tape. Iteration 0019 must extend those owned seams rather than recreate
+them.
+
+The first remaining product gap is visible metrics and evidence: Hyperliquid
+already emits funding rate, mark price, index price and open interest in a
+normalized `metrics` frame, but the cockpit did not render them or show the
+frame's event/receive/sequence/age boundary. Slice 1 exposes those values in
+the instrument detail with reviewed en/zh-CN copy. Missing data renders as
+unavailable; no UI estimate is introduced.
+
+### Checkpoint 1 — research evidence and documentation
+
+- Rewrote the English-first README and Chinese companion around the executable
+  local workstation: real capabilities, demo and read-only-live commands,
+  safety model, architecture, reuse boundaries and the current roadmap.
+- Added a reviewed market-context card to cockpit instrument detail for the
+  normalized Hyperliquid funding rate, mark price, index price and open
+  interest fields. The card only renders finite venue-provided values.
+- Added an evidence card for venue, freshness label, event time, local receive
+  time, sequence and age. It intentionally uses the normalized local view,
+  not an inferred wall-clock or provider-specific client calculation.
+- Verification: Cockpit screen drill 9/9; complete frontend suite 59/59;
+  `npm run lint` passes with four existing Fast Refresh warnings;
+  production TypeScript/Vite build passes; packaged SPA bundle rebuilt and
+  `python tools/build_frontend.py --check` passes.
 
 ## Scope
 

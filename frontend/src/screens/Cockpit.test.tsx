@@ -60,7 +60,13 @@ const STATE: LiveState = {
     BTC: {
       venue: 'hyperliquid',
       label: 'real',
-      kinds: { quote: view({ bid: 100, ask: 100.5 }) },
+      kinds: {
+        quote: view({ bid: 100, ask: 100.5 }),
+        metrics: view(
+          { funding_rate: 0.0001, mark_price: 100.2, index_price: 100, open_interest: 4567 },
+          { kind: 'metrics', sequence: 2 },
+        ),
+      },
     },
     SOL: {
       venue: 'hyperliquid',
@@ -203,11 +209,28 @@ describe('CockpitScreen', () => {
 })
 
 describe('CockpitDetailScreen', () => {
+  it('renders venue metrics with their evidence boundary', async () => {
+    renderDetail('BTC')
+
+    await waitFor(() => expect(screen.getByText('Funding rate')).toBeInTheDocument())
+    expect(screen.getByText('Market context')).toBeInTheDocument()
+    expect(screen.getByText('0.01%')).toBeInTheDocument()
+    expect(screen.getByText('Mark price')).toBeInTheDocument()
+    expect(screen.getByText('$100.20')).toBeInTheDocument()
+    expect(screen.getByText('Open interest')).toBeInTheDocument()
+    expect(screen.getByText('4,567')).toBeInTheDocument()
+    expect(screen.getByText('Market evidence')).toBeInTheDocument()
+    expect(screen.getByText('Event time')).toBeInTheDocument()
+    expect(screen.getByText('Received')).toBeInTheDocument()
+    expect(screen.getByText('Sequence')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+  })
+
   it('hydrates the latest quote and trade from the snapshot before a new frame arrives', async () => {
     renderDetail()
 
     await waitFor(() => expect(screen.getByText('$30.10')).toBeInTheDocument())
-    expect(screen.getByText('Stale')).toBeInTheDocument()
+    expect(screen.getAllByText('Stale').length).toBeGreaterThan(0)
     expect(screen.queryByText('Unavailable')).not.toBeInTheDocument()
     expect(screen.getByText(/mid \$30\.10/)).toBeInTheDocument()
     expect(screen.getByText('buy')).toBeInTheDocument()

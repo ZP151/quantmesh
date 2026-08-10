@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Page } from '@/components/page'
 import {
+  ageText,
   bookSide,
   candleCloses,
   LABEL_TEXT,
@@ -18,7 +19,7 @@ import {
 } from '@/lib/live'
 import { api } from '@/lib/api'
 import type { LiveInstrumentState, LiveView, MarketUpdate } from '@/lib/api'
-import { dateTime, money, quantity } from '@/lib/format'
+import { dateTime, money, number, percent, quantity } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
 // Instrument detail (iteration 0015 Phase C): the live chart (candle
@@ -31,6 +32,22 @@ import { usePreferences } from '@/lib/preferences'
 const TAPE_LIMIT = 40
 const CHART_LIMIT = 120
 const SNAPSHOT_INTERVAL_MS = 10_000
+
+const METRIC_DEFINITIONS = [
+  { key: 'funding_rate', label: 'screen.cockpitDetail.metric.fundingRate', format: percent },
+  { key: 'mark_price', label: 'screen.cockpitDetail.metric.markPrice', format: money },
+  { key: 'index_price', label: 'screen.cockpitDetail.metric.indexPrice', format: money },
+  { key: 'open_interest', label: 'screen.cockpitDetail.metric.openInterest', format: number },
+] as const
+
+function metricRows(view: LiveView | undefined) {
+  return METRIC_DEFINITIONS.flatMap((definition) => {
+    const value = view?.payload[definition.key]
+    return typeof value === 'number' && Number.isFinite(value)
+      ? [{ ...definition, value: definition.format(value) }]
+      : []
+  })
+}
 
 function snapshotUpdate(
   symbol: string,
@@ -150,6 +167,14 @@ export function CockpitDetailScreen() {
   const quote = quoteNumbers(byKind.quote)
   const mid = midOf(quote)
   const spread = spreadBps(quote)
+  const metricsView = instrument?.kinds.metrics
+  const metrics = metricRows(metricsView)
+  const evidence =
+    metricsView ??
+    instrument?.kinds.quote ??
+    instrument?.kinds.trade ??
+    instrument?.kinds.candle ??
+    instrument?.kinds.l2_snapshot
   const closes = useMemo(() => candleCloses(updates.slice(-CHART_LIMIT)), [updates])
   const bids = bookSide(l2Sides.bid)
   const asks = bookSide(l2Sides.ask)
@@ -214,6 +239,72 @@ export function CockpitDetailScreen() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t('screen.cockpitDetail.metrics')}</CardTitle>
+            <CardDescription>{t('screen.cockpitDetail.metricsDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {metrics.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t('screen.cockpitDetail.noMetrics')}
+              </p>
+            ) : (
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                {metrics.map((metric) => (
+                  <div key={metric.key} className="min-w-0">
+                    <dt className="text-xs text-muted-foreground">{t(metric.label)}</dt>
+                    <dd className="mt-0.5 font-mono tabular-nums">{metric.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t('screen.cockpitDetail.evidence')}</CardTitle>
+            <CardDescription>{t('screen.cockpitDetail.evidenceDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!evidence || !instrument ? (
+              <p className="text-sm text-muted-foreground">
+                {t('screen.cockpitDetail.noEvidence')}
+              </p>
+            ) : (
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.venue')}</dt>
+                  <dd className="mt-0.5 font-mono capitalize">{instrument.venue}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.freshness')}</dt>
+                  <dd className="mt-0.5">
+                    <Badge className={labelTone(evidence.label)}>{t(LABEL_TEXT[evidence.label])}</Badge>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.eventTime')}</dt>
+                  <dd className="mt-0.5 font-mono text-xs">{dateTime(evidence.data_time)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.receivedAt')}</dt>
+                  <dd className="mt-0.5 font-mono text-xs">{dateTime(evidence.received_at)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.sequence')}</dt>
+                  <dd className="mt-0.5 font-mono tabular-nums">{evidence.sequence ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.age')}</dt>
+                  <dd className="mt-0.5 font-mono tabular-nums">{ageText(evidence.age_ms)}</dd>
+                </div>
+              </dl>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t('screen.cockpitDetail.chart')}</CardTitle>
