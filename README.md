@@ -132,4 +132,3 @@ compact charts and deterministic replay. See
 **Sourced evidence → paper decision → replayable result**
 
 </div>
-
