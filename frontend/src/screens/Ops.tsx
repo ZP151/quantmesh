@@ -7,6 +7,7 @@ import { Page } from '@/components/page'
 import { Notice, Surface, useSurface } from '@/components/state'
 import { api, ApiError } from '@/lib/api'
 import { venueLabel } from '@/lib/format'
+import { usePreferences } from '@/lib/preferences'
 
 // --- Kill switch ----------------------------------------------------------
 
@@ -19,6 +20,7 @@ import { venueLabel } from '@/lib/format'
 export function KillSwitchScreen() {
   const query = useSurface(['kill-switch'], api.killSwitch)
   const queryClient = useQueryClient()
+  const { t } = usePreferences()
   const flip = useMutation({
     mutationFn: ({ engage, venue }: { engage: boolean; venue?: string }) =>
       engage ? api.engageKillSwitch(venue) : api.disarmKillSwitch(venue),
@@ -31,23 +33,22 @@ export function KillSwitchScreen() {
 
   return (
     <Page
-      title="Kill switch"
-      description="The global gate and the per-venue gates. Engaging refuses every paper and live submission through the accounting risk gate — no model surface is involved, and disarm always works."
+      title={t('screen.killSwitch.title')}
+      description={t('screen.killSwitch.description')}
     >
-      <Surface query={query} title="Kill switch">
+      <Surface query={query} title={t('screen.killSwitch.title')}>
         {(state) => (
           <div className="space-y-5">
             <Card className={state.kill_switch ? 'border-destructive/50' : ''}>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Power className="size-4" aria-hidden /> Global
+                  <Power className="size-4" aria-hidden /> {t('screen.killSwitch.global')}
                   <Badge variant={state.kill_switch ? 'destructive' : 'outline'} className="font-mono text-[10px]">
-                    {state.kill_switch ? 'engaged' : 'disarmed'}
+                    {state.kill_switch ? t('screen.killSwitch.engaged') : t('screen.killSwitch.disarmed')}
                   </Badge>
                 </CardTitle>
                 <CardDescription>
-                  Refuses every order — paper and live — at the accounting gate. The order form on
-                  the Paper order screen shows the same bit.
+                  {t('screen.killSwitch.globalDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -57,7 +58,7 @@ export function KillSwitchScreen() {
                   disabled={flip.isPending}
                   onClick={() => void flip.mutate({ engage: !state.kill_switch })}
                 >
-                  {state.kill_switch ? 'Disarm global kill switch' : 'Engage global kill switch'}
+                  {state.kill_switch ? t('screen.killSwitch.disarmGlobal') : t('screen.killSwitch.engageGlobal')}
                 </Button>
               </CardContent>
             </Card>
@@ -65,9 +66,9 @@ export function KillSwitchScreen() {
             {Object.keys(state.kill_switches).length > 0 && (
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Per venue</CardTitle>
+                  <CardTitle className="text-base">{t('screen.killSwitch.perVenue')}</CardTitle>
                   <CardDescription>
-                    A venue switch blocks only its venue; the global bit overrides everything.
+                    {t('screen.killSwitch.perVenueDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -80,7 +81,9 @@ export function KillSwitchScreen() {
                         disabled={flip.isPending}
                         onClick={() => void flip.mutate({ engage: !engaged, venue: name })}
                       >
-                        {engaged ? `Disarm ${name}` : `Engage ${name}`}
+                        {engaged
+                          ? t('screen.killSwitch.disarmVenue', { venue: venueLabel(name) })
+                          : t('screen.killSwitch.engageVenue', { venue: venueLabel(name) })}
                       </Button>
                     </div>
                   ))}
@@ -102,26 +105,27 @@ export function KillSwitchScreen() {
  * from the UI (ADR-0011 decision 6). */
 export function EnablementScreen() {
   const query = useSurface(['enablement'], api.enablement)
+  const { t } = usePreferences()
 
   return (
     <Page
-      title="Enablement"
-      description="Per-venue live-trading state from the approval ledger. Read-only: enablement transitions are operator-owned and never permitted from the UI."
+      title={t('screen.enablement.title')}
+      description={t('screen.enablement.description')}
     >
-      <Surface query={query} title="Enablement">
+      <Surface query={query} title={t('screen.enablement.title')}>
         {(enablement) => (
           <div className="space-y-5">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <KeyRound className="size-4" aria-hidden /> Venues
+                  <KeyRound className="size-4" aria-hidden /> {t('screen.enablement.venues')}
                   {!enablement.bound && (
                     <Badge variant="outline" className="text-[10px]">
-                      ledger not bound
+                      {t('screen.enablement.ledgerUnbound')}
                     </Badge>
                   )}
                 </CardTitle>
-                <CardDescription>The approval ledger's current states.</CardDescription>
+                  <CardDescription>{t('screen.enablement.ledgerDescription')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 {enablement.states.map(({ venue, state }) => (
@@ -131,7 +135,11 @@ export function EnablementScreen() {
                       variant={state === 'enabled' ? 'default' : state === 'pending' ? 'secondary' : 'outline'}
                       className="font-mono text-[10px]"
                     >
-                      {state}
+                      {state === 'enabled'
+                        ? t('screen.enablement.enabled')
+                        : state === 'pending'
+                          ? t('screen.enablement.pending')
+                          : t('screen.enablement.disabled')}
                     </Badge>
                   </div>
                 ))}
@@ -139,8 +147,8 @@ export function EnablementScreen() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">The recorded gate</CardTitle>
-                <CardDescription>The exact text recorded at enablement time (ADR-0011 decision 6).</CardDescription>
+                  <CardTitle className="text-base">{t('screen.enablement.gateTitle')}</CardTitle>
+                  <CardDescription>{t('screen.enablement.gateDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <Notice>{enablement.gate_text}</Notice>

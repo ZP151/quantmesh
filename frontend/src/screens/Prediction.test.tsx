@@ -107,6 +107,7 @@ function renderScreen() {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  window.localStorage.clear()
   mocked.prediction.mockResolvedValue(ROWS)
 })
 
@@ -148,6 +149,18 @@ describe('PredictionScreen', () => {
     await waitFor(() => expect(screen.getByText('BTC above $100k on 2026-06-26')).toBeInTheDocument())
     const link = screen.getByRole('link', { name: 'Calibration & forecast history' })
     expect(link).toHaveAttribute('href', '/research/forecasts')
+  })
+
+  it('localizes comparison labels when the global preference is zh-CN', async () => {
+    window.localStorage.setItem(
+      'quantmesh.preferences',
+      JSON.stringify({ locale: 'zh-CN', theme: 'dark' }),
+    )
+    renderScreen()
+    await waitFor(() => expect(screen.getByText('预测市场')).toBeInTheDocument())
+    expect(screen.getAllByText('买价 / 卖价').length).toBe(4)
+    expect(screen.getByText('校准与预测历史')).toBeInTheDocument()
+    expect(screen.getByText('到期 2026-06-26')).toBeInTheDocument()
   })
 
   it('renders the typed error state when no board is attached', async () => {

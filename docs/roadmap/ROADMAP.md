@@ -262,7 +262,8 @@ Initial deliverables:
 
 - Persistent English/Simplified Chinese UI language selection.
 - System/light/dark theme selection with no-flash startup behavior.
-- Localized shell, navigation, command palette and settings controls.
+- Localized every SPA screen, shell, navigation, command palette and settings
+  controls with reviewed English/zh-CN copy.
 - Reviewed translations for the highest-value domain screens.
 - Real-time cockpit charting and quote/book/trade freshness views over the
   existing read-only MarketUpdate, sequence and replay contracts.
@@ -271,7 +272,7 @@ Initial deliverables:
 Exit criteria:
 
 - Locale/theme survive reload and pass keyboard, compact-width and browser
-  acceptance checks.
+  acceptance checks on every SPA route.
 - Every displayed live value has venue, source, sequence/age and degraded
   state semantics; synthetic/demo data remains unmistakably labeled.
 - A clean checkout can run the demo and read-only live/replay workflows with

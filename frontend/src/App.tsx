@@ -16,6 +16,7 @@ import { RiskScreen } from '@/screens/Risk'
 import { SettingsScreen } from '@/screens/Settings'
 import { OrdersScreen, PnLScreen, PositionsScreen } from '@/screens/Trading'
 import { WatchlistScreen } from '@/screens/Watchlist'
+import { usePreferences } from '@/lib/preferences'
 
 // The target IA (iteration 0014 Phase C): the 13 legacy screens
 // consolidated under the /app router base, per LEGACY_TO_SPA. The
@@ -24,14 +25,12 @@ import { WatchlistScreen } from '@/screens/Watchlist'
 // path; every other screen renders the same providers.
 
 function NotFound() {
+  const { t } = usePreferences()
   return (
     <Card className="mx-auto max-w-md">
       <CardHeader>
-        <CardTitle>No such screen</CardTitle>
-        <CardDescription>
-          That deep link is not part of the workstation. Use the command palette (⌘K) to jump to a
-          screen.
-        </CardDescription>
+        <CardTitle>{t('shell.notFound.title')}</CardTitle>
+        <CardDescription>{t('shell.notFound.description')}</CardDescription>
       </CardHeader>
     </Card>
   )
