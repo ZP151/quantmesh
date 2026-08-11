@@ -2,18 +2,18 @@ import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
 import { WorkspaceLoading } from '@/components/workspace-loading'
 import {
   api,
   type HistoricalVenue,
   type HistoryRange,
 } from '@/lib/api'
-import { money, quantity } from '@/lib/format'
 import { useLiveConnection } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
 import { WorkspaceHeader } from './instrument/WorkspaceHeader'
 import { ComparisonPicker } from './instrument/ComparisonPicker'
+import { DecisionRail } from './instrument/DecisionRail'
+import { ForecastEvidence, type ForecastHorizon } from './instrument/ForecastEvidence'
 import { MarketCanvas } from './instrument/MarketCanvas'
 import { WorkspaceDegraded, WorkspaceError } from './instrument/WorkspaceStates'
 
@@ -28,11 +28,16 @@ function historyRange(value: string | null): HistoryRange {
   return value !== null && RANGES.includes(value as HistoryRange) ? value as HistoryRange : '6m'
 }
 
+function forecastHorizon(value: string | null): ForecastHorizon {
+  return value === '7' || value === '126' ? Number(value) as ForecastHorizon : 30
+}
+
 export function InstrumentWorkspaceScreen() {
   const { t } = usePreferences()
   const { symbol = '', venue = '' } = useParams<{ symbol: string; venue: string }>()
   const [search, setSearch] = useSearchParams()
   const range = historyRange(search.get('range'))
+  const horizon = forecastHorizon(search.get('horizon'))
   const compare = search.getAll('compare').filter(Boolean).slice(0, 3)
   const mode = search.get('mode') === 'line' ? 'line' : 'candles'
   const volume = search.get('volume') === '1'
@@ -53,9 +58,14 @@ export function InstrumentWorkspaceScreen() {
   if (query.isPending) return <WorkspaceLoading />
   if (query.isError) return <WorkspaceError error={query.error} symbol={symbol} venue={venue} />
   const workspace = query.data
-  const forecastPath = workspace.forecast?.paths.find((path) => path.sessions === 30)
+  const forecastPath = workspace.forecast?.paths.find((path) => path.sessions === horizon)
     ?? workspace.forecast?.paths[0]
     ?? null
+  const syntheticForecast = [
+    workspace.history.source,
+    workspace.history.license,
+    ...(workspace.forecast?.limitations ?? []),
+  ].some((value) => value.toLowerCase().includes('synthetic'))
   const liveReason = workspace.live.reason
     ?? workspace.proposal.blockers[0]
     ?? t('screen.workspace.staleReason')
@@ -161,49 +171,20 @@ export function InstrumentWorkspaceScreen() {
               <dd className="max-w-36 truncate font-mono">{workspace.history.license}</dd>
             </div>
           </dl>
-          <div className="space-y-1 px-3">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {t('screen.workspace.forecast')}
-            </h2>
-            <p className="text-xs">
-              {workspace.forecast === null
-                ? workspace.forecast_unavailable_reason ?? t('screen.workspace.noForecast')
-                : workspace.forecast.eligible
-                  ? t('screen.workspace.forecastEligible')
-                  : t('screen.workspace.forecastBlocked')}
-            </p>
-          </div>
+          <ForecastEvidence
+            forecast={workspace.forecast}
+            horizon={horizon}
+            onHorizonChange={(next) => updateParam('horizon', next === 30 ? null : String(next))}
+            synthetic={syntheticForecast}
+            unavailableReason={workspace.forecast_unavailable_reason}
+          />
         </section>
 
         <aside className="space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.decision')}>
-          <div className="space-y-1 px-4">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {t('screen.workspace.decision')}
-            </h2>
-            <p className="text-sm font-medium">{t('screen.workspace.paperOnly')}</p>
-          </div>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 text-xs">
-            <div>
-              <dt className="text-muted-foreground">{t('screen.workspace.cash')}</dt>
-              <dd className="font-mono tabular-nums">{money(workspace.risk.cash)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{t('screen.workspace.position')}</dt>
-              <dd className="font-mono tabular-nums">
-                {workspace.position === null ? t('screen.workspace.noPosition') : quantity(workspace.position.quantity)}
-              </dd>
-            </div>
-          </dl>
-          {workspace.proposal.blockers.length > 0 && (
-            <ul className="space-y-1 border-y border-border px-4 py-3 text-xs text-muted-foreground">
-              {workspace.proposal.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
-            </ul>
-          )}
-          <div className="px-4">
-            <Button className="w-full" disabled={!workspace.proposal.allowed} type="button">
-              {t('screen.workspace.createProposal')}
-            </Button>
-          </div>
+          <DecisionRail
+            key={`${workspace.instrument.venue}:${workspace.instrument.symbol}`}
+            workspace={workspace}
+          />
         </aside>
       </div>
     </div>
