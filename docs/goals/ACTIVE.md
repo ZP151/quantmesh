@@ -63,10 +63,18 @@ adapter and hardened controller passed 50/50 focused tests; four independent
 review rounds closed all Critical/Important findings around process, path,
 chronology, leakage and portable evidence boundaries.
 
-Current next action: Task 3, run the pinned NautilusTrader Hyperliquid recorded
-replay and sandbox-semantics comparator in a separate credential-free process.
-FinRL-X, NautilusTrader and Lightweight Charts remain candidates until their
-explicit evidence/admission gates pass.
+Task 3 completed through `9d416d6`. The pinned NautilusTrader comparator is
+deterministic and passes installation, license, chronology, leakage and
+paper-only gates, but honestly fails `contract_mapping`: MARGIN collateral
+semantics differ from QuantMesh cash accounting and the pinned sandbox client
+has no standalone offline replay API. It remains an LGPL process-isolated
+comparator and is not a release dependency. Final scoped review found no open
+Critical or Important issue.
+
+Current next action: Task 4, generate the common FinRL-X/Nautilus scorecard from
+the committed evidence and record ADR-0015 selecting reject or isolated-
+comparator boundaries before product workspace implementation begins.
+Lightweight Charts remains a candidate until its later explicit admission gate.
 
 ## Current state
 

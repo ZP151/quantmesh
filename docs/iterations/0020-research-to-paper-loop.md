@@ -257,6 +257,33 @@ not sufficient for cross-agent recovery.
   evidence was changed. Task 3 is the separate pinned NautilusTrader
   Hyperliquid recorded-replay/sandbox comparator.
 
+### Task 3 completion — pinned NautilusTrader replay/sandbox comparator
+
+- Commits `25d5dc5`, `5fb9d4b`, `d7dede2` and `9d416d6` add the
+  credential-free comparator at NautilusTrader `v1.231.0` / commit
+  `27a8e54e7ac3c57d6cbf8891f0283dfbaee97317`. The controller independently
+  verifies the fetched tag, detached HEAD, package version, LGPL-3.0 license
+  hash, `pip check`, environment closure and two physically independent runs.
+- The recorded Hyperliquid candle fixture is parsed through QuantMesh's wire
+  contract. `n` remains trade count, replay order is explicitly labeled
+  `replay_ordinal` / `quantmesh-fixture-order`, and any source `sequence_gap`,
+  duplicate, descending timestamp or non-60-second interval fails closed.
+- The real isolated run is deterministic with digest
+  `cfa10c25c523cfbd2f13d639d95f7d6116e57ea6e213d7d5ef0f26cec8f64514`.
+  Windows install, license, chronology, no-leakage and paper-only gates pass.
+  Overall evidence remains honestly `status="failed"` because Nautilus MARGIN
+  balance semantics differ from the QuantMesh cash account and pinned
+  `SandboxExecutionClientConfig` has no standalone offline recorded-bar path;
+  `contract_mapping=false` is retained rather than normalized away.
+- Three fresh review rounds closed fixture provenance, fetched-tag identity,
+  generic Windows reparse cleanup, portable HTTPS transcript and Windows
+  UNC/device metadata findings. Final scoped review approved with no remaining
+  Critical or Important issue. Verification includes the 111-test combined
+  Nautilus/FinRL/risk/replay regression, 44/44 final Nautilus tests and Ruff.
+- No Nautilus package or LGPL code entered the release runtime, no credential
+  or live endpoint was read, and no execution authority changed. Task 4 now
+  owns the generated scorecard and ADR disposition for both failed candidates.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another

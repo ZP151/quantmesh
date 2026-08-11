@@ -252,7 +252,7 @@ Commit: `git commit -m "research: run pinned FinRL-X NVDA bakeoff (#107)"`.
 - Consumes: Task 1 evidence contract; `src/quantmesh/hyperliquid/fixtures/wire_candles.json`; NautilusTrader v1.231.0 in an isolated venv.
 - Produces: `run_nautilus(fixture_path, work_root) -> FrameworkRunEvidence`, `events.jsonl`, `fills.json`, and `account.json`.
 
-- [ ] **Step 1: Write fixture-export and deterministic-fill tests**
+- [x] **Step 1: Write fixture-export and deterministic-fill tests**
 
 ```python
 def test_nautilus_comparator_preserves_replay_order_and_fill_identity(tmp_path):
@@ -264,29 +264,29 @@ def test_nautilus_comparator_preserves_replay_order_and_fill_identity(tmp_path):
     assert result.deterministic
 ```
 
-- [ ] **Step 2: Run the test and capture the red result**
+- [x] **Step 2: Run the test and capture the red result**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_nautilus_bakeoff.py --basetemp .pytest-0020-task3`
 
 Expected: FAIL because the Nautilus runner does not exist.
 
-- [ ] **Step 3: Export recorded Hyperliquid candles without changing provenance**
+- [x] **Step 3: Export recorded Hyperliquid candles without changing provenance**
 
 Parse through QuantMesh's existing Hyperliquid wire parser, then write `timestamp,open,high,low,close,volume,sequence,source` rows. The export must reject a symbol mismatch, duplicate timestamp, non-monotonic sequence, or a gap lacking an explicit `sequence_gap=true` mark.
 
-- [ ] **Step 4: Implement the isolated Nautilus driver**
+- [x] **Step 4: Implement the isolated Nautilus driver**
 
 Use the pinned low-level `BacktestEngine`, add venue `HYPERLIQUID` with `OmsType.NETTING`, `AccountType.MARGIN`, USD/USDC starting balance, deterministic IDs, and a 1-minute external `BarType`. Convert the exported frame through `BarDataWrangler`, submit one limit buy after the first eligible bar, and capture order/fill/account events. The driver source must retain its own QuantMesh copyright only; do not copy upstream example bodies.
 
-- [ ] **Step 5: Add the sandbox semantics comparison**
+- [x] **Step 5: Add the sandbox semantics comparison**
 
 Run the same order intent through Nautilus's `SandboxExecutionClientConfig` with `use_random_ids=False`, `bar_execution=True`, `trade_execution=True`, and `use_reduce_only=True`. Compare status transitions, fill quantity/price, deterministic IDs, and account delta with QuantMesh's `PaperAccount` over the same bars. Record mismatches rather than normalizing them away.
 
-- [ ] **Step 6: Install and execute in a separate pinned venv**
+- [x] **Step 6: Install and execute in a separate pinned venv**
 
 Install `nautilus_trader==1.231.0`, assert package version and repository tag commit, run twice, compare canonical hashes, run `pip check`, record environment bytes/RSS/duration, and hash LGPL-3.0. No Hyperliquid key or network endpoint may be read.
 
-- [ ] **Step 7: Verify, record, and commit**
+- [x] **Step 7: Verify, record, and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_nautilus_bakeoff.py tests/test_hyperliquid_risk.py tests/test_live_replay.py --basetemp .pytest-0020-task3-green`
 
