@@ -3,62 +3,39 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
 import sys
 import tempfile
 from collections.abc import Mapping
-from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
-from types import MappingProxyType
 
-from quantmesh.research.frameworks import FrameworkRunEvidence, FrameworkScore
+from quantmesh.research.frameworks import (
+    FRAMEWORK_SCORE_INPUT_NAMES,
+    FRAMEWORK_SCORE_WEIGHTS,
+    FrameworkRunEvidence,
+    FrameworkScore,
+    calculate_framework_total,
+    evaluate_framework_policy,
+)
 
-_SCORE_CATEGORIES = (
-    "workflow_fit",
-    "adapter_cost",
-    "maintenance",
-    "resource_cost",
-    "packaging",
-    "observability",
-    "migration",
-)
-_HARD_GATES = (
-    "license",
-    "windows_install",
-    "deterministic",
-    "chronological_split",
-    "no_leakage",
-    "paper_only",
-    "contract_mapping",
-)
-_COMPARATOR_GATES = _HARD_GATES[:-1]
-_TOTAL_QUANTUM = Decimal("0.01")
-
-DEFAULT_SCORE_WEIGHTS: Mapping[str, float] = MappingProxyType(
-    {
-        "workflow_fit": 25,
-        "adapter_cost": 20,
-        "maintenance": 15,
-        "resource_cost": 15,
-        "packaging": 10,
-        "observability": 10,
-        "migration": 5,
-    }
-)
+DEFAULT_SCORE_WEIGHTS = FRAMEWORK_SCORE_WEIGHTS
+_FINRL_SOURCE_ID = "docs/evidence/0020/finrl-x-run.json"
+_NAUTILUS_SOURCE_ID = "docs/evidence/0020/nautilus-run.json"
 
 
 def _validate_weights(weights: Mapping[str, float]) -> dict[str, float]:
-    unknown = set(weights) - set(_SCORE_CATEGORIES)
+    unknown = set(weights) - set(FRAMEWORK_SCORE_INPUT_NAMES)
     if unknown:
         raise ValueError(f"unknown weight categories: {sorted(unknown)}")
-    missing = set(_SCORE_CATEGORIES) - set(weights)
+    missing = set(FRAMEWORK_SCORE_INPUT_NAMES) - set(weights)
     if missing:
         raise ValueError(f"missing weight categories: {sorted(missing)}")
 
     normalized: dict[str, float] = {}
-    for name in _SCORE_CATEGORIES:
+    for name in FRAMEWORK_SCORE_INPUT_NAMES:
         value = weights[name]
         if (
             isinstance(value, bool)
@@ -70,17 +47,19 @@ def _validate_weights(weights: Mapping[str, float]) -> dict[str, float]:
         normalized[name] = float(value)
     if not any(normalized.values()):
         raise ValueError("weight total must be positive")
+    if normalized != dict(FRAMEWORK_SCORE_WEIGHTS):
+        raise ValueError("weights must equal the exact schema v1 weights")
     return normalized
 
 
 def _normalize_score_inputs(run: FrameworkRunEvidence) -> tuple[dict[str, float], list[str]]:
-    unknown = set(run.score_inputs) - set(_SCORE_CATEGORIES)
+    unknown = set(run.score_inputs) - set(FRAMEWORK_SCORE_INPUT_NAMES)
     if unknown:
         raise ValueError(f"unknown score input categories: {sorted(unknown)}")
 
     normalized: dict[str, float] = {}
     missing: list[str] = []
-    for name in _SCORE_CATEGORIES:
+    for name in FRAMEWORK_SCORE_INPUT_NAMES:
         if name not in run.score_inputs:
             normalized[name] = 0.0
             missing.append(name)
@@ -97,21 +76,12 @@ def _normalize_score_inputs(run: FrameworkRunEvidence) -> tuple[dict[str, float]
     return normalized, missing
 
 
-def _weighted_total(scores: Mapping[str, float], weights: Mapping[str, float]) -> float:
-    weighted = sum(
-        Decimal(str(scores[name])) * Decimal(str(weights[name]))
-        for name in _SCORE_CATEGORIES
-    )
-    total_weight = sum(Decimal(str(weights[name])) for name in _SCORE_CATEGORIES)
-    return float((weighted / total_weight).quantize(_TOTAL_QUANTUM, rounding=ROUND_HALF_UP))
-
-
 def score_framework(
     run: FrameworkRunEvidence,
     weights: Mapping[str, float] = DEFAULT_SCORE_WEIGHTS,
 ) -> FrameworkScore:
     """Apply the exact scorecard without inferring unavailable soft evidence."""
-    normalized_weights = _validate_weights(weights)
+    _validate_weights(weights)
     soft_scores, missing_inputs = _normalize_score_inputs(run)
     hard_gates = {
         "license": run.checks.get("license", False),
@@ -122,18 +92,10 @@ def score_framework(
         "paper_only": run.checks.get("paper_only", False),
         "contract_mapping": run.checks.get("contract_mapping", False),
     }
-    total = _weighted_total(soft_scores, normalized_weights)
-    runtime_admissible = all(hard_gates.values()) and total >= 80
-    if runtime_admissible:
-        disposition = "adopt-adapter"
-    elif (
-        run.framework == "nautilus-trader"
-        and all(hard_gates[name] for name in _COMPARATOR_GATES)
-        and not hard_gates["contract_mapping"]
-    ):
-        disposition = "isolated-comparator"
-    else:
-        disposition = "reject"
+    total = calculate_framework_total(soft_scores)
+    runtime_admissible, disposition = evaluate_framework_policy(
+        run.framework, hard_gates, total
+    )
 
     limitations = list(run.limitations)
     limitations.extend(f"missing-score-input:{name}" for name in missing_inputs)
@@ -161,11 +123,16 @@ def _paths_alias(left: Path, right: Path) -> bool:
     return False
 
 
-def _read_evidence(path: Path) -> FrameworkRunEvidence:
-    return FrameworkRunEvidence.model_validate_json(path.read_text(encoding="utf-8"))
+def _read_evidence(path: Path) -> tuple[FrameworkRunEvidence, str]:
+    source_bytes = path.read_bytes()
+    record_sha256 = hashlib.sha256(source_bytes).hexdigest()
+    run = FrameworkRunEvidence.model_validate_json(source_bytes, strict=True)
+    return run, record_sha256
 
 
-def _scorecard_entry(run: FrameworkRunEvidence) -> dict[str, object]:
+def _scorecard_entry(
+    run: FrameworkRunEvidence, source_id: str, record_sha256: str
+) -> dict[str, object]:
     score = score_framework(run)
     payload = score.model_dump(mode="json")
     payload["resource_facts"] = {
@@ -176,6 +143,8 @@ def _scorecard_entry(run: FrameworkRunEvidence) -> dict[str, object]:
     payload["evidence"] = {
         "input_digest": run.input_digest,
         "output_digest": run.output_digest,
+        "record_sha256": record_sha256,
+        "source_id": source_id,
         "status": run.status,
     }
     return payload
@@ -209,8 +178,8 @@ def _generate(finrl_path: Path, nautilus_path: Path, output_path: Path) -> None:
     if _paths_alias(output_path, finrl_path) or _paths_alias(output_path, nautilus_path):
         raise ValueError("output must not alias an evidence input")
 
-    finrl = _read_evidence(finrl_path)
-    nautilus = _read_evidence(nautilus_path)
+    finrl, finrl_record_sha256 = _read_evidence(finrl_path)
+    nautilus, nautilus_record_sha256 = _read_evidence(nautilus_path)
     frameworks = [finrl.framework, nautilus.framework]
     if len(set(frameworks)) != 2:
         raise ValueError("framework evidence inputs must not be duplicates")
@@ -220,7 +189,12 @@ def _generate(finrl_path: Path, nautilus_path: Path, output_path: Path) -> None:
         raise ValueError("--nautilus input must contain nautilus-trader evidence")
 
     payload: dict[str, object] = {
-        "frameworks": [_scorecard_entry(finrl), _scorecard_entry(nautilus)],
+        "frameworks": [
+            _scorecard_entry(finrl, _FINRL_SOURCE_ID, finrl_record_sha256),
+            _scorecard_entry(
+                nautilus, _NAUTILUS_SOURCE_ID, nautilus_record_sha256
+            ),
+        ],
         "schema_version": 1,
     }
     _write_atomic(output_path, payload)

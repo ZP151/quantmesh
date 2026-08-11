@@ -304,6 +304,18 @@ not sufficient for cross-agent recovery.
   zero copied upstream files and zero runtime dependencies, and selects the
   native workspace implementation as the fallback. The release closure is
   unchanged.
+- Fix round 1 now validates schema-v1 evidence and scorecards in strict mode,
+  forbids extra or coerced/non-finite values, enforces the exact seven hard
+  gates and seven soft categories, and rechecks score totals, admission and
+  disposition when a scorecard is loaded. The aggregate binds each framework
+  to its repo-logical source ID and the SHA-256 of the exact bytes validated;
+  deterministic regeneration produced
+  `b2cff147ea1145658db43107abd7d4016b2b07f4e6739c029162c6c6ae1c063b`.
+- Fresh Task 1-4 plus security verification is 173/173 tests. A unique clean
+  virtual environment installed `-e ".[dev,research,e2e]"` successfully, and
+  its Python reviewed the 64-package release closure (58 packages installed on
+  Windows) with every license allowed. The validated temporary root was then
+  removed and verified absent; the shared `.venv` was not mutated.
 - **Status: implementation result pending fresh review; Task 4 is not yet
   completed or approved.** Task 5 (venue-aware historical data contracts and
   service) becomes the next action only after that review clears Task 4.
