@@ -579,6 +579,17 @@ not sufficient for cross-agent recovery.
   history, 252-return fit, validation and interval-test boundaries are explicit.
   Twenty-two forecast tests plus research compatibility pass 76/76; focused
   Ruff, formatting and diff checks pass.
+- Task 8 initial implementation is complete and awaiting independent review.
+  It adds an append-only proposal event ledger and explicit preview/confirm
+  service over the existing forecast validator, `QuoteFence`, paper account,
+  matcher and order journal. Forecast drift after preview, missing journal,
+  invalid token and ineligible evidence fail before submission; real quotes
+  keep the existing provenance/continuity/freshness checks, while only an
+  explicit demo quote provider can use `demo-synthetic`. Kernel refusals remain
+  terminal rejected orders with the original reason. A journal-first retry
+  recovers a failed proposal transition without duplicating fills. Thirteen
+  proposal tests and the live-fence/account/journal matrix pass 71/71; focused
+  Ruff and formatting pass. Independent review remains the gate before Task 9.
 
 ## Acceptance criteria
 

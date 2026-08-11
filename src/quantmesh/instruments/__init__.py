@@ -13,10 +13,15 @@ from quantmesh.instruments.contracts import (
     HistoryRange,
     InstrumentSnapshot,
     OOSForecast,
+    PaperProposal,
     PriceForecastArtifact,
+    ProposalConfirmation,
+    ProposalEvent,
+    ProposalStatus,
 )
 from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
 from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
 
 __all__ = [
     "ComparisonPoint",
@@ -32,7 +37,13 @@ __all__ = [
     "HistoryService",
     "InstrumentSnapshot",
     "OOSForecast",
+    "PaperDecisionService",
+    "PaperProposal",
     "PriceForecastArtifact",
     "PriceForecastRegistry",
+    "ProposalConfirmation",
+    "ProposalEvent",
+    "ProposalLedger",
+    "ProposalStatus",
     "run_price_forecast",
 ]

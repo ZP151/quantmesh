@@ -20,7 +20,8 @@ from pydantic import (
 from quantmesh.data.layout import validate_dataset_name, validate_symbol
 from quantmesh.data.manifest import SeriesCoverage
 from quantmesh.domain.market_data import interval_to_timedelta
-from quantmesh.domain.models import Instrument, Venue
+from quantmesh.domain.models import Instrument, Side, Venue
+from quantmesh.domain.orders import Order, OrderType
 from quantmesh.live.contract import Provenance
 
 AdjustmentMode = Literal["unadjusted", "split-adjusted", "total-return"]
@@ -28,6 +29,8 @@ _COMPARISON_KEY = re.compile(r"^[a-z0-9_-]+:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 FORECAST_ID_PATTERN = r"^forecast-[0-9a-f]{24}$"
 _FORECAST_ID = re.compile(FORECAST_ID_PATTERN)
+PROPOSAL_ID_PATTERN = r"^proposal-[0-9a-f]{24}$"
+_PROPOSAL_ID = re.compile(PROPOSAL_ID_PATTERN)
 
 
 def _utc(value: datetime, name: str) -> datetime:
@@ -756,4 +759,155 @@ class PriceForecastArtifact(StrictContract):
             raise ValueError("artifact test boundaries must match interval-tested targets")
         if self.eligible != (not self.blockers):
             raise ValueError("eligible must be true if and only if blockers are empty")
+        return self
+
+
+class ProposalStatus(StrEnum):
+    """Append-only paper proposal lifecycle."""
+
+    PENDING = "pending"
+    BLOCKED = "blocked"
+    CONFIRMED = "confirmed"
+    REJECTED = "rejected"
+
+
+class PaperProposal(StrictContract):
+    """Immutable forecast-to-paper intent; creation never places an order."""
+
+    id: str
+    artifact_id: str
+    instrument: InstrumentSnapshot
+    dataset_id: str
+    dataset_revision: int = Field(ge=1)
+    forecast_generated_at: datetime
+    model_version: str = Field(min_length=1)
+    config_digest: str
+    history_digest: str
+    side: Side
+    quantity: float = Field(gt=0)
+    order_type: OrderType
+    limit_price: float | None = Field(default=None, gt=0)
+    created_at: datetime
+    confirmation_token: str
+    status: ProposalStatus
+    blockers: tuple[str, ...] = Field(default_factory=tuple)
+    order_id: str | None = None
+    quote_provenance: Literal["real", "demo-synthetic"] | None = None
+
+    @field_validator("id")
+    @classmethod
+    def id_is_canonical(cls, value: str) -> str:
+        if _PROPOSAL_ID.fullmatch(value) is None:
+            raise ValueError("proposal id must be proposal- plus 24 lowercase hex characters")
+        return value
+
+    @field_validator("artifact_id")
+    @classmethod
+    def artifact_id_is_canonical(cls, value: str) -> str:
+        if _FORECAST_ID.fullmatch(value) is None:
+            raise ValueError("artifact_id is not a canonical forecast id")
+        return value
+
+    @field_validator("instrument", mode="before")
+    @classmethod
+    def instrument_is_a_detached_snapshot(cls, value: object) -> object:
+        return _instrument_snapshot(value)
+
+    @field_validator("dataset_id")
+    @classmethod
+    def dataset_id_is_canonical(cls, value: str) -> str:
+        validate_dataset_name(value)
+        return value
+
+    @field_validator("forecast_generated_at", "created_at")
+    @classmethod
+    def proposal_times_are_utc(cls, value: datetime, info) -> datetime:
+        return _utc(value, info.field_name)
+
+    @field_validator("config_digest", "history_digest", "confirmation_token")
+    @classmethod
+    def digests_are_sha256(cls, value: str, info) -> str:
+        if _SHA256.fullmatch(value) is None:
+            raise ValueError(f"{info.field_name} must be lowercase sha256")
+        return value
+
+    @field_validator("blockers")
+    @classmethod
+    def blockers_are_unique_and_nonblank(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not item.strip() for item in value) or len(set(value)) != len(value):
+            raise ValueError("proposal blockers must be non-blank and unique")
+        return value
+
+    @model_validator(mode="after")
+    def proposal_state_is_consistent(self) -> "PaperProposal":
+        if self.created_at < self.forecast_generated_at:
+            raise ValueError("proposal cannot predate its forecast artifact")
+        if (self.order_type is OrderType.LIMIT) != (self.limit_price is not None):
+            raise ValueError("proposal order_type must match limit_price presence")
+        if self.status is ProposalStatus.PENDING:
+            if self.blockers or self.order_id is not None or self.quote_provenance is not None:
+                raise ValueError("pending proposal cannot carry blockers or order evidence")
+        elif self.status is ProposalStatus.BLOCKED:
+            if not self.blockers or self.order_id is not None or self.quote_provenance is not None:
+                raise ValueError("blocked proposal requires blockers and no order evidence")
+        elif self.status is ProposalStatus.CONFIRMED:
+            if self.blockers or self.order_id is None or self.quote_provenance is None:
+                raise ValueError("confirmed proposal requires order and quote evidence")
+        elif self.status is ProposalStatus.REJECTED and (
+            not self.blockers or self.order_id is None or self.quote_provenance is None
+        ):
+            raise ValueError("rejected proposal requires blocker, order and quote evidence")
+        return self
+
+
+class ProposalEvent(StrictContract):
+    """One durable proposal state transition."""
+
+    proposal_id: str
+    sequence: int = Field(ge=1)
+    recorded_at: datetime
+    proposal: PaperProposal
+
+    @field_validator("proposal_id")
+    @classmethod
+    def proposal_id_is_canonical(cls, value: str) -> str:
+        if _PROPOSAL_ID.fullmatch(value) is None:
+            raise ValueError("proposal_id is not canonical")
+        return value
+
+    @field_validator("recorded_at")
+    @classmethod
+    def recorded_at_is_utc(cls, value: datetime) -> datetime:
+        return _utc(value, "recorded_at")
+
+    @model_validator(mode="after")
+    def event_identity_matches(self) -> "ProposalEvent":
+        if self.proposal_id != self.proposal.id:
+            raise ValueError("proposal event identity does not match its snapshot")
+        return self
+
+
+class ProposalConfirmation(StrictContract):
+    """Typed result of an explicit confirmation attempt."""
+
+    proposal: PaperProposal
+    order: Order | None = None
+    blocker: str | None = None
+    quote_provenance: Literal["real", "demo-synthetic"] | None = None
+
+    @model_validator(mode="after")
+    def result_matches_proposal(self) -> "ProposalConfirmation":
+        terminal = self.proposal.status in {
+            ProposalStatus.CONFIRMED,
+            ProposalStatus.REJECTED,
+        }
+        if terminal != (self.order is not None):
+            raise ValueError("terminal confirmation result must carry its order")
+        if self.order is not None and self.order.order_id != self.proposal.order_id:
+            raise ValueError("confirmation order must match proposal order_id")
+        if self.quote_provenance != self.proposal.quote_provenance:
+            raise ValueError("confirmation quote provenance must match proposal")
+        if self.proposal.status in {ProposalStatus.BLOCKED, ProposalStatus.REJECTED}:
+            if self.blocker is None:
+                raise ValueError("blocked or rejected confirmation requires a blocker")
         return self
