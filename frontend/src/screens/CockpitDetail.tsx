@@ -340,12 +340,22 @@ export function CockpitDetailScreen() {
           : t('screen.cockpitDetail.waitingInstrument')
       }
       actions={
-        <Link
-          to="/cockpit"
-          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-        >
-          {t('screen.cockpitDetail.back')}
-        </Link>
+        <div className="flex items-center gap-3">
+          {instrument?.venue && (
+            <Link
+              to={`/instruments/${encodeURIComponent(instrument.venue)}/${encodeURIComponent(symbol)}`}
+              className="text-xs font-medium text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"
+            >
+              {t('screen.workspace.open')}
+            </Link>
+          )}
+          <Link
+            to="/cockpit"
+            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+          >
+            {t('screen.cockpitDetail.back')}
+          </Link>
+        </div>
       }
     >
       <div className="flex flex-wrap items-center gap-3">

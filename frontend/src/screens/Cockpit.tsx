@@ -471,7 +471,7 @@ export function CockpitScreen() {
                     <tr key={symbol} className="border-b border-border/60 last:border-0">
                       <td className="px-4 py-2.5">
                         <Link
-                          to={`/cockpit/${encodeURIComponent(symbol)}`}
+                          to={`/instruments/${encodeURIComponent(instrument.venue)}/${encodeURIComponent(symbol)}`}
                           className="font-mono font-medium hover:underline"
                         >
                           {symbol}

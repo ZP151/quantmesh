@@ -133,6 +133,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocked.liveState.mockResolvedValue(STATE)
   mocked.liveStatus.mockResolvedValue(STATUS)
+  mocked.replayExtent.mockRejectedValue(new Error('no replay lake attached'))
+  mocked.priceTrail.mockResolvedValue({ trail: {} })
   mockedStream.mockReturnValue('live')
 })
 
@@ -157,8 +159,8 @@ describe('CockpitScreen', () => {
   it('links every symbol to its detail screen', async () => {
     renderScreen()
     await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
-    expect(screen.getByRole('link', { name: 'BTC' })).toHaveAttribute('href', '/cockpit/BTC')
-    expect(screen.getByRole('link', { name: 'SOL' })).toHaveAttribute('href', '/cockpit/SOL')
+    expect(screen.getByRole('link', { name: 'BTC' })).toHaveAttribute('href', '/instruments/hyperliquid/BTC')
+    expect(screen.getByRole('link', { name: 'SOL' })).toHaveAttribute('href', '/instruments/hyperliquid/SOL')
   })
 
   it('exposes the evidence boundary on every row: event time, received time and sequence', async () => {
@@ -349,6 +351,10 @@ describe('CockpitDetailScreen', () => {
     expect(screen.getByText('Received')).toBeInTheDocument()
     expect(screen.getByText('Sequence')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open integrated workspace' })).toHaveAttribute(
+      'href',
+      '/instruments/hyperliquid/BTC',
+    )
   })
 
   it('hydrates the latest quote and trade from the snapshot before a new frame arrives', async () => {

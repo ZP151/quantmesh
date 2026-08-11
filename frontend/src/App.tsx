@@ -1,5 +1,7 @@
+import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/shell/AppShell'
+import { LoadingState } from '@/components/state'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AuditScreen } from '@/screens/Audit'
 import { CockpitDetailScreen } from '@/screens/CockpitDetail'
@@ -17,6 +19,8 @@ import { SettingsScreen } from '@/screens/Settings'
 import { OrdersScreen, PnLScreen, PositionsScreen } from '@/screens/Trading'
 import { WatchlistScreen } from '@/screens/Watchlist'
 import { usePreferences } from '@/lib/preferences'
+
+const InstrumentWorkspaceScreen = lazy(() => import('@/screens/InstrumentWorkspace'))
 
 // The target IA (iteration 0014 Phase C): the 13 legacy screens
 // consolidated under the /app router base, per LEGACY_TO_SPA. The
@@ -45,6 +49,14 @@ export default function App() {
         <Route path="markets/watchlist" element={<WatchlistScreen />} />
         <Route path="cockpit" element={<CockpitScreen />} />
         <Route path="cockpit/:symbol" element={<CockpitDetailScreen />} />
+        <Route
+          path="instruments/:venue/:symbol"
+          element={
+            <Suspense fallback={<LoadingState rows={3} />}>
+              <InstrumentWorkspaceScreen />
+            </Suspense>
+          }
+        />
         <Route path="prediction" element={<PredictionScreen />} />
         <Route path="research/experiments" element={<ExperimentsScreen />} />
         <Route path="research/promotions" element={<PromotionsScreen />} />
