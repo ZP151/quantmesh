@@ -19,6 +19,8 @@ The demo contract under test:
 import hashlib
 import json
 from pathlib import Path
+from types import SimpleNamespace
+from typing import cast
 
 import pytest
 from fastapi.testclient import TestClient
@@ -28,7 +30,9 @@ from quantmesh.demo.manifest import ANCHOR, MARKER_NAME, SURFACE_COUNTS, DemoSce
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.demo.seeder import (
     DEMO_COMMIT,
+    OWNERSHIP_NAME,
     DemoRootError,
+    _is_link_or_junction,
     is_demo_root,
     load_demo_root,
     reset_demo_root,
@@ -142,6 +146,102 @@ def test_reset_refuses_a_forged_marker_without_demo_identity(tmp_path: Path) -> 
         reset_demo_root(root, SCENARIO)
 
     assert sentinel.read_text(encoding="utf-8") == '{"operator": "data"}'
+
+
+def _write_v2_ownership(root: Path, entries: list[dict[str, str]]) -> None:
+    ownership_text = (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "entries": entries,
+                "format": "quantmesh-demo-ownership",
+                "version": 1,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+    (root / OWNERSHIP_NAME).write_text(ownership_text, encoding="utf-8")
+    ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()
+    marker_text = (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "format": "quantmesh-demo-root",
+                "ownership_sha256": ownership_sha256,
+                "version": 2,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+    (root / MARKER_NAME).write_text(marker_text, encoding="utf-8")
+
+
+def test_reset_refuses_a_self_signed_v2_inventory(tmp_path: Path) -> None:
+    root = tmp_path / "self-signed-user-data"
+    root.mkdir()
+    sentinel = root / "precious-user-file.json"
+    sentinel.write_text('{"operator":"data"}', encoding="utf-8")
+    provenance = root / "provenance.json"
+    provenance.write_text(
+        json.dumps(
+            {
+                "scenario": {"commit": DEMO_COMMIT},
+                "surfaces": {"orders": {"rows": 0}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    _write_v2_ownership(
+        root,
+        [
+            {
+                "path": path.name,
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                "type": "file",
+            }
+            for path in sorted((sentinel, provenance), key=lambda item: item.name)
+        ],
+    )
+
+    with pytest.raises(DemoRootError, match="complete seeded structure"):
+        reset_demo_root(root, SCENARIO)
+
+    assert sentinel.read_text(encoding="utf-8") == '{"operator":"data"}'
+
+
+def test_reset_requires_hashes_for_every_immutable_owned_file(tmp_path: Path) -> None:
+    root = tmp_path / "demo-with-weakened-inventory"
+    seed_demo_root(root, SCENARIO)
+    ownership_path = root / OWNERSHIP_NAME
+    ownership = json.loads(ownership_path.read_text(encoding="utf-8"))
+    provenance_entry = next(
+        entry for entry in ownership["entries"] if entry["path"] == "provenance.json"
+    )
+    provenance_entry.pop("sha256")
+    _write_v2_ownership(root, ownership["entries"])
+
+    with pytest.raises(DemoRootError, match="complete seeded structure"):
+        reset_demo_root(root, SCENARIO)
+
+    assert (root / "provenance.json").is_file()
+
+
+def test_windows_reparse_file_attribute_is_always_unsafe() -> None:
+    class ReparseNode:
+        def is_symlink(self) -> bool:
+            return False
+
+        def is_junction(self) -> bool:
+            return False
+
+        def lstat(self) -> SimpleNamespace:
+            return SimpleNamespace(st_file_attributes=0x0400)
+
+    assert _is_link_or_junction(cast(Path, ReparseNode())) is True
 
 
 def test_reset_refuses_unknown_files_even_inside_a_genuine_seeded_root(

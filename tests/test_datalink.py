@@ -493,6 +493,60 @@ def test_reset_clears_imports_and_datalink(demo_client, tmp_path):
     assert "upload the file again" in response.json()["detail"]
 
 
+def test_reset_refuses_unrelated_json_in_datalink_cache(demo_client):
+    client, _, service = demo_client
+    service.rest = ScriptedRestTransport(l2_books={"SOL": L2_PAYLOAD})
+    fetched = client.post("/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]})
+    assert fetched.status_code == 200
+    sentinel = service.root / ".datalink" / "hyperliquid" / "precious-user-file.json"
+    unrelated = {
+        "symbol": 7,
+        "coin": "precious-user-file",
+        "source": "hyperliquid-public",
+        "synthetic": False,
+        "fetched_at": "2026-08-12T00:00:00+00:00",
+        "payload": {},
+    }
+    sentinel.write_text(json.dumps(unrelated), encoding="utf-8")
+
+    response = client.post("/api/demo/reset")
+
+    assert response.status_code == 409
+    assert json.loads(sentinel.read_text(encoding="utf-8")) == unrelated
+
+
+def test_reset_refuses_unrelated_file_in_operator_import(demo_client):
+    client, _, service = demo_client
+    preview = _upload(client, "msft.csv", CSV_ROWS.encode())
+    committed = client.post(
+        "/api/demo/import/commit",
+        json={
+            "session_id": preview["session_id"],
+            "dataset": "imported-msft",
+            "interval": "1h",
+            "venue": "moomoo",
+            "symbol": "MSFT",
+            "mapping": preview["suggested_mapping"],
+        },
+    )
+    assert committed.status_code == 200
+    sentinel = (
+        service.root
+        / "market"
+        / "lake"
+        / "imported-msft"
+        / "precious-user-file.txt"
+    )
+    sentinel.write_text("operator data unrelated to the imported dataset", encoding="utf-8")
+
+    response = client.post("/api/demo/reset")
+
+    assert response.status_code == 409
+    assert sentinel.read_text(encoding="utf-8") == (
+        "operator data unrelated to the imported dataset"
+    )
+
+
 def test_import_write_is_origin_guarded(demo_client):
     client, _, _ = demo_client
     response = client.post(

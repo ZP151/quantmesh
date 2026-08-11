@@ -22,6 +22,7 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -33,6 +34,7 @@ from quantmesh.ai.decisions import DecisionLog, DecisionRecord, ModelMeta
 from quantmesh.ai.retrieval import Citation, DocumentIndex
 from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.data.lake import Lake
+from quantmesh.data.layout import SHARD_NAME, shards_in, validate_symbol
 from quantmesh.data.manifest import MANIFEST_NAME, DatasetManifest, ManifestWriter
 from quantmesh.data.providers.hyperliquid import HyperliquidFixtureProvider
 from quantmesh.data.providers.moomoo import MoomooFixtureProvider
@@ -291,7 +293,14 @@ def _marker_text(ownership_sha256: str) -> str:
 
 
 def _is_link_or_junction(path: Path) -> bool:
-    return path.is_symlink() or (hasattr(path, "is_junction") and path.is_junction())
+    try:
+        if path.is_symlink() or (hasattr(path, "is_junction") and path.is_junction()):
+            return True
+        attributes = getattr(path.lstat(), "st_file_attributes", 0)
+    except OSError:
+        return True
+    reparse_point = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x0400)
+    return bool(attributes & reparse_point)
 
 
 def _walk_owned_tree(root: Path) -> dict[str, str] | None:
@@ -344,17 +353,80 @@ def _ownership_text(root: Path) -> str:
     )
 
 
-def _is_valid_operator_import(root: Path, dataset: str) -> bool:
+def _operator_import_inventory(root: Path, dataset: str) -> dict[str, str] | None:
+    lake_root = root / "market" / "lake"
     manifest_path = root / "market" / "lake" / dataset / MANIFEST_NAME
     if not manifest_path.is_file() or _is_link_or_junction(manifest_path):
-        return False
+        return None
     try:
         manifest = DatasetManifest.model_validate_json(
             manifest_path.read_text(encoding="utf-8")
         )
+        if manifest.dataset != dataset or manifest.source != "operator-import":
+            return None
+        Lake(lake_root).dataset(dataset)
     except (OSError, UnicodeDecodeError, ValueError):
+        return None
+
+    base = lake_root / dataset
+    expected: dict[str, str] = {
+        base.relative_to(root).as_posix(): "directory",
+        manifest_path.relative_to(root).as_posix(): "file",
+    }
+    for coverage in manifest.coverage:
+        interval = base / coverage.interval
+        venue = interval / coverage.venue.value
+        symbol = venue / coverage.symbol
+        expected[interval.relative_to(root).as_posix()] = "directory"
+        expected[venue.relative_to(root).as_posix()] = "directory"
+        expected[symbol.relative_to(root).as_posix()] = "directory"
+        try:
+            shards = shards_in(symbol)
+        except (OSError, ValueError):
+            return None
+        if not shards:
+            return None
+        for shard in shards:
+            if shard.name != SHARD_NAME or _is_link_or_junction(shard):
+                return None
+            expected[shard.parent.relative_to(root).as_posix()] = "directory"
+            expected[shard.relative_to(root).as_posix()] = "file"
+    return expected
+
+
+def _is_valid_datalink_cache(root: Path, relative: str) -> bool:
+    path = root / relative
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return False
-    return manifest.dataset == dataset and manifest.source == "operator-import"
+    if (
+        not isinstance(record, dict)
+        or set(record)
+        != {"symbol", "coin", "source", "synthetic", "fetched_at", "payload"}
+        or not isinstance(record["symbol"], str)
+        or not isinstance(record["coin"], str)
+        or not isinstance(record["fetched_at"], str)
+    ):
+        return False
+    try:
+        fetched_at = datetime.fromisoformat(record["fetched_at"])
+        validate_symbol(path.stem)
+        validate_symbol(record["symbol"])
+    except ValueError:
+        return False
+    return (
+        record["coin"] == path.stem
+        and record["coin"] == (
+            record["symbol"][: -len("-USD")]
+            if record["symbol"].endswith("-USD")
+            else record["symbol"]
+        )
+        and record["source"] == "hyperliquid-public"
+        and record["synthetic"] is False
+        and fetched_at.tzinfo is not None
+        and isinstance(record["payload"], dict)
+    )
 
 
 def _valid_dynamic_paths(
@@ -362,30 +434,58 @@ def _valid_dynamic_paths(
     paths: dict[str, str],
     unknown: set[str],
 ) -> bool:
-    imported: dict[str, bool] = {}
-    for relative in unknown:
-        parts = Path(relative).parts
-        if parts == (".datalink",) and paths[relative] == "directory":
-            continue
-        if parts == (".datalink", "hyperliquid") and paths[relative] == "directory":
-            continue
-        if (
-            len(parts) == 3
-            and parts[:2] == (".datalink", "hyperliquid")
-            and paths[relative] == "file"
-            and parts[2].endswith(".json")
-        ):
-            continue
-        if len(parts) >= 3 and parts[:2] == ("market", "lake"):
-            dataset = parts[2]
-            valid = imported.setdefault(dataset, _is_valid_operator_import(root, dataset))
-            if valid:
+    remaining = set(unknown)
+    cache_paths = {
+        relative for relative in remaining if Path(relative).parts[:1] == (".datalink",)
+    }
+    if cache_paths:
+        for relative in cache_paths:
+            parts = Path(relative).parts
+            if parts == (".datalink",) and paths[relative] == "directory":
                 continue
+            if parts == (".datalink", "hyperliquid") and paths[relative] == "directory":
+                continue
+            if (
+                len(parts) == 3
+                and parts[:2] == (".datalink", "hyperliquid")
+                and paths[relative] == "file"
+                and parts[2].endswith(".json")
+                and _is_valid_datalink_cache(root, relative)
+            ):
+                continue
+            return False
+        remaining -= cache_paths
+
+    datasets = {
+        Path(relative).parts[2]
+        for relative in remaining
+        if len(Path(relative).parts) >= 3
+        and Path(relative).parts[:2] == ("market", "lake")
+    }
+    for dataset in datasets:
+        prefix = ("market", "lake", dataset)
+        members = {
+            relative
+            for relative in remaining
+            if Path(relative).parts[:3] == prefix
+        }
+        expected = _operator_import_inventory(root, dataset)
+        if expected is None or members != set(expected):
+            return False
+        if any(paths.get(relative) != kind for relative, kind in expected.items()):
+            return False
+        remaining -= members
+
+    return not remaining
+
+
+def _valid_ownership_structure(
+    root: Path,
+    ownership_text: str,
+    trusted_ownership_text: str,
+) -> bool:
+    if ownership_text != trusted_ownership_text:
         return False
-    return True
-
-
-def _valid_ownership_structure(root: Path, ownership_text: str) -> bool:
     try:
         ownership = json.loads(ownership_text)
     except json.JSONDecodeError:
@@ -410,6 +510,18 @@ def _valid_ownership_structure(root: Path, ownership_text: str) -> bool:
             or ".." in Path(relative).parts
             or kind not in {"file", "directory"}
             or relative in expected
+        ):
+            return False
+        expected_keys = {"path", "type"}
+        if kind == "file" and relative not in _MUTABLE_FILES:
+            expected_keys.add("sha256")
+        if set(raw) != expected_keys:
+            return False
+        expected_hash = raw.get("sha256")
+        if expected_hash is not None and (
+            not isinstance(expected_hash, str)
+            or len(expected_hash) != 64
+            or any(character not in "0123456789abcdef" for character in expected_hash)
         ):
             return False
         expected[relative] = raw
@@ -477,15 +589,23 @@ def is_demo_root(root: Path) -> bool:
     )
 
 
-def _has_reset_structure(root: Path) -> bool:
+def _trusted_ownership_text(scenario: DemoScenario) -> str:
+    with tempfile.TemporaryDirectory(prefix="quantmesh-demo-reset-trust-") as temp_dir:
+        trusted_root = Path(temp_dir) / "demo"
+        seed_demo_root(trusted_root, scenario)
+        return (trusted_root / OWNERSHIP_NAME).read_text(encoding="utf-8")
+
+
+def _has_reset_structure(root: Path, scenario: DemoScenario) -> bool:
     ownership_path = root / OWNERSHIP_NAME
     if not is_demo_root(root) or not ownership_path.is_file():
         return False
     try:
         ownership_text = ownership_path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+        trusted_ownership_text = _trusted_ownership_text(scenario)
+    except (DemoRootError, OSError, UnicodeDecodeError):
         return False
-    return _valid_ownership_structure(root, ownership_text)
+    return _valid_ownership_structure(root, ownership_text, trusted_ownership_text)
 
 
 def _write_account(root: Path, account: PaperAccount) -> None:
@@ -1431,7 +1551,7 @@ def reset_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> Demo
     never be wiped by the demo runtime.
     """
     root = Path(root)
-    if not _has_reset_structure(root):
+    if not _has_reset_structure(root, scenario):
         marker_note = (
             f"no {MARKER_NAME} marker"
             if not _marker(root).is_file()
