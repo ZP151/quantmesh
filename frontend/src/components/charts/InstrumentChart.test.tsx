@@ -307,4 +307,44 @@ describe('InstrumentChart', () => {
     expect(chartHarness.timeScale.fitContent).toHaveBeenCalledOnce()
     expect(chartHarness.timeScale.setVisibleRange).toHaveBeenCalledWith({ from: 1, to: 2 })
   })
+
+  it('reassigns comparison colors by current order after peers are removed and added', () => {
+    const first = {
+      ...comparisons,
+      keys: ['moomoo:AAPL', 'hyperliquid:BTC'],
+      points: comparisons.points.map((point) => ({
+        ...point,
+        values: { 'moomoo:AAPL': 100, 'hyperliquid:BTC': 101 },
+      })),
+    }
+    const view = render(
+      <InstrumentChart comparisons={first} mode="line" primary={primary} volume={false} />,
+    )
+    const addSeriesCalls = chartHarness.chart.addSeries.mock.calls as unknown as Array<[
+      unknown,
+      { title?: string } | undefined,
+    ]>
+    const btcSeriesIndex = addSeriesCalls.findIndex(
+      ([definition, options]) => definition === chartHarness.definitions.line && options?.title === 'hyperliquid:BTC',
+    )
+    const btcSeries = chartHarness.series[btcSeriesIndex]
+
+    view.rerender(
+      <InstrumentChart
+        comparisons={{
+          ...first,
+          keys: ['hyperliquid:BTC', 'hyperliquid:ETH'],
+          points: first.points.map((point) => ({
+            ...point,
+            values: { 'hyperliquid:BTC': 101, 'hyperliquid:ETH': 102 },
+          })),
+        }}
+        mode="line"
+        primary={primary}
+        volume={false}
+      />,
+    )
+
+    expect(btcSeries?.applyOptions).toHaveBeenLastCalledWith(expect.objectContaining({ color: '#5eead4' }))
+  })
 })

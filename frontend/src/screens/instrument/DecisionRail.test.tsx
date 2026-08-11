@@ -222,6 +222,7 @@ function ForecastHarness({ value = workspace }: { value?: InstrumentWorkspace })
 
 beforeEach(() => {
   vi.clearAllMocks()
+  window.localStorage.clear()
   mocked.createPaperProposal.mockResolvedValue(proposal)
   mocked.confirmPaperProposal.mockResolvedValue(confirmation)
 })
@@ -238,7 +239,7 @@ describe('ForecastEvidence', () => {
     await user.click(screen.getByRole('button', { name: '95% interval' }))
     expect(screen.getByText(/170.*210/)).toBeInTheDocument()
     expect(screen.getByText('OOS MAE').closest('div')).toHaveTextContent('126')
-    expect(screen.getByText('Benchmark MAE').closest('div')).toHaveTextContent('127')
+    expect(screen.getByText('Benchmark MAE').closest('div')).toHaveTextContent('last-close · 127')
     expect(screen.getByText('Residual samples').closest('div')).toHaveTextContent('20')
     expect(screen.getByText('Dataset revision').closest('div')).toHaveTextContent('demo-history · 1')
     expect(screen.getByText('Model version').closest('div')).toHaveTextContent('1.0.0')
@@ -255,6 +256,15 @@ describe('ForecastEvidence', () => {
 
     expect(screen.getByText('Forecast not promoted')).toBeInTheDocument()
     expect(screen.getByText('Coverage gate failed.')).toBeInTheDocument()
+  })
+
+  it('formats forecast dates with the selected Chinese locale', () => {
+    window.localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+    render(<ForecastHarness />, { wrapper: Providers })
+
+    const trainCutoff = screen.getByText('训练截止').closest('div')
+    expect(trainCutoff).toHaveTextContent('月')
+    expect(trainCutoff).not.toHaveTextContent('May')
   })
 })
 
@@ -280,6 +290,12 @@ describe('DecisionRail', () => {
     expect(mocked.confirmPaperProposal).not.toHaveBeenCalled()
     expect(screen.getByText('Immutable proposal preview')).toBeInTheDocument()
     expect(screen.getByText(proposal.confirmation_token)).toBeInTheDocument()
+    expect(screen.getByText('Venue').closest('div')).toHaveTextContent('moomoo')
+    expect(screen.getByText('Symbol').closest('div')).toHaveTextContent('NVDA')
+    expect(screen.getByText('Instrument type').closest('div')).toHaveTextContent('equity')
+    expect(screen.getByText('Currency').closest('div')).toHaveTextContent('USD')
+    expect(screen.getByText(proposal.config_digest)).toBeInTheDocument()
+    expect(screen.getByText(proposal.history_digest)).toBeInTheDocument()
   })
 
   it('requires the displayed token, confirms once, and links the resulting audit lineage', async () => {
@@ -316,6 +332,26 @@ describe('DecisionRail', () => {
     expect(screen.getByText(proposal.confirmation_token)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Create paper proposal' })).not.toBeInTheDocument()
     expect(mocked.createPaperProposal).not.toHaveBeenCalled()
+  })
+
+  it('drops local proposal and result state when refreshed authority removes it', async () => {
+    const user = userEvent.setup()
+    const view = render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
+    await user.click(screen.getByRole('button', { name: 'Create paper proposal' }))
+    expect(await screen.findByText('Immutable proposal preview')).toBeInTheDocument()
+
+    view.rerender(
+      <DecisionRail
+        workspace={{
+          ...workspace,
+          generated_at: '2026-08-08T12:03:00Z',
+          proposal: { ...workspace.proposal, proposals: [] },
+        }}
+      />,
+    )
+
+    expect(await screen.findByRole('button', { name: 'Create paper proposal' })).toBeInTheDocument()
+    expect(screen.queryByText('Immutable proposal preview')).not.toBeInTheDocument()
   })
 
   it('keeps a race-blocked proposal visible and cannot confirm it', async () => {
@@ -363,5 +399,6 @@ describe('DecisionRail', () => {
 
     expect(await screen.findByText('Quote crossed the freshness fence.')).toBeInTheDocument()
     expect(mocked.confirmPaperProposal).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'Confirm paper proposal' })).toBeDisabled()
   })
 })

@@ -15,15 +15,21 @@ function errorText(error: unknown): string {
 }
 
 export function DecisionRail({ workspace }: { workspace: InstrumentWorkspace }) {
-  const { t } = usePreferences()
+  const { locale, t } = usePreferences()
   const [side, setSide] = useState<'buy' | 'sell'>('buy')
   const [quantityValue, setQuantityValue] = useState('10')
   const [limitPrice, setLimitPrice] = useState('')
-  const [createdProposal, setCreatedProposal] = useState<PaperProposal | null>(null)
+  const [createdProposal, setCreatedProposal] = useState<{
+    authority: InstrumentWorkspace['proposal']['proposals']
+    proposal: PaperProposal
+  } | null>(null)
   const resumedProposal = [...workspace.proposal.proposals]
     .reverse()
     .find((candidate) => candidate.status === 'pending') ?? null
-  const proposal = createdProposal ?? resumedProposal
+  const localProposal = createdProposal?.authority === workspace.proposal.proposals
+    ? createdProposal.proposal
+    : null
+  const proposal = localProposal ?? resumedProposal
   const forecast = workspace.forecast
   const numericQuantity = Number(quantityValue)
   const numericLimit = limitPrice.trim() === '' ? null : Number(limitPrice)
@@ -40,7 +46,10 @@ export function DecisionRail({ workspace }: { workspace: InstrumentWorkspace }) 
       symbol: workspace.instrument.symbol,
       venue: workspace.instrument.venue,
     }),
-    onSuccess: (next) => setCreatedProposal(next),
+    onSuccess: (next) => setCreatedProposal({
+      authority: workspace.proposal.proposals,
+      proposal: next,
+    }),
   })
 
   return (
@@ -57,16 +66,16 @@ export function DecisionRail({ workspace }: { workspace: InstrumentWorkspace }) 
           {t('screen.workspace.portfolioRisk')}
         </h3>
         <dl className="space-y-1 text-xs">
-          <Fact label={t('screen.workspace.cash')} value={money(workspace.risk.cash)} />
-          <Fact label={t('screen.workspace.accountEquity')} value={money(workspace.risk.equity)} />
-          <Fact label={t('screen.workspace.position')} value={workspace.position === null ? t('screen.workspace.noPosition') : quantity(workspace.position.quantity)} />
-          <Fact label={t('screen.workspace.averageCost')} value={workspace.position === null ? '—' : moneyPrecise(workspace.position.average_cost)} />
-          <Fact label={t('screen.workspace.positionMark')} value={workspace.position?.mark === null || workspace.position?.mark === undefined ? t('screen.workspace.valueUnavailable') : moneyPrecise(workspace.position.mark)} />
-          <Fact label={t('screen.workspace.unrealizedPnl')} value={workspace.position?.unrealized_pnl === null || workspace.position?.unrealized_pnl === undefined ? t('screen.workspace.valueUnavailable') : money(workspace.position.unrealized_pnl)} />
-          <Fact label={t('screen.workspace.realizedPnl')} value={workspace.position === null ? '—' : money(workspace.position.realized_pnl)} />
-          <Fact label={t('screen.workspace.maxOrderQuantity')} value={quantity(workspace.risk.max_order_quantity)} />
-          <Fact label={t('screen.workspace.maxNotional')} value={money(workspace.risk.max_notional)} />
-          <Fact label={t('screen.workspace.maxPositionQuantity')} value={quantity(workspace.risk.max_position_quantity)} />
+          <Fact label={t('screen.workspace.cash')} value={money(workspace.risk.cash, locale)} />
+          <Fact label={t('screen.workspace.accountEquity')} value={money(workspace.risk.equity, locale)} />
+          <Fact label={t('screen.workspace.position')} value={workspace.position === null ? t('screen.workspace.noPosition') : quantity(workspace.position.quantity, locale)} />
+          <Fact label={t('screen.workspace.averageCost')} value={workspace.position === null ? '—' : moneyPrecise(workspace.position.average_cost, locale)} />
+          <Fact label={t('screen.workspace.positionMark')} value={workspace.position?.mark === null || workspace.position?.mark === undefined ? t('screen.workspace.valueUnavailable') : moneyPrecise(workspace.position.mark, locale)} />
+          <Fact label={t('screen.workspace.unrealizedPnl')} value={workspace.position?.unrealized_pnl === null || workspace.position?.unrealized_pnl === undefined ? t('screen.workspace.valueUnavailable') : money(workspace.position.unrealized_pnl, locale)} />
+          <Fact label={t('screen.workspace.realizedPnl')} value={workspace.position === null ? '—' : money(workspace.position.realized_pnl, locale)} />
+          <Fact label={t('screen.workspace.maxOrderQuantity')} value={quantity(workspace.risk.max_order_quantity, locale)} />
+          <Fact label={t('screen.workspace.maxNotional')} value={money(workspace.risk.max_notional, locale)} />
+          <Fact label={t('screen.workspace.maxPositionQuantity')} value={quantity(workspace.risk.max_position_quantity, locale)} />
           <Fact label={t('screen.workspace.globalKillSwitch')} value={t(workspace.risk.global_kill_switch ? 'screen.workspace.switchEngaged' : 'screen.workspace.switchDisarmed')} />
           <Fact label={t('screen.workspace.venueKillSwitch')} value={t(workspace.risk.venue_kill_switch ? 'screen.workspace.switchEngaged' : 'screen.workspace.switchDisarmed')} />
           <Fact label={t('screen.workspace.quoteFreshness')} value={liveLabel(workspace.live.label, t)} />
@@ -130,7 +139,10 @@ export function DecisionRail({ workspace }: { workspace: InstrumentWorkspace }) 
           </Button>
         </section>
       ) : (
-        <ProposalConfirmation proposal={proposal} />
+        <ProposalConfirmation
+          key={`${proposal.id}:${proposal.status}:${proposal.order_id ?? ''}`}
+          proposal={proposal}
+        />
       )}
     </div>
   )

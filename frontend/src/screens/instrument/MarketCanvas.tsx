@@ -64,7 +64,9 @@ export function MarketCanvas(props: MarketCanvasProps) {
   }), [t])
   const bars = dedupeObservedBars(props.history.bars)
   const indicators: ChartLine[] = []
-  if (props.showSma20) {
+  const hasSma20 = bars.length >= 20
+  const hasSma50 = bars.length >= 50
+  if (props.showSma20 && hasSma20) {
     indicators.push({
       color: '#22d3ee',
       key: 'sma20',
@@ -72,7 +74,7 @@ export function MarketCanvas(props: MarketCanvasProps) {
       points: movingAverageLine(bars, 20),
     })
   }
-  if (props.showSma50) {
+  if (props.showSma50 && hasSma50) {
     indicators.push({
       color: '#fbbf24',
       key: 'sma50',
@@ -80,11 +82,12 @@ export function MarketCanvas(props: MarketCanvasProps) {
       points: movingAverageLine(bars, 50),
     })
   }
-  const hasVolume = bars.some((bar) => bar.volume > 0)
+  const hasVolume = bars.length > 0 && bars.every((bar) => Number.isFinite(bar.volume) && bar.volume >= 0)
   const values = indicatorSnapshot(
     bars,
     props.history.interval,
     props.history.instrument.instrument_type,
+    props.history.calendar,
   )
 
   return (
@@ -111,12 +114,17 @@ export function MarketCanvas(props: MarketCanvasProps) {
           <Button aria-pressed={props.mode === 'line'} onClick={() => props.onModeChange('line')} type="button" variant={props.mode === 'line' ? 'secondary' : 'ghost'}>
             {t('screen.workspace.line')}
           </Button>
-          <Button aria-pressed={props.volume} disabled={!hasVolume} onClick={() => props.onVolumeChange(!props.volume)} title={!hasVolume ? t('screen.workspace.volumeUnavailable') : undefined} type="button" variant={props.volume ? 'secondary' : 'ghost'}>
+          <Button aria-describedby={!hasVolume ? 'volume-unavailable' : undefined} aria-disabled={!hasVolume} aria-pressed={props.volume && hasVolume} onClick={() => hasVolume && props.onVolumeChange(!props.volume)} type="button" variant={props.volume && hasVolume ? 'secondary' : 'ghost'}>
             {t('screen.workspace.volume')}
           </Button>
-          <Button aria-pressed={props.showSma20} onClick={() => props.onSma20Change(!props.showSma20)} type="button" variant={props.showSma20 ? 'secondary' : 'ghost'}>SMA 20</Button>
-          <Button aria-pressed={props.showSma50} onClick={() => props.onSma50Change(!props.showSma50)} type="button" variant={props.showSma50 ? 'secondary' : 'ghost'}>SMA 50</Button>
+          <Button aria-describedby={!hasSma20 ? 'sma20-unavailable' : undefined} aria-disabled={!hasSma20} aria-pressed={props.showSma20 && hasSma20} onClick={() => hasSma20 && props.onSma20Change(!props.showSma20)} type="button" variant={props.showSma20 && hasSma20 ? 'secondary' : 'ghost'}>SMA 20</Button>
+          <Button aria-describedby={!hasSma50 ? 'sma50-unavailable' : undefined} aria-disabled={!hasSma50} aria-pressed={props.showSma50 && hasSma50} onClick={() => hasSma50 && props.onSma50Change(!props.showSma50)} type="button" variant={props.showSma50 && hasSma50 ? 'secondary' : 'ghost'}>SMA 50</Button>
         </div>
+      </div>
+      <div className="space-y-0.5 px-1 text-[10px] text-muted-foreground" role="note">
+        {!hasVolume && <p id="volume-unavailable">{t('screen.workspace.volumeUnavailable')}</p>}
+        {!hasSma20 && <p id="sma20-unavailable">{t('screen.workspace.smaUnavailable', { count: '20' })}</p>}
+        {!hasSma50 && <p id="sma50-unavailable">{t('screen.workspace.smaUnavailable', { count: '50' })}</p>}
       </div>
       <div className="flex items-center justify-between gap-3 px-1 text-[10px] text-muted-foreground">
         <span>{t('screen.workspace.observed')} · {props.history.interval}</span>

@@ -1,5 +1,5 @@
-import { useCallback } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useCallback, useEffect, useRef } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'react-router-dom'
 
 import { WorkspaceLoading } from '@/components/workspace-loading'
@@ -7,6 +7,7 @@ import {
   api,
   type HistoricalVenue,
   type HistoryRange,
+  type MarketUpdate,
 } from '@/lib/api'
 import { useLiveConnection } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
@@ -44,11 +45,37 @@ export function InstrumentWorkspaceScreen() {
   const showSma20 = search.get('sma20') === '1'
   const showSma50 = search.get('sma50') === '1'
   const validVenue = isVenue(venue)
-  const stream = useLiveConnection(useCallback(() => {}, []))
+  const queryClient = useQueryClient()
+  const lastLiveRefresh = useRef(0)
+  const trailingLiveRefresh = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const refreshWorkspace = useCallback(() => {
+    lastLiveRefresh.current = Date.now()
+    trailingLiveRefresh.current = null
+    void queryClient.invalidateQueries({
+      queryKey: ['instrument-workspace', venue, symbol],
+      refetchType: 'active',
+    }, { cancelRefetch: false })
+  }, [queryClient, symbol, venue])
+  const onLiveUpdate = useCallback((update: MarketUpdate) => {
+    if (update.venue !== venue || update.instrument !== symbol) return
+    const remaining = 500 - (Date.now() - lastLiveRefresh.current)
+    if (remaining <= 0) {
+      refreshWorkspace()
+      return
+    }
+    if (trailingLiveRefresh.current === null) {
+      trailingLiveRefresh.current = setTimeout(refreshWorkspace, remaining)
+    }
+  }, [refreshWorkspace, symbol, venue])
+  useEffect(() => () => {
+    if (trailingLiveRefresh.current !== null) clearTimeout(trailingLiveRefresh.current)
+  }, [refreshWorkspace])
+  const stream = useLiveConnection(onLiveUpdate)
   const query = useQuery({
     enabled: validVenue && symbol.length > 0,
     queryKey: ['instrument-workspace', venue, symbol, range, compare],
     queryFn: () => api.instrumentWorkspace(venue as HistoricalVenue, symbol, range, compare),
+    refetchInterval: 5_000,
     retry: false,
   })
 

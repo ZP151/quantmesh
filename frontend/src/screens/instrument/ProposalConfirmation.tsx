@@ -11,7 +11,7 @@ import {
   type PaperProposal,
   type ProposalConfirmation as ProposalConfirmationResult,
 } from '@/lib/api'
-import { dateTime, moneyPrecise, quantity, shortHash } from '@/lib/format'
+import { dateTime, moneyPrecise, quantity } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
 function errorText(error: unknown): string {
@@ -20,11 +20,12 @@ function errorText(error: unknown): string {
 }
 
 export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) {
-  const { t } = usePreferences()
+  const { locale, t } = usePreferences()
   const queryClient = useQueryClient()
   const [confirmationToken, setConfirmationToken] = useState('')
   const [result, setResult] = useState<ProposalConfirmationResult | null>(null)
-  const proposalBlocked = proposal.status !== 'pending' || proposal.blockers.length > 0
+  const effectiveProposal = result?.proposal ?? proposal
+  const proposalBlocked = effectiveProposal.status !== 'pending' || effectiveProposal.blockers.length > 0
   const confirmation = useMutation({
     mutationFn: () => api.confirmPaperProposal(proposal.id, confirmationToken),
     onSuccess: (next) => {
@@ -35,7 +36,11 @@ export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) 
         ),
       )
     },
+    onError: (error) => {
+      if (error instanceof ProposalRefusalError) setResult(error.result)
+    },
   })
+  const confirmationError = confirmationErrorText(result, confirmation.error)
 
   if (result?.order) {
     return (
@@ -46,7 +51,7 @@ export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) 
         <dl className="space-y-1 text-xs">
           <Fact label={t('screen.workspace.orderId')} value={result.order.order_id} />
           <Fact label={t('screen.workspace.orderStatus')} value={orderStatus(result.order.status, t)} />
-          <Fact label={t('screen.workspace.filledQuantity')} value={quantity(result.order.filled_quantity)} />
+          <Fact label={t('screen.workspace.filledQuantity')} value={quantity(result.order.filled_quantity, locale)} />
           <Fact label={t('screen.workspace.quoteProvenance')} value={result.quote_provenance ?? '—'} />
         </dl>
         <Link
@@ -66,22 +71,27 @@ export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) 
         <p className="mt-1 text-xs text-muted-foreground">{t('screen.workspace.proposalPreviewNote')}</p>
       </div>
       <dl className="space-y-1 text-xs">
-        <Fact label={t('screen.workspace.proposalId')} value={proposal.id} />
-        <Fact label={t('screen.workspace.side')} value={t(proposal.side === 'buy' ? 'screen.workspace.buy' : 'screen.workspace.sell')} />
-        <Fact label={t('screen.workspace.quantity')} value={quantity(proposal.quantity)} />
-        <Fact label={t('screen.workspace.orderType')} value={t(proposal.order_type === 'market' ? 'screen.workspace.marketOrder' : 'screen.workspace.limitOrder')} />
-        <Fact label={t('screen.workspace.limitPrice')} value={moneyPrecise(proposal.limit_price)} />
-        <Fact label={t('screen.workspace.artifact')} value={proposal.artifact_id} />
-        <Fact label={t('screen.workspace.datasetRevision')} value={`${proposal.dataset_id} · ${proposal.dataset_revision}`} />
-        <Fact label={t('screen.workspace.modelVersion')} value={proposal.model_version} />
-        <Fact label={t('screen.workspace.configDigest')} value={shortHash(proposal.config_digest)} />
-        <Fact label={t('screen.workspace.historyDigest')} value={shortHash(proposal.history_digest)} />
-        <Fact label={t('screen.workspace.forecastVintage')} value={dateTime(proposal.forecast_generated_at)} />
-        <Fact label={t('screen.workspace.quoteProvenance')} value={proposal.quote_provenance ?? '—'} />
+        <Fact label={t('screen.workspace.proposalId')} value={effectiveProposal.id} />
+        <Fact label={t('screen.workspace.venue')} value={effectiveProposal.instrument.venue} />
+        <Fact label={t('screen.workspace.symbol')} value={effectiveProposal.instrument.symbol} />
+        <Fact label={t('screen.workspace.instrumentType')} value={effectiveProposal.instrument.instrument_type} />
+        <Fact label={t('screen.workspace.currency')} value={effectiveProposal.instrument.currency} />
+        <Fact label={t('screen.workspace.instrumentMetadata')} value={metadataText(effectiveProposal.instrument.metadata)} />
+        <Fact label={t('screen.workspace.side')} value={t(effectiveProposal.side === 'buy' ? 'screen.workspace.buy' : 'screen.workspace.sell')} />
+        <Fact label={t('screen.workspace.quantity')} value={quantity(effectiveProposal.quantity, locale)} />
+        <Fact label={t('screen.workspace.orderType')} value={t(effectiveProposal.order_type === 'market' ? 'screen.workspace.marketOrder' : 'screen.workspace.limitOrder')} />
+        <Fact label={t('screen.workspace.limitPrice')} value={moneyPrecise(effectiveProposal.limit_price, locale)} />
+        <Fact label={t('screen.workspace.artifact')} value={effectiveProposal.artifact_id} />
+        <Fact label={t('screen.workspace.datasetRevision')} value={`${effectiveProposal.dataset_id} · ${effectiveProposal.dataset_revision}`} />
+        <Fact label={t('screen.workspace.modelVersion')} value={effectiveProposal.model_version} />
+        <DigestFact label={t('screen.workspace.configDigest')} value={effectiveProposal.config_digest} />
+        <DigestFact label={t('screen.workspace.historyDigest')} value={effectiveProposal.history_digest} />
+        <Fact label={t('screen.workspace.forecastVintage')} value={dateTime(effectiveProposal.forecast_generated_at, locale)} />
+        <Fact label={t('screen.workspace.quoteProvenance')} value={effectiveProposal.quote_provenance ?? '—'} />
       </dl>
-      {proposal.blockers.length > 0 && (
+      {effectiveProposal.blockers.length > 0 && (
         <ul className="space-y-1 text-xs text-destructive" role="alert">
-          {proposal.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
+          {effectiveProposal.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
         </ul>
       )}
       <div className="border-y border-border py-3">
@@ -99,12 +109,12 @@ export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) 
           value={confirmationToken}
         />
       </div>
-      {confirmation.isError && (
-        <p className="text-xs text-destructive" role="alert">{errorText(confirmation.error)}</p>
+      {confirmation.isError && confirmationError !== null && !effectiveProposal.blockers.includes(confirmationError) && (
+        <p className="text-xs text-destructive" role="alert">{confirmationError}</p>
       )}
       <Button
         className="w-full"
-        disabled={proposalBlocked || confirmation.isPending || confirmationToken !== proposal.confirmation_token}
+        disabled={proposalBlocked || confirmation.isPending || confirmationToken !== effectiveProposal.confirmation_token}
         onClick={() => confirmation.mutate()}
         type="button"
       >
@@ -113,6 +123,29 @@ export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) 
           : t('screen.workspace.confirmProposal')}
       </Button>
     </section>
+  )
+}
+
+function confirmationErrorText(
+  result: ProposalConfirmationResult | null,
+  error: unknown,
+): string | null {
+  if (result?.blocker) return result.blocker
+  if (error === null || error === undefined) return null
+  return errorText(error)
+}
+
+function metadataText(metadata: Readonly<Record<string, string>> | undefined): string {
+  if (metadata === undefined || Object.keys(metadata).length === 0) return '—'
+  return JSON.stringify(Object.fromEntries(Object.entries(metadata).sort(([left], [right]) => left.localeCompare(right))))
+}
+
+function DigestFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-1 py-1">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd><code className="block select-all break-all font-mono text-[10px]">{value}</code></dd>
+    </div>
   )
 }
 

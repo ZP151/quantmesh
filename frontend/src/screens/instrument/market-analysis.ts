@@ -30,8 +30,10 @@ export function movingAverageLine(
   return points
 }
 
-function periodsPerYear(interval: string, instrumentType: string): number {
-  const continuous = instrumentType === 'spot' || instrumentType === 'perpetual'
+function periodsPerYear(interval: string, instrumentType: string, calendar: string): number {
+  const continuous = calendar.trim().toLowerCase() === '24/7'
+    || instrumentType === 'spot'
+    || instrumentType === 'perpetual'
   const days = continuous ? 365 : 252
   if (interval === '5m') return days * (continuous ? 288 : 78)
   if (interval === '30m') return days * (continuous ? 48 : 13)
@@ -43,6 +45,7 @@ export function indicatorSnapshot(
   bars: readonly HistoricalBar[],
   interval: string,
   instrumentType: string,
+  calendar: string,
 ): IndicatorValues {
   const closes = bars.map((bar) => bar.close).filter((value) => Number.isFinite(value) && value > 0)
   if (closes.length < 2) return { drawdown: null, realizedVolatility: null }
@@ -57,6 +60,6 @@ export function indicatorSnapshot(
   const peak = Math.max(...closes)
   return {
     drawdown: closes.at(-1)! / peak - 1,
-    realizedVolatility: Math.sqrt(variance * periodsPerYear(interval, instrumentType)),
+    realizedVolatility: Math.sqrt(variance * periodsPerYear(interval, instrumentType, calendar)),
   }
 }

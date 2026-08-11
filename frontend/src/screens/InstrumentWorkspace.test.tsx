@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import { ApiError, api, type InstrumentWorkspace } from '@/lib/api'
+import { useLiveConnection } from '@/lib/live'
 import { PreferencesProvider } from '@/lib/preferences'
 
 vi.mock('@/lib/api', async (importOriginal) => {
@@ -128,6 +129,8 @@ const workspace: InstrumentWorkspace = {
 }
 
 const mockedWorkspace = vi.mocked(api.instrumentWorkspace)
+const mockedLiveConnection = vi.mocked(useLiveConnection)
+let publishLiveUpdate: Parameters<typeof useLiveConnection>[0]
 
 function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -148,6 +151,10 @@ function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockedLiveConnection.mockImplementation((onUpdate) => {
+    publishLiveUpdate = onUpdate
+    return 'live'
+  })
   mockedWorkspace.mockResolvedValue(workspace)
 })
 
@@ -229,5 +236,49 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(screen.getByText(/Historical gaps: 1/)).toBeInTheDocument()
     expect(screen.getByText(/Historical duplicates: 1/)).toBeInTheDocument()
     expect(screen.getByText('Live sequence gap detected')).toBeInTheDocument()
+  })
+
+  it('refreshes authoritative quote, position and risk truth for matching live updates', async () => {
+    mockedWorkspace
+      .mockResolvedValueOnce(workspace)
+      .mockResolvedValue({
+        ...workspace,
+        live: {
+          ...workspace.live,
+          age_ms: 25,
+          data_time: '2026-08-08T12:00:01Z',
+          last: 190,
+          received_at: '2026-08-08T12:00:01Z',
+        },
+        position: {
+          average_cost: 180,
+          mark: 190,
+          quantity: 5,
+          realized_pnl: 12,
+          unrealized_pnl: 50,
+        },
+        risk: { ...workspace.risk, equity: 100_050 },
+      })
+    renderWorkspace()
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'NVDA' })).toBeInTheDocument())
+
+    act(() => publishLiveUpdate({
+      data_time: '2026-08-08T12:00:01Z',
+      instrument: 'NVDA',
+      kind: 'quote',
+      payload: { last: 190 },
+      provenance: 'real',
+      received_at: '2026-08-08T12:00:01Z',
+      sequence: 13,
+      sequence_gap: false,
+      state: 'connected',
+      state_note: null,
+      venue: 'moomoo',
+    }))
+
+    await waitFor(() => expect(screen.getByText('Mark').closest('div')).toHaveTextContent('190'))
+    expect(mockedWorkspace).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('Account equity').closest('div')).toHaveTextContent('100,050')
+    expect(screen.getByText('Unrealized P&L').closest('div')).toHaveTextContent('50')
   })
 })

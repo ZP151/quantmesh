@@ -316,6 +316,7 @@ export function InstrumentChart({
         })
         comparisonRefs.current.set(key, series)
       }
+      series.applyOptions({ color: COMPARISON_COLORS[index % COMPARISON_COLORS.length] })
       series.setData((comparisons?.points ?? []).flatMap((point) => {
         const time = utcTimestamp(point.timestamp)
         const value = point.values[key]

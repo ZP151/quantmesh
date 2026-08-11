@@ -32,7 +32,7 @@ export function ForecastEvidence({
   synthetic: boolean
   unavailableReason: string | null | undefined
 }) {
-  const { t } = usePreferences()
+  const { locale, t } = usePreferences()
   const [interval, setInterval] = useState<ForecastInterval>(80)
 
   if (forecast === null || forecast === undefined) {
@@ -87,7 +87,7 @@ export function ForecastEvidence({
 
       <div className="border-y border-border py-3">
         <p className="font-mono text-sm tabular-nums">
-          {t('screen.workspace.medianValue', { value: moneyPrecise(finalPoint?.p50) })}
+          {t('screen.workspace.medianValue', { value: moneyPrecise(finalPoint?.p50, locale) })}
         </p>
         <div className="mt-2 flex flex-wrap gap-1" aria-label={t('screen.workspace.forecastInterval')}>
           {([50, 80, 95] as const).map((candidate) => (
@@ -105,23 +105,23 @@ export function ForecastEvidence({
         </div>
         <p className="mt-2 font-mono text-xs tabular-nums">
           {t('screen.workspace.intervalValue', {
-            lower: moneyPrecise(lower),
-            upper: moneyPrecise(upper),
+            lower: moneyPrecise(lower, locale),
+            upper: moneyPrecise(upper, locale),
           })}
         </p>
       </div>
 
       {metrics && (
         <dl className="space-y-1 text-xs">
-          <Fact label={t('screen.workspace.oosMae')} value={number(metrics.mae)} />
-          <Fact label={t('screen.workspace.oosRmse')} value={number(metrics.rmse)} />
-          <Fact label={t('screen.workspace.benchmarkMae')} value={number(metrics.benchmark_mae)} />
+          <Fact label={t('screen.workspace.oosMae')} value={number(metrics.mae, locale)} />
+          <Fact label={t('screen.workspace.oosRmse')} value={number(metrics.rmse, locale)} />
+          <Fact label={t('screen.workspace.benchmarkMae')} value={`${forecast.benchmark_name} · ${number(metrics.benchmark_mae, locale)}`} />
           <Fact
             label={t('screen.workspace.coverage')}
-            value={`${percent(metrics.coverage_50)} / ${percent(metrics.coverage_80)} / ${percent(metrics.coverage_95)}`}
+            value={`${percent(metrics.coverage_50, locale)} / ${percent(metrics.coverage_80, locale)} / ${percent(metrics.coverage_95, locale)}`}
           />
-          <Fact label={t('screen.workspace.residualSamples')} value={number(metrics.residual_count)} />
-          <Fact label={t('screen.workspace.intervalTests')} value={number(metrics.interval_test_count)} />
+          <Fact label={t('screen.workspace.residualSamples')} value={number(metrics.residual_count, locale)} />
+          <Fact label={t('screen.workspace.intervalTests')} value={number(metrics.interval_test_count, locale)} />
         </dl>
       )}
 
@@ -130,8 +130,8 @@ export function ForecastEvidence({
         <Fact label={t('screen.workspace.modelVersion')} value={forecast.model_version} />
         <Fact label={t('screen.workspace.configDigest')} value={shortHash(forecast.config_digest)} />
         <Fact label={t('screen.workspace.historyDigest')} value={shortHash(forecast.history_digest)} />
-        <Fact label={t('screen.workspace.trainCutoff')} value={dateTime(forecast.train_end)} />
-        <Fact label={t('screen.workspace.generated')} value={dateTime(forecast.generated_at)} />
+        <Fact label={t('screen.workspace.trainCutoff')} value={dateTime(forecast.train_end, locale)} />
+        <Fact label={t('screen.workspace.generated')} value={dateTime(forecast.generated_at, locale)} />
       </dl>
 
       {!forecast.eligible && forecast.blockers.length > 0 && (

@@ -168,10 +168,63 @@ describe('MarketCanvas', () => {
     expect(bars).toHaveLength(history.bars.length)
     expect(bars.at(-1)?.close).toBe(999)
     expect(movingAverageLine(bars, 20)).toHaveLength(41)
-    expect(indicatorSnapshot(bars, '1d', 'equity')).toEqual({
+    expect(indicatorSnapshot(bars, '1d', 'equity', 'XNYS')).toEqual({
       drawdown: expect.any(Number),
       realizedVolatility: expect.any(Number),
     })
+  })
+
+  it('uses the trusted 24/7 calendar when annualizing event-market volatility', () => {
+    const hourly = history.bars.slice(0, 31).map((bar, index) => ({
+      ...bar,
+      close: 100 * 1.001 ** (index + (index % 3 === 0 ? 0.5 : 0)),
+      instrument: { ...bar.instrument, instrument_type: 'event_contract' as const, venue: 'polymarket' as const },
+      interval: '1h',
+    }))
+    const continuous = indicatorSnapshot(hourly, '1h', 'event_contract', '24/7')
+    const exchangeHours = indicatorSnapshot(hourly, '1h', 'event_contract', 'XNYS')
+
+    expect(continuous.realizedVolatility).not.toBeNull()
+    expect(exchangeHours.realizedVolatility).not.toBeNull()
+    expect(continuous.realizedVolatility!).toBeGreaterThan(exchangeHours.realizedVolatility! * 2)
+  })
+
+  it('treats zero volume as observed and explains unavailable moving averages accessibly', async () => {
+    const zeroVolume = {
+      ...history,
+      bars: history.bars.slice(0, 31).map((bar) => ({ ...bar, volume: 0 })),
+    }
+    const user = userEvent.setup()
+    const onVolumeChange = vi.fn()
+    const onSma50Change = vi.fn()
+    render(
+      <PreferencesProvider>
+        <MarketCanvas
+          comparison={null}
+          forecast={null}
+          history={zeroVolume}
+          mode="candles"
+          onModeChange={vi.fn()}
+          onRangeChange={vi.fn()}
+          onSma20Change={vi.fn()}
+          onSma50Change={onSma50Change}
+          onVolumeChange={onVolumeChange}
+          range="1m"
+          showSma20={false}
+          showSma50={false}
+          volume={false}
+        />
+      </PreferencesProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Volume' }))
+    expect(onVolumeChange).toHaveBeenCalledWith(true)
+    const sma50 = screen.getByRole('button', { name: 'SMA 50' })
+    expect(sma50).toHaveAttribute('aria-disabled', 'true')
+    expect(sma50).toHaveAttribute('aria-describedby', 'sma50-unavailable')
+    expect(screen.getByText('Requires at least 50 observed bars.')).toBeInTheDocument()
+    await user.click(sma50)
+    expect(onSma50Change).not.toHaveBeenCalled()
   })
 })
 
