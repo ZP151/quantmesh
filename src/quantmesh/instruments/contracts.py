@@ -911,3 +911,175 @@ class ProposalConfirmation(StrictContract):
             if self.blocker is None:
                 raise ValueError("blocked or rejected confirmation requires a blocker")
         return self
+
+
+class WorkspaceLiveEvidence(StrictContract):
+    """One truthful latest quote view; absent data stays explicitly absent."""
+
+    status: Literal["available", "degraded", "unavailable"]
+    reason: str | None = None
+    source: str | None = None
+    provenance: str | None = None
+    label: str | None = None
+    data_time: datetime | None = None
+    received_at: datetime | None = None
+    age_ms: int | None = Field(default=None, ge=0)
+    sequence: int | None = Field(default=None, ge=0)
+    sequence_gap: bool | None = None
+    bid: float | None = Field(default=None, gt=0)
+    ask: float | None = Field(default=None, gt=0)
+    last: float | None = Field(default=None, gt=0)
+
+    @field_validator("data_time", "received_at")
+    @classmethod
+    def live_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
+        return None if value is None else _utc(value, info.field_name)
+
+    @model_validator(mode="after")
+    def availability_is_explicit(self) -> "WorkspaceLiveEvidence":
+        if self.status == "available":
+            if (
+                self.reason is not None
+                or self.source is None
+                or self.provenance is None
+                or self.data_time is None
+                or self.received_at is None
+            ):
+                raise ValueError("available live evidence requires lineage and no reason")
+        elif self.reason is None:
+            raise ValueError("degraded or unavailable live evidence requires a reason")
+        if self.bid is not None and self.ask is not None and self.bid > self.ask:
+            raise ValueError("workspace bid cannot exceed ask")
+        return self
+
+
+class WorkspaceForecast(StrictContract):
+    """Forecast evidence needed by the workspace, without bulky OOS rows."""
+
+    artifact_id: str
+    generated_at: datetime
+    target: str
+    train_start: datetime
+    train_end: datetime
+    validation_start: datetime | None = None
+    validation_end: datetime | None = None
+    test_start: datetime | None = None
+    test_end: datetime | None = None
+    model_name: str
+    model_version: str
+    config_digest: str
+    dataset_id: str
+    dataset_revision: int = Field(ge=1)
+    history_digest: str
+    benchmark_name: str
+    eligible: bool
+    blockers: tuple[str, ...]
+    limitations: tuple[str, ...]
+    paths: tuple[ForecastPath, ...]
+    metrics: tuple[ForecastMetrics, ...]
+
+    @field_validator("artifact_id")
+    @classmethod
+    def artifact_id_is_canonical(cls, value: str) -> str:
+        if _FORECAST_ID.fullmatch(value) is None:
+            raise ValueError("workspace forecast artifact_id is not canonical")
+        return value
+
+    @field_validator(
+        "generated_at",
+        "train_start",
+        "train_end",
+        "validation_start",
+        "validation_end",
+        "test_start",
+        "test_end",
+    )
+    @classmethod
+    def forecast_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
+        return None if value is None else _utc(value, info.field_name)
+
+    @field_validator("config_digest", "history_digest")
+    @classmethod
+    def forecast_digests_are_sha256(cls, value: str, info) -> str:
+        if _SHA256.fullmatch(value) is None:
+            raise ValueError(f"{info.field_name} must be lowercase sha256")
+        return value
+
+    @model_validator(mode="after")
+    def eligibility_is_explicit(self) -> "WorkspaceForecast":
+        if self.eligible != (not self.blockers):
+            raise ValueError("workspace forecast eligibility must match blockers")
+        return self
+
+
+class WorkspacePosition(StrictContract):
+    quantity: float
+    average_cost: float = Field(ge=0)
+    realized_pnl: float
+    mark: float | None = Field(default=None, gt=0)
+    unrealized_pnl: float | None = None
+
+
+class WorkspaceRisk(StrictContract):
+    cash: float = Field(ge=0)
+    equity: float = Field(ge=0)
+    starting_cash: float = Field(ge=0)
+    max_order_quantity: float | None = Field(default=None, gt=0)
+    max_notional: float | None = Field(default=None, gt=0)
+    max_position_quantity: float | None = Field(default=None, gt=0)
+    global_kill_switch: bool
+    venue_kill_switch: bool
+    mark_available: bool
+
+
+class ProposalCapability(StrictContract):
+    allowed: bool
+    blockers: tuple[str, ...]
+    proposals: tuple[PaperProposal, ...]
+
+    @model_validator(mode="after")
+    def capability_matches_blockers(self) -> "ProposalCapability":
+        if self.allowed != (not self.blockers):
+            raise ValueError("proposal capability must match blockers")
+        return self
+
+
+class InstrumentWorkspace(StrictContract):
+    """Point-in-time read model for one venue-aware decision workspace."""
+
+    generated_at: datetime
+    instrument: InstrumentSnapshot
+    history: HistoricalSeries
+    comparison: ComparisonSeries | None = None
+    live: WorkspaceLiveEvidence
+    forecast: WorkspaceForecast | None = None
+    forecast_unavailable_reason: str | None = None
+    position: WorkspacePosition | None = None
+    risk: WorkspaceRisk
+    proposal: ProposalCapability
+
+    @field_validator("generated_at")
+    @classmethod
+    def generated_at_is_utc(cls, value: datetime) -> datetime:
+        return _utc(value, "generated_at")
+
+    @field_validator("instrument", mode="before")
+    @classmethod
+    def instrument_is_a_detached_snapshot(cls, value: object) -> object:
+        return _instrument_snapshot(value)
+
+    @model_validator(mode="after")
+    def identities_match(self) -> "InstrumentWorkspace":
+        if self.instrument != self.history.instrument:
+            raise ValueError("workspace instrument must match history")
+        if (self.forecast is None) != (self.forecast_unavailable_reason is not None):
+            raise ValueError(
+                "workspace must carry either forecast evidence or an unavailable reason"
+            )
+        if self.forecast is not None and any(
+            point.timestamp <= self.forecast.train_end
+            for path in self.forecast.paths
+            for point in path.points
+        ):
+            raise ValueError("workspace forecast paths must remain future-only")
+        return self

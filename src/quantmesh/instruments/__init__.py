@@ -12,16 +12,23 @@ from quantmesh.instruments.contracts import (
     HistoricalSeries,
     HistoryRange,
     InstrumentSnapshot,
+    InstrumentWorkspace,
     OOSForecast,
     PaperProposal,
     PriceForecastArtifact,
+    ProposalCapability,
     ProposalConfirmation,
     ProposalEvent,
     ProposalStatus,
+    WorkspaceForecast,
+    WorkspaceLiveEvidence,
+    WorkspacePosition,
+    WorkspaceRisk,
 )
 from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
+from quantmesh.instruments.workspace import InstrumentWorkspaceService
 
 __all__ = [
     "ComparisonPoint",
@@ -34,6 +41,8 @@ __all__ = [
     "HistoricalBar",
     "HistoricalSeries",
     "HistoryRange",
+    "InstrumentWorkspace",
+    "InstrumentWorkspaceService",
     "HistoryService",
     "InstrumentSnapshot",
     "OOSForecast",
@@ -41,9 +50,14 @@ __all__ = [
     "PaperProposal",
     "PriceForecastArtifact",
     "PriceForecastRegistry",
+    "ProposalCapability",
     "ProposalConfirmation",
     "ProposalEvent",
     "ProposalLedger",
     "ProposalStatus",
+    "WorkspaceForecast",
+    "WorkspaceLiveEvidence",
+    "WorkspacePosition",
+    "WorkspaceRisk",
     "run_price_forecast",
 ]

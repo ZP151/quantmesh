@@ -5,22 +5,33 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 from datetime import UTC, datetime
+from ipaddress import ip_address
 from typing import Annotated
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import BaseModel, ConfigDict
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
 
 from quantmesh.data.layout import validate_symbol
 from quantmesh.domain.market_data import interval_to_timedelta
-from quantmesh.domain.models import Venue
+from quantmesh.domain.models import Side, Venue
 from quantmesh.instruments.contracts import (
     ComparisonSeries,
     HistoricalBar,
     HistoricalSeries,
     HistoryRange,
+    InstrumentWorkspace,
     LiveTailLineage,
+    PaperProposal,
+    ProposalConfirmation,
+    ProposalStatus,
 )
+from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
+from quantmesh.instruments.proposals import PaperDecisionService
+from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.contract import Provenance, UpdateKind
 from quantmesh.live.feed import LiveFeed
 
@@ -40,8 +51,43 @@ class HistoricalPayload(BaseModel):
     comparison: ComparisonSeries | None = None
 
 
+class ProposalCreateBody(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    venue: Venue
+    symbol: str
+    artifact_id: str
+    side: Side
+    quantity: float = Field(gt=0)
+    limit_price: float | None = Field(default=None, gt=0)
+
+
+class ProposalConfirmBody(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    confirmation_token: str = Field(min_length=1, max_length=128)
+
+
 def _unprocessable(detail: str) -> HTTPException:
     return HTTPException(status_code=422, detail=detail)
+
+
+def _guard_json_origin(request: Request, surface: str) -> None:
+    origin = request.headers.get("origin")
+    if origin is None:
+        return
+    try:
+        hostname = urlsplit(origin).hostname
+        loopback = hostname == "localhost" or (
+            hostname is not None and ip_address(hostname).is_loopback
+        )
+    except ValueError:
+        loopback = False
+    if not loopback:
+        raise HTTPException(
+            status_code=403,
+            detail=f"{surface} refused: cross-origin send is not loopback",
+        )
 
 
 def _validate_api_symbol(symbol: str, *, field: str) -> str:
@@ -62,9 +108,7 @@ def _parse_compare(
     if raw_values is None:
         return ()
     if len(raw_values) > _MAX_COMPARE_QUERY_VALUES:
-        raise _unprocessable(
-            f"compare supports at most {_MAX_COMPARE_QUERY_VALUES} query values"
-        )
+        raise _unprocessable(f"compare supports at most {_MAX_COMPARE_QUERY_VALUES} query values")
     peers: list[tuple[Venue, str]] = []
     seen: set[tuple[Venue, str]] = set()
     for raw in raw_values:
@@ -318,5 +362,90 @@ def instrument_router() -> APIRouter:
             as_of=as_of,
         )
         return HistoricalPayload(primary=primary, comparison=comparison)
+
+    @router.get(
+        "/instruments/{venue}/{symbol}/workspace",
+        response_model=InstrumentWorkspace,
+        name="instrument_workspace",
+    )
+    def workspace(
+        request: Request,
+        venue: Venue,
+        symbol: str,
+        selected_range: Annotated[HistoryRange, Query(alias="range")],
+        compare: Annotated[list[str] | None, Query()] = None,
+    ) -> InstrumentWorkspace:
+        _validate_api_symbol(symbol, field="symbol")
+        peers = _parse_compare(compare, primary=(venue, symbol))
+        service = getattr(request.app.state, "instrument_workspace", None)
+        if not isinstance(service, InstrumentWorkspaceService):
+            raise HTTPException(status_code=404, detail="no instrument workspace is attached")
+        try:
+            return service.render(venue, symbol, selected_range, peers=peers)
+        except HistoryUnavailableError as error:
+            raise HTTPException(
+                status_code=404,
+                detail=f"instrument workspace unavailable: {error}",
+            ) from error
+
+    @router.post(
+        "/paper/proposals",
+        response_model=PaperProposal,
+        name="create_paper_proposal",
+    )
+    def create_proposal(request: Request, body: ProposalCreateBody) -> PaperProposal:
+        _guard_json_origin(request, "paper proposal")
+        _validate_api_symbol(body.symbol, field="symbol")
+        registry = getattr(request.app.state, "price_forecasts", None)
+        decisions = getattr(request.app.state, "paper_decisions", None)
+        if not isinstance(registry, PriceForecastRegistry) or not isinstance(
+            decisions, PaperDecisionService
+        ):
+            raise HTTPException(status_code=404, detail="no paper proposal service is attached")
+        try:
+            artifact = registry.get(body.artifact_id)
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        if artifact.instrument.venue is not body.venue or artifact.instrument.symbol != body.symbol:
+            raise _unprocessable("proposal venue and symbol must match the forecast artifact")
+        try:
+            return decisions.propose(
+                artifact,
+                side=body.side,
+                quantity=body.quantity,
+                limit_price=body.limit_price,
+            )
+        except ValueError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @router.post(
+        "/paper/proposals/{proposal_id}/confirm",
+        response_model=ProposalConfirmation,
+        responses={409: {"model": ProposalConfirmation}},
+        name="confirm_paper_proposal",
+    )
+    def confirm_proposal(
+        request: Request,
+        proposal_id: str,
+        body: ProposalConfirmBody,
+    ) -> ProposalConfirmation | JSONResponse:
+        _guard_json_origin(request, "paper proposal confirmation")
+        decisions = getattr(request.app.state, "paper_decisions", None)
+        if not isinstance(decisions, PaperDecisionService):
+            raise HTTPException(status_code=404, detail="no paper proposal service is attached")
+        try:
+            before = decisions.ledger.get(proposal_id)
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        result = decisions.confirm(
+            proposal_id,
+            confirmation=body.confirmation_token,
+            now=decisions.current_time(),
+        )
+        if before.status is not ProposalStatus.PENDING:
+            return result
+        if result.proposal.status is ProposalStatus.CONFIRMED:
+            return result
+        return JSONResponse(status_code=409, content=jsonable_encoder(result))
 
     return router

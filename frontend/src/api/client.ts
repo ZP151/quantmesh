@@ -157,6 +157,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/instruments/{venue}/{symbol}/workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Instrument Workspace */
+        get: operations["api_instrument_workspace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/kill-switch": {
         parameters: {
             query?: never;
@@ -398,6 +415,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/paper/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Paper Proposal */
+        post: operations["api_create_paper_proposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/paper/proposals/{proposal_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm Paper Proposal */
+        post: operations["api_confirm_paper_proposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pnl": {
         parameters: {
             query?: never;
@@ -594,6 +645,23 @@ export interface paths {
         };
         /** Instrument History */
         get: operations["instrument_history_instruments__venue___symbol__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/instruments/{venue}/{symbol}/workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Instrument Workspace */
+        get: operations["instrument_workspace_instruments__venue___symbol__workspace_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -820,6 +888,40 @@ export interface paths {
         get: operations["order_orders__order_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Paper Proposal */
+        post: operations["create_paper_proposal_paper_proposals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/proposals/{proposal_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm Paper Proposal */
+        post: operations["confirm_paper_proposal_paper_proposals__proposal_id__confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1075,6 +1177,81 @@ export interface components {
             symbol: string;
             venue: components["schemas"]["Venue"];
         };
+        /**
+         * ForecastMetrics
+         * @description Promotion evidence for one horizon.
+         */
+        ForecastMetrics: {
+            /** Benchmark Mae */
+            benchmark_mae: number;
+            /** Coverage 50 */
+            coverage_50: number;
+            /** Coverage 80 */
+            coverage_80: number;
+            /** Coverage 95 */
+            coverage_95: number;
+            /** Interval Test Count */
+            interval_test_count: number;
+            /** Mae */
+            mae: number;
+            /** Residual Count */
+            residual_count: number;
+            /** Rmse */
+            rmse: number;
+            /**
+             * Sessions
+             * @enum {integer}
+             */
+            sessions: 7 | 30 | 126;
+            /** Test End */
+            test_end?: string | null;
+            /** Test Start */
+            test_start?: string | null;
+            /** Validation End */
+            validation_end?: string | null;
+            /** Validation Start */
+            validation_start?: string | null;
+        };
+        /**
+         * ForecastPath
+         * @description A complete price path for one predeclared horizon.
+         */
+        ForecastPath: {
+            /** Points */
+            points: components["schemas"]["ForecastPoint"][];
+            /**
+             * Sessions
+             * @enum {integer}
+             */
+            sessions: 7 | 30 | 126;
+        };
+        /**
+         * ForecastPoint
+         * @description One future session and its ordered price quantiles.
+         */
+        ForecastPoint: {
+            /** P025 */
+            p025: number;
+            /** P10 */
+            p10: number;
+            /** P25 */
+            p25: number;
+            /** P50 */
+            p50: number;
+            /** P75 */
+            p75: number;
+            /** P90 */
+            p90: number;
+            /** P975 */
+            p975: number;
+            /** Session */
+            session: number;
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1178,6 +1355,22 @@ export interface components {
          * @enum {string}
          */
         HistoryRange: "1d" | "5d" | "1m" | "3m" | "6m" | "1y";
+        /** Instrument */
+        Instrument: {
+            /**
+             * Currency
+             * @default USD
+             */
+            currency: string;
+            instrument_type: components["schemas"]["InstrumentType"];
+            /** Metadata */
+            metadata?: {
+                [key: string]: string;
+            };
+            /** Symbol */
+            symbol: string;
+            venue: components["schemas"]["Venue"];
+        };
         /**
          * InstrumentSnapshot
          * @description Detached, deeply immutable view of the canonical Instrument schema.
@@ -1202,6 +1395,27 @@ export interface components {
          * @enum {string}
          */
         InstrumentType: "equity" | "etf" | "perpetual" | "spot" | "event_contract";
+        /**
+         * InstrumentWorkspace
+         * @description Point-in-time read model for one venue-aware decision workspace.
+         */
+        InstrumentWorkspace: {
+            comparison?: components["schemas"]["ComparisonSeries"] | null;
+            forecast?: components["schemas"]["WorkspaceForecast"] | null;
+            /** Forecast Unavailable Reason */
+            forecast_unavailable_reason?: string | null;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            history: components["schemas"]["HistoricalSeries"];
+            instrument: components["schemas"]["InstrumentSnapshot"];
+            live: components["schemas"]["WorkspaceLiveEvidence"];
+            position?: components["schemas"]["WorkspacePosition"] | null;
+            proposal: components["schemas"]["ProposalCapability"];
+            risk: components["schemas"]["WorkspaceRisk"];
+        };
         /**
          * LiveTailLineage
          * @description Positive, point-in-time evidence attached only to a live-tail bar.
@@ -1256,6 +1470,181 @@ export interface components {
             source: string;
             venue: components["schemas"]["Venue"];
         };
+        /**
+         * Order
+         * @description Replayable order; state fields must agree with the event history.
+         */
+        Order: {
+            /** Broker Order Id */
+            broker_order_id?: string | null;
+            /** Client Order Id */
+            client_order_id?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Events */
+            events?: components["schemas"]["OrderEvent"][];
+            /**
+             * Filled Quantity
+             * @default 0
+             */
+            filled_quantity: number;
+            /** Idempotency Key */
+            idempotency_key?: string | null;
+            instrument: components["schemas"]["Instrument"];
+            /** Limit Price */
+            limit_price?: number | null;
+            /** Order Id */
+            order_id: string;
+            order_type: components["schemas"]["OrderType"];
+            /** Quantity */
+            quantity: number;
+            side: components["schemas"]["Side"];
+            /** @default pending */
+            status: components["schemas"]["OrderStatus"];
+        };
+        /**
+         * OrderEvent
+         * @description One append-only lifecycle record; state is derived from this history.
+         *
+         *     Fill events carry the venue's own deal id and fee when the venue
+         *     reported them, so fills can be re-derived from the history for
+         *     fill-level reconciliation (ADR-0006 decision 4).
+         */
+        OrderEvent: {
+            /** Broker Fill Id */
+            broker_fill_id?: string | null;
+            event_type: components["schemas"]["OrderEventType"];
+            /** Fee */
+            fee?: number | null;
+            /** Price */
+            price?: number | null;
+            /** Quantity */
+            quantity?: number | null;
+            /** Reason */
+            reason?: string | null;
+            /** Sequence */
+            sequence: number;
+            status: components["schemas"]["OrderStatus"];
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+        };
+        /**
+         * OrderEventType
+         * @enum {string}
+         */
+        OrderEventType: "accepted" | "rejected" | "fill" | "canceled";
+        /**
+         * OrderStatus
+         * @enum {string}
+         */
+        OrderStatus: "pending" | "accepted" | "partially_filled" | "filled" | "canceled" | "rejected";
+        /**
+         * OrderType
+         * @enum {string}
+         */
+        OrderType: "market" | "limit";
+        /**
+         * PaperProposal
+         * @description Immutable forecast-to-paper intent; creation never places an order.
+         */
+        PaperProposal: {
+            /** Artifact Id */
+            artifact_id: string;
+            /** Blockers */
+            blockers?: string[];
+            /** Config Digest */
+            config_digest: string;
+            /** Confirmation Token */
+            confirmation_token: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Dataset Revision */
+            dataset_revision: number;
+            /**
+             * Forecast Generated At
+             * Format: date-time
+             */
+            forecast_generated_at: string;
+            /** History Digest */
+            history_digest: string;
+            /** Id */
+            id: string;
+            instrument: components["schemas"]["InstrumentSnapshot"];
+            /** Limit Price */
+            limit_price?: number | null;
+            /** Model Version */
+            model_version: string;
+            /** Order Id */
+            order_id?: string | null;
+            order_type: components["schemas"]["OrderType"];
+            /** Quantity */
+            quantity: number;
+            /** Quote Provenance */
+            quote_provenance?: ("real" | "demo-synthetic") | null;
+            side: components["schemas"]["Side"];
+            status: components["schemas"]["ProposalStatus"];
+        };
+        /** ProposalCapability */
+        ProposalCapability: {
+            /** Allowed */
+            allowed: boolean;
+            /** Blockers */
+            blockers: string[];
+            /** Proposals */
+            proposals: components["schemas"]["PaperProposal"][];
+        };
+        /** ProposalConfirmBody */
+        ProposalConfirmBody: {
+            /** Confirmation Token */
+            confirmation_token: string;
+        };
+        /**
+         * ProposalConfirmation
+         * @description Typed result of an explicit confirmation attempt.
+         */
+        ProposalConfirmation: {
+            /** Blocker */
+            blocker?: string | null;
+            order?: components["schemas"]["Order"] | null;
+            proposal: components["schemas"]["PaperProposal"];
+            /** Quote Provenance */
+            quote_provenance?: ("real" | "demo-synthetic") | null;
+        };
+        /** ProposalCreateBody */
+        ProposalCreateBody: {
+            /** Artifact Id */
+            artifact_id: string;
+            /** Limit Price */
+            limit_price?: number | null;
+            /** Quantity */
+            quantity: number;
+            side: components["schemas"]["Side"];
+            /** Symbol */
+            symbol: string;
+            venue: components["schemas"]["Venue"];
+        };
+        /**
+         * ProposalStatus
+         * @description Append-only paper proposal lifecycle.
+         * @enum {string}
+         */
+        ProposalStatus: "pending" | "blocked" | "confirmed" | "rejected";
+        /**
+         * Side
+         * @enum {string}
+         */
+        Side: "buy" | "sell";
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -1274,6 +1663,132 @@ export interface components {
          * @enum {string}
          */
         Venue: "internal" | "moomoo" | "hyperliquid" | "polymarket" | "kalshi";
+        /**
+         * WorkspaceForecast
+         * @description Forecast evidence needed by the workspace, without bulky OOS rows.
+         */
+        WorkspaceForecast: {
+            /** Artifact Id */
+            artifact_id: string;
+            /** Benchmark Name */
+            benchmark_name: string;
+            /** Blockers */
+            blockers: string[];
+            /** Config Digest */
+            config_digest: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Dataset Revision */
+            dataset_revision: number;
+            /** Eligible */
+            eligible: boolean;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** History Digest */
+            history_digest: string;
+            /** Limitations */
+            limitations: string[];
+            /** Metrics */
+            metrics: components["schemas"]["ForecastMetrics"][];
+            /** Model Name */
+            model_name: string;
+            /** Model Version */
+            model_version: string;
+            /** Paths */
+            paths: components["schemas"]["ForecastPath"][];
+            /** Target */
+            target: string;
+            /** Test End */
+            test_end?: string | null;
+            /** Test Start */
+            test_start?: string | null;
+            /**
+             * Train End
+             * Format: date-time
+             */
+            train_end: string;
+            /**
+             * Train Start
+             * Format: date-time
+             */
+            train_start: string;
+            /** Validation End */
+            validation_end?: string | null;
+            /** Validation Start */
+            validation_start?: string | null;
+        };
+        /**
+         * WorkspaceLiveEvidence
+         * @description One truthful latest quote view; absent data stays explicitly absent.
+         */
+        WorkspaceLiveEvidence: {
+            /** Age Ms */
+            age_ms?: number | null;
+            /** Ask */
+            ask?: number | null;
+            /** Bid */
+            bid?: number | null;
+            /** Data Time */
+            data_time?: string | null;
+            /** Label */
+            label?: string | null;
+            /** Last */
+            last?: number | null;
+            /** Provenance */
+            provenance?: string | null;
+            /** Reason */
+            reason?: string | null;
+            /** Received At */
+            received_at?: string | null;
+            /** Sequence */
+            sequence?: number | null;
+            /** Sequence Gap */
+            sequence_gap?: boolean | null;
+            /** Source */
+            source?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "degraded" | "unavailable";
+        };
+        /** WorkspacePosition */
+        WorkspacePosition: {
+            /** Average Cost */
+            average_cost: number;
+            /** Mark */
+            mark?: number | null;
+            /** Quantity */
+            quantity: number;
+            /** Realized Pnl */
+            realized_pnl: number;
+            /** Unrealized Pnl */
+            unrealized_pnl?: number | null;
+        };
+        /** WorkspaceRisk */
+        WorkspaceRisk: {
+            /** Cash */
+            cash: number;
+            /** Equity */
+            equity: number;
+            /** Global Kill Switch */
+            global_kill_switch: boolean;
+            /** Mark Available */
+            mark_available: boolean;
+            /** Max Notional */
+            max_notional?: number | null;
+            /** Max Order Quantity */
+            max_order_quantity?: number | null;
+            /** Max Position Quantity */
+            max_position_quantity?: number | null;
+            /** Starting Cash */
+            starting_cash: number;
+            /** Venue Kill Switch */
+            venue_kill_switch: boolean;
+        };
         /**
          * _KillSwitchBody
          * @description The JSON kill-switch flip the SPA shell calls. The form endpoint
@@ -1493,6 +2008,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HistoricalPayload"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_instrument_workspace: {
+        parameters: {
+            query: {
+                range: components["schemas"]["HistoryRange"];
+                compare?: string[] | null;
+            };
+            header?: never;
+            path: {
+                venue: components["schemas"]["Venue"];
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentWorkspace"];
                 };
             };
             /** @description Validation Error */
@@ -1842,6 +2392,83 @@ export interface operations {
             };
         };
     };
+    api_create_paper_proposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposalCreateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperProposal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_confirm_paper_proposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposalConfirmBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalConfirmation"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalConfirmation"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     api_pnl: {
         parameters: {
             query?: never;
@@ -2086,6 +2713,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HistoricalPayload"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    instrument_workspace_instruments__venue___symbol__workspace_get: {
+        parameters: {
+            query: {
+                range: components["schemas"]["HistoryRange"];
+                compare?: string[] | null;
+            };
+            header?: never;
+            path: {
+                venue: components["schemas"]["Venue"];
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentWorkspace"];
                 };
             };
             /** @description Validation Error */
@@ -2394,6 +3056,83 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_paper_proposal_paper_proposals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposalCreateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperProposal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_paper_proposal_paper_proposals__proposal_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposalConfirmBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalConfirmation"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalConfirmation"];
                 };
             };
             /** @description Validation Error */

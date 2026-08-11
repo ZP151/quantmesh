@@ -49,7 +49,7 @@ import asyncio
 from collections.abc import Callable, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field, replace
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Literal
 from urllib.parse import quote, urlsplit
@@ -65,7 +65,7 @@ from quantmesh.ai.decisions import DecisionLog
 from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.watchlist import WatchlistError, WatchlistStore
-from quantmesh.domain.models import Venue
+from quantmesh.domain.models import Instrument, Quote, Venue
 from quantmesh.domain.orders import Order
 from quantmesh.events.forecast import ForecastReportRegistry, forecast_artifact_paths
 from quantmesh.events.mapping import MappingLedger
@@ -73,9 +73,13 @@ from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
 from quantmesh.instruments.api import instrument_router
+from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
+from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.api import live_router
 from quantmesh.live.feed import LiveFeed
+from quantmesh.live.fence import QuoteFence
 from quantmesh.live.prediction import PredictionBoard
 from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
@@ -984,6 +988,10 @@ def create_workstation_app(
     hl_posture: HyperliquidRiskLimits | None = None,
     enablement: ApprovalLedger | None = None,
     history: HistoryService | None = None,
+    price_forecasts: PriceForecastRegistry | None = None,
+    proposal_ledger: ProposalLedger | None = None,
+    demo_quote_provider: Callable[[Instrument, datetime], Quote] | None = None,
+    workspace_clock: Callable[[], datetime] | None = None,
     live_feed: LiveFeed | None = None,
     prediction: PredictionBoard | None = None,
     host: str | None = None,
@@ -1052,6 +1060,41 @@ def create_workstation_app(
         enablement=enablement,
     )
     app.state.history = history
+    app.state.price_forecasts = price_forecasts
+    clock = workspace_clock if workspace_clock is not None else lambda: datetime.now(UTC)
+
+    def replace_account(updated: PaperAccount) -> None:
+        app.state.account = updated
+        app.state.page_context = replace(app.state.page_context, account=updated)
+
+    paper_decisions = None
+    if price_forecasts is not None and proposal_ledger is not None:
+        paper_decisions = PaperDecisionService(
+            ledger=proposal_ledger,
+            artifact_resolver=lambda artifact_id: price_forecasts.get(artifact_id),
+            account_provider=lambda: app.state.account,
+            account_sink=replace_account,
+            journal=journal,
+            snapshot_provider=(
+                (lambda: live_feed.latest_state(now=clock()))
+                if live_feed is not None
+                else lambda: None
+            ),
+            quote_fence=QuoteFence(),
+            demo_quote_provider=demo_quote_provider,
+            now=clock,
+        )
+        app.state.paper_decisions = paper_decisions
+    if history is not None:
+        app.state.instrument_workspace = InstrumentWorkspaceService(
+            history=history,
+            forecasts=price_forecasts,
+            account_provider=lambda: app.state.account,
+            marks_provider=lambda: app.state.marks,
+            live_feed=live_feed,
+            decisions=paper_decisions,
+            now=clock,
+        )
 
     # The SPA JSON surface (Phase C) in both modes: a strict superset
     # of the M1 API, so a client that wants JSON has one source of
@@ -1507,9 +1550,7 @@ def main(argv: list[str] | None = None) -> None:
             )
 
             watchlist = [
-                coin.strip().upper()
-                for coin in settings.live_watchlist.split(",")
-                if coin.strip()
+                coin.strip().upper() for coin in settings.live_watchlist.split(",") if coin.strip()
             ]
             if not watchlist:
                 raise SystemExit(
@@ -1547,9 +1588,7 @@ def main(argv: list[str] | None = None) -> None:
                 )
                 from quantmesh.polymarket.transport import SdkPolyTransport
 
-                board = PredictionBoard(
-                    parse_prediction_watchlist(settings.prediction_watchlist)
-                )
+                board = PredictionBoard(parse_prediction_watchlist(settings.prediction_watchlist))
                 watchlists = board.venues()
                 pm_watchlist = watchlists[Venue.POLYMARKET]
                 if pm_watchlist:
@@ -1588,9 +1627,7 @@ def main(argv: list[str] | None = None) -> None:
                 moomoo = MoomooVenueSupervisor(
                     MoomooVenueTransport(
                         MoomooOpenDClient.from_settings(settings),
-                        poll_interval=timedelta(
-                            seconds=settings.moomoo_poll_interval_s
-                        ),
+                        poll_interval=timedelta(seconds=settings.moomoo_poll_interval_s),
                     ),
                     market=settings.moomoo_market,
                 )

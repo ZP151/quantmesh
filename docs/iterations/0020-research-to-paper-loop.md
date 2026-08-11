@@ -590,6 +590,15 @@ not sufficient for cross-agent recovery.
   recovers a failed proposal transition without duplicating fills. Thirteen
   proposal tests and the live-fence/account/journal matrix pass 71/71; focused
   Ruff and formatting pass. Independent review remains the gate before Task 9.
+- Task 9 initial backend/client implementation is complete while its dedicated
+  API acceptance tests are still pending. A one-clock workspace read model now
+  composes history/comparisons, typed live availability, latest forecast
+  evidence, position/P&L, paper limits, kill switches and proposal capability.
+  Guarded preview/confirm routes accept only operator facts; account, risk and
+  eligibility stay server-owned. The workstation wires the same account object
+  through kernel, BFF and confirmation updates, and the generated OpenAPI client
+  plus handwritten adapter typecheck cleanly. Existing instrument/workstation/
+  proposal/history regressions pass 225/225; this is not yet the Task 9 gate.
 
 ## Acceptance criteria
 

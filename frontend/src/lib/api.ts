@@ -497,6 +497,10 @@ export type HistoricalSeries = DeepReadonly<components['schemas']['HistoricalSer
 export type ComparisonPoint = DeepReadonly<components['schemas']['ComparisonPoint']>
 export type ComparisonSeries = DeepReadonly<components['schemas']['ComparisonSeries']>
 export type HistoricalPayload = DeepReadonly<components['schemas']['HistoricalPayload']>
+export type InstrumentWorkspace = DeepReadonly<components['schemas']['InstrumentWorkspace']>
+export type PaperProposal = DeepReadonly<components['schemas']['PaperProposal']>
+export type ProposalConfirmation = DeepReadonly<components['schemas']['ProposalConfirmation']>
+export type ProposalCreateInput = components['schemas']['ProposalCreateBody']
 
 // --- Client --------------------------------------------------------------
 
@@ -507,6 +511,16 @@ export class ApiError extends Error {
     super(message)
     this.name = 'ApiError'
     this.status = status
+  }
+}
+
+export class ProposalRefusalError extends ApiError {
+  readonly result: ProposalConfirmation
+
+  constructor(result: ProposalConfirmation) {
+    super(409, result.blocker ?? 'Paper proposal confirmation was refused')
+    this.name = 'ProposalRefusalError'
+    this.result = result
   }
 }
 
@@ -658,6 +672,54 @@ export const api = {
         },
       },
     )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async instrumentWorkspace(
+    venue: HistoricalVenue,
+    symbol: string,
+    range: HistoryRange,
+    compare: readonly string[] = [],
+  ): Promise<InstrumentWorkspace> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/instruments/{venue}/{symbol}/workspace',
+      {
+        params: {
+          path: { venue, symbol },
+          query: {
+            range,
+            compare: compare.length > 0 ? [...compare] : undefined,
+          },
+        },
+      },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async createPaperProposal(input: ProposalCreateInput): Promise<PaperProposal> {
+    const { data, error, response } = await generatedApi.POST('/api/paper/proposals', {
+      body: input,
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async confirmPaperProposal(
+    proposalId: string,
+    confirmationToken: string,
+  ): Promise<ProposalConfirmation> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/paper/proposals/{proposal_id}/confirm',
+      {
+        params: { path: { proposal_id: proposalId } },
+        body: { confirmation_token: confirmationToken },
+      },
+    )
+    if (response.status === 409 && error !== undefined) {
+      throw new ProposalRefusalError(error as ProposalConfirmation)
+    }
     if (!response.ok || data === undefined) throw generatedApiError(response, error)
     return data
   },

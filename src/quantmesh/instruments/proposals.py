@@ -82,7 +82,7 @@ def _forecast_age_sessions(artifact: PriceForecastArtifact, now: datetime) -> in
     return count
 
 
-def _freshness_blocker(artifact: PriceForecastArtifact, now: datetime) -> str | None:
+def forecast_freshness_blocker(artifact: PriceForecastArtifact, now: datetime) -> str | None:
     age = _forecast_age_sessions(artifact, now)
     if age <= 1:
         return None
@@ -278,6 +278,16 @@ class PaperDecisionService:
         self._now = now
         self._lock = threading.RLock()
 
+    @property
+    def demo_mode(self) -> bool:
+        return self._demo_quote_provider is not None
+
+    def current_time(self) -> datetime:
+        value = self._now()
+        if value.tzinfo is None:
+            raise ValueError("proposal clock must be timezone-aware")
+        return value.astimezone(UTC)
+
     def _resolve_artifact(self, artifact_id: str) -> PriceForecastArtifact:
         artifact = self._artifact_resolver(artifact_id)
         if artifact is None:
@@ -297,10 +307,7 @@ class PaperDecisionService:
             resolved = self._resolve_artifact(artifact.id)
             if resolved != artifact:
                 raise ValueError("proposal artifact does not match the registered artifact")
-            created_at = self._now()
-            if created_at.tzinfo is None:
-                raise ValueError("proposal clock must be timezone-aware")
-            created_at = created_at.astimezone(UTC)
+            created_at = self.current_time()
             order_type = OrderType.LIMIT if limit_price is not None else OrderType.MARKET
             setup = {
                 "artifact_id": artifact.id,
@@ -318,7 +325,7 @@ class PaperDecisionService:
                 }
             )
             blockers = artifact.blockers if not artifact.eligible else ()
-            freshness = _freshness_blocker(artifact, created_at)
+            freshness = forecast_freshness_blocker(artifact, created_at)
             if freshness is not None:
                 blockers = (*blockers, freshness)
             proposal = PaperProposal(
@@ -460,7 +467,7 @@ class PaperDecisionService:
                 )
                 blocked = self.ledger.transition(blocked, recorded_at=now)
                 return self._terminal_result(blocked)
-            freshness = _freshness_blocker(artifact, now)
+            freshness = forecast_freshness_blocker(artifact, now)
             if freshness is not None:
                 blocked = PaperProposal.model_validate(
                     {
