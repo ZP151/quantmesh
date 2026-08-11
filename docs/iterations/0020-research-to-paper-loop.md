@@ -553,6 +553,18 @@ not sufficient for cross-agent recovery.
   writer exactly-once drill and four focused atomicity cases passed without a
   duplicate, sequence hole or deadlock. Task 6 is complete; Task 7 (truthful
   multi-horizon forecast artifacts) is the active frontier.
+- Task 7 initial implementation is complete and awaiting independent review.
+  It adds frozen API contracts, exact-252-return chronological point forecasts,
+  outcome-available-only conformal intervals, 7/30/126-session paths, explicit
+  promotion blockers, deterministic identities and a crash-safe append-only
+  registry whose reads revalidate canonical bytes and the lake manifest pin.
+  Sixteen forecast tests plus the existing research model/report suites pass
+  71/71; focused Ruff, formatting and diff checks pass. The implementation
+  records an important planning correction: 420 observed sessions can produce
+  126-session OOS residuals, but cannot both observe those outcomes and then
+  evaluate a later 126-session interval without leakage. Demo seeding must use
+  a longer history or honestly keep that horizon ineligible; it must not relax
+  the chronological gate to manufacture an acceptance result.
 
 ## Acceptance criteria
 
