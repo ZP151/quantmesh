@@ -18,6 +18,7 @@ legacy screens can never disagree. Under test:
   and a reset restores the pristine root
 """
 
+import json
 from pathlib import Path
 
 import pytest
@@ -29,6 +30,19 @@ from quantmesh.demo.runtime import create_demo_app
 from quantmesh.domain.models import Venue
 
 SCENARIO = DemoScenario()
+
+
+def test_ci_runs_the_exact_frontend_typecheck_after_openapi_staleness_check() -> None:
+    root = Path(__file__).resolve().parents[1]
+    package = json.loads((root / "frontend" / "package.json").read_text(encoding="utf-8"))
+    workflow = (root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+
+    assert package["scripts"]["typecheck"] == "tsc --noEmit"
+    openapi_check = "run: npm run check:api"
+    typecheck = "run: npm run typecheck"
+    assert openapi_check in workflow
+    assert typecheck in workflow
+    assert workflow.index(openapi_check) < workflow.index(typecheck)
 
 
 @pytest.fixture()

@@ -38,6 +38,9 @@ jobs:
       - name: Check generated OpenAPI client
         run: npm run check:api
         working-directory: frontend
+      - name: Type-check frontend
+        run: npm run typecheck
+        working-directory: frontend
       - name: Lint
         # tools/ exists on main only after the M10 merge; earlier milestone
         # PRs (and their stacked bases) must not fail on a missing path.

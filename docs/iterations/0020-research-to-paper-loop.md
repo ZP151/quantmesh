@@ -429,7 +429,7 @@ not sufficient for cross-agent recovery.
   removed. No dependency, built frontend asset, execution route or order
   authority changed. Fresh independent review remains pending.
 
-### Task 6 fix round 1 — fresh independent review pending
+### Task 6 fix round 1 — changes requested
 
 - The independent review of `ffd1ce1` requested five Important fixes and one
   local Minor: synchronized public feed access, positive continuity evidence,
@@ -471,6 +471,52 @@ not sufficient for cross-agent recovery.
   `9f2d93cdf638d0de9ac84eca1c92e10c516cff6fa78b5bb0487ef8ba193b5693`;
   TypeScript no-emit, Ruff and `git diff --check` pass. Existing Vitest
   React `act(...)`/undefined-query warnings remain outside this Task 6 fix.
+
+### Task 6 fix round 2 — fresh independent review pending
+
+- The round-1 rereview found four remaining Important issues and one Minor:
+  attached-lake writes were outside the feed lock, disconnects did not end the
+  continuity session, strict lineage reload did not bind receipt age to the
+  enclosing response, CI did not type-check the generated caller, and loader
+  `ValueError` was still converted to expected absence. This round addresses
+  all five findings; review acceptance remains deliberately pending.
+- Each `LiveFeed` update is now one serialized transaction under the feed
+  lock: detached update, continuity calculation, lake append, cache commit and
+  disconnect barrier update. Persistence occurs before visible cache state.
+  The 100-update/eight-writer regression captures every worker exception,
+  proves exactly-once persistence and unique contiguous `local_seq`, exercises
+  exact/latest/status snapshots concurrently, and confirms the final cache.
+  A forced append failure leaves both displayed value and continuity proof
+  unchanged.
+- Exact `DISCONNECTED` and `UNAVAILABLE` status observations establish a
+  venue/instrument session barrier for existing non-status stream keys without
+  removing their last display value. The first later candle is unproven and a
+  second valid predecessor relationship can restore proof. `CONNECTED` and
+  `LAGGING` do not fabricate proof; venue and symbol boundaries remain
+  isolated, including a disconnect before any candle.
+- `HistoricalSeries` now permits at most one live bar and only as the final
+  bar. Every historical bar must remain inside manifest coverage, while that
+  final live tail alone may extend beyond historical coverage. Live receipt
+  cannot follow the response `as_of`, and `age_ms` must exactly equal the
+  nonnegative integer millisecond difference. Strict JSON tampering
+  regressions reject forged age, future receipt, middle/multiple live bars and
+  historical coverage escape while preserving exact round trips.
+- The frontend defines the exact `typecheck: tsc --noEmit` package script and
+  CI runs it immediately after `check:api`; a repository regression fixes both
+  the command and ordering. `HistoryService` now lets plain loader
+  `ValueError`/Pydantic faults reach FastAPI's sanitized 500 boundary, while a
+  loader-raised `HistoryUnavailableError` remains the explicit stable 404.
+- RED evidence reproduced the prior defects: concurrent lake ingestion raised
+  77 worker errors, post-disconnect proof remained true, forged lineage and
+  out-of-coverage history validated, CI lacked `typecheck`, and both loader
+  faults returned 404. GREEN verification is 187/187 across the round-1 matrix
+  plus 21/21 `LiveBuffer` tests (208 total), and 73/73 Vitest tests. OpenAPI
+  stale checks passed twice at byte-identical SHA-256
+  `9f2d93cdf638d0de9ac84eca1c92e10c516cff6fa78b5bb0487ef8ba193b5693`;
+  `npm run typecheck`, frontend lint, focused Ruff and diff checks pass. The
+  npm closure is unchanged at 644 allowlisted entries and `npm audit` reports
+  zero advisories. Existing frontend warning debt is unchanged; no execution
+  authority, dependency, generated client or built asset changed.
 
 ## Acceptance criteria
 

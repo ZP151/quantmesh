@@ -357,6 +357,13 @@ class HistoricalSeries(StrictContract):
     @model_validator(mode="after")
     def observed_series_is_self_consistent(self) -> "HistoricalSeries":
         identity = (self.instrument.venue, self.instrument.symbol)
+        live_indices = [
+            index for index, item in enumerate(self.bars) if item.is_live_tail
+        ]
+        if len(live_indices) > 1:
+            raise ValueError("series may contain at most one live-tail bar")
+        if live_indices and live_indices[0] != len(self.bars) - 1:
+            raise ValueError("live-tail bar must be final")
         timestamps = [item.timestamp for item in self.bars]
         if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
             raise ValueError("bars must be strictly chronological and unique")
@@ -372,6 +379,24 @@ class HistoricalSeries(StrictContract):
             or self.coverage.symbol != self.instrument.symbol
         ):
             raise ValueError("coverage must describe the returned series")
+        if any(
+            not item.is_live_tail
+            and not (self.coverage.start <= item.timestamp <= self.coverage.end)
+            for item in self.bars
+        ):
+            raise ValueError("historical bars must remain inside manifest coverage")
+        for item in self.bars:
+            if item.live_lineage is None:
+                continue
+            if item.live_lineage.received_at > self.as_of:
+                raise ValueError("live lineage received_at must not exceed series as_of")
+            expected_age_ms = int(
+                (self.as_of - item.live_lineage.received_at).total_seconds() * 1000
+            )
+            if item.live_lineage.age_ms != expected_age_ms:
+                raise ValueError(
+                    "live lineage age_ms must exactly equal as_of minus received_at"
+                )
         return self
 
 

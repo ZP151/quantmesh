@@ -54,6 +54,9 @@ class ReadableDataset(Protocol):
     ) -> list[Bar]: ...
 
 
+# Expected absence must be reported as ``HistoryUnavailableError`` by the
+# loader. Plain ``ValueError`` and validation faults are programmer errors and
+# deliberately propagate to the API's sanitized 500 boundary.
 DatasetLoader = Callable[[str], ReadableDataset]
 Clock = Callable[[], datetime]
 
@@ -111,12 +114,7 @@ class HistoryService:
             raise TypeError("range must be a HistoryRange")
         selected_as_of = _aware_utc(as_of if as_of is not None else self._now(), "as_of")
         selected, fallback = self._select_binding(venue, symbol, range)
-        try:
-            dataset = self._dataset_loader(selected.dataset_id)
-        except HistoryUnavailableError:
-            raise
-        except ValueError as error:
-            raise HistoryUnavailableError(str(error)) from error
+        dataset = self._dataset_loader(selected.dataset_id)
         dataset_name = getattr(dataset, "name", None)
         if dataset_name != selected.dataset_id:
             raise HistoryUnavailableError(

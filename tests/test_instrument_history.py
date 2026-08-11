@@ -1069,6 +1069,164 @@ def test_live_tail_flag_and_lineage_identity_must_match_exactly() -> None:
         LiveTailLineage(**invalid_proof)
 
 
+def _series_with_live_tail() -> HistoricalSeries:
+    live_time = NOW + timedelta(days=1)
+    as_of = live_time + timedelta(milliseconds=1_500)
+    lineage = LiveTailLineage(
+        source="moomoo",
+        venue=Venue.MOOMOO,
+        instrument="NVDA",
+        provenance=Provenance.REAL,
+        data_time=live_time,
+        received_at=live_time,
+        interval="1d",
+        sequence=2,
+        predecessor_sequence=1,
+        predecessor_data_time=NOW,
+        sequence_gap=False,
+        continuity_proven=True,
+        freshness_label="real",
+        age_ms=1_500,
+    )
+    return HistoricalSeries(
+        instrument=NVDA,
+        range=HistoryRange.SIX_MONTHS,
+        as_of=as_of,
+        bars=(
+            HistoricalBar(
+                instrument=NVDA,
+                timestamp=NOW - timedelta(days=1),
+                interval="1d",
+                open=99.0,
+                high=102.0,
+                low=98.0,
+                close=100.0,
+                volume=1_000.0,
+            ),
+            HistoricalBar(
+                instrument=NVDA,
+                timestamp=NOW,
+                interval="1d",
+                open=100.0,
+                high=103.0,
+                low=99.0,
+                close=101.0,
+                volume=1_100.0,
+            ),
+            HistoricalBar(
+                instrument=NVDA,
+                timestamp=live_time,
+                interval="1d",
+                open=101.0,
+                high=104.0,
+                low=100.0,
+                close=103.0,
+                volume=1_200.0,
+                is_live_tail=True,
+                live_lineage=lineage,
+            ),
+        ),
+        dataset_id="equities",
+        dataset_revision=7,
+        source="operator-import",
+        license="operator-supplied",
+        generated_at=NOW - timedelta(days=2),
+        interval="1d",
+        calendar="XNYS",
+        adjustment="unadjusted",
+        coverage=CoverageSnapshot(
+            interval="1d",
+            venue=Venue.MOOMOO,
+            symbol="NVDA",
+            start=NOW - timedelta(days=1),
+            end=NOW,
+            rows=2,
+        ),
+        limitations=(
+            "manifest coverage is historical-only; the live-tail bar is excluded",
+        ),
+    )
+
+
+@pytest.mark.parametrize("forged_age", [0, 999_999])
+def test_series_strict_json_rejects_forged_live_lineage_age(forged_age: int) -> None:
+    payload = json.loads(_series_with_live_tail().model_dump_json())
+    payload["bars"][-1]["live_lineage"]["age_ms"] = forged_age
+
+    with pytest.raises(ValidationError, match="age_ms must exactly equal"):
+        HistoricalSeries.model_validate_json(json.dumps(payload), strict=True)
+
+
+def test_series_strict_json_rejects_live_receipt_after_as_of() -> None:
+    payload = json.loads(_series_with_live_tail().model_dump_json())
+    as_of = datetime.fromisoformat(payload["as_of"])
+    payload["bars"][-1]["live_lineage"]["received_at"] = (
+        as_of + timedelta(seconds=1)
+    ).isoformat()
+    payload["bars"][-1]["live_lineage"]["age_ms"] = 0
+
+    with pytest.raises(ValidationError, match="received_at must not exceed series as_of"):
+        HistoricalSeries.model_validate_json(json.dumps(payload), strict=True)
+
+
+def test_series_strict_json_rejects_live_tail_in_the_middle() -> None:
+    payload = json.loads(_series_with_live_tail().model_dump_json())
+    payload["bars"] = [payload["bars"][0], payload["bars"][2], payload["bars"][1]]
+
+    with pytest.raises(ValidationError, match="live-tail bar must be final"):
+        HistoricalSeries.model_validate_json(json.dumps(payload), strict=True)
+
+
+def test_series_strict_json_rejects_multiple_live_tails() -> None:
+    payload = json.loads(_series_with_live_tail().model_dump_json())
+    as_of = datetime.fromisoformat(payload["as_of"])
+    second = payload["bars"][1]
+    lineage = dict(payload["bars"][-1]["live_lineage"])
+    lineage.update(
+        {
+            "data_time": second["timestamp"],
+            "received_at": second["timestamp"],
+            "sequence": 1,
+            "predecessor_sequence": 0,
+            "predecessor_data_time": payload["bars"][0]["timestamp"],
+            "age_ms": int(
+                (
+                    as_of - datetime.fromisoformat(second["timestamp"])
+                ).total_seconds()
+                * 1000
+            ),
+        }
+    )
+    second["is_live_tail"] = True
+    second["live_lineage"] = lineage
+
+    with pytest.raises(ValidationError, match="at most one live-tail bar"):
+        HistoricalSeries.model_validate_json(json.dumps(payload), strict=True)
+
+
+def test_series_strict_json_rejects_historical_bar_outside_manifest_coverage() -> None:
+    payload = json.loads(_series_with_live_tail().model_dump_json())
+    coverage_start = datetime.fromisoformat(payload["coverage"]["start"])
+    payload["bars"][0]["timestamp"] = (
+        coverage_start - timedelta(days=1)
+    ).isoformat()
+
+    with pytest.raises(ValidationError, match="historical bars must remain inside"):
+        HistoricalSeries.model_validate_json(json.dumps(payload), strict=True)
+
+
+def test_series_live_tail_exact_age_and_outside_coverage_round_trip() -> None:
+    series = _series_with_live_tail()
+    payload = series.model_dump_json()
+
+    restored = HistoricalSeries.model_validate_json(payload, strict=True)
+
+    assert restored.model_dump_json() == payload
+    assert restored.bars[-1].timestamp > restored.coverage.end
+    assert restored.bars[-1].live_lineage is not None
+    assert restored.bars[-1].live_lineage.age_ms == 1_500
+
+
 @pytest.mark.parametrize(
     ("model", "payload"),
     [

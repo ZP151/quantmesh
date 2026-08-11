@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "generate:api": "node scripts/openapi-client.mjs generate",
     "check:api": "node scripts/openapi-client.mjs check",
+    "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "preview": "vite preview"
   },

@@ -37,7 +37,7 @@ from typing import Any
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Venue
 from quantmesh.live.buffer import LiveBuffer
-from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
+from quantmesh.live.contract import MarketUpdate, Provenance, SourceState, UpdateKind
 from quantmesh.live.supervisor import VenueSupervisor
 
 _POLL_SECONDS = 0.05  # supervisor outbox poll cadence (drain loop)
@@ -196,6 +196,7 @@ class LiveFeed:
         self._lock = RLock()
         self._latest: dict[tuple[str, str, str], MarketUpdate] = {}
         self._continuity: dict[tuple[str, str, str], _ContinuityProof] = {}
+        self._continuity_barriers: set[tuple[str, str, str]] = set()
         self._supervisors: list[VenueSupervisor] = []
         self._subscribers: set[asyncio.Queue[MarketUpdate]] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
@@ -213,10 +214,38 @@ class LiveFeed:
             cached = update.model_copy(deep=True)
             key = (cached.venue.value, cached.instrument, cached.kind.value)
             with self._lock:
-                self._continuity[key] = _continuity_proof(self._latest.get(key), cached)
+                proof = _continuity_proof(self._latest.get(key), cached)
+                barrier_consumed = key in self._continuity_barriers
+                if barrier_consumed:
+                    proof = _ContinuityProof(
+                        False,
+                        proof.predecessor_sequence,
+                        proof.predecessor_data_time,
+                    )
+                if self._lake is not None:
+                    self._lake.append(cached)
+                self._continuity[key] = proof
                 self._latest[key] = cached
-            if self._lake is not None:
-                self._lake.append(cached)
+                if barrier_consumed:
+                    self._continuity_barriers.discard(key)
+                if cached.kind is UpdateKind.STATUS and cached.state in (
+                    SourceState.DISCONNECTED,
+                    SourceState.UNAVAILABLE,
+                ):
+                    affected = [
+                        stream_key
+                        for stream_key in self._latest
+                        if stream_key[:2] == key[:2]
+                        and stream_key[2] != UpdateKind.STATUS.value
+                    ]
+                    for stream_key in affected:
+                        previous = self._latest[stream_key]
+                        self._continuity[stream_key] = _ContinuityProof(
+                            False,
+                            previous.sequence,
+                            previous.data_time,
+                        )
+                        self._continuity_barriers.add(stream_key)
 
     async def publish(self, update: MarketUpdate) -> None:
         """Ingest and fan out to every subscriber (server-loop path)."""

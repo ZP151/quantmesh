@@ -274,6 +274,207 @@ class TestExactContinuity:
         assert recovered.predecessor_sequence == 102
 
     @pytest.mark.parametrize(
+        "boundary_state",
+        [SourceState.DISCONNECTED, SourceState.UNAVAILABLE],
+    )
+    def test_disconnect_boundary_requires_two_new_session_candles(
+        self, boundary_state: SourceState
+    ) -> None:
+        feed = _feed()
+        feed.ingest(
+            [
+                _candle(sequence=100),
+                _candle(
+                    data_time=T0 + timedelta(minutes=1),
+                    received_at=T0 + timedelta(minutes=1),
+                    sequence=101,
+                ),
+            ]
+        )
+        proven = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=1),
+        )
+        assert proven is not None and proven.continuity_proven is True
+
+        feed.ingest(
+            [
+                _upd(
+                    kind=UpdateKind.STATUS,
+                    state=boundary_state,
+                    received_at=T0 + timedelta(minutes=1, seconds=1),
+                )
+            ]
+        )
+        retained = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=1, seconds=1),
+        )
+        assert retained is not None
+        assert retained.sequence == 101
+        assert retained.continuity_proven is False
+
+        feed.ingest(
+            [
+                _candle(
+                    data_time=T0 + timedelta(minutes=2),
+                    received_at=T0 + timedelta(minutes=2),
+                    sequence=102,
+                )
+            ]
+        )
+        first = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=2),
+        )
+        assert first is not None and first.continuity_proven is False
+
+        feed.ingest(
+            [
+                _candle(
+                    data_time=T0 + timedelta(minutes=3),
+                    received_at=T0 + timedelta(minutes=3),
+                    sequence=103,
+                )
+            ]
+        )
+        second = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=3),
+        )
+        assert second is not None
+        assert second.continuity_proven is True
+        assert second.predecessor_sequence == 102
+
+    @pytest.mark.parametrize(
+        "state", [SourceState.CONNECTED, SourceState.LAGGING]
+    )
+    def test_connected_or_lagging_status_cannot_fabricate_proof(
+        self, state: SourceState
+    ) -> None:
+        feed = _feed()
+        feed.ingest([_candle(sequence=100)])
+        feed.ingest(
+            [
+                _upd(
+                    kind=UpdateKind.STATUS,
+                    state=state,
+                    received_at=T0 + timedelta(seconds=1),
+                )
+            ]
+        )
+
+        snapshot = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(seconds=1),
+        )
+
+        assert snapshot is not None
+        assert snapshot.continuity_proven is False
+
+    def test_disconnect_barrier_is_isolated_by_exact_venue_and_instrument(self) -> None:
+        feed = _feed()
+        for venue, instrument in (
+            (Venue.HYPERLIQUID, "BTC"),
+            (Venue.HYPERLIQUID, "ETH"),
+            (Venue.MOOMOO, "BTC"),
+        ):
+            feed.ingest(
+                [
+                    _candle(venue=venue, instrument=instrument, sequence=100),
+                    _candle(
+                        venue=venue,
+                        instrument=instrument,
+                        data_time=T0 + timedelta(minutes=1),
+                        received_at=T0 + timedelta(minutes=1),
+                        sequence=101,
+                    ),
+                ]
+            )
+        feed.ingest(
+            [
+                _upd(
+                    venue=Venue.HYPERLIQUID,
+                    instrument="BTC",
+                    kind=UpdateKind.STATUS,
+                    state=SourceState.DISCONNECTED,
+                    received_at=T0 + timedelta(minutes=1, seconds=1),
+                )
+            ]
+        )
+
+        proofs = {
+            (venue, instrument): feed.snapshot_exact(
+                venue,
+                instrument,
+                UpdateKind.CANDLE,
+                as_of=T0 + timedelta(minutes=1, seconds=1),
+            )
+            for venue, instrument in (
+                (Venue.HYPERLIQUID, "BTC"),
+                (Venue.HYPERLIQUID, "ETH"),
+                (Venue.MOOMOO, "BTC"),
+            )
+        }
+
+        assert proofs[(Venue.HYPERLIQUID, "BTC")] is not None
+        assert proofs[(Venue.HYPERLIQUID, "BTC")].continuity_proven is False
+        assert proofs[(Venue.HYPERLIQUID, "ETH")] is not None
+        assert proofs[(Venue.HYPERLIQUID, "ETH")].continuity_proven is True
+        assert proofs[(Venue.MOOMOO, "BTC")] is not None
+        assert proofs[(Venue.MOOMOO, "BTC")].continuity_proven is True
+
+    def test_disconnect_before_first_candle_still_requires_a_predecessor(self) -> None:
+        feed = _feed()
+        feed.ingest(
+            [
+                _upd(
+                    kind=UpdateKind.STATUS,
+                    state=SourceState.DISCONNECTED,
+                ),
+                _candle(
+                    data_time=T0 + timedelta(minutes=1),
+                    received_at=T0 + timedelta(minutes=1),
+                    sequence=101,
+                ),
+            ]
+        )
+        first = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=1),
+        )
+        assert first is not None and first.continuity_proven is False
+
+        feed.ingest(
+            [
+                _candle(
+                    data_time=T0 + timedelta(minutes=2),
+                    received_at=T0 + timedelta(minutes=2),
+                    sequence=102,
+                )
+            ]
+        )
+        second = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=2),
+        )
+        assert second is not None and second.continuity_proven is True
+
+    @pytest.mark.parametrize(
         "second",
         [
             _candle(data_time=T0 + timedelta(minutes=2), sequence=101),
@@ -456,6 +657,103 @@ class TestFanOut:
 
 
 class TestLake:
+    def test_attached_lake_ingest_is_one_serialized_exactly_once_transaction(
+        self, tmp_path
+    ) -> None:
+        with LiveBuffer(root=tmp_path) as lake:
+            feed = _feed(lake=lake)
+            updates = [
+                _upd(
+                    sequence=offset,
+                    received_at=T0 + timedelta(milliseconds=offset),
+                    payload={"bid": 100.0 + offset, "ask": 100.5 + offset},
+                )
+                for offset in range(100)
+            ]
+
+            def publish(update: MarketUpdate) -> None:
+                feed.publish_threadsafe(update)
+                feed.snapshot_exact(
+                    Venue.HYPERLIQUID,
+                    "BTC",
+                    UpdateKind.QUOTE,
+                    as_of=T0 + timedelta(seconds=1),
+                )
+                feed.latest_state(now=T0 + timedelta(seconds=1))
+                feed.statuses(now=T0 + timedelta(seconds=1))
+
+            errors: list[BaseException] = []
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                futures = [pool.submit(publish, update) for update in updates]
+                for future in futures:
+                    try:
+                        future.result()
+                    except BaseException as error:  # capture every worker failure
+                        errors.append(error)
+
+            assert errors == []
+            replayed = lake.replay(limit=200)
+            assert len(replayed) == 100
+            assert sorted(update.sequence for update in replayed) == list(range(100))
+            snapshot = feed.snapshot_exact(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.QUOTE,
+                as_of=T0 + timedelta(seconds=1),
+            )
+            assert snapshot is not None
+            assert snapshot.sequence == replayed[-1].sequence
+            # 100 distinct rows followed by 101 proves local_seq was unique,
+            # gap-free and contiguous from the lake's public append boundary.
+            assert lake.append(_upd(sequence=100)) == 101
+
+    def test_lake_append_failure_does_not_publish_unpersisted_cache_or_proof(
+        self, tmp_path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        with LiveBuffer(root=tmp_path) as lake:
+            feed = _feed(lake=lake)
+            feed.ingest(
+                [
+                    _candle(sequence=100),
+                    _candle(
+                        data_time=T0 + timedelta(minutes=1),
+                        received_at=T0 + timedelta(minutes=1),
+                        sequence=101,
+                    ),
+                ]
+            )
+            before = feed.snapshot_exact(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.CANDLE,
+                as_of=T0 + timedelta(minutes=1),
+            )
+            assert before is not None and before.continuity_proven is True
+
+            def fail_append(update: MarketUpdate) -> int:
+                raise RuntimeError(f"persistence failed for {update.sequence}")
+
+            monkeypatch.setattr(lake, "append", fail_append)
+            with pytest.raises(RuntimeError, match="persistence failed for 102"):
+                feed.ingest(
+                    [
+                        _candle(
+                            data_time=T0 + timedelta(minutes=2),
+                            received_at=T0 + timedelta(minutes=2),
+                            sequence=102,
+                        )
+                    ]
+                )
+
+            after = feed.snapshot_exact(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.CANDLE,
+                as_of=T0 + timedelta(minutes=1),
+            )
+            assert after == before
+            assert [row.sequence for row in lake.replay()] == [100, 101]
+
     def test_ingest_appends_to_the_replay_lake(self, tmp_path) -> None:
         with LiveBuffer(root=tmp_path) as lake:
             feed = _feed(lake=lake)

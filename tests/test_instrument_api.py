@@ -14,6 +14,7 @@ from quantmesh.instruments.contracts import (
     ComparisonPoint,
     ComparisonSeries,
     CoverageSnapshot,
+    DatasetBinding,
     HistoricalBar,
     HistoricalSeries,
     HistoryRange,
@@ -165,6 +166,39 @@ class ProgrammerFailureService(RecordingHistoryService):
             volume=1.0,
         )
         raise AssertionError("validation failure should already have raised")
+
+
+def _loader_failure_service(failure: str) -> HistoryService:
+    def loader(_dataset_id: str):
+        if failure == "unavailable":
+            raise HistoryUnavailableError("known dataset is absent")
+        if failure == "value-error":
+            raise ValueError("private loader invariant")
+        HistoricalBar(
+            instrument=_instrument(Venue.MOOMOO, "NVDA"),
+            timestamp=BASE,
+            interval="1d",
+            open=-1.0,
+            high=1.0,
+            low=1.0,
+            close=1.0,
+            volume=1.0,
+        )
+        raise AssertionError("validation failure should already have raised")
+
+    return HistoryService(
+        [
+            DatasetBinding(
+                dataset_id="api-history",
+                interval="1d",
+                venue=Venue.MOOMOO,
+                symbol="NVDA",
+                calendar="XNYS",
+                adjustment="unadjusted",
+            )
+        ],
+        dataset_loader=loader,
+    )
 
 
 def _app(
@@ -382,6 +416,27 @@ def test_programmer_and_validation_errors_remain_observable_as_500(failure: str)
         response = client.get("/api/instruments/moomoo/NVDA/history?range=6m")
 
     assert response.status_code == 500
+
+
+def test_typed_loader_unavailability_remains_a_stable_404() -> None:
+    response = _get(_loader_failure_service("unavailable"))
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "historical data unavailable: known dataset is absent"
+    }
+
+
+@pytest.mark.parametrize("failure", ["value-error", "validation-error"])
+def test_unexpected_loader_fault_is_a_sanitized_500(failure: str) -> None:
+    app = _app(_loader_failure_service(failure))
+
+    with TestClient(app, raise_server_exceptions=False) as client:
+        response = client.get("/api/instruments/moomoo/NVDA/history?range=6m")
+
+    assert response.status_code == 500
+    assert response.text == "Internal Server Error"
+    assert "private loader invariant" not in response.text
 
 
 def test_openapi_operation_ids_are_unique_and_response_is_exact() -> None:
