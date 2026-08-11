@@ -58,9 +58,13 @@ DatasetLoader = Callable[[str], ReadableDataset]
 Clock = Callable[[], datetime]
 
 
+class HistoryUnavailableError(ValueError):
+    """Expected request or dataset unavailability at the history boundary."""
+
+
 def _aware_utc(value: datetime, name: str) -> datetime:
     if value.tzinfo is None:
-        raise ValueError(f"{name} must be timezone-aware")
+        raise HistoryUnavailableError(f"{name} must be timezone-aware")
     return value.astimezone(UTC)
 
 
@@ -107,17 +111,24 @@ class HistoryService:
             raise TypeError("range must be a HistoryRange")
         selected_as_of = _aware_utc(as_of if as_of is not None else self._now(), "as_of")
         selected, fallback = self._select_binding(venue, symbol, range)
-        dataset = self._dataset_loader(selected.dataset_id)
+        try:
+            dataset = self._dataset_loader(selected.dataset_id)
+        except HistoryUnavailableError:
+            raise
+        except ValueError as error:
+            raise HistoryUnavailableError(str(error)) from error
         dataset_name = getattr(dataset, "name", None)
         if dataset_name != selected.dataset_id:
-            raise ValueError(
+            raise HistoryUnavailableError(
                 f"dataset identity {dataset_name!r} does not match binding {selected.dataset_id!r}"
             )
         dataset_manifest = getattr(dataset, "manifest", None)
         if not isinstance(dataset_manifest, DatasetManifest):
-            raise ValueError("dataset loader did not return a manifest-gated Dataset")
+            raise HistoryUnavailableError(
+                "dataset loader did not return a manifest-gated Dataset"
+            )
         if dataset_manifest.dataset != selected.dataset_id:
-            raise ValueError(
+            raise HistoryUnavailableError(
                 f"manifest identity {dataset_manifest.dataset!r} does not match binding "
                 f"{selected.dataset_id!r}"
             )
@@ -129,7 +140,7 @@ class HistoryService:
             and item.symbol == symbol
         ]
         if len(matching_coverage) != 1:
-            raise ValueError(
+            raise HistoryUnavailableError(
                 "manifest coverage must contain exactly one bound "
                 f"{selected.interval}/{venue.value}/{symbol} series"
             )
@@ -151,7 +162,7 @@ class HistoryService:
             end=selected_as_of,
         )
         if not rows:
-            raise ValueError(
+            raise HistoryUnavailableError(
                 f"empty requested window for {venue.value}:{symbol} {range.value}"
             )
         historical = self._validate_and_convert_rows(
@@ -203,9 +214,11 @@ class HistoryService:
         identities = [primary, *peers]
         keys = tuple(_key(venue, symbol) for venue, symbol in identities)
         if len(keys) < 2:
-            raise ValueError("comparison requires a primary and at least one peer")
+            raise HistoryUnavailableError(
+                "comparison requires a primary and at least one peer"
+            )
         if len(set(keys)) != len(keys):
-            raise ValueError("duplicate comparison instrument")
+            raise HistoryUnavailableError("duplicate comparison instrument")
         selected_as_of = _aware_utc(as_of if as_of is not None else self._now(), "as_of")
         series = [
             self.history(venue, symbol, range, as_of=selected_as_of)
@@ -213,9 +226,9 @@ class HistoryService:
         ]
         for current in series:
             if any(item.is_live_tail for item in current.bars):
-                raise ValueError("comparison cannot include live-tail values")
+                raise HistoryUnavailableError("comparison cannot include live-tail values")
             if any(getattr(item, "is_forecast", False) for item in current.bars):
-                raise ValueError("comparison cannot include forecast values")
+                raise HistoryUnavailableError("comparison cannot include forecast values")
         by_timestamp = [
             {item.timestamp: item.close for item in current.bars} for current in series
         ]
@@ -224,10 +237,14 @@ class HistoryService:
             shared.intersection_update(values)
         timestamps = sorted(shared)
         if len(timestamps) < 2:
-            raise ValueError("comparison requires at least two shared observed points")
+            raise HistoryUnavailableError(
+                "comparison requires at least two shared observed points"
+            )
         bases = [values[timestamps[0]] for values in by_timestamp]
         if any(not math.isfinite(base) or base <= 0 for base in bases):
-            raise ValueError("comparison base closes must be finite and positive")
+            raise HistoryUnavailableError(
+                "comparison base closes must be finite and positive"
+            )
         points = tuple(
             ComparisonPoint(
                 timestamp=timestamp,
@@ -263,7 +280,7 @@ class HistoryService:
             item for item in self._bindings if item.venue is venue and item.symbol == symbol
         ]
         if not candidates:
-            raise ValueError(f"unknown venue/symbol {venue.value}:{symbol}")
+            raise HistoryUnavailableError(f"unknown venue/symbol {venue.value}:{symbol}")
         preferred = _PREFERRED_INTERVAL[requested_range]
         preferred_step = interval_to_timedelta(preferred)
         exact = [
@@ -279,7 +296,7 @@ class HistoryService:
             if interval_to_timedelta(item.interval) > preferred_step
         ]
         if not coarser:
-            raise ValueError(
+            raise HistoryUnavailableError(
                 f"no preferred or coarser binding for {venue.value}:{symbol} "
                 f"({preferred} requested)"
             )
@@ -300,28 +317,36 @@ class HistoryService:
         expected_instrument = None
         for row in rows:
             if getattr(row, "is_live_tail", False):
-                raise ValueError("historical reader returned a live-tail row")
+                raise HistoryUnavailableError("historical reader returned a live-tail row")
             if getattr(row, "is_forecast", False):
-                raise ValueError("historical reader returned a forecast row")
+                raise HistoryUnavailableError("historical reader returned a forecast row")
             if not isinstance(row, Bar):
-                raise ValueError("historical reader must return canonical Bar rows")
+                raise HistoryUnavailableError(
+                    "historical reader must return canonical Bar rows"
+                )
             timestamp = _aware_utc(row.timestamp, "bar timestamp")
             if timestamp > as_of:
-                raise ValueError("historical reader returned future leakage")
+                raise HistoryUnavailableError("historical reader returned future leakage")
             if timestamp < start:
-                raise ValueError("historical reader returned data outside the requested window")
+                raise HistoryUnavailableError(
+                    "historical reader returned data outside the requested window"
+                )
             if timestamp < coverage.start or timestamp > coverage.end:
-                raise ValueError("historical reader returned data outside manifest coverage")
+                raise HistoryUnavailableError(
+                    "historical reader returned data outside manifest coverage"
+                )
             if row.interval != selected.interval:
-                raise ValueError("historical reader returned a mixed interval")
+                raise HistoryUnavailableError("historical reader returned a mixed interval")
             identity = (row.instrument.venue, row.instrument.symbol)
             selected_identity = (selected.venue, selected.symbol)
             if identity != selected_identity:
-                raise ValueError("historical reader returned a mixed instrument")
+                raise HistoryUnavailableError("historical reader returned a mixed instrument")
             if expected_instrument is None:
                 expected_instrument = row.instrument
             elif row.instrument != expected_instrument:
-                raise ValueError("historical reader returned inconsistent instrument metadata")
+                raise HistoryUnavailableError(
+                    "historical reader returned inconsistent instrument metadata"
+                )
             timestamps.append(timestamp)
             converted.append(
                 HistoricalBar(
@@ -338,16 +363,16 @@ class HistoryService:
                 )
             )
         if len(set(timestamps)) != len(timestamps):
-            raise ValueError("historical reader returned a duplicate timestamp")
+            raise HistoryUnavailableError("historical reader returned a duplicate timestamp")
         if timestamps != sorted(timestamps):
-            raise ValueError("historical reader returned a non-monotonic series")
+            raise HistoryUnavailableError("historical reader returned a non-monotonic series")
         if start <= coverage.start and as_of >= coverage.end:
             if len(timestamps) != coverage.rows:
-                raise ValueError(
+                raise HistoryUnavailableError(
                     "manifest coverage row count does not match the full requested read"
                 )
             if timestamps[0] != coverage.start or timestamps[-1] != coverage.end:
-                raise ValueError(
+                raise HistoryUnavailableError(
                     "manifest coverage extent does not match the full requested read"
                 )
         return converted

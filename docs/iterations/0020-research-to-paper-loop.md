@@ -389,7 +389,7 @@ not sufficient for cross-agent recovery.
   verified Ruff, diff cleanliness, FastAPI encoding and strict JSON round trips.
   Task 6 (historical and continuity-safe live-tail API) is the active frontier.
 
-### Task 6 initial implementation — independent review pending
+### Task 6 initial implementation — changes requested
 
 - Strict TDD began with 34 expected failures: the workstation did not accept a
   historical service, no instrument-history router existed, and Hyperliquid
@@ -428,6 +428,49 @@ not sufficient for cross-agent recovery.
   `git diff --check` pass using a unique system-temp pytest base that was
   removed. No dependency, built frontend asset, execution route or order
   authority changed. Fresh independent review remains pending.
+
+### Task 6 fix round 1 — fresh independent review pending
+
+- The independent review of `ffd1ce1` requested five Important fixes and one
+  local Minor: synchronized public feed access, positive continuity evidence,
+  point-in-time freshness, immutable live lineage and historical-only coverage
+  semantics, ADR-0013 OpenAPI generation, and a typed expected-unavailability
+  exception. This round addresses every finding without changing execution
+  authority and deliberately awaits a new independent review.
+- `LiveFeed.snapshot_exact` now returns a detached exact venue/instrument/kind
+  snapshot. One threading lock protects cache and continuity reads/writes and
+  the detached `latest_state`/`statuses` snapshots. Continuity becomes proven
+  only after a valid predecessor for the same stream: intervals match, neither
+  update carries a gap, receipt/event times are monotonic, event time is the
+  same bar or exactly the next interval, and sequence behavior is
+  non-regressive for a same-bar update or advancing for a next-bar update.
+  First observations and the first clean observation after a gap remain
+  unproven.
+- The history API consumes only that public snapshot at its one captured
+  `as_of`. It rejects naive, post-snapshot and over-lag receipts and requires
+  positive continuity before a tail can join. Accepted bars carry a strict,
+  frozen `LiveTailLineage` with source/venue/instrument, real-or-delayed
+  provenance, event and receipt times, exact interval, sequence and predecessor
+  evidence, freshness label and age. `coverage_scope: historical-only` and a
+  stable limitation explain why a live tail may lie beyond manifest coverage.
+- `HistoryUnavailableError` is the sole expected absence/data-unavailability
+  exception translated to the stable 404. Unrelated `ValueError` and Pydantic
+  validation failures remain observable as 500 responses in the focused API
+  regressions.
+- ADR-0013 is now executable: deterministic cross-platform scripts export the
+  workstation OpenAPI and generate committed `frontend/src/api/client.ts`.
+  Task 6 DTOs are aliases of generated components and `api.history` uses the
+  generated path through `openapi-fetch`; an empty comparison remains omitted.
+  CI runs `check:api`. Exact additions are `openapi-fetch==0.17.0` (MIT) and
+  `openapi-typescript==7.13.0` (MIT); generator peer compatibility pins
+  `typescript==5.9.3` (Apache-2.0). The 644-entry lock closure is fully
+  allowlisted and `npm audit` reports zero advisories.
+- Fix-round verification is 168/168 across Task 5, Task 6, SPA API, live feed
+  and supervisor suites, plus 73/73 Vitest tests. OpenAPI stale generation
+  passed twice with byte-identical SHA-256
+  `9f2d93cdf638d0de9ac84eca1c92e10c516cff6fa78b5bb0487ef8ba193b5693`;
+  TypeScript no-emit, Ruff and `git diff --check` pass. Existing Vitest
+  React `act(...)`/undefined-query warnings remain outside this Task 6 fix.
 
 ## Acceptance criteria
 

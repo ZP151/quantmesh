@@ -21,6 +21,7 @@ from quantmesh.data.layout import validate_dataset_name, validate_symbol
 from quantmesh.data.manifest import SeriesCoverage
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Instrument, Venue
+from quantmesh.live.contract import Provenance
 
 AdjustmentMode = Literal["unadjusted", "split-adjusted", "total-return"]
 _COMPARISON_KEY = re.compile(r"^[a-z0-9_-]+:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$")
@@ -166,6 +167,67 @@ class DatasetBinding(StrictContract):
         return value
 
 
+class LiveTailLineage(StrictContract):
+    """Positive, point-in-time evidence attached only to a live-tail bar."""
+
+    source: str = Field(min_length=1)
+    venue: Venue
+    instrument: str
+    provenance: Literal[Provenance.REAL, Provenance.DELAYED]
+    data_time: datetime
+    received_at: datetime
+    interval: str
+    sequence: int = Field(ge=0)
+    predecessor_sequence: int = Field(ge=0)
+    predecessor_data_time: datetime
+    sequence_gap: Literal[False]
+    continuity_proven: Literal[True]
+    freshness_label: Literal["real", "delayed"]
+    age_ms: int = Field(ge=0)
+
+    @field_validator("source")
+    @classmethod
+    def source_is_not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("source must not be blank")
+        return value
+
+    @field_validator("instrument")
+    @classmethod
+    def instrument_is_canonical(cls, value: str) -> str:
+        validate_symbol(value)
+        return value
+
+    @field_validator("data_time", "received_at", "predecessor_data_time")
+    @classmethod
+    def lineage_times_are_utc(cls, value: datetime, info) -> datetime:
+        return _utc(value, info.field_name)
+
+    @field_validator("interval")
+    @classmethod
+    def interval_is_canonical(cls, value: str) -> str:
+        interval_to_timedelta(value)
+        return value
+
+    @model_validator(mode="after")
+    def freshness_matches_provenance(self) -> "LiveTailLineage":
+        if self.freshness_label != self.provenance.value:
+            raise ValueError("freshness_label must match live provenance")
+        duration = interval_to_timedelta(self.interval)
+        same_bar = self.data_time == self.predecessor_data_time
+        next_bar = self.data_time == self.predecessor_data_time + duration
+        if not (same_bar or next_bar):
+            raise ValueError(
+                "live lineage data_time must be the same or exactly one interval "
+                "after its predecessor"
+            )
+        if same_bar and self.sequence < self.predecessor_sequence:
+            raise ValueError("same-bar live lineage sequence must be non-regressive")
+        if next_bar and self.sequence <= self.predecessor_sequence:
+            raise ValueError("next-bar live lineage sequence must advance")
+        return self
+
+
 class HistoricalBar(StrictContract):
     """One observed OHLCV bar returned by the history service."""
 
@@ -179,6 +241,7 @@ class HistoricalBar(StrictContract):
     volume: float = Field(ge=0)
     adjusted_close: float | None = Field(default=None, gt=0)
     is_live_tail: bool = False
+    live_lineage: LiveTailLineage | None = None
 
     @field_validator("instrument", mode="before")
     @classmethod
@@ -200,6 +263,15 @@ class HistoricalBar(StrictContract):
     def candle_is_consistent(self) -> "HistoricalBar":
         if self.high < max(self.open, self.close) or self.low > min(self.open, self.close):
             raise ValueError("OHLC values are inconsistent")
+        if self.is_live_tail != (self.live_lineage is not None):
+            raise ValueError("is_live_tail must be true if and only if live_lineage exists")
+        if self.live_lineage is not None and (
+            self.live_lineage.venue != self.instrument.venue
+            or self.live_lineage.instrument != self.instrument.symbol
+            or self.live_lineage.data_time != self.timestamp
+            or self.live_lineage.interval != self.interval
+        ):
+            raise ValueError("live_lineage must match the bar instrument, timestamp, and interval")
         return self
 
 
@@ -219,6 +291,7 @@ class HistoricalSeries(StrictContract):
     calendar: str = Field(min_length=1)
     adjustment: AdjustmentMode
     coverage: CoverageSnapshot
+    coverage_scope: Literal["historical-only"] = "historical-only"
     gaps: tuple[datetime, ...] = Field(default_factory=tuple)
     duplicates: tuple[datetime, ...] = Field(default_factory=tuple)
     limitations: tuple[str, ...] = Field(default_factory=tuple)

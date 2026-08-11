@@ -27,6 +27,17 @@ jobs:
         # (playwright/pyee/greenlet) absent on Linux and fail the
         # closure contract.
         run: python -m pip install -e ".[dev,research,e2e]"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend contract tooling
+        run: npm ci
+        working-directory: frontend
+      - name: Check generated OpenAPI client
+        run: npm run check:api
+        working-directory: frontend
       - name: Lint
         # tools/ exists on main only after the M10 merge; earlier milestone
         # PRs (and their stacked bases) must not fail on a missing path.

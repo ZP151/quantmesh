@@ -21,8 +21,10 @@ from quantmesh.instruments.contracts import (
     HistoricalSeries,
     HistoryRange,
     InstrumentSnapshot,
+    LiveTailLineage,
 )
-from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
+from quantmesh.live.contract import Provenance
 
 NOW = datetime(2026, 8, 12, 16, 0, tzinfo=UTC)
 GENERATED_AT = datetime(2026, 8, 12, 15, 0, tzinfo=UTC)
@@ -395,7 +397,7 @@ def test_history_refuses_unknown_venue_or_symbol(venue: Venue, symbol: str) -> N
         [binding()], dataset_loader=lambda _: pytest.fail("must not load"), now=lambda: NOW
     )
 
-    with pytest.raises(ValueError, match="unknown venue/symbol"):
+    with pytest.raises(HistoryUnavailableError, match="unknown venue/symbol"):
         service.history(venue, symbol, HistoryRange.SIX_MONTHS)
 
 
@@ -971,6 +973,7 @@ def test_public_response_dump_keeps_json_arrays_objects_and_strict_round_trip() 
     assert isinstance(history_payload["gaps"], list)
     assert isinstance(history_payload["instrument"]["metadata"], dict)
     assert isinstance(history_payload["coverage"], dict)
+    assert history_payload["coverage_scope"] == "historical-only"
     assert isinstance(comparison_payload["keys"], list)
     assert isinstance(comparison_payload["points"], list)
     assert isinstance(comparison_payload["points"][0]["values"], dict)
@@ -980,6 +983,90 @@ def test_public_response_dump_keeps_json_arrays_objects_and_strict_round_trip() 
     assert ComparisonSeries.model_validate_json(
         comparison.model_dump_json(), strict=True
     ).model_dump_json() == comparison.model_dump_json()
+
+
+def test_live_tail_lineage_is_strict_frozen_and_round_trips() -> None:
+    lineage = LiveTailLineage(
+        source="moomoo",
+        venue=Venue.MOOMOO,
+        instrument="NVDA",
+        provenance=Provenance.DELAYED,
+        data_time=NOW,
+        received_at=NOW + timedelta(seconds=2),
+        interval="1d",
+        sequence=42,
+        predecessor_sequence=41,
+        predecessor_data_time=NOW - timedelta(days=1),
+        sequence_gap=False,
+        continuity_proven=True,
+        freshness_label="delayed",
+        age_ms=3_000,
+    )
+    live_bar = HistoricalBar(
+        instrument=NVDA,
+        timestamp=NOW,
+        interval="1d",
+        open=100.0,
+        high=102.0,
+        low=99.0,
+        close=101.0,
+        volume=1_000.0,
+        is_live_tail=True,
+        live_lineage=lineage,
+    )
+
+    payload = live_bar.model_dump_json()
+    restored = HistoricalBar.model_validate_json(payload, strict=True)
+    assert restored.model_dump_json() == payload
+    assert restored.live_lineage is not None
+    assert restored.live_lineage.provenance is Provenance.DELAYED
+    assert restored.live_lineage.predecessor_sequence == 41
+    with pytest.raises(ValidationError):
+        restored.live_lineage.age_ms = 1
+
+
+def test_live_tail_flag_and_lineage_identity_must_match_exactly() -> None:
+    lineage = LiveTailLineage(
+        source="moomoo",
+        venue=Venue.MOOMOO,
+        instrument="NVDA",
+        provenance=Provenance.REAL,
+        data_time=NOW,
+        received_at=NOW,
+        interval="1d",
+        sequence=2,
+        predecessor_sequence=1,
+        predecessor_data_time=NOW - timedelta(days=1),
+        sequence_gap=False,
+        continuity_proven=True,
+        freshness_label="real",
+        age_ms=0,
+    )
+    base = {
+        "instrument": NVDA,
+        "timestamp": NOW,
+        "interval": "1d",
+        "open": 100.0,
+        "high": 102.0,
+        "low": 99.0,
+        "close": 101.0,
+        "volume": 1_000.0,
+    }
+
+    with pytest.raises(ValidationError, match="if and only if"):
+        HistoricalBar(**base, is_live_tail=True)
+    with pytest.raises(ValidationError, match="if and only if"):
+        HistoricalBar(**base, is_live_tail=False, live_lineage=lineage)
+    with pytest.raises(ValidationError, match="must match"):
+        HistoricalBar(
+            **base,
+            is_live_tail=True,
+            live_lineage=lineage.model_copy(update={"instrument": "AAPL"}),
+        )
+    invalid_proof = lineage.model_dump()
+    invalid_proof["data_time"] = NOW + timedelta(days=2)
+    with pytest.raises(ValidationError, match="same or exactly one interval"):
+        LiveTailLineage(**invalid_proof)
 
 
 @pytest.mark.parametrize(

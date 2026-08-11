@@ -4,10 +4,12 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from quantmesh.api.workstation import create_workstation_app
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.execution.accounting import PaperAccount
+from quantmesh.instruments.api import HistoricalPayload
 from quantmesh.instruments.contracts import (
     ComparisonPoint,
     ComparisonSeries,
@@ -16,7 +18,7 @@ from quantmesh.instruments.contracts import (
     HistoricalSeries,
     HistoryRange,
 )
-from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
 from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
 from quantmesh.live.feed import LiveFeed
 
@@ -105,7 +107,7 @@ class RecordingHistoryService(HistoryService):
         assert as_of is not None
         self.history_as_of.append(as_of)
         if symbol == "MISSING":
-            raise ValueError(f"unknown venue/symbol {venue.value}:{symbol}")
+            raise HistoryUnavailableError(f"unknown venue/symbol {venue.value}:{symbol}")
         return _series(venue, symbol, range, as_of, adjustment=self.adjustment)
 
     def compare(
@@ -120,7 +122,7 @@ class RecordingHistoryService(HistoryService):
         self.compare_as_of.append(as_of)
         self.compare_peers = list(peers)
         if any(symbol == "MISSING" for _, symbol in peers):
-            raise ValueError("unknown venue/symbol moomoo:MISSING")
+            raise HistoryUnavailableError("unknown venue/symbol moomoo:MISSING")
         keys = tuple(f"{venue.value}:{symbol}" for venue, symbol in (primary, *peers))
         return ComparisonSeries(
             range=range,
@@ -135,6 +137,34 @@ class RecordingHistoryService(HistoryService):
             ),
             limitations=("comparison uses common observed timestamps",),
         )
+
+
+class ProgrammerFailureService(RecordingHistoryService):
+    def __init__(self, failure: str) -> None:
+        super().__init__()
+        self.failure = failure
+
+    def history(
+        self,
+        venue: Venue,
+        symbol: str,
+        range: HistoryRange,
+        *,
+        as_of: datetime | None = None,
+    ) -> HistoricalSeries:
+        if self.failure == "value-error":
+            raise ValueError("internal invariant failed")
+        HistoricalBar(
+            instrument=_instrument(venue, symbol),
+            timestamp=BASE,
+            interval="1d",
+            open=-1.0,
+            high=1.0,
+            low=1.0,
+            close=1.0,
+            volume=1.0,
+        )
+        raise AssertionError("validation failure should already have raised")
 
 
 def _app(
@@ -173,6 +203,7 @@ def _candle(
     low: float = 101.0,
     close: float = 103.0,
     volume: float = 1_002.0,
+    received_at: datetime | None = None,
 ) -> MarketUpdate:
     return MarketUpdate(
         venue=venue,
@@ -180,7 +211,7 @@ def _candle(
         kind=UpdateKind.CANDLE,
         provenance=provenance,
         data_time=timestamp,
-        received_at=datetime.now(UTC),
+        received_at=received_at if received_at is not None else datetime.now(UTC),
         sequence=sequence,
         sequence_gap=sequence_gap,
         payload={
@@ -192,6 +223,29 @@ def _candle(
             "volume": volume,
         },
     )
+
+
+def _ingest_with_predecessor(feed: LiveFeed, update: MarketUpdate) -> None:
+    interval = update.payload.get("interval")
+    durations = {"1d": timedelta(days=1), "5m": timedelta(minutes=5), "24h": timedelta(days=1)}
+    duration = durations.get(interval, timedelta(days=1))
+    predecessor_time = update.data_time - duration
+    predecessor_receipt = update.received_at - timedelta(seconds=1)
+    predecessor_sequence = (
+        update.sequence - 1
+        if type(update.sequence) is int and update.sequence > 0
+        else None
+    )
+    predecessor = _candle(
+        venue=update.venue,
+        symbol=update.instrument,
+        timestamp=predecessor_time,
+        interval=interval,
+        provenance=update.provenance,
+        sequence=predecessor_sequence,
+        received_at=predecessor_receipt,
+    )
+    feed.ingest([predecessor, update])
 
 
 def test_history_mounts_at_root_and_api_with_stable_json() -> None:
@@ -320,6 +374,16 @@ def test_missing_service_and_missing_data_are_truthful_stable_errors() -> None:
     assert missing_peer.json()["detail"].startswith("historical data unavailable: ")
 
 
+@pytest.mark.parametrize("failure", ["value-error", "validation-error"])
+def test_programmer_and_validation_errors_remain_observable_as_500(failure: str) -> None:
+    app = _app(ProgrammerFailureService(failure))
+
+    with TestClient(app, raise_server_exceptions=False) as client:
+        response = client.get("/api/instruments/moomoo/NVDA/history?range=6m")
+
+    assert response.status_code == 500
+
+
 def test_openapi_operation_ids_are_unique_and_response_is_exact() -> None:
     with TestClient(_app(RecordingHistoryService())) as client:
         schema = client.get("/openapi.json").json()
@@ -344,7 +408,7 @@ def test_contiguous_real_or_delayed_live_candle_appends_primary_only(
     provenance: Provenance,
 ) -> None:
     feed = LiveFeed()
-    feed.ingest([_candle(provenance=provenance)])
+    _ingest_with_predecessor(feed, _candle(provenance=provenance))
     service = RecordingHistoryService()
 
     response = _get(
@@ -358,14 +422,34 @@ def test_contiguous_real_or_delayed_live_candle_appends_primary_only(
     assert len(payload["primary"]["bars"]) == 3
     assert payload["primary"]["bars"][-1]["is_live_tail"] is True
     assert payload["primary"]["bars"][-1]["close"] == 103.0
-    assert payload["primary"]["limitations"] == ["baseline limitation"]
+    lineage = payload["primary"]["bars"][-1]["live_lineage"]
+    assert lineage["source"] == "moomoo"
+    assert lineage["venue"] == "moomoo"
+    assert lineage["instrument"] == "NVDA"
+    assert lineage["provenance"] == provenance.value
+    assert lineage["freshness_label"] == provenance.value
+    assert lineage["sequence"] == 2
+    assert lineage["predecessor_sequence"] == 1
+    assert lineage["sequence_gap"] is False
+    assert lineage["continuity_proven"] is True
+    assert 0 <= lineage["age_ms"] <= 30_000
+    assert payload["primary"]["coverage_scope"] == "historical-only"
+    assert "coverage is historical-only" in payload["primary"]["limitations"][-1]
     assert len(payload["comparison"]["points"]) == 2
     assert payload["comparison"]["keys"] == ["moomoo:NVDA", "moomoo:AAPL"]
+    restored = HistoricalPayload.model_validate_json(response.text, strict=True)
+    assert restored.model_dump(mode="json") == payload
+    assert restored.primary.bars[-1].live_lineage is not None
+    with pytest.raises(ValidationError):
+        restored.primary.bars[-1].live_lineage.age_ms = 0
 
 
 def test_same_last_timestamp_replaces_only_the_last_historical_bar() -> None:
     feed = LiveFeed()
-    feed.ingest([_candle(timestamp=BASE + timedelta(days=1), close=110.0, high=111.0)])
+    _ingest_with_predecessor(
+        feed,
+        _candle(timestamp=BASE + timedelta(days=1), close=110.0, high=111.0),
+    )
 
     payload = _get(RecordingHistoryService(), live_feed=feed).json()["primary"]
 
@@ -377,10 +461,13 @@ def test_same_last_timestamp_replaces_only_the_last_historical_bar() -> None:
 
 def test_exact_venue_symbol_kind_selection_survives_cross_venue_symbol_collision() -> None:
     feed = LiveFeed()
+    _ingest_with_predecessor(
+        feed,
+        _candle(venue=Venue.HYPERLIQUID, close=777.0, high=778.0),
+    )
+    _ingest_with_predecessor(feed, _candle(venue=Venue.MOOMOO, close=103.0))
     feed.ingest(
         [
-            _candle(venue=Venue.HYPERLIQUID, close=777.0, high=778.0),
-            _candle(venue=Venue.MOOMOO, close=103.0),
             MarketUpdate(
                 venue=Venue.MOOMOO,
                 instrument="NVDA",
@@ -399,27 +486,73 @@ def test_exact_venue_symbol_kind_selection_survives_cross_venue_symbol_collision
     assert payload["bars"][-1]["is_live_tail"] is True
 
 
+def test_single_arbitrary_sequence_never_proves_a_live_tail() -> None:
+    feed = LiveFeed()
+    feed.ingest([_candle(sequence=777_777)])
+
+    primary = _get(RecordingHistoryService(), live_feed=feed).json()["primary"]
+
+    assert len(primary["bars"]) == 2
+    assert primary["bars"][-1]["live_lineage"] is None
+    assert "continuity is not proven" in primary["limitations"][-1]
+
+
 @pytest.mark.parametrize(
-    "update",
+    "received_at",
     [
-        _candle(provenance=Provenance.SYNTHETIC),
-        _candle(provenance=Provenance.UNAVAILABLE),
-        _candle(interval=None),
-        _candle(interval="5m"),
-        _candle(interval="24h"),
-        _candle(sequence=None),
-        _candle(sequence_gap=True),
-        _candle(timestamp=BASE),
-        _candle(timestamp=BASE + timedelta(days=3)),
-        _candle(close=float("nan"), high=float("nan")),
-        _candle(volume=float("inf")),
+        datetime.now(UTC) - timedelta(days=30),
+        datetime.now(UTC) + timedelta(days=1),
+    ],
+)
+def test_stale_or_post_snapshot_receipt_is_refused(received_at: datetime) -> None:
+    feed = LiveFeed()
+    _ingest_with_predecessor(feed, _candle(received_at=received_at))
+
+    primary = _get(RecordingHistoryService(), live_feed=feed).json()["primary"]
+
+    assert len(primary["bars"]) == 2
+    assert all(bar["live_lineage"] is None for bar in primary["bars"])
+    assert primary["limitations"][-1].startswith("Live candle was not joined: ")
+
+
+def test_naive_live_receipt_is_refused_without_a_server_error() -> None:
+    feed = LiveFeed()
+    feed.ingest([_candle(timestamp=BASE + timedelta(days=1), sequence=1)])
+    invalid = _candle().model_copy(
+        update={"received_at": datetime(2026, 8, 12, 12, 0)}
+    )
+    feed.ingest([invalid])
+
+    response = _get(RecordingHistoryService(), live_feed=feed)
+
+    assert response.status_code == 200
+    primary = response.json()["primary"]
+    assert len(primary["bars"]) == 2
+    assert "received_at must be timezone-aware" in primary["limitations"][-1]
+
+
+@pytest.mark.parametrize(
+    ("update", "expected"),
+    [
+        (_candle(provenance=Provenance.SYNTHETIC), "provenance is not real or delayed"),
+        (_candle(provenance=Provenance.UNAVAILABLE), "provenance is not real or delayed"),
+        (_candle(interval=None), "payload interval is absent or invalid"),
+        (_candle(interval="5m"), "does not exactly match"),
+        (_candle(interval="24h"), "does not exactly match"),
+        (_candle(sequence=None), "sequence is absent or invalid"),
+        (_candle(sequence_gap=True), "sequence continuity is not proven"),
+        (_candle(timestamp=BASE), "older than the final historical bar"),
+        (_candle(timestamp=BASE + timedelta(days=3)), "not the next contiguous interval"),
+        (_candle(close=float("nan"), high=float("nan")), "high must be a finite number"),
+        (_candle(volume=float("inf")), "volume must be a finite number"),
     ],
 )
 def test_invalid_matching_live_candle_is_not_joined_and_names_a_limitation(
     update: MarketUpdate,
+    expected: str,
 ) -> None:
     feed = LiveFeed()
-    feed.ingest([update])
+    _ingest_with_predecessor(feed, update)
 
     payload = _get(RecordingHistoryService(), live_feed=feed).json()["primary"]
 
@@ -428,10 +561,15 @@ def test_invalid_matching_live_candle_is_not_joined_and_names_a_limitation(
     assert payload["limitations"][0] == "baseline limitation"
     assert len(payload["limitations"]) == 2
     assert payload["limitations"][1].startswith("Live candle was not joined: ")
+    assert expected in payload["limitations"][1]
 
 
 def test_naive_or_future_live_timestamp_is_refused_without_a_server_error() -> None:
-    for timestamp in (datetime(2026, 8, 3, 12, 0), datetime(2999, 1, 1, tzinfo=UTC)):
+    cases = (
+        (datetime(2026, 8, 3, 12, 0), "data_time must be timezone-aware"),
+        (datetime(2999, 1, 1, tzinfo=UTC), "data_time is later than the request time"),
+    )
+    for timestamp, expected in cases:
         update = _candle().model_copy(update={"data_time": timestamp})
         feed = LiveFeed()
         feed.ingest([update])
@@ -442,6 +580,7 @@ def test_naive_or_future_live_timestamp_is_refused_without_a_server_error() -> N
         primary = response.json()["primary"]
         assert len(primary["bars"]) == 2
         assert primary["limitations"][-1].startswith("Live candle was not joined: ")
+        assert expected in primary["limitations"][-1]
 
 
 def test_missing_feed_or_matching_candle_leaves_history_unchanged_without_fake_error() -> None:
@@ -458,7 +597,7 @@ def test_missing_feed_or_matching_candle_leaves_history_unchanged_without_fake_e
 
 def test_adjusted_history_refuses_unadjusted_live_tail() -> None:
     feed = LiveFeed()
-    feed.ingest([_candle()])
+    _ingest_with_predecessor(feed, _candle())
 
     primary = _get(
         RecordingHistoryService(adjustment="split-adjusted"), live_feed=feed

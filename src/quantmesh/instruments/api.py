@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Annotated
 
@@ -17,9 +18,10 @@ from quantmesh.instruments.contracts import (
     HistoricalBar,
     HistoricalSeries,
     HistoryRange,
+    LiveTailLineage,
 )
-from quantmesh.instruments.history import HistoryService
-from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
+from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
+from quantmesh.live.contract import Provenance, UpdateKind
 from quantmesh.live.feed import LiveFeed
 
 _MAX_COMPARE_INSTRUMENTS = 3
@@ -94,24 +96,6 @@ def _parse_compare(
     return tuple(peers)
 
 
-def _latest_candle(
-    feed: LiveFeed,
-    *,
-    venue: Venue,
-    symbol: str,
-) -> MarketUpdate | None:
-    """Read the feed's exact typed cache key, avoiding its symbol-only UI projection.
-
-    ``latest_state`` intentionally groups rows for the cockpit by symbol. That
-    projection cannot distinguish the same symbol on two venues, while this join
-    must. The feed's cache is the owned typed source of truth used to build that
-    projection, so this narrow read uses its exact venue/symbol/kind key.
-    """
-
-    update = feed._latest.get((venue.value, symbol, UpdateKind.CANDLE.value))
-    return update if isinstance(update, MarketUpdate) else None
-
-
 def _append_limitation(series: HistoricalSeries, reason: str) -> HistoricalSeries:
     limitation = f"{_LIVE_REJECTION_PREFIX}{reason}"
     limitations = tuple(dict.fromkeys((*series.limitations, limitation)))
@@ -140,6 +124,7 @@ def _rebuild_series(
         calendar=series.calendar,
         adjustment=series.adjustment,
         coverage=series.coverage,
+        coverage_scope=series.coverage_scope,
         gaps=series.gaps,
         duplicates=series.duplicates,
         limitations=limitations,
@@ -147,7 +132,7 @@ def _rebuild_series(
     )
 
 
-def _numeric_candle(payload: dict[str, object]) -> tuple[dict[str, float] | None, str | None]:
+def _numeric_candle(payload: Mapping[str, object]) -> tuple[dict[str, float] | None, str | None]:
     values: dict[str, float] = {}
     for field in ("open", "high", "low", "close", "volume"):
         value = payload.get(field)
@@ -176,20 +161,27 @@ def _join_live_tail(
 ) -> HistoricalSeries:
     if feed is None:
         return series
-    update = _latest_candle(
-        feed,
-        venue=series.instrument.venue,
-        symbol=series.instrument.symbol,
+    snapshot = feed.snapshot_exact(
+        series.instrument.venue,
+        series.instrument.symbol,
+        UpdateKind.CANDLE,
+        as_of=as_of,
     )
-    if update is None:
+    if snapshot is None:
         return series
-    if update.provenance not in (Provenance.REAL, Provenance.DELAYED):
+    if snapshot.provenance not in (Provenance.REAL, Provenance.DELAYED):
         return _append_limitation(series, "provenance is not real or delayed")
-    if type(update.sequence) is not int or update.sequence < 0:
-        return _append_limitation(series, "sequence is absent or invalid")
-    if update.sequence_gap is not False:
-        return _append_limitation(series, "sequence continuity is not proven")
-    payload_interval = update.payload.get("interval")
+    received_at = snapshot.received_at
+    if not isinstance(received_at, datetime) or received_at.tzinfo is None:
+        return _append_limitation(series, "received_at must be timezone-aware")
+    received_at = received_at.astimezone(UTC)
+    if received_at > as_of:
+        return _append_limitation(series, "received_at is later than the request time")
+    if as_of - received_at > feed.lag:
+        return _append_limitation(series, "received_at is outside the live freshness horizon")
+    if snapshot.age_ms is None or snapshot.freshness_label not in ("real", "delayed"):
+        return _append_limitation(series, "freshness evidence is absent or invalid")
+    payload_interval = snapshot.payload.get("interval")
     if not isinstance(payload_interval, str):
         return _append_limitation(series, "payload interval is absent or invalid")
     try:
@@ -206,15 +198,26 @@ def _join_live_tail(
             series,
             "adjusted historical series cannot be matched to an unadjusted live candle",
         )
-    data_time = update.data_time
+    data_time = snapshot.data_time
     if not isinstance(data_time, datetime) or data_time.tzinfo is None:
         return _append_limitation(series, "data_time must be timezone-aware")
     data_time = data_time.astimezone(UTC)
     if data_time > as_of:
         return _append_limitation(series, "data_time is later than the request time")
-    values, numeric_error = _numeric_candle(update.payload)
+    values, numeric_error = _numeric_candle(snapshot.payload)
     if numeric_error is not None or values is None:
         return _append_limitation(series, numeric_error or "OHLCV payload is invalid")
+    if type(snapshot.sequence) is not int or snapshot.sequence < 0:
+        return _append_limitation(series, "sequence is absent or invalid")
+    if snapshot.sequence_gap is not False or not snapshot.continuity_proven:
+        return _append_limitation(series, "sequence continuity is not proven")
+    if (
+        type(snapshot.predecessor_sequence) is not int
+        or snapshot.predecessor_sequence < 0
+        or not isinstance(snapshot.predecessor_data_time, datetime)
+        or snapshot.predecessor_data_time.tzinfo is None
+    ):
+        return _append_limitation(series, "sequence predecessor evidence is absent or invalid")
 
     last = series.bars[-1]
     expected_next = last.timestamp + interval_to_timedelta(series.interval)
@@ -238,11 +241,35 @@ def _join_live_tail(
         volume=values["volume"],
         adjusted_close=None,
         is_live_tail=True,
+        live_lineage=LiveTailLineage(
+            source=snapshot.source,
+            venue=snapshot.venue,
+            instrument=snapshot.instrument,
+            provenance=snapshot.provenance,
+            data_time=data_time,
+            received_at=received_at,
+            interval=payload_interval,
+            sequence=snapshot.sequence,
+            predecessor_sequence=snapshot.predecessor_sequence,
+            predecessor_data_time=snapshot.predecessor_data_time,
+            sequence_gap=False,
+            continuity_proven=True,
+            freshness_label=snapshot.freshness_label,
+            age_ms=snapshot.age_ms,
+        ),
+    )
+    limitations = tuple(
+        dict.fromkeys(
+            (
+                *series.limitations,
+                "manifest coverage is historical-only; the live-tail bar is excluded",
+            )
+        )
     )
     return _rebuild_series(
         series,
         bars=(*retained, live_bar),
-        limitations=series.limitations,
+        limitations=limitations,
     )
 
 
@@ -279,7 +306,7 @@ def instrument_router() -> APIRouter:
                 if peers
                 else None
             )
-        except ValueError as error:
+        except HistoryUnavailableError as error:
             raise HTTPException(
                 status_code=404,
                 detail=f"historical data unavailable: {error}",

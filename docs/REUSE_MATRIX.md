@@ -32,6 +32,8 @@ This document records which open-source projects are reused, why they are used, 
 | Browser DOM for tests | `jsdom` 26.x | jsdom environment for component tests (Phase E) | Dev dependency (Vitest `environment: "jsdom"`) | None | MIT |
 | React testing library | `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event` (16/6/14) | Component queries, matchers and user-event simulation | Dev dependencies; the E2E surface stays Playwright | Light | MIT (all three) |
 | Frontend linter | `oxlint` 1.x | Fast lint pass for the SPA source | Dev dependency behind `npm run lint` | Light | MIT |
+| OpenAPI type generator | `openapi-typescript` 7.13.0 | Generate the committed workstation contract from FastAPI OpenAPI | Exact dev dependency behind deterministic `generate:api` / `check:api` scripts | Light | MIT; frontend lock closure is 644 packages and offline-allowlisted |
+| Typed OpenAPI transport | `openapi-fetch` 0.17.0 | Execute the generated Task 6 history path without handwritten URL or DTO shapes | Exact runtime dependency behind `api.history` | Light | MIT |
 
 ## Selection rule
 

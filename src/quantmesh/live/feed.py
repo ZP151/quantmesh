@@ -27,8 +27,15 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from threading import RLock
+from types import MappingProxyType
+from typing import Any
 
+from quantmesh.domain.market_data import interval_to_timedelta
+from quantmesh.domain.models import Venue
 from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
 from quantmesh.live.supervisor import VenueSupervisor
@@ -44,6 +51,92 @@ SYNTHETIC = "synthetic"
 UNAVAILABLE = "unavailable"
 
 _LIVE_STATES = ("connected", "lagging")  # a venue is "connected" while either holds
+
+
+@dataclass(frozen=True)
+class ExactUpdateSnapshot:
+    """Detached point-in-time view of one exact live stream key."""
+
+    venue: Venue
+    instrument: str
+    kind: UpdateKind
+    source: str
+    provenance: Provenance
+    data_time: datetime
+    received_at: datetime
+    sequence: int | None
+    sequence_gap: bool
+    payload: Mapping[str, object]
+    continuity_proven: bool
+    predecessor_sequence: int | None
+    predecessor_data_time: datetime | None
+    freshness_label: str | None
+    age_ms: int | None
+
+
+@dataclass(frozen=True)
+class _ContinuityProof:
+    proven: bool
+    predecessor_sequence: int | None
+    predecessor_data_time: datetime | None
+
+
+def _freeze(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return MappingProxyType({str(key): _freeze(item) for key, item in value.items()})
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze(item) for item in value)
+    if isinstance(value, set):
+        return frozenset(_freeze(item) for item in value)
+    return value
+
+
+def _is_aware(value: object) -> bool:
+    return isinstance(value, datetime) and value.tzinfo is not None
+
+
+def _continuity_proof(
+    previous: MarketUpdate | None,
+    current: MarketUpdate,
+) -> _ContinuityProof:
+    if previous is None:
+        return _ContinuityProof(False, None, None)
+    predecessor = _ContinuityProof(False, previous.sequence, previous.data_time)
+    if current.kind is not UpdateKind.CANDLE or previous.kind is not UpdateKind.CANDLE:
+        return predecessor
+    if current.sequence_gap or previous.sequence_gap:
+        return predecessor
+    if type(current.sequence) is not int or type(previous.sequence) is not int:
+        return predecessor
+    if not all(
+        _is_aware(value)
+        for value in (
+            previous.data_time,
+            current.data_time,
+            previous.received_at,
+            current.received_at,
+        )
+    ):
+        return predecessor
+    previous_interval = previous.payload.get("interval")
+    current_interval = current.payload.get("interval")
+    if not isinstance(previous_interval, str) or current_interval != previous_interval:
+        return predecessor
+    try:
+        duration = interval_to_timedelta(current_interval)
+    except ValueError:
+        return predecessor
+    if current.received_at < previous.received_at:
+        return predecessor
+    same_bar = current.data_time == previous.data_time
+    next_bar = current.data_time == previous.data_time + duration
+    if not (same_bar or next_bar):
+        return predecessor
+    if same_bar and current.sequence < previous.sequence:
+        return predecessor
+    if next_bar and current.sequence <= previous.sequence:
+        return predecessor
+    return _ContinuityProof(True, previous.sequence, previous.data_time)
 
 
 def label(update: MarketUpdate, now: datetime, *, lag: timedelta) -> str:
@@ -100,7 +193,9 @@ class LiveFeed:
         self.stale = stale
         self._lake = lake
         self._queue_size = queue_size
+        self._lock = RLock()
         self._latest: dict[tuple[str, str, str], MarketUpdate] = {}
+        self._continuity: dict[tuple[str, str, str], _ContinuityProof] = {}
         self._supervisors: list[VenueSupervisor] = []
         self._subscribers: set[asyncio.Queue[MarketUpdate]] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
@@ -109,14 +204,19 @@ class LiveFeed:
 
     def attach(self, supervisor: VenueSupervisor) -> None:
         """Register a supervisor; the pump runs it and drains its outbox."""
-        self._supervisors.append(supervisor)
+        with self._lock:
+            self._supervisors.append(supervisor)
 
     def ingest(self, updates: list[MarketUpdate]) -> None:
         """Cache + replay lake; the wall-clock-free path every drill drives."""
         for update in updates:
-            self._latest[(update.venue.value, update.instrument, update.kind.value)] = update
+            cached = update.model_copy(deep=True)
+            key = (cached.venue.value, cached.instrument, cached.kind.value)
+            with self._lock:
+                self._continuity[key] = _continuity_proof(self._latest.get(key), cached)
+                self._latest[key] = cached
             if self._lake is not None:
-                self._lake.append(update)
+                self._lake.append(cached)
 
     async def publish(self, update: MarketUpdate) -> None:
         """Ingest and fan out to every subscriber (server-loop path)."""
@@ -136,13 +236,58 @@ class LiveFeed:
 
     # -- queries ------------------------------------------------------------
 
+    def snapshot_exact(
+        self,
+        venue: Venue,
+        instrument: str,
+        kind: UpdateKind,
+        *,
+        as_of: datetime,
+    ) -> ExactUpdateSnapshot | None:
+        """Return a detached snapshot for one venue/instrument/kind key."""
+        with self._lock:
+            key = (venue.value, instrument, kind.value)
+            update = self._latest.get(key)
+            if update is None:
+                return None
+            copied = update.model_copy(deep=True)
+            proof = self._continuity[key]
+        try:
+            freshness_label = label(copied, as_of, lag=self.lag)
+            age_ms = _age_ms(as_of, copied.received_at)
+        except (TypeError, ValueError):
+            freshness_label = None
+            age_ms = None
+        return ExactUpdateSnapshot(
+            venue=copied.venue,
+            instrument=copied.instrument,
+            kind=copied.kind,
+            source=copied.venue.value,
+            provenance=copied.provenance,
+            data_time=copied.data_time,
+            received_at=copied.received_at,
+            sequence=copied.sequence,
+            sequence_gap=copied.sequence_gap,
+            payload=_freeze(copied.payload),
+            continuity_proven=proof.proven,
+            predecessor_sequence=proof.predecessor_sequence,
+            predecessor_data_time=proof.predecessor_data_time,
+            freshness_label=freshness_label,
+            age_ms=age_ms,
+        )
+
     def latest_state(self, *, now: datetime | None = None) -> dict[str, object]:
         """One entry per instrument: the latest update per kind plus the
         newest update's provenance/age label (the watchlist badge)."""
         now = now if now is not None else datetime.now(UTC)
         instruments: dict[str, dict[str, object]] = {}
         newest: dict[str, MarketUpdate] = {}
-        for (venue, instrument, kind), update in sorted(self._latest.items()):
+        with self._lock:
+            latest = [
+                (key, update.model_copy(deep=True))
+                for key, update in sorted(self._latest.items())
+            ]
+        for (venue, instrument, kind), update in latest:
             entry = instruments.setdefault(instrument, {"venue": venue})
             kinds = entry.setdefault("kinds", {})  # type: ignore[assignment]
             kinds[kind] = _view(update, now, lag=self.lag)  # type: ignore[index]
@@ -158,7 +303,16 @@ class LiveFeed:
         reported yet (a freshly opened socket is not a status update)."""
         now = now if now is not None else datetime.now(UTC)
         sources: dict[str, dict[str, dict[str, object]]] = {}
-        for (venue, instrument, kind), update in self._latest.items():
+        with self._lock:
+            latest = [
+                (key, update.model_copy(deep=True))
+                for key, update in self._latest.items()
+            ]
+            supervisors = [
+                (supervisor.venue, tuple(supervisor.watchlist))
+                for supervisor in self._supervisors
+            ]
+        for (venue, instrument, kind), update in latest:
             if kind != UpdateKind.STATUS.value or update.state is None:
                 continue
             sources.setdefault(venue, {})[instrument] = {
@@ -169,9 +323,9 @@ class LiveFeed:
                 "received_at": update.received_at.isoformat(),
                 "age_ms": _age_ms(now, update.received_at),
             }
-        for supervisor in self._supervisors:
-            for instrument in supervisor.watchlist:
-                entry = sources.setdefault(supervisor.venue.value, {}).setdefault(
+        for venue, watchlist in supervisors:
+            for instrument in watchlist:
+                entry = sources.setdefault(venue.value, {}).setdefault(
                     instrument,
                     {
                         "instrument": instrument,

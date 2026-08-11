@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "generate:api": "node scripts/openapi-client.mjs generate",
+    "check:api": "node scripts/openapi-client.mjs check",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -18,6 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.30.0",
+    "openapi-fetch": "0.17.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",
@@ -35,8 +38,9 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "jsdom": "^26.1.0",
+    "openapi-typescript": "7.13.0",
     "oxlint": "^1.77.0",
-    "typescript": "~6.0.2",
+    "typescript": "5.9.3",
     "vite": "^8.2.0",
     "vitest": "^3.2.7"
   }

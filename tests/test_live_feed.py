@@ -7,6 +7,7 @@ never start the pump (the browser E2E is the pump's gate).
 """
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -26,7 +27,9 @@ def _upd(
     instrument: str = "BTC",
     kind: UpdateKind = UpdateKind.QUOTE,
     *,
+    venue: Venue = Venue.HYPERLIQUID,
     provenance: Provenance = Provenance.REAL,
+    data_time: datetime | None = None,
     received_at: datetime = T0,
     state: SourceState | None = None,
     sequence: int | None = None,
@@ -34,11 +37,11 @@ def _upd(
     payload: dict | None = None,
 ) -> MarketUpdate:
     return MarketUpdate(
-        venue=Venue.HYPERLIQUID,
+        venue=venue,
         instrument=instrument,
         kind=kind,
         provenance=provenance,
-        data_time=received_at,
+        data_time=data_time if data_time is not None else received_at,
         received_at=received_at,
         # STATUS updates carry no payload (contract validator); the rest
         # of the kinds default to a valid quote shape.
@@ -58,6 +61,35 @@ def _feed(**kwargs) -> LiveFeed:
     return LiveFeed(lag=LAG, stale=STALE, **kwargs)
 
 
+def _candle(
+    *,
+    venue: Venue = Venue.HYPERLIQUID,
+    instrument: str = "BTC",
+    data_time: datetime = T0,
+    received_at: datetime | None = None,
+    sequence: int | None = 100,
+    sequence_gap: bool = False,
+    interval: str = "1m",
+) -> MarketUpdate:
+    return _upd(
+        venue=venue,
+        instrument=instrument,
+        kind=UpdateKind.CANDLE,
+        data_time=data_time,
+        received_at=received_at if received_at is not None else data_time,
+        sequence=sequence,
+        sequence_gap=sequence_gap,
+        payload={
+            "interval": interval,
+            "open": 100.0,
+            "high": 101.0,
+            "low": 99.0,
+            "close": 100.5,
+            "volume": 10.0,
+        },
+    )
+
+
 class TestLabel:
     def test_provenance_labels(self) -> None:
         fresh = T0 + timedelta(seconds=5)
@@ -74,6 +106,239 @@ class TestLabel:
 
 
 class TestIngestAndCache:
+    def test_exact_snapshot_is_keyed_by_venue_symbol_and_kind(self) -> None:
+        feed = _feed()
+        feed.ingest(
+            [
+                _upd(venue=Venue.HYPERLIQUID, payload={"bid": 100.0, "ask": 100.5}),
+                _upd(venue=Venue.MOOMOO, payload={"bid": 200.0, "ask": 200.5}),
+            ]
+        )
+
+        snapshot = feed.snapshot_exact(
+            Venue.MOOMOO,
+            "BTC",
+            UpdateKind.QUOTE,
+            as_of=T0,
+        )
+
+        assert snapshot is not None
+        assert snapshot.venue is Venue.MOOMOO
+        assert snapshot.instrument == "BTC"
+        assert snapshot.kind is UpdateKind.QUOTE
+        assert snapshot.payload["bid"] == 200.0
+
+    def test_exact_snapshot_and_cache_are_detached_from_mutation(self) -> None:
+        feed = _feed()
+        update = _upd(payload={"bid": 100.0, "ask": 100.5, "levels": [[100.0, 2.0]]})
+        feed.ingest([update])
+
+        snapshot = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.QUOTE,
+            as_of=T0,
+        )
+        assert snapshot is not None
+        update.payload["bid"] = 999.0
+        update.payload["levels"][0][0] = 999.0
+
+        second = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.QUOTE,
+            as_of=T0,
+        )
+        assert second is not None
+        assert second.payload["bid"] == 100.0
+        assert second.payload["levels"] == ((100.0, 2.0),)
+        with pytest.raises(TypeError):
+            snapshot.payload["bid"] = 1.0  # type: ignore[index]
+
+    def test_latest_state_is_a_detached_snapshot(self) -> None:
+        feed = _feed()
+        feed.ingest([_upd(payload={"bid": 100.0, "ask": 100.5})])
+
+        rendered = feed.latest_state(now=T0)
+        rendered["instruments"]["BTC"]["kinds"]["quote"]["payload"]["bid"] = 999.0
+        snapshot = feed.snapshot_exact(
+            Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0
+        )
+
+        assert snapshot is not None
+        assert snapshot.payload["bid"] == 100.0
+
+
+class TestExactContinuity:
+    def test_first_observation_is_unproven_and_valid_second_update_is_proven(self) -> None:
+        feed = _feed()
+        feed.ingest([_candle(sequence=80)])
+        first = feed.snapshot_exact(
+            Venue.HYPERLIQUID, "BTC", UpdateKind.CANDLE, as_of=T0
+        )
+
+        assert first is not None
+        assert first.continuity_proven is False
+        assert first.predecessor_sequence is None
+        assert first.predecessor_data_time is None
+
+        feed.ingest(
+            [
+                _candle(
+                    data_time=T0 + timedelta(minutes=1),
+                    received_at=T0 + timedelta(minutes=1),
+                    sequence=81,
+                )
+            ]
+        )
+        second = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=1),
+        )
+
+        assert second is not None
+        assert second.continuity_proven is True
+        assert second.predecessor_sequence == 80
+        assert second.predecessor_data_time == T0
+
+    @pytest.mark.parametrize(
+        ("data_time", "sequence"),
+        [
+            (T0, 100),
+            (T0 + timedelta(minutes=1), 101),
+        ],
+    )
+    def test_same_bar_and_next_bar_updates_can_prove_continuity(
+        self, data_time: datetime, sequence: int
+    ) -> None:
+        feed = _feed()
+        feed.ingest([_candle(sequence=100)])
+        feed.ingest(
+            [
+                _candle(
+                    data_time=data_time,
+                    received_at=T0 + timedelta(seconds=1),
+                    sequence=sequence,
+                )
+            ]
+        )
+
+        snapshot = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(seconds=1),
+        )
+
+        assert snapshot is not None
+        assert snapshot.continuity_proven is True
+
+    def test_gap_resets_proof_until_two_clean_observations_follow(self) -> None:
+        feed = _feed()
+        feed.ingest([_candle(sequence=100)])
+        feed.ingest(
+            [
+                _candle(
+                    data_time=T0 + timedelta(minutes=1),
+                    sequence=101,
+                    sequence_gap=True,
+                )
+            ]
+        )
+        feed.ingest(
+            [_candle(data_time=T0 + timedelta(minutes=2), sequence=102)]
+        )
+        post_gap = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=2),
+        )
+
+        assert post_gap is not None
+        assert post_gap.continuity_proven is False
+
+        feed.ingest(
+            [_candle(data_time=T0 + timedelta(minutes=3), sequence=103)]
+        )
+        recovered = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=3),
+        )
+        assert recovered is not None
+        assert recovered.continuity_proven is True
+        assert recovered.predecessor_sequence == 102
+
+    @pytest.mark.parametrize(
+        "second",
+        [
+            _candle(data_time=T0 + timedelta(minutes=2), sequence=101),
+            _candle(data_time=T0 + timedelta(minutes=1), sequence=99),
+            _candle(
+                data_time=T0 + timedelta(minutes=1),
+                received_at=T0 - timedelta(seconds=1),
+                sequence=101,
+            ),
+            _candle(data_time=T0 + timedelta(minutes=1), sequence=101, interval="5m"),
+        ],
+    )
+    def test_gap_time_sequence_and_interval_mismatches_are_unproven(
+        self, second: MarketUpdate
+    ) -> None:
+        feed = _feed()
+        feed.ingest([_candle(sequence=100)])
+        feed.ingest([second])
+
+        snapshot = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.CANDLE,
+            as_of=T0 + timedelta(minutes=2),
+        )
+
+        assert snapshot is not None
+        assert snapshot.continuity_proven is False
+
+    def test_concurrent_ingest_and_exact_reads_remain_consistent(self) -> None:
+        feed = _feed()
+        feed.ingest([_candle(sequence=1)])
+
+        def write(offset: int) -> None:
+            feed.ingest(
+                [
+                    _candle(
+                        data_time=T0,
+                        received_at=T0 + timedelta(milliseconds=offset),
+                        sequence=offset + 1,
+                    )
+                ]
+            )
+
+        def read(_: int) -> tuple[Venue, str, UpdateKind, object]:
+            snapshot = feed.snapshot_exact(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.CANDLE,
+                as_of=T0 + timedelta(seconds=1),
+            )
+            assert snapshot is not None
+            return snapshot.venue, snapshot.instrument, snapshot.kind, snapshot.payload["interval"]
+
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            writes = [pool.submit(write, offset) for offset in range(1, 101)]
+            reads = [pool.submit(read, offset) for offset in range(100)]
+            for future in writes:
+                future.result()
+            snapshots = [future.result() for future in reads]
+
+        assert set(snapshots) == {
+            (Venue.HYPERLIQUID, "BTC", UpdateKind.CANDLE, "1m")
+        }
+
     def test_ingest_caches_latest_per_kind(self) -> None:
         feed = _feed()
         feed.ingest([_upd(received_at=T0)])

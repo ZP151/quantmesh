@@ -1,3 +1,7 @@
+import createClient from 'openapi-fetch'
+
+import type { components, paths } from '@/api/client'
+
 // The JSON surface contract (iteration 0014 Phase C, ADR-0013).
 // One route per screen; every route renders through the exact page
 // providers the RC1 templates use (src/quantmesh/api/workstation.py),
@@ -476,78 +480,23 @@ export interface ReplayWindow {
 
 // --- Integrated instrument history (iteration 0020 Task 6) -----------------
 
-export type HistoryRange = '1d' | '5d' | '1m' | '3m' | '6m' | '1y'
-export type AdjustmentMode = 'unadjusted' | 'split-adjusted' | 'total-return'
-export type HistoricalVenue = 'internal' | 'moomoo' | 'hyperliquid' | 'polymarket' | 'kalshi'
-export type HistoricalInstrumentType = 'equity' | 'etf' | 'perpetual' | 'spot' | 'event_contract'
+type DeepReadonly<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends readonly (infer Item)[]
+    ? readonly DeepReadonly<Item>[]
+    : T extends object
+      ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
+      : T
 
-export interface HistoricalInstrument {
-  readonly symbol: string
-  readonly venue: HistoricalVenue
-  readonly instrument_type: HistoricalInstrumentType
-  readonly currency: string
-  readonly metadata: Readonly<Record<string, string>>
-}
-
-export interface HistoricalBar {
-  readonly instrument: HistoricalInstrument
-  readonly timestamp: string
-  readonly interval: string
-  readonly open: number
-  readonly high: number
-  readonly low: number
-  readonly close: number
-  readonly volume: number
-  readonly adjusted_close: number | null
-  readonly is_live_tail: boolean
-}
-
-export interface HistoricalCoverage {
-  readonly interval: string
-  readonly venue: HistoricalVenue
-  readonly symbol: string
-  readonly start: string
-  readonly end: string
-  readonly rows: number
-}
-
-export interface HistoricalSeries {
-  readonly instrument: HistoricalInstrument
-  readonly range: HistoryRange
-  readonly as_of: string
-  readonly bars: readonly HistoricalBar[]
-  readonly dataset_id: string
-  readonly dataset_revision: number
-  readonly source: string
-  readonly license: string
-  readonly generated_at: string
-  readonly interval: string
-  readonly calendar: string
-  readonly adjustment: AdjustmentMode
-  readonly coverage: HistoricalCoverage
-  readonly gaps: readonly string[]
-  readonly duplicates: readonly string[]
-  readonly limitations: readonly string[]
-  readonly resolution_fallback: string | null
-}
-
-export interface ComparisonPoint {
-  readonly timestamp: string
-  readonly values: Readonly<Record<string, number>>
-}
-
-export interface ComparisonSeries {
-  readonly range: HistoryRange
-  readonly as_of: string
-  readonly keys: readonly string[]
-  readonly points: readonly ComparisonPoint[]
-  readonly limitations: readonly string[]
-}
-
-export interface HistoricalPayload {
-  readonly primary: HistoricalSeries
-  readonly comparison: ComparisonSeries | null
-}
+export type HistoryRange = components['schemas']['HistoryRange']
+export type HistoricalVenue = components['schemas']['Venue']
+export type HistoricalInstrument = DeepReadonly<components['schemas']['InstrumentSnapshot']>
+export type HistoricalBar = DeepReadonly<components['schemas']['HistoricalBar']>
+export type HistoricalCoverage = DeepReadonly<components['schemas']['CoverageSnapshot']>
+export type HistoricalSeries = DeepReadonly<components['schemas']['HistoricalSeries']>
+export type ComparisonPoint = DeepReadonly<components['schemas']['ComparisonPoint']>
+export type ComparisonSeries = DeepReadonly<components['schemas']['ComparisonSeries']>
+export type HistoricalPayload = DeepReadonly<components['schemas']['HistoricalPayload']>
 
 // --- Client --------------------------------------------------------------
 
@@ -576,6 +525,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init)
   if (!response.ok) throw await parseError(response)
   return (await response.json()) as T
+}
+
+const generatedApi = createClient<paths>()
+
+function generatedApiError(response: Response, error: unknown): ApiError {
+  let detail = `${response.status} ${response.statusText}`
+  if (
+    typeof error === 'object'
+    && error !== null
+    && 'detail' in error
+    && typeof error.detail === 'string'
+  ) {
+    detail = error.detail
+  }
+  return new ApiError(response.status, detail)
 }
 
 export interface DemoOrderInput {
@@ -676,17 +640,26 @@ export const api = {
   liveStatus: () => request<LiveStatus>('/api/live/status'),
   prediction: () => request<PredictionRow[]>('/api/live/prediction'),
 
-  history: (
+  async history(
     venue: HistoricalVenue,
     symbol: string,
     range: HistoryRange,
     compare: readonly string[] = [],
-  ) => {
-    const params = new URLSearchParams({ range })
-    if (compare.length > 0) params.set('compare', compare.join(','))
-    return request<HistoricalPayload>(
-      `/api/instruments/${encodeURIComponent(venue)}/${encodeURIComponent(symbol)}/history?${params}`,
+  ): Promise<HistoricalPayload> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/instruments/{venue}/{symbol}/history',
+      {
+        params: {
+          path: { venue, symbol },
+          query: {
+            range,
+            compare: compare.length > 0 ? [...compare] : undefined,
+          },
+        },
+      },
     )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
   },
 
   // Slice 4 — the recorded replay surface over the local lake.
