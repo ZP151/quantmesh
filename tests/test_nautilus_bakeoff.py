@@ -634,6 +634,22 @@ def test_portable_https_command_survives_expected_path_redaction(
 
 
 @pytest.mark.parametrize(
+    "url",
+    [
+        "https://example.com/ordinary/path",
+        "git+https://code.example.org/team/repository.git",
+    ],
+)
+def test_ordinary_urls_are_not_classified_as_network_paths(
+    tmp_path: Path,
+    url: str,
+) -> None:
+    metadata = f"safe-command --source={url}"
+
+    assert nautilus_module._portable_runner_text(metadata, tmp_path / "work") == metadata
+
+
+@pytest.mark.parametrize(
     "metadata",
     [
         "command --input=C:/Operators/private-user/input.json",
@@ -642,6 +658,12 @@ def test_portable_https_command_survives_expected_path_redaction(
         r"prefixC:\Operators\private-user\input.json",
         r"command --input=\\server\share\private-user\input.json",
         r"command --input=\\?\C:\Operators\private-user\input.json",
+        "//server/share/private-user/input.json",
+        "safe-command //server/share/private-user/input.json",
+        "//./PIPE/private-user",
+        "safe-command --pipe=//./PIPE/private-user",
+        "//?/UNC/server/share/private-user/input.json",
+        "safe-command --input=//?/UNC/server/share/private-user/input.json",
         "command --input=/home/private-user/input.json",
     ],
 )

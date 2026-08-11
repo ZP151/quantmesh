@@ -867,7 +867,7 @@ def _portable_runner_text(value: object, work_root: Path) -> str:
         return "invalid-runner-metadata-omitted"
     portable = _portable_text(value, work_root)
     if re.search(
-        r"(?i)(?:[a-z]:(?:\\|/(?!/))|\\\\|(?:^|[=\s])/[^/\s])",
+        r"(?i)(?:[a-z]:(?:\\|/(?!/))|\\\\|(?:^|[=\s])/(?=\S))",
         portable,
     ):
         return "nonportable-runner-metadata-omitted"
