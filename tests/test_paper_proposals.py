@@ -552,3 +552,70 @@ def test_ledger_recomputes_the_proposal_identity_seal(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="id does not match its immutable intent"):
         service.ledger.get(proposal.id)
+
+
+def test_ledger_seal_covers_the_complete_instrument_and_forecast_lineage(tmp_path: Path) -> None:
+    service, _, _ = _service(tmp_path)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+    ledger_path = tmp_path / "proposals" / "proposals.jsonl"
+    payload = json.loads(ledger_path.read_text(encoding="utf-8"))
+    payload["proposal"]["instrument"]["currency"] = "EUR"
+    payload["proposal"]["dataset_revision"] += 1
+    ledger_path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="id does not match its immutable intent"):
+        service.ledger.get(proposal.id)
+
+
+def test_terminal_replay_rejects_coordinated_order_id_tampering(tmp_path: Path) -> None:
+    service, _, journal = _service(tmp_path)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+    confirmed = service.confirm(
+        proposal.id,
+        confirmation=proposal.confirmation_token,
+        now=NOW,
+    )
+    forged_id = "paper-forged-order"
+
+    proposal_path = tmp_path / "proposals" / "proposals.jsonl"
+    events = [json.loads(line) for line in proposal_path.read_text(encoding="utf-8").splitlines()]
+    events[-1]["proposal"]["order_id"] = forged_id
+    proposal_path.write_text(
+        "".join(f"{json.dumps(event)}\n" for event in events),
+        encoding="utf-8",
+    )
+
+    journal_path = journal.root / "journal.jsonl"
+    orders = [json.loads(line) for line in journal_path.read_text(encoding="utf-8").splitlines()]
+    own = next(order for order in orders if order["order_id"] == confirmed.order.order_id)
+    own["order_id"] = forged_id
+    journal_path.write_text(
+        "".join(f"{json.dumps(order)}\n" for order in orders),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="immutable proposal intent"):
+        service.confirm(
+            proposal.id,
+            confirmation=proposal.confirmation_token,
+            now=NOW,
+        )
+
+
+def test_terminal_replay_requires_exact_derived_fill_quantity(tmp_path: Path) -> None:
+    service, _, journal = _service(tmp_path)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+    confirmed = service.confirm(
+        proposal.id,
+        confirmation=proposal.confirmation_token,
+        now=NOW,
+    )
+    order = journal.get(confirmed.order.order_id)
+    journal.update(order.model_copy(update={"filled_quantity": order.filled_quantity + 1e-10}))
+
+    with pytest.raises(ValueError, match="derived state does not replay exactly"):
+        service.confirm(
+            proposal.id,
+            confirmation=proposal.confirmation_token,
+            now=NOW,
+        )

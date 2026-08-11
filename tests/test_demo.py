@@ -115,6 +115,19 @@ def test_reset_refuses_a_root_without_the_marker(tmp_path: Path) -> None:
     assert sentinel.read_text(encoding="utf-8") == '{"operator": "data"}'
 
 
+def test_seed_refuses_to_claim_a_nonempty_unmarked_root(tmp_path: Path) -> None:
+    root = tmp_path / "operator-data"
+    root.mkdir()
+    sentinel = root / "precious-file.json"
+    sentinel.write_text('{"operator": "data"}', encoding="utf-8")
+
+    with pytest.raises(DemoRootError, match="non-empty"):
+        seed_demo_root(root, SCENARIO)
+
+    assert not is_demo_root(root)
+    assert sentinel.read_text(encoding="utf-8") == '{"operator": "data"}'
+
+
 def test_load_refuses_a_root_without_the_marker(tmp_path: Path) -> None:
     root = tmp_path / "plain"
     root.mkdir()

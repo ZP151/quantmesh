@@ -92,6 +92,16 @@ def test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state(tmp_path: 
         assert confirmed.status_code == 200
         assert confirmed.json()["proposal"]["status"] == "confirmed"
         assert confirmed.json()["proposal"]["quote_provenance"] == "demo-synthetic"
+        status = client.get("/api/demo/status").json()
+        assert status["surfaces"]["orders"]["rows"] == 9
+        after_confirm = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m").json()
+        confirmed_quantity = after_confirm["position"]["quantity"]
+
+    restarted = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(restarted) as client:
+        restored_before_reset = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m").json()
+        assert restored_before_reset["position"]["quantity"] == confirmed_quantity
+        assert restored_before_reset["proposal"]["proposals"][0]["status"] == "confirmed"
 
         reset = client.post("/api/demo/reset")
         assert reset.status_code == 200

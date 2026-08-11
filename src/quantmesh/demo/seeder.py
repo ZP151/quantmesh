@@ -20,7 +20,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
+import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -230,6 +232,20 @@ def is_demo_root(root: Path) -> bool:
     """True when the root carries the demo marker (and nothing else is
     required — the marker is the isolation contract)."""
     return _marker(root).is_file()
+
+
+def persist_demo_account(root: Path, account: PaperAccount) -> None:
+    """Atomically persist the mutable demo account under its owned root."""
+    if not is_demo_root(root):
+        raise DemoRootError(f"refusing to persist account outside a marked demo root: {root}")
+    descriptor, temp_name = tempfile.mkstemp(dir=root, prefix=".account.", suffix=".tmp")
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(account.model_dump_json())
+        os.replace(temp_name, root / "account.json")
+    finally:
+        if os.path.exists(temp_name):
+            os.unlink(temp_name)
 
 
 def _venue(name: str) -> Venue:
@@ -919,10 +935,24 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
             f"demo root {root} is already seeded — use reset_demo_root "
             "(re-seeding is explicit, never silent)"
         )
-    root.mkdir(parents=True, exist_ok=True)
-    _marker(root).write_text(
-        "deterministic demo root — reset deletes only this tree\n", encoding="utf-8"
-    )
+    if root.exists():
+        if not root.is_dir():
+            raise DemoRootError(f"demo root {root} exists and is not a directory")
+        if root.is_symlink() or (hasattr(root, "is_junction") and root.is_junction()):
+            raise DemoRootError(f"demo root {root} is a link or junction")
+        if any(root.iterdir()):
+            raise DemoRootError(
+                f"refusing to claim non-empty unmarked directory {root} as a demo root"
+            )
+    else:
+        root.mkdir(parents=True, exist_ok=False)
+    marker = _marker(root)
+    with marker.open("x", encoding="utf-8") as handle:
+        handle.write("deterministic demo root — reset deletes only this tree\n")
+    unexpected = [path for path in root.iterdir() if path != marker]
+    if unexpected:
+        marker.unlink()
+        raise DemoRootError(f"demo root {root} changed while ownership was established")
 
     draw = generators._Draw(scenario.seed)
     series = generators.series_map(draw, scenario)
@@ -1007,7 +1037,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         "surfaces": _provenance_rows(rows, scenario.anchor),
     }
     (root / "provenance.json").write_text(json.dumps(provenance, indent=1), encoding="utf-8")
-    (root / "account.json").write_text(account.model_dump_json(), encoding="utf-8")
+    persist_demo_account(root, account)
 
     return DemoSeeded(
         root=root,

@@ -990,6 +990,7 @@ def create_workstation_app(
     history: HistoryService | None = None,
     price_forecasts: PriceForecastRegistry | None = None,
     proposal_ledger: ProposalLedger | None = None,
+    account_sink: Callable[[PaperAccount], None] | None = None,
     demo_quote_provider: Callable[[Instrument, datetime], Quote] | None = None,
     workspace_clock: Callable[[], datetime] | None = None,
     live_feed: LiveFeed | None = None,
@@ -1067,6 +1068,10 @@ def create_workstation_app(
     def replace_account(updated: PaperAccount) -> None:
         app.state.account = updated
         app.state.page_context = replace(app.state.page_context, account=updated)
+        if account_sink is not None:
+            account_sink(updated)
+
+    app.state.replace_account = replace_account
 
     paper_decisions = None
     if price_forecasts is not None and proposal_ledger is not None:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import os
 import re
 import tempfile
@@ -123,24 +122,30 @@ def _proposal_identity(proposal: PaperProposal) -> dict[str, object]:
     )
 
 
-def _proposal_id_for(proposal: PaperProposal) -> str:
-    digest = _sha256(
-        {
-            "artifact_id": proposal.artifact_id,
-            "created_at": proposal.created_at.isoformat(),
-            "limit_price": proposal.limit_price,
-            "quantity": proposal.quantity,
-            "side": proposal.side.value,
-        }
+def _proposal_intent(proposal: PaperProposal) -> dict[str, object]:
+    """Every immutable operator and forecast fact, excluding its seals."""
+    return proposal.model_dump(
+        mode="json",
+        exclude={
+            "id",
+            "confirmation_token",
+            "status",
+            "blockers",
+            "order_id",
+            "quote_provenance",
+        },
     )
+
+
+def _proposal_id_for(proposal: PaperProposal) -> str:
+    digest = _sha256(_proposal_intent(proposal))
     return f"proposal-{digest[:24]}"
 
 
 def _confirmation_token_for(proposal: PaperProposal) -> str:
     return _sha256(
         {
-            "artifact_id": proposal.artifact_id,
-            "config_digest": proposal.config_digest,
+            "intent": _proposal_intent(proposal),
             "proposal_id": proposal.id,
         }
     )
@@ -151,6 +156,24 @@ def _validate_proposal_seal(proposal: PaperProposal) -> None:
         raise ValueError("proposal id does not match its immutable intent")
     if proposal.confirmation_token != _confirmation_token_for(proposal):
         raise ValueError("proposal confirmation token does not match its immutable intent")
+
+
+def _validate_artifact_binding(
+    proposal: PaperProposal,
+    artifact: PriceForecastArtifact,
+) -> None:
+    if (
+        proposal.artifact_id != artifact.id
+        or proposal.instrument.model_dump(mode="json")
+        != artifact.instrument.model_dump(mode="json")
+        or proposal.dataset_id != artifact.dataset_id
+        or proposal.dataset_revision != artifact.dataset_revision
+        or proposal.forecast_generated_at != artifact.generated_at
+        or proposal.model_version != artifact.model_version
+        or proposal.config_digest != artifact.config_digest
+        or proposal.history_digest != artifact.history_digest
+    ):
+        raise ValueError("proposal lineage does not match the trusted forecast artifact")
 
 
 def _forecast_age_sessions(artifact: PriceForecastArtifact, now: datetime) -> int:
@@ -436,27 +459,12 @@ class PaperDecisionService:
             artifact = self._resolve_artifact(artifact_id)
             created_at = self.current_time()
             order_type = OrderType.LIMIT if limit_price is not None else OrderType.MARKET
-            setup = {
-                "artifact_id": artifact.id,
-                "created_at": created_at.isoformat(),
-                "limit_price": float(limit_price) if limit_price is not None else None,
-                "quantity": float(quantity),
-                "side": side.value,
-            }
-            proposal_id = f"proposal-{_sha256(setup)[:24]}"
-            confirmation_token = _sha256(
-                {
-                    "artifact_id": artifact.id,
-                    "config_digest": artifact.config_digest,
-                    "proposal_id": proposal_id,
-                }
-            )
             blockers = artifact.blockers if not artifact.eligible else ()
             freshness = forecast_freshness_blocker(artifact, created_at)
             if freshness is not None:
                 blockers = (*blockers, freshness)
-            proposal = PaperProposal(
-                id=proposal_id,
+            candidate = PaperProposal(
+                id=f"proposal-{'0' * 24}",
                 artifact_id=artifact.id,
                 instrument=artifact.instrument,
                 dataset_id=artifact.dataset_id,
@@ -470,9 +478,18 @@ class PaperDecisionService:
                 order_type=order_type,
                 limit_price=limit_price,
                 created_at=created_at,
-                confirmation_token=confirmation_token,
+                confirmation_token="0" * 64,
                 status=(ProposalStatus.BLOCKED if blockers else ProposalStatus.PENDING),
                 blockers=blockers,
+            )
+            candidate = PaperProposal.model_validate(
+                {**candidate.model_dump(), "id": _proposal_id_for(candidate)}
+            )
+            proposal = PaperProposal.model_validate(
+                {
+                    **candidate.model_dump(),
+                    "confirmation_token": _confirmation_token_for(candidate),
+                }
             )
             _validate_proposal_seal(proposal)
             try:
@@ -548,7 +565,7 @@ class PaperDecisionService:
         if (
             replay.events != order.events
             or replay.status is not order.status
-            or not math.isclose(replay.filled_quantity, order.filled_quantity)
+            or replay.filled_quantity != order.filled_quantity
         ):
             raise ValueError("journal order derived state does not replay exactly")
 
@@ -571,6 +588,7 @@ class PaperDecisionService:
             or order.order_type is not proposal.order_type
             or order.limit_price != expected_limit
             or order.idempotency_key != f"proposal:{proposal.id}"
+            or order.order_id != f"paper-proposal:{proposal.id}"
             or order.client_order_id is not None
             or order.broker_order_id is not None
             or order.created_at.tzinfo is None
@@ -726,6 +744,7 @@ class PaperDecisionService:
                 )
                 blocked = self.ledger.transition(blocked, recorded_at=now)
                 return self._terminal_result(blocked)
+            _validate_artifact_binding(proposal, artifact)
             if not artifact.eligible:
                 blocked = PaperProposal.model_validate(
                     {

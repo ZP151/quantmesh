@@ -48,6 +48,7 @@ from quantmesh.demo.seeder import (
     DemoSeeded,
     is_demo_root,
     load_demo_root,
+    persist_demo_account,
     reset_demo_root,
     seed_demo_root,
 )
@@ -101,6 +102,7 @@ def _status(runtime: DemoRuntime) -> dict[str, object]:
         sum(1 for path in forecast_root.iterdir() if path.is_dir()) if forecast_root.exists() else 0
     )
     surfaces["paper_proposals"]["rows"] = len(seeded.proposal_ledger.all())
+    surfaces["orders"]["rows"] = len(seeded.journal.all())
     return {
         "mode": "demo",
         "root": str(runtime.root),
@@ -324,6 +326,7 @@ def create_demo_app(
         history=seeded.history,
         price_forecasts=seeded.price_forecasts,
         proposal_ledger=seeded.proposal_ledger,
+        account_sink=lambda account: persist_demo_account(root, account),
         demo_quote_provider=lambda instrument, now: _workspace_demo_quote(
             seeded,
             instrument,
@@ -332,6 +335,15 @@ def create_demo_app(
         workspace_clock=lambda: seeded.scenario.anchor,
         host=host,
     )
+    paper_decisions = getattr(app.state, "paper_decisions", None)
+    if paper_decisions is not None:
+        for proposal in seeded.proposal_ledger.all():
+            if proposal.order_id is not None:
+                paper_decisions.confirm(
+                    proposal.id,
+                    confirmation=proposal.confirmation_token,
+                    now=max(seeded.scenario.anchor, proposal.created_at),
+                )
     app.state.demo = DemoRuntime(root=root, scenario=seeded.scenario, seeded=seeded)
     router = demo_router()
     app.include_router(router)
