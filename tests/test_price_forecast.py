@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import math
+import os
+import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -21,6 +23,7 @@ from quantmesh.instruments.forecast import (
     PriceForecastRegistry,
     rolling_oos_forecasts,
     run_price_forecast,
+    validate_price_forecast_artifact,
 )
 
 MODEL_VERSION = "drift-conformal-v1"
@@ -118,8 +121,13 @@ def test_forecast_has_three_horizons_quantiles_and_lineage() -> None:
     assert artifact.dataset_id == series.dataset_id
     assert artifact.dataset_revision == series.dataset_revision
     assert artifact.source == series.source
-    assert artifact.train_start == series.bars[0].timestamp
+    assert artifact.history_start == series.bars[0].timestamp
+    assert artifact.history_sessions == 420
+    assert artifact.train_start == series.bars[-253].timestamp
     assert artifact.train_end == series.bars[-1].timestamp
+    assert artifact.target == "unadjusted-close"
+    assert artifact.validation_start == min(row.target_at for row in artifact.oos)
+    assert artifact.test_start == min(row.target_at for row in artifact.oos if row.p10 is not None)
     assert artifact.model_version == MODEL_VERSION
     assert artifact.benchmark_name == "last-price-random-walk"
     assert artifact.eligible == (artifact.blockers == ())
@@ -350,3 +358,94 @@ def test_generated_at_and_model_version_are_part_of_identity() -> None:
     )
 
     assert len({original.id, later.id, changed_model.id}) == 3
+
+
+def test_650_sessions_can_pass_every_horizon_without_relaxing_leakage() -> None:
+    series = _series(650)
+
+    artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
+
+    assert artifact.eligible is True
+    assert artifact.blockers == ()
+    assert [metric.interval_test_count for metric in artifact.metrics] == [384, 338, 146]
+
+
+def test_artifact_validator_recomputes_metrics_and_eligibility() -> None:
+    series = _series(650)
+    artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
+    forged_metric = artifact.metrics[2].model_copy(
+        update={"coverage_80": 0.99, "interval_test_count": 12}
+    )
+    forged = artifact.model_copy(update={"metrics": artifact.metrics[:2] + (forged_metric,)})
+
+    with pytest.raises(ValueError, match="metrics do not match"):
+        validate_price_forecast_artifact(forged)
+
+    blocked = run_price_forecast(
+        _series(), generated_at=_series().as_of, model_version=MODEL_VERSION
+    )
+    forged_eligibility = blocked.model_copy(update={"eligible": True, "blockers": ()})
+    with pytest.raises(ValueError, match="eligibility does not match"):
+        validate_price_forecast_artifact(forged_eligibility)
+
+    first_path = artifact.paths[0]
+    first_point = first_path.points[0].model_copy(update={"timestamp": artifact.train_end})
+    forged_path = first_path.model_copy(update={"points": (first_point,) + first_path.points[1:]})
+    with pytest.raises(ValueError, match="contract is internally inconsistent"):
+        validate_price_forecast_artifact(
+            artifact.model_copy(update={"paths": (forged_path,) + artifact.paths[1:]})
+        )
+
+
+def test_registry_recomputes_forecast_values_from_pinned_history(tmp_path: Path) -> None:
+    series = _series(650)
+    artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
+    lake_root = tmp_path / "lake"
+    _write_matching_lake(lake_root, series)
+    point = artifact.paths[0].points[0]
+    forged_point = point.model_copy(
+        update={
+            "p025": point.p025 * 2,
+            "p10": point.p10 * 2,
+            "p25": point.p25 * 2,
+            "p50": point.p50 * 2,
+            "p75": point.p75 * 2,
+            "p90": point.p90 * 2,
+            "p975": point.p975 * 2,
+        }
+    )
+    path = artifact.paths[0].model_copy(
+        update={"points": (forged_point,) + artifact.paths[0].points[1:]}
+    )
+    forged = artifact.model_copy(update={"paths": (path,) + artifact.paths[1:]})
+    registry = PriceForecastRegistry(tmp_path / "registry", lake_root=lake_root)
+
+    with pytest.raises(ValueError, match="paths do not match pinned history"):
+        registry.record(forged)
+
+
+def test_registry_rejects_malformed_id_before_path_lookup(tmp_path: Path) -> None:
+    registry = PriceForecastRegistry(tmp_path / "registry", lake_root=tmp_path / "lake")
+
+    with pytest.raises(ValueError, match="invalid forecast artifact id"):
+        registry.get("forecast-aaaaaaaaaaaaaaaaaaaaaa\\escape")
+
+
+def test_registry_refuses_link_or_windows_junction_root(tmp_path: Path) -> None:
+    target = tmp_path / "outside"
+    target.mkdir()
+    linked = tmp_path / "linked"
+    if os.name == "nt":
+        result = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(linked), str(target)],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        if result.returncode != 0:
+            pytest.skip(f"junction creation unavailable: {result.stderr}")
+    else:
+        linked.symlink_to(target, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="link or reparse point"):
+        PriceForecastRegistry(linked, lake_root=tmp_path / "lake").all()

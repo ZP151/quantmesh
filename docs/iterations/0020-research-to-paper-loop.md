@@ -565,6 +565,20 @@ not sufficient for cross-agent recovery.
   evaluate a later 126-session interval without leakage. Demo seeding must use
   a longer history or honestly keep that horizon ineligible; it must not relax
   the chronological gate to manufacture an acceptance result.
+- Task 7 independent review round 1 found no Critical issue and four Important
+  issues: junction/reparse traversal on Windows, persisted eligibility not
+  independently recomputed, the 420-session demo contradiction, and omitted
+  target/evaluation boundaries. One malformed-ID check was Minor. Fix round 1
+  is implemented and awaiting fresh review. The tracked demo contract is
+  corrected to 650 daily sessions,
+  which the unchanged chronological algorithm proves can produce and evaluate
+  all three horizons; no gate is weakened. The registry now rejects every
+  Windows reparse component and malformed ID before path traversal, rebuilds
+  metrics/eligibility from OOS rows, reopens the manifest pin, and reproduces
+  OOS/path values from the pinned history before accepting an artifact. Target,
+  history, 252-return fit, validation and interval-test boundaries are explicit.
+  Twenty-two forecast tests plus research compatibility pass 76/76; focused
+  Ruff, formatting and diff checks pass.
 
 ## Acceptance criteria
 

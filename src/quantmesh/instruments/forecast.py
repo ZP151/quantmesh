@@ -14,6 +14,7 @@ import io
 import json
 import math
 import os
+import re
 import shutil
 import tempfile
 from collections.abc import Sequence
@@ -26,6 +27,7 @@ from pydantic import ValidationError
 from quantmesh.data.lake import Dataset, Lake
 from quantmesh.domain.models import InstrumentType
 from quantmesh.instruments.contracts import (
+    FORECAST_ID_PATTERN,
     ForecastMetrics,
     ForecastPath,
     ForecastPoint,
@@ -191,7 +193,11 @@ def _metrics(horizon: int, rows: Sequence[OOSForecast]) -> ForecastMetrics:
         return ForecastMetrics(
             sessions=horizon,
             residual_count=0,
-            calibration_count=0,
+            interval_test_count=0,
+            validation_start=None,
+            validation_end=None,
+            test_start=None,
+            test_end=None,
             mae=0.0,
             rmse=0.0,
             benchmark_mae=0.0,
@@ -201,13 +207,18 @@ def _metrics(horizon: int, rows: Sequence[OOSForecast]) -> ForecastMetrics:
         )
     errors = [row.actual - row.predicted for row in rows]
     benchmark_errors = [row.actual - row.benchmark for row in rows]
-    calibration_count, coverage_80 = _coverage(rows, "p10", "p90")
+    tested = [row for row in rows if row.p10 is not None]
+    interval_test_count, coverage_80 = _coverage(rows, "p10", "p90")
     _, coverage_50 = _coverage(rows, "p25", "p75")
     _, coverage_95 = _coverage(rows, "p025", "p975")
     return ForecastMetrics(
         sessions=horizon,
         residual_count=len(rows),
-        calibration_count=calibration_count,
+        interval_test_count=interval_test_count,
+        validation_start=rows[0].target_at,
+        validation_end=rows[-1].target_at,
+        test_start=tested[0].target_at if tested else None,
+        test_end=tested[-1].target_at if tested else None,
         mae=sum(abs(value) for value in errors) / len(errors),
         rmse=math.sqrt(sum(value * value for value in errors) / len(errors)),
         benchmark_mae=sum(abs(value) for value in benchmark_errors) / len(benchmark_errors),
@@ -323,6 +334,207 @@ def _expected_hashes(artifact: PriceForecastArtifact) -> dict[str, str]:
     }
 
 
+def _config() -> dict[str, object]:
+    return {
+        "benchmark": BENCHMARK_NAME,
+        "coverage_gate": [0.60, 0.98],
+        "horizons": list(HORIZONS),
+        "model": MODEL_NAME,
+        "residual_minimums": {"7": 30, "30": 30, "126": 12},
+        "return_window": RETURN_WINDOW,
+    }
+
+
+def _bar_digest(bars: Sequence[object]) -> str:
+    return _sha256(
+        _canonical_json(
+            [
+                [
+                    bar.timestamp.isoformat(),
+                    bar.open,
+                    bar.high,
+                    bar.low,
+                    bar.close,
+                    bar.volume,
+                ]
+                for bar in bars
+            ]
+        )
+    )
+
+
+def _identity(
+    *,
+    artifact: PriceForecastArtifact | None = None,
+    series: HistoricalSeries | None = None,
+    generated_at: datetime | None = None,
+    model_version: str | None = None,
+    config_digest: str | None = None,
+    history_digest: str | None = None,
+) -> dict[str, object]:
+    if artifact is not None:
+        return {
+            "bar_digest": artifact.history_digest,
+            "config_digest": artifact.config_digest,
+            "dataset": artifact.dataset_id,
+            "generated_at": artifact.generated_at.isoformat(),
+            "history_sessions": artifact.history_sessions,
+            "history_start": artifact.history_start.isoformat(),
+            "instrument": artifact.instrument.model_dump(mode="json"),
+            "model_version": artifact.model_version,
+            "revision": artifact.dataset_revision,
+            "target": artifact.target,
+            "train_end": artifact.train_end.isoformat(),
+            "train_start": artifact.train_start.isoformat(),
+        }
+    if (
+        series is None
+        or generated_at is None
+        or model_version is None
+        or config_digest is None
+        or history_digest is None
+    ):
+        raise ValueError("forecast identity inputs are incomplete")
+    return {
+        "bar_digest": history_digest,
+        "config_digest": config_digest,
+        "dataset": series.dataset_id,
+        "generated_at": generated_at.isoformat(),
+        "history_sessions": len(series.bars),
+        "history_start": series.bars[0].timestamp.isoformat(),
+        "instrument": series.instrument.model_dump(mode="json"),
+        "model_version": model_version,
+        "revision": series.dataset_revision,
+        "target": f"{series.adjustment}-close",
+        "train_end": series.bars[-1].timestamp.isoformat(),
+        "train_start": series.bars[
+            max(0, len(series.bars) - RETURN_WINDOW - 1)
+        ].timestamp.isoformat(),
+    }
+
+
+def _promotion_blockers(
+    *,
+    history_sessions: int,
+    declared_gap_count: int,
+    declared_duplicate_count: int,
+    calendar_gap_count: int,
+    continuous: bool,
+    age_sessions: int,
+    metrics: Sequence[ForecastMetrics],
+) -> tuple[str, ...]:
+    blockers: list[str] = []
+    if history_sessions < 315:
+        blockers.append(f"history has {history_sessions} sessions; at least 315 are required")
+    if declared_gap_count:
+        blockers.append(f"history declares {declared_gap_count} unexplained gap(s)")
+    if declared_duplicate_count:
+        blockers.append(f"history declares {declared_duplicate_count} duplicate(s)")
+    if calendar_gap_count:
+        kind = "daily" if continuous else "weekday"
+        blockers.append(f"history contains {calendar_gap_count} unexplained {kind} gap(s)")
+    required = {7: 30, 30: 30, 126: 12}
+    for metric in metrics:
+        minimum = required[metric.sessions]
+        if metric.residual_count < minimum:
+            blockers.append(
+                f"{metric.sessions}-session horizon has {metric.residual_count} residuals; "
+                f"at least {minimum} are required"
+            )
+        if metric.interval_test_count == 0 or not 0.60 <= metric.coverage_80 <= 0.98:
+            blockers.append(
+                f"{metric.sessions}-session 80% coverage {metric.coverage_80:.6f} "
+                "is outside [0.60, 0.98]"
+            )
+        if metric.residual_count and metric.mae > metric.benchmark_mae * 1.10:
+            blockers.append(
+                f"{metric.sessions}-session MAE {metric.mae:.6f} exceeds 110% of "
+                f"benchmark MAE {metric.benchmark_mae:.6f}"
+            )
+    if age_sessions > 1:
+        blockers.append(f"artifact age is {age_sessions} sessions; it exceeds one session")
+    return tuple(blockers)
+
+
+def validate_price_forecast_artifact(
+    artifact: PriceForecastArtifact,
+) -> PriceForecastArtifact:
+    """Recompute every decision field before an artifact can be trusted."""
+    try:
+        artifact = PriceForecastArtifact.model_validate(artifact.model_dump())
+    except ValidationError as error:
+        raise ValueError("forecast artifact contract is internally inconsistent") from error
+    if artifact.config_digest != _sha256(_canonical_json(_config())):
+        raise ValueError("forecast config_digest does not match the declared model setup")
+    expected_id = f"forecast-{_sha256(_canonical_json(_identity(artifact=artifact)))[:24]}"
+    if artifact.id != expected_id:
+        raise ValueError("forecast id does not match its immutable setup")
+    grouped = {
+        horizon: tuple(row for row in artifact.oos if row.sessions == horizon)
+        for horizon in HORIZONS
+    }
+    expected_metrics = tuple(_metrics(horizon, grouped[horizon]) for horizon in HORIZONS)
+    if artifact.metrics != expected_metrics:
+        raise ValueError("forecast metrics do not match the recorded OOS rows")
+    for horizon, rows in grouped.items():
+        expected_count = max(0, artifact.history_sessions - RETURN_WINDOW - horizon)
+        if len(rows) != expected_count:
+            raise ValueError(f"{horizon}-session OOS count does not match history_sessions")
+        if any(row.target_at > artifact.train_end for row in rows):
+            raise ValueError("OOS outcomes cannot be after train_end")
+    continuous = artifact.instrument.instrument_type in {
+        InstrumentType.SPOT,
+        InstrumentType.PERPETUAL,
+    }
+    expected_blockers = _promotion_blockers(
+        history_sessions=artifact.history_sessions,
+        declared_gap_count=artifact.declared_gap_count,
+        declared_duplicate_count=artifact.declared_duplicate_count,
+        calendar_gap_count=artifact.calendar_gap_count,
+        continuous=continuous,
+        age_sessions=artifact.age_sessions,
+        metrics=artifact.metrics,
+    )
+    if artifact.blockers != expected_blockers or artifact.eligible != (not expected_blockers):
+        raise ValueError("forecast eligibility does not match its promotion evidence")
+    return artifact
+
+
+def _validate_against_bars(artifact: PriceForecastArtifact, bars: Sequence[object]) -> None:
+    if len(bars) != artifact.history_sessions or _bar_digest(bars) != artifact.history_digest:
+        raise ValueError("dataset pin history bytes do not match the forecast artifact")
+    if not bars:
+        raise ValueError("forecast artifact cannot resolve an empty history")
+    expected_train_start = bars[max(0, len(bars) - RETURN_WINDOW - 1)].timestamp
+    if (
+        artifact.history_start != bars[0].timestamp
+        or artifact.train_start != expected_train_start
+        or artifact.train_end != bars[-1].timestamp
+    ):
+        raise ValueError("forecast training boundaries do not match pinned history")
+    continuous = artifact.instrument.instrument_type in {
+        InstrumentType.SPOT,
+        InstrumentType.PERPETUAL,
+    }
+    expected_by_horizon = {
+        horizon: rolling_oos_forecasts(bars, horizon=horizon) for horizon in HORIZONS
+    }
+    expected_oos = tuple(row for horizon in HORIZONS for row in expected_by_horizon[horizon])
+    if artifact.oos != expected_oos:
+        raise ValueError("forecast OOS rows do not match pinned history")
+    expected_paths = tuple(
+        _path(
+            bars,
+            horizon=horizon,
+            residuals=[row.residual_log for row in expected_by_horizon[horizon]],
+            continuous=continuous,
+        )
+        for horizon in HORIZONS
+    )
+    if artifact.paths != expected_paths:
+        raise ValueError("forecast paths do not match pinned history")
+
+
 def run_price_forecast(
     series: HistoricalSeries,
     *,
@@ -361,68 +573,26 @@ def run_price_forecast(
     )
     oos = tuple(row for horizon in HORIZONS for row in oos_by_horizon[horizon])
 
-    blockers: list[str] = []
-    if len(series.bars) < 315:
-        blockers.append(f"history has {len(series.bars)} sessions; at least 315 are required")
-    if series.gaps:
-        blockers.append(f"history declares {len(series.gaps)} unexplained gap(s)")
-    if series.duplicates:
-        blockers.append(f"history declares {len(series.duplicates)} duplicate(s)")
     derived_gaps = _unexplained_session_gaps(series)
-    if derived_gaps:
-        blockers.append(
-            f"history contains {len(derived_gaps)} unexplained weekday gap(s)"
-            if not continuous
-            else f"history contains {len(derived_gaps)} unexplained daily gap(s)"
-        )
-    required = {7: 30, 30: 30, 126: 12}
-    for metric in metrics:
-        minimum = required[metric.sessions]
-        if metric.residual_count < minimum:
-            blockers.append(
-                f"{metric.sessions}-session horizon has {metric.residual_count} residuals; "
-                f"at least {minimum} are required"
-            )
-        if metric.calibration_count == 0 or not 0.60 <= metric.coverage_80 <= 0.98:
-            blockers.append(
-                f"{metric.sessions}-session 80% coverage {metric.coverage_80:.6f} "
-                "is outside [0.60, 0.98]"
-            )
-        if metric.residual_count and metric.mae > metric.benchmark_mae * 1.10:
-            blockers.append(
-                f"{metric.sessions}-session MAE {metric.mae:.6f} exceeds 110% of "
-                f"benchmark MAE {metric.benchmark_mae:.6f}"
-            )
     age = _session_age(series.bars[-1].timestamp, generated_at, continuous=continuous)
-    if age > 1:
-        blockers.append(f"artifact age is {age} sessions; it exceeds one session")
-
-    config = {
-        "benchmark": BENCHMARK_NAME,
-        "coverage_gate": [0.60, 0.98],
-        "horizons": list(HORIZONS),
-        "model": MODEL_NAME,
-        "residual_minimums": {str(key): value for key, value in required.items()},
-        "return_window": RETURN_WINDOW,
-    }
-    config_digest = _sha256(_canonical_json(config))
-    bar_digest = _sha256(
-        _canonical_json(
-            [
-                [bar.timestamp.isoformat(), bar.open, bar.high, bar.low, bar.close, bar.volume]
-                for bar in series.bars
-            ]
-        )
+    blockers = _promotion_blockers(
+        history_sessions=len(series.bars),
+        declared_gap_count=len(series.gaps),
+        declared_duplicate_count=len(series.duplicates),
+        calendar_gap_count=len(derived_gaps),
+        continuous=continuous,
+        age_sessions=age,
+        metrics=metrics,
     )
-    identity = {
-        "bar_digest": bar_digest,
-        "config_digest": config_digest,
-        "dataset": series.dataset_id,
-        "generated_at": generated_at.isoformat(),
-        "instrument": series.instrument.model_dump(mode="json"),
-        "model_version": model_version,
-        "revision": series.dataset_revision,
-    }
+    config_digest = _sha256(_canonical_json(_config()))
+    history_digest = _bar_digest(series.bars)
+    identity = _identity(
+        series=series,
+        generated_at=generated_at,
+        model_version=model_version,
+        config_digest=config_digest,
+        history_digest=history_digest,
+    )
     artifact_id = f"forecast-{_sha256(_canonical_json(identity))[:24]}"
     limitations = (
         "Prototype baseline uses weekday sessions for equities and does not "
@@ -437,9 +607,21 @@ def run_price_forecast(
         "dataset_revision": series.dataset_revision,
         "source": series.source,
         "license": series.license,
+        "target": f"{series.adjustment}-close",
+        "history_start": series.bars[0].timestamp,
+        "history_sessions": len(series.bars),
+        "history_digest": history_digest,
+        "declared_gap_count": len(series.gaps),
+        "declared_duplicate_count": len(series.duplicates),
+        "calendar_gap_count": len(derived_gaps),
+        "age_sessions": age,
         "generated_at": generated_at,
-        "train_start": series.bars[0].timestamp,
+        "train_start": series.bars[max(0, len(series.bars) - RETURN_WINDOW - 1)].timestamp,
         "train_end": series.bars[-1].timestamp,
+        "validation_start": min((row.target_at for row in oos), default=None),
+        "validation_end": max((row.target_at for row in oos), default=None),
+        "test_start": min((row.target_at for row in oos if row.p10 is not None), default=None),
+        "test_end": max((row.target_at for row in oos if row.p10 is not None), default=None),
         "model_name": MODEL_NAME,
         "model_version": model_version,
         "config_digest": config_digest,
@@ -448,17 +630,38 @@ def run_price_forecast(
         "oos": oos,
         "metrics": metrics,
         "eligible": not blockers,
-        "blockers": tuple(blockers),
+        "blockers": blockers,
         "limitations": limitations,
     }
     placeholder = PriceForecastArtifact(
         **common,
         artifact_hashes={name: "0" * 64 for name in FILES},
     )
-    return PriceForecastArtifact(
+    artifact = PriceForecastArtifact(
         **common,
         artifact_hashes=_expected_hashes(placeholder),
     )
+    return validate_price_forecast_artifact(artifact)
+
+
+def _path_is_link_or_reparse(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    if hasattr(path, "is_junction") and path.is_junction():
+        return True
+    try:
+        attributes = getattr(os.lstat(path), "st_file_attributes", 0)
+    except OSError:
+        return False
+    return bool(attributes & 0x400)
+
+
+def _reject_reparse_components(path: Path) -> None:
+    for component in (path, *path.parents):
+        if component.exists() and _path_is_link_or_reparse(component):
+            raise ValueError(
+                f"forecast registry path component {component} is a link or reparse point"
+            )
 
 
 class PriceForecastRegistry:
@@ -469,7 +672,8 @@ class PriceForecastRegistry:
         self.lake_root = lake_root if lake_root is not None else settings.lake_root
 
     def _safe_root(self) -> None:
-        if self.root.exists() and (not self.root.is_dir() or self.root.is_symlink()):
+        _reject_reparse_components(self.root)
+        if self.root.exists() and not self.root.is_dir():
             raise ValueError(f"forecast registry root {self.root} is not a safe directory")
 
     def resolve_pin(self, artifact: PriceForecastArtifact) -> Dataset:
@@ -500,19 +704,29 @@ class PriceForecastRegistry:
         )
         if (
             coverage is None
-            or coverage.start > artifact.train_start
+            or coverage.start > artifact.history_start
             or coverage.end < artifact.train_end
         ):
             raise ValueError("dataset pin no longer covers the artifact training window")
+        bars = dataset.read_bars(
+            interval="1d",
+            venue=artifact.instrument.venue,
+            symbol=artifact.instrument.symbol,
+            start=artifact.history_start,
+            end=artifact.train_end,
+        )
+        _validate_against_bars(artifact, bars)
         return dataset
 
     def record(self, artifact: PriceForecastArtifact) -> PriceForecastArtifact:
         self._safe_root()
+        validate_price_forecast_artifact(artifact)
         self.resolve_pin(artifact)
         expected = _expected_hashes(artifact)
         if dict(artifact.artifact_hashes) != expected:
             raise ValueError("forecast artifact hashes do not match its canonical payloads")
         self.root.mkdir(parents=True, exist_ok=True)
+        self._safe_root()
         target = self.root / artifact.id
         if target.exists():
             raise ValueError(f"forecast artifact {artifact.id!r} already recorded")
@@ -528,15 +742,15 @@ class PriceForecastRegistry:
         return artifact
 
     def get(self, artifact_id: str) -> PriceForecastArtifact:
-        if not artifact_id.startswith("forecast-") or len(artifact_id) != 33:
+        if re.fullmatch(FORECAST_ID_PATTERN, artifact_id) is None:
             raise ValueError("invalid forecast artifact id")
         self._safe_root()
         directory = self.root / artifact_id
-        if not directory.exists() or not directory.is_dir() or directory.is_symlink():
+        if not directory.exists() or not directory.is_dir() or _path_is_link_or_reparse(directory):
             raise ValueError(f"no forecast artifact recorded with id {artifact_id!r}")
         paths = {name: directory / name for name in FILES}
         for name, path in paths.items():
-            if not path.is_file() or path.is_symlink():
+            if not path.is_file() or _path_is_link_or_reparse(path):
                 raise ValueError(f"forecast artifact {path} is missing or unsafe")
         try:
             observed_report = paths["report.json"].read_bytes()
@@ -549,6 +763,7 @@ class PriceForecastRegistry:
             )
         if observed_report != _report_file(artifact):
             raise ValueError(f"forecast artifact {paths['report.json']} is not canonical")
+        validate_price_forecast_artifact(artifact)
         expected = _expected_hashes(artifact)
         if dict(artifact.artifact_hashes) != expected:
             raise ValueError(f"forecast artifact {paths['report.json']} hash is invalid")
@@ -574,7 +789,7 @@ class PriceForecastRegistry:
         for path in sorted(self.root.iterdir()):
             if path.name.startswith("."):
                 raise ValueError(f"forecast registry contains partial entry {path}")
-            if not path.is_dir() or path.is_symlink():
+            if not path.is_dir() or _path_is_link_or_reparse(path):
                 raise ValueError(f"forecast registry contains unsafe entry {path}")
             records.append(self.get(path.name))
         ids = [record.id for record in records]

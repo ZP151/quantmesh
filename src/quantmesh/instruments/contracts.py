@@ -26,7 +26,8 @@ from quantmesh.live.contract import Provenance
 AdjustmentMode = Literal["unadjusted", "split-adjusted", "total-return"]
 _COMPARISON_KEY = re.compile(r"^[a-z0-9_-]+:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
-_FORECAST_ID = re.compile(r"^forecast-[0-9a-f]{24}$")
+FORECAST_ID_PATTERN = r"^forecast-[0-9a-f]{24}$"
+_FORECAST_ID = re.compile(FORECAST_ID_PATTERN)
 
 
 def _utc(value: datetime, name: str) -> datetime:
@@ -573,7 +574,11 @@ class ForecastMetrics(StrictContract):
 
     sessions: Literal[7, 30, 126]
     residual_count: int = Field(ge=0)
-    calibration_count: int = Field(ge=0)
+    interval_test_count: int = Field(ge=0)
+    validation_start: datetime | None = None
+    validation_end: datetime | None = None
+    test_start: datetime | None = None
+    test_end: datetime | None = None
     mae: float = Field(ge=0)
     rmse: float = Field(ge=0)
     benchmark_mae: float = Field(ge=0)
@@ -581,10 +586,33 @@ class ForecastMetrics(StrictContract):
     coverage_80: float = Field(ge=0, le=1)
     coverage_95: float = Field(ge=0, le=1)
 
+    @field_validator("validation_start", "validation_end", "test_start", "test_end")
+    @classmethod
+    def metric_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
+        return None if value is None else _utc(value, info.field_name)
+
     @model_validator(mode="after")
-    def counts_are_consistent(self) -> "ForecastMetrics":
-        if self.calibration_count > self.residual_count:
-            raise ValueError("calibration_count cannot exceed residual_count")
+    def boundaries_and_counts_are_consistent(self) -> "ForecastMetrics":
+        if self.interval_test_count > self.residual_count:
+            raise ValueError("interval_test_count cannot exceed residual_count")
+        validation_present = self.validation_start is not None or self.validation_end is not None
+        if validation_present != (self.residual_count > 0):
+            raise ValueError("validation boundaries must exist exactly when residuals exist")
+        if (
+            self.validation_start is not None
+            and self.validation_end is not None
+            and self.validation_start > self.validation_end
+        ):
+            raise ValueError("validation_start cannot be after validation_end")
+        test_present = self.test_start is not None or self.test_end is not None
+        if test_present != (self.interval_test_count > 0):
+            raise ValueError("test boundaries must exist exactly when interval tests exist")
+        if (
+            self.test_start is not None
+            and self.test_end is not None
+            and self.test_start > self.test_end
+        ):
+            raise ValueError("test_start cannot be after test_end")
         return self
 
 
@@ -597,9 +625,21 @@ class PriceForecastArtifact(StrictContract):
     dataset_revision: int = Field(ge=1)
     source: str = Field(min_length=1)
     license: str = Field(min_length=1)
+    target: Literal["unadjusted-close", "split-adjusted-close", "total-return-close"]
+    history_start: datetime
+    history_sessions: int = Field(ge=1)
+    history_digest: str
+    declared_gap_count: int = Field(ge=0)
+    declared_duplicate_count: int = Field(ge=0)
+    calendar_gap_count: int = Field(ge=0)
+    age_sessions: int = Field(ge=0)
     generated_at: datetime
     train_start: datetime
     train_end: datetime
+    validation_start: datetime | None = None
+    validation_end: datetime | None = None
+    test_start: datetime | None = None
+    test_end: datetime | None = None
     model_name: Literal["median-log-drift-conformal"]
     model_version: str = Field(min_length=1)
     config_digest: str
@@ -630,10 +670,19 @@ class PriceForecastArtifact(StrictContract):
         validate_dataset_name(value)
         return value
 
-    @field_validator("generated_at", "train_start", "train_end")
+    @field_validator(
+        "history_start",
+        "generated_at",
+        "train_start",
+        "train_end",
+        "validation_start",
+        "validation_end",
+        "test_start",
+        "test_end",
+    )
     @classmethod
-    def artifact_times_are_utc(cls, value: datetime, info) -> datetime:
-        return _utc(value, info.field_name)
+    def artifact_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
+        return None if value is None else _utc(value, info.field_name)
 
     @field_validator("source", "license", "model_version")
     @classmethod
@@ -642,7 +691,7 @@ class PriceForecastArtifact(StrictContract):
             raise ValueError(f"{info.field_name} must not be blank")
         return value
 
-    @field_validator("config_digest")
+    @field_validator("config_digest", "history_digest")
     @classmethod
     def config_digest_is_sha256(cls, value: str) -> str:
         if _SHA256.fullmatch(value) is None:
@@ -672,7 +721,11 @@ class PriceForecastArtifact(StrictContract):
 
     @model_validator(mode="after")
     def artifact_is_self_consistent(self) -> "PriceForecastArtifact":
-        if self.train_start > self.train_end or self.generated_at < self.train_end:
+        if (
+            self.history_start > self.train_start
+            or self.train_start > self.train_end
+            or self.generated_at < self.train_end
+        ):
             raise ValueError("forecast training and generation times are inconsistent")
         if tuple(path.sessions for path in self.paths) != (7, 30, 126):
             raise ValueError("forecast paths must be ordered 7, 30, 126")
@@ -686,6 +739,21 @@ class PriceForecastArtifact(StrictContract):
             counts[row.sessions] += 1
         if any(metric.residual_count != counts[metric.sessions] for metric in self.metrics):
             raise ValueError("metric residual counts must match OOS rows")
+        for path in self.paths:
+            if any(point.timestamp <= self.train_end for point in path.points):
+                raise ValueError("forecast path timestamps must be after train_end")
+        validation_targets = tuple(row.target_at for row in self.oos)
+        expected_validation = (
+            (min(validation_targets), max(validation_targets))
+            if validation_targets
+            else (None, None)
+        )
+        if (self.validation_start, self.validation_end) != expected_validation:
+            raise ValueError("artifact validation boundaries must match OOS targets")
+        test_targets = tuple(row.target_at for row in self.oos if row.p10 is not None)
+        expected_test = (min(test_targets), max(test_targets)) if test_targets else (None, None)
+        if (self.test_start, self.test_end) != expected_test:
+            raise ValueError("artifact test boundaries must match interval-tested targets")
         if self.eligible != (not self.blockers):
             raise ValueError("eligible must be true if and only if blockers are empty")
         return self

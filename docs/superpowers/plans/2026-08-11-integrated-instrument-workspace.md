@@ -603,11 +603,11 @@ Commit: `git commit -m "feat: compose instrument workspace API (#107)"`.
 
 - [ ] **Step 1: Write deterministic seed/reset tests**
 
-Seed two roots and assert identical history/forecast/proposal artifact bytes; assert NVDA has 420 daily sessions and short-range intraday coverage; create and confirm one proposal, reset, and assert the proposal disappears while seeded state returns.
+Seed two roots and assert identical history/forecast/proposal artifact bytes; assert NVDA has 650 daily sessions and short-range intraday coverage; create and confirm one proposal, reset, and assert the proposal disappears while seeded state returns. The 650-session floor is required to fit 252 returns, observe 126-session outcomes, and evaluate later 126-session intervals without leakage.
 
 - [ ] **Step 2: Run red and expand the generator without wall-clock reads**
 
-Keep the current five-session live fixture contract unchanged. Add a separate historical generator for 420 daily sessions plus bounded 5-minute/30-minute/hourly windows, all derived from scenario seed and anchor and labeled `demo-synthetic`.
+Keep the current five-session live fixture contract unchanged. Add a separate historical generator for 650 daily sessions plus bounded 5-minute/30-minute/hourly windows, all derived from scenario seed and anchor and labeled `demo-synthetic`.
 
 - [ ] **Step 3: Seed the forecast registry and proposal service**
 
