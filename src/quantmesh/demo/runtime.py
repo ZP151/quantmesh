@@ -337,8 +337,16 @@ def create_demo_app(
     )
     paper_decisions = getattr(app.state, "paper_decisions", None)
     if paper_decisions is not None:
+        journal_keys = {
+            order.idempotency_key
+            for order in seeded.journal.all()
+            if order.idempotency_key is not None
+        }
         for proposal in seeded.proposal_ledger.all():
-            if proposal.order_id is not None:
+            has_crash_window_order = (
+                proposal.status.value == "pending" and f"proposal:{proposal.id}" in journal_keys
+            )
+            if proposal.order_id is not None or has_crash_window_order:
                 paper_decisions.confirm(
                     proposal.id,
                     confirmation=proposal.confirmation_token,

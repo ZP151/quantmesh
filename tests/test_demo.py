@@ -128,6 +128,22 @@ def test_seed_refuses_to_claim_a_nonempty_unmarked_root(tmp_path: Path) -> None:
     assert sentinel.read_text(encoding="utf-8") == '{"operator": "data"}'
 
 
+def test_reset_refuses_a_forged_marker_without_demo_identity(tmp_path: Path) -> None:
+    root = tmp_path / "operator-data"
+    root.mkdir()
+    sentinel = root / "precious-file.json"
+    sentinel.write_text('{"operator": "data"}', encoding="utf-8")
+    (root / MARKER_NAME).write_text(
+        "deterministic demo root — reset deletes only this tree\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(DemoRootError, match="valid demo ownership record"):
+        reset_demo_root(root, SCENARIO)
+
+    assert sentinel.read_text(encoding="utf-8") == '{"operator": "data"}'
+
+
 def test_load_refuses_a_root_without_the_marker(tmp_path: Path) -> None:
     root = tmp_path / "plain"
     root.mkdir()

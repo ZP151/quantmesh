@@ -228,10 +228,69 @@ def _marker(root: Path) -> Path:
     return root / MARKER_NAME
 
 
+def _marker_text() -> str:
+    return (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "format": "quantmesh-demo-root",
+                "version": 1,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
+def _is_link_or_junction(path: Path) -> bool:
+    return path.is_symlink() or (hasattr(path, "is_junction") and path.is_junction())
+
+
 def is_demo_root(root: Path) -> bool:
-    """True when the root carries the demo marker (and nothing else is
-    required — the marker is the isolation contract)."""
-    return _marker(root).is_file()
+    """Validate the versioned ownership record against seeded provenance."""
+    root = Path(root)
+    marker = _marker(root)
+    provenance_path = root / "provenance.json"
+    if (
+        not root.is_dir()
+        or _is_link_or_junction(root)
+        or not marker.is_file()
+        or _is_link_or_junction(marker)
+        or not provenance_path.is_file()
+        or _is_link_or_junction(provenance_path)
+    ):
+        return False
+    try:
+        if marker.read_text(encoding="utf-8") != _marker_text():
+            return False
+        provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return False
+    scenario = provenance.get("scenario")
+    surfaces = provenance.get("surfaces")
+    return (
+        isinstance(scenario, dict)
+        and scenario.get("commit") == DEMO_COMMIT
+        and isinstance(surfaces, dict)
+        and bool(surfaces)
+    )
+
+
+def _has_reset_structure(root: Path) -> bool:
+    required_files = ("account.json", "provenance.json")
+    required_directories = ("market", "orders", "research", "watchlists")
+    return (
+        is_demo_root(root)
+        and all(
+            (root / name).is_file() and not _is_link_or_junction(root / name)
+            for name in required_files
+        )
+        and all(
+            (root / name).is_dir() and not _is_link_or_junction(root / name)
+            for name in required_directories
+        )
+    )
 
 
 def persist_demo_account(root: Path, account: PaperAccount) -> None:
@@ -938,7 +997,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     if root.exists():
         if not root.is_dir():
             raise DemoRootError(f"demo root {root} exists and is not a directory")
-        if root.is_symlink() or (hasattr(root, "is_junction") and root.is_junction()):
+        if _is_link_or_junction(root):
             raise DemoRootError(f"demo root {root} is a link or junction")
         if any(root.iterdir()):
             raise DemoRootError(
@@ -948,7 +1007,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         root.mkdir(parents=True, exist_ok=False)
     marker = _marker(root)
     with marker.open("x", encoding="utf-8") as handle:
-        handle.write("deterministic demo root — reset deletes only this tree\n")
+        handle.write(_marker_text())
     unexpected = [path for path in root.iterdir() if path != marker]
     if unexpected:
         marker.unlink()
@@ -1165,9 +1224,14 @@ def reset_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> Demo
     never be wiped by the demo runtime.
     """
     root = Path(root)
-    if not is_demo_root(root):
+    if not _has_reset_structure(root):
+        marker_note = (
+            f"no {MARKER_NAME} marker"
+            if not _marker(root).is_file()
+            else "no valid demo ownership record and complete seeded structure"
+        )
         raise DemoRootError(
-            f"refusing to reset {root}: no {MARKER_NAME} marker — "
+            f"refusing to reset {root}: {marker_note} — "
             "the demo runtime never touches a non-demo root"
         )
     shutil.rmtree(root)

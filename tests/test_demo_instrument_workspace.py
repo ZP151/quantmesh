@@ -63,6 +63,7 @@ def test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state(tmp_path: 
     with TestClient(app) as client:
         assert client.get("/api/demo/status").status_code == 200
         pristine = _tree_digest(tmp_path / "demo")
+        pristine_account = (tmp_path / "demo" / "account.json").read_bytes()
         workspace = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m")
         assert workspace.status_code == 200
         body = workspace.json()
@@ -96,6 +97,14 @@ def test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state(tmp_path: 
         assert status["surfaces"]["orders"]["rows"] == 9
         after_confirm = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m").json()
         confirmed_quantity = after_confirm["position"]["quantity"]
+
+        # Crash-window fixture: journal is durable, but account persistence and
+        # the terminal proposal transition did not land. Startup must finish
+        # this exact order; it must not execute an unrelated pending proposal.
+        (tmp_path / "demo" / "account.json").write_bytes(pristine_account)
+        proposal_path = tmp_path / "demo" / "orders" / "proposals" / "proposals.jsonl"
+        pending_event = proposal_path.read_text(encoding="utf-8").splitlines()[0]
+        proposal_path.write_text(f"{pending_event}\n", encoding="utf-8")
 
     restarted = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
     with TestClient(restarted) as client:
