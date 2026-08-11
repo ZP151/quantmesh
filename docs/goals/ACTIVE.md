@@ -55,10 +55,18 @@ manifest-gated 420-session NVDA fixture passed 14 focused cases, Lake/Manifest
 regression and Ruff. Fresh review found no Critical or Important issue; one
 manifest-byte comparison Minor is parked for the final review.
 
-Current next action: Task 2, run pinned FinRL-X twice in an isolated child
-environment and emit canonical evidence. FinRL-X, NautilusTrader and
-Lightweight Charts remain candidates until their explicit evidence/admission
-gates pass.
+Task 2 completed through `5bdf32d`. The real pinned FinRL-X run is retained as
+an honest failed evaluation: checkout and Apache-2.0 license verification
+passed, but upstream dependency `bt` requires Microsoft Visual C++ 14.0+ on
+this CPython 3.13 Windows host. No runtime dependency was admitted. The fake
+adapter and hardened controller passed 50/50 focused tests; four independent
+review rounds closed all Critical/Important findings around process, path,
+chronology, leakage and portable evidence boundaries.
+
+Current next action: Task 3, run the pinned NautilusTrader Hyperliquid recorded
+replay and sandbox-semantics comparator in a separate credential-free process.
+FinRL-X, NautilusTrader and Lightweight Charts remain candidates until their
+explicit evidence/admission gates pass.
 
 ## Current state
 

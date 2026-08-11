@@ -175,7 +175,7 @@ Commit: `git commit -am "test: define framework bakeoff evidence contract (#107)
 - Consumes: Task 1 manifest and `FrameworkRunEvidence`; pinned FinRL-X `BaseStrategy`, `StrategyResult`, `BacktestConfig`, and `BacktestEngine` in a child process.
 - Produces: `run_finrl_x(lake_root, work_root) -> FrameworkRunEvidence` and canonical `weights.csv`, `backtest.json`, `proposal.json` artifacts.
 
-- [ ] **Step 1: Write subprocess-boundary tests**
+- [x] **Step 1: Write subprocess-boundary tests**
 
 ```python
 def test_finrl_driver_emits_target_weights_costs_and_paper_proposal(tmp_path):
@@ -189,17 +189,17 @@ def test_finrl_driver_emits_target_weights_costs_and_paper_proposal(tmp_path):
     assert manifest.dataset == "bakeoff-moomoo-nvda"
 ```
 
-- [ ] **Step 2: Run the focused test and verify the missing runner fails**
+- [x] **Step 2: Run the focused test and verify the missing runner fails**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_finrl_x_bakeoff.py --basetemp .pytest-0020-task2`
 
 Expected: FAIL because `run_finrl_x` is undefined.
 
-- [ ] **Step 3: Implement deterministic dataset export and driver input**
+- [x] **Step 3: Implement deterministic dataset export and driver input**
 
 Export manifest-validated NVDA bars to `input.csv` with exact columns `date,datadate,tic,open,high,low,close,adj_close,volume,cshtrd`. Write `driver-config.json` with train `[0,252)`, validation `[252,315)`, test `[315,420)`, fee `10 bps`, half-spread `5 bps`, slippage `2 bps`, and seed `20260811`.
 
-- [ ] **Step 4: Implement the FinRL-X driver in the isolated checkout**
+- [x] **Step 4: Implement the FinRL-X driver in the isolated checkout**
 
 ```python
 class NvdaTimingStrategy(BaseStrategy):
@@ -222,17 +222,17 @@ result = BacktestEngine(config).run_backtest("nvda_timing", prices, weights)
 
 The driver must fit/generate weights only through index 314, evaluate only 315-419, write sorted-key compact JSON, and derive the proposal from the last target weight. It must never import Alpaca or call a data provider.
 
-- [ ] **Step 5: Implement isolated environment orchestration**
+- [x] **Step 5: Implement isolated environment orchestration**
 
 Clone at the exact commit, create a Python 3.13 venv, install the checkout with `--no-deps`, install only the imports exercised by the driver (`numpy`, `pandas`, `scipy`, `matplotlib`, `bt`, `ffn`, `scikit-learn`, `requests`, `python-dotenv`, `pydantic`, `pydantic-settings`, `sqlalchemy`, `yfinance`), assert `git rev-parse HEAD`, run the driver twice into separate output roots, and compare canonical output digests. Record installation bytes, elapsed seconds, `pip freeze`, `pip check`, and the upstream LICENSE hash.
 
-- [ ] **Step 6: Run the real Windows bake-off twice**
+- [x] **Step 6: Run the real Windows bake-off twice**
 
 Run: `.\.venv\Scripts\python.exe -m tools.framework_bakeoff.run finrl-x --lake-root artifacts\0020\finrl-lake --work-root artifacts\0020\finrl-work`
 
 Expected: exit 0 only when the two output digests match and all mandatory checks pass. If installation or execution fails, write a `status="failed"` evidence file with the exact failing command and limitation; do not weaken the schema.
 
-- [ ] **Step 7: Verify, record, and commit**
+- [x] **Step 7: Verify, record, and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_framework_bakeoff_contract.py tests/test_finrl_x_bakeoff.py --basetemp .pytest-0020-task2-green`
 

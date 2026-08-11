@@ -230,6 +230,33 @@ not sufficient for cross-agent recovery.
 - No framework dependency entered the package and no execution authority
   changed. The next task is the pinned, child-process FinRL-X run.
 
+### Task 2 completion — pinned FinRL-X NVDA bake-off
+
+- Commits `e6e3c7d`, `f7482f1`, `e890a50`, `e23d2cf` and `5bdf32d`
+  implement and harden the isolated FinRL-X controller, driver, evidence and
+  process boundary. The fake adapter proves deterministic export, chronological
+  `[0,252) / [252,315) / [315,420)` boundaries, no leakage, 17-bps cost
+  semantics, target weights and a paper-only proposal without changing the
+  QuantMesh order authority.
+- The real pinned Windows run checked out
+  `e65d6f0483ead7d2ef4a5fc940cdf960392a25c1`, verified Apache-2.0 license
+  hash `afae3377fdbd0537635360e91585f3c5b478ffe8eb5308f1ddcb37b76a7325d2`,
+  then failed honestly while building upstream dependency `bt`: this CPython
+  3.13 host lacks Microsoft Visual C++ 14.0+. The evidence therefore remains
+  `status="failed"`, deterministic/output claims remain false/null, and
+  FinRL-X is not admitted to the release runtime.
+- Four review rounds closed seven Important boundary findings: owned-root
+  deletion, subprocess tree containment, proxy/credential isolation, exact
+  output chronology, portable fail-closed evidence, Windows namespace aliases,
+  and physical hard-link artifact uniqueness. Final focused verification is
+  50/50 tests in 359.80 seconds plus Ruff and `git diff --check`; fresh review
+  found no remaining Critical or Important issue. The pre-existing manifest
+  byte-comparison Minor and test-runtime/module-split Minors remain parked for
+  final review.
+- No product dependency, execution route, credential surface or release
+  evidence was changed. Task 3 is the separate pinned NautilusTrader
+  Hyperliquid recorded-replay/sandbox comparator.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another
