@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from tools.framework_bakeoff import nautilus as nautilus_module
+from tools.framework_bakeoff import process as process_module
 from tools.framework_bakeoff.nautilus import (
     NAUTILUS_LICENSE_SHA256,
     NAUTILUS_PIN,
@@ -170,6 +171,7 @@ def fake_nautilus_runner(
     )
     return IsolatedRunMetadata(
         revision=NAUTILUS_PIN,
+        tag_revision=NAUTILUS_PIN,
         version="1.231.0",
         license_sha256=NAUTILUS_LICENSE_SHA256,
         duration_seconds=0.25,
@@ -293,6 +295,48 @@ def test_unmarked_one_minute_gap_is_rejected_without_fabricating_a_gap_flag(
     assert any("unmarked 1m gap" in item for item in result.limitations)
 
 
+@pytest.mark.parametrize("marker", [True, False])
+def test_fixture_rejects_caller_injected_sequence_gap_marker(
+    tmp_path: Path,
+    marker: bool,
+) -> None:
+    rows = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    rows[3]["sequence_gap"] = marker
+    if marker:
+        for index in range(3, len(rows)):
+            rows[index]["t"] += 60_000
+            rows[index]["T"] += 60_000
+    fixture = tmp_path / "caller-marked-gap.json"
+    _write_json(fixture, rows)
+    called = False
+
+    def forbidden_runner(**_kwargs: object) -> IsolatedRunMetadata:
+        nonlocal called
+        called = True
+        raise AssertionError("caller-injected provenance reached runner")
+
+    result = run_nautilus(fixture, tmp_path / "work", runner=forbidden_runner)
+
+    assert result.status == "failed"
+    assert called is False
+    assert any("sequence_gap is forbidden" in item for item in result.limitations)
+
+
+def test_descending_fixture_timestamp_is_distinct_from_duplicate(
+    tmp_path: Path,
+) -> None:
+    rows = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    rows[2]["t"] = rows[0]["t"] - 60_000
+    rows[2]["T"] = rows[2]["t"] + 60_000
+    fixture = tmp_path / "descending.json"
+    _write_json(fixture, rows)
+
+    result = run_nautilus(fixture, tmp_path / "work", runner=fake_nautilus_runner)
+
+    assert result.status == "failed"
+    assert any("descending fixture timestamp" in item for item in result.limitations)
+
+
 def test_two_run_digest_difference_fails_the_deterministic_gate(tmp_path: Path) -> None:
     def nondeterministic_runner(**kwargs: object) -> IsolatedRunMetadata:
         metadata = fake_nautilus_runner(**kwargs)  # type: ignore[arg-type]
@@ -353,6 +397,28 @@ def test_nonzero_pip_check_fails_windows_install(tmp_path: Path) -> None:
     assert "pip check failed with exit code 1" in result.limitations
 
 
+def test_tag_revision_mismatch_cannot_be_hidden_by_matching_head(
+    tmp_path: Path,
+) -> None:
+    moved_tag_revision = "f" * 40
+
+    def mismatched_tag_runner(**kwargs: object) -> IsolatedRunMetadata:
+        return replace(
+            fake_nautilus_runner(**kwargs),  # type: ignore[arg-type]
+            revision=NAUTILUS_PIN,
+            tag_revision=moved_tag_revision,
+        )
+
+    result = run_nautilus(FIXTURE, tmp_path / "work", runner=mismatched_tag_runner)
+
+    assert result.status == "failed"
+    assert result.deterministic is True
+    assert result.output_digest is not None
+    assert result.checks["windows_install"] is False
+    assert "fetched v1.231.0 tag does not match the Nautilus pin" in result.limitations
+    assert f"tag_revision={moved_tag_revision}" in result.limitations
+
+
 def test_evidence_is_portable_and_excludes_local_identity(tmp_path: Path) -> None:
     work_root = tmp_path / "work-volatile-8f26"
     evidence_path = tmp_path / "nautilus-run.json"
@@ -405,6 +471,48 @@ def test_owned_work_root_removes_stale_outputs_and_environment(tmp_path: Path) -
     result = run_nautilus(FIXTURE, work_root, runner=clean_runner)
 
     assert result.status == "passed"
+
+
+def test_owned_reparse_child_fails_closed_without_target_mutation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    work_root = tmp_path / "owned-reparse-work"
+    assert run_nautilus(FIXTURE, work_root, runner=fake_nautilus_runner).status == "passed"
+    victim = work_root / "outputs" / "run-1" / "must-survive.txt"
+    victim.write_text("preserve target bytes", encoding="utf-8")
+    original_guard = getattr(
+        process_module,
+        "_path_is_link_or_reparse",
+        lambda path: path.is_symlink(),
+    )
+
+    def simulated_nonjunction_reparse(path: Path) -> bool:
+        return path == work_root / "outputs" or original_guard(path)
+
+    monkeypatch.setattr(
+        process_module,
+        "_path_is_link_or_reparse",
+        simulated_nonjunction_reparse,
+        raising=False,
+    )
+    called = False
+
+    def forbidden_runner(**_kwargs: object) -> IsolatedRunMetadata:
+        nonlocal called
+        called = True
+        raise AssertionError("reparse-marked owned child reached runner")
+
+    result = run_nautilus(FIXTURE, work_root, runner=forbidden_runner)
+
+    assert result.status == "failed"
+    assert called is False
+    assert victim.read_text(encoding="utf-8") == "preserve target bytes"
+    assert result.limitations == [
+        "failure_stage=work-root-preparation",
+        "failure_type=WorkRootOwnershipError",
+        "failure_code=work-root-owned-child-reparse",
+    ]
 
 
 def test_repository_root_is_rejected_as_sensitive_work_root() -> None:

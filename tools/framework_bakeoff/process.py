@@ -61,9 +61,24 @@ class OwnedWorkRootPolicy:
     owned_children: frozenset[str]
 
 
+def _path_is_link_or_reparse(path: Path) -> bool:
+    """Detect links and any Windows reparse point without following the target."""
+    if path.is_symlink():
+        return True
+    if hasattr(os.path, "isjunction") and os.path.isjunction(path):
+        return True
+    try:
+        attributes = getattr(path.lstat(), "st_file_attributes", 0)
+    except (FileNotFoundError, OSError):
+        return False
+    return bool(attributes & 0x400)  # FILE_ATTRIBUTE_REPARSE_POINT
+
+
 def prepare_owned_work_root(work_root: Path, policy: OwnedWorkRootPolicy) -> None:
     """Create or safely clear a marker-owned root without following links."""
-    if work_root.exists() and (work_root.is_symlink() or not work_root.is_dir()):
+    if work_root.exists() and (
+        _path_is_link_or_reparse(work_root) or not work_root.is_dir()
+    ):
         raise WorkRootOwnershipError("work root must be a real directory, not a file or link")
     if not work_root.exists():
         work_root.mkdir(parents=True)
@@ -84,7 +99,7 @@ def prepare_owned_work_root(work_root: Path, policy: OwnedWorkRootPolicy) -> Non
             encoding="utf-8",
         )
         return
-    if marker.is_symlink() or not marker.is_file():
+    if _path_is_link_or_reparse(marker) or not marker.is_file():
         raise WorkRootOwnershipError("work-root ownership marker is not a regular file")
     try:
         marker_payload = json.loads(marker.read_text(encoding="utf-8"))
@@ -97,18 +112,19 @@ def prepare_owned_work_root(work_root: Path, policy: OwnedWorkRootPolicy) -> Non
         raise WorkRootOwnershipError(
             f"marked work root contains unknown children: {', '.join(sorted(unknown))}"
         )
-    for name in sorted(entries & policy.owned_children):
-        child = work_root / name
+    owned_children = [
+        work_root / name for name in sorted(entries & policy.owned_children)
+    ]
+    for child in owned_children:
+        if _path_is_link_or_reparse(child):
+            raise WorkRootOwnershipError(
+                "owned child is a link or reparse point",
+                code="work-root-owned-child-reparse",
+            )
+    for child in owned_children:
         if child.parent.resolve() != work_root.resolve():
             raise WorkRootOwnershipError("owned child escaped the resolved work root")
-        if child.is_symlink() or (
-            hasattr(os.path, "isjunction") and os.path.isjunction(child)
-        ):
-            if child.is_dir():
-                os.rmdir(child)
-            else:
-                child.unlink()
-        elif child.is_dir():
+        if child.is_dir():
             shutil.rmtree(child)
         else:
             child.unlink()

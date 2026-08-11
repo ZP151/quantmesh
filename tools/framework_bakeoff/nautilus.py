@@ -29,7 +29,6 @@ from .finrl_x import (
     _directory_bytes,
     _existing_artifacts,
     _lexical_work_root,
-    _path_is_link_or_reparse,
     _portable_text,
     _resolve_safe_work_root,
     _safe_directory_bytes,
@@ -41,6 +40,7 @@ from .process import (
     CommandResult,
     OwnedWorkRootPolicy,
     WorkRootOwnershipError,
+    _path_is_link_or_reparse,
     prepare_owned_work_root,
     run_command,
 )
@@ -92,6 +92,7 @@ class IsolatedRunMetadata:
     """Measured facts returned by either the fake or real isolated runner."""
 
     revision: str
+    tag_revision: str
     version: str
     license_sha256: str
     duration_seconds: float
@@ -208,14 +209,18 @@ def _export_fixture(fixture_path: Path, work_root: Path) -> tuple[Path, Path]:
     for index, row in enumerate(raw):
         if not isinstance(row, dict):
             raise ValueError(f"fixture row {index} is not an object")
+        if "sequence_gap" in row:
+            raise ValueError("sequence_gap is forbidden in the source wire fixture")
         opened = row.get("t")
         if isinstance(opened, bool) or not isinstance(opened, int):
             raise ValueError(f"fixture row {index} timestamp is not unix milliseconds")
         if previous_open is not None:
             delta = opened - previous_open
-            if delta <= 0:
-                raise ValueError("duplicate or nonmonotonic fixture timestamp")
-            if delta != 60_000 and row.get("sequence_gap") is not True:
+            if delta == 0:
+                raise ValueError("duplicate fixture timestamp")
+            if delta < 0:
+                raise ValueError("descending fixture timestamp")
+            if delta != 60_000:
                 raise ValueError("unmarked 1m gap in Hyperliquid fixture")
         previous_open = opened
 
@@ -339,6 +344,7 @@ def _validate_outputs(
     checks["license"] = metadata.license_sha256 == NAUTILUS_LICENSE_SHA256
     checks["windows_install"] = (
         metadata.revision == NAUTILUS_PIN
+        and metadata.tag_revision == NAUTILUS_PIN
         and metadata.version == NAUTILUS_VERSION
         and metadata.pip_check_exit_code == 0
     )
@@ -494,6 +500,8 @@ def _validate_outputs(
         problems.append("upstream LICENSE hash does not match the pinned checkout")
     if metadata.revision != NAUTILUS_PIN:
         problems.append("isolated checkout revision does not match the Nautilus pin")
+    if metadata.tag_revision != NAUTILUS_PIN:
+        problems.append("fetched v1.231.0 tag does not match the Nautilus pin")
     if metadata.version != NAUTILUS_VERSION:
         problems.append("installed NautilusTrader version does not match 1.231.0")
     if metadata.pip_check_exit_code != 0:
@@ -593,6 +601,23 @@ def _real_nautilus_runner(
         timeout=600,
         network=True,
     )
+    tag_result = execute(
+        [
+            "git",
+            "-C",
+            str(checkout),
+            "rev-parse",
+            "refs/tags/v1.231.0^{commit}",
+        ],
+        label="02-git-tag-revision",
+        cwd=work_root,
+        timeout=60,
+    )
+    tag_revision = (work_root / tag_result.stdout_log).read_text(
+        encoding="utf-8"
+    ).strip()
+    if tag_revision != NAUTILUS_PIN:
+        raise RuntimeError("fetched v1.231.0 tag does not match the Nautilus pin")
     execute(
         [
             "git",
@@ -604,13 +629,13 @@ def _real_nautilus_runner(
             "--detach",
             NAUTILUS_PIN,
         ],
-        label="02-git-checkout",
+        label="03-git-checkout",
         cwd=work_root,
         timeout=300,
     )
     revision_result = execute(
         ["git", "-C", str(checkout), "rev-parse", "HEAD"],
-        label="03-git-revision",
+        label="04-git-revision",
         cwd=work_root,
         timeout=60,
     )
@@ -623,7 +648,7 @@ def _real_nautilus_runner(
 
     execute(
         [sys.executable, "-m", "venv", str(venv)],
-        label="04-create-venv",
+        label="05-create-venv",
         cwd=work_root,
         timeout=300,
     )
@@ -636,7 +661,7 @@ def _real_nautilus_runner(
             "nautilus_trader==1.231.0",
             f"pandas=={NAUTILUS_PANDAS_VERSION}",
         ],
-        label="05-install-nautilus",
+        label="06-install-nautilus",
         cwd=work_root,
         timeout=1200,
         network=True,
@@ -647,7 +672,7 @@ def _real_nautilus_runner(
             "-c",
             "import importlib.metadata as m; print(m.version('nautilus_trader'))",
         ],
-        label="06-version",
+        label="07-version",
         cwd=work_root,
         timeout=60,
     )
@@ -666,21 +691,21 @@ def _real_nautilus_runner(
                 "--output-root",
                 str(output_root),
             ],
-            label=f"07-driver-run-{index}",
+            label=f"08-driver-run-{index}",
             cwd=checkout,
             timeout=300,
             env={"PYTHONHASHSEED": "20260811"},
         )
     pip_check = execute(
         [str(venv_python), "-m", "pip", "check"],
-        label="08-pip-check",
+        label="09-pip-check",
         cwd=work_root,
         timeout=120,
         check=False,
     )
     pip_freeze = execute(
         [str(venv_python), "-m", "pip", "freeze", "--all"],
-        label="09-pip-freeze",
+        label="10-pip-freeze",
         cwd=work_root,
         timeout=120,
     )
@@ -689,6 +714,7 @@ def _real_nautilus_runner(
     _write_json(environment / "commands.json", _command_payload(records), indent=2)
     return IsolatedRunMetadata(
         revision=revision,
+        tag_revision=tag_revision,
         version=version,
         license_sha256=license_sha256,
         duration_seconds=time.perf_counter() - started,
@@ -910,12 +936,19 @@ def run_nautilus(
             and re.fullmatch(r"[0-9a-f]{64}", metadata.license_sha256)
             else "invalid-license-hash"
         )
+        safe_tag_revision = (
+            metadata.tag_revision
+            if isinstance(metadata.tag_revision, str)
+            and re.fullmatch(r"[0-9a-f]{40}", metadata.tag_revision)
+            else "invalid-tag-revision"
+        )
         limitations = [
             *(
                 _portable_runner_text(limitation, trusted_root)
                 for limitation in metadata.limitations
             ),
             f"upstream_version={safe_version}",
+            f"tag_revision={safe_tag_revision}",
             f"license_sha256={safe_license}",
             f"pip_check_exit_code={metadata.pip_check_exit_code}",
             *(

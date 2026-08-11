@@ -17,8 +17,8 @@
     "windows_install": true
   },
   "deterministic": true,
-  "duration_seconds": 133.97971029998735,
-  "environment_bytes": 565955095,
+  "duration_seconds": 153.65103010000894,
+  "environment_bytes": 565969715,
   "framework": "nautilus-trader",
   "input_digest": "a20302fe269a04135469dd1e0b45470753394e3d9c865b96f9b0b67b1ae00f8c",
   "limitations": [
@@ -26,9 +26,11 @@
     "pandas==2.3.3 pinned because BarDataWrangler in NautilusTrader 1.231.0 rejects pandas 3 read-only arrays",
     "peak RSS is maximum direct child working set, not process-tree sum",
     "upstream_version=1.231.0",
+    "tag_revision=27a8e54e7ac3c57d6cbf8891f0283dfbaee97317",
     "license_sha256=ee907919ec88c9c017b1f8b608db20960b6598aefcc4fe58820bde955d65ed3c",
     "pip_check_exit_code=0",
-    "command: git -c credential.helper= clone --filter=blob:none --no-checkout --branch v1.231.0 --single-branch https://github.com/nautechsystems/nautilus_trader.git {work_root}/checkout",
+    "command: nonportable-runner-metadata-omitted",
+    "command: git -C {work_root}/checkout rev-parse refs/tags/v1.231.0^{commit}",
     "command: git -C {work_root}/checkout -c credential.helper= checkout --detach 27a8e54e7ac3c57d6cbf8891f0283dfbaee97317",
     "command: git -C {work_root}/checkout rev-parse HEAD",
     "command: {host_python} -m venv {work_root}/venv",
@@ -52,7 +54,7 @@
     "pinned sandbox execution path/config is unsupported or incomplete"
   ],
   "output_digest": "cfa10c25c523cfbd2f13d639d95f7d6116e57ea6e213d7d5ef0f26cec8f64514",
-  "peak_rss_mb": 6.78515625,
+  "peak_rss_mb": 6.796875,
   "revision": "27a8e54e7ac3c57d6cbf8891f0283dfbaee97317",
   "schema_version": 1,
   "score_inputs": {},
