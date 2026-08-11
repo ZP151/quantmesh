@@ -40,6 +40,19 @@ NautilusTrader, score both, and record an adoption/rejection ADR before feature
 implementation expands. The shared Codex/Claude execution contract is
 `docs/agents/cross-agent-execution.md`.
 
+## Iteration 0020 implementation checkpoint — 2026-08-11
+
+The executable plan is
+`docs/superpowers/plans/2026-08-11-integrated-instrument-workspace.md` and is
+the task-level source of truth. It defines 16 test-first tasks with fresh
+implementation/review boundaries, exact upstream pins, one integration branch
+and one final PR. Task completion and exact verification evidence must be
+mirrored into iteration 0020 and this file before every pushed checkpoint.
+
+Current next action: Task 1, the owned `FrameworkRunEvidence` contract and a
+deterministic 420-session NVDA manifest. FinRL-X, NautilusTrader and Lightweight
+Charts remain candidates until their explicit evidence/admission gates pass.
+
 ## Current state
 
 Iteration 0015 live-cockpit hardening is merged at `c47b83d` (PR #95), and the

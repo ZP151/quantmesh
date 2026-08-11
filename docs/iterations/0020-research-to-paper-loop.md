@@ -198,6 +198,25 @@ when a green boundary exists). Mirror task completion, commit IDs and exact
 verification results here and in `docs/goals/ACTIVE.md`; a local SDD ledger is
 not sufficient for cross-agent recovery.
 
+## Checkpoint 1 — executable plan activated (2026-08-11)
+
+- Planning and upstream-review checkpoint `af62da2` is pushed on
+  `0020-research-to-paper-loop`; issue #107 is the single milestone tracker.
+- The task-level, test-first implementation plan is
+  `docs/superpowers/plans/2026-08-11-integrated-instrument-workspace.md`.
+- The plan contains 16 ordered tasks: framework evidence and two isolated
+  bake-offs; the scorecard/ADR admission gate; owned history, forecast,
+  proposal and workspace services; the chart adapter and instrument UI; then
+  browser, release, merge and isolated-RC acceptance gates.
+- Exact upstream pins are FinRL-X
+  `e65d6f0483ead7d2ef4a5fc940cdf960392a25c1` and NautilusTrader
+  `v1.231.0` / `27a8e54e7ac3c57d6cbf8891f0283dfbaee97317`.
+  Lightweight Charts is proposed at `5.2.0` and is not admitted until its
+  license, bundle and UI checks pass.
+- No runtime framework has been admitted yet. The immediate executable task is
+  Task 1, the QuantMesh-owned evidence contract and deterministic 420-session
+  NVDA manifest.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another
