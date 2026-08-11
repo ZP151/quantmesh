@@ -60,7 +60,7 @@
 def test_nvda_fixture_is_manifest_gated_and_byte_reproducible(tmp_path):
     left = build_nvda_fixture(tmp_path / "left")
     right = build_nvda_fixture(tmp_path / "right")
-    assert left.series[0].rows == 420
+    assert left.coverage[0].rows == 420
     assert left.model_dump(mode="json", exclude={"generated_at"}) == right.model_dump(
         mode="json", exclude={"generated_at"}
     )
@@ -110,6 +110,17 @@ class FrameworkRunEvidence(BaseModel):
         ):
             raise ValueError("passing run requires deterministic output and all mandatory checks")
         return self
+
+class FrameworkScore(BaseModel):
+    schema_version: Literal[1] = 1
+    framework: Literal["finrl-x", "nautilus-trader"]
+    revision: str = Field(min_length=7)
+    hard_gates: dict[str, bool]
+    soft_scores: dict[str, float]
+    total: float = Field(ge=0, le=100)
+    runtime_admissible: bool
+    disposition: Literal["adopt-adapter", "isolated-comparator", "reject"]
+    limitations: list[str] = Field(default_factory=list)
 ```
 
 - [ ] **Step 4: Implement the synthetic-but-labeled NVDA lake fixture**
@@ -117,6 +128,11 @@ class FrameworkRunEvidence(BaseModel):
 Generate 420 Monday-Friday UTC sessions from a fixed `2025-01-02T21:00:00Z` anchor. Use a deterministic close formula `120 * exp(0.0004*i + 0.018*sin(2*pi*i/21))`, derive OHLC and integer-like volume, write dataset `bakeoff-moomoo-nvda`, and generate a manifest with source `quantmesh-deterministic-bakeoff`, license `QuantMesh synthetic test data`, and fixed `generated_at`.
 
 - [ ] **Step 5: Add exact upstream pins**
+
+`load_pins(path)` returns a typed mapping and rejects mutable or malformed
+metadata: each repository must be an HTTPS GitHub URL, every revision exactly
+40 lowercase hexadecimal characters, every license nonblank, and an optional
+tag nonblank. Add focused positive and negative tests.
 
 ```json
 {
