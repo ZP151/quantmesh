@@ -13,7 +13,8 @@ inside the gate's clean checkout:
    a notes/metadata drift (the rc2 defect) fails here before any tag.
 3. If any ``v<version>`` tag points at HEAD, the tag version equals the
    package version — a mismatched tag can never be gated green.
-4. The version is a PEP 440 prerelease while the 0.1.0 RC line is open.
+4. The version is either a PEP 440 prerelease or the explicitly accepted first
+   product release ``0.1.0``.
 
 Exits 0 with a one-line summary; exits 1 naming the first mismatch.
 """
@@ -39,7 +40,9 @@ def _git(*args: str) -> str:
 
 
 def _release_note_version() -> str | None:
-    """The version declared by the newest v0.1.0-rcN notes file, if any."""
+    """The version declared by the current 0.1.0 release notes, if any."""
+    if (NOTES_DIR / "v0.1.0.md").exists():
+        return "0.1.0"
     newest: tuple[int, Path] | None = None
     for path in NOTES_DIR.glob("v0.1.0-rc*.md"):
         match = re.fullmatch(r"v0\.1\.0-rc(\d+)\.md", path.name)
@@ -87,8 +90,9 @@ def main() -> int:
             print(f"FAIL: tag {tag} at HEAD, package metadata says {version}")
             return 1
 
-    if not Version(version).is_prerelease:
-        print(f"FAIL: {version} is not a prerelease while the RC line is open")
+    parsed_version = Version(version)
+    if not parsed_version.is_prerelease and parsed_version != Version("0.1.0"):
+        print(f"FAIL: {version} is neither a prerelease nor the accepted 0.1.0 release")
         return 1
 
     tag_summary = ",".join(_head_version_tags()) or "none"
