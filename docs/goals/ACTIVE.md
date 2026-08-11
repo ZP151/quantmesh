@@ -70,6 +70,15 @@ override and its clean-checkout gate passed 15/15 on `085d0ad` (full pytest
 acceptance and promotion after the corrected candidate's automated browser
 walk. Do not enable live-market execution as part of promotion.
 
+## v0.1.0 promotion
+
+The accepted RC8 line was promoted through the dedicated `release/v0.1.0`
+tree. The formal clean-checkout gate passed 15/15 on `a317157`: version
+consistency, full release extras, Ruff, license review, pip-audit, frontend
+bundle and Vitest, full pytest (373.7 s), golden path and clean-checkout proof.
+The final `v0.1.0` tag must point only at the green merged promotion commit;
+all market access remains read-only or paper-only.
+
 ## Immediate frontier
 
 1. ~~Approve ADR-0013 through implementation evidence~~ (done, checkpoint
