@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import ctypes
+import json
 import os
+import shutil
 import signal
 import subprocess
 import time
@@ -40,6 +42,76 @@ class CommandFailure(RuntimeError):
 
 class ProcessContainmentError(RuntimeError):
     """A Windows child could not be safely contained before execution."""
+
+
+class WorkRootOwnershipError(ValueError):
+    """A scratch root cannot be safely treated as owned by a bake-off task."""
+
+    def __init__(self, message: str, *, code: str = "work-root-ownership") -> None:
+        super().__init__(message)
+        self.code = code
+
+
+@dataclass(frozen=True)
+class OwnedWorkRootPolicy:
+    """Exact marker and direct-child allowlist for one destructive scratch root."""
+
+    marker_name: str
+    marker_payload: Mapping[str, object]
+    owned_children: frozenset[str]
+
+
+def prepare_owned_work_root(work_root: Path, policy: OwnedWorkRootPolicy) -> None:
+    """Create or safely clear a marker-owned root without following links."""
+    if work_root.exists() and (work_root.is_symlink() or not work_root.is_dir()):
+        raise WorkRootOwnershipError("work root must be a real directory, not a file or link")
+    if not work_root.exists():
+        work_root.mkdir(parents=True)
+    marker = work_root / policy.marker_name
+    entries = {entry.name for entry in work_root.iterdir()}
+    if not marker.exists():
+        if entries:
+            raise WorkRootOwnershipError(
+                "work root is nonempty and has no valid ownership marker"
+            )
+        marker.write_text(
+            json.dumps(
+                policy.marker_payload,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return
+    if marker.is_symlink() or not marker.is_file():
+        raise WorkRootOwnershipError("work-root ownership marker is not a regular file")
+    try:
+        marker_payload = json.loads(marker.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise WorkRootOwnershipError("work-root ownership marker is unreadable") from error
+    if marker_payload != policy.marker_payload:
+        raise WorkRootOwnershipError("work-root ownership marker does not match this task")
+    unknown = entries - policy.owned_children - {policy.marker_name}
+    if unknown:
+        raise WorkRootOwnershipError(
+            f"marked work root contains unknown children: {', '.join(sorted(unknown))}"
+        )
+    for name in sorted(entries & policy.owned_children):
+        child = work_root / name
+        if child.parent.resolve() != work_root.resolve():
+            raise WorkRootOwnershipError("owned child escaped the resolved work root")
+        if child.is_symlink() or (
+            hasattr(os.path, "isjunction") and os.path.isjunction(child)
+        ):
+            if child.is_dir():
+                os.rmdir(child)
+            else:
+                child.unlink()
+        elif child.is_dir():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
 
 
 _INHERITED_ENVIRONMENT = {
