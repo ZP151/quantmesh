@@ -97,6 +97,7 @@ class FrameworkRunEvidence(BaseModel):
     environment_bytes: int = Field(ge=0)
     checks: dict[str, bool]
     artifacts: dict[str, str]
+    score_inputs: dict[str, float] = Field(default_factory=dict)
     limitations: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -109,6 +110,8 @@ class FrameworkRunEvidence(BaseModel):
             or not all(self.checks[name] for name in required)
         ):
             raise ValueError("passing run requires deterministic output and all mandatory checks")
+        if any(not math.isfinite(value) or not 0 <= value <= 100 for value in self.score_inputs.values()):
+            raise ValueError("score inputs must be finite values between 0 and 100")
         return self
 
 class FrameworkScore(BaseModel):
@@ -183,7 +186,7 @@ def test_finrl_driver_emits_target_weights_costs_and_paper_proposal(tmp_path):
     assert result.checks["no_leakage"]
     proposal = json.loads(Path(result.artifacts["proposal"]).read_text())
     assert proposal == {"venue": "moomoo", "symbol": "NVDA", "target_weight": 1.0, "paper": True}
-    assert manifest.name == "bakeoff-moomoo-nvda"
+    assert manifest.dataset == "bakeoff-moomoo-nvda"
 ```
 
 - [ ] **Step 2: Run the focused test and verify the missing runner fails**
@@ -312,7 +315,11 @@ Commit: `git commit -m "research: compare Nautilus Hyperliquid replay semantics 
 
 ```python
 def test_runtime_admission_requires_every_hard_gate_and_score_80():
-    score = score_framework(passing_evidence(score_inputs={"fit": 90, "maintenance": 70}))
+    score = score_framework(
+        passing_evidence(
+            score_inputs={name: 80 for name in DEFAULT_SCORE_WEIGHTS}
+        )
+    )
     assert score.total == 80
     assert score.runtime_admissible
     assert not score_framework(failed_license_evidence()).runtime_admissible
@@ -449,7 +456,11 @@ Commit: `git commit -m "feat: expose historical instrument API (#107)"`.
 def test_forecast_has_three_horizons_quantiles_and_lineage(nvda_series):
     artifact = run_price_forecast(nvda_series, generated_at=ANCHOR, model_version="drift-conformal-v1")
     assert [path.sessions for path in artifact.paths] == [7, 30, 126]
-    assert all(point.p10 <= point.p50 <= point.p90 for path in artifact.paths for point in path.points)
+    assert all(
+        point.p025 <= point.p10 <= point.p25 <= point.p50
+        <= point.p75 <= point.p90 <= point.p975
+        for path in artifact.paths for point in path.points
+    )
     assert artifact.dataset_revision == nvda_series.dataset_revision
     assert artifact.eligible == (artifact.blockers == [])
 
@@ -461,15 +472,30 @@ def test_future_flip_does_not_change_earlier_oos_predictions(nvda_series):
 
 - [ ] **Step 2: Run red and define the artifact models**
 
-Each artifact includes id, instrument, dataset/revision/source, generated-at, train start/end, model name/version/config digest, benchmark name, three forecast paths, OOS rows, MAE/RMSE/80-percent interval coverage per horizon, benchmark MAE, residual sample count, eligible flag, blockers, limitations, and artifact hashes.
+Each artifact includes id, instrument, dataset/revision/source, generated-at,
+train start/end, model name/version/config digest, benchmark name, three
+forecast paths with p2.5/p10/p25/p50/p75/p90/p97.5 points, OOS rows,
+MAE/RMSE and 50/80/95-percent interval coverage per horizon, benchmark MAE,
+residual sample count, eligible flag, blockers, limitations, and artifact
+hashes.
 
 - [ ] **Step 3: Implement deterministic drift plus conformal intervals**
 
-For each origin, estimate median daily log-return from only the preceding 252 observations; project `last_close * exp(median_return * k)`. Compute horizon-specific historical residuals from chronological rolling origins, use empirical 10th/90th residual quantiles for p10/p90, and use last-price random walk as benchmark. Generate future equity dates by Monday-Friday sessions and crypto dates daily.
+For each origin, estimate median daily log-return from only the preceding 252
+observations; project `last_close * exp(median_return * k)`. Compute
+horizon-specific historical residuals from chronological rolling origins, use
+empirical residual quantiles for the 50/80/95-percent boundaries, and use
+last-price random walk as benchmark. Generate future equity dates by
+Monday-Friday sessions and crypto dates daily.
 
 - [ ] **Step 4: Implement promotion gates**
 
-Block when history has fewer than 315 sessions, any gap/duplicate, fewer than 30 OOS residuals for 7/30 or 12 for 126, interval coverage outside `[0.60, 0.98]`, model MAE exceeds benchmark MAE by more than 10 percent, artifact age exceeds one session, or any lineage field is absent.
+Block when history has fewer than 315 sessions, any unexplained calendar gap
+or duplicate, fewer than 30 OOS residuals for 7/30 or 12 for 126,
+80-percent interval coverage outside `[0.60, 0.98]`, model MAE exceeds
+benchmark MAE by more than 10 percent, artifact age exceeds one session, or
+any lineage field is absent. Always report 50/80/95 coverage; only the
+predeclared 80-percent range is an admission gate in this prototype.
 
 - [ ] **Step 5: Implement append-only registry and byte-stable artifacts**
 
@@ -619,7 +645,10 @@ Record Apache-2.0, package URL, version, unpacked size, TradingView attribution 
 
 - [ ] **Step 2: Write adapter lifecycle and accessible-fallback tests**
 
-Mock `createChart`; assert one chart per mount, `remove()` on unmount, no duplicate series on rerender, resize handling, candlestick/line mode, volume histogram, comparison lines, forecast median/p10/p90 lines, and an off-canvas accessible summary table.
+Mock `createChart`; assert one chart per mount, `remove()` on unmount, no
+duplicate series on rerender, resize handling, candlestick/line mode, volume
+histogram, comparison lines, forecast median plus 50/80/95 interval
+boundaries, and an off-canvas accessible summary table.
 
 - [ ] **Step 3: Run red and implement the single adapter**
 
@@ -727,7 +756,11 @@ Commit: `git commit -m "feat(frontend): add observed chart analysis controls (#1
 
 - [ ] **Step 1: Write decision-flow tests**
 
-Assert 7/30/126-session paths display p10/p50/p90 and vintage; ineligible forecasts show blockers and disable proposal; proposal preview does not order; confirmation requires the displayed token/action; stale quote and kill switch refusals remain visible; successful confirmation shows order id and audit link; retry does not duplicate.
+Assert 7/30/126-session paths display the median, selectable 50/80/95
+intervals and vintage; ineligible forecasts show blockers and disable
+proposal; proposal preview does not order; confirmation requires the displayed
+token/action; stale quote and kill switch refusals remain visible; successful
+confirmation shows order id and audit link; retry does not duplicate.
 
 - [ ] **Step 2: Run red and implement forecast evidence**
 
