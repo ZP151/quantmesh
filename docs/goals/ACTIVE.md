@@ -37,6 +37,35 @@ external-temp run, SPA E2E `5 passed`, Ruff clean, and the GitHub CI run for
 the merged PR green. The fixed SPA E2E fixture reserves an OS-selected socket,
 eliminating the shared-runner fixed-port race caught by CI.
 
+## rc7 cycle
+
+Released `v0.1.0-rc7` at `c1ea037` (PR #103), verified on the tagged tree:
+
+| Step | Result |
+|------|--------|
+| clone current commit | PASS (1.9 s) |
+| release version consistent (metadata, notes, tag) | PASS (0.2 s) |
+| fresh venv | PASS (16.3 s) |
+| install `.[dev,research,e2e]` | PASS (241.6 s) |
+| ruff check src tests tools | PASS (3.0 s) |
+| license review (closure contract) | PASS (2.2 s) |
+| audit venv (isolated tooling) | PASS (14.2 s) |
+| install pip-audit (isolated) | PASS (34.5 s) |
+| pip-audit over requirements-audit.txt | PASS (12.7 s) |
+| npm ci (frontend deps) | PASS (49.6 s) |
+| frontend bundle current (build_frontend --check) | PASS (55.3 s) |
+| frontend unit tests (vitest 73/73) | PASS (39.1 s) |
+| full pytest suite (2134) | PASS (446.6 s) |
+| golden path 53/53 | PASS (3.4 s) |
+| clean-checkout proof | PASS (0.3 s) |
+
+Workstation tested once from the tagged tree: `pip show quantmesh` → `0.1.0rc7`,
+`import __version__` → `0.1.0rc7`, `/api/health` → `0.1.0rc7`, golden path
+53/53 on the isolated install.
+
+**v0.1.0-rc7 replaces v0.1.0-rc6 as the current acceptance candidate.**
+Do not promote to `v0.1.0` without the recorded operator acceptance verdict.
+
 ## Immediate frontier
 
 1. ~~Approve ADR-0013 through implementation evidence~~ (done, checkpoint
