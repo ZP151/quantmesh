@@ -73,8 +73,8 @@ class TestVersionMetadata:
         # the next candidate is cut from the merged tree; rc5 stays immutable.
         # This pin tracks the RC line while the gate step
         # tools/check_release_version.py owns the cross-check.
-        assert __version__ == "0.1.0rc8"
-        assert Version(__version__).is_prerelease
+        assert __version__ == "0.1.0"
+        assert not Version(__version__).is_prerelease
 
     def test_workstation_footer_shows_the_package_version(self) -> None:
         # The 13-screen workstation renders the package version in its
