@@ -163,9 +163,9 @@ ADR-0013 Decision 5 budget: permissive licenses only; any dependency
 outside the adopted set enters through a license/maintenance check
 recorded here and in `docs/REUSE_MATRIX.md`. The check: `npm audit`
 for advisories plus an allowlist scan of `package-lock.json`
-(`node -e` walk of `lock.packages` — no network). **644 packages**
+(`node -e` walk of `lock.packages` — no network). **646 packages**
 (lockfile v3, root entry excluded, all platform variants included), **every license
-allowlisted**: MIT 561, ISC 26, MPL-2.0 24, Apache-2.0 10,
+allowlisted**: MIT 562, ISC 26, MPL-2.0 24, Apache-2.0 11,
 BSD-3-Clause 8, BSD-2-Clause 7, BlueOak-1.0.0 2, 0BSD 1, MIT-0 1,
 OFL-1.1 1, CC-BY-4.0 1, Python-2.0 1, `(MIT OR CC0-1.0)` 1. No GPL/AGPL/LGPL, no
 source-available restriction, no untracked package.
@@ -194,12 +194,21 @@ source-available restriction, no untracked package.
   (Apache-2.0), replacing the unsupported 6.0 pre-existing range. These changes
   add 20 lockfile entries. `type-fest` 4.41.0 accounts for the one
   `(MIT OR CC0-1.0)` entry.
+- Iteration 0020 Task 11 adds exact runtime pin `lightweight-charts` 5.2.0
+  ([npm](https://www.npmjs.com/package/lightweight-charts),
+  [source](https://github.com/tradingview/lightweight-charts)) under
+  Apache-2.0, plus its MIT dependency `fancy-canvas` 2.1.0. Registry metadata
+  records an unpacked package size of 3,066,492 bytes. The adapter keeps the
+  library behind one QuantMesh component, enables its TradingView attribution
+  logo, and renders a user-visible `Charts by TradingView` link. The package
+  ships `LICENSE` but no separate `NOTICE`; the Apache license remains in the
+  npm distribution and no upstream notice file needs vendoring.
 - Runtime `dependencies` (direct): `react`/`react-dom` 19.2.8,
   `react-router-dom` 7.18.2, `@tanstack/react-query` 5.101.4,
   `@base-ui/react` 1.7.0, `tailwindcss` 4.3.3 + `@tailwindcss/vite`,
   `tw-animate-css`, `class-variance-authority`, `clsx`,
   `tailwind-merge`, `lucide-react`, `shadcn` 4.16.2 (CLI),
-  `openapi-fetch` 0.17.0,
+  `openapi-fetch` 0.17.0, `lightweight-charts` 5.2.0,
   `@fontsource-variable/geist`, `@rolldown/binding-win32-x64-msvc`
   (Vite's bundler binary) — all permissive (MIT / Apache-2.0 /
   BSD-3-Clause / OFL-1.1 as scanned above).

@@ -496,6 +496,7 @@ export type HistoricalCoverage = DeepReadonly<components['schemas']['CoverageSna
 export type HistoricalSeries = DeepReadonly<components['schemas']['HistoricalSeries']>
 export type ComparisonPoint = DeepReadonly<components['schemas']['ComparisonPoint']>
 export type ComparisonSeries = DeepReadonly<components['schemas']['ComparisonSeries']>
+export type ForecastPath = DeepReadonly<components['schemas']['ForecastPath']>
 export type HistoricalPayload = DeepReadonly<components['schemas']['HistoricalPayload']>
 export type InstrumentWorkspace = DeepReadonly<components['schemas']['InstrumentWorkspace']>
 export type PaperProposal = DeepReadonly<components['schemas']['PaperProposal']>
