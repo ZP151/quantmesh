@@ -63,8 +63,12 @@ Workstation tested once from the tagged tree: `pip show quantmesh` → `0.1.0rc7
 `import __version__` → `0.1.0rc7`, `/api/health` → `0.1.0rc7`, golden path
 53/53 on the isolated install.
 
-**v0.1.0-rc7 replaces v0.1.0-rc6 as the current acceptance candidate.**
-Do not promote to `v0.1.0` without the recorded operator acceptance verdict.
+**RC7 is superseded by RC8 as the acceptance candidate.** RC7's documented
+`--port` command was not accepted by its CLI; RC8 adds the tested loopback-only
+override and its clean-checkout gate passed 15/15 on `085d0ad` (full pytest
+353.2 s, golden path 53/53, browser cache present). The operator delegated
+acceptance and promotion after the corrected candidate's automated browser
+walk. Do not enable live-market execution as part of promotion.
 
 ## Immediate frontier
 
