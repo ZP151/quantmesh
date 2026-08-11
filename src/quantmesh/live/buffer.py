@@ -14,6 +14,7 @@ is assigned here on append and preserved in replay order.
 from __future__ import annotations
 
 import json
+from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -79,44 +80,54 @@ class LiveBuffer:
         """Persist one update; returns its ``local_seq``.
 
         Status updates also upsert the ``source_status`` table so the
-        current per-source state is cheap to read. Raises on any
-        validation failure — nothing invalid ever enters the lake.
+        current per-source state is cheap to read. Sequence allocation,
+        replay insertion and that conditional upsert commit atomically.
+        Raises on any validation or storage failure without a partial row.
         """
-        local_seq = self._con.execute(
-            "SELECT COALESCE(MAX(local_seq), 0) + 1 FROM market_updates"
-        ).fetchone()[0]
-        self._con.execute(
-            f"INSERT INTO market_updates ({_UPDATE_COLUMNS}) VALUES "
-            "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [
-                local_seq,
-                update.venue.value,
-                update.instrument,
-                update.kind.value,
-                update.provenance.value,
-                update.data_time,
-                update.received_at,
-                update.sequence,
-                update.sequence_gap,
-                update.state.value if update.state is not None else None,
-                update.state_note,
-                json.dumps(update.payload, sort_keys=True),
-            ],
-        )
-        if update.kind is UpdateKind.STATUS:
+        self._con.execute("BEGIN TRANSACTION")
+        try:
+            local_seq = self._con.execute(
+                "SELECT COALESCE(MAX(local_seq), 0) + 1 FROM market_updates"
+            ).fetchone()[0]
             self._con.execute(
-                "INSERT INTO source_status (venue, instrument, state, note, changed_at) "
-                "VALUES (?, ?, ?, ?, ?) "
-                "ON CONFLICT (venue, instrument) DO UPDATE SET "
-                "state = excluded.state, note = excluded.note, changed_at = excluded.changed_at",
+                f"INSERT INTO market_updates ({_UPDATE_COLUMNS}) VALUES "
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
+                    local_seq,
                     update.venue.value,
                     update.instrument,
+                    update.kind.value,
+                    update.provenance.value,
+                    update.data_time,
+                    update.received_at,
+                    update.sequence,
+                    update.sequence_gap,
                     update.state.value if update.state is not None else None,
                     update.state_note,
-                    update.received_at,
+                    json.dumps(update.payload, sort_keys=True),
                 ],
             )
+            if update.kind is UpdateKind.STATUS:
+                self._con.execute(
+                    "INSERT INTO source_status (venue, instrument, state, note, changed_at) "
+                    "VALUES (?, ?, ?, ?, ?) "
+                    "ON CONFLICT (venue, instrument) DO UPDATE SET "
+                    "state = excluded.state, note = excluded.note, "
+                    "changed_at = excluded.changed_at",
+                    [
+                        update.venue.value,
+                        update.instrument,
+                        update.state.value if update.state is not None else None,
+                        update.state_note,
+                        update.received_at,
+                    ],
+                )
+            self._con.execute("COMMIT")
+        except BaseException:
+            # Preserve the write failure even if DuckDB also refuses rollback.
+            with suppress(BaseException):
+                self._con.execute("ROLLBACK")
+            raise
         return local_seq
 
     def prune(self) -> int:

@@ -472,7 +472,7 @@ not sufficient for cross-agent recovery.
   TypeScript no-emit, Ruff and `git diff --check` pass. Existing Vitest
   React `act(...)`/undefined-query warnings remain outside this Task 6 fix.
 
-### Task 6 fix round 2 — fresh independent review pending
+### Task 6 fix round 2 — changes requested
 
 - The round-1 rereview found four remaining Important issues and one Minor:
   attached-lake writes were outside the feed lock, disconnects did not end the
@@ -517,6 +517,34 @@ not sufficient for cross-agent recovery.
   npm closure is unchanged at 644 allowlisted entries and `npm audit` reports
   zero advisories. Existing frontend warning debt is unchanged; no execution
   authority, dependency, generated client or built asset changed.
+
+### Task 6 fix round 3 — fresh independent review pending
+
+- The round-2 rereview closed every prior finding but identified one remaining
+  atomicity defect: a STATUS append used separate DuckDB auto-committed
+  statements, so failure of the `source_status` upsert could leave a replay
+  event without a status row. This round addresses only that finding.
+- `LiveBuffer.append` now starts one explicit DuckDB transaction before
+  allocating `local_seq`. The allocation, `market_updates` insert and
+  conditional `source_status` upsert all complete before COMMIT. Any exception
+  attempts ROLLBACK and re-raises the original failure; rollback failure cannot
+  mask the initiating exception. The existing long-lived connection remains
+  open and supports an immediate retry after rollback.
+- The fault-injection regression delegates the replay insert to DuckDB and
+  raises at the following status write. RED reproduced one partial replay row.
+  GREEN proves both tables remain empty, retry returns `local_seq=1`, and only
+  one replay row plus one status row persists. A reopened-lake regression
+  proves ordinary non-status commits remain durable, while existing status
+  upsert behavior remains covered.
+- The attached-feed regression starts from proven candle continuity, injects
+  the same partial STATUS failure, and proves the public cache/status/proof are
+  unchanged. The next candle still proves uninterrupted continuity, while a
+  successful retry persists exactly one STATUS event and only then establishes
+  the disconnect barrier.
+- Verification is 23/23 `LiveBuffer` plus 38/38 `LiveFeed` tests (61 total),
+  and 211/211 across the complete Task 6 focused matrix. Focused Ruff and
+  `git diff --check` pass. Frontend, generated OpenAPI client, dependencies and
+  execution authority are untouched; fresh independent review remains pending.
 
 ## Acceptance criteria
 

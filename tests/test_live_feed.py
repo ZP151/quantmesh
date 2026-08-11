@@ -9,6 +9,7 @@ never start the pump (the browser E2E is the pump's gate).
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 
@@ -21,6 +22,26 @@ from quantmesh.live.hyperliquid import HyperliquidVenueSupervisor, ScriptedHyper
 T0 = datetime(2026, 8, 9, 10, 0, 0, tzinfo=UTC)
 LAG = timedelta(seconds=30)
 STALE = timedelta(seconds=90)
+
+
+class _FailStatusWriteOnce:
+    """DuckDB boundary proxy that fails after the replay-event insert."""
+
+    def __init__(self, connection: Any) -> None:
+        self._connection = connection
+        self._armed = True
+        self.error = RuntimeError("injected source_status write failure")
+
+    def execute(self, query: str, parameters: object = None) -> Any:
+        if self._armed and query.startswith("INSERT INTO source_status"):
+            self._armed = False
+            raise self.error
+        if parameters is None:
+            return self._connection.execute(query)
+        return self._connection.execute(query, parameters)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._connection, name)
 
 
 def _upd(
@@ -753,6 +774,79 @@ class TestLake:
             )
             assert after == before
             assert [row.sequence for row in lake.replay()] == [100, 101]
+
+    def test_failed_status_transaction_preserves_cache_proof_and_session_barrier(
+        self, tmp_path
+    ) -> None:
+        with LiveBuffer(root=tmp_path) as lake:
+            feed = _feed(lake=lake)
+            feed.ingest(
+                [
+                    _candle(sequence=100),
+                    _candle(
+                        data_time=T0 + timedelta(minutes=1),
+                        received_at=T0 + timedelta(minutes=1),
+                        sequence=101,
+                    ),
+                ]
+            )
+            before = feed.snapshot_exact(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.CANDLE,
+                as_of=T0 + timedelta(minutes=1),
+            )
+            assert before is not None and before.continuity_proven is True
+
+            lake._con = _FailStatusWriteOnce(lake._con)
+            disconnected = _upd(
+                kind=UpdateKind.STATUS,
+                state=SourceState.DISCONNECTED,
+                received_at=T0 + timedelta(minutes=1, seconds=1),
+            )
+            with pytest.raises(RuntimeError, match="injected source_status write failure"):
+                feed.ingest([disconnected])
+
+            assert feed.snapshot_exact(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.CANDLE,
+                as_of=T0 + timedelta(minutes=1),
+            ) == before
+            assert feed.statuses(now=T0 + timedelta(minutes=1))["venues"] == []
+            assert lake.replay(kinds={UpdateKind.STATUS.value}) == []
+            assert lake.statuses() == []
+
+            feed.ingest(
+                [
+                    _candle(
+                        data_time=T0 + timedelta(minutes=2),
+                        received_at=T0 + timedelta(minutes=2),
+                        sequence=102,
+                    )
+                ]
+            )
+            uninterrupted = feed.snapshot_exact(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.CANDLE,
+                as_of=T0 + timedelta(minutes=2),
+            )
+            assert uninterrupted is not None
+            assert uninterrupted.continuity_proven is True
+
+            feed.ingest([disconnected])
+            assert len(lake.replay(kinds={UpdateKind.STATUS.value})) == 1
+            assert len(lake.statuses()) == 1
+            after_retry = feed.snapshot_exact(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.CANDLE,
+                as_of=T0 + timedelta(minutes=2),
+            )
+            assert after_retry is not None
+            assert after_retry.sequence == 102
+            assert after_retry.continuity_proven is False
 
     def test_ingest_appends_to_the_replay_lake(self, tmp_path) -> None:
         with LiveBuffer(root=tmp_path) as lake:
