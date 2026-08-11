@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
@@ -134,9 +135,11 @@ function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
     <QueryClientProvider client={client}>
       <PreferencesProvider>
         <MemoryRouter initialEntries={[path]}>
-          <Routes>
-            <Route path="/instruments/:venue/:symbol" element={<InstrumentWorkspaceScreen />} />
-          </Routes>
+          <main data-testid="app-main">
+            <Routes>
+              <Route path="/instruments/:venue/:symbol" element={<InstrumentWorkspaceScreen />} />
+            </Routes>
+          </main>
         </MemoryRouter>
       </PreferencesProvider>
     </QueryClientProvider>,
@@ -156,6 +159,15 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(mockedWorkspace).toHaveBeenCalledWith('moomoo', 'NVDA', '6m', [])
     expect(screen.getByTestId('workspace-grid')).toHaveClass('xl:grid-cols-[minmax(0,1fr)_18rem_22rem]')
     expect(screen.getByTestId('instrument-chart')).toHaveTextContent('NVDA chart')
+    expect(screen.getByTestId('app-main').querySelector('main')).not.toBeInTheDocument()
+    expect(screen.getByText('Historical source').closest('div')).toHaveTextContent('demo-synthetic')
+    expect(screen.getByText('Live source').closest('div')).toHaveTextContent('demo-synthetic')
+    expect(screen.getByText('Live classification').closest('div')).toHaveTextContent(
+      'stale · demo-synthetic',
+    )
+    expect(screen.getByText('Data time').closest('div')).toHaveTextContent('Aug 8')
+    expect(screen.getByText('Received').closest('div')).toHaveTextContent('Aug 8')
+    expect(screen.getByText('Age').closest('div')).toHaveTextContent('1 m 35 s')
   })
 
   it('uses a three-column matching skeleton while the workspace is loading', () => {
@@ -182,5 +194,40 @@ describe('InstrumentWorkspaceScreen', () => {
     await waitFor(() => expect(screen.getByText('Stale market evidence')).toBeInTheDocument())
     expect(screen.getAllByText('Quote age exceeds the paper-action fence.')).toHaveLength(2)
     expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeDisabled()
+  })
+
+  it('refetches history for URL-backed range and comparison controls', async () => {
+    const user = userEvent.setup()
+    renderWorkspace()
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'NVDA' })).toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: '1M' }))
+    await waitFor(() =>
+      expect(mockedWorkspace).toHaveBeenCalledWith('moomoo', 'NVDA', '1m', []),
+    )
+    await user.type(screen.getByRole('textbox', { name: 'Comparison instrument' }), 'moomoo:AAPL')
+    await user.click(screen.getByRole('button', { name: 'Add comparison' }))
+    await waitFor(() =>
+      expect(mockedWorkspace).toHaveBeenCalledWith('moomoo', 'NVDA', '1m', ['moomoo:AAPL']),
+    )
+  })
+
+  it('surfaces resolution fallback, history quality findings and a live sequence gap', async () => {
+    mockedWorkspace.mockResolvedValue({
+      ...workspace,
+      history: {
+        ...workspace.history,
+        duplicates: ['2026-08-06T20:00:00Z'],
+        gaps: ['2026-08-05T20:00:00Z'],
+        resolution_fallback: 'Requested 1h; serving trusted 1d bars.',
+      },
+      live: { ...workspace.live, sequence_gap: true },
+    })
+    renderWorkspace()
+
+    await waitFor(() => expect(screen.getByText(/Requested 1h; serving trusted 1d bars/)).toBeInTheDocument())
+    expect(screen.getByText(/Historical gaps: 1/)).toBeInTheDocument()
+    expect(screen.getByText(/Historical duplicates: 1/)).toBeInTheDocument()
+    expect(screen.getByText('Live sequence gap detected')).toBeInTheDocument()
   })
 })

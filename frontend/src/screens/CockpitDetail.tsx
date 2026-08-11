@@ -239,6 +239,10 @@ export function CockpitDetailScreen() {
     queryFn: api.liveState,
     refetchInterval: SNAPSHOT_INTERVAL_MS,
   })
+  const marketDirectory = useQuery({
+    queryKey: ['markets'],
+    queryFn: api.markets,
+  })
 
   useEffect(() => {
     const instrument = snapshot.data?.instruments[symbol]
@@ -270,6 +274,11 @@ export function CockpitDetailScreen() {
   })
 
   const instrument = instruments[symbol]
+  const directoryMatches = marketDirectory.data?.instruments.filter(
+    (candidate) => candidate.symbol === symbol,
+  ) ?? []
+  const canonicalVenue = instrument?.venue
+    ?? (directoryMatches.length === 1 ? directoryMatches[0].venue : null)
   const badgeLabel = instrument ? instrumentLabel(instrument) : 'unavailable'
 
   const byKind = useMemo(() => {
@@ -341,9 +350,9 @@ export function CockpitDetailScreen() {
       }
       actions={
         <div className="flex items-center gap-3">
-          {instrument?.venue && (
+          {canonicalVenue && (
             <Link
-              to={`/instruments/${encodeURIComponent(instrument.venue)}/${encodeURIComponent(symbol)}`}
+              to={`/instruments/${encodeURIComponent(canonicalVenue)}/${encodeURIComponent(symbol)}`}
               className="text-xs font-medium text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"
             >
               {t('screen.workspace.open')}

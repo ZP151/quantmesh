@@ -2,18 +2,20 @@ import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'react-router-dom'
 
-import { InstrumentChart } from '@/components/charts/InstrumentChart'
 import { Button } from '@/components/ui/button'
+import { WorkspaceLoading } from '@/components/workspace-loading'
 import {
   api,
   type HistoricalVenue,
   type HistoryRange,
 } from '@/lib/api'
-import { dateTime, money, quantity } from '@/lib/format'
+import { money, quantity } from '@/lib/format'
 import { useLiveConnection } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
 import { WorkspaceHeader } from './instrument/WorkspaceHeader'
-import { WorkspaceDegraded, WorkspaceError, WorkspaceLoading } from './instrument/WorkspaceStates'
+import { ComparisonPicker } from './instrument/ComparisonPicker'
+import { MarketCanvas } from './instrument/MarketCanvas'
+import { WorkspaceDegraded, WorkspaceError } from './instrument/WorkspaceStates'
 
 const VENUES: readonly HistoricalVenue[] = ['internal', 'moomoo', 'hyperliquid', 'polymarket', 'kalshi']
 const RANGES: readonly HistoryRange[] = ['1d', '5d', '1m', '3m', '6m', '1y']
@@ -29,9 +31,13 @@ function historyRange(value: string | null): HistoryRange {
 export function InstrumentWorkspaceScreen() {
   const { t } = usePreferences()
   const { symbol = '', venue = '' } = useParams<{ symbol: string; venue: string }>()
-  const [search] = useSearchParams()
+  const [search, setSearch] = useSearchParams()
   const range = historyRange(search.get('range'))
   const compare = search.getAll('compare').filter(Boolean).slice(0, 3)
+  const mode = search.get('mode') === 'line' ? 'line' : 'candles'
+  const volume = search.get('volume') === '1'
+  const showSma20 = search.get('sma20') === '1'
+  const showSma50 = search.get('sma50') === '1'
   const validVenue = isVenue(venue)
   const stream = useLiveConnection(useCallback(() => {}, []))
   const query = useQuery({
@@ -53,35 +59,78 @@ export function InstrumentWorkspaceScreen() {
   const liveReason = workspace.live.reason
     ?? workspace.proposal.blockers[0]
     ?? t('screen.workspace.staleReason')
+  const historyGaps = workspace.history.gaps ?? []
+  const historyDuplicates = workspace.history.duplicates ?? []
+  const qualityWarnings = [
+    workspace.history.resolution_fallback === null || workspace.history.resolution_fallback === undefined
+      ? null
+      : t('screen.workspace.resolutionFallback', { detail: workspace.history.resolution_fallback }),
+    historyGaps.length === 0
+      ? null
+      : t('screen.workspace.historyGaps', {
+          count: String(historyGaps.length),
+          detail: historyGaps.join(', '),
+        }),
+    historyDuplicates.length === 0
+      ? null
+      : t('screen.workspace.historyDuplicates', {
+          count: String(historyDuplicates.length),
+          detail: historyDuplicates.join(', '),
+        }),
+    workspace.live.sequence_gap ? t('screen.workspace.sequenceGap') : null,
+  ].filter((warning): warning is string => warning !== null)
+  const updateParam = (key: string, value: string | null) => {
+    const next = new URLSearchParams(search)
+    if (value === null) next.delete(key)
+    else next.set(key, value)
+    setSearch(next)
+  }
+  const updateComparisons = (peers: string[]) => {
+    const next = new URLSearchParams(search)
+    next.delete('compare')
+    for (const peer of peers) next.append('compare', peer)
+    setSearch(next)
+  }
 
   return (
     <div className="space-y-4">
       <WorkspaceHeader stream={stream} workspace={workspace} />
       {workspace.live.status !== 'available' && <WorkspaceDegraded reason={liveReason} />}
+      {qualityWarnings.length > 0 && (
+        <section
+          aria-label={t('screen.workspace.dataQuality')}
+          className="border-l-2 border-sky-500 bg-sky-500/5 px-3 py-2"
+          role="status"
+        >
+          <ul className="space-y-1 font-mono text-xs text-muted-foreground">
+            {qualityWarnings.map((warning) => <li key={warning}>{warning}</li>)}
+          </ul>
+        </section>
+      )}
       <div
         className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem_22rem]"
         data-testid="workspace-grid"
       >
-        <main className="min-w-0 border-y border-border py-3">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
-            <div>
-              <p className="text-sm font-medium">{t('screen.workspace.marketCanvas')}</p>
-              <p className="text-xs text-muted-foreground">
-                {workspace.history.range.toUpperCase()} · {workspace.history.interval} · {workspace.history.adjustment}
-              </p>
-            </div>
-            <p className="font-mono text-[11px] text-muted-foreground">
-              {t('screen.workspace.asOf', { time: dateTime(workspace.history.as_of) })}
-            </p>
-          </div>
-          <InstrumentChart
-            comparisons={workspace.comparison}
+        <section
+          aria-label={t('screen.workspace.marketCanvas')}
+          className="min-w-0 border-y border-border py-3"
+        >
+          <MarketCanvas
+            comparison={workspace.comparison}
             forecast={forecastPath}
-            mode="candles"
-            primary={workspace.history}
-            volume
+            history={workspace.history}
+            mode={mode}
+            onModeChange={(next) => updateParam('mode', next === 'candles' ? null : next)}
+            onRangeChange={(next) => updateParam('range', next)}
+            onSma20Change={(enabled) => updateParam('sma20', enabled ? '1' : null)}
+            onSma50Change={(enabled) => updateParam('sma50', enabled ? '1' : null)}
+            onVolumeChange={(enabled) => updateParam('volume', enabled ? '1' : null)}
+            range={range}
+            showSma20={showSma20}
+            showSma50={showSma50}
+            volume={volume}
           />
-        </main>
+        </section>
 
         <section className="space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.evidence')}>
           <div className="space-y-1 px-3">
@@ -93,6 +142,11 @@ export function InstrumentWorkspaceScreen() {
               {t('screen.workspace.revision', { revision: String(workspace.history.dataset_revision) })}
             </p>
           </div>
+          <ComparisonPicker
+            onChange={updateComparisons}
+            primary={`${workspace.instrument.venue}:${workspace.instrument.symbol}`}
+            selected={compare}
+          />
           <dl className="divide-y divide-border border-y border-border text-xs">
             <div className="flex justify-between gap-3 px-3 py-2">
               <dt className="text-muted-foreground">{t('screen.workspace.rows')}</dt>

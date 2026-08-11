@@ -3,19 +3,6 @@ import { TriangleAlert } from 'lucide-react'
 import { ApiError } from '@/lib/api'
 import { usePreferences } from '@/lib/preferences'
 
-const GRID = 'grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem_22rem]'
-
-export function WorkspaceLoading() {
-  const { t } = usePreferences()
-  return (
-    <div className={GRID} aria-busy="true" aria-label={t('screen.workspace.loading')}>
-      <div className="h-[34rem] animate-pulse rounded-lg bg-muted" />
-      <div className="h-64 animate-pulse rounded-lg bg-muted" />
-      <div className="h-80 animate-pulse rounded-lg bg-muted" />
-    </div>
-  )
-}
-
 export function WorkspaceError({
   error,
   symbol,

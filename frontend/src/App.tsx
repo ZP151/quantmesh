@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/shell/AppShell'
-import { LoadingState } from '@/components/state'
+import { WorkspaceLoading } from '@/components/workspace-loading'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AuditScreen } from '@/screens/Audit'
 import { CockpitDetailScreen } from '@/screens/CockpitDetail'
@@ -52,7 +52,7 @@ export default function App() {
         <Route
           path="instruments/:venue/:symbol"
           element={
-            <Suspense fallback={<LoadingState rows={3} />}>
+            <Suspense fallback={<WorkspaceLoading />}>
               <InstrumentWorkspaceScreen />
             </Suspense>
           }

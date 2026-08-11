@@ -19,6 +19,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
       ...actual.api,
       liveState: vi.fn(),
       liveStatus: vi.fn(),
+      markets: vi.fn(),
       replayExtent: vi.fn(),
       replayWindow: vi.fn(),
       priceTrail: vi.fn(),
@@ -133,6 +134,12 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocked.liveState.mockResolvedValue(STATE)
   mocked.liveStatus.mockResolvedValue(STATUS)
+  mocked.markets.mockResolvedValue({
+    instruments: [
+      { venue: 'hyperliquid', symbol: 'BTC', mark: 100.2 },
+      { venue: 'hyperliquid', symbol: 'SOL', mark: 30.1 },
+    ],
+  })
   mocked.replayExtent.mockRejectedValue(new Error('no replay lake attached'))
   mocked.priceTrail.mockResolvedValue({ trail: {} })
   mockedStream.mockReturnValue('live')
@@ -336,6 +343,18 @@ describe('CockpitScreen', () => {
 })
 
 describe('CockpitDetailScreen', () => {
+  it('keeps the canonical workspace link when the live snapshot is unavailable', async () => {
+    mocked.liveState.mockRejectedValue(new Error('live feed unavailable'))
+    mocked.markets.mockResolvedValue({
+      instruments: [{ venue: 'moomoo', symbol: 'NVDA', mark: 184 }],
+    })
+    renderDetail('NVDA')
+
+    await waitFor(() => expect(
+      screen.getByRole('link', { name: 'Open integrated workspace' }),
+    ).toHaveAttribute('href', '/instruments/moomoo/NVDA'))
+  })
+
   it('renders venue metrics with their evidence boundary', async () => {
     renderDetail('BTC')
 

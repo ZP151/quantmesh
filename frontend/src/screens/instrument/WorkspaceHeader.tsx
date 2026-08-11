@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import type { InstrumentWorkspace } from '@/lib/api'
-import { moneyPrecise } from '@/lib/format'
+import { dateTime, moneyPrecise } from '@/lib/format'
+import { ageText } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
 
 function liveTone(status: InstrumentWorkspace['live']['status']): string {
@@ -36,6 +37,7 @@ export function WorkspaceHeader({
       ? (live.bid + live.ask) / 2
       : null
   )
+  const liveClassification = [live.label, live.provenance].filter(Boolean).join(' · ') || '—'
 
   return (
     <header className="sticky top-14 z-20 -mx-4 border-y border-border/80 bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
@@ -51,7 +53,7 @@ export function WorkspaceHeader({
           </div>
           <Badge className={liveTone(live.status)}>{t(LIVE_MESSAGE[live.status])}</Badge>
         </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-right sm:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-x-5 gap-y-2 text-right sm:grid-cols-4 xl:grid-cols-8">
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {t('screen.workspace.mark')}
@@ -60,9 +62,39 @@ export function WorkspaceHeader({
           </div>
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              {t('screen.workspace.source')}
+              {t('screen.workspace.historySource')}
             </dt>
-            <dd className="max-w-32 truncate font-mono text-xs">{live.source ?? workspace.history.source}</dd>
+            <dd className="max-w-32 truncate font-mono text-xs">{workspace.history.source}</dd>
+          </div>
+          <div>
+            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('screen.workspace.liveSource')}
+            </dt>
+            <dd className="max-w-32 truncate font-mono text-xs">{live.source ?? '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('screen.workspace.liveClassification')}
+            </dt>
+            <dd className="max-w-40 truncate font-mono text-xs">{liveClassification}</dd>
+          </div>
+          <div>
+            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('screen.workspace.dataTime')}
+            </dt>
+            <dd className="font-mono text-xs">{live.data_time ? dateTime(live.data_time) : '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('screen.workspace.receivedAt')}
+            </dt>
+            <dd className="font-mono text-xs">{live.received_at ? dateTime(live.received_at) : '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('screen.workspace.age')}
+            </dt>
+            <dd className="font-mono text-xs">{live.age_ms === null || live.age_ms === undefined ? '—' : ageText(live.age_ms)}</dd>
           </div>
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">

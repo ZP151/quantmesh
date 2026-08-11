@@ -25,7 +25,9 @@ const chartHarness = vi.hoisted(() => {
     }),
     remove: vi.fn(),
     removeSeries: vi.fn(),
+    subscribeCrosshairMove: vi.fn(),
     timeScale: vi.fn(() => timeScale),
+    unsubscribeCrosshairMove: vi.fn(),
   }
   return {
     chart,
@@ -232,16 +234,50 @@ describe('InstrumentChart', () => {
       chartHarness.definitions.line,
       expect.objectContaining({ title: 'moomoo:AAPL' }),
     )
-    expect(screen.getByRole('table', { name: 'NVDA chart data' })).toHaveTextContent(
+    const table = screen.getByRole('table', { name: 'NVDA chart data' })
+    for (const series of [
+      'Observed open',
+      'Observed high',
+      'Observed low',
       'Observed close',
-    )
-    expect(screen.getByRole('table', { name: 'NVDA chart data' })).toHaveTextContent(
+      'Observed volume',
+      'moomoo:AAPL',
+      'Forecast 2.5%',
+      'Forecast 10%',
+      'Forecast 25%',
       'Forecast median',
-    )
+      'Forecast 75%',
+      'Forecast 90%',
+      'Forecast 97.5%',
+    ]) {
+      expect(table).toHaveTextContent(series)
+    }
     expect(screen.getByRole('link', { name: 'Charts by TradingView' })).toHaveAttribute(
       'href',
       'https://www.tradingview.com/',
     )
+  })
+
+  it('localizes chart, fallback and attribution copy supplied by the workspace', () => {
+    render(
+      <InstrumentChart
+        labels={{
+          attribution: '图表技术由 TradingView 提供',
+          caption: '观测值与概率预测值分开列示。',
+          chart: '市场图表',
+          dataTable: '图表数据',
+          forecastP025: '预测 2.5%',
+          observedOpen: '观测开盘价',
+        }}
+        mode="candles"
+        primary={primary}
+      />,
+    )
+
+    expect(screen.getByRole('img', { name: 'NVDA 市场图表' })).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'NVDA 图表数据' })).toHaveTextContent('观测开盘价')
+    expect(screen.getByText('观测值与概率预测值分开列示。')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '图表技术由 TradingView 提供' })).toBeInTheDocument()
   })
 
   it('fits only for instrument or range changes and preserves the visible range for live tails', () => {
