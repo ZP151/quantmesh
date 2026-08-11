@@ -8,7 +8,7 @@ This document records which open-source projects are reused, why they are used, 
 | Vectorized research | `polakowo/vectorbt` | Pattern/reference for parameter sweeps | Excluded from runtime | None | Apache-2.0 with Commons Clause; refused by the release-license policy |
 | Probabilistic forecasting candidate | `unit8co/darts` | Statistical/ML forecasts, historical backtests and quantile paths | Isolated spike, then optional adapter | Medium | Apache-2.0; review its full dependency closure before admission |
 | RL research | `AI4Finance-Foundation/FinRL` | PPO/SAC/TD3 experiments after baselines | Optional reference dependency | Medium | MIT; research use only until validated |
-| Integrated research-engine candidate | `AI4Finance-Foundation/FinRL-Trading` (FinRL-X) | Coherent data, selection, allocation, timing, risk, backtest and paper workflow | First isolated end-to-end bake-off; then package/process adapter only after ADR | Medium to high | Apache-2.0; pin commit and close the full dependency/license graph before admission |
+| Integrated research-engine candidate | `AI4Finance-Foundation/FinRL-Trading` (FinRL-X) | Coherent data, selection, allocation, timing, risk, backtest and paper workflow | Evaluated in isolated tooling; rejected from runtime by ADR-0015 after the pinned Windows run failed before verified outputs | None in runtime | Apache-2.0 upstream; no package or transitive dependency enters the release closure |
 | Stock broker | `MoomooOpen/py-moomoo-api` | Moomoo OpenAPI quote/trade transport | Git submodule or package | Medium | Apache-2.0; verify the upstream package version |
 | Crypto venue | `hyperliquid-dex/hyperliquid-python-sdk` | Hyperliquid REST, WebSocket and signed actions | Git submodule/package | Light | MIT; never expose private keys to AI |
 | Prediction market | `Polymarket/py-clob-client-v2` | Polymarket CLOB client | Git submodule/package | Light to medium | MIT; use the current v2 client, not the archived legacy client |
@@ -21,7 +21,7 @@ This document records which open-source projects are reused, why they are used, 
 | Quant trading framework | `vnpy/vnpy` | Gateway/app separation, CTA, portfolio, spread and ML research modules | Reference submodule; selectively port patterns | Medium | MIT |
 | LLM trading research | `TauricResearch/TradingAgents` | Analyst/researcher/risk/portfolio agent workflow and persistent decision logs | Optional research submodule; adapter around QuantMesh signals | Medium | Apache-2.0; treat output as research, not execution authority |
 | Execution engine candidate | `QuantConnect/Lean` | Event-driven simulation and future live execution | Deferred reference | Medium to high | Apache-2.0 |
-| Execution engine candidate | `nautechsystems/nautilus_trader` | Deterministic multi-venue research/backtest/sandbox/live semantics; official Hyperliquid, Polymarket and IB adapters | Isolated Hyperliquid replay/sandbox comparator; process boundary only after ADR | High | LGPL-3.0; excluded from the permissive runtime until an explicit license decision |
+| Execution engine comparator | `nautechsystems/nautilus_trader` | Deterministic multi-venue research/backtest/sandbox/live semantics; official Hyperliquid, Polymarket and IB adapters | Evaluated isolated tooling and retained only as a removable process-isolated comparator by ADR-0015 | None in runtime; high isolated cost | LGPL-3.0; never part of the release closure or execution authority |
 | UI component source | `shadcn-ui/ui` | Accessible React primitives owned and themed by QuantMesh | CLI-copy selected components; never copy the full repository | Medium | MIT; preserve generated component notices where supplied |
 | Data grid candidate | `TanStack/table` | Dense positions, orders, instruments and audit tables | Package behind QuantMesh table components | Light to medium | MIT; verify selected release during ADR spike |
 | Market chart candidate | `tradingview/lightweight-charts` | Candlestick, comparison and forecast-band market views | Preferred package behind a chart adapter | Light to medium | Apache-2.0; preserve NOTICE and user-visible TradingView attribution |
@@ -44,12 +44,14 @@ mean forking the full showcase application or shipping its default theme.
 ## Similar-project lessons
 
 - FinRL-X demonstrates a weight-centric pipeline spanning data, selection,
-  allocation, timing, risk, backtest and paper execution. QuantMesh will test
-  the complete workflow before implementing another native research engine,
-  while retaining its own evidence and safety contracts.
+  allocation, timing, risk, backtest and paper execution. Its pinned Windows
+  bake-off failed at the `bt`/MSVC build before verified outputs, so ADR-0015
+  rejects runtime adoption and QuantMesh proceeds with its native contracts.
 - NautilusTrader demonstrates consistent event semantics from research through
-  sandbox/live and already exposes relevant multi-venue adapters. It is the
-  architectural execution comparator, not an approved runtime dependency.
+  sandbox/live and already exposes relevant multi-venue adapters. Its pinned
+  deterministic replay still mismatched QuantMesh account contracts and lacked
+  a standalone offline sandbox path, so it remains removable isolated tooling,
+  not an approved runtime dependency.
 - OpenBB demonstrates a provider-registry and “connect once, consume everywhere” data layer. QuantMesh should borrow the provider contract, not the full AGPL application surface.
 - Hummingbot demonstrates that a strategy should not know exchange-specific REST/WebSocket details. QuantMesh keeps this separation through `MarketConnector` and `ExecutionConnector`.
 - Freqtrade demonstrates a practical dry-run promotion path, SQLite persistence, strategy file loading and explicit risk controls. These are high-value product patterns for the first paper-trading release.
@@ -59,9 +61,9 @@ mean forking the full showcase application or shipping its default theme.
 
 ## Excluded from the first MVP
 
-- LEAN and NautilusTrader are not pulled into the permissive runtime because
-  they add substantial engine/deployment complexity and NautilusTrader also
-  requires an explicit LGPL boundary decision.
+- LEAN is not pulled into the permissive runtime because it adds substantial
+  engine/deployment complexity. ADR-0015 resolves NautilusTrader's LGPL
+  boundary as isolated comparator only and rejects FinRL-X runtime admission.
 - FinRL is kept optional because reinforcement learning is not the first validation path.
 - Backtrader is not selected for the core because the active fork is GPLv3 and Qlib/VectorBT cover the initial research needs.
 - OpenBB and Freqtrade may be checked out for reference, but their AGPL/GPL licenses make direct code embedding a deliberate later decision.

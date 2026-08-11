@@ -70,6 +70,29 @@ point"). Under the closure contract they are isolated from the product
 inventory by design; installing them into a release environment
 refuses the license gate with a precise message.
 
+## Framework bake-off tooling (outside the release closure)
+
+Iteration 0020 evaluated candidate frameworks in external checkouts and virtual
+environments. ADR-0015 admits neither candidate to the product runtime, so this
+record is deliberately separate from the generated release inventory below:
+
+- FinRL-X was pinned to
+  `e65d6f0483ead7d2ef4a5fc940cdf960392a25c1` (Apache-2.0). Its isolated install
+  failed while building `bt` because MSVC 14.0+ was unavailable; no FinRL-X or
+  bake-off-only transitive package was added to QuantMesh.
+- NautilusTrader was pinned to `v1.231.0` /
+  `27a8e54e7ac3c57d6cbf8891f0283dfbaee97317` (LGPL-3.0). It is retained only as
+  removable process-isolated comparison tooling. `nautilus_trader` is not a
+  release dependency.
+- The comparator's external environment pinned `pandas==2.3.3` for upstream
+  compatibility. That pin does not add or alter a release dependency; pandas
+  already appears independently in the QuantMesh research closure and the
+  inventory below remains generated solely from `requirements-audit.txt`.
+- Copied upstream source: zero files. New release runtime dependencies: zero.
+
+The isolated environments, wheels and checkouts are not distributed. Their
+portable evidence and hashes are recorded under `docs/evidence/0020/`.
+
 ## Platform-restricted closure members
 
 Eight closure packages are pinned for every platform but part of the

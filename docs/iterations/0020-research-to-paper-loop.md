@@ -284,6 +284,30 @@ not sufficient for cross-agent recovery.
   or live endpoint was read, and no execution authority changed. Task 4 now
   owns the generated scorecard and ADR disposition for both failed candidates.
 
+### Task 4 implementation — common scorecard and ADR gate (fresh review pending)
+
+- The scorecard implementation was developed test-first. RED was collection
+  failure for missing `tools.framework_bakeoff.score`; GREEN is 27 focused
+  scorecard/CLI tests. The exact CLI generated
+  `docs/evidence/0020/framework-scorecard.json` atomically from the two
+  committed evidence files.
+- Both evidence files contain `score_inputs={}`. Every soft category is
+  therefore explicitly `0.0`, every missing category is machine-listed, and
+  both totals are honestly `0.0`. No soft score was inferred from prose.
+- FinRL-X is `reject`: the `bt`/MSVC installation failure leaves Windows,
+  determinism, chronology, leakage, paper-only and contract-mapping gates
+  unverified. NautilusTrader is `isolated-comparator`: all required comparator
+  gates pass except contract mapping; LGPL/process isolation, its 565,969,715
+  byte environment and unavailable standalone offline sandbox path remain
+  explicit limitations.
+- ADR-0015 keeps QuantMesh's contracts and deterministic paper kernel, records
+  zero copied upstream files and zero runtime dependencies, and selects the
+  native workspace implementation as the fallback. The release closure is
+  unchanged.
+- **Status: implementation result pending fresh review; Task 4 is not yet
+  completed or approved.** Task 5 (venue-aware historical data contracts and
+  service) becomes the next action only after that review clears Task 4.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another

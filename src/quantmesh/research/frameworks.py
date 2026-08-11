@@ -66,7 +66,7 @@ class FrameworkRunEvidence(BaseModel):
 
 
 class FrameworkScore(BaseModel):
-    """Data-only scorecard result; Task 4 owns scoring behavior."""
+    """Deterministic result of applying the framework admission scorecard."""
 
     schema_version: Literal[1] = 1
     framework: Literal["finrl-x", "nautilus-trader"]
@@ -76,4 +76,5 @@ class FrameworkScore(BaseModel):
     total: float = Field(ge=0, le=100)
     runtime_admissible: bool
     disposition: Literal["adopt-adapter", "isolated-comparator", "reject"]
+    missing_inputs: list[str] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)

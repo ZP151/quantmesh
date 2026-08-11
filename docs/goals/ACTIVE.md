@@ -71,10 +71,15 @@ has no standalone offline replay API. It remains an LGPL process-isolated
 comparator and is not a release dependency. Final scoped review found no open
 Critical or Important issue.
 
-Current next action: Task 4, generate the common FinRL-X/Nautilus scorecard from
-the committed evidence and record ADR-0015 selecting reject or isolated-
-comparator boundaries before product workspace implementation begins.
-Lightweight Charts remains a candidate until its later explicit admission gate.
+Task 4 implementation is now pending fresh review, not completed or approved.
+The generated scorecard gives both candidates an honest `0.0` total because
+both committed evidence files lack soft-score inputs. It rejects FinRL-X after
+the `bt`/MSVC install failure and retains NautilusTrader only as an isolated
+comparator after its deterministic contract mismatch. ADR-0015 records zero
+copied upstream files, zero release dependencies and the native QuantMesh
+workspace fallback. After fresh review clears this gate, Task 5 (venue-aware
+historical data contracts and service) is the next planned action. Lightweight
+Charts remains a candidate until its later explicit admission gate.
 
 ## Current state
 
