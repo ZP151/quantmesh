@@ -509,6 +509,37 @@ def test_artifact_metadata_is_canonicalized_and_unsafe_candidates_are_rejected(
     assert all("\\" not in value for value in result.artifacts.values())
 
 
+def test_artifact_metadata_omits_all_hard_link_aliases(tmp_path: Path) -> None:
+    lake_root = tmp_path / "lake"
+    work_root = tmp_path / "work"
+    build_nvda_fixture(lake_root)
+
+    def hard_link_runner(**kwargs: object) -> IsolatedRunMetadata:
+        metadata = fake_finrl_runner(**kwargs)  # type: ignore[arg-type]
+        original = work_root / "environment" / "physical.txt"
+        alias = work_root / "environment" / "physical-alias.txt"
+        original.write_text("one physical artifact", encoding="utf-8")
+        try:
+            os.link(original, alias)
+        except (NotImplementedError, OSError) as error:
+            pytest.skip(f"filesystem cannot create a hard link: {error}")
+        assert os.path.samefile(original, alias)
+        return replace(
+            metadata,
+            environment_artifacts={
+                **metadata.environment_artifacts,
+                "physical": "environment/physical.txt",
+                "physical_alias": "environment/physical-alias.txt",
+            },
+        )
+
+    result = run_finrl_x(lake_root, work_root, runner=hard_link_runner)
+
+    assert result.status == "passed"
+    assert "physical" not in result.artifacts
+    assert "physical_alias" not in result.artifacts
+
+
 def test_malformed_output_ignores_poisoned_runner_metadata(tmp_path: Path) -> None:
     lake_root = tmp_path / "lake"
     work_root = tmp_path / "work"

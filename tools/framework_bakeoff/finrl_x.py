@@ -375,7 +375,7 @@ def _base_checks() -> dict[str, bool]:
 def _existing_artifacts(work_root: Path, candidates: dict[str, str]) -> dict[str, str]:
     """Return unique, real, in-root artifacts as canonical relative POSIX paths."""
     root = work_root.resolve(strict=True)
-    discovered: list[tuple[str, str, str]] = []
+    discovered: list[tuple[str, str, Path]] = []
     for name, supplied in candidates.items():
         try:
             if not isinstance(name, str) or not isinstance(supplied, str):
@@ -403,17 +403,24 @@ def _existing_artifacts(work_root: Path, candidates: dict[str, str]) -> dict[str
             if not resolved.is_relative_to(root) or not resolved.is_file():
                 continue
             canonical = resolved.relative_to(root).as_posix()
-            identity = os.path.normcase(os.fspath(resolved))
-            discovered.append((name, canonical, identity))
+            discovered.append((name, canonical, resolved))
         except (OSError, RuntimeError, TypeError, ValueError):
             continue
-    counts: dict[str, int] = {}
-    for _name, _canonical, identity in discovered:
-        counts[identity] = counts.get(identity, 0) + 1
+    ambiguous: set[int] = set()
+    for index, (_name, _canonical, path) in enumerate(discovered):
+        for other_index, (_other_name, _other_canonical, other_path) in enumerate(
+            discovered[:index]
+        ):
+            try:
+                same_file = os.path.samefile(path, other_path)
+            except (NotImplementedError, OSError):
+                same_file = True
+            if same_file:
+                ambiguous.update((index, other_index))
     return {
         name: canonical
-        for name, canonical, identity in discovered
-        if counts[identity] == 1
+        for index, (name, canonical, _path) in enumerate(discovered)
+        if index not in ambiguous
     }
 
 
