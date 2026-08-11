@@ -217,6 +217,19 @@ not sufficient for cross-agent recovery.
   Task 1, the QuantMesh-owned evidence contract and deterministic 420-session
   NVDA manifest.
 
+### Task 1 completion — owned bake-off contract
+
+- Commit `e251d8c` adds `FrameworkRunEvidence`, the data-only
+  `FrameworkScore`, typed immutable upstream pins, and the explicitly labeled
+  420-session NVDA lake fixture.
+- TDD RED was the missing `quantmesh.research.frameworks` module. GREEN was
+  14 focused contract cases plus the Lake/Manifest regression set; Ruff passed.
+- A fresh task review approved spec and quality with no Critical or Important
+  finding. One deferred Minor asks the final review to compare manifest bytes
+  directly in addition to parsed deterministic values.
+- No framework dependency entered the package and no execution authority
+  changed. The next task is the pinned, child-process FinRL-X run.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another

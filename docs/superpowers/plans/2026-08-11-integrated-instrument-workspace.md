@@ -54,7 +54,7 @@
 - Consumes: `Lake.write_bars(dataset, bars)`, `ManifestWriter.generate(...)`, `Dataset.read_bars(interval, venue, symbol)`.
 - Produces: `FrameworkRunEvidence`, `FrameworkScore`, `load_pins(path)`, and `build_nvda_fixture(root, sessions=420) -> DatasetManifest`.
 
-- [ ] **Step 1: Write the failing contract and fixture tests**
+- [x] **Step 1: Write the failing contract and fixture tests**
 
 ```python
 def test_nvda_fixture_is_manifest_gated_and_byte_reproducible(tmp_path):
@@ -75,13 +75,13 @@ def test_framework_evidence_rejects_an_unpinned_or_nondeterministic_pass():
         )
 ```
 
-- [ ] **Step 2: Run the tests and capture the red result**
+- [x] **Step 2: Run the tests and capture the red result**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_framework_bakeoff_contract.py --basetemp .pytest-0020-task1`
 
 Expected: collection fails because `quantmesh.research.frameworks` and `tools.framework_bakeoff.fixture` do not exist.
 
-- [ ] **Step 3: Implement the owned evidence types**
+- [x] **Step 3: Implement the owned evidence types**
 
 ```python
 class FrameworkRunEvidence(BaseModel):
@@ -126,11 +126,11 @@ class FrameworkScore(BaseModel):
     limitations: list[str] = Field(default_factory=list)
 ```
 
-- [ ] **Step 4: Implement the synthetic-but-labeled NVDA lake fixture**
+- [x] **Step 4: Implement the synthetic-but-labeled NVDA lake fixture**
 
 Generate 420 Monday-Friday UTC sessions from a fixed `2025-01-02T21:00:00Z` anchor. Use a deterministic close formula `120 * exp(0.0004*i + 0.018*sin(2*pi*i/21))`, derive OHLC and integer-like volume, write dataset `bakeoff-moomoo-nvda`, and generate a manifest with source `quantmesh-deterministic-bakeoff`, license `QuantMesh synthetic test data`, and fixed `generated_at`.
 
-- [ ] **Step 5: Add exact upstream pins**
+- [x] **Step 5: Add exact upstream pins**
 
 `load_pins(path)` returns a typed mapping and rejects mutable or malformed
 metadata: each repository must be an HTTPS GitHub URL, every revision exactly
@@ -153,7 +153,7 @@ tag nonblank. Add focused positive and negative tests.
 }
 ```
 
-- [ ] **Step 6: Run green verification and commit**
+- [x] **Step 6: Run green verification and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_framework_bakeoff_contract.py --basetemp .pytest-0020-task1`
 

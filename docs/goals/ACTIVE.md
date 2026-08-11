@@ -49,9 +49,16 @@ implementation/review boundaries, exact upstream pins, one integration branch
 and one final PR. Task completion and exact verification evidence must be
 mirrored into iteration 0020 and this file before every pushed checkpoint.
 
-Current next action: Task 1, the owned `FrameworkRunEvidence` contract and a
-deterministic 420-session NVDA manifest. FinRL-X, NautilusTrader and Lightweight
-Charts remain candidates until their explicit evidence/admission gates pass.
+Task 1 completed at `e251d8c`: the owned `FrameworkRunEvidence` and
+`FrameworkScore` contracts, immutable exact pins, and a deterministic,
+manifest-gated 420-session NVDA fixture passed 14 focused cases, Lake/Manifest
+regression and Ruff. Fresh review found no Critical or Important issue; one
+manifest-byte comparison Minor is parked for the final review.
+
+Current next action: Task 2, run pinned FinRL-X twice in an isolated child
+environment and emit canonical evidence. FinRL-X, NautilusTrader and
+Lightweight Charts remain candidates until their explicit evidence/admission
+gates pass.
 
 ## Current state
 
