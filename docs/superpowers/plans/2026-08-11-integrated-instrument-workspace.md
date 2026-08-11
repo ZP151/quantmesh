@@ -359,7 +359,7 @@ Commit: `git commit -m "docs: decide framework boundaries from bakeoff evidence 
 - Consumes: manifest-gated `Dataset`, `Bar`, `Instrument`, and `Venue`.
 - Produces: `HistoryRange`, `DatasetBinding`, `HistoricalSeries`, `ComparisonSeries`, `HistoryService.history(...)`, and `HistoryService.compare(...)`.
 
-- [ ] **Step 1: Write range, manifest, and comparison tests**
+- [x] **Step 1: Write range, manifest, and comparison tests**
 
 ```python
 def test_history_is_manifest_gated_venue_aware_and_chronological(history_service):
@@ -374,19 +374,19 @@ def test_comparison_rebases_only_the_shared_observed_window(history_service):
     assert comparison.points[0].values == {"moomoo:NVDA": 100.0, "moomoo:AAPL": 100.0}
 ```
 
-- [ ] **Step 2: Run red and add strict models**
+- [x] **Step 2: Run red and add strict models**
 
 Define ranges `1d`, `5d`, `1m`, `3m`, `6m`, `1y`; response bars carry aware UTC timestamp, OHLCV, `adjusted_close: float | None`, and `is_live_tail`. Historical series carries dataset/revision/source/license/generated-at, interval, calendar, adjustment mode, coverage, gaps, duplicates, and limitations.
 
-- [ ] **Step 3: Implement range-to-resolution selection**
+- [x] **Step 3: Implement range-to-resolution selection**
 
 Use preferred intervals `1d->5m`, `5d->30m`, `1m->1h`, `3m/6m/1y->1d`, falling back only to a coarser available binding while recording `resolution_fallback`. Refuse an unknown venue/symbol, stale manifest, mixed instruments, duplicate timestamp, non-monotonic series, or an empty requested window.
 
-- [ ] **Step 4: Implement normalized comparisons**
+- [x] **Step 4: Implement normalized comparisons**
 
 Intersect observed timestamps across all series, divide each close by its first shared close, multiply by 100, and refuse fewer than two shared points. Never forward-fill across missing sessions or mix a forecast value into the comparison.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_instrument_history.py tests/test_lake.py tests/test_manifest.py --basetemp .pytest-0020-task5`
 

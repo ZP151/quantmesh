@@ -323,7 +323,7 @@ not sufficient for cross-agent recovery.
   Task 5 (venue-aware historical data contracts and service) is now the active
   implementation frontier.
 
-### Task 5 implementation complete — independent review pending
+### Task 5 initial implementation
 
 - Strict TDD began with a collection RED because `quantmesh.instruments` did
   not exist. The new focused suite is GREEN at 31/31 tests; the plan-prescribed
@@ -353,7 +353,7 @@ not sufficient for cross-agent recovery.
   Task 5 review remains pending; no tracked plan checkbox or `ACTIVE.md` state
   is advanced by this implementation checkpoint.
 
-### Task 5 fix round 1 implemented — fresh review pending
+### Task 5 complete — fix round 1 and independent acceptance
 
 - The first independent review found four Important issues: returned rows were
   not fully bound to manifest coverage, equal-duration interval aliases made
@@ -383,7 +383,11 @@ not sufficient for cross-agent recovery.
   133 passed and 3 platform-skipped in 7.25 seconds using a unique system-temp
   base, which was verified removed. Focused Ruff and `git diff --check` pass;
   no workspace temp artifact, dependency or out-of-scope source change remains.
-  Independent fix-round review is pending.
+- Independent fix-round review closed all four findings with zero Critical,
+  Important or Minor issue. It reproduced 54/54 focused tests, 133 passed plus
+  3 platform-skipped compatibility checks and 18/18 targeted probes, then
+  verified Ruff, diff cleanliness, FastAPI encoding and strict JSON round trips.
+  Task 6 (historical and continuity-safe live-tail API) is the active frontier.
 
 ## Acceptance criteria
 

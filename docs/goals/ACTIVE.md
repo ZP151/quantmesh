@@ -81,7 +81,10 @@ copied upstream files, zero release dependencies and the native QuantMesh
 workspace fallback. Strict evidence and scorecard validation rejected 28/28
 independent malformed/tampered probes, the Task 1-4 compatibility run passed
 173/173 tests, and the clean release-closure license gate exited zero. Task 5
-(venue-aware historical data contracts and service) is now in progress.
+(venue-aware historical data contracts and service) is complete through
+`036d89c`: independent review closed all four first-round findings with zero
+remaining Critical, Important or Minor issue. Task 6 (historical/live-tail API)
+is now in progress.
 Lightweight Charts remains a candidate until its later explicit admission gate.
 
 ## Current state
