@@ -38,6 +38,10 @@ class CommandFailure(RuntimeError):
         self.peak_rss_mb = result.peak_rss_mb
 
 
+class ProcessContainmentError(RuntimeError):
+    """A Windows child could not be safely contained before execution."""
+
+
 _INHERITED_ENVIRONMENT = {
     "COMSPEC",
     "PATH",
@@ -54,6 +58,7 @@ _INHERITED_ENVIRONMENT = {
 _PROXY_ENVIRONMENT = {"ALL_PROXY", "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY"}
 _BLOCKED_ENVIRONMENT_MARKERS = ("API_KEY", "PASSWORD", "PRIVATE_KEY", "SECRET", "TOKEN")
 _POST_KILL_TIMEOUT_SECONDS = 0.75
+_CREATE_SUSPENDED = 0x00000004
 
 
 class _IoCounters(ctypes.Structure):
@@ -117,6 +122,31 @@ def _assign_kill_on_close_job(process: subprocess.Popen[object]) -> int | None:
 def _close_job(job: int | None) -> None:
     if job is not None:
         ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(job))  # type: ignore[attr-defined]
+
+
+def _resume_windows_process(process: subprocess.Popen[object]) -> bool:
+    ntdll = ctypes.windll.ntdll  # type: ignore[attr-defined]
+    ntdll.NtResumeProcess.argtypes = [ctypes.c_void_p]
+    ntdll.NtResumeProcess.restype = ctypes.c_long
+    return ntdll.NtResumeProcess(
+        ctypes.c_void_p(int(process._handle))  # type: ignore[attr-defined]
+    ) == 0
+
+
+def _terminate_suspended_process(
+    process: subprocess.Popen[object], job: int | None
+) -> None:
+    if job is not None:
+        ctypes.windll.kernel32.TerminateJobObject(  # type: ignore[attr-defined]
+            ctypes.c_void_p(job), 1
+        )
+    else:
+        process.kill()
+    try:
+        process.wait(timeout=_POST_KILL_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=_POST_KILL_TIMEOUT_SECONDS)
 
 
 def _validate_proxy(name: str, value: str) -> None:
@@ -278,7 +308,9 @@ def run_command(
     child_environment = _child_environment(env, inherit_proxy=inherit_proxy)
     started = time.perf_counter()
     creation_flags = (
-        subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
+        subprocess.CREATE_NO_WINDOW
+        | subprocess.CREATE_NEW_PROCESS_GROUP
+        | _CREATE_SUSPENDED
         if os.name == "nt"
         else 0
     )
@@ -295,8 +327,33 @@ def run_command(
             creationflags=creation_flags,
             start_new_session=os.name != "nt",
         )
-        job = _assign_kill_on_close_job(process)
+        job: int | None = None
         try:
+            if os.name == "nt":
+                try:
+                    job = _assign_kill_on_close_job(process)
+                except Exception as error:
+                    _terminate_suspended_process(process, None)
+                    raise ProcessContainmentError(
+                        "Windows process containment setup failed: job-assignment"
+                    ) from error
+                if job is None:
+                    _terminate_suspended_process(process, None)
+                    raise ProcessContainmentError(
+                        "Windows process containment setup failed: job-assignment"
+                    )
+                try:
+                    resumed = _resume_windows_process(process)
+                except Exception as error:
+                    _terminate_suspended_process(process, job)
+                    raise ProcessContainmentError(
+                        "Windows process containment setup failed: process-resume"
+                    ) from error
+                if not resumed:
+                    _terminate_suspended_process(process, job)
+                    raise ProcessContainmentError(
+                        "Windows process containment setup failed: process-resume"
+                    )
             peak_rss_mb = 0.0
             timed_out = False
             while True:

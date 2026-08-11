@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from tools.framework_bakeoff import finrl_x as finrl_module
+from tools.framework_bakeoff import process as process_module
 from tools.framework_bakeoff.finrl_x import (
     CANONICAL_ARTIFACTS,
     FINRL_PIN,
@@ -364,7 +365,11 @@ def test_export_failure_returns_redacted_evidence_without_phantom_artifacts(
     assert len(result.input_digest) == 64
     assert str(work_root) not in payload
     assert "7dd1" not in payload
-    assert "{work_root}" in payload
+    assert result.limitations == [
+        "failure_stage=input-export",
+        "failure_type=OSError",
+        "failure_code=orchestration-failure",
+    ]
 
 
 def test_generic_runner_failure_is_redacted_and_lists_only_existing_artifacts(
@@ -384,7 +389,83 @@ def test_generic_runner_failure_is_redacted_and_lists_only_existing_artifacts(
     assert result.artifacts == {}
     assert str(work_root) not in payload
     assert "4ac2" not in payload
-    assert "{work_root}" in payload
+    assert result.limitations == [
+        "failure_stage=runner-execution",
+        "failure_type=RuntimeError",
+        "failure_code=orchestration-failure",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("corruption", "failure_type"),
+    [("malformed-json", "JSONDecodeError"), ("invalid-weight", "ValueError")],
+)
+def test_malformed_canonical_output_returns_portable_failed_evidence(
+    tmp_path: Path,
+    corruption: str,
+    failure_type: str,
+) -> None:
+    lake_root = tmp_path / "lake"
+    work_root = tmp_path / "work"
+    build_nvda_fixture(lake_root)
+
+    def malformed_runner(**kwargs: object) -> IsolatedRunMetadata:
+        metadata = fake_finrl_runner(**kwargs)  # type: ignore[arg-type]
+        output_roots = kwargs["output_roots"]
+        assert isinstance(output_roots, tuple)
+        for output_root in output_roots:
+            if corruption == "malformed-json":
+                (output_root / "backtest.json").write_text("{partial", encoding="utf-8")
+            else:
+                weights_path = output_root / "weights.csv"
+                lines = weights_path.read_text(encoding="utf-8").splitlines()
+                lines[-1] = f"{lines[-1].split(',', maxsplit=1)[0]},not-a-number"
+                weights_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return metadata
+
+    result = run_finrl_x(lake_root, work_root, runner=malformed_runner)
+
+    assert result.status == "failed"
+    assert result.deterministic is False
+    assert result.output_digest is None
+    assert set(result.artifacts) == {
+        "backtest",
+        "commands",
+        "pip_check",
+        "pip_freeze",
+        "proposal",
+        "weights",
+    }
+    assert result.limitations == [
+        "failure_stage=output-validation",
+        f"failure_type={failure_type}",
+        "failure_code=orchestration-failure",
+    ]
+
+
+def test_generic_failure_never_persists_unrelated_absolute_path(tmp_path: Path) -> None:
+    lake_root = tmp_path / "lake"
+    work_root = tmp_path / "work"
+    build_nvda_fixture(lake_root)
+    unrelated_windows_path = "C:\\Operators\\private-user\\secrets.txt"
+    unrelated_posix_path = "/var/private/operator/secrets.txt"
+
+    def path_leaking_runner(**_kwargs: object) -> IsolatedRunMetadata:
+        raise OSError(f"failed at {unrelated_windows_path} and {unrelated_posix_path}")
+
+    result = run_finrl_x(lake_root, work_root, runner=path_leaking_runner)
+    payload = result.model_dump_json()
+
+    assert result.status == "failed"
+    assert result.artifacts == {}
+    assert unrelated_windows_path not in payload
+    assert unrelated_posix_path not in payload
+    assert "private-user" not in payload
+    assert result.limitations == [
+        "failure_stage=runner-execution",
+        "failure_type=OSError",
+        "failure_code=orchestration-failure",
+    ]
 
 
 def test_subprocess_boundary_sanitizes_credentials_and_records_failure(
@@ -472,8 +553,19 @@ def test_offline_driver_environment_excludes_all_proxy_variables(
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows process-tree contract")
-def test_timeout_terminates_descendants_and_bounds_collection(tmp_path: Path) -> None:
+def test_timeout_terminates_descendants_and_bounds_collection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     pid_path = tmp_path / "pids.txt"
+    real_assign = process_module._assign_kill_on_close_job
+    assignment_observation: dict[str, bool] = {}
+
+    def delayed_assignment(process: subprocess.Popen[object]) -> int | None:
+        time.sleep(0.5)
+        assignment_observation["child_started"] = pid_path.exists()
+        return real_assign(process)
+
+    monkeypatch.setattr(process_module, "_assign_kill_on_close_job", delayed_assignment)
     child_code = "import time; time.sleep(10)"
     parent_code = (
         "import subprocess,sys,time; from pathlib import Path; "
@@ -503,9 +595,70 @@ def test_timeout_terminates_descendants_and_bounds_collection(tmp_path: Path) ->
         errors="replace",
         check=False,
     )
+    descendant_survived = str(child_pid) in tasklist.stdout
+    if descendant_survived:
+        subprocess.run(
+            ["taskkill", "/PID", str(child_pid), "/T", "/F"],
+            capture_output=True,
+            check=False,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
     assert caught.value.exit_code == -1
     assert elapsed < 4
-    assert str(child_pid) not in tasklist.stdout
+    assert assignment_observation == {"child_started": False}
+    assert not descendant_survived
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows process containment contract")
+@pytest.mark.parametrize("failure", ["assignment", "resume"])
+def test_windows_containment_setup_failure_never_runs_or_leaks_child(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: str,
+) -> None:
+    marker = tmp_path / "child-ran.txt"
+    captured_pid: list[int] = []
+    real_assign = process_module._assign_kill_on_close_job
+
+    def capture_assignment(process: subprocess.Popen[object]) -> int | None:
+        captured_pid.append(process.pid)
+        return None if failure == "assignment" else real_assign(process)
+
+    monkeypatch.setattr(process_module, "_assign_kill_on_close_job", capture_assignment)
+    if failure == "resume":
+        monkeypatch.setattr(
+            process_module,
+            "_resume_windows_process",
+            lambda _process: False,
+            raising=False,
+        )
+
+    with pytest.raises(RuntimeError, match="Windows process containment setup failed"):
+        run_command(
+            [
+                sys.executable,
+                "-c",
+                f"from pathlib import Path; import time; "
+                f"Path({str(marker)!r}).write_text('ran'); time.sleep(10)",
+            ],
+            cwd=tmp_path,
+            logs_root=tmp_path / "logs",
+            label=f"containment-{failure}",
+            placeholders={Path(sys.executable): "{python}", tmp_path: "{work_root}"},
+            timeout_seconds=1,
+        )
+
+    assert len(captured_pid) == 1
+    tasklist = subprocess.run(
+        ["tasklist", "/FI", f"PID eq {captured_pid[0]}", "/FO", "CSV", "/NH"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    assert not marker.exists()
+    assert str(captured_pid[0]) not in tasklist.stdout
 
 
 def test_cli_builds_fixture_writes_evidence_and_uses_status_as_exit_code(
@@ -551,10 +704,11 @@ def test_unmarked_nonempty_work_root_is_preserved_and_rejected(tmp_path: Path) -
     assert result.status == "failed"
     assert sentinel.read_text(encoding="utf-8") == "preserve me"
     assert not (work_root / "input.csv").exists()
-    assert any(
-        "work root is nonempty and has no valid ownership marker" in item
-        for item in result.limitations
-    )
+    assert result.limitations == [
+        "failure_stage=work-root-preparation",
+        "failure_type=WorkRootOwnershipError",
+        "failure_code=work-root-ownership",
+    ]
 
 
 def test_owned_work_root_recreates_checkout_venv_and_outputs(tmp_path: Path) -> None:
@@ -579,3 +733,66 @@ def test_owned_work_root_recreates_checkout_venv_and_outputs(tmp_path: Path) -> 
     result = run_finrl_x(lake_root, work_root, runner=clean_root_runner)
 
     assert result.status == "passed"
+
+
+@pytest.mark.parametrize("linked_component", ["root", "ancestor"])
+def test_work_root_link_or_reparse_component_is_rejected_without_target_mutation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    linked_component: str,
+) -> None:
+    lake_root = tmp_path / "lake"
+    build_nvda_fixture(lake_root)
+    real_parent = tmp_path / "real-parent"
+    target_root = real_parent if linked_component == "root" else real_parent / "owned"
+    assert run_finrl_x(lake_root, target_root, runner=fake_finrl_runner).status == "passed"
+    victim = target_root / "checkout" / "must-survive.txt"
+    victim.parent.mkdir()
+    victim.write_text("preserve target bytes", encoding="utf-8")
+
+    link = tmp_path / "linked"
+    link_target = target_root if linked_component == "root" else real_parent
+    try:
+        link.symlink_to(link_target, target_is_directory=True)
+    except OSError:
+        original_guard = getattr(
+            finrl_module,
+            "_path_is_link_or_reparse",
+            lambda path: path.is_symlink(),
+        )
+
+        def simulated_reparse(path: Path) -> bool:
+            return path == link or original_guard(path)
+
+        monkeypatch.setattr(
+            finrl_module,
+            "_path_is_link_or_reparse",
+            simulated_reparse,
+            raising=False,
+        )
+    caller_root = link if linked_component == "root" else link / "owned"
+
+    result = run_finrl_x(lake_root, caller_root, runner=fake_finrl_runner)
+
+    assert result.status == "failed"
+    assert victim.read_text(encoding="utf-8") == "preserve target bytes"
+    assert result.limitations == [
+        "failure_stage=work-root-validation",
+        "failure_type=WorkRootOwnershipError",
+        "failure_code=work-root-link-or-reparse",
+    ]
+
+
+def test_repository_root_is_rejected_as_a_sensitive_work_root(tmp_path: Path) -> None:
+    lake_root = tmp_path / "lake"
+    build_nvda_fixture(lake_root)
+    repository_root = Path(finrl_module.__file__).parents[2]
+
+    result = run_finrl_x(lake_root, repository_root, runner=fake_finrl_runner)
+
+    assert result.status == "failed"
+    assert result.limitations == [
+        "failure_stage=work-root-resolution",
+        "failure_type=WorkRootOwnershipError",
+        "failure_code=work-root-sensitive-location",
+    ]

@@ -84,6 +84,57 @@ FinrlRunner = Callable[..., IsolatedRunMetadata]
 class WorkRootOwnershipError(ValueError):
     """The requested scratch root is not demonstrably owned by Task 2."""
 
+    def __init__(self, message: str, *, code: str = "work-root-ownership") -> None:
+        super().__init__(message)
+        self.code = code
+
+
+def _path_is_link_or_reparse(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    if hasattr(path, "is_junction") and path.is_junction():
+        return True
+    try:
+        attributes = path.lstat().st_file_attributes
+    except (AttributeError, FileNotFoundError, OSError):
+        return False
+    return bool(attributes & 0x400)  # FILE_ATTRIBUTE_REPARSE_POINT
+
+
+def _lexical_work_root(path: Path) -> Path:
+    """Reject linked caller components before normalization or resolution."""
+    path = Path(path)
+    parts = path.parts if path.is_absolute() else (*Path.cwd().parts, *path.parts)
+    current = Path(parts[0])
+    for part in parts[1:]:
+        if part == "..":
+            current = current.parent
+            continue
+        if part != ".":
+            current /= part
+        if _path_is_link_or_reparse(current):
+            raise WorkRootOwnershipError(
+                "work-root path component is a link or reparse point",
+                code="work-root-link-or-reparse",
+            )
+    return Path(os.path.abspath(os.fspath(path)))
+
+
+def _resolve_safe_work_root(path: Path) -> Path:
+    resolved = path.resolve()
+    repository_root = Path(__file__).parents[2].resolve()
+    sensitive_roots = {
+        Path(resolved.anchor).resolve(),
+        Path.home().resolve(),
+        repository_root,
+    }
+    if resolved in sensitive_roots:
+        raise WorkRootOwnershipError(
+            "resolved work root is a protected location",
+            code="work-root-sensitive-location",
+        )
+    return resolved
+
 
 def _write_json(path: Path, payload: object, *, indent: int | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -248,6 +299,15 @@ def _directory_bytes(root: Path) -> int:
     return sum(path.stat().st_size for path in root.rglob("*") if path.is_file())
 
 
+def _safe_directory_bytes(root: Path | None) -> int:
+    if root is None:
+        return 0
+    try:
+        return _directory_bytes(root)
+    except (OSError, RuntimeError):
+        return 0
+
+
 def _portable_text(value: str, work_root: Path, lake_root: Path | None = None) -> str:
     replacements = {
         str(work_root): "{work_root}",
@@ -281,10 +341,68 @@ def _base_checks() -> dict[str, bool]:
 def _existing_artifacts(work_root: Path, candidates: dict[str, str]) -> dict[str, str]:
     existing: dict[str, str] = {}
     for name, relative in candidates.items():
-        path = work_root / relative
-        if path.is_file() and path.resolve().is_relative_to(work_root.resolve()):
-            existing[name] = relative
+        try:
+            path = work_root / relative
+            if (
+                path.is_file()
+                and not path.is_symlink()
+                and path.resolve().is_relative_to(work_root.resolve())
+            ):
+                existing[name] = relative
+        except (OSError, RuntimeError, ValueError):
+            continue
     return existing
+
+
+def _generic_failure_evidence(
+    *,
+    stage: str,
+    error: Exception,
+    started: float,
+    input_digest: str,
+    work_root: Path | None,
+    metadata: IsolatedRunMetadata | None,
+) -> FrameworkRunEvidence:
+    candidates = {"commands": "environment/commands.json"}
+    if metadata is not None:
+        candidates.update(
+            {
+                "backtest": "outputs/run-1/backtest.json",
+                "proposal": "outputs/run-1/proposal.json",
+                "weights": "outputs/run-1/weights.csv",
+                **metadata.environment_artifacts,
+            }
+        )
+    error_code = (
+        error.code
+        if isinstance(error, WorkRootOwnershipError)
+        else "orchestration-failure"
+    )
+    return FrameworkRunEvidence(
+        framework="finrl-x",
+        revision=metadata.revision if metadata is not None else FINRL_PIN,
+        status="failed",
+        deterministic=False,
+        input_digest=input_digest,
+        duration_seconds=(
+            metadata.duration_seconds
+            if metadata is not None
+            else time.perf_counter() - started
+        ),
+        peak_rss_mb=metadata.peak_rss_mb if metadata is not None else 0,
+        environment_bytes=(
+            metadata.environment_bytes
+            if metadata is not None
+            else _safe_directory_bytes(work_root / "venv" if work_root else None)
+        ),
+        checks=_base_checks(),
+        artifacts=_existing_artifacts(work_root, candidates) if work_root else {},
+        limitations=[
+            f"failure_stage={stage}",
+            f"failure_type={type(error).__name__}",
+            f"failure_code={error_code}",
+        ],
+    )
 
 
 def _failure_summary(work_root: Path, error: CommandFailure) -> str:
@@ -716,26 +834,79 @@ def run_finrl_x(
     """Export one manifest-gated fixture and evaluate the pinned engine twice."""
     started = time.perf_counter()
     input_digest = hashlib.sha256(b"finrl-x-input-unavailable").hexdigest()
-    lake_root = Path(lake_root).absolute()
-    work_root = Path(work_root).absolute()
+    lake_root = Path(lake_root)
+    caller_work_root = Path(work_root)
+    trusted_work_root: Path | None = None
+    metadata: IsolatedRunMetadata | None = None
+    stage = "work-root-validation"
     try:
+        lexical_work_root = _lexical_work_root(caller_work_root)
+        stage = "lake-root-resolution"
         lake_root = lake_root.resolve()
-        work_root = work_root.resolve()
-        _prepare_owned_work_root(work_root)
-        input_path, config_path = _export_input(lake_root, work_root)
+        stage = "work-root-resolution"
+        trusted_work_root = _resolve_safe_work_root(lexical_work_root)
+        stage = "work-root-preparation"
+        _prepare_owned_work_root(trusted_work_root)
+        stage = "input-export"
+        input_path, config_path = _export_input(lake_root, trusted_work_root)
+        stage = "input-hash"
         input_digest = _input_digest(input_path, config_path)
-        output_roots = _prepare_output_roots(work_root)
+        stage = "output-root-preparation"
+        output_roots = _prepare_output_roots(trusted_work_root)
+        stage = "runner-execution"
         metadata = runner(
             input_path=input_path,
             config_path=config_path,
             output_roots=output_roots,
-            work_root=work_root,
+            work_root=trusted_work_root,
+        )
+        stage = "output-validation"
+        checks, problems, output_digest, deterministic = _validate_outputs(
+            trusted_work_root, input_path, config_path, output_roots, metadata
+        )
+        limitations = [
+            *metadata.limitations,
+            f"upstream_version={metadata.version}",
+            f"license_sha256={metadata.license_sha256}",
+            f"pip_check_exit_code={metadata.pip_check_exit_code}",
+            *(f"command: {command}" for command in metadata.commands),
+            *problems,
+        ]
+        passed = deterministic and not problems and all(checks.values())
+        artifacts = _existing_artifacts(
+            trusted_work_root,
+            {
+                "backtest": "outputs/run-1/backtest.json",
+                "proposal": "outputs/run-1/proposal.json",
+                "weights": "outputs/run-1/weights.csv",
+                **metadata.environment_artifacts,
+            },
+        )
+        stage = "evidence-construction"
+        return FrameworkRunEvidence(
+            framework="finrl-x",
+            revision=metadata.revision,
+            status="passed" if passed else "failed",
+            deterministic=deterministic,
+            input_digest=input_digest,
+            output_digest=output_digest if passed else None,
+            duration_seconds=metadata.duration_seconds,
+            peak_rss_mb=metadata.peak_rss_mb,
+            environment_bytes=metadata.environment_bytes,
+            checks=checks,
+            artifacts=artifacts,
+            limitations=limitations,
         )
     except CommandFailure as error:
-        license_path = work_root / "checkout" / "LICENSE"
-        license_ok = license_path.is_file() and (
-            hashlib.sha256(license_path.read_bytes()).hexdigest() == FINRL_LICENSE_SHA256
-        )
+        assert trusted_work_root is not None
+        license_path = trusted_work_root / "checkout" / "LICENSE"
+        try:
+            license_ok = license_path.is_file() and (
+                hashlib.sha256(license_path.read_bytes()).hexdigest()
+                == FINRL_LICENSE_SHA256
+            )
+        except OSError:
+            license_ok = False
         return FrameworkRunEvidence(
             framework="finrl-x",
             revision=FINRL_PIN,
@@ -744,10 +915,10 @@ def run_finrl_x(
             input_digest=input_digest,
             duration_seconds=time.perf_counter() - started,
             peak_rss_mb=error.peak_rss_mb,
-            environment_bytes=_directory_bytes(work_root / "venv"),
+            environment_bytes=_safe_directory_bytes(trusted_work_root / "venv"),
             checks={**_base_checks(), "license": license_ok},
             artifacts=_existing_artifacts(
-                work_root,
+                trusted_work_root,
                 {
                     "commands": "environment/commands.json",
                     "failure_stderr": error.stderr_log,
@@ -755,65 +926,19 @@ def run_finrl_x(
                 },
             ),
             limitations=[
-                f"failed command: {_portable_text(error.command, work_root, lake_root)}",
+                f"failed command: {_portable_text(error.command, trusted_work_root, lake_root)}",
                 f"exit_code={error.exit_code}",
-                f"failure: {_failure_summary(work_root, error)}",
+                f"failure: {_failure_summary(trusted_work_root, error)}",
                 f"stderr_log={error.stderr_log}",
-                *_failure_attribution(work_root, error),
+                *_failure_attribution(trusted_work_root, error),
             ],
         )
     except Exception as error:
-        return FrameworkRunEvidence(
-            framework="finrl-x",
-            revision=FINRL_PIN,
-            status="failed",
-            deterministic=False,
+        return _generic_failure_evidence(
+            stage=stage,
+            error=error,
+            started=started,
             input_digest=input_digest,
-            duration_seconds=time.perf_counter() - started,
-            peak_rss_mb=0,
-            environment_bytes=_directory_bytes(work_root / "venv"),
-            checks=_base_checks(),
-            artifacts=_existing_artifacts(
-                work_root, {"commands": "environment/commands.json"}
-            ),
-            limitations=[
-                f"orchestration_failure_type={type(error).__name__}",
-                f"orchestration_failure={_portable_text(str(error), work_root, lake_root)}",
-            ],
+            work_root=trusted_work_root,
+            metadata=metadata,
         )
-
-    checks, problems, output_digest, deterministic = _validate_outputs(
-        work_root, input_path, config_path, output_roots, metadata
-    )
-    limitations = [
-        *metadata.limitations,
-        f"upstream_version={metadata.version}",
-        f"license_sha256={metadata.license_sha256}",
-        f"pip_check_exit_code={metadata.pip_check_exit_code}",
-        *(f"command: {command}" for command in metadata.commands),
-        *problems,
-    ]
-    passed = deterministic and not problems and all(checks.values())
-    artifacts = _existing_artifacts(
-        work_root,
-        {
-            "backtest": "outputs/run-1/backtest.json",
-            "proposal": "outputs/run-1/proposal.json",
-            "weights": "outputs/run-1/weights.csv",
-            **metadata.environment_artifacts,
-        },
-    )
-    return FrameworkRunEvidence(
-        framework="finrl-x",
-        revision=metadata.revision,
-        status="passed" if passed else "failed",
-        deterministic=deterministic,
-        input_digest=input_digest,
-        output_digest=output_digest if passed else None,
-        duration_seconds=metadata.duration_seconds,
-        peak_rss_mb=metadata.peak_rss_mb,
-        environment_bytes=metadata.environment_bytes,
-        checks=checks,
-        artifacts=artifacts,
-        limitations=limitations,
-    )
