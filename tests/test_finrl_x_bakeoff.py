@@ -468,6 +468,148 @@ def test_generic_failure_never_persists_unrelated_absolute_path(tmp_path: Path) 
     ]
 
 
+def test_artifact_metadata_is_canonicalized_and_unsafe_candidates_are_rejected(
+    tmp_path: Path,
+) -> None:
+    lake_root = tmp_path / "lake"
+    work_root = tmp_path / "work"
+    outside = tmp_path / "outside-secret.txt"
+    outside.write_text("outside", encoding="utf-8")
+    build_nvda_fixture(lake_root)
+
+    def artifact_runner(**kwargs: object) -> IsolatedRunMetadata:
+        metadata = fake_finrl_runner(**kwargs)  # type: ignore[arg-type]
+        unique = work_root / "environment" / "unique.txt"
+        duplicate = work_root / "environment" / "duplicate.txt"
+        unique.write_text("unique", encoding="utf-8")
+        duplicate.write_text("duplicate", encoding="utf-8")
+        return replace(
+            metadata,
+            environment_artifacts={
+                **metadata.environment_artifacts,
+                "absolute_in_root": str(unique.resolve()),
+                "outside": str(outside.resolve()),
+                "missing": str((work_root / "missing.txt").resolve()),
+                "duplicate_relative": "environment/duplicate.txt",
+                "duplicate_absolute": str(duplicate.resolve()),
+                "ambiguous": "environment/../environment/unique.txt",
+            },
+        )
+
+    result = run_finrl_x(lake_root, work_root, runner=artifact_runner)
+
+    assert result.status == "passed"
+    assert result.artifacts["absolute_in_root"] == "environment/unique.txt"
+    assert "outside" not in result.artifacts
+    assert "missing" not in result.artifacts
+    assert "duplicate_relative" not in result.artifacts
+    assert "duplicate_absolute" not in result.artifacts
+    assert "ambiguous" not in result.artifacts
+    assert all(not Path(value).is_absolute() for value in result.artifacts.values())
+    assert all("\\" not in value for value in result.artifacts.values())
+
+
+def test_malformed_output_ignores_poisoned_runner_metadata(tmp_path: Path) -> None:
+    lake_root = tmp_path / "lake"
+    work_root = tmp_path / "work"
+    outside = tmp_path / "outside-private.txt"
+    outside.write_text("private", encoding="utf-8")
+    build_nvda_fixture(lake_root)
+    windows_secret = r"C:\Operators\private-user\secrets.txt"
+    posix_secret = "/var/private/operator/secrets.txt"
+
+    def poisoned_runner(**kwargs: object) -> IsolatedRunMetadata:
+        metadata = fake_finrl_runner(**kwargs)  # type: ignore[arg-type]
+        output_roots = kwargs["output_roots"]
+        assert isinstance(output_roots, tuple)
+        for output_root in output_roots:
+            (output_root / "backtest.json").write_text("{partial", encoding="utf-8")
+        absolute_in_root = work_root / "environment" / "absolute.txt"
+        absolute_in_root.write_text("absolute", encoding="utf-8")
+        return replace(
+            metadata,
+            revision=windows_secret,
+            duration_seconds=float("nan"),
+            peak_rss_mb=-99.0,
+            environment_bytes=posix_secret,  # type: ignore[arg-type]
+            commands=(windows_secret,),
+            environment_artifacts={
+                "absolute_in_root": str(absolute_in_root.resolve()),
+                "outside": str(outside.resolve()),
+            },
+            limitations=(posix_secret,),
+        )
+
+    result = run_finrl_x(lake_root, work_root, runner=poisoned_runner)
+    payload = result.model_dump_json()
+
+    assert result.status == "failed"
+    assert result.revision == FINRL_PIN
+    assert result.deterministic is False
+    assert result.output_digest is None
+    assert result.duration_seconds >= 0
+    assert result.peak_rss_mb == 0
+    assert isinstance(result.environment_bytes, int)
+    assert result.environment_bytes >= 0
+    assert result.checks == {name: False for name in result.checks}
+    assert result.score_inputs == {}
+    assert "absolute_in_root" not in result.artifacts
+    assert "outside" not in result.artifacts
+    assert windows_secret not in payload
+    assert posix_secret not in payload
+    assert str(work_root) not in payload
+    assert str(outside) not in payload
+    assert result.limitations == [
+        "failure_stage=output-validation",
+        "failure_type=JSONDecodeError",
+        "failure_code=orchestration-failure",
+    ]
+
+
+def test_invalid_runner_measurements_fall_back_to_static_failed_evidence(
+    tmp_path: Path,
+) -> None:
+    lake_root = tmp_path / "lake"
+    work_root = tmp_path / "work"
+    build_nvda_fixture(lake_root)
+    windows_secret = r"C:\Operators\metadata-user\profile.txt"
+    posix_secret = "/home/metadata-user/profile.txt"
+
+    def invalid_metadata_runner(**kwargs: object) -> IsolatedRunMetadata:
+        metadata = fake_finrl_runner(**kwargs)  # type: ignore[arg-type]
+        return replace(
+            metadata,
+            revision=windows_secret,
+            duration_seconds=float("nan"),
+            peak_rss_mb=-1.0,
+            environment_bytes=posix_secret,  # type: ignore[arg-type]
+            commands=(windows_secret,),
+            limitations=(posix_secret,),
+        )
+
+    result = run_finrl_x(lake_root, work_root, runner=invalid_metadata_runner)
+    payload = result.model_dump_json()
+
+    assert result.status == "failed"
+    assert result.revision == FINRL_PIN
+    assert result.deterministic is False
+    assert result.output_digest is None
+    assert result.duration_seconds >= 0
+    assert result.peak_rss_mb == 0
+    assert isinstance(result.environment_bytes, int)
+    assert result.environment_bytes >= 0
+    assert result.checks == {name: False for name in result.checks}
+    assert result.score_inputs == {}
+    assert windows_secret not in payload
+    assert posix_secret not in payload
+    assert "metadata-user" not in payload
+    assert result.limitations == [
+        "failure_stage=evidence-construction",
+        "failure_type=ValidationError",
+        "failure_code=orchestration-failure",
+    ]
+
+
 def test_subprocess_boundary_sanitizes_credentials_and_records_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -795,4 +937,80 @@ def test_repository_root_is_rejected_as_a_sensitive_work_root(tmp_path: Path) ->
         "failure_stage=work-root-resolution",
         "failure_type=WorkRootOwnershipError",
         "failure_code=work-root-sensitive-location",
+    ]
+
+
+@pytest.mark.parametrize(
+    "lexeme",
+    [
+        r"\\?\C:\scratch",
+        r"\\.\C:\scratch",
+        r"\??\C:\scratch",
+        r"\\?\GLOBALROOT\Device\HarddiskVolume1",
+        r"\\server\share\scratch",
+        "//server/share/scratch",
+    ],
+)
+def test_unsupported_windows_namespace_and_network_lexemes_are_rejected(
+    lexeme: str,
+) -> None:
+    validator = getattr(finrl_module, "_validate_work_root_lexeme", lambda _value: None)
+
+    with pytest.raises(ValueError, match="unsupported Windows namespace or network root"):
+        validator(lexeme)
+
+
+def test_extended_length_alias_is_rejected_before_owned_target_mutation(
+    tmp_path: Path,
+) -> None:
+    lake_root = tmp_path / "lake"
+    target_root = tmp_path / "owned-target"
+    build_nvda_fixture(lake_root)
+    assert run_finrl_x(lake_root, target_root, runner=fake_finrl_runner).status == "passed"
+    victim = target_root / "checkout" / "must-survive.txt"
+    victim.parent.mkdir()
+    victim.write_text("preserve extended target", encoding="utf-8")
+    marker_before = (target_root / ".quantmesh-finrl-x-work-root.json").read_bytes()
+    extended_alias = rf"\\?\{target_root}"
+
+    result = run_finrl_x(lake_root, extended_alias, runner=fake_finrl_runner)  # type: ignore[arg-type]
+
+    assert result.status == "failed"
+    assert victim.read_text(encoding="utf-8") == "preserve extended target"
+    assert (target_root / ".quantmesh-finrl-x-work-root.json").read_bytes() == marker_before
+    assert result.limitations == [
+        "failure_stage=work-root-validation",
+        "failure_type=WorkRootOwnershipError",
+        "failure_code=work-root-unsupported-namespace",
+    ]
+
+
+def test_extended_length_sensitive_root_alias_never_reaches_preparation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository_root = Path(finrl_module.__file__).parents[2].resolve()
+    repository_marker = repository_root / ".quantmesh-finrl-x-work-root.json"
+    marker_existed = repository_marker.exists()
+    prepare_called = False
+
+    def forbidden_prepare(_work_root: Path) -> None:
+        nonlocal prepare_called
+        prepare_called = True
+        raise AssertionError("extended alias reached destructive preparation")
+
+    monkeypatch.setattr(finrl_module, "_prepare_owned_work_root", forbidden_prepare)
+    result = run_finrl_x(
+        tmp_path / "lake",
+        rf"\\?\{repository_root}",  # type: ignore[arg-type]
+        runner=fake_finrl_runner,
+    )
+
+    assert result.status == "failed"
+    assert prepare_called is False
+    assert repository_marker.exists() is marker_existed
+    assert result.limitations == [
+        "failure_stage=work-root-validation",
+        "failure_type=WorkRootOwnershipError",
+        "failure_code=work-root-unsupported-namespace",
     ]

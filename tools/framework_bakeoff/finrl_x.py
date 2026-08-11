@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -60,6 +61,15 @@ _DEPENDENCIES = (
     "sqlalchemy",
     "yfinance",
 )
+_CONTROLLER_ARTIFACTS = {
+    "backtest": "outputs/run-1/backtest.json",
+    "commands": "environment/commands.json",
+    "pip_check": "environment/pip-check.txt",
+    "pip_freeze": "environment/pip-freeze.txt",
+    "proposal": "outputs/run-1/proposal.json",
+    "weights": "outputs/run-1/weights.csv",
+}
+_UNAVAILABLE_INPUT_DIGEST = hashlib.sha256(b"finrl-x-input-unavailable").hexdigest()
 
 
 @dataclass(frozen=True)
@@ -99,6 +109,30 @@ def _path_is_link_or_reparse(path: Path) -> bool:
     except (AttributeError, FileNotFoundError, OSError):
         return False
     return bool(attributes & 0x400)  # FILE_ATTRIBUTE_REPARSE_POINT
+
+
+def _validate_work_root_lexeme(value: os.PathLike[str] | str) -> str:
+    """Reject Windows namespace and network aliases before constructing a Path."""
+    raw = os.fspath(value)
+    if not isinstance(raw, str):
+        raise WorkRootOwnershipError(
+            "unsupported Windows namespace or network root",
+            code="work-root-unsupported-namespace",
+        )
+    windows_form = raw.replace("/", "\\")
+    upper = windows_form.upper()
+    namespace_prefixes = ("\\\\?\\", "\\\\.\\", "\\??\\")
+    is_globalroot = upper == "GLOBALROOT" or upper.startswith("GLOBALROOT\\")
+    if (
+        windows_form.startswith("\\\\")
+        or upper.startswith(namespace_prefixes)
+        or is_globalroot
+    ):
+        raise WorkRootOwnershipError(
+            "unsupported Windows namespace or network root",
+            code="work-root-unsupported-namespace",
+        )
+    return raw
 
 
 def _lexical_work_root(path: Path) -> Path:
@@ -339,19 +373,102 @@ def _base_checks() -> dict[str, bool]:
 
 
 def _existing_artifacts(work_root: Path, candidates: dict[str, str]) -> dict[str, str]:
-    existing: dict[str, str] = {}
-    for name, relative in candidates.items():
+    """Return unique, real, in-root artifacts as canonical relative POSIX paths."""
+    root = work_root.resolve(strict=True)
+    discovered: list[tuple[str, str, str]] = []
+    for name, supplied in candidates.items():
         try:
-            path = work_root / relative
-            if (
-                path.is_file()
-                and not path.is_symlink()
-                and path.resolve().is_relative_to(work_root.resolve())
-            ):
-                existing[name] = relative
-        except (OSError, RuntimeError, ValueError):
+            if not isinstance(name, str) or not isinstance(supplied, str):
+                continue
+            if not name or not re.fullmatch(r"[a-z][a-z0-9_]*", name):
+                continue
+            candidate = Path(supplied)
+            if any(part in {".", ".."} for part in candidate.parts):
+                continue
+            path = candidate if candidate.is_absolute() else root / candidate
+            lexical = Path(os.path.abspath(os.fspath(path)))
+            if not lexical.is_relative_to(root):
+                continue
+            relative = lexical.relative_to(root)
+            current = root
+            linked = False
+            for part in relative.parts:
+                current /= part
+                if _path_is_link_or_reparse(current):
+                    linked = True
+                    break
+            if linked:
+                continue
+            resolved = lexical.resolve(strict=True)
+            if not resolved.is_relative_to(root) or not resolved.is_file():
+                continue
+            canonical = resolved.relative_to(root).as_posix()
+            identity = os.path.normcase(os.fspath(resolved))
+            discovered.append((name, canonical, identity))
+        except (OSError, RuntimeError, TypeError, ValueError):
             continue
-    return existing
+    counts: dict[str, int] = {}
+    for _name, _canonical, identity in discovered:
+        counts[identity] = counts.get(identity, 0) + 1
+    return {
+        name: canonical
+        for name, canonical, identity in discovered
+        if counts[identity] == 1
+    }
+
+
+def _controller_failure_artifacts(work_root: Path | None) -> dict[str, str]:
+    if work_root is None:
+        return {}
+    try:
+        return _existing_artifacts(work_root, _CONTROLLER_ARTIFACTS)
+    except Exception:
+        return {}
+
+
+def _controlled_duration(started: float) -> float:
+    try:
+        duration = time.perf_counter() - started
+    except Exception:
+        return 0.0
+    return duration if math.isfinite(duration) and duration >= 0 else 0.0
+
+
+def _controlled_environment_bytes(work_root: Path | None) -> int:
+    measured = _safe_directory_bytes(work_root / "venv" if work_root else None)
+    return measured if isinstance(measured, int) and measured >= 0 else 0
+
+
+def _safe_input_digest(value: object) -> str:
+    if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value):
+        return value
+    return _UNAVAILABLE_INPUT_DIGEST
+
+
+def _static_failure_evidence() -> FrameworkRunEvidence:
+    payload = {
+        "framework": "finrl-x",
+        "revision": FINRL_PIN,
+        "status": "failed",
+        "deterministic": False,
+        "input_digest": _UNAVAILABLE_INPUT_DIGEST,
+        "output_digest": None,
+        "duration_seconds": 0.0,
+        "peak_rss_mb": 0.0,
+        "environment_bytes": 0,
+        "checks": _base_checks(),
+        "artifacts": {},
+        "score_inputs": {},
+        "limitations": [
+            "failure_stage=fallback-evidence",
+            "failure_type=EvidenceConstructionError",
+            "failure_code=static-fallback",
+        ],
+    }
+    try:
+        return FrameworkRunEvidence(**payload)  # type: ignore[arg-type]
+    except Exception:
+        return FrameworkRunEvidence.model_construct(**payload)
 
 
 def _generic_failure_evidence(
@@ -361,48 +478,33 @@ def _generic_failure_evidence(
     started: float,
     input_digest: str,
     work_root: Path | None,
-    metadata: IsolatedRunMetadata | None,
 ) -> FrameworkRunEvidence:
-    candidates = {"commands": "environment/commands.json"}
-    if metadata is not None:
-        candidates.update(
-            {
-                "backtest": "outputs/run-1/backtest.json",
-                "proposal": "outputs/run-1/proposal.json",
-                "weights": "outputs/run-1/weights.csv",
-                **metadata.environment_artifacts,
-            }
-        )
     error_code = (
         error.code
         if isinstance(error, WorkRootOwnershipError)
         else "orchestration-failure"
     )
-    return FrameworkRunEvidence(
-        framework="finrl-x",
-        revision=metadata.revision if metadata is not None else FINRL_PIN,
-        status="failed",
-        deterministic=False,
-        input_digest=input_digest,
-        duration_seconds=(
-            metadata.duration_seconds
-            if metadata is not None
-            else time.perf_counter() - started
-        ),
-        peak_rss_mb=metadata.peak_rss_mb if metadata is not None else 0,
-        environment_bytes=(
-            metadata.environment_bytes
-            if metadata is not None
-            else _safe_directory_bytes(work_root / "venv" if work_root else None)
-        ),
-        checks=_base_checks(),
-        artifacts=_existing_artifacts(work_root, candidates) if work_root else {},
-        limitations=[
-            f"failure_stage={stage}",
-            f"failure_type={type(error).__name__}",
-            f"failure_code={error_code}",
-        ],
-    )
+    try:
+        return FrameworkRunEvidence(
+            framework="finrl-x",
+            revision=FINRL_PIN,
+            status="failed",
+            deterministic=False,
+            input_digest=_safe_input_digest(input_digest),
+            duration_seconds=_controlled_duration(started),
+            peak_rss_mb=0,
+            environment_bytes=_controlled_environment_bytes(work_root),
+            checks=_base_checks(),
+            artifacts=_controller_failure_artifacts(work_root),
+            score_inputs={},
+            limitations=[
+                f"failure_stage={stage}",
+                f"failure_type={type(error).__name__}",
+                f"failure_code={error_code}",
+            ],
+        )
+    except Exception:
+        return _static_failure_evidence()
 
 
 def _failure_summary(work_root: Path, error: CommandFailure) -> str:
@@ -827,22 +929,21 @@ def _validate_outputs(
 
 def run_finrl_x(
     lake_root: Path,
-    work_root: Path,
+    work_root: Path | str,
     *,
     runner: FinrlRunner = _real_finrl_runner,
 ) -> FrameworkRunEvidence:
     """Export one manifest-gated fixture and evaluate the pinned engine twice."""
     started = time.perf_counter()
-    input_digest = hashlib.sha256(b"finrl-x-input-unavailable").hexdigest()
-    lake_root = Path(lake_root)
-    caller_work_root = Path(work_root)
+    input_digest = _UNAVAILABLE_INPUT_DIGEST
     trusted_work_root: Path | None = None
     metadata: IsolatedRunMetadata | None = None
     stage = "work-root-validation"
     try:
-        lexical_work_root = _lexical_work_root(caller_work_root)
+        work_root_lexeme = _validate_work_root_lexeme(work_root)
+        lexical_work_root = _lexical_work_root(Path(work_root_lexeme))
         stage = "lake-root-resolution"
-        lake_root = lake_root.resolve()
+        lake_root = Path(lake_root).resolve()
         stage = "work-root-resolution"
         trusted_work_root = _resolve_safe_work_root(lexical_work_root)
         stage = "work-root-preparation"
@@ -864,6 +965,7 @@ def run_finrl_x(
         checks, problems, output_digest, deterministic = _validate_outputs(
             trusted_work_root, input_path, config_path, output_roots, metadata
         )
+        stage = "evidence-construction"
         limitations = [
             *metadata.limitations,
             f"upstream_version={metadata.version}",
@@ -873,19 +975,21 @@ def run_finrl_x(
             *problems,
         ]
         passed = deterministic and not problems and all(checks.values())
+        environment_artifacts = (
+            metadata.environment_artifacts
+            if isinstance(metadata.environment_artifacts, dict)
+            else {}
+        )
         artifacts = _existing_artifacts(
             trusted_work_root,
             {
-                "backtest": "outputs/run-1/backtest.json",
-                "proposal": "outputs/run-1/proposal.json",
-                "weights": "outputs/run-1/weights.csv",
-                **metadata.environment_artifacts,
+                **environment_artifacts,
+                **_CONTROLLER_ARTIFACTS,
             },
         )
-        stage = "evidence-construction"
         return FrameworkRunEvidence(
             framework="finrl-x",
-            revision=metadata.revision,
+            revision=FINRL_PIN,
             status="passed" if passed else "failed",
             deterministic=deterministic,
             input_digest=input_digest,
@@ -940,5 +1044,4 @@ def run_finrl_x(
             started=started,
             input_digest=input_digest,
             work_root=trusted_work_root,
-            metadata=metadata,
         )
