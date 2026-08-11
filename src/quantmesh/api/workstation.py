@@ -1446,6 +1446,13 @@ def main(argv: list[str] | None = None) -> None:
             "QUANTMESH_PREDICTION_WATCHLIST adds the prediction board)"
         ),
     )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        metavar="PORT",
+        help="loopback port override (default: QUANTMESH_WORKSTATION_PORT or 8765)",
+    )
     args = parser.parse_args(argv)
 
     host = settings.workstation_host
@@ -1454,6 +1461,9 @@ def main(argv: list[str] | None = None) -> None:
             f"workstation host must be loopback, got {host!r} "
             "(non-loopback binds are refused at construction)"
         )
+    port = settings.workstation_port if args.port is None else args.port
+    if not 1 <= port <= 65535:
+        parser.error("--port must be between 1 and 65535")
     if args.demo and args.live:
         raise SystemExit(
             "--demo and --live are mutually exclusive: the demo runtime is the "
@@ -1572,7 +1582,7 @@ def main(argv: list[str] | None = None) -> None:
             )
         else:
             app = create_workstation_app(account=account, host=host)
-    uvicorn.run(app, host=host, port=settings.workstation_port)
+    uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":

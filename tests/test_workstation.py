@@ -553,6 +553,27 @@ class TestConsoleScript:
         assert calls["host"] == "127.0.0.1"
         assert calls["port"] == 9876
 
+    def test_main_allows_a_loopback_operator_port_override(self, monkeypatch) -> None:
+        calls: dict = {}
+
+        def fake_run(*args, **kwargs) -> None:
+            calls.update(kwargs)
+
+        monkeypatch.setitem(sys.modules, "uvicorn", types.SimpleNamespace(run=fake_run))
+        monkeypatch.setattr(settings, "workstation_host", "127.0.0.1")
+        monkeypatch.setattr(settings, "workstation_port", 8765)
+
+        workstation.main(["--port", "8766"])
+
+        assert calls["host"] == "127.0.0.1"
+        assert calls["port"] == 8766
+
+    def test_main_refuses_an_out_of_range_port_override(self, monkeypatch) -> None:
+        monkeypatch.setitem(sys.modules, "uvicorn", types.SimpleNamespace(run=lambda **kw: None))
+
+        with pytest.raises(SystemExit, match="2"):
+            workstation.main(["--port", "65536"])
+
 
 class TestPhaseBScreens:
     """Phase B screens (issue #52): overview venue cards + watchlist
