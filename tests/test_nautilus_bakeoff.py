@@ -619,6 +619,53 @@ def test_runner_metadata_cannot_leak_nonportable_paths(tmp_path: Path) -> None:
     assert "private-user" not in payload
 
 
+def test_portable_https_command_survives_expected_path_redaction(
+    tmp_path: Path,
+) -> None:
+    work_root = tmp_path / "private-work-root"
+    command = (
+        "git clone --branch v1.231.0 "
+        "https://github.com/nautechsystems/nautilus_trader.git "
+        f"{work_root / 'checkout'}"
+    )
+    expected = command.replace(str(work_root), "{work_root}")
+
+    assert nautilus_module._portable_runner_text(command, work_root) == expected
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        "command --input=C:/Operators/private-user/input.json",
+        r"command --input=C:\Operators\private-user\input.json",
+        "prefixC:/Operators/private-user/input.json",
+        r"prefixC:\Operators\private-user\input.json",
+        r"command --input=\\server\share\private-user\input.json",
+        r"command --input=\\?\C:\Operators\private-user\input.json",
+        "command --input=/home/private-user/input.json",
+    ],
+)
+def test_runner_text_omits_absolute_paths_wherever_they_appear(
+    tmp_path: Path,
+    metadata: str,
+) -> None:
+    assert (
+        nautilus_module._portable_runner_text(metadata, tmp_path / "work")
+        == "nonportable-runner-metadata-omitted"
+    )
+
+
+def test_runner_text_removes_line_breaks_and_remains_bounded(tmp_path: Path) -> None:
+    metadata = "safe-prefix\r\nsafe-continuation " + "x" * 600
+
+    portable = nautilus_module._portable_runner_text(metadata, tmp_path / "work")
+
+    assert "\r" not in portable
+    assert "\n" not in portable
+    assert portable.startswith("safe-prefix  safe-continuation ")
+    assert len(portable) == 512
+
+
 def test_driver_source_has_no_quantmesh_or_live_adapter_imports() -> None:
     source = (
         Path(__file__).parents[1]

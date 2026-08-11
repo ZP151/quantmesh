@@ -866,7 +866,10 @@ def _portable_runner_text(value: object, work_root: Path) -> str:
     if not isinstance(value, str):
         return "invalid-runner-metadata-omitted"
     portable = _portable_text(value, work_root)
-    if re.search(r"(?i)(?:[a-z]:[\\/]|\\\\|(?:^|[=\s])/[^/\s])", portable):
+    if re.search(
+        r"(?i)(?:[a-z]:(?:\\|/(?!/))|\\\\|(?:^|[=\s])/[^/\s])",
+        portable,
+    ):
         return "nonportable-runner-metadata-omitted"
     return portable.replace("\r", " ").replace("\n", " ")[:512]
 
