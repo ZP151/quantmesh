@@ -1,0 +1,30 @@
+{
+  "artifacts": {
+    "commands": "environment/commands.json",
+    "failure_stderr": "logs/06-install-driver-imports.stderr.log",
+    "failure_stdout": "logs/06-install-driver-imports.stdout.log"
+  },
+  "checks": {
+    "chronological_split": false,
+    "license": true,
+    "no_leakage": false,
+    "windows_install": false
+  },
+  "deterministic": false,
+  "duration_seconds": 31.71950189996278,
+  "environment_bytes": 13275793,
+  "framework": "finrl-x",
+  "input_digest": "3b8ba32b4947b081027623a8599379648c94d0d37ac7e7c430c648d16b4a2d7c",
+  "limitations": [
+    "failed command: {work_root}/venv/Scripts/python.exe -m pip install numpy pandas scipy matplotlib bt ffn scikit-learn requests python-dotenv pydantic pydantic-settings sqlalchemy yfinance",
+    "exit_code=1",
+    "failure: error: Microsoft Visual C++ 14.0 or greater is required. Get it with \"Microsoft C++ Build Tools\": https://visualstudio.microsoft.com/visual-cpp-build-tools/",
+    "stderr_log=logs/06-install-driver-imports.stderr.log"
+  ],
+  "output_digest": null,
+  "peak_rss_mb": 6.8515625,
+  "revision": "e65d6f0483ead7d2ef4a5fc940cdf960392a25c1",
+  "schema_version": 1,
+  "score_inputs": {},
+  "status": "failed"
+}
