@@ -6,12 +6,14 @@
   },
   "checks": {
     "chronological_split": false,
+    "contract_mapping": false,
     "license": true,
     "no_leakage": false,
+    "paper_only": false,
     "windows_install": false
   },
   "deterministic": false,
-  "duration_seconds": 31.71950189996278,
+  "duration_seconds": 63.10752959997626,
   "environment_bytes": 13275793,
   "framework": "finrl-x",
   "input_digest": "3b8ba32b4947b081027623a8599379648c94d0d37ac7e7c430c648d16b4a2d7c",
@@ -19,7 +21,12 @@
     "failed command: {work_root}/venv/Scripts/python.exe -m pip install numpy pandas scipy matplotlib bt ffn scikit-learn requests python-dotenv pydantic pydantic-settings sqlalchemy yfinance",
     "exit_code=1",
     "failure: error: Microsoft Visual C++ 14.0 or greater is required. Get it with \"Microsoft C++ Build Tools\": https://visualstudio.microsoft.com/visual-cpp-build-tools/",
-    "stderr_log=logs/06-install-driver-imports.stderr.log"
+    "stderr_log=logs/06-install-driver-imports.stderr.log",
+    "failure_stage=dependency-install",
+    "failure_package=bt",
+    "failure_excerpt=error: subprocess-exited-with-error | \u00d7 Building wheel for bt (pyproject.toml) did not run successfully. | creating build\\lib.win-amd64-cpython-313\\bt | copying bt\\algos.py -> build\\lib.win-amd64-cpython-313\\bt | copying bt\\backtest.py -> build\\lib.win-amd64-cpython-313\\bt | copying bt\\core.py -> build\\lib.win-amd64-cpython-313\\bt | copying bt\\__init__.py -> build\\lib.win-amd64-cpython-313\\bt | building 'bt.core' extension | error: Microsoft Visual C++ 14.0 or greater is required. Get it with \"Microsoft C++",
+    "failure_excerpt_sha256=e740d494fa74b32c3f50cc90719980c60a1c90e15bcbc4a86e1adaf54c3bc25b",
+    "peak_rss_scope=direct-child-process-only"
   ],
   "output_digest": null,
   "peak_rss_mb": 6.8515625,

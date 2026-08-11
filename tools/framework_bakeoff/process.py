@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import ctypes
 import os
+import signal
 import subprocess
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 
 
 @dataclass(frozen=True)
@@ -38,9 +40,6 @@ class CommandFailure(RuntimeError):
 
 _INHERITED_ENVIRONMENT = {
     "COMSPEC",
-    "HTTPS_PROXY",
-    "HTTP_PROXY",
-    "NO_PROXY",
     "PATH",
     "PATHEXT",
     "REQUESTS_CA_BUNDLE",
@@ -52,10 +51,85 @@ _INHERITED_ENVIRONMENT = {
     "TMP",
     "WINDIR",
 }
+_PROXY_ENVIRONMENT = {"ALL_PROXY", "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY"}
 _BLOCKED_ENVIRONMENT_MARKERS = ("API_KEY", "PASSWORD", "PRIVATE_KEY", "SECRET", "TOKEN")
+_POST_KILL_TIMEOUT_SECONDS = 0.75
 
 
-def _child_environment(extra: Mapping[str, str] | None) -> dict[str, str]:
+class _IoCounters(ctypes.Structure):
+    _fields_ = [
+        ("ReadOperationCount", ctypes.c_ulonglong),
+        ("WriteOperationCount", ctypes.c_ulonglong),
+        ("OtherOperationCount", ctypes.c_ulonglong),
+        ("ReadTransferCount", ctypes.c_ulonglong),
+        ("WriteTransferCount", ctypes.c_ulonglong),
+        ("OtherTransferCount", ctypes.c_ulonglong),
+    ]
+
+
+class _BasicLimitInformation(ctypes.Structure):
+    _fields_ = [
+        ("PerProcessUserTimeLimit", ctypes.c_longlong),
+        ("PerJobUserTimeLimit", ctypes.c_longlong),
+        ("LimitFlags", ctypes.c_ulong),
+        ("MinimumWorkingSetSize", ctypes.c_size_t),
+        ("MaximumWorkingSetSize", ctypes.c_size_t),
+        ("ActiveProcessLimit", ctypes.c_ulong),
+        ("Affinity", ctypes.c_size_t),
+        ("PriorityClass", ctypes.c_ulong),
+        ("SchedulingClass", ctypes.c_ulong),
+    ]
+
+
+class _ExtendedLimitInformation(ctypes.Structure):
+    _fields_ = [
+        ("BasicLimitInformation", _BasicLimitInformation),
+        ("IoInfo", _IoCounters),
+        ("ProcessMemoryLimit", ctypes.c_size_t),
+        ("JobMemoryLimit", ctypes.c_size_t),
+        ("PeakProcessMemoryUsed", ctypes.c_size_t),
+        ("PeakJobMemoryUsed", ctypes.c_size_t),
+    ]
+
+
+def _assign_kill_on_close_job(process: subprocess.Popen[object]) -> int | None:
+    if os.name != "nt":
+        return None
+    kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+    kernel32.CreateJobObjectW.restype = ctypes.c_void_p
+    job = kernel32.CreateJobObjectW(None, None)
+    if not job:
+        return None
+    limits = _ExtendedLimitInformation()
+    limits.BasicLimitInformation.LimitFlags = 0x00002000
+    configured = kernel32.SetInformationJobObject(
+        ctypes.c_void_p(job), 9, ctypes.byref(limits), ctypes.sizeof(limits)
+    )
+    assigned = configured and kernel32.AssignProcessToJobObject(
+        ctypes.c_void_p(job), ctypes.c_void_p(int(process._handle))  # type: ignore[attr-defined]
+    )
+    if not assigned:
+        kernel32.CloseHandle(ctypes.c_void_p(job))
+        return None
+    return int(job)
+
+
+def _close_job(job: int | None) -> None:
+    if job is not None:
+        ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(job))  # type: ignore[attr-defined]
+
+
+def _validate_proxy(name: str, value: str) -> None:
+    if name.upper() == "NO_PROXY":
+        return
+    parsed = urlsplit(value)
+    if parsed.username is not None or parsed.password is not None:
+        raise ValueError(f"credential-bearing proxy URL is forbidden: {name}")
+
+
+def _child_environment(
+    extra: Mapping[str, str] | None, *, inherit_proxy: bool
+) -> dict[str, str]:
     environment = {
         name: value for name, value in os.environ.items() if name.upper() in _INHERITED_ENVIRONMENT
     }
@@ -70,10 +144,18 @@ def _child_environment(extra: Mapping[str, str] | None) -> dict[str, str]:
             "PYTHONUTF8": "1",
         }
     )
+    if inherit_proxy:
+        for name, value in os.environ.items():
+            upper_name = name.upper()
+            if upper_name in _PROXY_ENVIRONMENT:
+                _validate_proxy(upper_name, value)
+                environment[upper_name] = value
     for name, value in (extra or {}).items():
         upper_name = name.upper()
         if any(marker in upper_name for marker in _BLOCKED_ENVIRONMENT_MARKERS):
             raise ValueError(f"credential-like environment variable is forbidden: {name}")
+        if upper_name in _PROXY_ENVIRONMENT:
+            _validate_proxy(upper_name, value)
         environment[name] = value
     return environment
 
@@ -126,6 +208,47 @@ def _peak_process_rss_mb(process: subprocess.Popen[str]) -> float:
     return counters.PeakWorkingSetSize / (1024 * 1024)
 
 
+def _terminate_process_tree(
+    process: subprocess.Popen[object], job: int | None
+) -> str:
+    if os.name == "nt":
+        if job is not None and ctypes.windll.kernel32.TerminateJobObject(  # type: ignore[attr-defined]
+            ctypes.c_void_p(job), 1
+        ):
+            mechanism = "job_object_terminated"
+        else:
+            try:
+                killed = subprocess.run(
+                    ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                    stdin=subprocess.DEVNULL,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=_POST_KILL_TIMEOUT_SECONDS,
+                    check=False,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+                mechanism = f"taskkill_exit={killed.returncode}"
+            except subprocess.TimeoutExpired:
+                mechanism = "taskkill_timeout"
+    else:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+            mechanism = "process_group_sigkill"
+        except ProcessLookupError:
+            mechanism = "process_group_already_exited"
+    try:
+        process.wait(timeout=_POST_KILL_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        try:
+            process.wait(timeout=_POST_KILL_TIMEOUT_SECONDS)
+        except subprocess.TimeoutExpired:
+            return f"{mechanism}; direct_process_termination_unverified"
+    return f"{mechanism}; direct_process_termination_verified"
+
+
 def run_command(
     command: Sequence[str],
     *,
@@ -135,6 +258,7 @@ def run_command(
     placeholders: Mapping[Path, str],
     timeout_seconds: float,
     env: Mapping[str, str] | None = None,
+    inherit_proxy: bool = False,
     check: bool = True,
 ) -> CommandResult:
     """Run one argv-only command with bounded time, sanitized env, and raw logs."""
@@ -151,45 +275,55 @@ def run_command(
     stdout_path = logs_root / f"{label}.stdout.log"
     stderr_path = logs_root / f"{label}.stderr.log"
     display_command = _portable_command(command, placeholders)
+    child_environment = _child_environment(env, inherit_proxy=inherit_proxy)
     started = time.perf_counter()
-    creation_flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-    process = subprocess.Popen(
-        list(command),
-        cwd=cwd,
-        env=_child_environment(env),
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        creationflags=creation_flags,
+    creation_flags = (
+        subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
+        if os.name == "nt"
+        else 0
     )
-    peak_rss_mb = 0.0
-    timed_out = False
-    while True:
-        peak_rss_mb = max(peak_rss_mb, _peak_process_rss_mb(process))
-        remaining = timeout_seconds - (time.perf_counter() - started)
-        if remaining <= 0:
-            timed_out = True
-            process.kill()
-            stdout, stderr = process.communicate()
-            break
+    with stdout_path.open("w", encoding="utf-8") as stdout_handle, stderr_path.open(
+        "w", encoding="utf-8"
+    ) as stderr_handle:
+        process = subprocess.Popen(
+            list(command),
+            cwd=cwd,
+            env=child_environment,
+            stdin=subprocess.DEVNULL,
+            stdout=stdout_handle,
+            stderr=stderr_handle,
+            creationflags=creation_flags,
+            start_new_session=os.name != "nt",
+        )
+        job = _assign_kill_on_close_job(process)
         try:
-            stdout, stderr = process.communicate(timeout=min(0.1, remaining))
-            break
-        except subprocess.TimeoutExpired:
-            continue
+            peak_rss_mb = 0.0
+            timed_out = False
+            while True:
+                peak_rss_mb = max(peak_rss_mb, _peak_process_rss_mb(process))
+                remaining = timeout_seconds - (time.perf_counter() - started)
+                if remaining <= 0:
+                    timed_out = True
+                    termination = _terminate_process_tree(process, job)
+                    break
+                try:
+                    process.wait(timeout=min(0.1, remaining))
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
 
-    duration_seconds = time.perf_counter() - started
-    peak_rss_mb = max(peak_rss_mb, _peak_process_rss_mb(process))
-    if timed_out:
-        stderr = f"{stderr}\ncommand timed out after {timeout_seconds:.3f} seconds\n"
-        exit_code = -1
-    else:
-        exit_code = process.returncode
-    stdout_path.write_text(stdout, encoding="utf-8")
-    stderr_path.write_text(stderr, encoding="utf-8")
+            duration_seconds = time.perf_counter() - started
+            peak_rss_mb = max(peak_rss_mb, _peak_process_rss_mb(process))
+            if timed_out:
+                stderr_handle.write(
+                    f"\ncommand timed out after {timeout_seconds:.3f} seconds; "
+                    f"{termination}\n"
+                )
+                exit_code = -1
+            else:
+                exit_code = process.returncode
+        finally:
+            _close_job(job)
     relative_root = logs_root.parent
     result = CommandResult(
         command=display_command,
