@@ -262,7 +262,20 @@ def main() -> int:
         ),
         step(
             "full pytest suite",
-            [_venv_python(temp / "release-venv"), "-m", "pytest", "-q"],
+            [
+                _venv_python(temp / "release-venv"),
+                "-m",
+                "pytest",
+                "-q",
+                # Do not let pytest touch the shared Windows TEMP root:
+                # a locked pytest-current symlink can make an otherwise
+                # green release suite fail during pytest's final cleanup.
+                # Keep the test root adjacent to (never inside) checkout,
+                # because commit-resolution tests intentionally expect a
+                # temp path outside the repository's .git ancestry.
+                "--basetemp",
+                str(temp / "pytest-tmp"),
+            ],
             checkout,
             2400,
         ),
