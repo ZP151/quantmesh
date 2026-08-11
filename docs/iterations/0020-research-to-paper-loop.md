@@ -323,6 +323,36 @@ not sufficient for cross-agent recovery.
   Task 5 (venue-aware historical data contracts and service) is now the active
   implementation frontier.
 
+### Task 5 implementation complete — independent review pending
+
+- Strict TDD began with a collection RED because `quantmesh.instruments` did
+  not exist. The new focused suite is GREEN at 31/31 tests; the plan-prescribed
+  history/lake/manifest compatibility run is 110 passed and 3 platform-skipped.
+- `HistoryRange` now exposes the stable `1d`, `5d`, `1m`, `3m`, `6m` and `1y`
+  wire values. `DatasetBinding` routes one exact venue/symbol/resolution to a
+  dataset ID while retaining calendar and adjustment semantics; it does not
+  duplicate `Dataset`, `Bar`, `Instrument` or `Venue` domain authority.
+- `HistoryService` receives a narrow dataset loader and invokes it on every
+  request, so reads pass through the current lake manifest gate instead of a
+  cached `Dataset`. It selects `5m`, `30m`, `1h` or `1d` according to the
+  requested range and only falls back to the nearest coarser bound interval,
+  recording the transition explicitly.
+- Returned series normalize aware timestamps to UTC and carry the manifest
+  dataset ID, revision, source, license, generated time and coverage together
+  with calendar, adjustment, gaps, duplicates, limitations and resolution
+  fallback. Deterministic fixed windows are 1, 5, 31, 93, 186 and 366 calendar
+  days ending inclusively at the injected `as_of` value.
+- Empty windows, stale/missing/foreign manifest coverage, ambiguous bindings,
+  finer fallback, mixed identity or interval, duplicate/non-monotonic rows,
+  future leakage, and live-tail/forecast rows fail closed. Comparison series
+  use only exact shared observed timestamps, never forward-fill, require two
+  shared points and normalize each positive finite first close to 100 under
+  the stable `venue:symbol` key.
+- Focused Ruff and `git diff --check` are clean. No dependency, storage,
+  frontend, execution-authority or upstream-code change was made. Independent
+  Task 5 review remains pending; no tracked plan checkbox or `ACTIVE.md` state
+  is advanced by this implementation checkpoint.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another
