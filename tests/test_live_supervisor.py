@@ -250,6 +250,7 @@ class TestHyperliquidSupervisor:
         assert update.kind is UpdateKind.CANDLE
         assert update.payload["open"] == 99.0
         assert update.payload["close"] == 101.0
+        assert update.payload["interval"] == "1m"
         assert update.sequence == 1_750_000_000_000
 
     def test_trade_sequence_gap_detected(self) -> None:
@@ -366,6 +367,8 @@ class TestDisconnectDrill:
         assert UpdateKind.L2_SNAPSHOT in kinds  # book snapshot replaced
         gapped = [u for u in updates if u.kind in (UpdateKind.CANDLE, UpdateKind.L2_SNAPSHOT)]
         assert all(u.sequence_gap for u in gapped)
+        candle = next(update for update in updates if update.kind is UpdateKind.CANDLE)
+        assert candle.payload["interval"] == "1m"
         messages = " ".join(f.message for f in findings)
         assert "cannot be REST re-synced" in messages  # trades gap reported
 

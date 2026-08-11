@@ -389,6 +389,46 @@ not sufficient for cross-agent recovery.
   verified Ruff, diff cleanliness, FastAPI encoding and strict JSON round trips.
   Task 6 (historical and continuity-safe live-tail API) is the active frontier.
 
+### Task 6 initial implementation — independent review pending
+
+- Strict TDD began with 34 expected failures: the workstation did not accept a
+  historical service, no instrument-history router existed, and Hyperliquid
+  candle payloads omitted their interval. The new API suite now covers 34
+  focused cases, including root/API parity, exact OpenAPI response identity,
+  stable input and absence errors, bounded comparison parsing, and execution
+  state immutability.
+- `GET /instruments/{venue}/{symbol}/history` and its `/api` mount resolve one
+  explicit aware request time, pass it to both primary history and normalized
+  comparison reads, and return the strict `HistoricalPayload` envelope. A
+  missing service returns the exact typed 404; invalid venue, range, symbol or
+  comparison syntax returns 422; unavailable manifest-backed data returns a
+  stable reason-bearing 404.
+- Repeated and comma-separated comparison values retain first-seen order,
+  deduplicate peers, refuse the primary instrument, and cap query-value count,
+  token length, symbol length and unique peers. Comparisons remain Task 5
+  observed-only output and never receive a live or forecast tail.
+- The optional live join addresses the exact venue/symbol/candle cache key. It
+  accepts only real or delayed provenance with a present sequence, no sequence
+  gap, aware non-future timestamp, finite valid OHLCV and an explicit canonical
+  payload interval exactly equal to the selected historical interval. It can
+  replace only the final timestamp or append exactly one next interval; every
+  matching refusal preserves the frozen Task 5 series and adds a stable
+  limitation. Adjusted history refuses an unadjusted live candle.
+- Hyperliquid stream and reconnect candles now carry the canonical `1m`
+  interval with focused regressions. Task 5 currently selects no interval finer
+  than `5m`; those candles therefore remain truthfully unjoined unless a future
+  explicitly reviewed producer/range policy aligns the intervals. No interval
+  is inferred and no browser-side aggregation is introduced.
+- TypeScript now mirrors the immutable history, coverage, comparison and
+  payload wire shapes, including exact venue and instrument-type unions. The
+  client URL-encodes path values, sends the selected range, and omits an empty
+  comparison query instead of emitting a misleading blank value.
+- Verification is 148/148 across Task 6, SPA API, Task 5 history, live feed and
+  Hyperliquid supervisor suites. TypeScript `--noEmit`, focused Ruff and
+  `git diff --check` pass using a unique system-temp pytest base that was
+  removed. No dependency, built frontend asset, execution route or order
+  authority changed. Fresh independent review remains pending.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another

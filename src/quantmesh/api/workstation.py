@@ -72,6 +72,8 @@ from quantmesh.events.mapping import MappingLedger
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
+from quantmesh.instruments.api import instrument_router
+from quantmesh.instruments.history import HistoryService
 from quantmesh.live.api import live_router
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.prediction import PredictionBoard
@@ -981,6 +983,7 @@ def create_workstation_app(
     documents: DocumentIndex | None = None,
     hl_posture: HyperliquidRiskLimits | None = None,
     enablement: ApprovalLedger | None = None,
+    history: HistoryService | None = None,
     live_feed: LiveFeed | None = None,
     prediction: PredictionBoard | None = None,
     host: str | None = None,
@@ -1008,7 +1011,11 @@ def create_workstation_app(
     owned and never permitted from the UI. The kill-switch POST flips
     the injected account's flag in both `app.state` and the page
     context, so the JSON surface and every page agree (ADR-0011
-    decision 6). `live_feed` (iteration 0015 Phase C) attaches the live
+    decision 6). `history` (iteration 0020 Task 6) attaches the
+    manifest-gated historical instrument service. Its read-only router
+    mounts at both the root and `/api`; without the service it returns a
+    typed 404 and never constructs data inside a request. `live_feed`
+    (iteration 0015 Phase C) attaches the live
     read-only feed: the /api/live surface mounts either way (404
     without a feed), and an attached feed starts its pump with the app
     lifespan and stops it on shutdown. `prediction` (iteration 0015
@@ -1044,6 +1051,7 @@ def create_workstation_app(
         hl_posture=hl_posture,
         enablement=enablement,
     )
+    app.state.history = history
 
     # The SPA JSON surface (Phase C) in both modes: a strict superset
     # of the M1 API, so a client that wants JSON has one source of
@@ -1055,15 +1063,26 @@ def create_workstation_app(
         generate_unique_id_function=lambda route: f"api_{route.name}",
     )
 
+    # Venue-aware observed history is double-mounted like the live surface:
+    # root for direct local clients and /api for the SPA. Both handlers read
+    # the same injected service and optional feed from app.state.
+    router = instrument_router()
+    app.include_router(router)
+    app.include_router(
+        router,
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
+
     # The live feed surface (iteration 0015 Phase C, ADR-0014 decision
     # 4): WebSocket + SSE stream, latest-state and connector health,
     # double-mounted like the demo router. Without an attached feed the
     # handlers answer 404 ("no live feed is attached"), so the
     # workstation is unchanged when no live watchlist is configured.
-    router = live_router()
-    app.include_router(router)
+    live = live_router()
+    app.include_router(live)
     app.include_router(
-        router,
+        live,
         prefix="/api",
         generate_unique_id_function=lambda route: f"api_{route.name}",
     )

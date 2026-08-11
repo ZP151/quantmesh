@@ -474,6 +474,81 @@ export interface ReplayWindow {
   updates: MarketUpdate[]
 }
 
+// --- Integrated instrument history (iteration 0020 Task 6) -----------------
+
+export type HistoryRange = '1d' | '5d' | '1m' | '3m' | '6m' | '1y'
+export type AdjustmentMode = 'unadjusted' | 'split-adjusted' | 'total-return'
+export type HistoricalVenue = 'internal' | 'moomoo' | 'hyperliquid' | 'polymarket' | 'kalshi'
+export type HistoricalInstrumentType = 'equity' | 'etf' | 'perpetual' | 'spot' | 'event_contract'
+
+export interface HistoricalInstrument {
+  readonly symbol: string
+  readonly venue: HistoricalVenue
+  readonly instrument_type: HistoricalInstrumentType
+  readonly currency: string
+  readonly metadata: Readonly<Record<string, string>>
+}
+
+export interface HistoricalBar {
+  readonly instrument: HistoricalInstrument
+  readonly timestamp: string
+  readonly interval: string
+  readonly open: number
+  readonly high: number
+  readonly low: number
+  readonly close: number
+  readonly volume: number
+  readonly adjusted_close: number | null
+  readonly is_live_tail: boolean
+}
+
+export interface HistoricalCoverage {
+  readonly interval: string
+  readonly venue: HistoricalVenue
+  readonly symbol: string
+  readonly start: string
+  readonly end: string
+  readonly rows: number
+}
+
+export interface HistoricalSeries {
+  readonly instrument: HistoricalInstrument
+  readonly range: HistoryRange
+  readonly as_of: string
+  readonly bars: readonly HistoricalBar[]
+  readonly dataset_id: string
+  readonly dataset_revision: number
+  readonly source: string
+  readonly license: string
+  readonly generated_at: string
+  readonly interval: string
+  readonly calendar: string
+  readonly adjustment: AdjustmentMode
+  readonly coverage: HistoricalCoverage
+  readonly gaps: readonly string[]
+  readonly duplicates: readonly string[]
+  readonly limitations: readonly string[]
+  readonly resolution_fallback: string | null
+}
+
+export interface ComparisonPoint {
+  readonly timestamp: string
+  readonly values: Readonly<Record<string, number>>
+}
+
+export interface ComparisonSeries {
+  readonly range: HistoryRange
+  readonly as_of: string
+  readonly keys: readonly string[]
+  readonly points: readonly ComparisonPoint[]
+  readonly limitations: readonly string[]
+}
+
+export interface HistoricalPayload {
+  readonly primary: HistoricalSeries
+  readonly comparison: ComparisonSeries | null
+}
+
 // --- Client --------------------------------------------------------------
 
 export class ApiError extends Error {
@@ -600,6 +675,19 @@ export const api = {
   liveState: () => request<LiveState>('/api/live/state'),
   liveStatus: () => request<LiveStatus>('/api/live/status'),
   prediction: () => request<PredictionRow[]>('/api/live/prediction'),
+
+  history: (
+    venue: HistoricalVenue,
+    symbol: string,
+    range: HistoryRange,
+    compare: readonly string[] = [],
+  ) => {
+    const params = new URLSearchParams({ range })
+    if (compare.length > 0) params.set('compare', compare.join(','))
+    return request<HistoricalPayload>(
+      `/api/instruments/${encodeURIComponent(venue)}/${encodeURIComponent(symbol)}/history?${params}`,
+    )
+  },
 
   // Slice 4 — the recorded replay surface over the local lake.
   replayExtent: () => request<ReplayExtent>('/api/live/replay/windows'),
