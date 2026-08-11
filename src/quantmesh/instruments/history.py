@@ -5,12 +5,13 @@ from collections.abc import Callable, Iterable
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
-from quantmesh.data.manifest import DatasetManifest, SeriesCoverage
+from quantmesh.data.manifest import DatasetManifest
 from quantmesh.domain.market_data import Bar, find_gaps, interval_to_timedelta
 from quantmesh.domain.models import Venue
 from quantmesh.instruments.contracts import (
     ComparisonPoint,
     ComparisonSeries,
+    CoverageSnapshot,
     DatasetBinding,
     HistoricalBar,
     HistoricalSeries,
@@ -33,6 +34,7 @@ _WINDOW = {
     HistoryRange.SIX_MONTHS: timedelta(days=186),
     HistoryRange.ONE_YEAR: timedelta(days=366),
 }
+_CONTINUOUS_CALENDAR = "24/7"
 
 
 class ReadableDataset(Protocol):
@@ -79,13 +81,14 @@ class HistoryService:
         self._bindings = tuple(bindings)
         self._dataset_loader = dataset_loader
         self._now = now or (lambda: datetime.now(UTC))
-        seen: set[tuple[Venue, str, str]] = set()
+        seen: set[tuple[Venue, str, timedelta]] = set()
         for current in self._bindings:
-            identity = (current.venue, current.symbol, current.interval)
+            resolution = interval_to_timedelta(current.interval)
+            identity = (current.venue, current.symbol, resolution)
             if identity in seen:
                 raise ValueError(
                     "ambiguous dataset bindings for "
-                    f"{current.venue.value}:{current.symbol} at {current.interval}"
+                    f"{current.venue.value}:{current.symbol} at resolution {resolution}"
                 )
             seen.add(identity)
 
@@ -130,6 +133,15 @@ class HistoryService:
                 "manifest coverage must contain exactly one bound "
                 f"{selected.interval}/{venue.value}/{symbol} series"
             )
+        manifest_coverage = matching_coverage[0]
+        normalized_coverage = CoverageSnapshot(
+            interval=manifest_coverage.interval,
+            venue=manifest_coverage.venue,
+            symbol=manifest_coverage.symbol,
+            start=_aware_utc(manifest_coverage.start, "coverage start"),
+            end=_aware_utc(manifest_coverage.end, "coverage end"),
+            rows=manifest_coverage.rows,
+        )
         start = selected_as_of - _WINDOW[range]
         rows = dataset.read_bars(
             interval=selected.interval,
@@ -147,23 +159,23 @@ class HistoryService:
             selected=selected,
             start=start,
             as_of=selected_as_of,
+            coverage=normalized_coverage,
         )
         timestamps = [item.timestamp for item in historical]
-        gaps = find_gaps(timestamps, interval=selected.interval)
-        manifest_coverage = matching_coverage[0]
-        normalized_coverage = SeriesCoverage(
-            interval=manifest_coverage.interval,
-            venue=manifest_coverage.venue,
-            symbol=manifest_coverage.symbol,
-            start=_aware_utc(manifest_coverage.start, "coverage start"),
-            end=_aware_utc(manifest_coverage.end, "coverage end"),
-            rows=manifest_coverage.rows,
-        )
+        if selected.calendar == _CONTINUOUS_CALENDAR:
+            gaps = tuple(find_gaps(timestamps, interval=selected.interval))
+            limitations: tuple[str, ...] = ()
+        else:
+            gaps = ()
+            limitations = (
+                "Gap detection requires a session calendar and was not run for "
+                f"{selected.calendar}.",
+            )
         return HistoricalSeries(
             instrument=historical[0].instrument,
             range=range,
             as_of=selected_as_of,
-            bars=historical,
+            bars=tuple(historical),
             dataset_id=selected.dataset_id,
             dataset_revision=dataset_manifest.revision,
             source=dataset_manifest.source,
@@ -174,8 +186,8 @@ class HistoryService:
             adjustment=selected.adjustment,
             coverage=normalized_coverage,
             gaps=gaps,
-            duplicates=[],
-            limitations=[],
+            duplicates=(),
+            limitations=limitations,
             resolution_fallback=fallback,
         )
 
@@ -189,7 +201,7 @@ class HistoryService:
     ) -> ComparisonSeries:
         """Rebase closes over timestamps observed by every requested series."""
         identities = [primary, *peers]
-        keys = [_key(venue, symbol) for venue, symbol in identities]
+        keys = tuple(_key(venue, symbol) for venue, symbol in identities)
         if len(keys) < 2:
             raise ValueError("comparison requires a primary and at least one peer")
         if len(set(keys)) != len(keys):
@@ -216,7 +228,7 @@ class HistoryService:
         bases = [values[timestamps[0]] for values in by_timestamp]
         if any(not math.isfinite(base) or base <= 0 for base in bases):
             raise ValueError("comparison base closes must be finite and positive")
-        points = [
+        points = tuple(
             ComparisonPoint(
                 timestamp=timestamp,
                 values={
@@ -225,13 +237,20 @@ class HistoryService:
                 },
             )
             for timestamp in timestamps
-        ]
+        )
+        limitations = tuple(
+            dict.fromkeys(
+                limitation
+                for current in series
+                for limitation in current.limitations
+            )
+        )
         return ComparisonSeries(
             range=range,
             as_of=selected_as_of,
             keys=keys,
             points=points,
-            limitations=[],
+            limitations=limitations,
         )
 
     def _select_binding(
@@ -246,10 +265,14 @@ class HistoryService:
         if not candidates:
             raise ValueError(f"unknown venue/symbol {venue.value}:{symbol}")
         preferred = _PREFERRED_INTERVAL[requested_range]
-        exact = [item for item in candidates if item.interval == preferred]
+        preferred_step = interval_to_timedelta(preferred)
+        exact = [
+            item
+            for item in candidates
+            if interval_to_timedelta(item.interval) == preferred_step
+        ]
         if exact:
             return exact[0], None
-        preferred_step = interval_to_timedelta(preferred)
         coarser = [
             item
             for item in candidates
@@ -270,6 +293,7 @@ class HistoryService:
         selected: DatasetBinding,
         start: datetime,
         as_of: datetime,
+        coverage: CoverageSnapshot,
     ) -> list[HistoricalBar]:
         converted: list[HistoricalBar] = []
         timestamps: list[datetime] = []
@@ -286,6 +310,8 @@ class HistoryService:
                 raise ValueError("historical reader returned future leakage")
             if timestamp < start:
                 raise ValueError("historical reader returned data outside the requested window")
+            if timestamp < coverage.start or timestamp > coverage.end:
+                raise ValueError("historical reader returned data outside manifest coverage")
             if row.interval != selected.interval:
                 raise ValueError("historical reader returned a mixed interval")
             identity = (row.instrument.venue, row.instrument.symbol)
@@ -315,4 +341,13 @@ class HistoryService:
             raise ValueError("historical reader returned a duplicate timestamp")
         if timestamps != sorted(timestamps):
             raise ValueError("historical reader returned a non-monotonic series")
+        if start <= coverage.start and as_of >= coverage.end:
+            if len(timestamps) != coverage.rows:
+                raise ValueError(
+                    "manifest coverage row count does not match the full requested read"
+                )
+            if timestamps[0] != coverage.start or timestamps[-1] != coverage.end:
+                raise ValueError(
+                    "manifest coverage extent does not match the full requested read"
+                )
         return converted

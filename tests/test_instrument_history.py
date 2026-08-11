@@ -15,10 +15,12 @@ from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.instruments.contracts import (
     ComparisonPoint,
     ComparisonSeries,
+    CoverageSnapshot,
     DatasetBinding,
     HistoricalBar,
     HistoricalSeries,
     HistoryRange,
+    InstrumentSnapshot,
 )
 from quantmesh.instruments.history import HistoryService
 
@@ -69,13 +71,14 @@ def binding(
     dataset_id: str = "equities",
     interval: str = "1d",
     venue: Venue = Venue.MOOMOO,
+    calendar: str | None = None,
 ) -> DatasetBinding:
     return DatasetBinding(
         dataset_id=dataset_id,
         interval=interval,
         venue=venue,
         symbol=symbol,
-        calendar="XNYS" if venue is Venue.MOOMOO else "24/7",
+        calendar=calendar or ("XNYS" if venue is Venue.MOOMOO else "24/7"),
         adjustment="unadjusted",
     )
 
@@ -185,7 +188,7 @@ def test_history_is_manifest_gated_venue_aware_chronological_and_provenanced() -
 
     series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
 
-    assert series.instrument == NVDA
+    assert series.instrument.model_dump(mode="json") == NVDA.model_dump(mode="json")
     assert series.dataset_id == "equities"
     assert series.dataset_revision == 7
     assert series.source == "operator-import"
@@ -194,10 +197,12 @@ def test_history_is_manifest_gated_venue_aware_chronological_and_provenanced() -
     assert series.interval == "1d"
     assert series.calendar == "XNYS"
     assert series.adjustment == "unadjusted"
-    assert series.coverage == coverage("NVDA")
-    assert series.gaps == []
-    assert series.duplicates == []
-    assert series.limitations == []
+    assert series.coverage.model_dump() == coverage("NVDA").model_dump()
+    assert series.gaps == ()
+    assert series.duplicates == ()
+    assert series.limitations == (
+        "Gap detection requires a session calendar and was not run for XNYS.",
+    )
     assert series.resolution_fallback is None
     assert [item.timestamp for item in series.bars] == [row.timestamp for row in rows]
     assert all(item.is_live_tail is False for item in series.bars)
@@ -223,7 +228,7 @@ def test_history_uses_explicit_as_of_inclusively_and_normalizes_to_utc() -> None
     ]
     dataset = FakeDataset(
         "equities",
-        manifest(coverage("NVDA", interval="5m", start=start, end=NOW)),
+        manifest(coverage("NVDA", interval="5m", start=start, end=NOW, rows=2)),
         {("5m", Venue.MOOMOO, "NVDA"): rows},
     )
     service = fake_service([binding(interval="5m")], {"equities": dataset})
@@ -288,6 +293,80 @@ def test_history_uses_only_the_nearest_coarser_fallback_and_records_it() -> None
     assert dataset.calls[0]["interval"] == "30m"
 
 
+@pytest.mark.parametrize("intervals", [("60m", "1h"), ("1h", "60m")])
+def test_history_rejects_equal_duration_binding_aliases_as_ambiguous(
+    intervals: tuple[str, str],
+) -> None:
+    with pytest.raises(ValueError, match="ambiguous"):
+        HistoryService(
+            [binding(interval=interval) for interval in intervals],
+            dataset_loader=lambda _: None,
+            now=lambda: NOW,
+        )
+
+
+def test_history_treats_one_equivalent_interval_alias_as_preferred() -> None:
+    rows = [
+        bar(timestamp=NOW - timedelta(hours=1), interval="60m"),
+        bar(interval="60m"),
+    ]
+    dataset = FakeDataset(
+        "equities",
+        manifest(coverage("NVDA", interval="60m")),
+        {("60m", Venue.MOOMOO, "NVDA"): rows},
+    )
+    service = fake_service([binding(interval="60m")], {"equities": dataset})
+
+    series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.ONE_MONTH)
+
+    assert series.interval == "60m"
+    assert series.resolution_fallback is None
+
+
+@pytest.mark.parametrize(
+    ("requested", "preferred", "coarser", "finer"),
+    [
+        (HistoryRange.ONE_DAY, "5m", "30m", "1m"),
+        (HistoryRange.FIVE_DAYS, "30m", "1h", "5m"),
+        (HistoryRange.ONE_MONTH, "1h", "1d", "30m"),
+        (HistoryRange.THREE_MONTHS, "1d", "1w", "1h"),
+        (HistoryRange.SIX_MONTHS, "1d", "1w", "1h"),
+        (HistoryRange.ONE_YEAR, "1d", "1w", "1h"),
+    ],
+)
+def test_all_ranges_use_nearest_coarser_fallback_and_never_finer(
+    requested: HistoryRange,
+    preferred: str,
+    coarser: str,
+    finer: str,
+) -> None:
+    dataset = FakeDataset(
+        "equities",
+        manifest(coverage("NVDA", interval=coarser)),
+        {(coarser, Venue.MOOMOO, "NVDA"): [bar(interval=coarser)]},
+    )
+    fallback_service = fake_service(
+        [binding(interval=coarser)], {"equities": dataset}
+    )
+
+    selected = fallback_service.history(Venue.MOOMOO, "NVDA", requested)
+
+    assert selected.interval == coarser
+    assert selected.resolution_fallback == f"{preferred}->{coarser}"
+    finer_service = HistoryService(
+        [binding(interval=finer)],
+        dataset_loader=lambda _: pytest.fail("must not load finer data"),
+        now=lambda: NOW,
+    )
+    with pytest.raises(ValueError, match="preferred or coarser"):
+        finer_service.history(Venue.MOOMOO, "NVDA", requested)
+
+
+def test_dataset_binding_rejects_unknown_interval() -> None:
+    with pytest.raises(ValidationError, match="unsupported interval"):
+        binding(interval="1q")
+
+
 def test_history_never_falls_back_to_a_finer_interval() -> None:
     dataset = FakeDataset(
         "equities",
@@ -345,6 +424,110 @@ def test_history_refuses_manifest_without_the_bound_coverage() -> None:
     service = fake_service([binding()], {"equities": dataset})
 
     with pytest.raises(ValueError, match="manifest coverage"):
+        service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
+
+
+@pytest.mark.parametrize("offset", [timedelta(days=-11), timedelta(days=-1)])
+def test_history_refuses_rows_outside_manifest_coverage(offset: timedelta) -> None:
+    declared = coverage(
+        "NVDA",
+        start=NOW - timedelta(days=10),
+        end=NOW - timedelta(days=5),
+        rows=6,
+    )
+    dataset = FakeDataset(
+        "equities",
+        manifest(declared),
+        {("1d", Venue.MOOMOO, "NVDA"): [bar(timestamp=NOW + offset)]},
+        ignore_window=True,
+    )
+    service = fake_service([binding()], {"equities": dataset})
+
+    with pytest.raises(ValueError, match="manifest coverage"):
+        service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
+
+
+def test_history_normalizes_manifest_coverage_before_binding_rows() -> None:
+    eastern = timezone(timedelta(hours=-4))
+    declared_start = (NOW - timedelta(days=1)).astimezone(eastern)
+    declared_end = NOW.astimezone(eastern)
+    declared = coverage(
+        "NVDA",
+        start=declared_start,
+        end=declared_end,
+        rows=2,
+    )
+    dataset = FakeDataset(
+        "equities",
+        manifest(declared),
+        {
+            ("1d", Venue.MOOMOO, "NVDA"): [
+                bar(timestamp=NOW - timedelta(days=1)),
+                bar(timestamp=NOW),
+            ]
+        },
+    )
+    service = fake_service([binding()], {"equities": dataset})
+
+    series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
+
+    assert series.coverage.start == NOW - timedelta(days=1)
+    assert series.coverage.end == NOW
+    assert series.coverage.start.tzinfo is UTC
+    assert series.coverage.end.tzinfo is UTC
+
+
+def test_history_refuses_full_coverage_row_count_or_boundary_drift() -> None:
+    declared = coverage(
+        "NVDA",
+        start=NOW - timedelta(days=2),
+        end=NOW,
+        rows=3,
+    )
+    dataset = FakeDataset(
+        "equities",
+        manifest(declared),
+        {
+            ("1d", Venue.MOOMOO, "NVDA"): [
+                bar(timestamp=NOW - timedelta(days=2)),
+                bar(timestamp=NOW),
+            ]
+        },
+    )
+    service = fake_service([binding()], {"equities": dataset})
+
+    with pytest.raises(ValueError, match="row count"):
+        service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
+
+
+@pytest.mark.parametrize("drift", ["start", "end"])
+def test_history_refuses_full_coverage_extent_drift(drift: str) -> None:
+    declared_start = NOW - timedelta(days=3)
+    declared_end = NOW
+    timestamps = [declared_start, NOW - timedelta(days=1), declared_end]
+    if drift == "start":
+        timestamps[0] = declared_start + timedelta(hours=1)
+    else:
+        timestamps[-1] = declared_end - timedelta(hours=1)
+    dataset = FakeDataset(
+        "equities",
+        manifest(
+            coverage(
+                "NVDA",
+                start=declared_start,
+                end=declared_end,
+                rows=3,
+            )
+        ),
+        {
+            ("1d", Venue.MOOMOO, "NVDA"): [
+                bar(timestamp=timestamp) for timestamp in timestamps
+            ]
+        },
+    )
+    service = fake_service([binding()], {"equities": dataset})
+
+    with pytest.raises(ValueError, match="coverage extent"):
         service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
 
 
@@ -435,12 +618,72 @@ def test_history_records_real_interval_gaps_but_does_not_invent_duplicates() -> 
         manifest(coverage("NVDA")),
         {("1d", Venue.MOOMOO, "NVDA"): rows},
     )
-    service = fake_service([binding()], {"equities": dataset})
+    service = fake_service([binding(calendar="24/7")], {"equities": dataset})
 
     series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
 
-    assert series.gaps == [NOW - timedelta(days=2), NOW - timedelta(days=1)]
-    assert series.duplicates == []
+    assert series.gaps == (NOW - timedelta(days=2), NOW - timedelta(days=1))
+    assert series.duplicates == ()
+
+
+def test_history_does_not_report_market_closures_as_data_gaps() -> None:
+    friday = datetime(2026, 8, 7, 16, 0, tzinfo=UTC)
+    monday = datetime(2026, 8, 10, 16, 0, tzinfo=UTC)
+    dataset = FakeDataset(
+        "equities",
+        manifest(coverage("NVDA", start=friday, end=monday, rows=2)),
+        {
+            ("1d", Venue.MOOMOO, "NVDA"): [
+                bar(timestamp=friday),
+                bar(timestamp=monday),
+            ]
+        },
+    )
+    service = HistoryService(
+        [binding(calendar="XNYS")],
+        dataset_loader=lambda _: dataset,
+        now=lambda: monday,
+    )
+
+    series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
+
+    assert series.gaps == ()
+    assert series.limitations == (
+        "Gap detection requires a session calendar and was not run for XNYS.",
+    )
+
+
+def test_history_does_not_report_equity_overnight_as_intraday_gaps() -> None:
+    first_close = datetime(2026, 8, 11, 20, 0, tzinfo=UTC)
+    next_open = datetime(2026, 8, 12, 13, 30, tzinfo=UTC)
+    dataset = FakeDataset(
+        "equities",
+        manifest(
+            coverage(
+                "NVDA",
+                interval="30m",
+                start=first_close,
+                end=next_open,
+                rows=2,
+            )
+        ),
+        {
+            ("30m", Venue.MOOMOO, "NVDA"): [
+                bar(timestamp=first_close, interval="30m"),
+                bar(timestamp=next_open, interval="30m"),
+            ]
+        },
+    )
+    service = HistoryService(
+        [binding(interval="30m", calendar="XNYS")],
+        dataset_loader=lambda _: dataset,
+        now=lambda: next_open,
+    )
+
+    series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.FIVE_DAYS)
+
+    assert series.gaps == ()
+    assert series.limitations
 
 
 def test_comparison_rebases_only_the_shared_observed_window_without_forward_fill() -> None:
@@ -471,11 +714,14 @@ def test_comparison_rebases_only_the_shared_observed_window_without_forward_fill
         range=HistoryRange.ONE_YEAR,
     )
 
-    assert comparison.keys == ["moomoo:NVDA", "moomoo:AAPL"]
+    assert comparison.keys == ("moomoo:NVDA", "moomoo:AAPL")
     assert [point.timestamp for point in comparison.points] == [t1, t3]
     assert comparison.points[0].values == {"moomoo:NVDA": 100.0, "moomoo:AAPL": 100.0}
     assert comparison.points[1].values == {"moomoo:NVDA": 120.0, "moomoo:AAPL": 120.0}
     assert t2 not in [point.timestamp for point in comparison.points]
+    assert comparison.limitations == (
+        "Gap detection requires a session calendar and was not run for XNYS.",
+    )
 
 
 def test_comparison_refuses_fewer_than_two_shared_points() -> None:
@@ -592,10 +838,148 @@ def test_comparison_has_deterministic_key_order_and_stable_serialization() -> No
         range=HistoryRange.ONE_YEAR,
     )
 
-    assert comparison.keys == ["moomoo:NVDA", "hyperliquid:BTC-PERP", "moomoo:AAPL"]
+    assert comparison.keys == (
+        "moomoo:NVDA",
+        "hyperliquid:BTC-PERP",
+        "moomoo:AAPL",
+    )
     payload = comparison.model_dump_json()
     assert ComparisonSeries.model_validate_json(payload, strict=True).model_dump_json() == payload
-    assert list(json.loads(payload)["points"][0]["values"]) == comparison.keys
+    assert tuple(json.loads(payload)["points"][0]["values"]) == comparison.keys
+
+
+def test_history_and_comparison_responses_are_structurally_immutable() -> None:
+    nvda = [bar(timestamp=NOW - timedelta(days=1)), bar()]
+    aapl = [
+        bar(AAPL, timestamp=NOW - timedelta(days=1), close=50),
+        bar(AAPL, close=55),
+    ]
+    dataset = FakeDataset(
+        "equities",
+        manifest(coverage("NVDA"), coverage("AAPL")),
+        {
+            ("1d", Venue.MOOMOO, "NVDA"): nvda,
+            ("1d", Venue.MOOMOO, "AAPL"): aapl,
+        },
+    )
+    service = fake_service([binding(), binding("AAPL")], {"equities": dataset})
+
+    history = service.history(Venue.MOOMOO, "NVDA", HistoryRange.ONE_YEAR)
+    comparison = service.compare(
+        primary=(Venue.MOOMOO, "NVDA"),
+        peers=[(Venue.MOOMOO, "AAPL")],
+        range=HistoryRange.ONE_YEAR,
+    )
+
+    with pytest.raises(ValidationError):
+        history.instrument.symbol = "MUTATED"
+    with pytest.raises(TypeError):
+        history.instrument.metadata["source"] = "mutated"
+    with pytest.raises(AttributeError):
+        history.bars.clear()
+    with pytest.raises(AttributeError):
+        history.gaps.append(NOW)
+    with pytest.raises(AttributeError):
+        history.duplicates.append(NOW)
+    with pytest.raises(AttributeError):
+        history.limitations.append("mutated")
+    with pytest.raises(ValidationError):
+        history.coverage.rows = 1
+    with pytest.raises(AttributeError):
+        comparison.points.clear()
+    with pytest.raises(AttributeError):
+        comparison.keys.clear()
+    with pytest.raises(AttributeError):
+        comparison.limitations.append("mutated")
+    with pytest.raises(TypeError):
+        comparison.points[0].values[comparison.keys[0]] = 0.0
+
+
+def test_history_detaches_reader_owned_instrument_coverage_and_lists() -> None:
+    source_instrument = Instrument(
+        symbol="NVDA",
+        venue=Venue.MOOMOO,
+        instrument_type=InstrumentType.EQUITY,
+        metadata={"sector": "technology"},
+    )
+    source_coverage = coverage(
+        "NVDA",
+        start=NOW - timedelta(days=1),
+        end=NOW,
+        rows=2,
+    )
+    source_rows = [
+        bar(source_instrument, timestamp=NOW - timedelta(days=1)),
+        bar(source_instrument, timestamp=NOW),
+    ]
+    dataset = FakeDataset(
+        "equities",
+        manifest(source_coverage),
+        {("1d", Venue.MOOMOO, "NVDA"): source_rows},
+    )
+    service = fake_service([binding()], {"equities": dataset})
+
+    series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
+    source_instrument.symbol = "MUTATED"
+    source_instrument.metadata["sector"] = "mutated"
+    source_coverage.rows = 99
+    source_rows[0].close = 999.0
+    dataset.manifest.coverage.clear()
+    source_rows.clear()
+
+    assert series.instrument.symbol == "NVDA"
+    assert series.instrument.metadata == {"sector": "technology"}
+    assert series.bars[0].instrument.symbol == "NVDA"
+    assert series.bars[0].close == 100.0
+    assert series.coverage.rows == 2
+    assert len(series.bars) == 2
+
+    source_values = {"moomoo:NVDA": 100.0}
+    point = ComparisonPoint(timestamp=NOW, values=source_values)
+    source_values["moomoo:NVDA"] = 0.0
+    assert point.values["moomoo:NVDA"] == 100.0
+
+
+def test_public_response_dump_keeps_json_arrays_objects_and_strict_round_trip() -> None:
+    nvda = [bar(timestamp=NOW - timedelta(days=1)), bar()]
+    aapl = [
+        bar(AAPL, timestamp=NOW - timedelta(days=1), close=50),
+        bar(AAPL, close=55),
+    ]
+    dataset = FakeDataset(
+        "equities",
+        manifest(
+            coverage("NVDA", start=NOW - timedelta(days=1), end=NOW, rows=2),
+            coverage("AAPL", start=NOW - timedelta(days=1), end=NOW, rows=2),
+        ),
+        {
+            ("1d", Venue.MOOMOO, "NVDA"): nvda,
+            ("1d", Venue.MOOMOO, "AAPL"): aapl,
+        },
+    )
+    service = fake_service([binding(), binding("AAPL")], {"equities": dataset})
+    history = service.history(Venue.MOOMOO, "NVDA", HistoryRange.ONE_YEAR)
+    comparison = service.compare(
+        primary=(Venue.MOOMOO, "NVDA"),
+        peers=[(Venue.MOOMOO, "AAPL")],
+        range=HistoryRange.ONE_YEAR,
+    )
+
+    history_payload = history.model_dump(mode="json")
+    comparison_payload = comparison.model_dump(mode="json")
+    assert isinstance(history_payload["bars"], list)
+    assert isinstance(history_payload["gaps"], list)
+    assert isinstance(history_payload["instrument"]["metadata"], dict)
+    assert isinstance(history_payload["coverage"], dict)
+    assert isinstance(comparison_payload["keys"], list)
+    assert isinstance(comparison_payload["points"], list)
+    assert isinstance(comparison_payload["points"][0]["values"], dict)
+    assert HistoricalSeries.model_validate_json(
+        history.model_dump_json(), strict=True
+    ).model_dump_json() == history.model_dump_json()
+    assert ComparisonSeries.model_validate_json(
+        comparison.model_dump_json(), strict=True
+    ).model_dump_json() == comparison.model_dump_json()
 
 
 @pytest.mark.parametrize(
@@ -629,6 +1013,27 @@ def test_comparison_has_deterministic_key_order_and_stable_serialization() -> No
             },
         ),
         (ComparisonPoint, {"timestamp": NOW, "values": {"moomoo:NVDA": float("nan")}}),
+        (
+            InstrumentSnapshot,
+            {
+                "symbol": 123,
+                "venue": Venue.MOOMOO,
+                "instrument_type": InstrumentType.EQUITY,
+                "currency": "USD",
+                "metadata": {},
+            },
+        ),
+        (
+            CoverageSnapshot,
+            {
+                "interval": "1d",
+                "venue": Venue.MOOMOO,
+                "symbol": "NVDA",
+                "start": NOW - timedelta(days=1),
+                "end": NOW,
+                "rows": True,
+            },
+        ),
     ],
 )
 def test_public_contracts_reject_extra_coercive_or_nonfinite_state(model, payload) -> None:

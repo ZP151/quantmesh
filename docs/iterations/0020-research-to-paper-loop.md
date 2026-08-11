@@ -353,6 +353,38 @@ not sufficient for cross-agent recovery.
   Task 5 review remains pending; no tracked plan checkbox or `ACTIVE.md` state
   is advanced by this implementation checkpoint.
 
+### Task 5 fix round 1 implemented — fresh review pending
+
+- The first independent review found four Important issues: returned rows were
+  not fully bound to manifest coverage, equal-duration interval aliases made
+  selection order-dependent, fixed-grid gaps mislabeled session closures, and
+  frozen top-level models still exposed mutable/aliased nested state. The
+  review RED reproduced all four categories as 7 failures in 38 tests.
+- Manifest coverage is now normalized to UTC before the read. Every returned
+  timestamp must be inside both the inclusive request window and the declared
+  coverage. A request containing the full declared coverage also requires the
+  exact manifest row count and first/last timestamps. The loader is still
+  invoked on every request, preserving the query-time stale-manifest gate.
+- Binding identity now uses normalized interval duration per venue/symbol, so
+  aliases such as `60m` and `1h` fail closed regardless of input order. A lone
+  alias can satisfy the preferred duration while the exact raw interval remains
+  bound to manifest lookup and lake reading. All six ranges cover preferred,
+  nearest-coarser and never-finer behavior.
+- Fixed-grid gap detection now runs only for the exact continuous-calendar
+  spelling `24/7`. Session calendars such as `XNYS` return no calendar-blind
+  gaps and carry the stable limitation that session-aware detection was not
+  run; comparison responses preserve that limitation.
+- Task 5-owned frozen strict subclasses snapshot the existing `Instrument` and
+  `SeriesCoverage` schemas without changing those domain models. Tuple-backed
+  collections and read-only mappings detach reader state and make the full
+  historical/comparison response graph immutable while JSON output remains
+  arrays and objects with strict stable round trips.
+- Focused Task 5 verification is 54/54. The Task 5 + lake + manifest gate is
+  133 passed and 3 platform-skipped in 7.25 seconds using a unique system-temp
+  base, which was verified removed. Focused Ruff and `git diff --check` pass;
+  no workspace temp artifact, dependency or out-of-scope source change remains.
+  Independent fix-round review is pending.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another

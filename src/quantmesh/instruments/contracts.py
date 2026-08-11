@@ -2,11 +2,20 @@
 
 import math
 import re
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from quantmesh.data.layout import validate_dataset_name, validate_symbol
 from quantmesh.data.manifest import SeriesCoverage
@@ -45,8 +54,84 @@ class HistoryRange(StrEnum):
     ONE_YEAR = "1y"
 
 
+class InstrumentSnapshot(Instrument):
+    """Detached, deeply immutable view of the canonical Instrument schema."""
+
+    model_config = ConfigDict(
+        extra="forbid",
+        strict=True,
+        allow_inf_nan=False,
+        frozen=True,
+    )
+
+    metadata: Mapping[str, str] = Field(default_factory=dict)
+
+    @field_validator("metadata")
+    @classmethod
+    def metadata_is_detached(
+        cls, value: Mapping[str, str]
+    ) -> Mapping[str, str]:
+        return MappingProxyType(dict(value))
+
+    @field_serializer("metadata")
+    def serialize_metadata(self, value: Mapping[str, str]) -> dict[str, str]:
+        return dict(value)
+
+
+class CoverageSnapshot(SeriesCoverage):
+    """Detached, frozen UTC view of canonical manifest coverage."""
+
+    model_config = ConfigDict(
+        extra="forbid",
+        strict=True,
+        allow_inf_nan=False,
+        frozen=True,
+    )
+
+    @field_validator("start", "end", mode="before")
+    @classmethod
+    def json_coverage_times_are_parsed(cls, value: object, info) -> object:
+        if info.mode == "json" and isinstance(value, str):
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return value
+
+    @field_validator("start", "end")
+    @classmethod
+    def coverage_times_are_utc(cls, value: datetime, info) -> datetime:
+        return _utc(value, info.field_name)
+
+
+def _instrument_snapshot(value: object) -> object:
+    if not isinstance(value, Instrument):
+        return value
+    return InstrumentSnapshot(
+        symbol=value.symbol,
+        venue=value.venue,
+        instrument_type=value.instrument_type,
+        currency=value.currency,
+        metadata=dict(value.metadata),
+    )
+
+
+def _coverage_snapshot(value: object) -> object:
+    if not isinstance(value, SeriesCoverage):
+        return value
+    return CoverageSnapshot(
+        interval=value.interval,
+        venue=value.venue,
+        symbol=value.symbol,
+        start=value.start,
+        end=value.end,
+        rows=value.rows,
+    )
+
+
 class DatasetBinding(StrictContract):
-    """Route one venue/symbol/resolution to a manifest-gated dataset ID."""
+    """Route one venue/symbol/resolution to a manifest-gated dataset ID.
+
+    The exact spelling ``24/7`` is the only calendar declared continuous for
+    fixed-grid gap detection. Every other calendar is treated as session-based.
+    """
 
     dataset_id: str
     interval: str
@@ -84,7 +169,7 @@ class DatasetBinding(StrictContract):
 class HistoricalBar(StrictContract):
     """One observed OHLCV bar returned by the history service."""
 
-    instrument: Instrument
+    instrument: InstrumentSnapshot
     timestamp: datetime
     interval: str
     open: float = Field(gt=0)
@@ -94,6 +179,11 @@ class HistoricalBar(StrictContract):
     volume: float = Field(ge=0)
     adjusted_close: float | None = Field(default=None, gt=0)
     is_live_tail: bool = False
+
+    @field_validator("instrument", mode="before")
+    @classmethod
+    def instrument_is_a_detached_snapshot(cls, value: object) -> object:
+        return _instrument_snapshot(value)
 
     @field_validator("timestamp")
     @classmethod
@@ -116,10 +206,10 @@ class HistoricalBar(StrictContract):
 class HistoricalSeries(StrictContract):
     """Observed history and the exact manifest provenance used to read it."""
 
-    instrument: Instrument
+    instrument: InstrumentSnapshot
     range: HistoryRange
     as_of: datetime
-    bars: list[HistoricalBar] = Field(min_length=1)
+    bars: tuple[HistoricalBar, ...] = Field(min_length=1)
     dataset_id: str
     dataset_revision: int = Field(ge=1)
     source: str = Field(min_length=1)
@@ -128,11 +218,21 @@ class HistoricalSeries(StrictContract):
     interval: str
     calendar: str = Field(min_length=1)
     adjustment: AdjustmentMode
-    coverage: SeriesCoverage
-    gaps: list[datetime] = Field(default_factory=list)
-    duplicates: list[datetime] = Field(default_factory=list)
-    limitations: list[str] = Field(default_factory=list)
+    coverage: CoverageSnapshot
+    gaps: tuple[datetime, ...] = Field(default_factory=tuple)
+    duplicates: tuple[datetime, ...] = Field(default_factory=tuple)
+    limitations: tuple[str, ...] = Field(default_factory=tuple)
     resolution_fallback: str | None = None
+
+    @field_validator("instrument", mode="before")
+    @classmethod
+    def instrument_is_a_detached_snapshot(cls, value: object) -> object:
+        return _instrument_snapshot(value)
+
+    @field_validator("coverage", mode="before")
+    @classmethod
+    def coverage_is_a_detached_snapshot(cls, value: object) -> object:
+        return _coverage_snapshot(value)
 
     @field_validator("dataset_id")
     @classmethod
@@ -153,15 +253,17 @@ class HistoricalSeries(StrictContract):
 
     @field_validator("gaps", "duplicates")
     @classmethod
-    def quality_times_are_utc(cls, value: list[datetime], info) -> list[datetime]:
-        normalized = [_utc(item, info.field_name) for item in value]
-        if normalized != sorted(set(normalized)):
+    def quality_times_are_utc(
+        cls, value: tuple[datetime, ...], info
+    ) -> tuple[datetime, ...]:
+        normalized = tuple(_utc(item, info.field_name) for item in value)
+        if normalized != tuple(sorted(set(normalized))):
             raise ValueError(f"{info.field_name} must be unique and chronological")
         return normalized
 
     @field_validator("limitations")
     @classmethod
-    def limitations_are_unique_and_nonblank(cls, value: list[str]) -> list[str]:
+    def limitations_are_unique_and_nonblank(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not item.strip() for item in value) or len(set(value)) != len(value):
             raise ValueError("limitations must be non-blank and unique")
         return value
@@ -204,7 +306,7 @@ class ComparisonPoint(StrictContract):
     """Normalized closes for one timestamp shared by every comparison series."""
 
     timestamp: datetime
-    values: dict[str, float] = Field(min_length=1)
+    values: Mapping[str, float] = Field(min_length=1)
 
     @field_validator("timestamp")
     @classmethod
@@ -213,12 +315,18 @@ class ComparisonPoint(StrictContract):
 
     @field_validator("values")
     @classmethod
-    def values_are_finite_and_keyed(cls, value: dict[str, float]) -> dict[str, float]:
+    def values_are_finite_and_keyed(
+        cls, value: Mapping[str, float]
+    ) -> Mapping[str, float]:
         if any(_COMPARISON_KEY.fullmatch(key) is None for key in value):
             raise ValueError("comparison keys must use 'venue:symbol'")
         if any(not math.isfinite(item) or item <= 0 for item in value.values()):
             raise ValueError("comparison values must be finite and positive")
-        return value
+        return MappingProxyType(dict(value))
+
+    @field_serializer("values")
+    def serialize_values(self, value: Mapping[str, float]) -> dict[str, float]:
+        return dict(value)
 
 
 class ComparisonSeries(StrictContract):
@@ -226,9 +334,9 @@ class ComparisonSeries(StrictContract):
 
     range: HistoryRange
     as_of: datetime
-    keys: list[str] = Field(min_length=2)
-    points: list[ComparisonPoint] = Field(min_length=2)
-    limitations: list[str] = Field(default_factory=list)
+    keys: tuple[str, ...] = Field(min_length=2)
+    points: tuple[ComparisonPoint, ...] = Field(min_length=2)
+    limitations: tuple[str, ...] = Field(default_factory=tuple)
 
     @field_validator("as_of")
     @classmethod
@@ -237,7 +345,7 @@ class ComparisonSeries(StrictContract):
 
     @field_validator("keys")
     @classmethod
-    def keys_are_stable_and_unique(cls, value: list[str]) -> list[str]:
+    def keys_are_stable_and_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise ValueError("comparison keys must be unique")
         if any(_COMPARISON_KEY.fullmatch(key) is None for key in value):
@@ -246,7 +354,7 @@ class ComparisonSeries(StrictContract):
 
     @field_validator("limitations")
     @classmethod
-    def limitations_are_unique_and_nonblank(cls, value: list[str]) -> list[str]:
+    def limitations_are_unique_and_nonblank(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not item.strip() for item in value) or len(set(value)) != len(value):
             raise ValueError("limitations must be non-blank and unique")
         return value
@@ -256,7 +364,7 @@ class ComparisonSeries(StrictContract):
         timestamps = [point.timestamp for point in self.points]
         if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
             raise ValueError("comparison points must be strictly chronological and unique")
-        if any(list(point.values) != self.keys for point in self.points):
+        if any(tuple(point.values) != self.keys for point in self.points):
             raise ValueError("comparison point values must follow the declared key order")
         if any(point.timestamp > self.as_of for point in self.points):
             raise ValueError("comparison points cannot contain future leakage")
