@@ -67,6 +67,16 @@ from quantmesh.events.mapping import (
 from quantmesh.events.models import EventMarket, EventVenue, Outcome, ResolutionRule
 from quantmesh.execution.accounting import FeeModel, PaperAccount, PaperMatcher
 from quantmesh.execution.journal import OrderJournal
+from quantmesh.instruments.contracts import (
+    CoverageSnapshot,
+    DatasetBinding,
+    HistoricalBar,
+    HistoricalSeries,
+    HistoryRange,
+)
+from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
+from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.proposals import ProposalLedger
 from quantmesh.ops.enablement import ApprovalLedger
 from quantmesh.research.drift import (
     AlertLedger,
@@ -206,6 +216,9 @@ class DemoSeeded:
     documents: DocumentIndex
     enablement: ApprovalLedger
     providers: DemoProviders
+    history: HistoryService
+    price_forecasts: PriceForecastRegistry
+    proposal_ledger: ProposalLedger
     provenance: dict[str, object] = field(default_factory=dict)
 
 
@@ -294,42 +307,194 @@ def _seed_market_data(
 
 def _seed_lake(
     scenario: DemoScenario, series: dict[str, dict[str, list[float]]], root: Path
-) -> tuple[Path, dict[str, int]]:
+) -> tuple[Path, dict[str, int], tuple[DatasetBinding, ...]]:
     """One dataset per symbol: real shards + a manifest whose ``source``
     label is ``demo-synthetic`` (the lake's own provenance field)."""
     lake_root = root / "market" / "lake"
     lake = Lake(lake_root)
-    times = generators.session_times(scenario)
+    fixture_times = generators.session_times(scenario)
     # One deterministic manifest stamp for the whole bulk seed: after the
     # last seeded session, before the paper replay (the timeline the UI
     # renders reads oldest-first across surfaces).
     generated_at = scenario.anchor - timedelta(minutes=5)
     datasets: dict[str, int] = {}
+    bindings: list[DatasetBinding] = []
     for spec in (*scenario.equities, *scenario.crypto):
         closes = series[spec.venue][spec.symbol]
-        bars = [
-            Bar(
-                instrument=_instrument(spec.symbol, spec.venue, spec.kind),
-                timestamp=time,
-                interval="1d",
-                open=closes[index] * 0.998,
-                high=closes[index] * 1.004,
-                low=closes[index] * 0.996,
-                close=closes[index],
-                volume=1_000_000.0,
+        rows_by_interval: dict[str, list[dict[str, object]]]
+        if scenario.workspace_history and spec.kind == "equity" and spec.symbol in {"AAPL", "NVDA"}:
+            rows_by_interval = generators.analytical_history(
+                scenario,
+                spec,
+                target_close=closes[-1],
             )
-            for index, time in enumerate(times)
-        ]
+            if spec.symbol == "AAPL":
+                rows_by_interval = {"1d": rows_by_interval["1d"][-420:]}
+        else:
+            rows_by_interval = {
+                "1d": [
+                    {
+                        "timestamp": time,
+                        "interval": "1d",
+                        "open": closes[index] * 0.998,
+                        "high": closes[index] * 1.004,
+                        "low": closes[index] * 0.996,
+                        "close": closes[index],
+                        "volume": 1_000_000.0,
+                    }
+                    for index, time in enumerate(fixture_times)
+                ]
+            }
         dataset = f"demo-{spec.venue}-{spec.symbol.lower()}"
-        lake.write_bars(dataset, bars)
+        total = 0
+        for interval, rows in rows_by_interval.items():
+            bars = [
+                Bar(
+                    instrument=_instrument(spec.symbol, spec.venue, spec.kind),
+                    timestamp=row["timestamp"],
+                    interval=interval,
+                    open=float(row["open"]),
+                    high=float(row["high"]),
+                    low=float(row["low"]),
+                    close=float(row["close"]),
+                    volume=float(row["volume"]),
+                )
+                for row in rows
+            ]
+            lake.write_bars(dataset, bars)
+            total += len(bars)
+            bindings.append(
+                DatasetBinding(
+                    dataset_id=dataset,
+                    interval=interval,
+                    venue=_venue(spec.venue),
+                    symbol=spec.symbol,
+                    calendar="XNYS" if spec.kind == "equity" else "24/7",
+                    adjustment="unadjusted",
+                )
+            )
         ManifestWriter(lake_root).generate(
             dataset,
             source="demo-synthetic",
             license="QuantMesh deterministic demo",
             generated_at=generated_at,
         )
-        datasets[dataset] = len(bars)
-    return lake_root, datasets
+        datasets[dataset] = total
+    return lake_root, datasets, tuple(bindings)
+
+
+def _history_service(
+    lake_root: Path,
+    bindings: tuple[DatasetBinding, ...],
+    *,
+    scenario: DemoScenario,
+) -> HistoryService:
+    lake = Lake(lake_root)
+    return HistoryService(
+        bindings,
+        dataset_loader=lake.dataset,
+        now=lambda: scenario.anchor,
+    )
+
+
+def _history_bindings_from_lake(
+    lake_root: Path,
+    scenario: DemoScenario,
+) -> tuple[DatasetBinding, ...]:
+    lake = Lake(lake_root)
+    bindings: list[DatasetBinding] = []
+    for spec in (*scenario.equities, *scenario.crypto):
+        dataset_id = f"demo-{spec.venue}-{spec.symbol.lower()}"
+        dataset = lake.dataset(dataset_id)
+        for coverage in dataset.manifest.coverage:
+            bindings.append(
+                DatasetBinding(
+                    dataset_id=dataset_id,
+                    interval=coverage.interval,
+                    venue=coverage.venue,
+                    symbol=coverage.symbol,
+                    calendar="XNYS" if spec.kind == "equity" else "24/7",
+                    adjustment="unadjusted",
+                )
+            )
+    return tuple(bindings)
+
+
+def _forecast_series(
+    lake_root: Path,
+    *,
+    scenario: DemoScenario,
+    symbol: str,
+    sessions: int,
+) -> HistoricalSeries:
+    dataset_id = f"demo-moomoo-{symbol.lower()}"
+    dataset = Lake(lake_root).dataset(dataset_id)
+    observed = dataset.read_bars(
+        interval="1d",
+        venue=Venue.MOOMOO,
+        symbol=symbol,
+    )[-sessions:]
+    coverage = next(
+        item
+        for item in dataset.manifest.coverage
+        if item.interval == "1d" and item.venue is Venue.MOOMOO and item.symbol == symbol
+    )
+    bars = tuple(
+        HistoricalBar(
+            instrument=item.instrument,
+            timestamp=item.timestamp,
+            interval=item.interval,
+            open=item.open,
+            high=item.high,
+            low=item.low,
+            close=item.close,
+            volume=item.volume,
+        )
+        for item in observed
+    )
+    return HistoricalSeries(
+        instrument=bars[0].instrument,
+        range=HistoryRange.ONE_YEAR,
+        as_of=scenario.anchor,
+        bars=bars,
+        dataset_id=dataset_id,
+        dataset_revision=dataset.manifest.revision,
+        source=dataset.manifest.source,
+        license=dataset.manifest.license,
+        generated_at=dataset.manifest.generated_at,
+        interval="1d",
+        calendar="XNYS",
+        adjustment="unadjusted",
+        coverage=CoverageSnapshot.model_validate(coverage.model_dump()),
+        limitations=("Deterministic demo-synthetic analytical history.",),
+    )
+
+
+def _seed_price_forecasts(
+    scenario: DemoScenario,
+    root: Path,
+    lake_root: Path,
+    bindings: tuple[DatasetBinding, ...],
+) -> PriceForecastRegistry:
+    registry = PriceForecastRegistry(
+        root / "research" / "price-forecasts",
+        lake_root=lake_root,
+        bindings=bindings,
+    )
+    for symbol, sessions in (("AAPL", 420), ("NVDA", 650)):
+        series = _forecast_series(
+            lake_root,
+            scenario=scenario,
+            symbol=symbol,
+            sessions=sessions,
+        )
+        artifact = run_price_forecast(
+            series,
+            generated_at=scenario.anchor,
+            model_version="demo-drift-conformal-v1",
+        )
+        registry.record(artifact)
+    return registry
 
 
 def _seed_account(
@@ -763,7 +928,21 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     series = generators.series_map(draw, scenario)
 
     fixture_rows, providers, _fixture_dir = _seed_market_data(scenario, draw, root, series)
-    lake_root, dataset_rows = _seed_lake(scenario, series, root)
+    lake_root, dataset_rows, history_bindings = _seed_lake(scenario, series, root)
+    history = _history_service(lake_root, history_bindings, scenario=scenario)
+    price_forecasts = PriceForecastRegistry(
+        root / "research" / "price-forecasts",
+        lake_root=lake_root,
+        bindings=history_bindings,
+    )
+    if scenario.workspace_history:
+        price_forecasts = _seed_price_forecasts(
+            scenario,
+            root,
+            lake_root,
+            history_bindings,
+        )
+    proposal_ledger = ProposalLedger(root / "orders" / "proposals")
     account, marks, markets, order_quotes = _seed_account(scenario, series, draw)
 
     research_rows = _seed_research(scenario, draw, root, lake_root, series)
@@ -809,6 +988,9 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     rows = {
         **fixture_rows,  # keys already carry the market: provenance prefix
         **{f"lake:{name}": count for name, count in dataset_rows.items()},
+        "history": sum(dataset_rows.values()),
+        "price_forecasts": len(price_forecasts.all()),
+        "paper_proposals": 0,
         "orders": len(order_quotes),
         **research_rows,
         **forecast_rows,
@@ -817,6 +999,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     provenance = {
         "scenario": {
             "seed": scenario.seed,
+            "workspace_history": scenario.workspace_history,
             "anchor": scenario.anchor.isoformat(),
             "open": scenario.open.isoformat(),
             "commit": DEMO_COMMIT,
@@ -844,6 +1027,9 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         documents=DocumentIndex(root=root / "documents"),
         enablement=enablement,
         providers=providers,
+        history=history,
+        price_forecasts=price_forecasts,
+        proposal_ledger=proposal_ledger,
         provenance=provenance,
     )
 
@@ -888,6 +1074,13 @@ def load_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         for venue, symbols in series.items()
     }
     provenance = json.loads((root / "provenance.json").read_text(encoding="utf-8"))
+    lake_root = root / "market" / "lake"
+    history_bindings = _history_bindings_from_lake(lake_root, scenario)
+    history = _history_service(
+        lake_root,
+        history_bindings,
+        scenario=scenario,
+    )
     return DemoSeeded(
         root=root,
         scenario=scenario,
@@ -910,6 +1103,13 @@ def load_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         documents=DocumentIndex(root=root / "documents"),
         enablement=ApprovalLedger(root=root / "enablement"),
         providers=providers,
+        history=history,
+        price_forecasts=PriceForecastRegistry(
+            root / "research" / "price-forecasts",
+            lake_root=lake_root,
+            bindings=history_bindings,
+        ),
+        proposal_ledger=ProposalLedger(root / "orders" / "proposals"),
         provenance=provenance,
     )
 
@@ -921,6 +1121,7 @@ def _load_scenario(root: Path, default: DemoScenario) -> DemoScenario:
     scenario = provenance.get("scenario", {})
     return DemoScenario(
         seed=int(scenario.get("seed", default.seed)),
+        workspace_history=bool(scenario.get("workspace_history", default.workspace_history)),
         anchor=datetime.fromisoformat(scenario["anchor"]),
         open=datetime.fromisoformat(scenario["open"]),
     )

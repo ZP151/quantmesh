@@ -14,12 +14,27 @@ registration serves both prefixes; handlers read state from
 `request.app.state`, so both mounts see the same account and marks.
 """
 
+import math
+
 from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from quantmesh import __version__
 from quantmesh.domain.orders import Order
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.settings import settings
+
+
+def _json_finite(value):  # noqa: ANN001, ANN202
+    if isinstance(value, float) and not math.isfinite(value):
+        return "non-finite number"
+    if isinstance(value, dict):
+        return {key: _json_finite(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_finite(item) for item in value]
+    return value
 
 
 def _health() -> dict[str, str | bool]:
@@ -87,9 +102,7 @@ def observability_router() -> APIRouter:
         return {
             "cash": current.cash,
             "starting_cash": (
-                current.starting_cash
-                if current.starting_cash is not None
-                else current.cash
+                current.starting_cash if current.starting_cash is not None else current.cash
             ),
             "total_fees": current.total_fees,
             "kill_switch": current.kill_switch,
@@ -117,10 +130,7 @@ def observability_router() -> APIRouter:
 
     @router.get("/orders")
     def orders(request: Request) -> list[dict]:
-        return [
-            _order_summary(order)
-            for order in request.app.state.account.orders.values()
-        ]
+        return [_order_summary(order) for order in request.app.state.account.orders.values()]
 
     @router.get("/orders/{order_id}")
     def order(request: Request, order_id: str) -> dict:
@@ -135,9 +145,7 @@ def observability_router() -> APIRouter:
         marks = dict(request.app.state.marks)
         return {
             "starting_cash": (
-                current.starting_cash
-                if current.starting_cash is not None
-                else current.cash
+                current.starting_cash if current.starting_cash is not None else current.cash
             ),
             "realized_pnl": current.realized_pnl,
             "unrealized_pnl": current.unrealized_pnl(marks),
@@ -146,9 +154,7 @@ def observability_router() -> APIRouter:
             "marks": marks,
             # Positions without a mark are excluded from equity-based
             # numbers; name them so understated equity is never silent.
-            "missing_marks": sorted(
-                key for key in current.positions if key not in marks
-            ),
+            "missing_marks": sorted(key for key in current.positions if key not in marks),
         }
 
     @router.get("/kill-switch")
@@ -161,17 +167,14 @@ def observability_router() -> APIRouter:
         return {
             "kill_switch": current.kill_switch,
             "kill_switches": {
-                venue.value: engaged
-                for venue, engaged in sorted(current.kill_switches.items())
+                venue.value: engaged for venue, engaged in sorted(current.kill_switches.items())
             },
         }
 
     return router
 
 
-def create_app(
-    *, account: PaperAccount, marks: dict[str, float] | None = None
-) -> FastAPI:
+def create_app(*, account: PaperAccount, marks: dict[str, float] | None = None) -> FastAPI:
     """A read-only observability app bound to one paper account.
 
     `marks` is held by reference: mutating it after creation is the way
@@ -179,6 +182,15 @@ def create_app(
     at the root (RC1 contract) and under `/api` (ADR-0013 SPA surface).
     """
     app = FastAPI(title=settings.app_name, version=__version__)
+
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_error(
+        _request: Request,
+        error: RequestValidationError,
+    ) -> JSONResponse:
+        detail = _json_finite(jsonable_encoder(error.errors()))
+        return JSONResponse(status_code=422, content={"detail": detail})
+
     app.state.account = account
     app.state.marks = marks if marks is not None else {}
     router = observability_router()

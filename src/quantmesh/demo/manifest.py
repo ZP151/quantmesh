@@ -34,6 +34,11 @@ MARKET_OPEN = datetime(2026, 8, 3, 13, 30, 0, tzinfo=UTC)  # five sessions back
 SESSIONS = 5
 BAR_COUNT = SESSIONS
 
+# The five-session provider fixture above remains the compact live demo
+# contract.  The instrument workspace reads this separate analytical history.
+HISTORICAL_DAILY_SESSIONS = 650
+HISTORICAL_INTRADAY_INTERVALS = ("5m", "30m", "1h")
+
 # Deterministic pseudo-random draws are shared across symbols so the
 # cross-market relationships below are reproducible by construction.
 CROSS_MARKET_CLUSTER = {
@@ -113,6 +118,7 @@ class DemoScenario:
     """
 
     seed: int = 20260809
+    workspace_history: bool = True
     anchor: datetime = ANCHOR
     open: datetime = MARKET_OPEN
     equities: tuple[InstrumentSpec, ...] = EQUITIES

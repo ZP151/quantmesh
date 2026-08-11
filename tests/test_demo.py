@@ -36,7 +36,7 @@ from quantmesh.demo.seeder import (
 )
 from quantmesh.domain.models import Venue
 
-SCENARIO = DemoScenario()
+SCENARIO = DemoScenario(workspace_history=False)
 
 
 def _tree(root: Path) -> dict[str, bytes]:
@@ -83,7 +83,10 @@ def test_reset_reproduces_the_identical_root(tmp_path: Path) -> None:
 def test_different_seed_produces_different_root(tmp_path: Path) -> None:
     root_a, root_b = tmp_path / "a", tmp_path / "b"
     seed_demo_root(root_a, SCENARIO)
-    seed_demo_root(root_b, DemoScenario(seed=SCENARIO.seed + 1))
+    seed_demo_root(
+        root_b,
+        DemoScenario(seed=SCENARIO.seed + 1, workspace_history=False),
+    )
     assert _digest(_tree(root_a)) != _digest(_tree(root_b))
 
 
@@ -145,14 +148,17 @@ def test_provenance_contract(tmp_path: Path) -> None:
         set(SURFACE_COUNTS)
         | market_keys
         | {f"lake:demo-{spec.venue}-{spec.symbol.lower()}" for spec in universe}
-        | {"orders"}
+        | {"orders", "history", "price_forecasts", "paper_proposals"}
     )
     for name, surface in surfaces.items():
         assert surface["source"] == "demo"
         assert surface["synthetic"] is True
         assert surface["updated_at"] == ANCHOR.isoformat()
         assert isinstance(surface["rows"], int)
-        assert surface["rows"] >= 1
+        if name in {"paper_proposals", "price_forecasts"}:
+            assert surface["rows"] == 0
+        else:
+            assert surface["rows"] >= 1
     # The marker is the isolation contract.
     assert (seeded.root / MARKER_NAME).is_file()
     # The account snapshot round-trips.
@@ -173,6 +179,8 @@ def test_every_surface_has_rows(tmp_path: Path) -> None:
     assert len(seeded.decisions.all()) == SCENARIO.surface_counts["decisions"]
     assert len(seeded.documents.all()) == SCENARIO.surface_counts["documents"]
     assert len(seeded.journal.all()) == 8
+    assert seeded.price_forecasts.all() == []
+    assert seeded.proposal_ledger.all() == ()
     assert len(seeded.watchlist.all()) == 4
     # moomoo enablement was requested (pending); the hyperliquid
     # request was withdrawn (disabled) — the ledger drives both.
@@ -210,7 +218,7 @@ def test_load_recovers_the_seeded_scenario(tmp_path: Path) -> None:
     # A default-scenario load of a differently-seeded root must read the
     # root's own scenario from provenance, not the caller's default.
     root = tmp_path / "demo"
-    seed_demo_root(root, DemoScenario(seed=7))
+    seed_demo_root(root, DemoScenario(seed=7, workspace_history=False))
     loaded = load_demo_root(root, SCENARIO)
     assert loaded.scenario.seed == 7
 
@@ -245,7 +253,12 @@ def test_providers_serve_the_full_demo_universe(tmp_path: Path) -> None:
 
 @pytest.fixture()
 def demo_client(tmp_path: Path):
-    app = create_demo_app(root=tmp_path / "runtime", seed=SCENARIO.seed, host="127.0.0.1")
+    app = create_demo_app(
+        root=tmp_path / "runtime",
+        seed=SCENARIO.seed,
+        workspace_history=False,
+        host="127.0.0.1",
+    )
     with TestClient(app) as client:
         yield client, app
 

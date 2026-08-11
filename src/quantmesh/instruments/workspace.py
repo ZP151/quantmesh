@@ -57,6 +57,8 @@ def _live_evidence(
         )
     bid = _positive(snapshot.payload, "bid")
     ask = _positive(snapshot.payload, "ask")
+    bid_size = _positive(snapshot.payload, "bid_size")
+    ask_size = _positive(snapshot.payload, "ask_size")
     last = _positive(snapshot.payload, "last")
     if last is None and bid is not None and ask is not None:
         last = (bid + ask) / 2
@@ -65,9 +67,11 @@ def _live_evidence(
         reasons.append(f"quote provenance is {snapshot.provenance.value}")
     if snapshot.freshness_label not in {"real", "delayed"}:
         reasons.append(f"quote freshness is {snapshot.freshness_label or 'unknown'}")
+    if snapshot.received_at > as_of:
+        reasons.append("quote receipt time is in the future")
     if snapshot.sequence_gap:
         reasons.append("quote sequence has a gap (discontinuous)")
-    if bid is None or ask is None or bid > ask:
+    if bid is None or ask is None or bid > ask or bid_size is None or ask_size is None:
         reasons.append("quote has no usable bid/ask depth")
     return WorkspaceLiveEvidence(
         status="degraded" if reasons else "available",
@@ -137,7 +141,7 @@ class InstrumentWorkspaceService:
         self._now = now
 
     def _latest_forecast(
-        self, venue: Venue, symbol: str
+        self, venue: Venue, symbol: str, *, as_of: datetime
     ) -> tuple[PriceForecastArtifact | None, str | None]:
         if self._forecasts is None:
             return None, "no price forecast registry is attached"
@@ -145,12 +149,17 @@ class InstrumentWorkspaceService:
             matches = [
                 artifact
                 for artifact in self._forecasts.all()
-                if artifact.instrument.venue is venue and artifact.instrument.symbol == symbol
+                if artifact.instrument.venue is venue
+                and artifact.instrument.symbol == symbol
+                and artifact.generated_at <= as_of
             ]
         except ValueError as error:
             return None, f"price forecast registry is unavailable: {error}"
         if not matches:
-            return None, "no price forecast artifact exists for this venue and symbol"
+            return None, (
+                "no price forecast artifact exists at or before the workspace clock "
+                f"for {venue.value}:{symbol}"
+            )
         return max(matches, key=lambda item: (item.generated_at, item.id)), None
 
     def render(
@@ -185,10 +194,18 @@ class InstrumentWorkspaceService:
             symbol=symbol,
             as_of=generated_at,
         )
-        artifact, forecast_error = self._latest_forecast(venue, symbol)
+        artifact, forecast_error = self._latest_forecast(
+            venue,
+            symbol,
+            as_of=generated_at,
+        )
         forecast = _forecast_summary(artifact) if artifact is not None else None
 
-        account = self._account_provider()
+        if self._decisions is None:
+            account = self._account_provider()
+            proposals = ()
+        else:
+            account, proposals = self._decisions.workspace_snapshot(venue, symbol)
         marks = dict(self._marks_provider())
         key = position_key(history.instrument)
         held = account.positions.get(key)
@@ -229,13 +246,7 @@ class InstrumentWorkspaceService:
                 proposal_blockers.append(freshness)
         if self._decisions is None:
             proposal_blockers.append("paper proposal service is not attached")
-            proposals = ()
         else:
-            proposals = tuple(
-                proposal
-                for proposal in self._decisions.ledger.all()
-                if proposal.instrument.venue is venue and proposal.instrument.symbol == symbol
-            )
             if not self._decisions.demo_mode and (
                 live.status != "available" or live.provenance != Provenance.REAL.value
             ):

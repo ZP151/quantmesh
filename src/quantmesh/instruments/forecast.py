@@ -17,7 +17,7 @@ import os
 import re
 import shutil
 import tempfile
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from statistics import median
@@ -28,6 +28,7 @@ from quantmesh.data.lake import Dataset, Lake
 from quantmesh.domain.models import InstrumentType
 from quantmesh.instruments.contracts import (
     FORECAST_ID_PATTERN,
+    DatasetBinding,
     ForecastMetrics,
     ForecastPath,
     ForecastPoint,
@@ -45,6 +46,11 @@ MODEL_NAME = "median-log-drift-conformal"
 BENCHMARK_NAME = "last-price-random-walk"
 QUANTILES = (0.025, 0.10, 0.25, 0.75, 0.90, 0.975)
 FILES = ("report.json", "paths.csv", "oos.csv")
+LIMITATIONS = (
+    "Prototype baseline uses weekday sessions for equities and does not model exchange holidays.",
+    "Intervals are empirical and do not imply a probability of profit or execution outcome.",
+    "The artifact is research evidence; the paper kernel remains the only order authority.",
+)
 
 
 def _sha256(data: bytes) -> str:
@@ -391,6 +397,7 @@ def _identity(
             "history_start": artifact.history_start.isoformat(),
             "instrument": artifact.instrument.model_dump(mode="json"),
             "license": artifact.license,
+            "limitations": list(artifact.limitations),
             "model_version": artifact.model_version,
             "revision": artifact.dataset_revision,
             "source": artifact.source,
@@ -426,6 +433,7 @@ def _identity(
         "history_start": bars[0].timestamp.isoformat(),
         "instrument": series.instrument.model_dump(mode="json"),
         "license": series.license,
+        "limitations": list(LIMITATIONS),
         "model_version": model_version,
         "revision": series.dataset_revision,
         "source": series.source,
@@ -485,6 +493,8 @@ def validate_price_forecast_artifact(
         raise ValueError("forecast artifact contract is internally inconsistent") from error
     if artifact.config_digest != _sha256(_canonical_json(_config())):
         raise ValueError("forecast config_digest does not match the declared model setup")
+    if artifact.limitations != LIMITATIONS:
+        raise ValueError("forecast limitations do not match the canonical risk disclosure")
     expected_id = f"forecast-{_sha256(_canonical_json(_identity(artifact=artifact)))[:24]}"
     if artifact.id != expected_id:
         raise ValueError("forecast id does not match its immutable setup")
@@ -523,6 +533,9 @@ def _validate_against_bars(artifact: PriceForecastArtifact, bars: Sequence[objec
         raise ValueError("dataset pin history bytes do not match the forecast artifact")
     if not bars:
         raise ValueError("forecast artifact cannot resolve an empty history")
+    expected_instrument = artifact.instrument.model_dump(mode="json")
+    if any(bar.instrument.model_dump(mode="json") != expected_instrument for bar in bars):
+        raise ValueError("pinned history instrument does not match the forecast artifact")
     expected_train_start = bars[max(0, len(bars) - RETURN_WINDOW - 1)].timestamp
     if (
         artifact.history_start != bars[0].timestamp
@@ -591,10 +604,14 @@ def run_price_forecast(
         raise ValueError("model_version must not be blank")
     if series.interval != "1d":
         raise ValueError("price forecast requires manifest-gated daily history")
+    if series.adjustment != "unadjusted":
+        raise ValueError("price forecast currently supports unadjusted close only")
     if any(bar.is_live_tail for bar in series.bars):
         raise ValueError("price forecast refuses a live-tail bar")
     if generated_at < series.bars[-1].timestamp:
         raise ValueError("generated_at cannot precede the last observed bar")
+    if generated_at < series.generated_at:
+        raise ValueError("generated_at cannot precede the dataset manifest generation")
 
     bars = tuple(series.bars[-MAX_FORECAST_SESSIONS:])
     continuous = series.instrument.instrument_type in {
@@ -640,12 +657,6 @@ def run_price_forecast(
         age_sessions=age,
     )
     artifact_id = f"forecast-{_sha256(_canonical_json(identity))[:24]}"
-    limitations = (
-        "Prototype baseline uses weekday sessions for equities and does not "
-        "model exchange holidays.",
-        "Intervals are empirical and do not imply a probability of profit or execution outcome.",
-        "The artifact is research evidence; the paper kernel remains the only order authority.",
-    )
     common: dict[str, object] = {
         "id": artifact_id,
         "instrument": series.instrument,
@@ -680,7 +691,7 @@ def run_price_forecast(
         "metrics": metrics,
         "eligible": not blockers,
         "blockers": blockers,
-        "limitations": limitations,
+        "limitations": LIMITATIONS,
     }
     placeholder = PriceForecastArtifact(
         **common,
@@ -716,9 +727,16 @@ def _reject_reparse_components(path: Path) -> None:
 class PriceForecastRegistry:
     """Crash-safe append-only forecast directories with lake pin checks."""
 
-    def __init__(self, root: Path | None = None, *, lake_root: Path | None = None) -> None:
+    def __init__(
+        self,
+        root: Path | None = None,
+        *,
+        lake_root: Path | None = None,
+        bindings: Iterable[DatasetBinding] = (),
+    ) -> None:
         self.root = root if root is not None else settings.reports_dir / "forecasts"
         self.lake_root = lake_root if lake_root is not None else settings.lake_root
+        self._bindings = tuple(bindings)
 
     def _safe_root(self) -> None:
         _reject_reparse_components(self.root)
@@ -726,6 +744,19 @@ class PriceForecastRegistry:
             raise ValueError(f"forecast registry root {self.root} is not a safe directory")
 
     def resolve_pin(self, artifact: PriceForecastArtifact) -> Dataset:
+        matches = [
+            binding
+            for binding in self._bindings
+            if binding.dataset_id == artifact.dataset_id
+            and binding.interval == "1d"
+            and binding.venue is artifact.instrument.venue
+            and binding.symbol == artifact.instrument.symbol
+        ]
+        if len(matches) != 1:
+            raise ValueError("forecast pin requires exactly one trusted daily dataset binding")
+        binding = matches[0]
+        if binding.calendar != artifact.calendar or binding.adjustment != artifact.adjustment:
+            raise ValueError("forecast calendar or adjustment does not match its trusted binding")
         dataset = Lake(self.lake_root).dataset(artifact.dataset_id)
         if dataset.manifest.revision != artifact.dataset_revision:
             raise ValueError(
@@ -746,6 +777,8 @@ class PriceForecastRegistry:
                 f"dataset {artifact.dataset_id!r} manifest generation no longer matches "
                 "the artifact pin"
             )
+        if artifact.generated_at < artifact.dataset_generated_at:
+            raise ValueError("forecast predates the pinned dataset manifest")
         coverage = next(
             (
                 item
@@ -802,6 +835,9 @@ class PriceForecastRegistry:
         if not directory.exists() or not directory.is_dir() or _path_is_link_or_reparse(directory):
             raise ValueError(f"no forecast artifact recorded with id {artifact_id!r}")
         paths = {name: directory / name for name in FILES}
+        entries = {path.name for path in directory.iterdir()}
+        if entries != set(FILES):
+            raise ValueError(f"forecast artifact {directory} must contain exactly {sorted(FILES)}")
         for name, path in paths.items():
             if not path.is_file() or _path_is_link_or_reparse(path):
                 raise ValueError(f"forecast artifact {path} is missing or unsafe")

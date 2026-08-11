@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -223,9 +224,27 @@ def _artifact(*, eligible: bool = True) -> PriceForecastArtifact:
     return result
 
 
-def _quote_feed(*, gap: bool = False, stale: bool = False) -> LiveFeed:
+def _quote_feed(
+    *,
+    gap: bool = False,
+    stale: bool = False,
+    future: bool = False,
+    missing_depth: bool = False,
+) -> LiveFeed:
     feed = LiveFeed()
-    received_at = NOW - timedelta(minutes=2) if stale else NOW
+    received_at = (
+        NOW + timedelta(days=1) if future else NOW - timedelta(minutes=2) if stale else NOW
+    )
+    payload = {
+        "bid": 104.9,
+        "ask": 105.1,
+        "last": 105.0,
+        "bid_size": 500.0,
+        "ask_size": 600.0,
+    }
+    if missing_depth:
+        payload.pop("bid_size")
+        payload.pop("ask_size")
     feed.ingest(
         [
             MarketUpdate(
@@ -237,13 +256,7 @@ def _quote_feed(*, gap: bool = False, stale: bool = False) -> LiveFeed:
                 received_at=received_at,
                 sequence=8,
                 sequence_gap=gap,
-                payload={
-                    "bid": 104.9,
-                    "ask": 105.1,
-                    "last": 105.0,
-                    "bid_size": 500.0,
-                    "ask_size": 600.0,
-                },
+                payload=payload,
             )
         ]
     )
@@ -394,6 +407,8 @@ def test_workspace_uses_one_clock_for_history_comparison_and_response(
         (None, "unavailable", "live"),
         (_quote_feed(gap=True), "degraded", "gap"),
         (_quote_feed(stale=True), "degraded", "stale"),
+        (_quote_feed(future=True), "degraded", "future"),
+        (_quote_feed(missing_depth=True), "degraded", "depth"),
     ],
 )
 def test_workspace_keeps_typed_live_absence_and_degradation(
@@ -458,6 +473,20 @@ def test_workspace_summarizes_the_latest_forecast_even_when_ineligible(
     assert forecast["blockers"] == list(artifact.blockers)
     assert [path["sessions"] for path in forecast["paths"]] == [7, 30, 126]
     assert {metric["sessions"] for metric in forecast["metrics"]} == {7, 30, 126}
+
+
+def test_workspace_never_selects_a_forecast_from_after_its_clock(tmp_path: Path) -> None:
+    current = _artifact()
+    future = current.model_copy(update={"generated_at": NOW + timedelta(days=1)})
+    harness = _harness(tmp_path, artifacts=(current, future))
+
+    with TestClient(harness.app) as client:
+        response = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m")
+
+    assert response.status_code == 200
+    assert response.json()["forecast"]["generated_at"] == current.generated_at.isoformat().replace(
+        "+00:00", "Z"
+    )
 
 
 def test_workspace_exposes_position_marks_pnl_risk_switches_and_capability(
@@ -559,6 +588,22 @@ def test_browser_cannot_supply_server_owned_decision_fields(
     assert any(error["type"] == "extra_forbidden" for error in response.json()["detail"])
     assert harness.proposals.ledger.all() == ()
     assert harness.journal.all() == []
+
+
+def test_non_finite_proposal_numbers_are_request_validation_errors(tmp_path: Path) -> None:
+    harness = _harness(tmp_path)
+    payload = _create_payload()
+    body = json.dumps(payload).replace('"quantity": 1.0', '"quantity": 1e309')
+
+    with TestClient(harness.app) as client:
+        response = client.post(
+            "/api/paper/proposals",
+            content=body,
+            headers={"Content-Type": "application/json"},
+        )
+
+    assert response.status_code == 422
+    assert harness.proposals.ledger.all() == ()
 
 
 def test_proposal_posts_reject_cross_origin_browsers(tmp_path: Path) -> None:

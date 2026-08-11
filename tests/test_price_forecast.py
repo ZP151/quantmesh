@@ -14,6 +14,7 @@ from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.instruments.contracts import (
     CoverageSnapshot,
+    DatasetBinding,
     HistoricalBar,
     HistoricalSeries,
     HistoryRange,
@@ -103,6 +104,17 @@ def _series(
         ),
         gaps=gaps,
         duplicates=duplicates,
+    )
+
+
+def _binding(series: HistoricalSeries) -> DatasetBinding:
+    return DatasetBinding(
+        dataset_id=series.dataset_id,
+        interval="1d",
+        venue=series.instrument.venue,
+        symbol=series.instrument.symbol,
+        calendar=series.calendar,
+        adjustment=series.adjustment,
     )
 
 
@@ -302,8 +314,12 @@ def test_registry_writes_byte_stable_artifacts_and_re_resolves_dataset_pin(
     artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
     lake_root = tmp_path / "lake"
     _write_matching_lake(lake_root, series)
-    first = PriceForecastRegistry(tmp_path / "one", lake_root=lake_root)
-    second = PriceForecastRegistry(tmp_path / "two", lake_root=lake_root)
+    first = PriceForecastRegistry(
+        tmp_path / "one", lake_root=lake_root, bindings=(_binding(series),)
+    )
+    second = PriceForecastRegistry(
+        tmp_path / "two", lake_root=lake_root, bindings=(_binding(series),)
+    )
 
     first.record(artifact)
     second.record(artifact)
@@ -324,7 +340,9 @@ def test_registry_rejects_missing_or_tampered_artifact_file(tmp_path: Path, name
     artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
     lake_root = tmp_path / "lake"
     _write_matching_lake(lake_root, series)
-    registry = PriceForecastRegistry(tmp_path / "registry", lake_root=lake_root)
+    registry = PriceForecastRegistry(
+        tmp_path / "registry", lake_root=lake_root, bindings=(_binding(series),)
+    )
     registry.record(artifact)
     path = tmp_path / "registry" / artifact.id / name
     if name == "report.json":
@@ -341,7 +359,9 @@ def test_registry_refuses_a_manifest_revision_that_moved(tmp_path: Path) -> None
     artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
     lake_root = tmp_path / "lake"
     _write_matching_lake(lake_root, series)
-    registry = PriceForecastRegistry(tmp_path / "registry", lake_root=lake_root)
+    registry = PriceForecastRegistry(
+        tmp_path / "registry", lake_root=lake_root, bindings=(_binding(series),)
+    )
     registry.record(artifact)
     manifest_path = lake_root / series.dataset_id / "manifest.json"
     payload = manifest_path.read_text(encoding="utf-8").replace('"revision": 7', '"revision": 8')
@@ -380,10 +400,46 @@ def test_registry_refuses_same_revision_manifest_coverage_expansion(tmp_path: Pa
         revision=series.dataset_revision,
         generated_at=series.generated_at,
     )
-    registry = PriceForecastRegistry(tmp_path / "registry", lake_root=lake_root)
+    registry = PriceForecastRegistry(
+        tmp_path / "registry", lake_root=lake_root, bindings=(_binding(series),)
+    )
 
     with pytest.raises(ValueError, match="coverage no longer exactly matches"):
         registry.resolve_pin(artifact)
+
+
+def test_registry_requires_trusted_calendar_and_adjustment_binding(tmp_path: Path) -> None:
+    series = _series(650)
+    artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
+    lake_root = tmp_path / "lake"
+    _write_matching_lake(lake_root, series)
+    wrong = _binding(series).model_copy(update={"calendar": "24/7"})
+    registry = PriceForecastRegistry(
+        tmp_path / "registry",
+        lake_root=lake_root,
+        bindings=(wrong,),
+    )
+
+    with pytest.raises(ValueError, match="calendar or adjustment"):
+        registry.record(artifact)
+
+
+def test_forecast_cannot_predate_manifest_or_strip_limitations() -> None:
+    series = _series(650)
+    future_manifest = series.model_copy(
+        update={"generated_at": series.generated_at + timedelta(days=1)}
+    )
+
+    with pytest.raises(ValueError, match="cannot precede the dataset manifest"):
+        run_price_forecast(
+            future_manifest,
+            generated_at=series.generated_at,
+            model_version=MODEL_VERSION,
+        )
+
+    artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
+    with pytest.raises(ValueError, match="contract is internally inconsistent|canonical"):
+        validate_price_forecast_artifact(artifact.model_copy(update={"limitations": ()}))
 
 
 def test_generated_at_and_model_version_are_part_of_identity() -> None:
@@ -421,7 +477,7 @@ def test_forecast_cost_and_identity_are_bounded_to_latest_650_sessions() -> None
     assert artifact.train_end == series.bars[-1].timestamp
 
 
-def test_source_license_and_adjustment_are_part_of_identity() -> None:
+def test_source_and_license_are_part_of_identity_and_adjusted_close_is_refused() -> None:
     series = _series(650)
     original = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
     changed_source = run_price_forecast(
@@ -434,13 +490,13 @@ def test_source_license_and_adjustment_are_part_of_identity() -> None:
         generated_at=series.as_of,
         model_version=MODEL_VERSION,
     )
-    changed_adjustment = run_price_forecast(
-        series.model_copy(update={"adjustment": "split-adjusted"}),
-        generated_at=series.as_of,
-        model_version=MODEL_VERSION,
-    )
-
-    assert len({original.id, changed_source.id, changed_license.id, changed_adjustment.id}) == 4
+    assert len({original.id, changed_source.id, changed_license.id}) == 3
+    with pytest.raises(ValueError, match="unadjusted close only"):
+        run_price_forecast(
+            series.model_copy(update={"adjustment": "split-adjusted"}),
+            generated_at=series.as_of,
+            model_version=MODEL_VERSION,
+        )
 
 
 def test_artifact_validator_recomputes_metrics_and_eligibility() -> None:
@@ -491,10 +547,32 @@ def test_registry_recomputes_forecast_values_from_pinned_history(tmp_path: Path)
         update={"points": (forged_point,) + artifact.paths[0].points[1:]}
     )
     forged = artifact.model_copy(update={"paths": (path,) + artifact.paths[1:]})
-    registry = PriceForecastRegistry(tmp_path / "registry", lake_root=lake_root)
+    registry = PriceForecastRegistry(
+        tmp_path / "registry", lake_root=lake_root, bindings=(_binding(series),)
+    )
 
     with pytest.raises(ValueError, match="paths do not match pinned history"):
         registry.record(forged)
+
+
+def test_registry_rejects_extra_artifact_entries(tmp_path: Path) -> None:
+    series = _series(650)
+    artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
+    lake_root = tmp_path / "lake"
+    _write_matching_lake(lake_root, series)
+    registry = PriceForecastRegistry(
+        tmp_path / "registry",
+        lake_root=lake_root,
+        bindings=(_binding(series),),
+    )
+    registry.record(artifact)
+    (tmp_path / "registry" / artifact.id / "unexpected.txt").write_text(
+        "unexpected",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="must contain exactly"):
+        registry.get(artifact.id)
 
 
 def test_registry_rejects_malformed_id_before_path_lookup(tmp_path: Path) -> None:

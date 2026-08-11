@@ -17,7 +17,7 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
-from quantmesh.domain.models import Instrument, InstrumentType, OrderRequest, Quote, Side
+from quantmesh.domain.models import Instrument, InstrumentType, OrderRequest, Quote, Side, Venue
 from quantmesh.domain.orders import (
     Fill,
     Order,
@@ -121,6 +121,36 @@ def _proposal_identity(proposal: PaperProposal) -> dict[str, object]:
         mode="json",
         exclude={"status", "blockers", "order_id", "quote_provenance"},
     )
+
+
+def _proposal_id_for(proposal: PaperProposal) -> str:
+    digest = _sha256(
+        {
+            "artifact_id": proposal.artifact_id,
+            "created_at": proposal.created_at.isoformat(),
+            "limit_price": proposal.limit_price,
+            "quantity": proposal.quantity,
+            "side": proposal.side.value,
+        }
+    )
+    return f"proposal-{digest[:24]}"
+
+
+def _confirmation_token_for(proposal: PaperProposal) -> str:
+    return _sha256(
+        {
+            "artifact_id": proposal.artifact_id,
+            "config_digest": proposal.config_digest,
+            "proposal_id": proposal.id,
+        }
+    )
+
+
+def _validate_proposal_seal(proposal: PaperProposal) -> None:
+    if proposal.id != _proposal_id_for(proposal):
+        raise ValueError("proposal id does not match its immutable intent")
+    if proposal.confirmation_token != _confirmation_token_for(proposal):
+        raise ValueError("proposal confirmation token does not match its immutable intent")
 
 
 def _forecast_age_sessions(artifact: PriceForecastArtifact, now: datetime) -> int:
@@ -299,6 +329,7 @@ class ProposalLedger:
                 event = ProposalEvent.model_validate_json(line)
             except ValidationError as error:
                 raise ValueError(f"proposal ledger {path} line {line_number} is invalid") from error
+            _validate_proposal_seal(event.proposal)
             prior = by_id.setdefault(event.proposal_id, [])
             if event.sequence != len(prior) + 1:
                 raise ValueError(
@@ -375,6 +406,21 @@ class PaperDecisionService:
             raise ValueError("proposal clock must be timezone-aware")
         return value.astimezone(UTC)
 
+    def workspace_snapshot(
+        self,
+        venue: Venue,
+        symbol: str,
+    ) -> tuple[PaperAccount, tuple[PaperProposal, ...]]:
+        """Read mutable account and proposal state under one ledger boundary."""
+        with self.ledger.transaction():
+            account = self._account_provider()
+            proposals = tuple(
+                proposal
+                for proposal in self.ledger.all()
+                if proposal.instrument.venue is venue and proposal.instrument.symbol == symbol
+            )
+            return account, proposals
+
     def _resolve_artifact(self, artifact_id: str) -> PriceForecastArtifact:
         return self._forecast_registry.get(artifact_id)
 
@@ -393,8 +439,8 @@ class PaperDecisionService:
             setup = {
                 "artifact_id": artifact.id,
                 "created_at": created_at.isoformat(),
-                "limit_price": limit_price,
-                "quantity": quantity,
+                "limit_price": float(limit_price) if limit_price is not None else None,
+                "quantity": float(quantity),
                 "side": side.value,
             }
             proposal_id = f"proposal-{_sha256(setup)[:24]}"
@@ -428,6 +474,7 @@ class PaperDecisionService:
                 status=(ProposalStatus.BLOCKED if blockers else ProposalStatus.PENDING),
                 blockers=blockers,
             )
+            _validate_proposal_seal(proposal)
             try:
                 existing = self.ledger.get(proposal.id)
             except ValueError as error:
@@ -445,7 +492,16 @@ class PaperDecisionService:
             if self._journal is None:
                 raise ValueError("terminal proposal has no bound order journal")
             order = self._journal.get(proposal.order_id)
-            self._validate_order_binding(proposal, order)
+            terminal_at = self.ledger.events(proposal.id)[-1].recorded_at
+            self._validate_order_binding(
+                proposal,
+                order,
+                expected_created_at=terminal_at,
+            )
+            account = self._account_provider()
+            recovered = self._recover_account(account, order)
+            if recovered is not account:
+                self._account_sink(recovered)
         blocker = "; ".join(proposal.blockers) if proposal.blockers else None
         return ProposalConfirmation(
             proposal=proposal,
@@ -496,18 +552,32 @@ class PaperDecisionService:
         ):
             raise ValueError("journal order derived state does not replay exactly")
 
-    def _validate_order_binding(self, proposal: PaperProposal, order: Order) -> None:
+    def _validate_order_binding(
+        self,
+        proposal: PaperProposal,
+        order: Order,
+        *,
+        expected_created_at: datetime | None = None,
+    ) -> None:
         expected_limit = proposal.limit_price
         if (
             order.instrument.symbol != proposal.instrument.symbol
             or order.instrument.venue is not proposal.instrument.venue
             or order.instrument.instrument_type is not proposal.instrument.instrument_type
             or order.instrument.currency != proposal.instrument.currency
+            or order.instrument.metadata != dict(proposal.instrument.metadata)
             or order.side is not proposal.side
-            or not math.isclose(order.quantity, proposal.quantity)
+            or order.quantity != proposal.quantity
             or order.order_type is not proposal.order_type
             or order.limit_price != expected_limit
             or order.idempotency_key != f"proposal:{proposal.id}"
+            or order.client_order_id is not None
+            or order.broker_order_id is not None
+            or order.created_at.tzinfo is None
+            or (
+                expected_created_at is not None
+                and order.created_at.astimezone(UTC) != expected_created_at
+            )
             or order.status not in {OrderStatus.FILLED, OrderStatus.REJECTED}
         ):
             raise ValueError("journal order does not match immutable proposal intent")
@@ -552,7 +622,11 @@ class PaperDecisionService:
         now: datetime,
         quote_provenance: str,
     ) -> ProposalConfirmation:
-        self._validate_order_binding(proposal, order)
+        self._validate_order_binding(
+            proposal,
+            order,
+            expected_created_at=now,
+        )
         rejected = order.status is OrderStatus.REJECTED
         reason = next(
             (event.reason for event in reversed(order.events) if event.reason is not None),
@@ -598,6 +672,7 @@ class PaperDecisionService:
             quote.instrument.venue is not proposal.instrument.venue
             or quote.instrument.symbol != proposal.instrument.symbol
             or quote.instrument.instrument_type is not proposal.instrument.instrument_type
+            or quote.instrument.currency != proposal.instrument.currency
         ):
             return "demo quote instrument does not match proposal instrument"
         if quote.timestamp.tzinfo is None:

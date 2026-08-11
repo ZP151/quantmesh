@@ -655,7 +655,7 @@ class PriceForecastArtifact(StrictContract):
     metrics: tuple[ForecastMetrics, ...]
     eligible: bool
     blockers: tuple[str, ...] = Field(default_factory=tuple)
-    limitations: tuple[str, ...] = Field(default_factory=tuple)
+    limitations: tuple[str, ...] = Field(min_length=1)
     artifact_hashes: Mapping[str, str]
 
     @field_validator("id")
@@ -737,8 +737,11 @@ class PriceForecastArtifact(StrictContract):
             self.history_start > self.train_start
             or self.train_start > self.train_end
             or self.generated_at < self.train_end
+            or self.generated_at < self.dataset_generated_at
         ):
             raise ValueError("forecast training and generation times are inconsistent")
+        if self.adjustment != "unadjusted":
+            raise ValueError("forecast artifacts currently support unadjusted close only")
         expected_target = f"{self.adjustment}-close"
         if self.target != expected_target:
             raise ValueError("forecast target must match the recorded adjustment mode")

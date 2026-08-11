@@ -40,6 +40,7 @@ from quantmesh.api.workstation import (
     _json_guard_origin,
     create_workstation_app,
 )
+from quantmesh.data.lake import Lake
 from quantmesh.demo.datalink import DatalinkService, datalink_router
 from quantmesh.demo.manifest import MARKER_NAME, DemoScenario
 from quantmesh.demo.seeder import (
@@ -50,7 +51,7 @@ from quantmesh.demo.seeder import (
     reset_demo_root,
     seed_demo_root,
 )
-from quantmesh.domain.models import OrderRequest, Quote, Side
+from quantmesh.domain.models import Instrument, OrderRequest, Quote, Side
 from quantmesh.settings import settings
 
 
@@ -87,6 +88,19 @@ def _status(runtime: DemoRuntime) -> dict[str, object]:
     """The provenance contract: everything derives from the root's own
     records, never from the wall clock."""
     seeded = runtime.seeded
+    surfaces = {name: dict(value) for name, value in seeded.provenance["surfaces"].items()}
+    lake_root = seeded.root / "market" / "lake"
+    history_rows = 0
+    for path in sorted(lake_root.iterdir()):
+        if path.is_dir():
+            coverage = Lake(lake_root).dataset(path.name).manifest.coverage
+            history_rows += sum(item.rows for item in coverage)
+    surfaces["history"]["rows"] = history_rows
+    forecast_root = seeded.root / "research" / "price-forecasts"
+    surfaces["price_forecasts"]["rows"] = (
+        sum(1 for path in forecast_root.iterdir() if path.is_dir()) if forecast_root.exists() else 0
+    )
+    surfaces["paper_proposals"]["rows"] = len(seeded.proposal_ledger.all())
     return {
         "mode": "demo",
         "root": str(runtime.root),
@@ -94,7 +108,7 @@ def _status(runtime: DemoRuntime) -> dict[str, object]:
         "source": "demo",
         "synthetic": True,
         "scenario": seeded.provenance["scenario"],
-        "surfaces": seeded.provenance["surfaces"],
+        "surfaces": surfaces,
         "last_update": runtime.scenario.anchor.isoformat(),
         "health": {"status": "ok", "seed": runtime.scenario.seed},
     }
@@ -111,6 +125,8 @@ def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
     """
     app.state.account = seeded.account
     app.state.marks = seeded.marks
+    app.state.history = seeded.history
+    app.state.price_forecasts = seeded.price_forecasts
     app.state.page_context = PageContext(
         account=seeded.account,
         marks=seeded.marks,
@@ -127,6 +143,25 @@ def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
         documents=seeded.documents,
         hl_posture=None,
         enablement=seeded.enablement,
+    )
+
+
+def _workspace_demo_quote(
+    seeded: DemoSeeded,
+    instrument: Instrument,
+    now,
+) -> Quote:
+    venue = instrument.venue.value
+    book = seeded.providers.order_books(venue, instrument.symbol)[0]
+    bid = book.bids[0].price if book.bids else None
+    ask = book.asks[0].price if book.asks else None
+    return Quote(
+        instrument=instrument,
+        timestamp=now,
+        bid=bid,
+        ask=ask,
+        last=((bid + ask) / 2 if bid is not None and ask is not None else bid or ask),
+        volume=sum(level.quantity for level in (*book.bids, *book.asks)),
     )
 
 
@@ -251,6 +286,7 @@ def create_demo_app(
     *,
     root: Path | None = None,
     seed: int | None = None,
+    workspace_history: bool = True,
     host: str | None = None,
 ) -> FastAPI:
     """A workstation app bound to one labeled demo root.
@@ -263,7 +299,10 @@ def create_demo_app(
     dirs are never opened.
     """
     root = Path(root) if root is not None else Path(settings.demo_root)
-    scenario = DemoScenario(seed=seed if seed is not None else settings.demo_seed)
+    scenario = DemoScenario(
+        seed=seed if seed is not None else settings.demo_seed,
+        workspace_history=workspace_history,
+    )
     seeded = (
         load_demo_root(root, scenario) if is_demo_root(root) else seed_demo_root(root, scenario)
     )
@@ -282,6 +321,15 @@ def create_demo_app(
         decisions=seeded.decisions,
         documents=seeded.documents,
         enablement=seeded.enablement,
+        history=seeded.history,
+        price_forecasts=seeded.price_forecasts,
+        proposal_ledger=seeded.proposal_ledger,
+        demo_quote_provider=lambda instrument, now: _workspace_demo_quote(
+            seeded,
+            instrument,
+            now,
+        ),
+        workspace_clock=lambda: seeded.scenario.anchor,
         host=host,
     )
     app.state.demo = DemoRuntime(root=root, scenario=seeded.scenario, seeded=seeded)

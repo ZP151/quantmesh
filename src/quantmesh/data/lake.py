@@ -96,9 +96,7 @@ class Lake:
     def from_settings(cls, settings: Settings) -> "Lake":
         return cls(settings.lake_root)
 
-    def shard_file(
-        self, dataset: str, interval: str, venue: Venue, symbol: str, day: str
-    ) -> Path:
+    def shard_file(self, dataset: str, interval: str, venue: Venue, symbol: str, day: str) -> Path:
         validate_dataset_name(dataset)
         interval_to_timedelta(interval)
         validate_symbol(symbol)
@@ -139,33 +137,34 @@ class Lake:
                 current.timestamp.astimezone(UTC).date().isoformat(),
             )
             groups.setdefault(key, []).append(current)
-        for (interval, venue, symbol, day), group in groups.items():
-            path = self.shard_file(dataset, interval, venue, symbol, day)
-            path.parent.mkdir(parents=True, exist_ok=True)
-            frame = pd.DataFrame(
-                {
-                    "timestamp": [b.timestamp.astimezone(UTC) for b in group],
-                    "open": [b.open for b in group],
-                    "high": [b.high for b in group],
-                    "low": [b.low for b in group],
-                    "close": [b.close for b in group],
-                    "volume": [b.volume for b in group],
-                    "instrument_type": [b.instrument.instrument_type.value for b in group],
-                    "currency": [b.instrument.currency for b in group],
-                }
-            )
-            temp = path.with_name(f"{SHARD_NAME}.tmp")
-            try:
-                with duckdb.connect() as con:
+        with duckdb.connect() as con:
+            for (interval, venue, symbol, day), group in groups.items():
+                path = self.shard_file(dataset, interval, venue, symbol, day)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                frame = pd.DataFrame(
+                    {
+                        "timestamp": [b.timestamp.astimezone(UTC) for b in group],
+                        "open": [b.open for b in group],
+                        "high": [b.high for b in group],
+                        "low": [b.low for b in group],
+                        "close": [b.close for b in group],
+                        "volume": [b.volume for b in group],
+                        "instrument_type": [b.instrument.instrument_type.value for b in group],
+                        "currency": [b.instrument.currency for b in group],
+                    }
+                )
+                temp = path.with_name(f"{SHARD_NAME}.tmp")
+                try:
                     con.register("frame", frame)
                     con.execute(
                         f"COPY (SELECT * FROM frame) TO '{_sql_literal(temp.as_posix())}' "
                         "(FORMAT PARQUET)"
                     )
-                os.replace(temp, path)
-            finally:
-                if temp.exists():
-                    temp.unlink()
+                    con.unregister("frame")
+                    os.replace(temp, path)
+                finally:
+                    if temp.exists():
+                        temp.unlink()
 
     def read_bars(
         self,
@@ -232,9 +231,7 @@ class Lake:
                     )
         return bars
 
-    def quality(
-        self, dataset: str, *, interval: str, venue: Venue, symbol: str
-    ) -> LakeQuality:
+    def quality(self, dataset: str, *, interval: str, venue: Venue, symbol: str) -> LakeQuality:
         """Run the slice #14 quality primitives over the stored series.
 
         Gaps are computed on the sorted unique timestamps so duplicate
@@ -270,8 +267,7 @@ class Lake:
         manifest_path = self.root / name / MANIFEST_NAME
         if not manifest_path.exists():
             raise ValueError(
-                f"dataset {name!r} has no manifest — generate one (ManifestWriter) "
-                "before querying"
+                f"dataset {name!r} has no manifest — generate one (ManifestWriter) before querying"
             )
         try:
             manifest = DatasetManifest.model_validate_json(
@@ -283,8 +279,7 @@ class Lake:
             raise ValueError(f"manifest dataset {manifest.dataset!r} does not match {name!r}")
         scan = scan_series(self.root, name)
         declared = {
-            (c.interval, c.venue, c.symbol): (c.rows, c.start, c.end)
-            for c in manifest.coverage
+            (c.interval, c.venue, c.symbol): (c.rows, c.start, c.end) for c in manifest.coverage
         }
         if scan != declared:
             raise ValueError(

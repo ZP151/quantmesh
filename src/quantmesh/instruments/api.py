@@ -51,7 +51,7 @@ class HistoricalPayload(BaseModel):
 
 
 class ProposalCreateBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
 
     venue: Venue
     symbol: str

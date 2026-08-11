@@ -29,7 +29,7 @@ from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.domain.models import Venue
 
-SCENARIO = DemoScenario()
+SCENARIO = DemoScenario(workspace_history=False)
 
 
 def test_ci_runs_the_exact_frontend_typecheck_after_openapi_staleness_check() -> None:
@@ -47,7 +47,12 @@ def test_ci_runs_the_exact_frontend_typecheck_after_openapi_staleness_check() ->
 
 @pytest.fixture()
 def demo_client(tmp_path: Path):
-    app = create_demo_app(root=tmp_path / "runtime", seed=SCENARIO.seed, host="127.0.0.1")
+    app = create_demo_app(
+        root=tmp_path / "runtime",
+        seed=SCENARIO.seed,
+        workspace_history=False,
+        host="127.0.0.1",
+    )
     with TestClient(app) as client:
         yield client, app
 
@@ -150,9 +155,7 @@ def test_kill_switch_json_refusals(demo_client) -> None:
         "/api/kill-switch", json={"action": "engage"}, headers={"Origin": "https://evil.example"}
     )
     assert cross_origin.status_code == 403
-    bad_venue = client.post(
-        "/api/kill-switch", json={"action": "engage", "venue": "not-a-venue"}
-    )
+    bad_venue = client.post("/api/kill-switch", json={"action": "engage", "venue": "not-a-venue"})
     assert bad_venue.status_code == 422
 
 
@@ -195,8 +198,11 @@ def test_demo_order_resting_limit_accepts_without_fill(demo_client) -> None:
     response = client.post(
         "/api/demo/order",
         json={
-            "venue": "moomoo", "symbol": "MSFT", "side": "BUY",
-            "quantity": 1, "limit_price": 0.5,
+            "venue": "moomoo",
+            "symbol": "MSFT",
+            "side": "BUY",
+            "quantity": 1,
+            "limit_price": 0.5,
         },
     )
     assert response.status_code == 200

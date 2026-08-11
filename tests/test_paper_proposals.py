@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
@@ -237,13 +238,10 @@ def test_two_service_instances_share_one_exactly_once_confirmation_boundary(
     assert results[0] == results[1]
     assert len(journal.all()) == 1
     assert len(first.ledger.events(proposal.id)) == 2
-    total_position = sum(
-        state["account"].positions.get("moomoo:NVDA").quantity
-        if "moomoo:NVDA" in state["account"].positions
-        else 0
+    assert all(
+        state["account"].positions["moomoo:NVDA"].quantity == 1
         for state in (first_state, second_state)
     )
-    assert total_position == 1
 
 
 @pytest.mark.parametrize(
@@ -418,6 +416,15 @@ def test_demo_quote_must_be_explicitly_injected_and_is_marked_in_confirmation(
             ),
             "demo quote timestamp is in the future",
         ),
+        (
+            lambda instrument, now: Quote(
+                instrument=instrument.model_copy(update={"currency": "EUR"}),
+                timestamp=now,
+                bid=99.9,
+                ask=100.0,
+            ),
+            "demo quote instrument does not match proposal instrument",
+        ),
     ],
 )
 def test_demo_quote_must_match_instrument_and_time(
@@ -477,6 +484,36 @@ def test_terminal_replay_rejects_a_journal_order_that_changed_intent(tmp_path: P
         )
 
 
+@pytest.mark.parametrize(
+    "update",
+    [
+        {"broker_order_id": "forged-broker-order"},
+        {"client_order_id": "forged-client-order"},
+        {"created_at": NOW + timedelta(seconds=1)},
+    ],
+)
+def test_terminal_replay_rejects_unexpected_order_identity_fields(
+    tmp_path: Path,
+    update: dict[str, object],
+) -> None:
+    service, _, journal = _service(tmp_path)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+    confirmed = service.confirm(
+        proposal.id,
+        confirmation=proposal.confirmation_token,
+        now=NOW,
+    )
+    order = journal.get(confirmed.order.order_id)
+    journal.update(order.model_copy(update=update))
+
+    with pytest.raises(ValueError, match="immutable proposal intent"):
+        service.confirm(
+            proposal.id,
+            confirmation=proposal.confirmation_token,
+            now=NOW,
+        )
+
+
 def test_confirmation_order_snapshot_is_deeply_immutable(tmp_path: Path) -> None:
     service, _, _ = _service(tmp_path)
     proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
@@ -502,4 +539,16 @@ def test_ledger_rejects_tampering_partial_lines_and_illegal_transitions(tmp_path
     )
 
     with pytest.raises(ValueError, match="line 2"):
+        service.ledger.get(proposal.id)
+
+
+def test_ledger_recomputes_the_proposal_identity_seal(tmp_path: Path) -> None:
+    service, _, _ = _service(tmp_path)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+    ledger_path = tmp_path / "proposals" / "proposals.jsonl"
+    payload = json.loads(ledger_path.read_text(encoding="utf-8"))
+    payload["proposal"]["quantity"] = 2.0
+    ledger_path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="id does not match its immutable intent"):
         service.ledger.get(proposal.id)
