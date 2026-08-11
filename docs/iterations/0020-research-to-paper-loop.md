@@ -284,7 +284,7 @@ not sufficient for cross-agent recovery.
   or live endpoint was read, and no execution authority changed. Task 4 now
   owns the generated scorecard and ADR disposition for both failed candidates.
 
-### Task 4 implementation — common scorecard and ADR gate (fresh review pending)
+### Task 4 complete — common scorecard and ADR gate
 
 - The scorecard implementation was developed test-first. RED was collection
   failure for missing `tools.framework_bakeoff.score`; GREEN is 27 focused
@@ -316,9 +316,12 @@ not sufficient for cross-agent recovery.
   its Python reviewed the 64-package release closure (58 packages installed on
   Windows) with every license allowed. The validated temporary root was then
   removed and verified absent; the shared `.venv` was not mutated.
-- **Status: implementation result pending fresh review; Task 4 is not yet
-  completed or approved.** Task 5 (venue-aware historical data contracts and
-  service) becomes the next action only after that review clears Task 4.
+- Independent review accepted Task 4 with zero Critical, Important or Minor
+  findings. It independently reproduced 79/79 focused tests, 173/173 Task 1-4
+  compatibility tests, byte-identical scorecard output and rejection of 13/13
+  malformed evidence plus 15/15 tampered score objects. ADR-0015 is accepted.
+  Task 5 (venue-aware historical data contracts and service) is now the active
+  implementation frontier.
 
 ## Acceptance criteria
 

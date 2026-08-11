@@ -1,6 +1,6 @@
 # ADR-0015 — Framework boundaries and the instrument workspace
 
-- Status: proposed (Task 4 implementation; fresh review pending)
+- Status: accepted (Task 4 independent review, 2026-08-12)
 - Date: 2026-08-11
 - Supersedes: none; preserves ADR-0014's live-data and quote-fence boundaries
   and every existing paper, risk, kill-switch, journal and audit decision.

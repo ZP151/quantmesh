@@ -311,7 +311,7 @@ Commit: `git commit -m "research: compare Nautilus Hyperliquid replay semantics 
 - Consumes: Tasks 2-3 evidence JSON.
 - Produces: `score_framework(run, weights=DEFAULT_SCORE_WEIGHTS) -> FrameworkScore`, a signed-off ADR disposition of `adopt-adapter`, `isolated-comparator`, or `reject` for each framework.
 
-- [ ] **Step 1: Write the scoring-gate tests**
+- [x] **Step 1: Write the scoring-gate tests**
 
 ```python
 def test_runtime_admission_requires_every_hard_gate_and_score_80():
@@ -325,21 +325,21 @@ def test_runtime_admission_requires_every_hard_gate_and_score_80():
     assert not score_framework(failed_license_evidence()).runtime_admissible
 ```
 
-- [ ] **Step 2: Run red, then implement deterministic scoring**
+- [x] **Step 2: Run red, then implement deterministic scoring**
 
 Use hard gates `license`, `windows_install`, `deterministic`, `chronological_split`, `no_leakage`, `paper_only`, `contract_mapping`; use weighted soft scores `workflow_fit 25`, `adapter_cost 20`, `maintenance 15`, `resource_cost 15`, `packaging 10`, `observability 10`, `migration 5`. Runtime admission requires every hard gate and total at least 80.
 
-- [ ] **Step 3: Generate the scorecard from evidence, not prose**
+- [x] **Step 3: Generate the scorecard from evidence, not prose**
 
 Run: `.\.venv\Scripts\python.exe -m tools.framework_bakeoff.score --finrl docs/evidence/0020/finrl-x-run.json --nautilus docs/evidence/0020/nautilus-run.json --output docs/evidence/0020/framework-scorecard.json`
 
 Expected: compact sorted-key JSON with exact revisions, checks, scores, resource values, limitations, and disposition.
 
-- [ ] **Step 4: Write ADR-0015 from the generated facts**
+- [x] **Step 4: Write ADR-0015 from the generated facts**
 
 The ADR must state: FinRL-X's accepted/rejected boundary; Nautilus's isolated comparator boundary due LGPL/process cost even if technically successful; QuantMesh-owned contracts that remain; copied code count (expected zero); runtime dependency decision; rollback; and the native fallback. Do not describe a failed run as adopted.
 
-- [ ] **Step 5: Verify the architecture gate and commit**
+- [x] **Step 5: Verify the architecture gate and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_framework_scorecard.py tests/test_security.py --basetemp .pytest-0020-task4`
 
