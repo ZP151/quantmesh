@@ -1062,6 +1062,7 @@ def create_workstation_app(
     app.state.history = history
     app.state.price_forecasts = price_forecasts
     clock = workspace_clock if workspace_clock is not None else lambda: datetime.now(UTC)
+    app.state.instrument_clock = clock
 
     def replace_account(updated: PaperAccount) -> None:
         app.state.account = updated
@@ -1071,7 +1072,7 @@ def create_workstation_app(
     if price_forecasts is not None and proposal_ledger is not None:
         paper_decisions = PaperDecisionService(
             ledger=proposal_ledger,
-            artifact_resolver=lambda artifact_id: price_forecasts.get(artifact_id),
+            forecast_registry=price_forecasts,
             account_provider=lambda: app.state.account,
             account_sink=replace_account,
             journal=journal,
@@ -1085,6 +1086,7 @@ def create_workstation_app(
             now=clock,
         )
         app.state.paper_decisions = paper_decisions
+        app.state.proposal_service = paper_decisions
     if history is not None:
         app.state.instrument_workspace = InstrumentWorkspaceService(
             history=history,

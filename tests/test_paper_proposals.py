@@ -30,6 +30,16 @@ NVDA = Instrument(
 )
 
 
+class ForecastCatalog:
+    def __init__(self, artifact) -> None:  # noqa: ANN001
+        self.artifact = artifact
+
+    def get(self, artifact_id: str):  # noqa: ANN201
+        if artifact_id != self.artifact.id:
+            raise ValueError(f"forecast artifact {artifact_id!r} is unavailable")
+        return self.artifact
+
+
 @lru_cache(maxsize=2)
 def _artifact(*, eligible: bool = True):  # noqa: ANN202
     timestamp = NOW
@@ -120,7 +130,7 @@ def _service(
     actual_journal = OrderJournal(tmp_path / "orders") if journal is True else journal
     service = PaperDecisionService(
         ledger=ProposalLedger(tmp_path / "proposals"),
-        artifact_resolver=lambda artifact_id: selected if artifact_id == selected.id else None,
+        forecast_registry=ForecastCatalog(selected),
         account_provider=lambda: state["account"],
         account_sink=lambda value: state.__setitem__("account", value),
         journal=actual_journal,
@@ -136,7 +146,7 @@ def test_proposal_is_a_preview_and_pins_the_forecast_without_ordering(tmp_path: 
     artifact = _artifact()
     service, state, journal = _service(tmp_path, artifact=artifact)
 
-    proposal = service.propose(artifact, side=Side.BUY, quantity=10)
+    proposal = service.propose(artifact.id, side=Side.BUY, quantity=10)
 
     assert proposal.status == "pending"
     assert proposal.artifact_id == artifact.id
@@ -152,7 +162,7 @@ def test_ineligible_forecast_creates_a_blocked_non_confirmable_record(tmp_path: 
     artifact = _artifact(eligible=False)
     service, _, journal = _service(tmp_path, artifact=artifact)
 
-    proposal = service.propose(artifact, side=Side.BUY, quantity=1)
+    proposal = service.propose(artifact.id, side=Side.BUY, quantity=1)
     result = service.confirm(proposal.id, confirmation=proposal.confirmation_token, now=NOW)
 
     assert proposal.status == "blocked"
@@ -165,7 +175,7 @@ def test_ineligible_forecast_creates_a_blocked_non_confirmable_record(tmp_path: 
 
 def test_confirm_requires_exact_operator_token_then_crosses_quote_fence(tmp_path: Path) -> None:
     service, state, journal = _service(tmp_path)
-    proposal = service.propose(_artifact(), side=Side.BUY, quantity=10)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=10)
 
     refused = service.confirm(proposal.id, confirmation="", now=NOW)
     confirmed = service.confirm(proposal.id, confirmation=proposal.confirmation_token, now=NOW)
@@ -183,7 +193,7 @@ def test_confirm_requires_exact_operator_token_then_crosses_quote_fence(tmp_path
 
 def test_confirmation_replay_is_exactly_once_even_concurrently(tmp_path: Path) -> None:
     service, state, journal = _service(tmp_path)
-    proposal = service.propose(_artifact(), side=Side.BUY, quantity=1)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
 
     with ThreadPoolExecutor(max_workers=8) as pool:
         results = list(
@@ -203,6 +213,37 @@ def test_confirmation_replay_is_exactly_once_even_concurrently(tmp_path: Path) -
     assert len(journal.all()) == 1
     assert state["account"].positions["moomoo:NVDA"].quantity == 1
     assert len(service.ledger.events(proposal.id)) == 2
+
+
+def test_two_service_instances_share_one_exactly_once_confirmation_boundary(
+    tmp_path: Path,
+) -> None:
+    first, first_state, journal = _service(tmp_path)
+    second, second_state, _ = _service(tmp_path)
+    proposal = first.propose(_artifact().id, side=Side.BUY, quantity=1)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(
+            pool.map(
+                lambda service: service.confirm(
+                    proposal.id,
+                    confirmation=proposal.confirmation_token,
+                    now=NOW,
+                ),
+                (first, second),
+            )
+        )
+
+    assert results[0] == results[1]
+    assert len(journal.all()) == 1
+    assert len(first.ledger.events(proposal.id)) == 2
+    total_position = sum(
+        state["account"].positions.get("moomoo:NVDA").quantity
+        if "moomoo:NVDA" in state["account"].positions
+        else 0
+        for state in (first_state, second_state)
+    )
+    assert total_position == 1
 
 
 @pytest.mark.parametrize(
@@ -236,7 +277,7 @@ def test_kernel_refusals_are_preserved_verbatim_and_never_retried(
     reason: str,
 ) -> None:
     service, state, journal = _service(tmp_path, account=account, snapshot=snapshot)
-    proposal = service.propose(_artifact(), side=Side.BUY, quantity=10)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=10)
 
     refused = service.confirm(proposal.id, confirmation=proposal.confirmation_token, now=NOW)
     replay = service.confirm(proposal.id, confirmation=proposal.confirmation_token, now=NOW)
@@ -250,7 +291,7 @@ def test_kernel_refusals_are_preserved_verbatim_and_never_retried(
 
 def test_missing_journal_fails_before_submission_and_remains_retryable(tmp_path: Path) -> None:
     service, state, _ = _service(tmp_path, journal=None)
-    proposal = service.propose(_artifact(), side=Side.BUY, quantity=1)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
 
     result = service.confirm(proposal.id, confirmation=proposal.confirmation_token, now=NOW)
 
@@ -259,9 +300,25 @@ def test_missing_journal_fails_before_submission_and_remains_retryable(tmp_path:
     assert state["account"].orders == {}
 
 
+def test_confirmation_time_cannot_regress_before_paper_submission(tmp_path: Path) -> None:
+    service, state, journal = _service(tmp_path)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+
+    with pytest.raises(ValueError, match="cannot predate proposal creation"):
+        service.confirm(
+            proposal.id,
+            confirmation=proposal.confirmation_token,
+            now=NOW - timedelta(seconds=1),
+        )
+
+    assert service.ledger.get(proposal.id).status == "pending"
+    assert state["account"].orders == {}
+    assert journal.all() == []
+
+
 def test_forecast_that_ages_after_preview_is_blocked_before_order(tmp_path: Path) -> None:
     service, state, journal = _service(tmp_path)
-    proposal = service.propose(_artifact(), side=Side.BUY, quantity=1)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
 
     result = service.confirm(
         proposal.id,
@@ -280,7 +337,7 @@ def test_retry_recovers_after_order_was_journaled_before_proposal_transition(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     service, state, journal = _service(tmp_path)
-    proposal = service.propose(_artifact(), side=Side.BUY, quantity=1)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
     transition = service.ledger.transition
     calls = 0
 
@@ -328,7 +385,7 @@ def test_demo_quote_must_be_explicitly_injected_and_is_marked_in_confirmation(
         snapshot={},
         demo_quote=demo_quote,
     )
-    proposal = service.propose(_artifact(), side=Side.BUY, quantity=1)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
 
     result = service.confirm(proposal.id, confirmation=proposal.confirmation_token, now=NOW)
 
@@ -336,9 +393,108 @@ def test_demo_quote_must_be_explicitly_injected_and_is_marked_in_confirmation(
     assert result.quote_provenance == "demo-synthetic"
 
 
+@pytest.mark.parametrize(
+    ("quote_factory", "reason"),
+    [
+        (
+            lambda _instrument, now: Quote(
+                instrument=Instrument(
+                    symbol="SOL-USD",
+                    venue=Venue.HYPERLIQUID,
+                    instrument_type=InstrumentType.SPOT,
+                ),
+                timestamp=now,
+                bid=99.9,
+                ask=100.0,
+            ),
+            "demo quote instrument does not match proposal instrument",
+        ),
+        (
+            lambda instrument, now: Quote(
+                instrument=instrument,
+                timestamp=now + timedelta(seconds=1),
+                bid=99.9,
+                ask=100.0,
+            ),
+            "demo quote timestamp is in the future",
+        ),
+    ],
+)
+def test_demo_quote_must_match_instrument_and_time(
+    tmp_path: Path,
+    quote_factory,
+    reason: str,
+) -> None:
+    service, state, journal = _service(tmp_path, demo_quote=quote_factory)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+
+    result = service.confirm(
+        proposal.id,
+        confirmation=proposal.confirmation_token,
+        now=NOW,
+    )
+
+    assert result.proposal.status == "blocked"
+    assert result.blocker == reason
+    assert state["account"].orders == {}
+    assert journal.all() == []
+
+
+def test_future_real_quote_is_rejected_by_the_paper_kernel(tmp_path: Path) -> None:
+    service, _, journal = _service(
+        tmp_path,
+        snapshot=_snapshot(received_at=NOW + timedelta(seconds=1)),
+    )
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+
+    result = service.confirm(
+        proposal.id,
+        confirmation=proposal.confirmation_token,
+        now=NOW,
+    )
+
+    assert result.proposal.status == "rejected"
+    assert result.blocker == "quote receipt time is in the future"
+    assert len(journal.all()) == 1
+
+
+def test_terminal_replay_rejects_a_journal_order_that_changed_intent(tmp_path: Path) -> None:
+    service, _, journal = _service(tmp_path)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+    confirmed = service.confirm(
+        proposal.id,
+        confirmation=proposal.confirmation_token,
+        now=NOW,
+    )
+    order = journal.get(confirmed.order.order_id)
+    journal.update(order.model_copy(update={"quantity": 999.0}))
+
+    with pytest.raises(ValueError, match="immutable proposal intent"):
+        service.confirm(
+            proposal.id,
+            confirmation=proposal.confirmation_token,
+            now=NOW,
+        )
+
+
+def test_confirmation_order_snapshot_is_deeply_immutable(tmp_path: Path) -> None:
+    service, _, _ = _service(tmp_path)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
+    result = service.confirm(
+        proposal.id,
+        confirmation=proposal.confirmation_token,
+        now=NOW,
+    )
+
+    with pytest.raises(Exception):
+        result.order.quantity = 777
+    with pytest.raises(Exception):
+        result.order.events += result.order.events
+
+
 def test_ledger_rejects_tampering_partial_lines_and_illegal_transitions(tmp_path: Path) -> None:
     service, _, _ = _service(tmp_path)
-    proposal = service.propose(_artifact(), side=Side.BUY, quantity=1)
+    proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
     ledger_path = tmp_path / "proposals" / "proposals.jsonl"
     ledger_path.write_text(
         ledger_path.read_text(encoding="utf-8") + "{partial\n",

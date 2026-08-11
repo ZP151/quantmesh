@@ -4,18 +4,28 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import tempfile
 import threading
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Protocol
 
 from pydantic import ValidationError
 
 from quantmesh.domain.models import Instrument, InstrumentType, OrderRequest, Quote, Side
-from quantmesh.domain.orders import Order, OrderStatus, OrderType
+from quantmesh.domain.orders import (
+    Fill,
+    Order,
+    OrderEventType,
+    OrderStateMachine,
+    OrderStatus,
+    OrderType,
+)
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.instruments.contracts import (
@@ -26,11 +36,56 @@ from quantmesh.instruments.contracts import (
     ProposalEvent,
     ProposalStatus,
 )
-from quantmesh.instruments.forecast import validate_price_forecast_artifact
 from quantmesh.live.fence import QuoteFence
 from quantmesh.settings import settings
 
 PROPOSALS_FILE = "proposals.jsonl"
+LOCK_FILE = ".proposals.lock"
+_ROOT_LOCKS_GUARD = threading.Lock()
+_ROOT_LOCKS: dict[str, threading.RLock] = {}
+
+
+class ForecastRegistry(Protocol):
+    """Trusted forecast boundary required by paper proposal creation."""
+
+    def get(self, artifact_id: str) -> PriceForecastArtifact: ...
+
+
+def _shared_root_lock(root: Path) -> threading.RLock:
+    key = str(root.resolve(strict=False)).casefold()
+    with _ROOT_LOCKS_GUARD:
+        return _ROOT_LOCKS.setdefault(key, threading.RLock())
+
+
+@contextmanager
+def _interprocess_lock(root: Path) -> Iterator[None]:
+    """Serialize one local ledger across processes without adding a dependency."""
+    path = root / LOCK_FILE
+    if path.exists() and (not path.is_file() or _path_is_link_or_reparse(path)):
+        raise ValueError(f"proposal ledger lock {path} is unsafe")
+    with path.open("a+b") as handle:
+        handle.seek(0, os.SEEK_END)
+        if handle.tell() == 0:
+            handle.write(b"\0")
+            handle.flush()
+        handle.seek(0)
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+            try:
+                yield
+            finally:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 def _canonical_json(value: object) -> bytes:
@@ -94,15 +149,38 @@ class ProposalLedger:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.orders_dir / "proposals"
-        self._lock = threading.RLock()
+        self._lock = _shared_root_lock(self.root)
+        self._local = threading.local()
 
     def _safe_root(self) -> None:
         _reject_reparse_components(self.root)
         if self.root.exists() and not self.root.is_dir():
             raise ValueError(f"proposal ledger root {self.root} is not a safe directory")
 
-    def record(self, proposal: PaperProposal) -> PaperProposal:
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        """Hold the complete proposal/order/account critical section."""
         with self._lock:
+            depth = getattr(self._local, "depth", 0)
+            if depth:
+                self._local.depth = depth + 1
+                try:
+                    yield
+                finally:
+                    self._local.depth = depth
+                return
+            self._safe_root()
+            self.root.mkdir(parents=True, exist_ok=True)
+            self._safe_root()
+            with _interprocess_lock(self.root):
+                self._local.depth = 1
+                try:
+                    yield
+                finally:
+                    self._local.depth = 0
+
+    def record(self, proposal: PaperProposal) -> PaperProposal:
+        with self.transaction():
             events = self._read()
             if any(event.proposal_id == proposal.id for event in events):
                 raise ValueError(f"proposal {proposal.id!r} already recorded")
@@ -122,12 +200,17 @@ class ProposalLedger:
             return proposal
 
     def transition(self, proposal: PaperProposal, *, recorded_at: datetime) -> PaperProposal:
-        with self._lock:
+        with self.transaction():
             events = self._read()
             own = [event for event in events if event.proposal_id == proposal.id]
             if not own:
                 raise ValueError(f"no proposal recorded with id {proposal.id!r}")
             current = own[-1].proposal
+            if recorded_at.tzinfo is None:
+                raise ValueError("proposal transition time must be timezone-aware")
+            recorded_at = recorded_at.astimezone(UTC)
+            if recorded_at < own[-1].recorded_at:
+                raise ValueError("proposal transition time cannot regress")
             if current.status is not ProposalStatus.PENDING:
                 raise ValueError(
                     f"proposal {proposal.id!r} is terminal in state {current.status.value!r}"
@@ -156,20 +239,25 @@ class ProposalLedger:
     def get(self, proposal_id: str) -> PaperProposal:
         if re.fullmatch(PROPOSAL_ID_PATTERN, proposal_id) is None:
             raise ValueError("invalid proposal id")
-        own = [event for event in self._read() if event.proposal_id == proposal_id]
-        if not own:
-            raise ValueError(f"no proposal recorded with id {proposal_id!r}")
-        return own[-1].proposal
+        with self.transaction():
+            own = [event for event in self._read() if event.proposal_id == proposal_id]
+            if not own:
+                raise ValueError(f"no proposal recorded with id {proposal_id!r}")
+            return own[-1].proposal
 
     def events(self, proposal_id: str) -> tuple[ProposalEvent, ...]:
-        self.get(proposal_id)
-        return tuple(event for event in self._read() if event.proposal_id == proposal_id)
+        with self.transaction():
+            own = tuple(event for event in self._read() if event.proposal_id == proposal_id)
+            if not own:
+                raise ValueError(f"no proposal recorded with id {proposal_id!r}")
+            return own
 
     def all(self) -> tuple[PaperProposal, ...]:
-        latest: dict[str, PaperProposal] = {}
-        for event in self._read():
-            latest[event.proposal_id] = event.proposal
-        return tuple(latest[key] for key in sorted(latest))
+        with self.transaction():
+            latest: dict[str, PaperProposal] = {}
+            for event in self._read():
+                latest[event.proposal_id] = event.proposal
+            return tuple(latest[key] for key in sorted(latest))
 
     def _write(self, events: list[ProposalEvent]) -> None:
         self._safe_root()
@@ -258,7 +346,7 @@ class PaperDecisionService:
         self,
         *,
         ledger: ProposalLedger,
-        artifact_resolver: Callable[[str], PriceForecastArtifact | None],
+        forecast_registry: ForecastRegistry,
         account_provider: Callable[[], PaperAccount],
         account_sink: Callable[[PaperAccount], None],
         journal: OrderJournal | None,
@@ -268,7 +356,7 @@ class PaperDecisionService:
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         self.ledger = ledger
-        self._artifact_resolver = artifact_resolver
+        self._forecast_registry = forecast_registry
         self._account_provider = account_provider
         self._account_sink = account_sink
         self._journal = journal
@@ -276,7 +364,6 @@ class PaperDecisionService:
         self._quote_fence = quote_fence
         self._demo_quote_provider = demo_quote_provider
         self._now = now
-        self._lock = threading.RLock()
 
     @property
     def demo_mode(self) -> bool:
@@ -289,24 +376,18 @@ class PaperDecisionService:
         return value.astimezone(UTC)
 
     def _resolve_artifact(self, artifact_id: str) -> PriceForecastArtifact:
-        artifact = self._artifact_resolver(artifact_id)
-        if artifact is None:
-            raise ValueError(f"forecast artifact {artifact_id!r} is unavailable")
-        return validate_price_forecast_artifact(artifact)
+        return self._forecast_registry.get(artifact_id)
 
     def propose(
         self,
-        artifact: PriceForecastArtifact,
+        artifact_id: str,
         *,
         side: Side,
         quantity: float,
         limit_price: float | None = None,
     ) -> PaperProposal:
-        with self._lock:
-            artifact = validate_price_forecast_artifact(artifact)
-            resolved = self._resolve_artifact(artifact.id)
-            if resolved != artifact:
-                raise ValueError("proposal artifact does not match the registered artifact")
+        with self.ledger.transaction():
+            artifact = self._resolve_artifact(artifact_id)
             created_at = self.current_time()
             order_type = OrderType.LIMIT if limit_price is not None else OrderType.MARKET
             setup = {
@@ -364,6 +445,7 @@ class PaperDecisionService:
             if self._journal is None:
                 raise ValueError("terminal proposal has no bound order journal")
             order = self._journal.get(proposal.order_id)
+            self._validate_order_binding(proposal, order)
         blocker = "; ".join(proposal.blockers) if proposal.blockers else None
         return ProposalConfirmation(
             proposal=proposal,
@@ -372,14 +454,80 @@ class PaperDecisionService:
             quote_provenance=proposal.quote_provenance,
         )
 
+    @staticmethod
+    def _replay_order(order: Order) -> None:
+        replay = order.model_copy(
+            update={
+                "status": OrderStatus.PENDING,
+                "filled_quantity": 0.0,
+                "events": [],
+            },
+            deep=True,
+        )
+        prior = order.created_at
+        for expected in order.events:
+            if expected.timestamp.tzinfo is None or expected.timestamp < prior:
+                raise ValueError("journal order event time is invalid or regresses")
+            if expected.sequence != len(replay.events) + 1:
+                raise ValueError("journal order event sequence is not contiguous")
+            fill = None
+            if expected.event_type is OrderEventType.FILL:
+                if expected.quantity is None or expected.price is None:
+                    raise ValueError("journal fill event is incomplete")
+                fill = Fill(
+                    timestamp=expected.timestamp,
+                    quantity=expected.quantity,
+                    price=expected.price,
+                    broker_fill_id=expected.broker_fill_id,
+                    fee=expected.fee,
+                )
+            replay = OrderStateMachine.apply(
+                replay,
+                expected.event_type,
+                fill=fill,
+                reason=expected.reason,
+                timestamp=expected.timestamp,
+            )
+            prior = expected.timestamp
+        if (
+            replay.events != order.events
+            or replay.status is not order.status
+            or not math.isclose(replay.filled_quantity, order.filled_quantity)
+        ):
+            raise ValueError("journal order derived state does not replay exactly")
+
+    def _validate_order_binding(self, proposal: PaperProposal, order: Order) -> None:
+        expected_limit = proposal.limit_price
+        if (
+            order.instrument.symbol != proposal.instrument.symbol
+            or order.instrument.venue is not proposal.instrument.venue
+            or order.instrument.instrument_type is not proposal.instrument.instrument_type
+            or order.instrument.currency != proposal.instrument.currency
+            or order.side is not proposal.side
+            or not math.isclose(order.quantity, proposal.quantity)
+            or order.order_type is not proposal.order_type
+            or order.limit_price != expected_limit
+            or order.idempotency_key != f"proposal:{proposal.id}"
+            or order.status not in {OrderStatus.FILLED, OrderStatus.REJECTED}
+        ):
+            raise ValueError("journal order does not match immutable proposal intent")
+        if proposal.order_id is not None and order.order_id != proposal.order_id:
+            raise ValueError("journal order does not match proposal order_id")
+        if proposal.status is ProposalStatus.CONFIRMED and order.status is not OrderStatus.FILLED:
+            raise ValueError("confirmed proposal is not backed by a filled order")
+        if proposal.status is ProposalStatus.REJECTED and order.status is not OrderStatus.REJECTED:
+            raise ValueError("rejected proposal is not backed by a rejected order")
+        self._replay_order(order)
+
     def _journal_order(self, proposal_id: str) -> Order | None:
         if self._journal is None:
             return None
         key = f"proposal:{proposal_id}"
-        return next(
+        order = next(
             (order for order in self._journal.all() if order.idempotency_key == key),
             None,
         )
+        return order
 
     def _recover_account(self, account: PaperAccount, order: Order) -> PaperAccount:
         if order.order_id in account.orders:
@@ -404,6 +552,7 @@ class PaperDecisionService:
         now: datetime,
         quote_provenance: str,
     ) -> ProposalConfirmation:
+        self._validate_order_binding(proposal, order)
         rejected = order.status is OrderStatus.REJECTED
         reason = next(
             (event.reason for event in reversed(order.events) if event.reason is not None),
@@ -421,6 +570,49 @@ class PaperDecisionService:
         terminal = self.ledger.transition(terminal, recorded_at=now)
         return self._terminal_result(terminal)
 
+    def _block(
+        self,
+        proposal: PaperProposal,
+        *,
+        reason: str,
+        now: datetime,
+    ) -> ProposalConfirmation:
+        blocked = PaperProposal.model_validate(
+            {
+                **proposal.model_dump(),
+                "status": ProposalStatus.BLOCKED,
+                "blockers": (reason,),
+            }
+        )
+        blocked = self.ledger.transition(blocked, recorded_at=now)
+        return self._terminal_result(blocked)
+
+    def _demo_quote_blocker(
+        self,
+        proposal: PaperProposal,
+        quote: Quote,
+        *,
+        now: datetime,
+    ) -> str | None:
+        if (
+            quote.instrument.venue is not proposal.instrument.venue
+            or quote.instrument.symbol != proposal.instrument.symbol
+            or quote.instrument.instrument_type is not proposal.instrument.instrument_type
+        ):
+            return "demo quote instrument does not match proposal instrument"
+        if quote.timestamp.tzinfo is None:
+            return "demo quote timestamp must be timezone-aware"
+        timestamp = quote.timestamp.astimezone(UTC)
+        if timestamp > now:
+            return "demo quote timestamp is in the future"
+        age = now - timestamp
+        if age > self._quote_fence.max_age:
+            return (
+                f"demo quote is {round(age.total_seconds())} s old; the fence horizon is "
+                f"{self._quote_fence.max_age.total_seconds():g} s"
+            )
+        return None
+
     def confirm(
         self,
         proposal_id: str,
@@ -428,11 +620,13 @@ class PaperDecisionService:
         confirmation: str,
         now: datetime,
     ) -> ProposalConfirmation:
-        with self._lock:
+        with self.ledger.transaction():
             if now.tzinfo is None:
                 raise ValueError("confirmation time must be timezone-aware")
             now = now.astimezone(UTC)
             proposal = self.ledger.get(proposal_id)
+            if now < proposal.created_at:
+                raise ValueError("confirmation time cannot predate proposal creation")
             if proposal.status is not ProposalStatus.PENDING:
                 return self._terminal_result(proposal)
             if confirmation != proposal.confirmation_token:
@@ -483,6 +677,7 @@ class PaperDecisionService:
             existing = self._journal_order(proposal.id)
             account = self._account_provider()
             if existing is not None:
+                self._validate_order_binding(proposal, existing)
                 recovered = self._recover_account(account, existing)
                 if recovered is not account:
                     self._account_sink(recovered)
@@ -509,6 +704,9 @@ class PaperDecisionService:
             )
             if self._demo_quote_provider is not None:
                 quote = self._demo_quote_provider(proposal.instrument, now)
+                demo_blocker = self._demo_quote_blocker(proposal, quote, now=now)
+                if demo_blocker is not None:
+                    return self._block(proposal, reason=demo_blocker, now=now)
                 result = account.submit(request, quote, now=now)
             else:
                 snapshot = self._snapshot_provider()

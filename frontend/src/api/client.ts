@@ -1355,22 +1355,6 @@ export interface components {
          * @enum {string}
          */
         HistoryRange: "1d" | "5d" | "1m" | "3m" | "6m" | "1y";
-        /** Instrument */
-        Instrument: {
-            /**
-             * Currency
-             * @default USD
-             */
-            currency: string;
-            instrument_type: components["schemas"]["InstrumentType"];
-            /** Metadata */
-            metadata?: {
-                [key: string]: string;
-            };
-            /** Symbol */
-            symbol: string;
-            venue: components["schemas"]["Venue"];
-        };
         /**
          * InstrumentSnapshot
          * @description Detached, deeply immutable view of the canonical Instrument schema.
@@ -1471,49 +1455,10 @@ export interface components {
             venue: components["schemas"]["Venue"];
         };
         /**
-         * Order
-         * @description Replayable order; state fields must agree with the event history.
+         * OrderEventSnapshot
+         * @description Deeply immutable public copy of one paper-order event.
          */
-        Order: {
-            /** Broker Order Id */
-            broker_order_id?: string | null;
-            /** Client Order Id */
-            client_order_id?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Events */
-            events?: components["schemas"]["OrderEvent"][];
-            /**
-             * Filled Quantity
-             * @default 0
-             */
-            filled_quantity: number;
-            /** Idempotency Key */
-            idempotency_key?: string | null;
-            instrument: components["schemas"]["Instrument"];
-            /** Limit Price */
-            limit_price?: number | null;
-            /** Order Id */
-            order_id: string;
-            order_type: components["schemas"]["OrderType"];
-            /** Quantity */
-            quantity: number;
-            side: components["schemas"]["Side"];
-            /** @default pending */
-            status: components["schemas"]["OrderStatus"];
-        };
-        /**
-         * OrderEvent
-         * @description One append-only lifecycle record; state is derived from this history.
-         *
-         *     Fill events carry the venue's own deal id and fee when the venue
-         *     reported them, so fills can be re-derived from the history for
-         *     fill-level reconciliation (ADR-0006 decision 4).
-         */
-        OrderEvent: {
+        OrderEventSnapshot: {
             /** Broker Fill Id */
             broker_fill_id?: string | null;
             event_type: components["schemas"]["OrderEventType"];
@@ -1539,6 +1484,37 @@ export interface components {
          * @enum {string}
          */
         OrderEventType: "accepted" | "rejected" | "fill" | "canceled";
+        /**
+         * OrderSnapshot
+         * @description Deeply immutable response snapshot of a replay-validated paper order.
+         */
+        OrderSnapshot: {
+            /** Broker Order Id */
+            broker_order_id?: string | null;
+            /** Client Order Id */
+            client_order_id?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Events */
+            events?: components["schemas"]["OrderEventSnapshot"][];
+            /** Filled Quantity */
+            filled_quantity: number;
+            /** Idempotency Key */
+            idempotency_key?: string | null;
+            instrument: components["schemas"]["InstrumentSnapshot"];
+            /** Limit Price */
+            limit_price?: number | null;
+            /** Order Id */
+            order_id: string;
+            order_type: components["schemas"]["OrderType"];
+            /** Quantity */
+            quantity: number;
+            side: components["schemas"]["Side"];
+            status: components["schemas"]["OrderStatus"];
+        };
         /**
          * OrderStatus
          * @enum {string}
@@ -1616,7 +1592,7 @@ export interface components {
         ProposalConfirmation: {
             /** Blocker */
             blocker?: string | null;
-            order?: components["schemas"]["Order"] | null;
+            order?: components["schemas"]["OrderSnapshot"] | null;
             proposal: components["schemas"]["PaperProposal"];
             /** Quote Provenance */
             quote_provenance?: ("real" | "demo-synthetic") | null;

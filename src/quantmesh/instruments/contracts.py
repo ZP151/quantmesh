@@ -20,8 +20,8 @@ from pydantic import (
 from quantmesh.data.layout import validate_dataset_name, validate_symbol
 from quantmesh.data.manifest import SeriesCoverage
 from quantmesh.domain.market_data import interval_to_timedelta
-from quantmesh.domain.models import Instrument, Side, Venue
-from quantmesh.domain.orders import Order, OrderType
+from quantmesh.domain.models import IDEMPOTENCY_KEY_PATTERN, Instrument, Side, Venue
+from quantmesh.domain.orders import Order, OrderEventType, OrderStatus, OrderType
 from quantmesh.live.contract import Provenance
 
 AdjustmentMode = Literal["unadjusted", "split-adjusted", "total-return"]
@@ -628,13 +628,16 @@ class PriceForecastArtifact(StrictContract):
     dataset_revision: int = Field(ge=1)
     source: str = Field(min_length=1)
     license: str = Field(min_length=1)
+    dataset_generated_at: datetime
+    coverage: CoverageSnapshot
+    calendar: str = Field(min_length=1)
+    adjustment: AdjustmentMode
     target: Literal["unadjusted-close", "split-adjusted-close", "total-return-close"]
     history_start: datetime
     history_sessions: int = Field(ge=1)
     history_digest: str
-    declared_gap_count: int = Field(ge=0)
-    declared_duplicate_count: int = Field(ge=0)
-    calendar_gap_count: int = Field(ge=0)
+    gap_count: int = Field(ge=0)
+    duplicate_count: int = Field(ge=0)
     age_sessions: int = Field(ge=0)
     generated_at: datetime
     train_start: datetime
@@ -675,6 +678,7 @@ class PriceForecastArtifact(StrictContract):
 
     @field_validator(
         "history_start",
+        "dataset_generated_at",
         "generated_at",
         "train_start",
         "train_end",
@@ -686,6 +690,11 @@ class PriceForecastArtifact(StrictContract):
     @classmethod
     def artifact_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
         return None if value is None else _utc(value, info.field_name)
+
+    @field_validator("coverage", mode="before")
+    @classmethod
+    def coverage_is_a_detached_snapshot(cls, value: object) -> object:
+        return _coverage_snapshot(value)
 
     @field_validator("source", "license", "model_version")
     @classmethod
@@ -730,6 +739,17 @@ class PriceForecastArtifact(StrictContract):
             or self.generated_at < self.train_end
         ):
             raise ValueError("forecast training and generation times are inconsistent")
+        expected_target = f"{self.adjustment}-close"
+        if self.target != expected_target:
+            raise ValueError("forecast target must match the recorded adjustment mode")
+        if (
+            self.coverage.interval != "1d"
+            or self.coverage.venue != self.instrument.venue
+            or self.coverage.symbol != self.instrument.symbol
+            or self.coverage.start > self.history_start
+            or self.coverage.end < self.train_end
+        ):
+            raise ValueError("forecast coverage must contain its daily training history")
         if tuple(path.sessions for path in self.paths) != (7, 30, 126):
             raise ValueError("forecast paths must be ordered 7, 30, 126")
         if tuple(metric.sessions for metric in self.metrics) != (7, 30, 126):
@@ -884,6 +904,65 @@ class ProposalEvent(StrictContract):
     def event_identity_matches(self) -> "ProposalEvent":
         if self.proposal_id != self.proposal.id:
             raise ValueError("proposal event identity does not match its snapshot")
+        if self.recorded_at < self.proposal.created_at:
+            raise ValueError("proposal event cannot predate proposal creation")
+        return self
+
+
+class OrderEventSnapshot(StrictContract):
+    """Deeply immutable public copy of one paper-order event."""
+
+    sequence: int = Field(ge=1)
+    timestamp: datetime
+    event_type: OrderEventType
+    status: OrderStatus
+    quantity: float | None = Field(default=None, gt=0)
+    price: float | None = Field(default=None, gt=0)
+    reason: str | None = None
+    broker_fill_id: str | None = None
+    fee: float | None = Field(default=None, ge=0)
+
+    @field_validator("timestamp")
+    @classmethod
+    def timestamp_is_utc(cls, value: datetime) -> datetime:
+        return _utc(value, "timestamp")
+
+
+class OrderSnapshot(StrictContract):
+    """Deeply immutable response snapshot of a replay-validated paper order."""
+
+    order_id: str
+    instrument: InstrumentSnapshot
+    side: Side
+    quantity: float = Field(gt=0)
+    order_type: OrderType
+    limit_price: float | None = Field(default=None, gt=0)
+    created_at: datetime
+    client_order_id: str | None = None
+    idempotency_key: str | None = Field(default=None, pattern=IDEMPOTENCY_KEY_PATTERN)
+    broker_order_id: str | None = None
+    status: OrderStatus
+    filled_quantity: float = Field(ge=0)
+    events: tuple[OrderEventSnapshot, ...] = Field(default_factory=tuple)
+
+    @field_validator("instrument", mode="before")
+    @classmethod
+    def instrument_is_a_detached_snapshot(cls, value: object) -> object:
+        return _instrument_snapshot(value)
+
+    @field_validator("created_at")
+    @classmethod
+    def created_at_is_utc(cls, value: datetime) -> datetime:
+        return _utc(value, "created_at")
+
+    @model_validator(mode="after")
+    def snapshot_is_consistent(self) -> "OrderSnapshot":
+        if self.filled_quantity > self.quantity and not math.isclose(
+            self.filled_quantity, self.quantity
+        ):
+            raise ValueError("filled_quantity cannot exceed order quantity")
+        if (self.order_type is OrderType.LIMIT) != (self.limit_price is not None):
+            raise ValueError("order_type must match limit_price presence")
         return self
 
 
@@ -891,9 +970,18 @@ class ProposalConfirmation(StrictContract):
     """Typed result of an explicit confirmation attempt."""
 
     proposal: PaperProposal
-    order: Order | None = None
+    order: OrderSnapshot | None = None
     blocker: str | None = None
     quote_provenance: Literal["real", "demo-synthetic"] | None = None
+
+    @field_validator("order", mode="before")
+    @classmethod
+    def order_is_a_detached_snapshot(cls, value: object) -> object:
+        if isinstance(value, Order):
+            payload = value.model_dump()
+            payload["events"] = tuple(payload["events"])
+            return payload
+        return value
 
     @model_validator(mode="after")
     def result_matches_proposal(self) -> "ProposalConfirmation":

@@ -66,7 +66,7 @@ def _live_evidence(
     if snapshot.freshness_label not in {"real", "delayed"}:
         reasons.append(f"quote freshness is {snapshot.freshness_label or 'unknown'}")
     if snapshot.sequence_gap:
-        reasons.append("quote sequence is discontinuous")
+        reasons.append("quote sequence has a gap (discontinuous)")
     if bid is None or ask is None or bid > ask:
         reasons.append("quote has no usable bid/ask depth")
     return WorkspaceLiveEvidence(

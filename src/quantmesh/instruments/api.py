@@ -28,7 +28,6 @@ from quantmesh.instruments.contracts import (
     ProposalConfirmation,
     ProposalStatus,
 )
-from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
 from quantmesh.instruments.proposals import PaperDecisionService
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
@@ -52,7 +51,7 @@ class HistoricalPayload(BaseModel):
 
 
 class ProposalCreateBody(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid")
 
     venue: Venue
     symbol: str
@@ -63,7 +62,7 @@ class ProposalCreateBody(BaseModel):
 
 
 class ProposalConfirmBody(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid")
 
     confirmation_token: str = Field(min_length=1, max_length=128)
 
@@ -377,9 +376,31 @@ def instrument_router() -> APIRouter:
     ) -> InstrumentWorkspace:
         _validate_api_symbol(symbol, field="symbol")
         peers = _parse_compare(compare, primary=(venue, symbol))
-        service = getattr(request.app.state, "instrument_workspace", None)
-        if not isinstance(service, InstrumentWorkspaceService):
-            raise HTTPException(status_code=404, detail="no instrument workspace is attached")
+        history = getattr(request.app.state, "history", None)
+        if not isinstance(history, HistoryService):
+            raise HTTPException(
+                status_code=404,
+                detail="no instrument workspace service is attached",
+            )
+        forecasts = getattr(request.app.state, "price_forecasts", None)
+        decisions = getattr(request.app.state, "proposal_service", None)
+        if not isinstance(decisions, PaperDecisionService):
+            decisions = getattr(request.app.state, "paper_decisions", None)
+        clock = getattr(request.app.state, "instrument_clock", None)
+        if not callable(clock):
+
+            def clock() -> datetime:
+                return datetime.now(UTC)
+
+        service = InstrumentWorkspaceService(
+            history=history,
+            forecasts=forecasts,
+            account_provider=lambda: request.app.state.account,
+            marks_provider=lambda: request.app.state.marks,
+            live_feed=getattr(request.app.state, "live", None),
+            decisions=(decisions if isinstance(decisions, PaperDecisionService) else None),
+            now=clock,
+        )
         try:
             return service.render(venue, symbol, selected_range, peers=peers)
         except HistoryUnavailableError as error:
@@ -397,8 +418,10 @@ def instrument_router() -> APIRouter:
         _guard_json_origin(request, "paper proposal")
         _validate_api_symbol(body.symbol, field="symbol")
         registry = getattr(request.app.state, "price_forecasts", None)
-        decisions = getattr(request.app.state, "paper_decisions", None)
-        if not isinstance(registry, PriceForecastRegistry) or not isinstance(
+        decisions = getattr(request.app.state, "proposal_service", None)
+        if not isinstance(decisions, PaperDecisionService):
+            decisions = getattr(request.app.state, "paper_decisions", None)
+        if not callable(getattr(registry, "get", None)) or not isinstance(
             decisions, PaperDecisionService
         ):
             raise HTTPException(status_code=404, detail="no paper proposal service is attached")
@@ -410,7 +433,7 @@ def instrument_router() -> APIRouter:
             raise _unprocessable("proposal venue and symbol must match the forecast artifact")
         try:
             return decisions.propose(
-                artifact,
+                artifact.id,
                 side=body.side,
                 quantity=body.quantity,
                 limit_price=body.limit_price,
@@ -430,7 +453,9 @@ def instrument_router() -> APIRouter:
         body: ProposalConfirmBody,
     ) -> ProposalConfirmation | JSONResponse:
         _guard_json_origin(request, "paper proposal confirmation")
-        decisions = getattr(request.app.state, "paper_decisions", None)
+        decisions = getattr(request.app.state, "proposal_service", None)
+        if not isinstance(decisions, PaperDecisionService):
+            decisions = getattr(request.app.state, "paper_decisions", None)
         if not isinstance(decisions, PaperDecisionService):
             raise HTTPException(status_code=404, detail="no paper proposal service is attached")
         try:
@@ -442,6 +467,8 @@ def instrument_router() -> APIRouter:
             confirmation=body.confirmation_token,
             now=decisions.current_time(),
         )
+        if before.status is ProposalStatus.BLOCKED:
+            return JSONResponse(status_code=409, content=jsonable_encoder(result))
         if before.status is not ProposalStatus.PENDING:
             return result
         if result.proposal.status is ProposalStatus.CONFIRMED:

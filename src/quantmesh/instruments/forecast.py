@@ -40,6 +40,7 @@ from quantmesh.settings import settings
 
 HORIZONS = (7, 30, 126)
 RETURN_WINDOW = 252
+MAX_FORECAST_SESSIONS = 650
 MODEL_NAME = "median-log-drift-conformal"
 BENCHMARK_NAME = "last-price-random-walk"
 QUANTILES = (0.025, 0.10, 0.25, 0.75, 0.90, 0.975)
@@ -228,12 +229,8 @@ def _metrics(horizon: int, rows: Sequence[OOSForecast]) -> ForecastMetrics:
     )
 
 
-def _unexplained_session_gaps(series: HistoricalSeries) -> tuple[datetime, ...]:
-    timestamps = tuple(bar.timestamp for bar in series.bars)
-    continuous = series.instrument.instrument_type in {
-        InstrumentType.SPOT,
-        InstrumentType.PERPETUAL,
-    }
+def _unexplained_bar_gaps(bars: Sequence[object], *, continuous: bool) -> tuple[datetime, ...]:
+    timestamps = tuple(bar.timestamp for bar in bars)
     gaps: list[datetime] = []
     for left, right in zip(timestamps, timestamps[1:]):
         candidate = left + timedelta(days=1)
@@ -340,6 +337,7 @@ def _config() -> dict[str, object]:
         "coverage_gate": [0.60, 0.98],
         "horizons": list(HORIZONS),
         "model": MODEL_NAME,
+        "max_forecast_sessions": MAX_FORECAST_SESSIONS,
         "residual_minimums": {"7": 30, "30": 30, "126": 12},
         "return_window": RETURN_WINDOW,
     }
@@ -371,18 +369,31 @@ def _identity(
     model_version: str | None = None,
     config_digest: str | None = None,
     history_digest: str | None = None,
+    bars: Sequence[HistoricalBar] | None = None,
+    gap_count: int | None = None,
+    duplicate_count: int | None = None,
+    age_sessions: int | None = None,
 ) -> dict[str, object]:
     if artifact is not None:
         return {
+            "adjustment": artifact.adjustment,
+            "age_sessions": artifact.age_sessions,
             "bar_digest": artifact.history_digest,
+            "calendar": artifact.calendar,
             "config_digest": artifact.config_digest,
+            "coverage": artifact.coverage.model_dump(mode="json"),
             "dataset": artifact.dataset_id,
+            "dataset_generated_at": artifact.dataset_generated_at.isoformat(),
+            "duplicate_count": artifact.duplicate_count,
+            "gap_count": artifact.gap_count,
             "generated_at": artifact.generated_at.isoformat(),
             "history_sessions": artifact.history_sessions,
             "history_start": artifact.history_start.isoformat(),
             "instrument": artifact.instrument.model_dump(mode="json"),
+            "license": artifact.license,
             "model_version": artifact.model_version,
             "revision": artifact.dataset_revision,
+            "source": artifact.source,
             "target": artifact.target,
             "train_end": artifact.train_end.isoformat(),
             "train_start": artifact.train_start.isoformat(),
@@ -393,32 +404,42 @@ def _identity(
         or model_version is None
         or config_digest is None
         or history_digest is None
+        or bars is None
+        or gap_count is None
+        or duplicate_count is None
+        or age_sessions is None
     ):
         raise ValueError("forecast identity inputs are incomplete")
     return {
+        "adjustment": series.adjustment,
+        "age_sessions": age_sessions,
         "bar_digest": history_digest,
+        "calendar": series.calendar,
         "config_digest": config_digest,
+        "coverage": series.coverage.model_dump(mode="json"),
         "dataset": series.dataset_id,
+        "dataset_generated_at": series.generated_at.isoformat(),
+        "duplicate_count": duplicate_count,
+        "gap_count": gap_count,
         "generated_at": generated_at.isoformat(),
-        "history_sessions": len(series.bars),
-        "history_start": series.bars[0].timestamp.isoformat(),
+        "history_sessions": len(bars),
+        "history_start": bars[0].timestamp.isoformat(),
         "instrument": series.instrument.model_dump(mode="json"),
+        "license": series.license,
         "model_version": model_version,
         "revision": series.dataset_revision,
+        "source": series.source,
         "target": f"{series.adjustment}-close",
-        "train_end": series.bars[-1].timestamp.isoformat(),
-        "train_start": series.bars[
-            max(0, len(series.bars) - RETURN_WINDOW - 1)
-        ].timestamp.isoformat(),
+        "train_end": bars[-1].timestamp.isoformat(),
+        "train_start": bars[max(0, len(bars) - RETURN_WINDOW - 1)].timestamp.isoformat(),
     }
 
 
 def _promotion_blockers(
     *,
     history_sessions: int,
-    declared_gap_count: int,
-    declared_duplicate_count: int,
-    calendar_gap_count: int,
+    gap_count: int,
+    duplicate_count: int,
     continuous: bool,
     age_sessions: int,
     metrics: Sequence[ForecastMetrics],
@@ -426,13 +447,11 @@ def _promotion_blockers(
     blockers: list[str] = []
     if history_sessions < 315:
         blockers.append(f"history has {history_sessions} sessions; at least 315 are required")
-    if declared_gap_count:
-        blockers.append(f"history declares {declared_gap_count} unexplained gap(s)")
-    if declared_duplicate_count:
-        blockers.append(f"history declares {declared_duplicate_count} duplicate(s)")
-    if calendar_gap_count:
+    if duplicate_count:
+        blockers.append(f"history contains {duplicate_count} duplicate timestamp(s)")
+    if gap_count:
         kind = "daily" if continuous else "weekday"
-        blockers.append(f"history contains {calendar_gap_count} unexplained {kind} gap(s)")
+        blockers.append(f"history contains {gap_count} unexplained {kind} gap(s)")
     required = {7: 30, 30: 30, 126: 12}
     for metric in metrics:
         minimum = required[metric.sessions]
@@ -459,7 +478,7 @@ def _promotion_blockers(
 def validate_price_forecast_artifact(
     artifact: PriceForecastArtifact,
 ) -> PriceForecastArtifact:
-    """Recompute every decision field before an artifact can be trusted."""
+    """Validate internal structure only; registry pin validation establishes trust."""
     try:
         artifact = PriceForecastArtifact.model_validate(artifact.model_dump())
     except ValidationError as error:
@@ -488,9 +507,8 @@ def validate_price_forecast_artifact(
     }
     expected_blockers = _promotion_blockers(
         history_sessions=artifact.history_sessions,
-        declared_gap_count=artifact.declared_gap_count,
-        declared_duplicate_count=artifact.declared_duplicate_count,
-        calendar_gap_count=artifact.calendar_gap_count,
+        gap_count=artifact.gap_count,
+        duplicate_count=artifact.duplicate_count,
         continuous=continuous,
         age_sessions=artifact.age_sessions,
         metrics=artifact.metrics,
@@ -516,6 +534,20 @@ def _validate_against_bars(artifact: PriceForecastArtifact, bars: Sequence[objec
         InstrumentType.SPOT,
         InstrumentType.PERPETUAL,
     }
+    timestamps = tuple(bar.timestamp for bar in bars)
+    duplicate_count = len(timestamps) - len(set(timestamps))
+    gap_count = len(_unexplained_bar_gaps(bars, continuous=continuous))
+    age_sessions = _session_age(
+        bars[-1].timestamp,
+        artifact.generated_at,
+        continuous=continuous,
+    )
+    if (
+        artifact.duplicate_count != duplicate_count
+        or artifact.gap_count != gap_count
+        or artifact.age_sessions != age_sessions
+    ):
+        raise ValueError("forecast quality evidence does not match pinned history")
     expected_by_horizon = {
         horizon: rolling_oos_forecasts(bars, horizon=horizon) for horizon in HORIZONS
     }
@@ -533,6 +565,16 @@ def _validate_against_bars(artifact: PriceForecastArtifact, bars: Sequence[objec
     )
     if artifact.paths != expected_paths:
         raise ValueError("forecast paths do not match pinned history")
+    expected_blockers = _promotion_blockers(
+        history_sessions=len(bars),
+        gap_count=gap_count,
+        duplicate_count=duplicate_count,
+        continuous=continuous,
+        age_sessions=age_sessions,
+        metrics=artifact.metrics,
+    )
+    if artifact.blockers != expected_blockers or artifact.eligible != (not expected_blockers):
+        raise ValueError("forecast eligibility does not match pinned history")
 
 
 def run_price_forecast(
@@ -554,17 +596,16 @@ def run_price_forecast(
     if generated_at < series.bars[-1].timestamp:
         raise ValueError("generated_at cannot precede the last observed bar")
 
+    bars = tuple(series.bars[-MAX_FORECAST_SESSIONS:])
     continuous = series.instrument.instrument_type in {
         InstrumentType.SPOT,
         InstrumentType.PERPETUAL,
     }
-    oos_by_horizon = {
-        horizon: rolling_oos_forecasts(series.bars, horizon=horizon) for horizon in HORIZONS
-    }
+    oos_by_horizon = {horizon: rolling_oos_forecasts(bars, horizon=horizon) for horizon in HORIZONS}
     metrics = tuple(_metrics(horizon, oos_by_horizon[horizon]) for horizon in HORIZONS)
     paths = tuple(
         _path(
-            series.bars,
+            bars,
             horizon=horizon,
             residuals=[row.residual_log for row in oos_by_horizon[horizon]],
             continuous=continuous,
@@ -573,25 +614,30 @@ def run_price_forecast(
     )
     oos = tuple(row for horizon in HORIZONS for row in oos_by_horizon[horizon])
 
-    derived_gaps = _unexplained_session_gaps(series)
-    age = _session_age(series.bars[-1].timestamp, generated_at, continuous=continuous)
+    timestamps = tuple(bar.timestamp for bar in bars)
+    duplicate_count = len(timestamps) - len(set(timestamps))
+    gap_count = len(_unexplained_bar_gaps(bars, continuous=continuous))
+    age = _session_age(bars[-1].timestamp, generated_at, continuous=continuous)
     blockers = _promotion_blockers(
-        history_sessions=len(series.bars),
-        declared_gap_count=len(series.gaps),
-        declared_duplicate_count=len(series.duplicates),
-        calendar_gap_count=len(derived_gaps),
+        history_sessions=len(bars),
+        gap_count=gap_count,
+        duplicate_count=duplicate_count,
         continuous=continuous,
         age_sessions=age,
         metrics=metrics,
     )
     config_digest = _sha256(_canonical_json(_config()))
-    history_digest = _bar_digest(series.bars)
+    history_digest = _bar_digest(bars)
     identity = _identity(
         series=series,
         generated_at=generated_at,
         model_version=model_version,
         config_digest=config_digest,
         history_digest=history_digest,
+        bars=bars,
+        gap_count=gap_count,
+        duplicate_count=duplicate_count,
+        age_sessions=age,
     )
     artifact_id = f"forecast-{_sha256(_canonical_json(identity))[:24]}"
     limitations = (
@@ -607,17 +653,20 @@ def run_price_forecast(
         "dataset_revision": series.dataset_revision,
         "source": series.source,
         "license": series.license,
+        "dataset_generated_at": series.generated_at,
+        "coverage": series.coverage,
+        "calendar": series.calendar,
+        "adjustment": series.adjustment,
         "target": f"{series.adjustment}-close",
-        "history_start": series.bars[0].timestamp,
-        "history_sessions": len(series.bars),
+        "history_start": bars[0].timestamp,
+        "history_sessions": len(bars),
         "history_digest": history_digest,
-        "declared_gap_count": len(series.gaps),
-        "declared_duplicate_count": len(series.duplicates),
-        "calendar_gap_count": len(derived_gaps),
+        "gap_count": gap_count,
+        "duplicate_count": duplicate_count,
         "age_sessions": age,
         "generated_at": generated_at,
-        "train_start": series.bars[max(0, len(series.bars) - RETURN_WINDOW - 1)].timestamp,
-        "train_end": series.bars[-1].timestamp,
+        "train_start": bars[max(0, len(bars) - RETURN_WINDOW - 1)].timestamp,
+        "train_end": bars[-1].timestamp,
         "validation_start": min((row.target_at for row in oos), default=None),
         "validation_end": max((row.target_at for row in oos), default=None),
         "test_start": min((row.target_at for row in oos if row.p10 is not None), default=None),
@@ -692,6 +741,11 @@ class PriceForecastRegistry:
             raise ValueError(
                 f"dataset {artifact.dataset_id!r} license no longer matches the artifact pin"
             )
+        if dataset.manifest.generated_at.astimezone(UTC) != artifact.dataset_generated_at:
+            raise ValueError(
+                f"dataset {artifact.dataset_id!r} manifest generation no longer matches "
+                "the artifact pin"
+            )
         coverage = next(
             (
                 item
@@ -702,12 +756,11 @@ class PriceForecastRegistry:
             ),
             None,
         )
-        if (
-            coverage is None
-            or coverage.start > artifact.history_start
-            or coverage.end < artifact.train_end
-        ):
+        if coverage is None:
             raise ValueError("dataset pin no longer covers the artifact training window")
+        observed_coverage = artifact.coverage.model_validate(coverage.model_dump())
+        if observed_coverage != artifact.coverage:
+            raise ValueError("dataset coverage no longer exactly matches the artifact pin")
         bars = dataset.read_bars(
             interval="1d",
             venue=artifact.instrument.venue,

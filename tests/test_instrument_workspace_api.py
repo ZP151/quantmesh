@@ -147,6 +147,10 @@ class RecordingHistoryService(HistoryService):
             keys=keys,
             points=(
                 ComparisonPoint(
+                    timestamp=as_of - timedelta(days=2),
+                    values={key: 99.0 for key in keys},
+                ),
+                ComparisonPoint(
                     timestamp=as_of - timedelta(days=1),
                     values={key: 100.0 for key in keys},
                 ),
@@ -305,10 +309,7 @@ def _harness(
 
     proposals = PaperDecisionService(
         ledger=ProposalLedger(tmp_path / "proposals"),
-        artifact_resolver=lambda artifact_id: next(
-            (artifact for artifact in selected if artifact.id == artifact_id),
-            None,
-        ),
+        forecast_registry=catalog,
         account_provider=lambda: state["account"],
         account_sink=sink,
         journal=journal,

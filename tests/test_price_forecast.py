@@ -121,6 +121,11 @@ def test_forecast_has_three_horizons_quantiles_and_lineage() -> None:
     assert artifact.dataset_id == series.dataset_id
     assert artifact.dataset_revision == series.dataset_revision
     assert artifact.source == series.source
+    assert artifact.license == series.license
+    assert artifact.dataset_generated_at == series.generated_at
+    assert artifact.coverage == series.coverage
+    assert artifact.calendar == series.calendar
+    assert artifact.adjustment == series.adjustment
     assert artifact.history_start == series.bars[0].timestamp
     assert artifact.history_sessions == 420
     assert artifact.train_start == series.bars[-253].timestamp
@@ -203,7 +208,7 @@ def test_insufficient_history_is_reported_as_an_ineligible_artifact(
     ]
 
 
-def test_gap_duplicate_and_stale_artifact_each_fail_closed() -> None:
+def test_quality_is_derived_from_bars_and_stale_artifact_fails_closed() -> None:
     baseline = _series()
     gap = baseline.bars[100].timestamp
     broken = baseline.model_copy(update={"gaps": (gap,), "duplicates": (gap,)})
@@ -213,8 +218,9 @@ def test_gap_duplicate_and_stale_artifact_each_fail_closed() -> None:
     quality = run_price_forecast(broken, generated_at=broken.as_of, model_version=MODEL_VERSION)
     old = run_price_forecast(stale, generated_at=stale_at, model_version=MODEL_VERSION)
 
-    assert any("gap" in blocker for blocker in quality.blockers)
-    assert any("duplicate" in blocker for blocker in quality.blockers)
+    assert quality.gap_count == 0
+    assert quality.duplicate_count == 0
+    assert not any("gap" in blocker or "duplicate" in blocker for blocker in quality.blockers)
     assert any("one session" in blocker for blocker in old.blockers)
 
 
@@ -345,6 +351,41 @@ def test_registry_refuses_a_manifest_revision_that_moved(tmp_path: Path) -> None
         registry.resolve_pin(artifact)
 
 
+def test_registry_refuses_same_revision_manifest_coverage_expansion(tmp_path: Path) -> None:
+    series = _series(650)
+    expanded = _series(651)
+    artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
+    lake_root = tmp_path / "lake"
+    _write_matching_lake(lake_root, series)
+    extra = expanded.bars[-1]
+    Lake(lake_root).write_bars(
+        series.dataset_id,
+        [
+            Bar(
+                instrument=extra.instrument,
+                timestamp=extra.timestamp,
+                interval=extra.interval,
+                open=extra.open,
+                high=extra.high,
+                low=extra.low,
+                close=extra.close,
+                volume=extra.volume,
+            )
+        ],
+    )
+    ManifestWriter(lake_root).generate(
+        series.dataset_id,
+        source=series.source,
+        license=series.license,
+        revision=series.dataset_revision,
+        generated_at=series.generated_at,
+    )
+    registry = PriceForecastRegistry(tmp_path / "registry", lake_root=lake_root)
+
+    with pytest.raises(ValueError, match="coverage no longer exactly matches"):
+        registry.resolve_pin(artifact)
+
+
 def test_generated_at_and_model_version_are_part_of_identity() -> None:
     series = _series()
     original = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
@@ -368,6 +409,38 @@ def test_650_sessions_can_pass_every_horizon_without_relaxing_leakage() -> None:
     assert artifact.eligible is True
     assert artifact.blockers == ()
     assert [metric.interval_test_count for metric in artifact.metrics] == [384, 338, 146]
+
+
+def test_forecast_cost_and_identity_are_bounded_to_latest_650_sessions() -> None:
+    series = _series(5_000)
+
+    artifact = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
+
+    assert artifact.history_sessions == 650
+    assert artifact.history_start == series.bars[-650].timestamp
+    assert artifact.train_end == series.bars[-1].timestamp
+
+
+def test_source_license_and_adjustment_are_part_of_identity() -> None:
+    series = _series(650)
+    original = run_price_forecast(series, generated_at=series.as_of, model_version=MODEL_VERSION)
+    changed_source = run_price_forecast(
+        series.model_copy(update={"source": "another-source"}),
+        generated_at=series.as_of,
+        model_version=MODEL_VERSION,
+    )
+    changed_license = run_price_forecast(
+        series.model_copy(update={"license": "another-license"}),
+        generated_at=series.as_of,
+        model_version=MODEL_VERSION,
+    )
+    changed_adjustment = run_price_forecast(
+        series.model_copy(update={"adjustment": "split-adjusted"}),
+        generated_at=series.as_of,
+        model_version=MODEL_VERSION,
+    )
+
+    assert len({original.id, changed_source.id, changed_license.id, changed_adjustment.id}) == 4
 
 
 def test_artifact_validator_recomputes_metrics_and_eligibility() -> None:

@@ -83,9 +83,7 @@ class QuoteFence:
         if view is None:
             return FenceDecision(False, f"no locally validated quote for {instrument.symbol}")
         if view.get("kind") != UpdateKind.QUOTE.value:
-            return FenceDecision(
-                False, f"no locally validated quote for {instrument.symbol}"
-            )
+            return FenceDecision(False, f"no locally validated quote for {instrument.symbol}")
         provenance = view.get("provenance")
         if provenance != Provenance.REAL.value:
             return FenceDecision(
@@ -109,6 +107,8 @@ class QuoteFence:
                 False, "quote has no local receipt time — it cannot be age-validated"
             )
         age = now - anchored
+        if age < timedelta(0):
+            return FenceDecision(False, "quote receipt time is in the future")
         if age > self.max_age:
             seconds = round(age.total_seconds())
             return FenceDecision(
