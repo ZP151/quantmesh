@@ -144,6 +144,39 @@ def test_reset_refuses_a_forged_marker_without_demo_identity(tmp_path: Path) -> 
     assert sentinel.read_text(encoding="utf-8") == '{"operator": "data"}'
 
 
+def test_reset_refuses_unknown_files_even_inside_a_genuine_seeded_root(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "demo-with-user-data"
+    seed_demo_root(root, SCENARIO)
+    sentinel = root / "precious-user-file.json"
+    sentinel.write_text('{"operator": "data"}', encoding="utf-8")
+
+    with pytest.raises(DemoRootError, match="complete seeded structure"):
+        reset_demo_root(root, SCENARIO)
+
+    assert sentinel.read_text(encoding="utf-8") == '{"operator": "data"}'
+    assert (root / "QUANTMESH_DEMO_OWNERSHIP.json").is_file()
+
+
+def test_reset_refuses_a_link_added_below_a_genuine_seeded_root(tmp_path: Path) -> None:
+    root = tmp_path / "demo-with-link"
+    seed_demo_root(root, SCENARIO)
+    outside = tmp_path / "outside.txt"
+    outside.write_text("operator data", encoding="utf-8")
+    link = root / "documents" / "operator-link.txt"
+    try:
+        link.symlink_to(outside)
+    except OSError:
+        pytest.skip("this environment cannot create symlinks")
+
+    with pytest.raises(DemoRootError, match="complete seeded structure"):
+        reset_demo_root(root, SCENARIO)
+
+    assert outside.read_text(encoding="utf-8") == "operator data"
+    assert link.is_symlink()
+
+
 def test_load_refuses_a_root_without_the_marker(tmp_path: Path) -> None:
     root = tmp_path / "plain"
     root.mkdir()

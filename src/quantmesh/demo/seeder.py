@@ -33,7 +33,7 @@ from quantmesh.ai.decisions import DecisionLog, DecisionRecord, ModelMeta
 from quantmesh.ai.retrieval import Citation, DocumentIndex
 from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.data.lake import Lake
-from quantmesh.data.manifest import ManifestWriter
+from quantmesh.data.manifest import MANIFEST_NAME, DatasetManifest, ManifestWriter
 from quantmesh.data.providers.hyperliquid import HyperliquidFixtureProvider
 from quantmesh.data.providers.moomoo import MoomooFixtureProvider
 from quantmesh.demo import generators
@@ -104,6 +104,21 @@ from quantmesh.research.reports import (
 # replay depend on checkout state). Hex-shaped to satisfy the
 # registries' commit validators.
 DEMO_COMMIT = "0a1e2d3c4b5a69788796a5b4c3d2e1f0deadbeef"
+OWNERSHIP_NAME = "QUANTMESH_DEMO_OWNERSHIP.json"
+
+# These seeded files are legitimately rewritten by public demo APIs. Their
+# path and regular-file type remain ownership evidence, but their bytes cannot
+# be pinned. All other seeded files are hash-pinned in the ownership manifest.
+_MUTABLE_FILES = frozenset(
+    {
+        "account.json",
+        "enablement/enablement.jsonl",
+        "orders/journal.jsonl",
+        "orders/proposals/.proposals.lock",
+        "orders/proposals/proposals.jsonl",
+        "watchlists/watchlist.jsonl",
+    }
+)
 
 # One deterministic paper-order sequence: fills across venues plus one
 # resting limit below the market (the "working order" state). Quantities
@@ -228,7 +243,7 @@ def _marker(root: Path) -> Path:
     return root / MARKER_NAME
 
 
-def _marker_text() -> str:
+def _legacy_marker_text() -> str:
     return (
         json.dumps(
             {
@@ -243,8 +258,177 @@ def _marker_text() -> str:
     )
 
 
+def _claim_marker_text() -> str:
+    return (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "format": "quantmesh-demo-root",
+                "state": "seeding",
+                "version": 2,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
+def _marker_text(ownership_sha256: str) -> str:
+    return (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "format": "quantmesh-demo-root",
+                "ownership_sha256": ownership_sha256,
+                "version": 2,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
 def _is_link_or_junction(path: Path) -> bool:
     return path.is_symlink() or (hasattr(path, "is_junction") and path.is_junction())
+
+
+def _walk_owned_tree(root: Path) -> dict[str, str] | None:
+    """Walk without following links/reparse points; return relative path types."""
+    found: dict[str, str] = {}
+    stack = [root]
+    try:
+        while stack:
+            directory = stack.pop()
+            for path in sorted(directory.iterdir(), key=lambda item: item.name):
+                relative = path.relative_to(root).as_posix()
+                if relative in {MARKER_NAME, OWNERSHIP_NAME}:
+                    continue
+                if _is_link_or_junction(path):
+                    return None
+                if path.is_dir():
+                    found[relative] = "directory"
+                    stack.append(path)
+                elif path.is_file():
+                    found[relative] = "file"
+                else:
+                    return None
+    except OSError:
+        return None
+    return found
+
+
+def _ownership_text(root: Path) -> str:
+    paths = _walk_owned_tree(root)
+    if paths is None:
+        raise DemoRootError(f"cannot inventory unsafe demo root {root}")
+    entries: list[dict[str, str]] = []
+    for relative, kind in sorted(paths.items()):
+        entry = {"path": relative, "type": kind}
+        if kind == "file" and relative not in _MUTABLE_FILES:
+            entry["sha256"] = hashlib.sha256((root / relative).read_bytes()).hexdigest()
+        entries.append(entry)
+    return (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "entries": entries,
+                "format": "quantmesh-demo-ownership",
+                "version": 1,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
+def _is_valid_operator_import(root: Path, dataset: str) -> bool:
+    manifest_path = root / "market" / "lake" / dataset / MANIFEST_NAME
+    if not manifest_path.is_file() or _is_link_or_junction(manifest_path):
+        return False
+    try:
+        manifest = DatasetManifest.model_validate_json(
+            manifest_path.read_text(encoding="utf-8")
+        )
+    except (OSError, UnicodeDecodeError, ValueError):
+        return False
+    return manifest.dataset == dataset and manifest.source == "operator-import"
+
+
+def _valid_dynamic_paths(
+    root: Path,
+    paths: dict[str, str],
+    unknown: set[str],
+) -> bool:
+    imported: dict[str, bool] = {}
+    for relative in unknown:
+        parts = Path(relative).parts
+        if parts == (".datalink",) and paths[relative] == "directory":
+            continue
+        if parts == (".datalink", "hyperliquid") and paths[relative] == "directory":
+            continue
+        if (
+            len(parts) == 3
+            and parts[:2] == (".datalink", "hyperliquid")
+            and paths[relative] == "file"
+            and parts[2].endswith(".json")
+        ):
+            continue
+        if len(parts) >= 3 and parts[:2] == ("market", "lake"):
+            dataset = parts[2]
+            valid = imported.setdefault(dataset, _is_valid_operator_import(root, dataset))
+            if valid:
+                continue
+        return False
+    return True
+
+
+def _valid_ownership_structure(root: Path, ownership_text: str) -> bool:
+    try:
+        ownership = json.loads(ownership_text)
+    except json.JSONDecodeError:
+        return False
+    if (
+        ownership.get("format") != "quantmesh-demo-ownership"
+        or ownership.get("version") != 1
+        or ownership.get("commit") != DEMO_COMMIT
+        or not isinstance(ownership.get("entries"), list)
+    ):
+        return False
+    expected: dict[str, dict[str, str]] = {}
+    for raw in ownership["entries"]:
+        if not isinstance(raw, dict):
+            return False
+        relative = raw.get("path")
+        kind = raw.get("type")
+        if (
+            not isinstance(relative, str)
+            or not relative
+            or Path(relative).is_absolute()
+            or ".." in Path(relative).parts
+            or kind not in {"file", "directory"}
+            or relative in expected
+        ):
+            return False
+        expected[relative] = raw
+    actual = _walk_owned_tree(root)
+    if actual is None:
+        return False
+    for relative, entry in expected.items():
+        if actual.get(relative) != entry["type"]:
+            return False
+        expected_hash = entry.get("sha256")
+        if expected_hash is not None:
+            try:
+                actual_hash = hashlib.sha256((root / relative).read_bytes()).hexdigest()
+            except OSError:
+                return False
+            if actual_hash != expected_hash:
+                return False
+    unknown = set(actual) - set(expected)
+    return _valid_dynamic_paths(root, actual, unknown)
 
 
 def is_demo_root(root: Path) -> bool:
@@ -262,41 +446,49 @@ def is_demo_root(root: Path) -> bool:
     ):
         return False
     try:
-        if marker.read_text(encoding="utf-8") != _marker_text():
-            return False
+        marker_text = marker.read_text(encoding="utf-8")
         provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return False
     scenario = provenance.get("scenario")
     surfaces = provenance.get("surfaces")
-    return (
+    provenance_valid = (
         isinstance(scenario, dict)
         and scenario.get("commit") == DEMO_COMMIT
         and isinstance(surfaces, dict)
         and bool(surfaces)
     )
-
-
-def _has_reset_structure(root: Path) -> bool:
-    required_files = ("account.json", "provenance.json")
-    required_directories = ("market", "orders", "research", "watchlists")
+    if not provenance_valid:
+        return False
+    if marker_text == _legacy_marker_text():
+        return True
+    ownership_path = root / OWNERSHIP_NAME
+    if not ownership_path.is_file() or _is_link_or_junction(ownership_path):
+        return False
+    try:
+        marker_record = json.loads(marker_text)
+        ownership_text = ownership_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return False
+    ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()
     return (
-        is_demo_root(root)
-        and all(
-            (root / name).is_file() and not _is_link_or_junction(root / name)
-            for name in required_files
-        )
-        and all(
-            (root / name).is_dir() and not _is_link_or_junction(root / name)
-            for name in required_directories
-        )
+        marker_text == _marker_text(ownership_sha256)
+        and marker_record.get("ownership_sha256") == ownership_sha256
     )
 
 
-def persist_demo_account(root: Path, account: PaperAccount) -> None:
-    """Atomically persist the mutable demo account under its owned root."""
-    if not is_demo_root(root):
-        raise DemoRootError(f"refusing to persist account outside a marked demo root: {root}")
+def _has_reset_structure(root: Path) -> bool:
+    ownership_path = root / OWNERSHIP_NAME
+    if not is_demo_root(root) or not ownership_path.is_file():
+        return False
+    try:
+        ownership_text = ownership_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return False
+    return _valid_ownership_structure(root, ownership_text)
+
+
+def _write_account(root: Path, account: PaperAccount) -> None:
     descriptor, temp_name = tempfile.mkstemp(dir=root, prefix=".account.", suffix=".tmp")
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
@@ -305,6 +497,13 @@ def persist_demo_account(root: Path, account: PaperAccount) -> None:
     finally:
         if os.path.exists(temp_name):
             os.unlink(temp_name)
+
+
+def persist_demo_account(root: Path, account: PaperAccount) -> None:
+    """Atomically persist the mutable demo account under its owned root."""
+    if not is_demo_root(root):
+        raise DemoRootError(f"refusing to persist account outside a marked demo root: {root}")
+    _write_account(root, account)
 
 
 def _venue(name: str) -> Venue:
@@ -1007,7 +1206,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         root.mkdir(parents=True, exist_ok=False)
     marker = _marker(root)
     with marker.open("x", encoding="utf-8") as handle:
-        handle.write(_marker_text())
+        handle.write(_claim_marker_text())
     unexpected = [path for path in root.iterdir() if path != marker]
     if unexpected:
         marker.unlink()
@@ -1096,7 +1295,15 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         "surfaces": _provenance_rows(rows, scenario.anchor),
     }
     (root / "provenance.json").write_text(json.dumps(provenance, indent=1), encoding="utf-8")
-    persist_demo_account(root, account)
+    _write_account(root, account)
+    proposal_root = root / "orders" / "proposals"
+    proposal_root.mkdir(parents=True, exist_ok=True)
+    (proposal_root / ".proposals.lock").write_text("", encoding="utf-8")
+    (proposal_root / "proposals.jsonl").write_text("", encoding="utf-8")
+    ownership_text = _ownership_text(root)
+    (root / OWNERSHIP_NAME).write_text(ownership_text, encoding="utf-8")
+    ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()
+    marker.write_text(_marker_text(ownership_sha256), encoding="utf-8")
 
     return DemoSeeded(
         root=root,
