@@ -404,7 +404,7 @@ Commit: `git commit -m "feat: add venue-aware historical series service (#107)"`
 - Consumes: `HistoryService`, optional `LiveFeed`.
 - Produces: `GET /api/instruments/{venue}/{symbol}/history?range=6m&compare=moomoo:AAPL` and typed frontend `HistoricalPayload`.
 
-- [ ] **Step 1: Write API tests for success and honest absence**
+- [x] **Step 1: Write API tests for success and honest absence**
 
 ```python
 response = client.get("/api/instruments/moomoo/NVDA/history?range=6m&compare=moomoo:AAPL")
@@ -414,15 +414,15 @@ assert client.get("/api/instruments/moomoo/NVDA/history?range=bogus").status_cod
 assert plain_client.get("/api/instruments/moomoo/NVDA/history?range=6m").status_code == 404
 ```
 
-- [ ] **Step 2: Run red and mount the router twice consistently**
+- [x] **Step 2: Run red and mount the router twice consistently**
 
 Add `history: HistoryService | None = None` to `create_workstation_app`, store it on `app.state`, and include `instrument_router()` under `/api`. Handlers return 404 `"no historical service is attached"` when absent.
 
-- [ ] **Step 3: Join only continuity-safe live candle tails**
+- [x] **Step 3: Join only continuity-safe live candle tails**
 
 When a live candle matches venue, symbol, and interval, append or replace the same timestamp only if provenance is real/delayed, sequence is continuous, and timestamp is newer than the manifest bar. Mark `is_live_tail=true`; otherwise return history unchanged plus a limitation string.
 
-- [ ] **Step 4: Add exact TypeScript response types and client function**
+- [x] **Step 4: Add exact TypeScript response types and client function**
 
 ```typescript
 history: (venue: string, symbol: string, range: HistoryRange, compare: string[]) =>
@@ -431,7 +431,7 @@ history: (venue: string, symbol: string, range: HistoryRange, compare: string[])
   )
 ```
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_instrument_api.py tests/test_spa_api.py --basetemp .pytest-0020-task6`
 

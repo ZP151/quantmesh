@@ -518,7 +518,7 @@ not sufficient for cross-agent recovery.
   zero advisories. Existing frontend warning debt is unchanged; no execution
   authority, dependency, generated client or built asset changed.
 
-### Task 6 fix round 3 — fresh independent review pending
+### Task 6 fix round 3 — accepted
 
 - The round-2 rereview closed every prior finding but identified one remaining
   atomicity defect: a STATUS append used separate DuckDB auto-committed
@@ -544,7 +544,15 @@ not sufficient for cross-agent recovery.
 - Verification is 23/23 `LiveBuffer` plus 38/38 `LiveFeed` tests (61 total),
   and 211/211 across the complete Task 6 focused matrix. Focused Ruff and
   `git diff --check` pass. Frontend, generated OpenAPI client, dependencies and
-  execution authority are untouched; fresh independent review remains pending.
+  execution authority are untouched.
+- The final narrow independent review of `7f051b8..629d3c8` closed the sole
+  remaining finding with zero Critical, Important or Minor issue. Independent
+  RuntimeError, `BaseException`, failed-BEGIN, rollback-failure and nested-
+  transaction recovery probes preserved the original failure and found no
+  partial row or supported-path connection poisoning. The 100-update/eight-
+  writer exactly-once drill and four focused atomicity cases passed without a
+  duplicate, sequence hole or deadlock. Task 6 is complete; Task 7 (truthful
+  multi-horizon forecast artifacts) is the active frontier.
 
 ## Acceptance criteria
 

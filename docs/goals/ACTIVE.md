@@ -84,7 +84,10 @@ independent malformed/tampered probes, the Task 1-4 compatibility run passed
 (venue-aware historical data contracts and service) is complete through
 `036d89c`: independent review closed all four first-round findings with zero
 remaining Critical, Important or Minor issue. Task 6 (historical/live-tail API)
-is now in progress.
+is complete through `629d3c8`: 211 focused tests, independent transaction
+fault probes and the 100-update/eight-writer exactly-once drill passed, with
+zero remaining Critical, Important or Minor issue. Task 7 (truthful multi-
+horizon forecast artifacts) is now the active frontier.
 Lightweight Charts remains a candidate until its later explicit admission gate.
 
 ## Current state
