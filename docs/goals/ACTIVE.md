@@ -1,17 +1,44 @@
 # Active Goal
 
-- Status: iteration 0019 complete; ready to cut the next release candidate
-- Objective: cut and verify a replacement release candidate containing global
-  localization and the bounded live-research surface, without changing
+- Status: `v0.1.0` released; iteration 0020 active
+- Objective: first decide, with reproducible evidence, whether FinRL-X and/or a
+  process-isolated NautilusTrader boundary can replace substantial engine work;
+  then deliver the integrated instrument decision workspace without changing
   paper-only execution authority.
-- Started: 2026-08-10
-- Completed iteration: `docs/iterations/0019-live-research-surface.md`
-- Baseline: `main` at `298825b` (PR #101). RC2–RC6 remain historical immutable
-  candidates.
-- Next delivery: replacement RC, clean-checkout gate, isolated operator
-  acceptance. Formal promotion remains an explicit operator gate.
-- Blockers: none for the RC work; no formal version promotion without operator
-  acceptance.
+- Started: 2026-08-11
+- Completed release: `v0.1.0` at `5a7f660` (PR #106)
+- Next iteration: `docs/iterations/0020-research-to-paper-loop.md`
+- Tracking issue: [#107](https://github.com/ZP151/quantmesh/issues/107)
+- Integration branch: `0020-research-to-paper-loop`
+- Baseline: released `main` at `5a7f660`; all release candidates remain
+  immutable historical tags.
+- Next delivery: `v0.1.1-rc1`, clean-checkout gate and isolated operator
+  acceptance. Promotion remains an explicit operator gate.
+- Blockers: none at planning time. Every framework, chart and forecasting
+  dependency must pass license, packaging, Windows, determinism, leakage and
+  evidence gates before adoption.
+
+## Iteration 0020 planning checkpoint — 2026-08-11
+
+The operator asked to prefer coherent upstream frameworks over assembling
+isolated features. The durable review is
+`docs/architecture/framework-adoption-review-2026-08-11.md`:
+
+- FinRL-X/FinRL-Trading is the first permissive, Python, end-to-end research
+  workflow candidate.
+- NautilusTrader is the closest event-driven execution architecture and has
+  relevant Hyperliquid, Polymarket and IB adapters, but remains an isolated
+  comparator because LGPL-3.0 and its process boundary require an ADR.
+- Hummingbot Dashboard, vn.py, LEAN, Freqtrade and OpenBB remain bounded
+  companions or references rather than a replacement product shell.
+- No reviewed project covers QuantMesh's full equities + crypto + prediction
+  markets + evidence + forecast UI + deterministic paper-control target.
+
+The immediate frontier is Phase 0 of iteration 0020: reproduce one pinned NVDA
+workflow in FinRL-X, a narrower Hyperliquid replay/sandbox comparison in
+NautilusTrader, score both, and record an adoption/rejection ADR before feature
+implementation expands. The shared Codex/Claude execution contract is
+`docs/agents/cross-agent-execution.md`.
 
 ## Current state
 
@@ -79,7 +106,22 @@ bundle and Vitest, full pytest (373.7 s), golden path and clean-checkout proof.
 The final `v0.1.0` tag must point only at the green merged promotion commit;
 all market access remains read-only or paper-only.
 
-## Immediate frontier
+## Current frontier
+
+1. Start iteration 0020 from the released `v0.1.0` baseline and record the
+   implementation checkpoints in
+   `docs/iterations/0020-research-to-paper-loop.md`.
+2. Establish venue-aware instrument identity and a historical OHLCV/manifest
+   API before replacing the current instrument sparkline.
+3. Spike TradingView Lightweight Charts behind a local adapter; admit the
+   dependency only after license/NOTICE, package, a11y, compact-width and
+   deterministic browser checks pass.
+4. Deliver the observed chart first, then transparent multi-horizon forecast
+   baselines and uncertainty gates, then the contextual paper decision rail.
+5. Cut `v0.1.1-rc1` only after complete lineage, safety and clean-checkout
+   evidence; wait for explicit operator acceptance before final promotion.
+
+## Historical delivery frontier
 
 1. ~~Approve ADR-0013 through implementation evidence~~ (done, checkpoint
    bfa097c): the SPA spike is served from the packaged bundle with the
@@ -300,13 +342,13 @@ labeled and isolated from non-demo operator state.
 ## Resume instruction
 
 Run `/goal`, then read this file, `PRODUCT.md`, `docs/product-strategy.md`,
-iteration 0018, iteration 0019, the roadmap, relevant ADRs, Git state and the
-current rc6 release notes. First cut the replacement RC from the merged tree:
-update every version surface consistently, write English-first release notes
-with Chinese acceptance aid, run the clean-checkout gate against the exact tag,
-and create an isolated acceptance station. Do not promote to `v0.1.0` without
-explicit human acceptance. After acceptance, continue adapter hardening, local
-quant analysis slices, AI advisory research and paper-trading acceptance
-expansion — one tested integration PR per milestone. Implementation details
-and evidence belong in the iteration record; keep this file limited to current
-truth and frontier.
+iteration 0020, the framework adoption review, the cross-agent execution
+contract, the roadmap, relevant ADRs and current Git/CI state. Start with the
+framework bake-off and its tool-neutral tracked implementation plan. Only after
+the ADR gate, continue the integrated workspace with the selected adapter or
+the recorded native fallback: venue-aware historical chart data, truthful
+forecast artifacts and operator-confirmed paper-decision lineage. Use one
+tested integration PR, mirror every phase checkpoint for Codex/Claude recovery,
+and cut `v0.1.1-rc1` only from merged `main` after the clean-checkout gate. Do
+not enable real-money, mainnet or AI order authority, and do not promote the
+candidate without explicit human acceptance.

@@ -1,6 +1,7 @@
 # Iteration 0018 — Global Localization Completion
 
-Status: active
+Status: completed (PR #100 squash-merged at `5069d1b`; replacement release
+candidate and final acceptance continued through iterations 0019 and release)
 Started: 2026-08-10
 Baseline: `origin/main` / `v0.1.0-rc6` (`7ceba59`)
 Branch: `0018-global-localization`
@@ -54,8 +55,9 @@ would not satisfy a truly global language setting.
   the selected locale.
 - [x] English remains the byte-stable fallback.
 - [x] RC6 is not rewritten or silently replaced.
-- [ ] Merge the integration PR and cut a replacement RC from the merged tree.
-- [ ] Run the full tagged-tree release gate and operator acceptance checklist.
+- [x] Merge the integration PR; PR #100 squash-merged at `5069d1b`.
+- [x] Run the later tagged-tree release gate and operator acceptance checklist;
+  the accepted combined tree was promoted to `v0.1.0` at `5a7f660`.
 
 ## Release handoff
 

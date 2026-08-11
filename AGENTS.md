@@ -15,6 +15,8 @@ Before changing code, read:
 3. The active file in `docs/iterations/`
 4. Relevant decisions in `docs/adr/`
 5. `docs/REUSE_MATRIX.md` before copying or embedding upstream code
+6. `docs/agents/cross-agent-execution.md` and, when present, the active tracked
+   plan before starting or resuming a multi-session implementation
 
 ## Collaboration mode
 
@@ -61,6 +63,12 @@ this happens:
 
 Use `docs/goals/ACTIVE.md` as the resumable state for multi-session work. Claude Code invokes `.claude/commands/goal.md` with `/goal`; Codex can use `.codex/prompts/goal.md`. Every resume begins by reading repository docs, Git history, GitHub issues and open PRs. Chat history is never the sole source of project state.
 
+Specifications and executable plans under `docs/superpowers/` are shared
+repository artifacts, not Claude-only files. Claude Code may execute them with
+the installed Superpowers plugin; Codex follows the equivalent plan, TDD,
+subagent-review and verification lifecycle. Durable completion evidence must
+also be mirrored into the active iteration so either agent can resume.
+
 ## Trading safety invariants
 
 - Paper mode remains the default.
@@ -96,3 +104,13 @@ project-scoped `impeccable` skill before shaping or changing a surface. Use
 but respect its explicit exclusion of dashboards and data tables. Dense tables
 and financial charts require purpose-built components. Record durable visual
 decisions only after implementation evidence exists.
+
+### Superpowers-compatible delivery
+
+For non-trivial implementation plans, follow
+`docs/agents/cross-agent-execution.md`. Claude Code invokes
+`superpowers:writing-plans`, `superpowers:subagent-driven-development`,
+`superpowers:test-driven-development`, `superpowers:requesting-code-review`
+and `superpowers:verification-before-completion` as applicable. Codex uses its
+available skills and subagents to enforce the same observable gates. The
+repository plan and iteration ledger govern both agents.
