@@ -686,6 +686,53 @@ not sufficient for cross-agent recovery.
   clone gate prove all imports and referenced assets are present. `git commit
   -am` is forbidden for this release.
 
+## Checkpoint 4 — third review closure and local release matrix (2026-08-12)
+
+- The complete source inventory was staged with `git add -A`, audited and
+  committed at `2e54909`; the generated SPA asset names, new runtime modules
+  and all regression tests are now part of the commit rather than ambient
+  working-tree state.
+- A third independent review rejected the candidate on five Important
+  boundaries: journal replay could produce negative/non-finite aggregate
+  values; a demo journal-first/account-publication crash was not recovered on
+  restart; the final reset load was outside its rollback boundary; Overview
+  displayed cash as exact equity when a held mark was absent; and live startup
+  did not publish a venue-aware instrument directory. Test-first fixes now
+  fail closed, recover a valid journal suffix exactly once, restore and retain
+  failed reset replacements without recursive deletion, withhold incomplete
+  equity, and declare configured/discovered live instruments without inventing
+  marks.
+- Two adjacent product regressions were also caught before release. Legacy
+  Overview formatted a deliberately absent live mark as a float and returned
+  500; it now renders `no mark`. The canonical instrument URL lost the existing
+  live chart/book/tape while replay history was still unavailable; an exact
+  live-runtime/history-404 boundary now falls back to the read-only live detail
+  at the same canonical URL. Non-live and non-404 errors remain explicit and
+  fail closed. A final independent rereview found no remaining Critical or
+  Important source issue.
+- Local verification on the committed tree is green: Python `2591 passed,
+  4 skipped` in 862.76 s using a sibling basetemp outside Git ancestry;
+  browser E2E `35/35` in 287.09 s; frontend Vitest `143/143`; TypeScript,
+  Oxlint (zero errors, four existing Fast Refresh warnings), generated API
+  client, production build and packaged-bundle comparison pass; npm audit
+  reports zero vulnerabilities; the locked frontend license review accepts
+  646 packages; pip-audit reports no known vulnerabilities; all nine pinned
+  submodules resolve; a real Hyperliquid read-only station passes the live
+  smoke drill `9/9`; and the integrated golden path passes `60/60`.
+- The broad developer venv intentionally fails the Python release-closure
+  license command because it contains 60 research/audit packages outside
+  `requirements-audit.txt`. This is the tool's required fail-closed behavior,
+  not a waiver. The release-closure verdict remains owned by the fresh venv in
+  `tools/release_gate.py` and is still pending at this checkpoint.
+- The first attempted full run used an in-repository basetemp and correctly
+  tripped the existing commit-resolution fail-closed test. The same exact test
+  passed with a sibling basetemp before the full matrix was restarted from
+  zero. This was a gate invocation error, not a product waiver.
+- Task 16 broad review and local verification are complete. The remaining
+  release frontier is the clean-checkout gate, single PR/CI/squash merge,
+  immutable tag on merged `main`, and isolated operator acceptance. No
+  `v0.1.1-rc1` tag exists yet.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another

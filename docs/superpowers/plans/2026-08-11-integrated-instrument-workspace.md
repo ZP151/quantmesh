@@ -848,11 +848,11 @@ Commit: `git commit -m "test: accept the integrated instrument decision loop (#1
 - Consumes: all prior green commits and reviewer reports.
 - Produces: one green squash-merged PR, immutable `v0.1.1-rc1` tag, and an isolated acceptance station; no final `v0.1.1` promotion.
 
-- [ ] **Step 1: Request a fresh broad code review against `origin/main`**
+- [x] **Step 1: Request a fresh broad code review against `origin/main`**
 
 Review standards and intent, framework/license isolation, chronology/leakage, determinism, API types, quote/risk/kill-switch authority, frontend state honesty, accessibility, and release packaging. Fix every Critical and Important finding using a new failing regression test first.
 
-- [ ] **Step 2: Run the complete local verification matrix**
+- [x] **Step 2: Run the complete local verification matrix**
 
 Run in order:
 
@@ -874,6 +874,11 @@ Pop-Location
 git diff --check
 git submodule status
 ```
+
+The broad developer venv may contain optional research/audit tools outside the
+frozen release closure; in that environment `tools/license_review.py` must
+refuse them. Record the refusal, never allowlist ambient packages, and obtain
+the authoritative license PASS from Step 3's fresh release venv.
 
 - [ ] **Step 3: Run the clean-checkout release gate before opening the PR**
 
