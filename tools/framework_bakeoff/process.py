@@ -280,7 +280,11 @@ def _child_environment(
 
 def _portable_command(command: Sequence[str], placeholders: Mapping[Path, str]) -> str:
     replacements = sorted(
-        ((str(path.resolve()), replacement) for path, replacement in placeholders.items()),
+        (
+            (candidate, replacement)
+            for path, replacement in placeholders.items()
+            for candidate in dict.fromkeys((str(path), str(path.resolve())))
+        ),
         key=lambda item: len(item[0]),
         reverse=True,
     )

@@ -781,6 +781,13 @@ not sufficient for cross-agent recovery.
   comparison, and focused release/frontend-security tests `8/8`. PR #108 CI
   must rerun on this exact tree before merge; the tagged-tree 17-step gate is
   still mandatory after squash merge.
+- The next CI run passed every frontend step and then exposed a second Linux
+  portability assertion in the framework subprocess evidence: `sys.executable`
+  was a symlink spelling while `Path.resolve()` produced its target, so only
+  the target was eligible for `{python}` redaction. The recorder now replaces
+  both original and resolved path spellings, longest first. The credential-
+  sanitization behavior remains unchanged. Red/green symlink-path coverage is
+  `2/2`, and the complete FinRL-X isolation file passes `37/37`.
 
 ## Acceptance criteria
 

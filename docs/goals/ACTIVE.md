@@ -125,6 +125,13 @@ the package bundle is current, and audit/license gates are green. The immediate
 frontier is the exact-tree PR CI rerun, squash merge, `v0.1.1-rc1` tag,
 tagged-tree gate and isolated operator acceptance.
 
+That rerun passed the entire frontend surface and caught one Linux-only
+portable-evidence assertion: the Python symlink spelling was not redacted when
+its resolved target differed. The recorder now normalizes both spellings; the
+credential boundary remains fail-closed, targeted coverage is `2/2`, and the
+complete FinRL-X isolation suite is `37/37`. PR #108 must rerun once more on
+this exact fix before merge.
+
 ## Current state
 
 Iteration 0015 live-cockpit hardening is merged at `c47b83d` (PR #95), and the

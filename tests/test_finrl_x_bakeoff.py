@@ -683,6 +683,25 @@ def test_subprocess_boundary_sanitizes_credentials_and_records_failure(
     ).strip() == "boom"
 
 
+def test_portable_command_redacts_symlink_spelling_and_resolved_target() -> None:
+    class SymlinkPlaceholder:
+        def __str__(self) -> str:
+            return "/opt/python/bin/python"
+
+        def resolve(self) -> str:
+            return "/opt/python/bin/python3.13"
+
+    placeholder = SymlinkPlaceholder()
+    replacements = {placeholder: "{python}"}  # type: ignore[dict-item]
+
+    assert process_module._portable_command(  # noqa: SLF001
+        ["/opt/python/bin/python", "-V"], replacements
+    ).startswith("{python} -V")
+    assert process_module._portable_command(  # noqa: SLF001
+        ["/opt/python/bin/python3.13", "-V"], replacements
+    ).startswith("{python} -V")
+
+
 def test_network_subprocess_rejects_credential_bearing_proxy_url(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
