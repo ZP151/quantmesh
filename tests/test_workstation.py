@@ -373,6 +373,28 @@ class TestLayoutAndAccessibility:
         assert f"{account.starting_cash:.2f}" in html
         assert f"{account.equity(MARKS):.2f}" in html
 
+    def test_overview_api_withholds_equity_when_a_held_mark_is_missing(self) -> None:
+        response = client(sample_account(), marks={}).get("/api/overview")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["account"]["cash"] == pytest.approx(sample_account().cash)
+        assert body["account"]["equity"] is None
+        assert body["valuation_complete"] is False
+        assert body["valuation_reason"] == ("missing valid marks for held positions: internal:AAPL")
+        assert body["missing_marks"] == ["internal:AAPL"]
+
+    def test_overview_api_keeps_cash_equity_when_no_position_needs_a_mark(self) -> None:
+        account = PaperAccount(cash=10_000.0)
+
+        body = client(account, marks={}).get("/api/overview").json()
+
+        assert body["account"]["cash"] == 10_000.0
+        assert body["account"]["equity"] == 10_000.0
+        assert body["valuation_complete"] is True
+        assert body["valuation_reason"] is None
+        assert body["missing_marks"] == []
+
     def test_kill_switch_state_rendered(self) -> None:
         html = client().get("/").text
         assert 'data-kill-switch="false"' in html
@@ -390,6 +412,7 @@ class TestLayoutAndAccessibility:
 
     def test_missing_marks_notice_rendered(self) -> None:
         html = client(marks={}).get("/").text
+        assert "Equity (marked)</th><td>Unavailable" in html
         assert "Positions without a mark" in html
         assert "internal:AAPL" in html
 
@@ -626,6 +649,13 @@ class TestPhaseBScreens:
     hostile symbols escaped on render, and an unbound store refusing
     writes fail-closed instead of crashing.
     """
+
+    def test_legacy_overview_renders_unpriced_live_directory_entry(self) -> None:
+        response = client(markets={"hyperliquid": {"BTC": None}}).get("/")
+
+        assert response.status_code == 200
+        assert "BTC" in response.text
+        assert "no mark" in response.text
 
     MARKETS = {
         "hyperliquid": {"BTC": 65_000.0, "ETH": 3_200.0},

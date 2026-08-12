@@ -11,7 +11,7 @@
     <tbody>
       <tr><th scope="row">Cash</th><td>{{ "%.2f"|format(account.cash) }}</td></tr>
       <tr><th scope="row">Starting cash</th><td>{{ "%.2f"|format(account.starting_cash) }}</td></tr>
-      <tr><th scope="row">Equity (marked)</th><td>{{ "%.2f"|format(account.equity) }}</td></tr>
+      <tr><th scope="row">Equity (marked)</th><td>{% if valuation_complete %}{{ "%.2f"|format(account.equity) }}{% else %}Unavailable{% endif %}</td></tr>
       <tr><th scope="row">Kill switch</th><td>{% if account.kill_switch %}engaged{% else %}disarmed{% endif %}</td></tr>
     </tbody>
   </table>
@@ -49,7 +49,7 @@
     </thead>
     <tbody>
       {% for instrument in venue.instruments %}
-      <tr><th scope="row">{{ instrument.symbol }}</th><td>{{ "%.4f"|format(instrument.mark) }}</td></tr>
+      <tr><th scope="row">{{ instrument.symbol }}</th><td>{% if instrument.mark is not none %}{{ "%.4f"|format(instrument.mark) }}{% else %}no mark{% endif %}</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
@@ -128,6 +129,7 @@ def recover_account_from_journal(
         kill_switch=account.kill_switch,
         kill_switches=dict(account.kill_switches),
     )
+    _validate_reconstructed_values(recovered)
 
     prefix_length = len(account_order_ids)
     if prefix_length == 0:
@@ -141,6 +143,7 @@ def recover_account_from_journal(
                 raise PaperAccountPersistenceError(
                     f"order journal fills cannot reconstruct order {order.order_id!r}"
                 ) from error
+            _validate_reconstructed_values(recovered)
         order_map = dict(recovered.orders)
         order_map[order.order_id] = order
         recovered = recovered.model_copy(
@@ -151,7 +154,29 @@ def recover_account_from_journal(
         )
         if sequence == prefix_length:
             _validate_account_aggregate(account, recovered)
+    _validate_reconstructed_values(recovered)
     return recovered
+
+
+def _validate_reconstructed_values(account: PaperAccount) -> None:
+    for field in (
+        "cash",
+        "starting_cash",
+        "total_fees",
+        "total_funding",
+        "realized_pnl",
+    ):
+        value = getattr(account, field)
+        if value is None or not math.isfinite(value):
+            raise PaperAccountPersistenceError(f"reconstructed paper account {field} is non-finite")
+    if account.cash < 0:
+        raise PaperAccountPersistenceError("reconstructed paper account cash is negative")
+    for key, position in account.positions.items():
+        for field in ("quantity", "average_cost", "realized_pnl"):
+            if not math.isfinite(getattr(position, field)):
+                raise PaperAccountPersistenceError(
+                    f"reconstructed paper account position {key!r} {field} is non-finite"
+                )
 
 
 def _validate_account_aggregate(

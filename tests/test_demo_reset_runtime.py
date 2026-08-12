@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from quantmesh.demo import runtime as demo_runtime
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
+from quantmesh.execution.account_store import PaperAccountPersistenceError
 
 SCENARIO = DemoScenario(workspace_history=False)
 
@@ -194,3 +195,102 @@ def test_demo_order_and_kill_switch_share_one_account_authority(
     assert app.state.account.kill_switch is True
     assert app.state.page_context.account.kill_switch is True
     assert app.state.account_store.get().kill_switch is True
+
+
+def test_restart_recovers_journaled_order_after_account_publication_crash(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "demo"
+    app = create_demo_app(
+        root=root,
+        seed=SCENARIO.seed,
+        workspace_history=False,
+        host="127.0.0.1",
+    )
+    original_persist = demo_runtime.persist_demo_account
+    attempted_accounts = []
+
+    class InjectedAccountPublicationCrash(RuntimeError):
+        pass
+
+    def crash_after_journal(account_root: Path, account) -> None:
+        attempted_accounts.append(account)
+        raise InjectedAccountPublicationCrash
+
+    journal_path = root / "orders" / "journal.jsonl"
+    initial_orders = app.state.demo.seeded.journal.all()
+    monkeypatch.setattr(demo_runtime, "persist_demo_account", crash_after_journal)
+
+    with TestClient(app) as client:
+        with pytest.raises(InjectedAccountPublicationCrash):
+            client.post(
+                "/api/demo/order",
+                json={
+                    "venue": "moomoo",
+                    "symbol": "NVDA",
+                    "side": "BUY",
+                    "quantity": 1,
+                    "idempotency_key": "demo-crash-recovery",
+                },
+            )
+
+    assert len(attempted_accounts) == 1
+    expected_account = attempted_accounts[0]
+    assert app.state.account_store.get() != expected_account
+    crash_journal_bytes = journal_path.read_bytes()
+    crash_orders = app.state.demo.seeded.journal.all()
+    assert len(crash_orders) == len(initial_orders) + 1
+
+    monkeypatch.setattr(demo_runtime, "persist_demo_account", original_persist)
+    restarted = create_demo_app(
+        root=root,
+        seed=SCENARIO.seed,
+        workspace_history=False,
+        host="127.0.0.1",
+    )
+
+    assert restarted.state.account_store.get() == expected_account
+    assert restarted.state.account == expected_account
+    assert restarted.state.page_context.account == expected_account
+    recovered_orders = restarted.state.demo.seeded.journal.all()
+    recovered_order_ids = [order.order_id for order in recovered_orders]
+    assert recovered_order_ids == [order.order_id for order in crash_orders]
+    assert len(recovered_order_ids) == len(set(recovered_order_ids))
+    assert journal_path.read_bytes() == crash_journal_bytes
+
+    restarted_again = create_demo_app(
+        root=root,
+        seed=SCENARIO.seed,
+        workspace_history=False,
+        host="127.0.0.1",
+    )
+    assert restarted_again.state.account_store.get() == expected_account
+    assert journal_path.read_bytes() == crash_journal_bytes
+
+
+def test_restart_fails_closed_when_account_conflicts_with_journal(tmp_path: Path) -> None:
+    root = tmp_path / "demo"
+    app = create_demo_app(
+        root=root,
+        seed=SCENARIO.seed,
+        workspace_history=False,
+        host="127.0.0.1",
+    )
+    account = app.state.account_store.get()
+    conflicting_account = account.model_copy(update={"cash": account.cash + 1})
+    (root / "account.json").write_text(
+        conflicting_account.model_dump_json(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        PaperAccountPersistenceError,
+        match="paper account aggregate cash disagrees with journal reconstruction",
+    ):
+        create_demo_app(
+            root=root,
+            seed=SCENARIO.seed,
+            workspace_history=False,
+            host="127.0.0.1",
+        )

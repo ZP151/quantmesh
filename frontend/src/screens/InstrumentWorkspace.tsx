@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'react-router-dom'
 
 import { WorkspaceLoading } from '@/components/workspace-loading'
 import {
+  ApiError,
   api,
   type HistoricalVenue,
   type HistoryRange,
@@ -12,6 +13,7 @@ import {
 import { useLiveConnection } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
 import { WorkspaceHeader } from './instrument/WorkspaceHeader'
+import { CockpitDetailScreen } from './CockpitDetail'
 import { ComparisonPicker } from './instrument/ComparisonPicker'
 import { DecisionRail } from './instrument/DecisionRail'
 import { evidenceText } from './instrument/evidence-copy'
@@ -78,7 +80,6 @@ export function InstrumentWorkspaceScreen() {
     queryFn: api.health,
     retry: false,
   })
-  const stream = useLiveConnection(onLiveUpdate, health.data?.runtime_mode === 'live')
   const query = useQuery({
     enabled: validVenue && symbol.length > 0,
     queryKey: ['instrument-workspace', venue, symbol, range, compare],
@@ -92,12 +93,17 @@ export function InstrumentWorkspaceScreen() {
     refetchInterval: 5_000,
     retry: false,
   })
+  const liveRuntime = health.data?.runtime_mode === 'live'
+  const stream = useLiveConnection(onLiveUpdate, liveRuntime && query.data !== undefined)
 
   if (!validVenue || symbol.length === 0) {
     return <WorkspaceError error={new Error(t('screen.workspace.invalidRoute'))} symbol={symbol} venue={venue} />
   }
   if (query.isPending) return <WorkspaceLoading />
   if (query.isError && query.data === undefined) {
+    if (liveRuntime && query.error instanceof ApiError && query.error.status === 404) {
+      return <CockpitDetailScreen showWorkspaceLink={false} />
+    }
     return <WorkspaceError error={query.error} symbol={symbol} venue={venue} />
   }
   const workspace = query.data

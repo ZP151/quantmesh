@@ -22,7 +22,7 @@ export interface Instrument {
 export interface InstrumentMark {
   venue: string
   symbol: string
-  mark: number
+  mark: number | null
 }
 
 export interface AccountSummary {
@@ -65,11 +65,13 @@ export interface OrderSummary {
 // --- Per-surface payloads (the page providers, verbatim) ----------------
 
 export interface Overview {
-  account: { cash: number; starting_cash: number; equity: number; kill_switch: boolean }
+  account: { cash: number; starting_cash: number; equity: number | null; kill_switch: boolean }
   marks: Record<string, number>
   missing_marks: string[]
-  venues: { venue: string; instruments: { symbol: string; mark: number }[] }[]
-  watchlist: { symbol: string; mark: number }[]
+  valuation_complete?: boolean
+  valuation_reason?: string | null
+  venues: { venue: string; instruments: { symbol: string; mark: number | null }[] }[]
+  watchlist: { symbol: string; mark: number | null }[]
 }
 
 export interface Markets {

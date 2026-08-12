@@ -85,6 +85,7 @@ from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.api import live_router
 from quantmesh.live.contract import UpdateKind
+from quantmesh.live.directory import build_live_market_directory
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.fence import QuoteFence
 from quantmesh.live.marks import (
@@ -211,7 +212,7 @@ class PageContext:
 
     account: PaperAccount
     marks: Mapping[str, float] = field(default_factory=dict)
-    markets: Mapping[str, Mapping[str, float]] = field(default_factory=dict)
+    markets: Mapping[str, Mapping[str, float | None]] = field(default_factory=dict)
     watchlist: WatchlistStore | None = None
     experiments: ExperimentRegistry | None = None
     promotions: PromotionLedger | None = None
@@ -238,7 +239,7 @@ class Page:
 
 
 def _watchlist_entry(
-    markets: Mapping[str, Mapping[str, float]],
+    markets: Mapping[str, Mapping[str, float | None]],
     record: WatchlistRecord,
 ) -> dict[str, object]:
     venue = record.venue.value if record.venue is not None else None
@@ -247,7 +248,11 @@ def _watchlist_entry(
 
 
 def _overview_provider(context: PageContext) -> dict[str, object]:
-    account = context.account
+    valuation = account_valuation_snapshot(
+        context.account,
+        LiveMarkSnapshot(marks=dict(context.marks), statuses={}),
+    )
+    account = valuation.account
     venues = []
     for venue in sorted(context.markets):
         instruments = [
@@ -272,11 +277,13 @@ def _overview_provider(context: PageContext) -> dict[str, object]:
             "starting_cash": (
                 account.starting_cash if account.starting_cash is not None else account.cash
             ),
-            "equity": account.equity(context.marks),
+            "equity": account.equity(valuation.marks) if valuation.complete else None,
             "kill_switch": account.kill_switch,
         },
-        "marks": dict(context.marks),
-        "missing_marks": sorted(key for key in account.positions if key not in context.marks),
+        "marks": dict(valuation.marks),
+        "missing_marks": list(valuation.missing_marks),
+        "valuation_complete": valuation.complete,
+        "valuation_reason": valuation.reason,
         "venues": venues,
         "watchlist": watchlist_entries,
     }
@@ -1010,7 +1017,7 @@ def create_workstation_app(
     *,
     account: PaperAccount,
     marks: dict[str, float] | None = None,
-    markets: Mapping[str, Mapping[str, float]] | None = None,
+    markets: Mapping[str, Mapping[str, float | None]] | None = None,
     watchlist: WatchlistStore | None = None,
     experiments: ExperimentRegistry | None = None,
     promotions: PromotionLedger | None = None,
@@ -1716,6 +1723,7 @@ def main(argv: list[str] | None = None) -> None:
                     ks.subscribe(ks_watchlist)
                     feed.attach(ks)
                 prediction = board
+            moomoo_symbols: list[str] = []
             if settings.moomoo_watchlist:
                 # The Moomoo OpenD surface (Phase F): read-only polls of
                 # a local OpenD daemon for the operator's equity
@@ -1732,7 +1740,11 @@ def main(argv: list[str] | None = None) -> None:
                 )
                 from quantmesh.moomoo.opend import MoomooOpenDClient
 
-                symbols = [s.strip() for s in settings.moomoo_watchlist.split(",") if s.strip()]
+                moomoo_symbols = [
+                    symbol.strip()
+                    for symbol in settings.moomoo_watchlist.split(",")
+                    if symbol.strip()
+                ]
                 moomoo = MoomooVenueSupervisor(
                     MoomooVenueTransport(
                         MoomooOpenDClient.from_settings(settings),
@@ -1740,9 +1752,15 @@ def main(argv: list[str] | None = None) -> None:
                     ),
                     market=settings.moomoo_market,
                 )
-                moomoo.subscribe(symbols)
+                moomoo.subscribe(moomoo_symbols)
                 feed.attach(moomoo)
             bindings = discover_history_bindings(settings.lake_root)
+            market_directory = build_live_market_directory(
+                hyperliquid_symbols=watchlist,
+                moomoo_symbols=moomoo_symbols,
+                prediction=prediction,
+                bindings=bindings,
+            )
             history = (
                 HistoryService(bindings, dataset_loader=Lake(settings.lake_root).dataset)
                 if bindings
@@ -1750,6 +1768,7 @@ def main(argv: list[str] | None = None) -> None:
             )
             app = create_workstation_app(
                 account=account,
+                markets=market_directory,
                 history=history,
                 price_forecasts=PriceForecastRegistry(
                     lake_root=settings.lake_root,

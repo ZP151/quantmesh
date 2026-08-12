@@ -231,7 +231,11 @@ function DepthChart({ bids, asks }: { bids: BookLevel[]; asks: BookLevel[] }) {
   )
 }
 
-export function CockpitDetailScreen() {
+export function CockpitDetailScreen({
+  showWorkspaceLink = true,
+}: {
+  showWorkspaceLink?: boolean
+} = {}) {
   const { venue = '', symbol = '' } = useParams<{ venue: string; symbol: string }>()
   const { t } = usePreferences()
   const [updates, setUpdates] = useState<MarketUpdate[]>([])
@@ -355,7 +359,7 @@ export function CockpitDetailScreen() {
       }
       actions={
         <div className="flex items-center gap-3">
-          {canonicalVenue && (
+          {showWorkspaceLink && canonicalVenue && (
             <Link
               to={`/instruments/${encodeURIComponent(canonicalVenue)}/${encodeURIComponent(symbol)}`}
               className="text-xs font-medium text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"

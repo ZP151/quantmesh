@@ -27,7 +27,7 @@ prefix), so the SPA and the RC1 contract call the same handlers.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from threading import Condition, Lock
 from typing import Literal
@@ -58,7 +58,7 @@ from quantmesh.demo.seeder import (
     seed_demo_root,
 )
 from quantmesh.domain.models import Instrument, OrderRequest, Quote, Side
-from quantmesh.execution.account_store import PaperAccountStore
+from quantmesh.execution.account_store import PaperAccountStore, recover_account_from_journal
 from quantmesh.settings import settings
 
 
@@ -400,6 +400,18 @@ def create_demo_app(
     )
     existing = is_demo_root(root)
     seeded = load_demo_root(root, scenario) if existing else seed_demo_root(root, scenario)
+    if existing:
+        recovered_account = recover_account_from_journal(
+            seeded.account,
+            seeded.journal.all(),
+        )
+        if recovered_account != seeded.account:
+            # Demo orders are journal-first. If a process stops after the
+            # append but before the account snapshot is published, replay the
+            # validated trailing suffix once and make that aggregate durable
+            # before exposing any workstation surface.
+            persist_demo_account(root, recovered_account)
+            seeded = replace(seeded, account=recovered_account)
     if existing:
         trusted_ownership_text, trusted_reset_archive = build_trusted_demo_reset_image(
             seeded.scenario

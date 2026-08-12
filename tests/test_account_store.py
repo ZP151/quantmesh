@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from quantmesh.domain.models import Instrument, InstrumentType, OrderRequest, Quote, Side, Venue
+from quantmesh.domain.orders import Fill, Order, OrderEventType, OrderStateMachine
 from quantmesh.execution.account_store import (
     PAPER_ACCOUNT_FILE,
     PaperAccountFile,
@@ -55,6 +56,58 @@ def test_journal_recovery_closes_the_append_before_snapshot_crash_window() -> No
     assert recovered.positions == submitted.account.positions
     assert recovered.orders == submitted.account.orders
     assert recovered.order_sequence == submitted.account.order_sequence
+
+
+def test_journal_recovery_refuses_trailing_fill_that_would_make_cash_negative() -> None:
+    now = datetime(2026, 8, 12, tzinfo=UTC)
+    instrument = Instrument(
+        symbol="BTC",
+        venue=Venue.HYPERLIQUID,
+        instrument_type=InstrumentType.PERPETUAL,
+        currency="USD",
+    )
+    initial = PaperAccount(cash=100.0)
+    order = Order.from_request(
+        OrderRequest(instrument=instrument, side=Side.BUY, quantity=2.0),
+        order_id="journal-only",
+        created_at=now,
+    )
+    order = OrderStateMachine.apply(order, OrderEventType.ACCEPTED, timestamp=now)
+    order = OrderStateMachine.apply(
+        order,
+        OrderEventType.FILL,
+        fill=Fill(timestamp=now, quantity=2.0, price=100.0),
+        timestamp=now,
+    )
+
+    with pytest.raises(PaperAccountPersistenceError, match="cash.*negative"):
+        recover_account_from_journal(initial, [order])
+
+
+def test_journal_recovery_refuses_nonfinite_trailing_fill_aggregates() -> None:
+    now = datetime(2026, 8, 12, tzinfo=UTC)
+    instrument = Instrument(
+        symbol="BTC",
+        venue=Venue.HYPERLIQUID,
+        instrument_type=InstrumentType.PERPETUAL,
+        currency="USD",
+    )
+    initial = PaperAccount(cash=100.0)
+    order = Order.from_request(
+        OrderRequest(instrument=instrument, side=Side.BUY, quantity=1.0),
+        order_id="nonfinite-journal-only",
+        created_at=now,
+    )
+    order = OrderStateMachine.apply(order, OrderEventType.ACCEPTED, timestamp=now)
+    order = OrderStateMachine.apply(
+        order,
+        OrderEventType.FILL,
+        fill=Fill(timestamp=now, quantity=1.0, price=float("inf")),
+        timestamp=now,
+    )
+
+    with pytest.raises(PaperAccountPersistenceError, match="non-finite"):
+        recover_account_from_journal(initial, [order])
 
 
 def test_journal_recovery_refuses_state_that_disagrees_with_fill_history() -> None:

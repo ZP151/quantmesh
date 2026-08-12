@@ -12,7 +12,13 @@ vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/api')>()
   return {
     ...actual,
-    api: { ...actual.api, health: vi.fn(), instrumentWorkspace: vi.fn() },
+    api: {
+      ...actual.api,
+      health: vi.fn(),
+      instrumentWorkspace: vi.fn(),
+      liveState: vi.fn(),
+      markets: vi.fn(),
+    },
   }
 })
 
@@ -133,6 +139,8 @@ const workspace: InstrumentWorkspace = {
 
 const mockedWorkspace = vi.mocked(api.instrumentWorkspace)
 const mockedHealth = vi.mocked(api.health)
+const mockedLiveState = vi.mocked(api.liveState)
+const mockedMarkets = vi.mocked(api.markets)
 const mockedLiveConnection = vi.mocked(useLiveConnection)
 let publishLiveUpdate: Parameters<typeof useLiveConnection>[0]
 
@@ -160,6 +168,32 @@ beforeEach(() => {
     return 'live'
   })
   mockedWorkspace.mockResolvedValue(workspace)
+  mockedLiveState.mockResolvedValue({
+    generated_at: '2026-08-08T12:00:00Z',
+    instruments: {
+      'hyperliquid:BTC': {
+        instrument: 'BTC',
+        kinds: {
+          quote: {
+            age_ms: 10,
+            data_time: '2026-08-08T12:00:00Z',
+            kind: 'quote',
+            label: 'real',
+            payload: { ask: 100.5, bid: 100 },
+            provenance: 'real',
+            received_at: '2026-08-08T12:00:00Z',
+            sequence: 1,
+            sequence_gap: false,
+          },
+        },
+        label: 'real',
+        venue: 'hyperliquid',
+      },
+    },
+  })
+  mockedMarkets.mockResolvedValue({
+    instruments: [{ mark: null, symbol: 'BTC', venue: 'hyperliquid' }],
+  })
   mockedHealth.mockResolvedValue({
     live_trading: false,
     paper_mode: true,
@@ -221,6 +255,25 @@ describe('InstrumentWorkspaceScreen', () => {
     await waitFor(() => expect(screen.getByText('History unavailable')).toBeInTheDocument())
     expect(screen.getByText('No trusted history for moomoo:UNKNOWN')).toBeInTheDocument()
     expect(screen.getByText('moomoo / UNKNOWN')).toBeInTheDocument()
+  })
+
+  it('keeps the live detail usable when replay history is not ready', async () => {
+    mockedHealth.mockResolvedValue({
+      live_trading: false,
+      paper_mode: true,
+      project: 'QuantMesh',
+      runtime_mode: 'live',
+      status: 'ok',
+      version: '0.1.1rc1',
+    })
+    mockedWorkspace.mockRejectedValue(new ApiError(404, 'live replay continuity is not proven'))
+
+    renderWorkspace('/instruments/hyperliquid/BTC')
+
+    expect(await screen.findByRole('heading', { name: 'BTC' })).toBeInTheDocument()
+    expect(screen.getByText('Order book')).toBeInTheDocument()
+    expect(screen.getByText('Trade tape')).toBeInTheDocument()
+    expect(screen.queryByText('History unavailable')).not.toBeInTheDocument()
   })
 
   it('keeps stale evidence visible and blocks the paper action', async () => {

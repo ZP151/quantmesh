@@ -73,14 +73,15 @@ FEED_LAG = timedelta(seconds=5)
 FEED_STALE = timedelta(seconds=10)
 
 # The venue plan: a burst at connect, then KEEPALIVE_CYCLES refresh
-# cycles every 4 s. The window is deliberately long (20 min): module
+# frames every 1 s (one full BBO/candle/trade/book cycle every 4 s).
+# The window is deliberately long (20 min): module
 # setup (uvicorn boot, feed attach, browser launch) and the browser
 # tests all happen inside it, so a slow full-suite run can never push
 # the freshness phase past. The quiet tail is NOT clock-bound: the
 # stale-transition test triggers the venue's ``quiet`` event, which
 # stops the frames with the socket still open.
 KEEPALIVE_CYCLES = 300
-KEEPALIVE_DELAY = 4.0
+KEEPALIVE_DELAY = 1.0
 
 
 # -- canonical frame shapes (mirror test_live_supervisor) ---------------------

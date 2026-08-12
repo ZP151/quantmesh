@@ -1928,6 +1928,22 @@ def reset_demo_root(
                     f"restored the original demo and retained {retained}",
                     retained_paths=retained,
                 ) from error
+            try:
+                seeded = load_demo_root(root, scenario)
+            except BaseException as error:
+                retained = _restore_original_after_publish_mismatch(
+                    root,
+                    quarantine,
+                    scenario,
+                    trusted_ownership_text=trusted_ownership_text,
+                    root_identity=root_identity,
+                    published_identity=published_identity,
+                )
+                raise DemoRootError(
+                    "published replacement failed final load; "
+                    f"restored the original demo and retained {retained}",
+                    retained_paths=retained,
+                ) from error
         except BaseException:
             if not root.exists() and quarantine.exists():
                 try:
@@ -1940,9 +1956,7 @@ def reset_demo_root(
                     atomic_replace(quarantine, root)
             raise
 
-        # Return an assembly rebound to the public path. The prebuilt objects
-        # deliberately point at the temporary sibling and are never exposed.
-        # The old identity-validated tree remains at ``quarantine`` for an
-        # operator to inspect and remove outside the running reset boundary.
-        seeded = load_demo_root(root, scenario)
+        # Return the assembly loaded inside the rollback boundary. The old
+        # identity-validated tree remains at ``quarantine`` for an operator to
+        # inspect and remove outside the running reset boundary.
         return seeded
