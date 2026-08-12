@@ -282,7 +282,7 @@ Exit criteria:
 Iterations 0018 and 0019 are merged, their release candidates were verified,
 and the accepted product was promoted to `v0.1.0` at `5a7f660` (PR #106).
 
-### M13 — Integrated instrument decision workspace (`ACTIVE`)
+### M13 — Integrated instrument decision workspace (`DONE`)
 
 Outcome: enable a solo researcher to combine chart evidence, probabilistic
 forecasts, confidence, risk and a paper decision on one venue-aware instrument
@@ -322,6 +322,11 @@ Exit criteria:
 Implementation ledger:
 `docs/iterations/0020-research-to-paper-loop.md`. Architecture evidence:
 `docs/architecture/framework-adoption-review-2026-08-11.md`.
+
+PR #108 squash-merged at `b6b05b9`. The immutable `v0.1.1-rc1` tagged tree
+passed the 17-step clean-checkout gate and isolated demo/live-degraded browser
+acceptance. It is accepted for prototype use; final `v0.1.1` promotion remains
+a separate explicit operator gate.
 
 ### M14 — Trusted data and algorithm expansion (`LATER`)
 

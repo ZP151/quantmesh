@@ -886,23 +886,23 @@ Run: `.\.venv\Scripts\python.exe tools/release_gate.py --branch HEAD`.
 
 Record all step counts, elapsed times, pytest totals, browser totals, golden-path totals, bundle hash, and clean-checkout proof in iteration 0020.
 
-- [ ] **Step 4: Open the one final PR and wait for CI**
+- [x] **Step 4: Open the one final PR and wait for CI**
 
 Push the branch, open a non-draft PR titled `M13: integrated instrument decision workspace`, link `Closes #107`, include framework dispositions and verification evidence, then wait for CI/Security. Fix failures on the same branch and rerun the affected local gate.
 
-- [ ] **Step 5: Squash-merge under standing authority**
+- [x] **Step 5: Squash-merge under standing authority**
 
 Merge only when every required check is green and no Critical/Important finding remains. Delete the remote branch, fetch `origin/main`, and fast-forward local `main` without manufacturing a merge commit.
 
-- [ ] **Step 6: Cut the release candidate from merged main**
+- [x] **Step 6: Cut the release candidate from merged main**
 
 Update every version surface to PEP 440 `0.1.1rc1` / tag `v0.1.1-rc1`, write English-primary release notes with a Simplified-Chinese acceptance section, commit through a release PR if branch protection requires it, merge, then create one annotated immutable tag on the merged commit.
 
-- [ ] **Step 7: Verify the exact tag in an isolated acceptance root**
+- [x] **Step 7: Verify the exact tag in an isolated acceptance root**
 
 Fresh-clone the tag, create a new venv, install `.[dev,research,e2e]`, run the release gate against the exact tag, start a deterministic demo station and a read-only live/degraded station on unused loopback ports, execute the smoke drill, and write English plus zh-CN operator checklists covering the NVDA loop, failure states, keyboard/390 px, persistence/reset, and kill switch.
 
-- [ ] **Step 8: Stop at the operator gate**
+- [x] **Step 8: Stop at the operator gate**
 
 Report the tag commit, install/import/API versions, station URLs/PIDs, all verification counts, framework decisions, acceptance checklist paths, and any honest degraded external source. Do not create or promote `v0.1.1` until the operator explicitly accepts `v0.1.1-rc1`.
 

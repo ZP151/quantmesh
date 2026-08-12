@@ -1,6 +1,6 @@
 # Iteration 0020 — Integrated Instrument Decision Workspace
 
-Status: active
+Status: completed (2026-08-12)
 Target release: `v0.1.1-rc1`
 Baseline: released `v0.1.0` at `5a7f660`
 Branch: `0020-research-to-paper-loop`
@@ -788,6 +788,33 @@ not sufficient for cross-agent recovery.
   both original and resolved path spellings, longest first. The credential-
   sanitization behavior remains unchanged. Red/green symlink-path coverage is
   `2/2`, and the complete FinRL-X isolation file passes `37/37`.
+
+## Checkpoint 6 — merge, immutable candidate and operator acceptance (2026-08-12)
+
+- PR #108 passed CI and squash-merged at
+  `b6b05b96f232366dad31177e2e8e13ab23c08b97`; issue #107 closed and the remote
+  integration branch was deleted. Local `main` was fast-forwarded to the merge.
+- Annotated tag `v0.1.1-rc1` resolves to that exact commit locally and remotely.
+  No final `v0.1.1` tag was created.
+- The exact tagged tree passed the 17-step clean-checkout release gate:
+  `2595 passed, 4 skipped`, Vitest `143/143`, golden path `60/60`, browser E2E,
+  Ruff, TypeScript, Oxlint, bundle freshness, Python/frontend license closure,
+  pip/npm audits and clone-clean proof all passed. The first attempt correctly
+  refused ambient Node 22.11; after selecting the pinned Node 22.12 runtime, the
+  same immutable tag passed without moving the tag.
+- A detached fresh clone at the acceptance root reports `0.1.1rc1` from package,
+  import and both API health surfaces. The deterministic demo station and the
+  read-only live/degraded station passed the browser acceptance, 390 px,
+  keyboard, Simplified-Chinese, reduced-motion, paper lineage, reset and kill-
+  switch checks. Live smoke passed `15/15`; an unreachable station failed `4/4`
+  and exited 1 as required.
+- Hyperliquid's retained real BTC frame is explicitly stale after an external
+  disconnect; Moomoo equities are explicitly unavailable because OpenD is not
+  installed. No synthetic-as-live or live-order path was introduced.
+- English-primary and Simplified-Chinese operator records were written in the
+  isolated acceptance root. The candidate is accepted for prototype use. Final
+  `v0.1.1` promotion remains prohibited until a separate explicit operator
+  command.
 
 ## Acceptance criteria
 
