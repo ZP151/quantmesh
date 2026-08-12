@@ -96,17 +96,13 @@ class Order(BaseModel):
         return self
 
     @classmethod
-    def from_request(
-        cls, request: OrderRequest, *, order_id: str, created_at: datetime
-    ) -> "Order":
+    def from_request(cls, request: OrderRequest, *, order_id: str, created_at: datetime) -> "Order":
         return cls(
             order_id=order_id,
             instrument=request.instrument,
             side=request.side,
             quantity=request.quantity,
-            order_type=(
-                OrderType.LIMIT if request.limit_price is not None else OrderType.MARKET
-            ),
+            order_type=(OrderType.LIMIT if request.limit_price is not None else OrderType.MARKET),
             limit_price=request.limit_price,
             created_at=created_at,
             client_order_id=request.client_order_id,
@@ -146,9 +142,7 @@ class Order(BaseModel):
 class OrderStateMachine:
     """Explicit order-state transitions; state is only changed through here."""
 
-    TERMINAL_STATES = frozenset(
-        {OrderStatus.FILLED, OrderStatus.CANCELED, OrderStatus.REJECTED}
-    )
+    TERMINAL_STATES = frozenset({OrderStatus.FILLED, OrderStatus.CANCELED, OrderStatus.REJECTED})
     TRANSITIONS: dict[OrderEventType, tuple[OrderStatus, ...]] = {
         OrderEventType.ACCEPTED: (OrderStatus.PENDING,),
         OrderEventType.REJECTED: (OrderStatus.PENDING, OrderStatus.ACCEPTED),
@@ -218,3 +212,52 @@ class OrderStateMachine:
             fee=fill.fee if fill is not None else None,
         )
         return order.model_copy(update={"status": status, "events": [*order.events, event]})
+
+
+def validate_order_replay(order: Order) -> Order:
+    """Fail closed unless an order snapshot is exactly derived from its events."""
+    if order.created_at.tzinfo is None:
+        raise ValueError("order creation time must be timezone-aware")
+
+    replay = order.model_copy(
+        update={
+            "status": OrderStatus.PENDING,
+            "filled_quantity": 0.0,
+            "events": [],
+        },
+        deep=True,
+    )
+    prior = order.created_at
+    for expected in order.events:
+        if expected.timestamp.tzinfo is None or expected.timestamp < prior:
+            raise ValueError("order event time is invalid or regresses")
+        if expected.sequence != len(replay.events) + 1:
+            raise ValueError("order event sequence is not contiguous")
+
+        fill = None
+        if expected.event_type is OrderEventType.FILL:
+            if expected.quantity is None or expected.price is None:
+                raise ValueError("fill event is incomplete")
+            fill = Fill(
+                timestamp=expected.timestamp,
+                quantity=expected.quantity,
+                price=expected.price,
+                broker_fill_id=expected.broker_fill_id,
+                fee=expected.fee,
+            )
+        replay = OrderStateMachine.apply(
+            replay,
+            expected.event_type,
+            fill=fill,
+            reason=expected.reason,
+            timestamp=expected.timestamp,
+        )
+        prior = expected.timestamp
+
+    if (
+        replay.events != order.events
+        or replay.status is not order.status
+        or replay.filled_quantity != order.filled_quantity
+    ):
+        raise ValueError("order derived state does not replay exactly")
+    return order

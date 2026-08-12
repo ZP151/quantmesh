@@ -13,9 +13,11 @@ import {
   LABEL_TEXT,
   instrumentLabel,
   labelTone,
+  liveInstrumentKey,
   markIndexDivergence,
   mergeUpdate,
   midOf,
+  normalizeLiveInstruments,
   quoteNumbers,
   realizedVol,
   spreadBps,
@@ -229,8 +231,12 @@ function DepthChart({ bids, asks }: { bids: BookLevel[]; asks: BookLevel[] }) {
   )
 }
 
-export function CockpitDetailScreen() {
-  const { symbol = '' } = useParams<{ symbol: string }>()
+export function CockpitDetailScreen({
+  showWorkspaceLink = true,
+}: {
+  showWorkspaceLink?: boolean
+} = {}) {
+  const { venue = '', symbol = '' } = useParams<{ venue: string; symbol: string }>()
   const { t } = usePreferences()
   const [updates, setUpdates] = useState<MarketUpdate[]>([])
   const [instruments, setInstruments] = useState<Record<string, LiveInstrumentState>>({})
@@ -239,11 +245,18 @@ export function CockpitDetailScreen() {
     queryFn: api.liveState,
     refetchInterval: SNAPSHOT_INTERVAL_MS,
   })
+  const marketDirectory = useQuery({
+    queryKey: ['markets'],
+    queryFn: api.markets,
+  })
 
   useEffect(() => {
-    const instrument = snapshot.data?.instruments[symbol]
+    const instrument = snapshot.data
+      ? normalizeLiveInstruments(snapshot.data.instruments)[liveInstrumentKey(venue, symbol)]
+      : undefined
     if (!instrument) return
-    setInstruments((previous) => ({ ...previous, [symbol]: instrument }))
+    const key = liveInstrumentKey(venue, symbol)
+    setInstruments((previous) => ({ ...previous, [key]: instrument }))
     const seeded = Object.values(instrument.kinds).map((view) =>
       snapshotUpdate(symbol, instrument.venue, view),
     )
@@ -257,10 +270,10 @@ export function CockpitDetailScreen() {
       const next = [...previous, ...missing]
       return next.slice(-(TAPE_LIMIT + CHART_LIMIT))
     })
-  }, [snapshot.data, symbol])
+  }, [snapshot.data, symbol, venue])
 
   const streamStatus = useLiveConnection((update) => {
-    if (update.instrument !== symbol) return
+    if (update.instrument !== symbol || update.venue !== venue) return
     setUpdates((previous) => {
       const next = [...previous, update]
       return next.length > TAPE_LIMIT + CHART_LIMIT ? next.slice(-(TAPE_LIMIT + CHART_LIMIT)) : next
@@ -269,7 +282,12 @@ export function CockpitDetailScreen() {
     setInstruments((previous) => mergeUpdate(previous, update))
   })
 
-  const instrument = instruments[symbol]
+  const instrument = instruments[liveInstrumentKey(venue, symbol)]
+  const directoryMatches = marketDirectory.data?.instruments.filter(
+    (candidate) => candidate.symbol === symbol,
+  ) ?? []
+  const canonicalVenue = instrument?.venue ?? venue
+    ?? (directoryMatches.length === 1 ? directoryMatches[0].venue : null)
   const badgeLabel = instrument ? instrumentLabel(instrument) : 'unavailable'
 
   const byKind = useMemo(() => {
@@ -340,12 +358,22 @@ export function CockpitDetailScreen() {
           : t('screen.cockpitDetail.waitingInstrument')
       }
       actions={
-        <Link
-          to="/cockpit"
-          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-        >
-          {t('screen.cockpitDetail.back')}
-        </Link>
+        <div className="flex items-center gap-3">
+          {showWorkspaceLink && canonicalVenue && (
+            <Link
+              to={`/instruments/${encodeURIComponent(canonicalVenue)}/${encodeURIComponent(symbol)}`}
+              className="text-xs font-medium text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"
+            >
+              {t('screen.workspace.open')}
+            </Link>
+          )}
+          <Link
+            to="/cockpit"
+            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+          >
+            {t('screen.cockpitDetail.back')}
+          </Link>
+        </div>
       }
     >
       <div className="flex flex-wrap items-center gap-3">

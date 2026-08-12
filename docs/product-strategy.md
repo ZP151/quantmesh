@@ -87,8 +87,10 @@ Supporting metrics:
 - stale/degraded states detected instead of silently rendered as fresh;
 - zero safety violations in kill-switch and quote-fence drills.
 
-Near-term OMTM: complete a clean, reproducible demo-to-paper workflow with
-locale/theme persistence and no unlabelled data.
+Near-term OMTM: complete one venue-aware instrument decision loop in which the
+operator can inspect sourced historical/live prices, compare probabilistic
+forecast evidence, accept or reject a paper proposal, and replay the entire
+lineage without changing pages or re-entering context.
 
 ## 7. Growth and distribution
 
@@ -106,10 +108,16 @@ Reuse behind adapters:
 
 - FastAPI, React/TypeScript/Vite and selected shadcn/ui components;
 - DuckDB/Parquet and existing data-quality primitives;
+- a coherent FinRL-X research/allocation workflow if the iteration-0020
+  evidence gate passes, with QuantMesh retaining provenance, risk and paper
+  authority;
+- a process-isolated NautilusTrader execution boundary only after an explicit
+  LGPL/license and process-architecture ADR;
 - official or maintained Hyperliquid, Moomoo OpenD, Polymarket and Kalshi
   transports where licensing and read-only boundaries are clear;
-- Qlib/VectorBT/LightGBM and similar research components after license,
-  point-in-time and cost-model review;
+- Qlib, Darts, LightGBM and similar research components after license,
+  point-in-time and cost-model review; Commons-Clause VectorBT remains
+  excluded from the runtime;
 - local/OpenAI-compatible model gateways for advisory analysis.
 
 ## 9. Defensibility
@@ -130,6 +138,9 @@ The end state is a local desktop web application with:
   Moomoo OpenD;
 - market cockpit, watchlists, probability board, experiments, forecasts,
   paper orders, positions, P&L, risk and audit;
+- an integrated instrument workspace combining historical/live charts,
+  comparison series, forecast intervals, confidence evidence, position/risk
+  context and operator-confirmed paper actions;
 - English/简体中文 language setting and system/light/dark theme;
 - local AI analyst/critic/risk assistant with citations and structured output;
 - deterministic paper kernel as the only order authority;

@@ -23,8 +23,11 @@ Read these primary sources in order:
 3. `docs/goals/ACTIVE.md`
 4. `docs/roadmap/ROADMAP.md`
 5. `docs/iterations/INDEX.md` and the active iteration file
-6. Relevant ADRs under `docs/adr/`
-7. The full body, comments and labels of linked GitHub issues/PRs
+6. `docs/agents/cross-agent-execution.md` and any active tracked plan under
+   `docs/superpowers/` (create it from the approved iteration before code if it
+   does not exist)
+7. Relevant ADRs under `docs/adr/`
+8. The full body, comments and labels of linked GitHub issues/PRs
 
 Then inspect repository history and current state:
 
@@ -86,6 +89,14 @@ If the current worktree is dirty, identify ownership of every change. Continue o
 ## 4. Persistent execution loop
 
 Continue until the objective is achieved or a genuine human/external gate is reached:
+
+For a non-trivial multi-task implementation, invoke the installed Superpowers
+skills directly. Use `superpowers:writing-plans` to produce the tracked plan,
+then prefer `superpowers:subagent-driven-development`; use
+`superpowers:test-driven-development`, `superpowers:requesting-code-review`
+and `superpowers:verification-before-completion` at their required gates. The
+operator's standing integration authority below overrides only the final
+interactive merge menu; it does not waive tests, reviews or safety gates.
 
 1. Choose the smallest complete vertical slice on the unblocked frontier.
 2. Record its acceptance criteria and role assignments in the active iteration.

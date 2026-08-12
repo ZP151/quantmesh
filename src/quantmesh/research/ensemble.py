@@ -35,6 +35,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
+from quantmesh._fs import atomic_replace
 from quantmesh.data.lake import Dataset, Lake
 from quantmesh.domain.market_data import Bar
 from quantmesh.events.calibration import CalibrationBin, brier_by_bin
@@ -454,7 +455,7 @@ class EnsembleReportRegistry:
                 for record in existing + [report]:
                     handle.write(record.model_dump_json())
                     handle.write("\n")
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)

@@ -17,6 +17,12 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0011 | completed | 2026-08-08 | 2026-08-08 | M9 local frontend workstation | [PR #70](https://github.com/ZP151/quantmesh/pull/70) |
 | 0012 | completed | 2026-08-08 | 2026-08-08 | M10 guarded live execution and hardening | [PR #71](https://github.com/ZP151/quantmesh/pull/71) |
 | 0013 | completed | 2026-08-08 | 2026-08-09 | v0.1.0-rc1 engineering release; operator acceptance deferred | [Plan](0013-v0.1.0-rc1-and-architecture-hardening.md) |
-| 0014 | active | 2026-08-09 | | v0.1.0-rc2 interactive product acceptance | [Plan](0014-v0.1.0-rc2-interactive-product-acceptance.md) |
+| 0014 | completed | 2026-08-09 | 2026-08-10 | RC2–RC4 interactive product acceptance and correction | [Plan](0014-v0.1.0-rc2-interactive-product-acceptance.md) |
+| 0015 | completed | 2026-08-09 | 2026-08-10 | Live market cockpit and acceptance hardening | [PR #95](https://github.com/ZP151/quantmesh/pull/95) |
+| 0016 | completed | 2026-08-10 | 2026-08-10 | Global preferences and workstation continuity | [PR #97](https://github.com/ZP151/quantmesh/pull/97) |
+| 0017 | completed | 2026-08-10 | 2026-08-10 | Domain-screen translations | [PR #99](https://github.com/ZP151/quantmesh/pull/99) |
+| 0018 | completed | 2026-08-10 | 2026-08-10 | Global localization completion | [PR #100](https://github.com/ZP151/quantmesh/pull/100) |
+| 0019 | completed | 2026-08-10 | 2026-08-10 | Live research surface | [PR #101](https://github.com/ZP151/quantmesh/pull/101) |
+| 0020 | active | 2026-08-11 | | Framework-first integrated instrument decision workspace | [Issue #107](https://github.com/ZP151/quantmesh/issues/107) / [Plan](0020-research-to-paper-loop.md) |
 
 <!-- quantmesh-iterations:append-above -->

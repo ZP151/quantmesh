@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "product": "QuantMesh local evidence-first trading workstation",
+  "direction": "restrained technical black-green console",
+  "tokens": {
+    "radius_px": 10,
+    "font_ui": "Geist",
+    "font_numeric": "system monospace stack with tabular numerals",
+    "layout": "separator-first three-column desktop, ordered single-column compact",
+    "motion": "short state transitions; disabled for reduced motion"
+  },
+  "non_negotiables": [
+    "observed and forecast data remain visually and semantically separate",
+    "synthetic, stale, degraded and unavailable evidence is explicitly labeled",
+    "color is never the only signal",
+    "material provenance may wrap and must remain inspectable",
+    "paper actions require explicit confirmation and preserve terminal evidence",
+    "no horizontal document overflow at 390px"
+  ]
+}

@@ -11,14 +11,17 @@ import {
   instrumentLabel,
   LABEL_TEXT,
   labelTone,
+  liveInstrumentSymbol,
   mergeUpdate,
   midOf,
+  normalizeLiveInstruments,
   quoteNumbers,
   spreadBps,
   useLiveConnection,
 } from '@/lib/live'
 import { api, type LiveInstrumentState, type LiveSourceState, type LiveStatus, type ReplayWindow } from '@/lib/api'
 import { dateTime, money, timeOfDay } from '@/lib/format'
+import { instrumentPath } from '@/lib/instrument-route'
 import { usePreferences } from '@/lib/preferences'
 
 // The Live Market Cockpit watchlist (iteration 0015 Phase C): every
@@ -325,7 +328,7 @@ export function CockpitScreen() {
   })
   const [instruments, setInstruments] = useState<Record<string, LiveInstrumentState>>({})
   useEffect(() => {
-    if (snapshot.data) setInstruments(snapshot.data.instruments)
+    if (snapshot.data) setInstruments(normalizeLiveInstruments(snapshot.data.instruments))
   }, [snapshot.data])
 
   const statusQuery = useQuery({
@@ -334,12 +337,19 @@ export function CockpitScreen() {
     refetchInterval: SNAPSHOT_INTERVAL_MS,
   })
 
-  const symbols = Object.keys(instruments).join(',')
+  const rows = useMemo(
+    () =>
+      Object.entries(instruments)
+        .map(([key, instrument]) => ({ key, symbol: liveInstrumentSymbol(key), instrument }))
+        .sort((a, b) => a.symbol.localeCompare(b.symbol) || a.instrument.venue.localeCompare(b.instrument.venue)),
+    [instruments],
+  )
+  const identities = rows.map((row) => row.key).join(',')
   const trailQuery = useQuery({
-    queryKey: ['live', 'price-trail', symbols],
+    queryKey: ['live', 'price-trail', identities],
     queryFn: () =>
-      symbols.length > 0
-        ? api.priceTrail({ symbols, limit: 20 })
+      identities.length > 0
+        ? api.priceTrail({ identities, limit: 20 })
         : Promise.resolve({ trail: {} }),
     refetchInterval: SNAPSHOT_INTERVAL_MS,
     retry: false,
@@ -351,13 +361,6 @@ export function CockpitScreen() {
   })
 
   const [filter, setFilter] = useState('')
-  const rows = useMemo(
-    () =>
-      Object.entries(instruments)
-        .map(([symbol, instrument]) => ({ symbol, instrument }))
-        .sort((a, b) => a.symbol.localeCompare(b.symbol)),
-    [instruments],
-  )
   const filteredRows = useMemo(
     () =>
       filter
@@ -460,7 +463,7 @@ export function CockpitScreen() {
                     </td>
                   </tr>
                 ) : null}
-                {filteredRows.map(({ symbol, instrument }) => {
+                {filteredRows.map(({ key, symbol, instrument }) => {
                   const quote = quoteNumbers(instrument.kinds.quote)
                   const trade = instrument.kinds.trade
                   const label = instrumentLabel(instrument)
@@ -468,10 +471,10 @@ export function CockpitScreen() {
                   const spread = spreadBps(quote)
                   const worst = instrument.kinds.quote ?? instrument.kinds.trade
                   return (
-                    <tr key={symbol} className="border-b border-border/60 last:border-0">
+                    <tr key={key} className="border-b border-border/60 last:border-0">
                       <td className="px-4 py-2.5">
                         <Link
-                          to={`/cockpit/${encodeURIComponent(symbol)}`}
+                          to={instrumentPath(instrument.venue, symbol)}
                           className="font-mono font-medium hover:underline"
                         >
                           {symbol}
@@ -501,7 +504,7 @@ export function CockpitScreen() {
                             : '—'}
                         </td>
                         <td className="px-2 py-2.5">
-                          <SparklineCell closes={trails[symbol] ?? []} />
+                          <SparklineCell closes={trails[key] ?? []} />
                         </td>
                         <td className="px-4 py-2.5 text-right font-mono text-xs tabular-nums text-muted-foreground">
                           {worst ? timeOfDay(worst.data_time) : '—'}

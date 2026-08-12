@@ -127,10 +127,10 @@ records counts, dates and any debugging detours.
 Roadmap milestone identifiers are delivery-history labels, not package
 versions. The first operator-facing product release line is `0.1.x`:
 
-- release-candidate package metadata uses the PEP 440 form `0.1.0rcN`;
-- the corresponding Git tag uses the readable form `v0.1.0-rcN`;
-- operator acceptance promotes the same verified line to package version
-  `0.1.0` and tag `v0.1.0`;
+- release-candidate package metadata uses the PEP 440 form `X.Y.ZrcN`;
+- the corresponding Git tag uses the readable form `vX.Y.Z-rcN`;
+- operator acceptance promotes the same verified scope to package version
+  `X.Y.Z` and tag `vX.Y.Z` in a separately verified promotion commit;
 - later compatible fixes increment the patch; a deliberately incompatible
   product release increments the minor.
 

@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from quantmesh._fs import atomic_replace
 from quantmesh.domain.market_data import Bar, interval_to_timedelta
 from quantmesh.research.reports import (
     MODEL_STRATEGIES,
@@ -524,7 +525,7 @@ def _atomic_text(path: Path, text: str) -> None:
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             handle.write(text)
-        os.replace(temp_name, path)
+        atomic_replace(temp_name, path)
     finally:
         if os.path.exists(temp_name):
             os.unlink(temp_name)
@@ -539,7 +540,7 @@ def _atomic_csv(path: Path, header: list[str], rows: list[list]) -> None:
             writer = csv.writer(handle)
             writer.writerow(header)
             writer.writerows(rows)
-        os.replace(temp_name, path)
+        atomic_replace(temp_name, path)
     finally:
         if os.path.exists(temp_name):
             os.unlink(temp_name)

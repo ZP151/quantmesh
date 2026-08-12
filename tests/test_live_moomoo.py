@@ -364,7 +364,7 @@ def _wait_for(condition, timeout: float = 10.0) -> None:
 
 
 def _state(feed: LiveFeed, symbol: str) -> dict:
-    return feed.latest_state()["instruments"].get(symbol, {})
+    return feed.latest_state()["instruments"].get(f"moomoo:{symbol}", {})
 
 
 def _moomoo_venue(feed: LiveFeed) -> dict:
@@ -477,14 +477,17 @@ def test_live_stack_honest_unavailable_when_opend_is_down() -> None:
     try:
         # wait for the disconnect STATUS updates themselves (the
         # statuses() defaults alone are not the surface)
-        _wait_for(lambda: set(feed.latest_state()["instruments"]) == {"AAPL", "NVDA"})
+        _wait_for(
+            lambda: set(feed.latest_state()["instruments"])
+            == {"moomoo:AAPL", "moomoo:NVDA"}
+        )
         assert _source_state(feed, "AAPL") == "unavailable"
         assert _source_state(feed, "NVDA") == "unavailable"
         assert _moomoo_venue(feed).get("connected") is False
         # the watchlist rows exist — honestly labeled unavailable, with
         # no metrics/trade surface at all: never a fabricated number
         instruments = feed.latest_state()["instruments"]
-        assert set(instruments) == {"AAPL", "NVDA"}
+        assert set(instruments) == {"moomoo:AAPL", "moomoo:NVDA"}
         for row in instruments.values():
             assert row["label"] == "unavailable"
             assert "metrics" not in row["kinds"]

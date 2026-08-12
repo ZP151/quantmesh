@@ -29,6 +29,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 
+from quantmesh.domain.models import Venue
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.prediction import PredictionBoard
 
@@ -150,16 +151,38 @@ def live_router() -> APIRouter:
     @router.get("/live/price-trail")
     def live_price_trail(
         request: Request,
-        symbols: str = Query(description="Comma-separated instrument symbols"),
+        identities: str = Query(
+            description="Comma-separated canonical venue:instrument identities"
+        ),
         limit: int = Query(default=20, ge=1, le=100),
     ) -> dict[str, object]:
         feed = _feed(request)
         if not feed.lake_attached:
             raise HTTPException(status_code=404, detail="no replay lake is attached")
-        syms = [s.strip() for s in symbols.split(",") if s.strip()]
-        if not syms:
-            raise HTTPException(status_code=422, detail="at least one symbol is required")
-        return {"trail": feed.price_trail(syms, limit=limit)}
+        requested = [value.strip() for value in identities.split(",") if value.strip()]
+        if not requested:
+            raise HTTPException(status_code=422, detail="at least one identity is required")
+        parsed: list[tuple[str, str]] = []
+        seen: set[tuple[str, str]] = set()
+        for identity in requested:
+            venue_value, separator, instrument = identity.partition(":")
+            try:
+                venue = Venue(venue_value)
+            except ValueError:
+                venue = None
+            canonical = (
+                f"{venue.value}:{instrument}" if venue is not None and instrument else None
+            )
+            if not separator or canonical != identity:
+                raise HTTPException(
+                    status_code=422,
+                    detail="identities must use canonical venue:instrument form",
+                )
+            pair = (venue.value, instrument)
+            if pair not in seen:
+                parsed.append(pair)
+                seen.add(pair)
+        return {"trail": feed.price_trail(parsed, limit=limit)}
 
     @router.get("/live/stream")
     async def live_stream(request: Request) -> StreamingResponse:

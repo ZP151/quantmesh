@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-08-10
+Last updated: 2026-08-11
 
 ## Status legend
 
@@ -254,7 +254,7 @@ numeric-policy deepening remain backlog items unless they block the accepted
 workflow. Moomoo simulated-account and Hyperliquid testnet drills remain
 optional gates and do not enable live or mainnet operation.
 
-### M12 — Global preferences and live research continuity (`ACTIVE`)
+### M12 — Global preferences and live research continuity (`DONE`)
 
 Outcome: make the local workstation comfortable for long-running personal use
 while increasing the density and trustworthiness of live research surfaces.
@@ -279,7 +279,63 @@ Exit criteria:
 - A clean checkout can run the demo and read-only live/replay workflows with
   reproducible tests and a documented acceptance station.
 
-Iteration 0018 is the current integration candidate on PR #100. Once merged,
-cut a replacement RC from the merged tree; do not mutate RC6. Iteration 0019
-(`docs/iterations/0019-live-research-surface.md`) is the next implementation
-slice and must preserve the same read-only, provenance-first boundary.
+Iterations 0018 and 0019 are merged, their release candidates were verified,
+and the accepted product was promoted to `v0.1.0` at `5a7f660` (PR #106).
+
+### M13 — Integrated instrument decision workspace (`ACTIVE`)
+
+Outcome: enable a solo researcher to combine chart evidence, probabilistic
+forecasts, confidence, risk and a paper decision on one venue-aware instrument
+workspace so that a complete decision loop no longer requires route hopping.
+
+Initial deliverables:
+
+- A framework-first bake-off: FinRL-X end-to-end NVDA research/proposal path,
+  NautilusTrader Hyperliquid replay/sandbox comparator, common scorecard and an
+  ADR that selects or rejects each boundary before production expansion.
+- Historical 1D/5D/1M/3M/6M/1Y line and candlestick charts with volume,
+  bounded overlays and normalized comparison series.
+- Truthful 7-session, 30-session and 6-month forecast paths with uncertainty
+  bands, vintage, benchmark and chronological out-of-sample evidence.
+- One decision rail containing model/dataset provenance, current paper
+  position/risk and an operator-confirmed paper proposal or manual ticket.
+- Full lineage from chart/forecast evidence through research run, risk,
+  paper order, fill, P&L and audit.
+- A permissively licensed chart adapter and isolated Qlib/Darts evaluation
+  spikes after the framework decision; no bulk copying of upstream
+  applications.
+
+Exit criteria:
+
+- The operator can inspect a seeded stock such as NVDA, compare observed and
+  forecast paths and complete or reject a paper decision on one page.
+- Framework adoption or rejection is reproducible from a clean Windows
+  checkout and records license closure, deterministic output, chronological
+  evaluation, maintenance cost and the QuantMesh adapter boundary.
+- Forecast quality, coverage, leakage and freshness failures block promotion
+  with an actionable reason; synthetic output is never shown as live.
+- The same manifest/model/configuration reproduces the forecast artifact and
+  paper-decision lineage from a clean checkout.
+- `v0.1.1-rc1` passes browser/a11y, replay, safety, security and release gates
+  and waits for explicit operator acceptance.
+
+Implementation ledger:
+`docs/iterations/0020-research-to-paper-loop.md`. Architecture evidence:
+`docs/architecture/framework-adoption-review-2026-08-11.md`.
+
+### M14 — Trusted data and algorithm expansion (`LATER`)
+
+Outcome: enable many data and model candidates to be compared safely behind
+stable adapters instead of increasing product complexity per provider.
+
+Sequence for operator review:
+
+1. Trusted data fabric: provider registry, symbol/calendar/corporate-action
+   normalization, raw/normalized/feature layers, manifests, source rights and
+   quality SLAs.
+2. Algorithm evaluation lab: extend the iteration-0020 FinRL-X/Nautilus
+   decision with Qlib and Darts comparisons, then selected LEAN or other
+   candidates under common walk-forward, cost, leakage and calibration gates.
+3. Grounded research copilot with citations and no order authority.
+4. Paper shadow portfolio with scheduled proposals and outcome monitoring.
+5. Guarded broker/testnet execution only after a separate authorization.

@@ -149,6 +149,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                 _instrument(coin),
                 UpdateKind.CANDLE,
                 {
+                    "interval": _CANDLE_INTERVAL,
                     "open": bar.open,
                     "high": bar.high,
                     "low": bar.low,
@@ -265,6 +266,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                         instrument,
                         UpdateKind.CANDLE,
                         {
+                            "interval": _CANDLE_INTERVAL,
                             "open": bar.open,
                             "high": bar.high,
                             "low": bar.low,

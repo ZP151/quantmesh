@@ -70,6 +70,29 @@ point"). Under the closure contract they are isolated from the product
 inventory by design; installing them into a release environment
 refuses the license gate with a precise message.
 
+## Framework bake-off tooling (outside the release closure)
+
+Iteration 0020 evaluated candidate frameworks in external checkouts and virtual
+environments. ADR-0015 admits neither candidate to the product runtime, so this
+record is deliberately separate from the generated release inventory below:
+
+- FinRL-X was pinned to
+  `e65d6f0483ead7d2ef4a5fc940cdf960392a25c1` (Apache-2.0). Its isolated install
+  failed while building `bt` because MSVC 14.0+ was unavailable; no FinRL-X or
+  bake-off-only transitive package was added to QuantMesh.
+- NautilusTrader was pinned to `v1.231.0` /
+  `27a8e54e7ac3c57d6cbf8891f0283dfbaee97317` (LGPL-3.0). It is retained only as
+  removable process-isolated comparison tooling. `nautilus_trader` is not a
+  release dependency.
+- The comparator's external environment pinned `pandas==2.3.3` for upstream
+  compatibility. That pin does not add or alter a release dependency; pandas
+  already appears independently in the QuantMesh research closure and the
+  inventory below remains generated solely from `requirements-audit.txt`.
+- Copied upstream source: zero files. New release runtime dependencies: zero.
+
+The isolated environments, wheels and checkouts are not distributed. Their
+portable evidence and hashes are recorded under `docs/evidence/0020/`.
+
 ## Platform-restricted closure members
 
 Eight closure packages are pinned for every platform but part of the
@@ -134,17 +157,19 @@ part of the Python runtime dependency closure:
   carries the Apache-2.0 license and the upstream notice is preserved in
   `docs/third-party/impeccable-NOTICE.md`.
 
-## Frontend npm closure (Phase E, checked 2026-08-09)
+## Frontend npm closure (iteration 0020 Task 6, checked 2026-08-12)
 
 ADR-0013 Decision 5 budget: permissive licenses only; any dependency
 outside the adopted set enters through a license/maintenance check
-recorded here and in `docs/REUSE_MATRIX.md`. The check: `npm audit`
-for advisories plus an allowlist scan of `package-lock.json`
-(`node -e` walk of `lock.packages` — no network). **624 packages**
-(lockfile v3, all platform variants included), **every license
-allowlisted**: MIT 545, ISC 24, MPL-2.0 24, Apache-2.0 9,
+recorded here and in `docs/REUSE_MATRIX.md`. The checks are `npm audit
+--audit-level=high` for advisories plus the fail-closed, stdlib-only
+`python tools/npm_license_review.py` scan of `package-lock.json` (no network).
+They run in PR CI, the path-filtered Security workflow and the clean-checkout
+release gate. **646 packages**
+(lockfile v3, root entry excluded, all platform variants included), **every license
+allowlisted**: MIT 562, ISC 26, MPL-2.0 24, Apache-2.0 11,
 BSD-3-Clause 8, BSD-2-Clause 7, BlueOak-1.0.0 2, 0BSD 1, MIT-0 1,
-OFL-1.1 1, CC-BY-4.0 1, Python-2.0 1. No GPL/AGPL/LGPL, no
+OFL-1.1 1, CC-BY-4.0 1, Python-2.0 1, `(MIT OR CC0-1.0)` 1. No GPL/AGPL/LGPL, no
 source-available restriction, no untracked package.
 
 - MPL-2.0 ×24 is one project: `lightningcss` (Tailwind 4's CSS
@@ -165,17 +190,34 @@ source-available restriction, no untracked package.
   `@testing-library/jest-dom` 6.9.1 (MIT),
   `@testing-library/user-event` 14.6.3 (MIT) — all already present
   in the closure scan above; recorded in `docs/REUSE_MATRIX.md`.
+- Iteration 0020 Task 6 adds exact pins `openapi-fetch` 0.17.0 (MIT,
+  runtime) and `openapi-typescript` 7.13.0 (MIT, development). The generator's
+  declared TypeScript 5 peer range requires exact `typescript` 5.9.3
+  (Apache-2.0), replacing the unsupported 6.0 pre-existing range. These changes
+  add 20 lockfile entries. `type-fest` 4.41.0 accounts for the one
+  `(MIT OR CC0-1.0)` entry.
+- Iteration 0020 Task 11 adds exact runtime pin `lightweight-charts` 5.2.0
+  ([npm](https://www.npmjs.com/package/lightweight-charts),
+  [source](https://github.com/tradingview/lightweight-charts)) under
+  Apache-2.0, plus its MIT dependency `fancy-canvas` 2.1.0. Registry metadata
+  records an unpacked package size of 3,066,492 bytes. The adapter keeps the
+  library behind one QuantMesh component, enables its TradingView attribution
+  logo, and renders a user-visible `Charts by TradingView` link. The package
+  ships `LICENSE` but no separate `NOTICE`; the Apache license remains in the
+  npm distribution and no upstream notice file needs vendoring.
 - Runtime `dependencies` (direct): `react`/`react-dom` 19.2.8,
   `react-router-dom` 7.18.2, `@tanstack/react-query` 5.101.4,
   `@base-ui/react` 1.7.0, `tailwindcss` 4.3.3 + `@tailwindcss/vite`,
   `tw-animate-css`, `class-variance-authority`, `clsx`,
   `tailwind-merge`, `lucide-react`, `shadcn` 4.16.2 (CLI),
+  `openapi-fetch` 0.17.0, `lightweight-charts` 5.2.0,
   `@fontsource-variable/geist`, `@rolldown/binding-win32-x64-msvc`
   (Vite's bundler binary) — all permissive (MIT / Apache-2.0 /
   BSD-3-Clause / OFL-1.1 as scanned above).
-- Maintenance: `npm audit` runs as part of the release gate; a
-  dependency change beyond patch level triggers a re-check of this
-  section and the lockfile scan.
+- Maintenance: both frontend gates run on every PR and release candidate;
+  package/lock changes also trigger the Security workflow. A dependency
+  change beyond patch level requires a re-check of this section and the
+  explicit SPDX allowlist.
 
 ## Inventory (generated 2026-08-08; 64 packages in the release
 closure `.[dev,research,e2e]`)

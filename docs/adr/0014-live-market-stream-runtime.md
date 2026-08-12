@@ -55,9 +55,12 @@ that may consume live data only through a deterministic quote fence.
    no venue endpoints in the frontend).
 
 5. **Deterministic quote fence**: paper orders may consume a quote
-   only if provenance ∈ {real, delayed}, age ≤ the venue's maximum
+   only if provenance is `real`, age ≤ the venue's maximum
    freshness, and sequence continuity holds; otherwise the order is
    rejected with an explicit reason (stale / gapped / unprovenanced).
+   `delayed` remains visible for analysis but is deliberately excluded
+   from execution authority; iteration 0020 tightened this rule so an
+   operator can never mistake delayed display data for an executable quote.
    In demo mode the fence consumes the seeded synthetic quotes exactly
    as today (no behavior change). Fully unit-tested, no wall-clock
    dependence in the checks' core.

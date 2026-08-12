@@ -1,11 +1,12 @@
 """Watchlist persistence for the workstation (M9, issue #52).
 
 The watchlist is the one UI-owned write surface in the workstation
-(ADR-0011 decision 3): a single default watchlist of instrument
-symbols, stored as JSONL on the ADR-0006 discipline — atomic
-temp+replace appends, fail-closed reads with line attribution,
-duplicate-symbol refusal, root-not-dir refusal. Reading a missing
-store is an empty list, never an error.
+(ADR-0011 decision 3): a single default watchlist of venue-scoped
+instrument identities, stored as JSONL on the ADR-0006 discipline — atomic
+temp+replace appends, fail-closed reads with line attribution, duplicate
+identity refusal, and root-not-dir refusal. Legacy symbol-only rows remain
+readable but are never assigned a guessed venue. Reading a missing store is
+an empty list, never an error.
 """
 
 from __future__ import annotations
@@ -17,6 +18,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from quantmesh._fs import atomic_replace
+from quantmesh.domain.models import Venue
 from quantmesh.settings import settings
 
 WATCHLIST_FILE = "watchlist.jsonl"
@@ -27,9 +30,10 @@ class WatchlistError(ValueError):
 
 
 class WatchlistRecord(BaseModel):
-    """One symbol on the default watchlist, with its added-at stamp."""
+    """One venue-scoped symbol, or a readable legacy unscoped row."""
 
     symbol: str = Field(min_length=1)
+    venue: Venue | None = None
     added_at: datetime
 
     model_config = {"extra": "forbid"}
@@ -53,33 +57,61 @@ class WatchlistRecord(BaseModel):
 
 
 class WatchlistStore:
-    """An append-only-by-discipline JSONL store of watchlist symbols."""
+    """An append-only-by-discipline JSONL store of watchlist identities."""
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.watchlists_dir
 
-    def add(self, symbol: str, *, now: datetime | None = None) -> WatchlistRecord:
+    def add(
+        self,
+        symbol: str,
+        *,
+        venue: Venue | str | None = None,
+        now: datetime | None = None,
+    ) -> WatchlistRecord:
         """Add one symbol; a duplicate or malformed symbol is refused."""
         try:
             record = WatchlistRecord(
                 symbol=symbol,
+                venue=venue,
                 added_at=now if now is not None else datetime.now(UTC),
             )
         except ValidationError as error:
             raise WatchlistError(f"cannot add {symbol!r} to the watchlist") from error
 
         existing = self.all()
-        if any(item.symbol == record.symbol for item in existing):
-            raise WatchlistError(f"{record.symbol!r} is already on the watchlist")
+        if any(
+            item.symbol == record.symbol
+            and (item.venue is None or record.venue is None or item.venue is record.venue)
+            for item in existing
+        ):
+            identity = (
+                f"{record.venue.value}:{record.symbol}"
+                if record.venue is not None
+                else record.symbol
+            )
+            raise WatchlistError(f"{identity!r} is already on the watchlist")
         self._write(existing + [record])
         return record
 
-    def remove(self, symbol: str) -> None:
+    def remove(self, symbol: str, *, venue: Venue | str | None = None) -> None:
         """Remove one symbol; an absent symbol is refused (fail-closed)."""
         existing = self.all()
-        remaining = [item for item in existing if item.symbol != symbol]
-        if len(remaining) == len(existing):
+        selected_venue = Venue(venue) if venue is not None else None
+        matches = [
+            item
+            for item in existing
+            if item.symbol == symbol
+            and (selected_venue is None or item.venue is selected_venue)
+        ]
+        if not matches:
             raise WatchlistError(f"{symbol!r} is not on the watchlist")
+        if selected_venue is None and len(matches) > 1:
+            raise WatchlistError(
+                f"{symbol!r} is ambiguous across venues; supply a venue to remove it"
+            )
+        target = matches[0]
+        remaining = [item for item in existing if item is not target]
         self._write(remaining)
 
     def all(self) -> list[WatchlistRecord]:
@@ -95,7 +127,7 @@ class WatchlistStore:
         except (OSError, UnicodeDecodeError) as error:
             raise WatchlistError(f"watchlist {path} is unreadable") from error
         records = []
-        seen: set[str] = set()
+        seen: dict[str, set[Venue | None]] = {}
         for line_number, line in enumerate(text.splitlines(), start=1):
             if not line.strip():
                 continue
@@ -105,12 +137,13 @@ class WatchlistStore:
                 raise WatchlistError(
                     f"watchlist {path} line {line_number} is invalid"
                 ) from error
-            if record.symbol in seen:
+            venues = seen.setdefault(record.symbol, set())
+            if record.venue in venues or None in venues or (record.venue is None and venues):
                 raise WatchlistError(
                     f"watchlist {path} line {line_number} repeats symbol "
                     f"{record.symbol!r}"
                 )
-            seen.add(record.symbol)
+            venues.add(record.venue)
             records.append(record)
         return records
 
@@ -125,7 +158,7 @@ class WatchlistStore:
                 for record in records:
                     handle.write(record.model_dump_json())
                     handle.write("\n")
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)

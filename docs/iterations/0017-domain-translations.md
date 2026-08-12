@@ -1,6 +1,6 @@
 # Iteration 0017 — Domain-Screen Translations
 
-Status: active
+Status: completed (PR #99 squash-merged; verification recorded below)
 Started: 2026-08-10
 Baseline: `origin/main` / `v0.1.0-rc6` (`f97f04b`)
 Branch: `0017-translations`

@@ -19,19 +19,32 @@ non-demo directory.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
-import shutil
+import os
+import stat
+import tempfile
+import zipfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from pydantic import BaseModel
 
+from quantmesh._fs import FilesystemIdentity, atomic_replace, filesystem_identity
 from quantmesh.ai.decisions import DecisionLog, DecisionRecord, ModelMeta
 from quantmesh.ai.retrieval import Citation, DocumentIndex
 from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.data.lake import Lake
-from quantmesh.data.manifest import ManifestWriter
+from quantmesh.data.layout import SHARD_NAME, shards_in, validate_symbol
+from quantmesh.data.manifest import (
+    MANIFEST_NAME,
+    DatasetClass,
+    DatasetManifest,
+    ManifestWriter,
+)
 from quantmesh.data.providers.hyperliquid import HyperliquidFixtureProvider
 from quantmesh.data.providers.moomoo import MoomooFixtureProvider
 from quantmesh.demo import generators
@@ -67,6 +80,16 @@ from quantmesh.events.mapping import (
 from quantmesh.events.models import EventMarket, EventVenue, Outcome, ResolutionRule
 from quantmesh.execution.accounting import FeeModel, PaperAccount, PaperMatcher
 from quantmesh.execution.journal import OrderJournal
+from quantmesh.instruments.contracts import (
+    CoverageSnapshot,
+    DatasetBinding,
+    HistoricalBar,
+    HistoricalSeries,
+    HistoryRange,
+)
+from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
+from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.proposals import ProposalLedger
 from quantmesh.ops.enablement import ApprovalLedger
 from quantmesh.research.drift import (
     AlertLedger,
@@ -92,6 +115,22 @@ from quantmesh.research.reports import (
 # replay depend on checkout state). Hex-shaped to satisfy the
 # registries' commit validators.
 DEMO_COMMIT = "0a1e2d3c4b5a69788796a5b4c3d2e1f0deadbeef"
+OWNERSHIP_NAME = "QUANTMESH_DEMO_OWNERSHIP.json"
+RESET_LOCK_SUFFIX = ".quantmesh-demo-reset.lock"
+
+# These seeded files are legitimately rewritten by public demo APIs. Their
+# path and regular-file type remain ownership evidence, but their bytes cannot
+# be pinned. All other seeded files are hash-pinned in the ownership manifest.
+_MUTABLE_FILES = frozenset(
+    {
+        "account.json",
+        "enablement/enablement.jsonl",
+        "orders/journal.jsonl",
+        "orders/proposals/.proposals.lock",
+        "orders/proposals/proposals.jsonl",
+        "watchlists/watchlist.jsonl",
+    }
+)
 
 # One deterministic paper-order sequence: fills across venues plus one
 # resting limit below the market (the "working order" state). Quantities
@@ -125,6 +164,10 @@ _DOCUMENT_TEXT = {
 
 class DemoRootError(ValueError):
     """A demo root is missing its marker, or refuses a requested op."""
+
+    def __init__(self, message: str, *, retained_paths: tuple[Path, ...] = ()) -> None:
+        super().__init__(message)
+        self.retained_paths = retained_paths
 
 
 class DemoProviders:
@@ -206,6 +249,9 @@ class DemoSeeded:
     documents: DocumentIndex
     enablement: ApprovalLedger
     providers: DemoProviders
+    history: HistoryService
+    price_forecasts: PriceForecastRegistry
+    proposal_ledger: ProposalLedger
     provenance: dict[str, object] = field(default_factory=dict)
 
 
@@ -213,10 +259,601 @@ def _marker(root: Path) -> Path:
     return root / MARKER_NAME
 
 
+def _legacy_marker_text() -> str:
+    return (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "format": "quantmesh-demo-root",
+                "version": 1,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
+def _claim_marker_text() -> str:
+    return (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "format": "quantmesh-demo-root",
+                "state": "seeding",
+                "version": 2,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
+def _marker_text(ownership_sha256: str) -> str:
+    return (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "format": "quantmesh-demo-root",
+                "ownership_sha256": ownership_sha256,
+                "version": 2,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
+def _is_link_or_junction(path: Path) -> bool:
+    try:
+        if path.is_symlink() or (hasattr(path, "is_junction") and path.is_junction()):
+            return True
+        attributes = getattr(path.lstat(), "st_file_attributes", 0)
+    except OSError:
+        return True
+    reparse_point = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x0400)
+    return bool(attributes & reparse_point)
+
+
+def _walk_owned_tree(root: Path) -> dict[str, str] | None:
+    """Walk without following links/reparse points; return relative path types."""
+    found: dict[str, str] = {}
+    stack = [root]
+    try:
+        while stack:
+            directory = stack.pop()
+            for path in sorted(directory.iterdir(), key=lambda item: item.name):
+                relative = path.relative_to(root).as_posix()
+                if relative in {MARKER_NAME, OWNERSHIP_NAME}:
+                    continue
+                if _is_link_or_junction(path):
+                    return None
+                if path.is_dir():
+                    found[relative] = "directory"
+                    stack.append(path)
+                elif path.is_file():
+                    found[relative] = "file"
+                else:
+                    return None
+    except OSError:
+        return None
+    return found
+
+
+def _ownership_text(root: Path) -> str:
+    paths = _walk_owned_tree(root)
+    if paths is None:
+        raise DemoRootError(f"cannot inventory unsafe demo root {root}")
+    entries: list[dict[str, str]] = []
+    for relative, kind in sorted(paths.items()):
+        entry = {"path": relative, "type": kind}
+        if kind == "file" and relative not in _MUTABLE_FILES:
+            entry["sha256"] = hashlib.sha256((root / relative).read_bytes()).hexdigest()
+        entries.append(entry)
+    return (
+        json.dumps(
+            {
+                "commit": DEMO_COMMIT,
+                "entries": entries,
+                "format": "quantmesh-demo-ownership",
+                "version": 1,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
+def build_demo_reset_archive(root: Path) -> bytes:
+    """Capture a validated pristine demo tree as an in-memory reset image."""
+    root = Path(root)
+    paths = _walk_owned_tree(root)
+    if paths is None or not is_demo_root(root):
+        raise DemoRootError(f"cannot capture unsafe demo reset image from {root}")
+    members = {
+        MARKER_NAME: "file",
+        OWNERSHIP_NAME: "file",
+        **paths,
+    }
+    payload = io.BytesIO()
+    with zipfile.ZipFile(payload, mode="w", compression=zipfile.ZIP_STORED) as archive:
+        for relative, kind in sorted(members.items()):
+            name = f"{relative}/" if kind == "directory" else relative
+            info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+            info.create_system = 0
+            archive.writestr(info, b"" if kind == "directory" else (root / relative).read_bytes())
+    return payload.getvalue()
+
+
+def build_trusted_demo_reset_image(scenario: DemoScenario) -> tuple[str, bytes]:
+    """Independently generate the pristine ownership truth and reset image."""
+    with tempfile.TemporaryDirectory(prefix="quantmesh-demo-reset-image-") as temp_dir:
+        trusted_root = Path(temp_dir) / "demo"
+        seed_demo_root(trusted_root, scenario)
+        ownership_text = (trusted_root / OWNERSHIP_NAME).read_text(encoding="utf-8")
+        return ownership_text, build_demo_reset_archive(trusted_root)
+
+
+def _restore_demo_reset_archive(payload: bytes, root: Path) -> None:
+    """Restore only the safe relative members emitted by our archive builder."""
+    root = Path(root)
+    if root.exists():
+        raise DemoRootError(f"reset replacement {root} already exists")
+    root.mkdir(parents=True, exist_ok=False)
+    try:
+        with zipfile.ZipFile(io.BytesIO(payload), mode="r") as archive:
+            infos = archive.infolist()
+            names = [info.filename.rstrip("/") for info in infos]
+            if len(names) != len(set(names)):
+                raise DemoRootError("trusted demo reset image has duplicate members")
+            for info, relative in zip(infos, names, strict=True):
+                parts = Path(relative).parts
+                if not relative or Path(relative).is_absolute() or ".." in parts:
+                    raise DemoRootError("trusted demo reset image has an unsafe member")
+                target = root.joinpath(*parts)
+                if info.is_dir():
+                    target.mkdir(parents=True, exist_ok=True)
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with target.open("xb") as handle:
+                        handle.write(archive.read(info))
+    except BaseException as error:
+        retained = f"; partial tree retained at {root}" if root.exists() else ""
+        raise DemoRootError(f"failed to restore trusted demo reset image{retained}") from error
+
+
+def _operator_import_inventory(root: Path, dataset: str) -> dict[str, str] | None:
+    lake_root = root / "market" / "lake"
+    manifest_path = root / "market" / "lake" / dataset / MANIFEST_NAME
+    if not manifest_path.is_file() or _is_link_or_junction(manifest_path):
+        return None
+    try:
+        manifest = DatasetManifest.model_validate_json(
+            manifest_path.read_text(encoding="utf-8")
+        )
+        if manifest.dataset != dataset or manifest.source != "operator-import":
+            return None
+        Lake(lake_root).dataset(dataset)
+    except (OSError, UnicodeDecodeError, ValueError):
+        return None
+
+    base = lake_root / dataset
+    expected: dict[str, str] = {
+        base.relative_to(root).as_posix(): "directory",
+        manifest_path.relative_to(root).as_posix(): "file",
+    }
+    for coverage in manifest.coverage:
+        interval = base / coverage.interval
+        venue = interval / coverage.venue.value
+        symbol = venue / coverage.symbol
+        expected[interval.relative_to(root).as_posix()] = "directory"
+        expected[venue.relative_to(root).as_posix()] = "directory"
+        expected[symbol.relative_to(root).as_posix()] = "directory"
+        try:
+            shards = shards_in(symbol)
+        except (OSError, ValueError):
+            return None
+        if not shards:
+            return None
+        for shard in shards:
+            if shard.name != SHARD_NAME or _is_link_or_junction(shard):
+                return None
+            expected[shard.parent.relative_to(root).as_posix()] = "directory"
+            expected[shard.relative_to(root).as_posix()] = "file"
+    return expected
+
+
+def _is_valid_datalink_cache(root: Path, relative: str) -> bool:
+    path = root / relative
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return False
+    if (
+        not isinstance(record, dict)
+        or set(record)
+        != {"symbol", "coin", "source", "synthetic", "fetched_at", "payload"}
+        or not isinstance(record["symbol"], str)
+        or not isinstance(record["coin"], str)
+        or not isinstance(record["fetched_at"], str)
+    ):
+        return False
+    try:
+        fetched_at = datetime.fromisoformat(record["fetched_at"])
+        validate_symbol(path.stem)
+        validate_symbol(record["symbol"])
+    except ValueError:
+        return False
+    return (
+        record["coin"] == path.stem
+        and record["coin"] == (
+            record["symbol"][: -len("-USD")]
+            if record["symbol"].endswith("-USD")
+            else record["symbol"]
+        )
+        and record["source"] == "hyperliquid-public"
+        and record["synthetic"] is False
+        and fetched_at.tzinfo is not None
+        and isinstance(record["payload"], dict)
+    )
+
+
+def _valid_dynamic_paths(
+    root: Path,
+    paths: dict[str, str],
+    unknown: set[str],
+) -> bool:
+    remaining = set(unknown)
+    cache_paths = {
+        relative for relative in remaining if Path(relative).parts[:1] == (".datalink",)
+    }
+    if cache_paths:
+        for relative in cache_paths:
+            parts = Path(relative).parts
+            if parts == (".datalink",) and paths[relative] == "directory":
+                continue
+            if parts == (".datalink", "hyperliquid") and paths[relative] == "directory":
+                continue
+            if (
+                len(parts) == 3
+                and parts[:2] == (".datalink", "hyperliquid")
+                and paths[relative] == "file"
+                and parts[2].endswith(".json")
+                and _is_valid_datalink_cache(root, relative)
+            ):
+                continue
+            return False
+        remaining -= cache_paths
+
+    datasets = {
+        Path(relative).parts[2]
+        for relative in remaining
+        if len(Path(relative).parts) >= 3
+        and Path(relative).parts[:2] == ("market", "lake")
+    }
+    for dataset in datasets:
+        prefix = ("market", "lake", dataset)
+        members = {
+            relative
+            for relative in remaining
+            if Path(relative).parts[:3] == prefix
+        }
+        expected = _operator_import_inventory(root, dataset)
+        if expected is None or members != set(expected):
+            return False
+        if any(paths.get(relative) != kind for relative, kind in expected.items()):
+            return False
+        remaining -= members
+
+    return not remaining
+
+
+def _valid_ownership_structure(
+    root: Path,
+    ownership_text: str,
+    trusted_ownership_text: str,
+) -> bool:
+    if ownership_text != trusted_ownership_text:
+        return False
+    try:
+        ownership = json.loads(ownership_text)
+    except json.JSONDecodeError:
+        return False
+    if (
+        ownership.get("format") != "quantmesh-demo-ownership"
+        or ownership.get("version") != 1
+        or ownership.get("commit") != DEMO_COMMIT
+        or not isinstance(ownership.get("entries"), list)
+    ):
+        return False
+    expected: dict[str, dict[str, str]] = {}
+    for raw in ownership["entries"]:
+        if not isinstance(raw, dict):
+            return False
+        relative = raw.get("path")
+        kind = raw.get("type")
+        if (
+            not isinstance(relative, str)
+            or not relative
+            or Path(relative).is_absolute()
+            or ".." in Path(relative).parts
+            or kind not in {"file", "directory"}
+            or relative in expected
+        ):
+            return False
+        expected_keys = {"path", "type"}
+        if kind == "file" and relative not in _MUTABLE_FILES:
+            expected_keys.add("sha256")
+        if set(raw) != expected_keys:
+            return False
+        expected_hash = raw.get("sha256")
+        if expected_hash is not None and (
+            not isinstance(expected_hash, str)
+            or len(expected_hash) != 64
+            or any(character not in "0123456789abcdef" for character in expected_hash)
+        ):
+            return False
+        expected[relative] = raw
+    actual = _walk_owned_tree(root)
+    if actual is None:
+        return False
+    for relative, entry in expected.items():
+        if actual.get(relative) != entry["type"]:
+            return False
+        expected_hash = entry.get("sha256")
+        if expected_hash is not None:
+            try:
+                actual_hash = hashlib.sha256((root / relative).read_bytes()).hexdigest()
+            except OSError:
+                return False
+            if actual_hash != expected_hash:
+                return False
+    unknown = set(actual) - set(expected)
+    return _valid_dynamic_paths(root, actual, unknown)
+
+
 def is_demo_root(root: Path) -> bool:
-    """True when the root carries the demo marker (and nothing else is
-    required — the marker is the isolation contract)."""
-    return _marker(root).is_file()
+    """Validate the versioned ownership record against seeded provenance."""
+    root = Path(root)
+    marker = _marker(root)
+    provenance_path = root / "provenance.json"
+    if (
+        not root.is_dir()
+        or _is_link_or_junction(root)
+        or not marker.is_file()
+        or _is_link_or_junction(marker)
+        or not provenance_path.is_file()
+        or _is_link_or_junction(provenance_path)
+    ):
+        return False
+    try:
+        marker_text = marker.read_text(encoding="utf-8")
+        provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return False
+    scenario = provenance.get("scenario")
+    surfaces = provenance.get("surfaces")
+    provenance_valid = (
+        isinstance(scenario, dict)
+        and scenario.get("commit") == DEMO_COMMIT
+        and isinstance(surfaces, dict)
+        and bool(surfaces)
+    )
+    if not provenance_valid:
+        return False
+    if marker_text == _legacy_marker_text():
+        return True
+    ownership_path = root / OWNERSHIP_NAME
+    if not ownership_path.is_file() or _is_link_or_junction(ownership_path):
+        return False
+    try:
+        marker_record = json.loads(marker_text)
+        ownership_text = ownership_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return False
+    ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()
+    return (
+        marker_text == _marker_text(ownership_sha256)
+        and marker_record.get("ownership_sha256") == ownership_sha256
+    )
+
+
+def _trusted_ownership_text(scenario: DemoScenario) -> str:
+    with tempfile.TemporaryDirectory(prefix="quantmesh-demo-reset-trust-") as temp_dir:
+        trusted_root = Path(temp_dir) / "demo"
+        seed_demo_root(trusted_root, scenario)
+        return (trusted_root / OWNERSHIP_NAME).read_text(encoding="utf-8")
+
+
+def _has_reset_structure(
+    root: Path,
+    scenario: DemoScenario,
+    *,
+    trusted_ownership_text: str | None = None,
+) -> bool:
+    ownership_path = root / OWNERSHIP_NAME
+    if not is_demo_root(root) or not ownership_path.is_file():
+        return False
+    try:
+        ownership_text = ownership_path.read_text(encoding="utf-8")
+        trusted_ownership_text = (
+            trusted_ownership_text
+            if trusted_ownership_text is not None
+            else _trusted_ownership_text(scenario)
+        )
+    except (DemoRootError, OSError, UnicodeDecodeError):
+        return False
+    return _valid_ownership_structure(root, ownership_text, trusted_ownership_text)
+
+
+@contextmanager
+def _interprocess_reset_lock(root: Path) -> Iterator[None]:
+    """Serialize reset callers using a stable lock outside the replaced root."""
+    lock_path = root.parent / f".{root.name}{RESET_LOCK_SUFFIX}"
+    if lock_path.exists() and (not lock_path.is_file() or _is_link_or_junction(lock_path)):
+        raise DemoRootError(f"refusing unsafe demo reset lock {lock_path}")
+    with lock_path.open("a+b") as handle:
+        handle.seek(0, os.SEEK_END)
+        if handle.tell() == 0:
+            handle.write(b"\0")
+            handle.flush()
+        handle.seek(0)
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+            try:
+                yield
+            finally:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def _unused_reset_quarantine(root: Path) -> Path:
+    """Reserve no path; merely choose a collision-resistant sibling name."""
+    descriptor, name = tempfile.mkstemp(
+        dir=root.parent,
+        prefix=f".{root.name}.reset-quarantine-",
+    )
+    os.close(descriptor)
+    os.unlink(name)
+    return Path(name)
+
+
+def retained_demo_reset_paths(root: Path) -> tuple[Path, ...]:
+    """List retained reset siblings without claiming ownership or deleting them."""
+    root = Path(root)
+    prefix = f".{root.name}.reset-quarantine-"
+    try:
+        candidates = tuple(root.parent.iterdir())
+    except OSError:
+        return ()
+    return tuple(sorted((path for path in candidates if path.name.startswith(prefix)), key=str))
+
+
+def _require_demo_tree_identity(
+    root: Path,
+    scenario: DemoScenario,
+    *,
+    trusted_ownership_text: str,
+    expected_identity: FilesystemIdentity | None = None,
+    failure_message: str,
+) -> FilesystemIdentity:
+    """Bind trusted ownership validation to one filesystem object."""
+    try:
+        identity_before = filesystem_identity(root)
+    except OSError as error:
+        raise DemoRootError(
+            f"{failure_message}: identity unavailable; preserving {root}"
+        ) from error
+    if expected_identity is not None and identity_before != expected_identity:
+        raise DemoRootError(f"{failure_message}: identity changed; preserving {root}")
+    if not _has_reset_structure(
+        root,
+        scenario,
+        trusted_ownership_text=trusted_ownership_text,
+    ):
+        raise DemoRootError(
+            f"{failure_message}: trusted ownership/structure validation failed; "
+            f"preserving {root}"
+        )
+    try:
+        identity_after = filesystem_identity(root)
+    except OSError as error:
+        raise DemoRootError(
+            f"{failure_message}: identity unavailable; preserving {root}"
+        ) from error
+    if identity_after != identity_before or (
+        expected_identity is not None and identity_after != expected_identity
+    ):
+        raise DemoRootError(f"{failure_message}: identity changed; preserving {root}")
+    return identity_after
+
+
+def _restore_original_after_publish_mismatch(
+    root: Path,
+    quarantine: Path,
+    scenario: DemoScenario,
+    *,
+    trusted_ownership_text: str,
+    root_identity: FilesystemIdentity,
+    published_identity: FilesystemIdentity | None,
+) -> tuple[Path, ...]:
+    """Retain an unexpected public object and restore the original demo.
+
+    No path is recursively deleted. The unexpected occupant is moved to a new
+    sibling and its observed identity is checked after the move before the
+    identity-bound original quarantine is restored.
+    """
+    unexpected = _unused_reset_quarantine(root)
+    retained = (unexpected,)
+    try:
+        atomic_replace(root, unexpected)
+        if (
+            published_identity is None
+            or filesystem_identity(unexpected) != published_identity
+        ):
+            raise DemoRootError(
+                "unexpected published object changed while it was quarantined",
+                retained_paths=retained,
+            )
+        _require_demo_tree_identity(
+            quarantine,
+            scenario,
+            trusted_ownership_text=trusted_ownership_text,
+            expected_identity=root_identity,
+            failure_message="original demo rollback quarantine failed identity validation",
+        )
+        if root.exists():
+            raise DemoRootError(
+                f"refusing to overwrite a new public-path occupant at {root}",
+                retained_paths=retained,
+            )
+        atomic_replace(quarantine, root)
+        _require_demo_tree_identity(
+            root,
+            scenario,
+            trusted_ownership_text=trusted_ownership_text,
+            expected_identity=root_identity,
+            failure_message="restored demo failed identity validation",
+        )
+    except DemoRootError:
+        raise
+    except (OSError, ValueError) as error:
+        raise DemoRootError(
+            f"failed to restore original demo after publish mismatch; preserving {retained}",
+            retained_paths=retained,
+        ) from error
+    return retained
+
+
+def _write_account(root: Path, account: PaperAccount) -> None:
+    descriptor, temp_name = tempfile.mkstemp(dir=root, prefix=".account.", suffix=".tmp")
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(account.model_dump_json())
+        atomic_replace(temp_name, root / "account.json")
+    finally:
+        if os.path.exists(temp_name):
+            os.unlink(temp_name)
+
+
+def persist_demo_account(root: Path, account: PaperAccount) -> None:
+    """Atomically persist the mutable demo account under its owned root."""
+    if not is_demo_root(root):
+        raise DemoRootError(f"refusing to persist account outside a marked demo root: {root}")
+    _write_account(root, account)
 
 
 def _venue(name: str) -> Venue:
@@ -294,42 +931,195 @@ def _seed_market_data(
 
 def _seed_lake(
     scenario: DemoScenario, series: dict[str, dict[str, list[float]]], root: Path
-) -> tuple[Path, dict[str, int]]:
+) -> tuple[Path, dict[str, int], tuple[DatasetBinding, ...]]:
     """One dataset per symbol: real shards + a manifest whose ``source``
     label is ``demo-synthetic`` (the lake's own provenance field)."""
     lake_root = root / "market" / "lake"
     lake = Lake(lake_root)
-    times = generators.session_times(scenario)
+    fixture_times = generators.session_times(scenario)
     # One deterministic manifest stamp for the whole bulk seed: after the
     # last seeded session, before the paper replay (the timeline the UI
     # renders reads oldest-first across surfaces).
     generated_at = scenario.anchor - timedelta(minutes=5)
     datasets: dict[str, int] = {}
+    bindings: list[DatasetBinding] = []
     for spec in (*scenario.equities, *scenario.crypto):
         closes = series[spec.venue][spec.symbol]
-        bars = [
-            Bar(
-                instrument=_instrument(spec.symbol, spec.venue, spec.kind),
-                timestamp=time,
-                interval="1d",
-                open=closes[index] * 0.998,
-                high=closes[index] * 1.004,
-                low=closes[index] * 0.996,
-                close=closes[index],
-                volume=1_000_000.0,
+        rows_by_interval: dict[str, list[dict[str, object]]]
+        if scenario.workspace_history and spec.kind == "equity" and spec.symbol in {"AAPL", "NVDA"}:
+            rows_by_interval = generators.analytical_history(
+                scenario,
+                spec,
+                target_close=closes[-1],
             )
-            for index, time in enumerate(times)
-        ]
+            if spec.symbol == "AAPL":
+                rows_by_interval = {"1d": rows_by_interval["1d"][-420:]}
+        else:
+            rows_by_interval = {
+                "1d": [
+                    {
+                        "timestamp": time,
+                        "interval": "1d",
+                        "open": closes[index] * 0.998,
+                        "high": closes[index] * 1.004,
+                        "low": closes[index] * 0.996,
+                        "close": closes[index],
+                        "volume": 1_000_000.0,
+                    }
+                    for index, time in enumerate(fixture_times)
+                ]
+            }
         dataset = f"demo-{spec.venue}-{spec.symbol.lower()}"
-        lake.write_bars(dataset, bars)
+        total = 0
+        for interval, rows in rows_by_interval.items():
+            bars = [
+                Bar(
+                    instrument=_instrument(spec.symbol, spec.venue, spec.kind),
+                    timestamp=row["timestamp"],
+                    interval=interval,
+                    open=float(row["open"]),
+                    high=float(row["high"]),
+                    low=float(row["low"]),
+                    close=float(row["close"]),
+                    volume=float(row["volume"]),
+                )
+                for row in rows
+            ]
+            lake.write_bars(dataset, bars)
+            total += len(bars)
+            bindings.append(
+                DatasetBinding(
+                    dataset_id=dataset,
+                    interval=interval,
+                    venue=_venue(spec.venue),
+                    symbol=spec.symbol,
+                    calendar="XNYS" if spec.kind == "equity" else "24/7",
+                    adjustment="unadjusted",
+                )
+            )
         ManifestWriter(lake_root).generate(
             dataset,
             source="demo-synthetic",
             license="QuantMesh deterministic demo",
+            data_class=DatasetClass.SYNTHETIC,
             generated_at=generated_at,
         )
-        datasets[dataset] = len(bars)
-    return lake_root, datasets
+        datasets[dataset] = total
+    return lake_root, datasets, tuple(bindings)
+
+
+def _history_service(
+    lake_root: Path,
+    bindings: tuple[DatasetBinding, ...],
+    *,
+    scenario: DemoScenario,
+) -> HistoryService:
+    lake = Lake(lake_root)
+    return HistoryService(
+        bindings,
+        dataset_loader=lake.dataset,
+        now=lambda: scenario.anchor,
+    )
+
+
+def _history_bindings_from_lake(
+    lake_root: Path,
+    scenario: DemoScenario,
+) -> tuple[DatasetBinding, ...]:
+    lake = Lake(lake_root)
+    bindings: list[DatasetBinding] = []
+    for spec in (*scenario.equities, *scenario.crypto):
+        dataset_id = f"demo-{spec.venue}-{spec.symbol.lower()}"
+        dataset = lake.dataset(dataset_id)
+        for coverage in dataset.manifest.coverage:
+            bindings.append(
+                DatasetBinding(
+                    dataset_id=dataset_id,
+                    interval=coverage.interval,
+                    venue=coverage.venue,
+                    symbol=coverage.symbol,
+                    calendar="XNYS" if spec.kind == "equity" else "24/7",
+                    adjustment="unadjusted",
+                )
+            )
+    return tuple(bindings)
+
+
+def _forecast_series(
+    lake_root: Path,
+    *,
+    scenario: DemoScenario,
+    symbol: str,
+    sessions: int,
+) -> HistoricalSeries:
+    dataset_id = f"demo-moomoo-{symbol.lower()}"
+    dataset = Lake(lake_root).dataset(dataset_id)
+    observed = dataset.read_bars(
+        interval="1d",
+        venue=Venue.MOOMOO,
+        symbol=symbol,
+    )[-sessions:]
+    coverage = next(
+        item
+        for item in dataset.manifest.coverage
+        if item.interval == "1d" and item.venue is Venue.MOOMOO and item.symbol == symbol
+    )
+    bars = tuple(
+        HistoricalBar(
+            instrument=item.instrument,
+            timestamp=item.timestamp,
+            interval=item.interval,
+            open=item.open,
+            high=item.high,
+            low=item.low,
+            close=item.close,
+            volume=item.volume,
+        )
+        for item in observed
+    )
+    return HistoricalSeries(
+        instrument=bars[0].instrument,
+        range=HistoryRange.ONE_YEAR,
+        as_of=scenario.anchor,
+        bars=bars,
+        dataset_id=dataset_id,
+        dataset_revision=dataset.manifest.revision,
+        source=dataset.manifest.source,
+        license=dataset.manifest.license,
+        generated_at=dataset.manifest.generated_at,
+        interval="1d",
+        calendar="XNYS",
+        adjustment="unadjusted",
+        coverage=CoverageSnapshot.model_validate(coverage.model_dump()),
+        limitations=("Deterministic demo-synthetic analytical history.",),
+    )
+
+
+def _seed_price_forecasts(
+    scenario: DemoScenario,
+    root: Path,
+    lake_root: Path,
+    bindings: tuple[DatasetBinding, ...],
+) -> PriceForecastRegistry:
+    registry = PriceForecastRegistry(
+        root / "research" / "price-forecasts",
+        lake_root=lake_root,
+        bindings=bindings,
+    )
+    for symbol, sessions in (("AAPL", 420), ("NVDA", 650)):
+        series = _forecast_series(
+            lake_root,
+            scenario=scenario,
+            symbol=symbol,
+            sessions=sessions,
+        )
+        artifact = run_price_forecast(
+            series,
+            generated_at=scenario.anchor,
+            model_version="demo-drift-conformal-v1",
+        )
+        registry.record(artifact)
+    return registry
 
 
 def _seed_account(
@@ -754,16 +1544,44 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
             f"demo root {root} is already seeded — use reset_demo_root "
             "(re-seeding is explicit, never silent)"
         )
-    root.mkdir(parents=True, exist_ok=True)
-    _marker(root).write_text(
-        "deterministic demo root — reset deletes only this tree\n", encoding="utf-8"
-    )
+    if root.exists():
+        if not root.is_dir():
+            raise DemoRootError(f"demo root {root} exists and is not a directory")
+        if _is_link_or_junction(root):
+            raise DemoRootError(f"demo root {root} is a link or junction")
+        if any(root.iterdir()):
+            raise DemoRootError(
+                f"refusing to claim non-empty unmarked directory {root} as a demo root"
+            )
+    else:
+        root.mkdir(parents=True, exist_ok=False)
+    marker = _marker(root)
+    with marker.open("x", encoding="utf-8") as handle:
+        handle.write(_claim_marker_text())
+    unexpected = [path for path in root.iterdir() if path != marker]
+    if unexpected:
+        marker.unlink()
+        raise DemoRootError(f"demo root {root} changed while ownership was established")
 
     draw = generators._Draw(scenario.seed)
     series = generators.series_map(draw, scenario)
 
     fixture_rows, providers, _fixture_dir = _seed_market_data(scenario, draw, root, series)
-    lake_root, dataset_rows = _seed_lake(scenario, series, root)
+    lake_root, dataset_rows, history_bindings = _seed_lake(scenario, series, root)
+    history = _history_service(lake_root, history_bindings, scenario=scenario)
+    price_forecasts = PriceForecastRegistry(
+        root / "research" / "price-forecasts",
+        lake_root=lake_root,
+        bindings=history_bindings,
+    )
+    if scenario.workspace_history:
+        price_forecasts = _seed_price_forecasts(
+            scenario,
+            root,
+            lake_root,
+            history_bindings,
+        )
+    proposal_ledger = ProposalLedger(root / "orders" / "proposals")
     account, marks, markets, order_quotes = _seed_account(scenario, series, draw)
 
     research_rows = _seed_research(scenario, draw, root, lake_root, series)
@@ -786,8 +1604,17 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         journal.record(order)
 
     watchlist = WatchlistStore(root=root / "watchlists")
-    for symbol in ("BTC-USD", "AAPL", "NVDA", "SOL-USD"):
-        watchlist.add(symbol, now=scenario.anchor - timedelta(hours=1))
+    for venue, symbol in (
+        (Venue.HYPERLIQUID, "BTC-USD"),
+        (Venue.MOOMOO, "AAPL"),
+        (Venue.MOOMOO, "NVDA"),
+        (Venue.HYPERLIQUID, "SOL-USD"),
+    ):
+        watchlist.add(
+            symbol,
+            venue=venue,
+            now=scenario.anchor - timedelta(hours=1),
+        )
 
     enablement = ApprovalLedger(root=root / "enablement")
     enablement.request(
@@ -809,6 +1636,9 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     rows = {
         **fixture_rows,  # keys already carry the market: provenance prefix
         **{f"lake:{name}": count for name, count in dataset_rows.items()},
+        "history": sum(dataset_rows.values()),
+        "price_forecasts": len(price_forecasts.all()),
+        "paper_proposals": 0,
         "orders": len(order_quotes),
         **research_rows,
         **forecast_rows,
@@ -817,6 +1647,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     provenance = {
         "scenario": {
             "seed": scenario.seed,
+            "workspace_history": scenario.workspace_history,
             "anchor": scenario.anchor.isoformat(),
             "open": scenario.open.isoformat(),
             "commit": DEMO_COMMIT,
@@ -824,7 +1655,15 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         "surfaces": _provenance_rows(rows, scenario.anchor),
     }
     (root / "provenance.json").write_text(json.dumps(provenance, indent=1), encoding="utf-8")
-    (root / "account.json").write_text(account.model_dump_json(), encoding="utf-8")
+    _write_account(root, account)
+    proposal_root = root / "orders" / "proposals"
+    proposal_root.mkdir(parents=True, exist_ok=True)
+    (proposal_root / ".proposals.lock").write_text("", encoding="utf-8")
+    (proposal_root / "proposals.jsonl").write_text("", encoding="utf-8")
+    ownership_text = _ownership_text(root)
+    (root / OWNERSHIP_NAME).write_text(ownership_text, encoding="utf-8")
+    ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()
+    marker.write_text(_marker_text(ownership_sha256), encoding="utf-8")
 
     return DemoSeeded(
         root=root,
@@ -844,6 +1683,9 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         documents=DocumentIndex(root=root / "documents"),
         enablement=enablement,
         providers=providers,
+        history=history,
+        price_forecasts=price_forecasts,
+        proposal_ledger=proposal_ledger,
         provenance=provenance,
     )
 
@@ -888,6 +1730,13 @@ def load_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         for venue, symbols in series.items()
     }
     provenance = json.loads((root / "provenance.json").read_text(encoding="utf-8"))
+    lake_root = root / "market" / "lake"
+    history_bindings = _history_bindings_from_lake(lake_root, scenario)
+    history = _history_service(
+        lake_root,
+        history_bindings,
+        scenario=scenario,
+    )
     return DemoSeeded(
         root=root,
         scenario=scenario,
@@ -910,6 +1759,13 @@ def load_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         documents=DocumentIndex(root=root / "documents"),
         enablement=ApprovalLedger(root=root / "enablement"),
         providers=providers,
+        history=history,
+        price_forecasts=PriceForecastRegistry(
+            root / "research" / "price-forecasts",
+            lake_root=lake_root,
+            bindings=history_bindings,
+        ),
+        proposal_ledger=ProposalLedger(root / "orders" / "proposals"),
         provenance=provenance,
     )
 
@@ -921,23 +1777,186 @@ def _load_scenario(root: Path, default: DemoScenario) -> DemoScenario:
     scenario = provenance.get("scenario", {})
     return DemoScenario(
         seed=int(scenario.get("seed", default.seed)),
+        workspace_history=bool(scenario.get("workspace_history", default.workspace_history)),
         anchor=datetime.fromisoformat(scenario["anchor"]),
         open=datetime.fromisoformat(scenario["open"]),
     )
 
 
-def reset_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoSeeded:
-    """Wipe and re-seed a demo root, marker-guarded.
+def reset_demo_root(
+    root: Path,
+    scenario: DemoScenario = DemoScenario(),
+    *,
+    trusted_ownership_text: str | None = None,
+    trusted_reset_archive: bytes | None = None,
+) -> DemoSeeded:
+    """Atomically replace a demo root and retain the old tree for recovery.
 
     The marker is the isolation contract: without it the root is not a
     demo root and reset refuses to touch it — a non-demo directory can
-    never be wiped by the demo runtime.
+    never be replaced by the demo runtime. Reset never recursively deletes
+    a runtime path because an external process could swap that path after
+    validation.
     """
     root = Path(root)
-    if not is_demo_root(root):
-        raise DemoRootError(
-            f"refusing to reset {root}: no {MARKER_NAME} marker — "
-            "the demo runtime never touches a non-demo root"
+    with _interprocess_reset_lock(root):
+        # Build the independent expected inventory once. Both the public-path
+        # check and the identity-bound quarantine check compare against this
+        # same immutable truth; regenerating it twice adds no safety property
+        # and makes full-history resets exceed the operator timeout.
+        trusted_ownership_text = (
+            trusted_ownership_text
+            if trusted_ownership_text is not None
+            else (_trusted_ownership_text(scenario) if is_demo_root(root) else None)
         )
-    shutil.rmtree(root)
-    return seed_demo_root(root, scenario)
+        try:
+            root_identity = filesystem_identity(root)
+        except OSError:
+            root_identity = None
+        if (
+            trusted_ownership_text is None
+            or root_identity is None
+            or not _has_reset_structure(
+                root,
+                scenario,
+                trusted_ownership_text=trusted_ownership_text,
+            )
+        ):
+            marker_note = (
+                f"no {MARKER_NAME} marker"
+                if not _marker(root).is_file()
+                else "no valid demo ownership record and complete seeded structure"
+            )
+            raise DemoRootError(
+                f"refusing to reset {root}: {marker_note} — "
+                "the demo runtime never touches a non-demo root"
+            )
+        try:
+            if filesystem_identity(root) != root_identity:
+                raise DemoRootError(
+                    f"refusing to reset {root}: filesystem identity changed during "
+                    "trusted ownership validation"
+                )
+        except OSError as error:
+            raise DemoRootError(
+                f"refusing to reset {root}: filesystem identity unavailable after "
+                "trusted ownership validation"
+            ) from error
+
+        # Construct the replacement before moving the served root. This keeps
+        # the public demo available during deterministic generation and turns
+        # publication into two bounded atomic renames. The sibling
+        # starts empty and unmarked, so ``seed_demo_root`` retains ownership of
+        # every byte it creates.
+        replacement = _unused_reset_quarantine(root)
+        try:
+            if trusted_reset_archive is None:
+                seed_demo_root(replacement, scenario)
+            else:
+                _restore_demo_reset_archive(trusted_reset_archive, replacement)
+                load_demo_root(replacement, scenario)
+        except BaseException as error:
+            if replacement.exists():
+                raise DemoRootError(
+                    f"reset replacement could not establish trusted ownership; "
+                    f"preserving {replacement}"
+                ) from error
+            raise
+        replacement_identity = _require_demo_tree_identity(
+            replacement,
+            scenario,
+            trusted_ownership_text=trusted_ownership_text,
+            failure_message="reset replacement failed identity validation",
+        )
+
+        # Move the exact directory object away from the public path first,
+        # then validate the quarantined object again. Runtime reset never
+        # recursively deletes the quarantine or replacement: path identity
+        # cannot stay bound between a completed validation and path-based
+        # recursive deletion. Every leftover is retained for operator recovery.
+        quarantine = _unused_reset_quarantine(root)
+        try:
+            atomic_replace(root, quarantine)
+            _require_demo_tree_identity(
+                quarantine,
+                scenario,
+                trusted_ownership_text=trusted_ownership_text,
+                expected_identity=root_identity,
+                failure_message=(
+                    f"demo root {root} changed after it was quarantined; "
+                    "preserving paths because identity or ownership changed"
+                ),
+            )
+            atomic_replace(replacement, root)
+            try:
+                published_identity = filesystem_identity(root)
+            except OSError:
+                published_identity = None
+            if published_identity != replacement_identity:
+                retained = _restore_original_after_publish_mismatch(
+                    root,
+                    quarantine,
+                    scenario,
+                    trusted_ownership_text=trusted_ownership_text,
+                    root_identity=root_identity,
+                    published_identity=published_identity,
+                )
+                raise DemoRootError(
+                    "published replacement identity did not match the validated replacement; "
+                    f"restored the original demo and retained {retained}",
+                    retained_paths=retained,
+                )
+            try:
+                _require_demo_tree_identity(
+                    root,
+                    scenario,
+                    trusted_ownership_text=trusted_ownership_text,
+                    expected_identity=replacement_identity,
+                    failure_message="published reset replacement failed identity validation",
+                )
+            except DemoRootError as error:
+                retained = _restore_original_after_publish_mismatch(
+                    root,
+                    quarantine,
+                    scenario,
+                    trusted_ownership_text=trusted_ownership_text,
+                    root_identity=root_identity,
+                    published_identity=published_identity,
+                )
+                raise DemoRootError(
+                    "published replacement failed trusted structure validation; "
+                    f"restored the original demo and retained {retained}",
+                    retained_paths=retained,
+                ) from error
+            try:
+                seeded = load_demo_root(root, scenario)
+            except BaseException as error:
+                retained = _restore_original_after_publish_mismatch(
+                    root,
+                    quarantine,
+                    scenario,
+                    trusted_ownership_text=trusted_ownership_text,
+                    root_identity=root_identity,
+                    published_identity=published_identity,
+                )
+                raise DemoRootError(
+                    "published replacement failed final load; "
+                    f"restored the original demo and retained {retained}",
+                    retained_paths=retained,
+                ) from error
+        except BaseException:
+            if not root.exists() and quarantine.exists():
+                try:
+                    quarantine_is_original = (
+                        filesystem_identity(quarantine) == root_identity
+                    )
+                except OSError:
+                    quarantine_is_original = False
+                if quarantine_is_original:
+                    atomic_replace(quarantine, root)
+            raise
+
+        # Return the assembly loaded inside the rollback boundary. The old
+        # identity-validated tree remains at ``quarantine`` for an operator to
+        # inspect and remove outside the running reset boundary.
+        return seeded

@@ -38,7 +38,13 @@ from pydantic import BaseModel, ValidationError, model_validator
 
 from quantmesh.data.lake import Lake
 from quantmesh.data.layout import shards_in, validate_dataset_name
-from quantmesh.data.manifest import MANIFEST_NAME, DatasetManifest, ManifestWriter, scan_series
+from quantmesh.data.manifest import (
+    MANIFEST_NAME,
+    DatasetClass,
+    DatasetManifest,
+    ManifestWriter,
+    scan_series,
+)
 from quantmesh.data.providers import ProviderRegistry
 from quantmesh.domain.market_data import Bar, interval_to_timedelta
 from quantmesh.domain.models import Instrument, Venue
@@ -72,11 +78,13 @@ class Ingestor:
         *,
         source: str = "ingestion",
         license: str = "fixture-only",
+        data_class: DatasetClass | None = None,
     ) -> None:
         self.registry = registry
         self.lake = Lake(lake_root if lake_root is not None else settings.lake_root)
         self.source = source
         self.license = license
+        self.data_class = data_class
 
     def ingest(self, job: IngestionJob) -> DatasetManifest | None:
         """Fetch new bars for the job and land them, then re-manifest.
@@ -115,6 +123,7 @@ class Ingestor:
             job.dataset,
             source=self.source,
             license=self.license,
+            data_class=self.data_class,
             rewritten=frozenset([(job.interval, job.instrument.venue, job.instrument.symbol)]),
         )
 
@@ -167,7 +176,10 @@ class Ingestor:
             self.lake.dataset(job.dataset)
         except ValueError:
             return ManifestWriter(self.lake.root).generate(
-                job.dataset, source=self.source, license=self.license
+                job.dataset,
+                source=self.source,
+                license=self.license,
+                data_class=self.data_class,
             )
         return None
 

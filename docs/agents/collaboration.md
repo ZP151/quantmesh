@@ -6,6 +6,10 @@ QuantMesh uses an issue-driven, role-based workflow. The main agent coordinates 
 
 For multi-session objectives, `/goal` is the durable coordinator. It restores state from `docs/goals/ACTIVE.md`, Git, GitHub and the iteration ledger before choosing the next unblocked slice.
 
+Codex and Claude Code share the tracked plan and recovery protocol in
+`docs/agents/cross-agent-execution.md`. Superpowers plans under
+`docs/superpowers/` are repository artifacts that either agent may execute.
+
 ## Standard sequence
 
 1. **Intake**: Read the GitHub issue, domain context, roadmap and active iteration.
@@ -31,7 +35,7 @@ Every handoff states:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\ruff.exe check src tests scripts
+.\.venv\Scripts\ruff.exe check src tests tools
 git diff --check
 git submodule status
 ```

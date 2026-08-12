@@ -1,6 +1,6 @@
 # Iteration 0016 — Global Preferences and Workstation Continuity
 
-Status: active
+Status: completed (PR #97 squash-merged at `3514c18`)
 Started: 2026-08-10
 Baseline: `origin/main` / `v0.1.0-rc5` (`cc8bde8`)
 Branch: `0016-global-preferences`

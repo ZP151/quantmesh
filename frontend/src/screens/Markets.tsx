@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api } from '@/lib/api'
+import { instrumentPath } from '@/lib/instrument-route'
 import { money, venueLabel } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 import { cn } from '@/lib/utils'
@@ -26,7 +27,7 @@ export function MarketsScreen() {
       title={t('screen.markets.title')}
       description={t('screen.markets.description')}
       actions={
-        <Button variant="outline" size="sm" render={<Link to="/trading/order" />}>
+        <Button nativeButton={false} variant="outline" size="sm" render={<Link to="/trading/order" />}>
           <Activity className="size-3.5" aria-hidden /> {t('screen.markets.paperOrder')}
         </Button>
       }
@@ -76,11 +77,19 @@ export function MarketsScreen() {
                           .filter((instrument) => instrument.venue === entry.venue)
                           .map((instrument) => (
                             <tr key={`${instrument.venue}:${instrument.symbol}`} className="border-b border-border/60 last:border-0">
-                              <td className="py-2 pr-4 font-mono font-medium">{instrument.symbol}</td>
+                              <td className="py-2 pr-4 font-mono font-medium">
+                                <Link
+                                  className="underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                  to={instrumentPath(instrument.venue, instrument.symbol)}
+                                >
+                                  {instrument.symbol}
+                                </Link>
+                              </td>
                               <td className="py-2 pr-4 text-right font-mono tabular-nums">{money(instrument.mark)}</td>
                               <td className="py-2 pr-4 font-mono text-xs text-muted-foreground">{instrument.venue}</td>
                               <td className="py-2 text-right">
                                 <Button
+                                  nativeButton={false}
                                   size="sm"
                                   variant="outline"
                                   render={

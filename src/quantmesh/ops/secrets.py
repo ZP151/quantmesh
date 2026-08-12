@@ -16,6 +16,8 @@ import tempfile
 from pathlib import Path
 from typing import Protocol
 
+from quantmesh._fs import atomic_replace
+
 _NAME_PATTERN = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
 
 
@@ -62,7 +64,7 @@ class KeyFileStore:
         try:
             with os.fdopen(descriptor, "wb") as handle:
                 handle.write(value)
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)

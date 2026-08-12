@@ -1,51 +1,47 @@
 // Formatting helpers shared by every screen. Everything is a
 // deterministic render of kernel numbers — no wall-clock state.
 
-const moneyFormat = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
+type DisplayLocale = 'en' | 'zh-CN'
 
-const moneyPrecisionFormat = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 4,
-  maximumFractionDigits: 6,
-})
+function intlLocale(locale: DisplayLocale = 'en'): string {
+  return locale === 'zh-CN' ? 'zh-CN' : 'en-US'
+}
 
-const numberFormat = new Intl.NumberFormat('en-US', {
-  maximumFractionDigits: 4,
-})
-
-const percentFormat = new Intl.NumberFormat('en-US', {
-  style: 'percent',
-  maximumFractionDigits: 2,
-})
-
-export function money(value: number | null | undefined): string {
+export function money(value: number | null | undefined, locale: DisplayLocale = 'en'): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '—'
-  return moneyFormat.format(value)
+  return new Intl.NumberFormat(intlLocale(locale), {
+    currency: 'USD',
+    style: 'currency',
+  }).format(value)
 }
 
 /** Money at the precision the kernel produces (avg fill prices, marks). */
-export function moneyPrecise(value: number | null | undefined): string {
+export function moneyPrecise(value: number | null | undefined, locale: DisplayLocale = 'en'): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '—'
-  return moneyPrecisionFormat.format(value)
+  return new Intl.NumberFormat(intlLocale(locale), {
+    currency: 'USD',
+    maximumFractionDigits: 6,
+    minimumFractionDigits: 4,
+    style: 'currency',
+  }).format(value)
 }
 
-export function number(value: number | null | undefined): string {
+export function number(value: number | null | undefined, locale: DisplayLocale = 'en'): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '—'
-  return numberFormat.format(value)
+  return new Intl.NumberFormat(intlLocale(locale), { maximumFractionDigits: 4 }).format(value)
 }
 
-export function quantity(value: number | null | undefined): string {
+export function quantity(value: number | null | undefined, locale: DisplayLocale = 'en'): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '—'
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 6 }).format(value)
+  return new Intl.NumberFormat(intlLocale(locale), { maximumFractionDigits: 6 }).format(value)
 }
 
-export function percent(value: number | null | undefined): string {
+export function percent(value: number | null | undefined, locale: DisplayLocale = 'en'): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '—'
-  return percentFormat.format(value)
+  return new Intl.NumberFormat(intlLocale(locale), {
+    maximumFractionDigits: 2,
+    style: 'percent',
+  }).format(value)
 }
 
 export function pnlClass(value: number | null | undefined): string {
@@ -57,16 +53,14 @@ export function shortHash(value: string): string {
   return value.length > 12 ? `${value.slice(0, 8)}…${value.slice(-4)}` : value
 }
 
-const dateTimeFormat = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-})
-
-export function dateTime(value: string): string {
+export function dateTime(value: string, locale: DisplayLocale = 'en'): string {
   const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? value : dateTimeFormat.format(parsed)
+  return Number.isNaN(parsed.getTime()) ? value : new Intl.DateTimeFormat(intlLocale(locale), {
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+  }).format(parsed)
 }
 
 const timeOfDayFormat = new Intl.DateTimeFormat('en-US', {

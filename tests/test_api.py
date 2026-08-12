@@ -146,10 +146,12 @@ def test_pnl_names_positions_without_marks() -> None:
 
     body = test_client.get("/pnl").json()
 
-    # Equity-based numbers exclude the unmarked position, but never
-    # silently: the missing mark is named.
+    # An unmarked held position makes valuation incomplete; cash alone must
+    # never be presented as if it were exact account equity.
     assert body["missing_marks"] == [POSITION_KEY]
-    assert body["equity"] == pytest.approx(hold_only.cash)
+    assert body["valuation_complete"] is False
+    assert body["equity"] is None
+    assert body["total_pnl"] is None
 
 
 def test_position_without_a_mark_reports_null_unrealized() -> None:

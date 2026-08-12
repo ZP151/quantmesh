@@ -141,7 +141,7 @@ class TestPredictionBoard:
         rows = demo_board().render(
             {
                 "instruments": {
-                    "0xasset-btc-100k": {
+                    "polymarket:0xasset-btc-100k": {
                         "venue": "polymarket",
                         "kinds": {
                             "quote": {
@@ -162,7 +162,7 @@ class TestPredictionBoard:
                             },
                         },
                     },
-                    "KXBTD-26JUN26-1000-C": {
+                    "kalshi:KXBTD-26JUN26-1000-C": {
                         "venue": "kalshi",
                         "kinds": {
                             "quote": {
@@ -196,7 +196,7 @@ class TestPredictionBoard:
         rows = demo_board().render(
             {
                 "instruments": {
-                    "0xasset-solo": {
+                    "polymarket:0xasset-solo": {
                         "venue": "polymarket",
                         "kinds": {
                             "quote": {
@@ -217,7 +217,7 @@ class TestPredictionBoard:
         rows = demo_board().render(
             {
                 "instruments": {
-                    "0xasset-btc-100k": {
+                    "polymarket:0xasset-btc-100k": {
                         "venue": "polymarket",
                         "kinds": {
                             "quote": {

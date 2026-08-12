@@ -49,7 +49,7 @@ import asyncio
 from collections.abc import Callable, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field, replace
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Literal
 from urllib.parse import quote, urlsplit
@@ -64,16 +64,36 @@ from quantmesh import __version__
 from quantmesh.ai.decisions import DecisionLog
 from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.api.app import _order_summary, create_app
-from quantmesh.api.watchlist import WatchlistError, WatchlistStore
-from quantmesh.domain.models import Venue
+from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
+from quantmesh.domain.models import Instrument, Quote, Venue
 from quantmesh.domain.orders import Order
 from quantmesh.events.forecast import ForecastReportRegistry, forecast_artifact_paths
 from quantmesh.events.mapping import MappingLedger
+from quantmesh.execution.account_store import (
+    PaperAccountFile,
+    PaperAccountStore,
+    recover_account_from_journal,
+)
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
+from quantmesh.instruments.api import instrument_router
+from quantmesh.instruments.forecast import PriceForecastRegistry
+from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.live_history import LiveHistoryService
+from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
+from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.api import live_router
+from quantmesh.live.contract import UpdateKind
+from quantmesh.live.directory import build_live_market_directory
 from quantmesh.live.feed import LiveFeed
+from quantmesh.live.fence import QuoteFence
+from quantmesh.live.marks import (
+    AccountValuationSnapshot,
+    LiveMarkSnapshot,
+    account_valuation_snapshot,
+    live_mark_snapshot,
+)
 from quantmesh.live.prediction import PredictionBoard
 from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
@@ -192,7 +212,7 @@ class PageContext:
 
     account: PaperAccount
     marks: Mapping[str, float] = field(default_factory=dict)
-    markets: Mapping[str, Mapping[str, float]] = field(default_factory=dict)
+    markets: Mapping[str, Mapping[str, float | None]] = field(default_factory=dict)
     watchlist: WatchlistStore | None = None
     experiments: ExperimentRegistry | None = None
     promotions: PromotionLedger | None = None
@@ -218,16 +238,21 @@ class Page:
     label: str
 
 
-def _mark_for(markets: Mapping[str, Mapping[str, float]], symbol: str) -> float | None:
-    """The first venue's mark for a symbol, venues sorted — deterministic."""
-    for venue in sorted(markets):
-        if symbol in markets[venue]:
-            return markets[venue][symbol]
-    return None
+def _watchlist_entry(
+    markets: Mapping[str, Mapping[str, float | None]],
+    record: WatchlistRecord,
+) -> dict[str, object]:
+    venue = record.venue.value if record.venue is not None else None
+    mark = markets.get(venue, {}).get(record.symbol) if venue is not None else None
+    return {"venue": venue, "symbol": record.symbol, "mark": mark}
 
 
 def _overview_provider(context: PageContext) -> dict[str, object]:
-    account = context.account
+    valuation = account_valuation_snapshot(
+        context.account,
+        LiveMarkSnapshot(marks=dict(context.marks), statuses={}),
+    )
+    account = valuation.account
     venues = []
     for venue in sorted(context.markets):
         instruments = [
@@ -237,8 +262,11 @@ def _overview_provider(context: PageContext) -> dict[str, object]:
         venues.append({"venue": venue, "instruments": instruments})
     watchlist_entries = (
         [
-            {"symbol": record.symbol, "mark": _mark_for(context.markets, record.symbol)}
-            for record in sorted(context.watchlist.all(), key=lambda item: item.symbol)
+            _watchlist_entry(context.markets, record)
+            for record in sorted(
+                context.watchlist.all(),
+                key=lambda item: (item.symbol, item.venue.value if item.venue else ""),
+            )
         ]
         if context.watchlist is not None
         else []
@@ -249,11 +277,13 @@ def _overview_provider(context: PageContext) -> dict[str, object]:
             "starting_cash": (
                 account.starting_cash if account.starting_cash is not None else account.cash
             ),
-            "equity": account.equity(context.marks),
+            "equity": account.equity(valuation.marks) if valuation.complete else None,
             "kill_switch": account.kill_switch,
         },
-        "marks": dict(context.marks),
-        "missing_marks": sorted(key for key in account.positions if key not in context.marks),
+        "marks": dict(valuation.marks),
+        "missing_marks": list(valuation.missing_marks),
+        "valuation_complete": valuation.complete,
+        "valuation_reason": valuation.reason,
         "venues": venues,
         "watchlist": watchlist_entries,
     }
@@ -271,10 +301,13 @@ def _instruments_provider(context: PageContext) -> dict[str, object]:
 def _watchlist_provider(context: PageContext) -> dict[str, object]:
     records = context.watchlist.all() if context.watchlist is not None else []
     entries = [
-        {"symbol": record.symbol, "mark": _mark_for(context.markets, record.symbol)}
-        for record in sorted(records, key=lambda item: item.symbol)
+        _watchlist_entry(context.markets, record)
+        for record in sorted(
+            records,
+            key=lambda item: (item.symbol, item.venue.value if item.venue else ""),
+        )
     ]
-    return {"entries": entries}
+    return {"entries": entries, "venues": sorted(context.markets)}
 
 
 def _fmt_parameter(value: object) -> str:
@@ -761,6 +794,20 @@ def _json_context(request: Request) -> PageContext:
     context = getattr(request.app.state, "page_context", None)
     if context is None:
         raise HTTPException(status_code=404, detail="no workstation context is attached")
+    provider = getattr(request.app.state, "mark_snapshot_provider", None)
+    if callable(provider):
+        state = provider()
+        if isinstance(state, AccountValuationSnapshot):
+            return replace(
+                context,
+                account=state.account,
+                marks=dict(state.marks),
+            )
+        return replace(
+            context,
+            account=request.app.state.account,
+            marks=dict(state["marks"]),
+        )
     return context
 
 
@@ -825,10 +872,8 @@ def spa_router() -> APIRouter:
     @router.post("/kill-switch")
     def kill_switch_json(request: Request, body: _KillSwitchBody) -> dict[str, object]:
         _json_guard_origin(request, "kill-switch")
-        context = _json_context(request)
-        if body.venue is None:
-            flipped = context.account.model_copy(update={"kill_switch": body.action == "engage"})
-        else:
+        venue_enum = None
+        if body.venue is not None:
             try:
                 venue_enum = Venue(body.venue)
             except ValueError:
@@ -836,16 +881,20 @@ def spa_router() -> APIRouter:
                     status_code=422,
                     detail=f"kill-switch POST refused: unknown venue {body.venue!r}",
                 ) from None
-            kill_switches = dict(context.account.kill_switches)
+
+        def flip(current: PaperAccount) -> PaperAccount:
+            if venue_enum is None:
+                return current.model_copy(update={"kill_switch": body.action == "engage"})
+            kill_switches = dict(current.kill_switches)
             if body.action == "engage":
                 kill_switches[venue_enum] = True
             else:
                 kill_switches.pop(venue_enum, None)
-            flipped = context.account.model_copy(update={"kill_switches": kill_switches})
-        flipped_context = replace(context, account=flipped)
-        request.app.state.account = flipped
-        request.app.state.page_context = flipped_context
-        return _kill_switch_provider(flipped_context)
+            return current.model_copy(update={"kill_switches": kill_switches})
+
+        store: PaperAccountStore = request.app.state.account_store
+        flipped = store.update(flip)
+        return _kill_switch_provider(replace(_json_context(request), account=flipped))
 
     return router
 
@@ -968,7 +1017,7 @@ def create_workstation_app(
     *,
     account: PaperAccount,
     marks: dict[str, float] | None = None,
-    markets: Mapping[str, Mapping[str, float]] | None = None,
+    markets: Mapping[str, Mapping[str, float | None]] | None = None,
     watchlist: WatchlistStore | None = None,
     experiments: ExperimentRegistry | None = None,
     promotions: PromotionLedger | None = None,
@@ -981,6 +1030,12 @@ def create_workstation_app(
     documents: DocumentIndex | None = None,
     hl_posture: HyperliquidRiskLimits | None = None,
     enablement: ApprovalLedger | None = None,
+    history: HistoryService | None = None,
+    price_forecasts: PriceForecastRegistry | None = None,
+    proposal_ledger: ProposalLedger | None = None,
+    account_sink: Callable[[PaperAccount], None] | None = None,
+    demo_quote_provider: Callable[[Instrument, datetime], Quote] | None = None,
+    workspace_clock: Callable[[], datetime] | None = None,
     live_feed: LiveFeed | None = None,
     prediction: PredictionBoard | None = None,
     host: str | None = None,
@@ -1008,7 +1063,11 @@ def create_workstation_app(
     owned and never permitted from the UI. The kill-switch POST flips
     the injected account's flag in both `app.state` and the page
     context, so the JSON surface and every page agree (ADR-0011
-    decision 6). `live_feed` (iteration 0015 Phase C) attaches the live
+    decision 6). `history` (iteration 0020 Task 6) attaches the
+    manifest-gated historical instrument service. Its read-only router
+    mounts at both the root and `/api`; without the service it returns a
+    typed 404 and never constructs data inside a request. `live_feed`
+    (iteration 0015 Phase C) attaches the live
     read-only feed: the /api/live surface mounts either way (404
     without a feed), and an attached feed starts its pump with the app
     lifespan and stops it on shutdown. `prediction` (iteration 0015
@@ -1044,6 +1103,84 @@ def create_workstation_app(
         hl_posture=hl_posture,
         enablement=enablement,
     )
+    effective_history = (
+        LiveHistoryService(history, live_feed) if live_feed is not None else history
+    )
+    app.state.history = effective_history
+    app.state.price_forecasts = price_forecasts
+    clock = workspace_clock if workspace_clock is not None else lambda: datetime.now(UTC)
+    app.state.instrument_clock = clock
+
+    def publish_account(updated: PaperAccount) -> None:
+        if account_sink is not None:
+            account_sink(updated)
+        app.state.account = updated
+        app.state.page_context = replace(app.state.page_context, account=updated)
+
+    account_store = PaperAccountStore(account, publish=publish_account)
+    app.state.account_store = account_store
+
+    def mark_snapshot_provider(as_of: datetime | None = None) -> AccountValuationSnapshot:
+        valuation_at = clock() if as_of is None else as_of
+        current = account_store.get()
+        if live_feed is None:
+            return account_valuation_snapshot(
+                current,
+                LiveMarkSnapshot(marks=dict(app.state.marks), statuses={}),
+            )
+        snapshot = live_mark_snapshot(
+            current,
+            base_marks=dict(app.state.marks),
+            feed=live_feed,
+            as_of=valuation_at,
+        )
+        return account_valuation_snapshot(current, snapshot)
+
+    app.state.mark_snapshot_provider = mark_snapshot_provider
+
+    def replace_account(updated: PaperAccount) -> None:
+        account_store.replace(updated)
+
+    app.state.replace_account = replace_account
+
+    paper_decisions = None
+    if price_forecasts is not None and proposal_ledger is not None:
+        paper_decisions = PaperDecisionService(
+            ledger=proposal_ledger,
+            forecast_registry=price_forecasts,
+            account_provider=account_store.get,
+            account_sink=replace_account,
+            account_transaction=account_store.transaction,
+            journal=journal,
+            snapshot_provider=(
+                (
+                    lambda instrument, now: live_feed.snapshot_exact(
+                        instrument.venue,
+                        instrument.symbol,
+                        UpdateKind.QUOTE,
+                        as_of=now,
+                    )
+                )
+                if live_feed is not None
+                else lambda _instrument, _now: None
+            ),
+            quote_fence=QuoteFence(),
+            demo_quote_provider=demo_quote_provider,
+            now=clock,
+        )
+        app.state.paper_decisions = paper_decisions
+        app.state.proposal_service = paper_decisions
+    if effective_history is not None:
+        app.state.instrument_workspace = InstrumentWorkspaceService(
+            history=effective_history,
+            forecasts=price_forecasts,
+            account_provider=account_store.get,
+            marks_provider=lambda: mark_snapshot_provider(clock()).marks,
+            valuation_provider=mark_snapshot_provider,
+            live_feed=live_feed,
+            decisions=paper_decisions,
+            now=clock,
+        )
 
     # The SPA JSON surface (Phase C) in both modes: a strict superset
     # of the M1 API, so a client that wants JSON has one source of
@@ -1055,15 +1192,26 @@ def create_workstation_app(
         generate_unique_id_function=lambda route: f"api_{route.name}",
     )
 
+    # Venue-aware observed history is double-mounted like the live surface:
+    # root for direct local clients and /api for the SPA. Both handlers read
+    # the same injected service and optional feed from app.state.
+    router = instrument_router()
+    app.include_router(router)
+    app.include_router(
+        router,
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
+
     # The live feed surface (iteration 0015 Phase C, ADR-0014 decision
     # 4): WebSocket + SSE stream, latest-state and connector health,
     # double-mounted like the demo router. Without an attached feed the
     # handlers answer 404 ("no live feed is attached"), so the
     # workstation is unchanged when no live watchlist is configured.
-    router = live_router()
-    app.include_router(router)
+    live = live_router()
+    app.include_router(live)
     app.include_router(
-        router,
+        live,
         prefix="/api",
         generate_unique_id_function=lambda route: f"api_{route.name}",
     )
@@ -1181,7 +1329,11 @@ def _register_spa_serving(app: FastAPI) -> None:
 
 def _register_watchlist_forms(app: FastAPI) -> None:
     @app.post("/watchlist/add", response_class=HTMLResponse)
-    def watchlist_add(request: Request, symbol: str = Form(...)) -> Response:
+    def watchlist_add(
+        request: Request,
+        symbol: str = Form(...),
+        venue: str | None = Form(None),
+    ) -> Response:
         refused = _guard_origin(app, request, "/watchlist", "watchlist")
         if refused is not None:
             return refused
@@ -1189,13 +1341,22 @@ def _register_watchlist_forms(app: FastAPI) -> None:
         if context.watchlist is None:
             return _error_page(app, request, "/watchlist", "no watchlist store is bound")
         try:
-            context.watchlist.add(symbol)
+            selected_venue = venue.strip() if venue and venue.strip() else None
+            if selected_venue is None:
+                matches = [name for name, rows in context.markets.items() if symbol in rows]
+                if len(matches) == 1:
+                    selected_venue = matches[0]
+            context.watchlist.add(symbol, venue=selected_venue)
         except WatchlistError as error:
             return _error_page(app, request, "/watchlist", str(error))
         return RedirectResponse("/watchlist", status_code=303)
 
     @app.post("/watchlist/remove", response_class=HTMLResponse)
-    def watchlist_remove(request: Request, symbol: str = Form(...)) -> Response:
+    def watchlist_remove(
+        request: Request,
+        symbol: str = Form(...),
+        venue: str | None = Form(None),
+    ) -> Response:
         refused = _guard_origin(app, request, "/watchlist", "watchlist")
         if refused is not None:
             return refused
@@ -1203,7 +1364,8 @@ def _register_watchlist_forms(app: FastAPI) -> None:
         if context.watchlist is None:
             return _error_page(app, request, "/watchlist", "no watchlist store is bound")
         try:
-            context.watchlist.remove(symbol)
+            selected_venue = venue.strip() if venue and venue.strip() else None
+            context.watchlist.remove(symbol, venue=selected_venue)
         except WatchlistError as error:
             return _error_page(app, request, "/watchlist", str(error))
         return RedirectResponse("/watchlist", status_code=303)
@@ -1329,10 +1491,8 @@ def _register_kill_switch(app: FastAPI) -> None:
                 "kill-switch POST refused: expected a confirm form "
                 "(action=engage|disarm and confirm=confirm)",
             )
-        context = app.state.page_context
-        if venue is None:
-            flipped = context.account.model_copy(update={"kill_switch": action == "engage"})
-        else:
+        venue_enum = None
+        if venue is not None:
             try:
                 venue_enum = Venue(venue)
             except ValueError:
@@ -1342,14 +1502,18 @@ def _register_kill_switch(app: FastAPI) -> None:
                     "/kill-switch/control",
                     f"kill-switch POST refused: unknown venue {venue!r}",
                 )
-            kill_switches = dict(context.account.kill_switches)
+        def flip(current: PaperAccount) -> PaperAccount:
+            if venue_enum is None:
+                return current.model_copy(update={"kill_switch": action == "engage"})
+            kill_switches = dict(current.kill_switches)
             if action == "engage":
                 kill_switches[venue_enum] = True
             else:
                 kill_switches.pop(venue_enum, None)
-            flipped = context.account.model_copy(update={"kill_switches": kill_switches})
-        app.state.account = flipped
-        app.state.page_context = replace(context, account=flipped)
+            return current.model_copy(update={"kill_switches": kill_switches})
+
+        store: PaperAccountStore = app.state.account_store
+        store.update(flip)
         return RedirectResponse("/kill-switch/control", status_code=303)
 
 
@@ -1480,6 +1644,12 @@ def main(argv: list[str] | None = None) -> None:
     else:
         account = PaperAccount(cash=100_000.0)
         if args.live:
+            from quantmesh.data.lake import Lake
+            from quantmesh.execution.journal import OrderJournal
+            from quantmesh.instruments.forecast import PriceForecastRegistry
+            from quantmesh.instruments.history import HistoryService
+            from quantmesh.instruments.live_history import discover_history_bindings
+            from quantmesh.instruments.proposals import ProposalLedger
             from quantmesh.live.buffer import LiveBuffer
             from quantmesh.live.feed import LiveFeed
             from quantmesh.live.hyperliquid import (
@@ -1488,16 +1658,22 @@ def main(argv: list[str] | None = None) -> None:
             )
 
             watchlist = [
-                coin.strip().upper()
-                for coin in settings.live_watchlist.split(",")
-                if coin.strip()
+                coin.strip().upper() for coin in settings.live_watchlist.split(",") if coin.strip()
             ]
             if not watchlist:
                 raise SystemExit(
                     "--live requires a watchlist: set QUANTMESH_LIVE_WATCHLIST "
                     "(e.g. BTC,ETH,SOL,HYPE)"
                 )
-            feed = LiveFeed(lake=LiveBuffer(root=settings.lake_root))
+            replay = LiveBuffer(root=settings.lake_root)
+            account_snapshot = PaperAccountFile(settings.orders_dir)
+            account = account_snapshot.load_or_create(account)
+            journal = OrderJournal(settings.orders_dir)
+            recovered_account = recover_account_from_journal(account, journal.all())
+            if recovered_account != account:
+                account_snapshot.save(recovered_account)
+                account = recovered_account
+            feed = LiveFeed(lake=replay)
             supervisor = HyperliquidVenueSupervisor(
                 LiveHyperliquidTransport(settings.hyperliquid_ws_url)
             )
@@ -1528,9 +1704,7 @@ def main(argv: list[str] | None = None) -> None:
                 )
                 from quantmesh.polymarket.transport import SdkPolyTransport
 
-                board = PredictionBoard(
-                    parse_prediction_watchlist(settings.prediction_watchlist)
-                )
+                board = PredictionBoard(parse_prediction_watchlist(settings.prediction_watchlist))
                 watchlists = board.venues()
                 pm_watchlist = watchlists[Venue.POLYMARKET]
                 if pm_watchlist:
@@ -1549,6 +1723,7 @@ def main(argv: list[str] | None = None) -> None:
                     ks.subscribe(ks_watchlist)
                     feed.attach(ks)
                 prediction = board
+            moomoo_symbols: list[str] = []
             if settings.moomoo_watchlist:
                 # The Moomoo OpenD surface (Phase F): read-only polls of
                 # a local OpenD daemon for the operator's equity
@@ -1565,20 +1740,46 @@ def main(argv: list[str] | None = None) -> None:
                 )
                 from quantmesh.moomoo.opend import MoomooOpenDClient
 
-                symbols = [s.strip() for s in settings.moomoo_watchlist.split(",") if s.strip()]
+                moomoo_symbols = [
+                    symbol.strip()
+                    for symbol in settings.moomoo_watchlist.split(",")
+                    if symbol.strip()
+                ]
                 moomoo = MoomooVenueSupervisor(
                     MoomooVenueTransport(
                         MoomooOpenDClient.from_settings(settings),
-                        poll_interval=timedelta(
-                            seconds=settings.moomoo_poll_interval_s
-                        ),
+                        poll_interval=timedelta(seconds=settings.moomoo_poll_interval_s),
                     ),
                     market=settings.moomoo_market,
                 )
-                moomoo.subscribe(symbols)
+                moomoo.subscribe(moomoo_symbols)
                 feed.attach(moomoo)
+            bindings = discover_history_bindings(settings.lake_root)
+            market_directory = build_live_market_directory(
+                hyperliquid_symbols=watchlist,
+                moomoo_symbols=moomoo_symbols,
+                prediction=prediction,
+                bindings=bindings,
+            )
+            history = (
+                HistoryService(bindings, dataset_loader=Lake(settings.lake_root).dataset)
+                if bindings
+                else None
+            )
             app = create_workstation_app(
-                account=account, live_feed=feed, prediction=prediction, host=host
+                account=account,
+                markets=market_directory,
+                history=history,
+                price_forecasts=PriceForecastRegistry(
+                    lake_root=settings.lake_root,
+                    bindings=bindings,
+                ),
+                proposal_ledger=ProposalLedger(settings.orders_dir / "proposals"),
+                journal=journal,
+                account_sink=account_snapshot.save,
+                live_feed=feed,
+                prediction=prediction,
+                host=host,
             )
         else:
             app = create_workstation_app(account=account, host=host)

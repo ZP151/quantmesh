@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Menu, Power, RotateCcw, Search, Settings, ShieldCheck, X } from 'lucide-react'
+import { AlertTriangle, Menu, Power, RotateCcw, Search, Settings, ShieldCheck, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -104,12 +104,16 @@ export function AppShell() {
   })
   const healthVersion = health.data?.version ? `v${health.data.version}` : 'local'
   const demoAttached = runtimeMode === 'demo' && demoStatus.data !== undefined
+  const retainedResets = demoStatus.data?.retained_resets ?? []
 
   const killSwitch = useSurface(['kill-switch'], api.killSwitch)
   const engaged = killSwitch.data?.kill_switch ?? false
   const engagedVenues = Object.entries(killSwitch.data?.kill_switches ?? {})
     .filter(([, value]) => value)
     .map(([name]) => name)
+  const killSwitchLabel = engaged
+    ? `${t('shell.killSwitchOn')}${engagedVenues.length ? ` · ${engagedVenues.join(', ')}` : ''}`
+    : t('shell.killSwitchOff')
 
   const resetDemo = useMutation({
     mutationFn: api.demoReset,
@@ -190,15 +194,37 @@ export function AppShell() {
               </Badge>
             )}
 
+            {retainedResets.length > 0 && demoStatus.data && (
+              <Badge
+                variant="outline"
+                role="status"
+                aria-label={t('shell.retainedResetWarning', {
+                  count: String(retainedResets.length),
+                })}
+                title={`${retainedResets.map((item) => item.path).join(' · ')} · ${demoStatus.data.retained_reset_cleanup.instructions}`}
+                className="gap-1 border-amber-500/60 bg-amber-500/10 font-mono text-[10px] text-amber-800 dark:text-amber-300"
+              >
+                <AlertTriangle className="size-3" aria-hidden />
+                <span className="sm:hidden" aria-hidden>{retainedResets.length}</span>
+                <span className="hidden sm:inline">
+                  {t('shell.retainedResetWarning', {
+                    count: String(retainedResets.length),
+                  })}
+                </span>
+              </Badge>
+            )}
+
             <Button
               variant={engaged ? 'destructive' : 'outline'}
               size="sm"
               className="gap-1.5 font-mono text-[11px]"
               onClick={() => navigate('/ops/kill-switch')}
               aria-pressed={engaged}
+              aria-label={killSwitchLabel}
+              title={killSwitchLabel}
             >
               <Power className="size-3.5" aria-hidden />
-              {engaged ? `${t('shell.killSwitchOn')}${engagedVenues.length ? ` · ${engagedVenues.join(', ')}` : ''}` : t('shell.killSwitchOff')}
+              <span className="hidden min-[430px]:inline">{killSwitchLabel}</span>
             </Button>
 
             {demoAttached && (

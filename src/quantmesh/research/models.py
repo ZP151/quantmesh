@@ -49,6 +49,7 @@ from pydantic import (
     model_validator,
 )
 
+from quantmesh._fs import atomic_replace
 from quantmesh.data.lake import Dataset, Lake
 from quantmesh.data.layout import validate_dataset_name
 from quantmesh.settings import settings
@@ -432,7 +433,7 @@ class ModelRegistry:
         try:
             with os.fdopen(descriptor, "wb") as handle:
                 handle.write(data)
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)
@@ -449,7 +450,7 @@ def _append_records(root: Path, filename: str, records: list[BaseModel]) -> None
             for record in records:
                 handle.write(record.model_dump_json())
                 handle.write("\n")
-        os.replace(temp_name, path)
+        atomic_replace(temp_name, path)
     finally:
         if os.path.exists(temp_name):
             os.unlink(temp_name)

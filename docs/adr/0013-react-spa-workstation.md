@@ -77,6 +77,11 @@ no Node at runtime
 - `openapi-typescript` codegen produces `frontend/src/api/client.ts`
   from it; the generated file is committed and a CI check fails when
   it is stale (regenerate and commit with backend changes).
+- Iteration 0020 implements this with deterministic cross-platform
+  `generate:api` / `check:api` scripts, pinned `openapi-typescript`
+  and a typed `openapi-fetch` transport. The integrated instrument-history
+  route is the first migrated caller; older handwritten workstation calls
+  are explicit migration debt and may not be copied into new routes.
 - TanStack Query owns server state over the generated typed client;
   components never hand-roll fetch shapes.
 

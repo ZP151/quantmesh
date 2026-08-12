@@ -42,6 +42,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, ValidationError
 
+from quantmesh._fs import atomic_replace
 from quantmesh.domain.models import OrderRequest, Side, Venue
 from quantmesh.hyperliquid.exchange import BrokerPosition
 from quantmesh.settings import settings
@@ -426,7 +427,7 @@ class FundingLedger:
                 for entry in entries:
                     handle.write(entry.model_dump_json())
                     handle.write("\n")
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)

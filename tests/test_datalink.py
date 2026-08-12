@@ -31,7 +31,7 @@ from quantmesh.hyperliquid.errors import (
 )
 from quantmesh.hyperliquid.rest import ScriptedRestTransport
 
-SCENARIO = DemoScenario()
+SCENARIO = DemoScenario(workspace_history=False)
 
 L2_PAYLOAD = {
     "levels": [
@@ -70,7 +70,12 @@ class _FailingTransport:
 
 
 def _demo_client(tmp_path, **overrides):
-    app = create_demo_app(root=tmp_path / "runtime", seed=SCENARIO.seed, host="127.0.0.1")
+    app = create_demo_app(
+        root=tmp_path / "runtime",
+        seed=SCENARIO.seed,
+        workspace_history=False,
+        host="127.0.0.1",
+    )
     service = DatalinkService(root=app.state.demo.root, **overrides)
     app.state.datalink = service
     return app, service
@@ -90,7 +95,11 @@ def test_panel_lists_all_five_connectors(demo_client):
     client, _, _ = demo_client
     rows = client.get("/api/demo/connectors").json()
     assert [row["venue"] for row in rows] == [
-        "demo", "hyperliquid", "moomoo", "polymarket", "kalshi",
+        "demo",
+        "hyperliquid",
+        "moomoo",
+        "polymarket",
+        "kalshi",
     ]
     assert rows[0]["state"] == "ok"  # fixture/demo is always available
     assert rows[1]["credentials_required"] is False
@@ -121,9 +130,7 @@ def test_probe_hyperliquid_missing_sdk_is_instructive(demo_client):
 
 def test_probe_hyperliquid_unreachable_is_degraded(demo_client):
     client, _, service = demo_client
-    service.rest = _FailingTransport(
-        HyperliquidUnavailableError("connection refused")
-    )
+    service.rest = _FailingTransport(HyperliquidUnavailableError("connection refused"))
     rows = client.post("/api/demo/connectors/probe").json()
     hl = next(row for row in rows if row["venue"] == "hyperliquid")
     assert hl["state"] == "degraded"
@@ -133,9 +140,7 @@ def test_probe_hyperliquid_unreachable_is_degraded(demo_client):
 
 def test_probe_requires_origin_guard(demo_client):
     client, _, _ = demo_client
-    response = client.post(
-        "/api/demo/connectors/probe", headers={"Origin": "https://evil.example"}
-    )
+    response = client.post("/api/demo/connectors/probe", headers={"Origin": "https://evil.example"})
     assert response.status_code == 403
 
 
@@ -145,9 +150,7 @@ def test_probe_requires_origin_guard(demo_client):
 def test_fetch_public_caches_live_rows(demo_client, tmp_path):
     client, _, service = demo_client
     service.rest = ScriptedRestTransport(l2_books={"SOL": L2_PAYLOAD})
-    report = client.post(
-        "/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}
-    ).json()
+    report = client.post("/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}).json()
     assert report["read_only"] is True
     assert report["synthetic"] is False
     row = report["rows"][0]
@@ -174,9 +177,7 @@ def test_fetch_public_caches_live_rows(demo_client, tmp_path):
 def test_fetch_public_falls_back_deterministically(demo_client):
     client, _, service = demo_client
     service.rest = _FailingTransport(HyperliquidUnavailableError("connection refused"))
-    report = client.post(
-        "/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}
-    ).json()
+    report = client.post("/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}).json()
     row = report["rows"][0]
     assert row["source"] == "fixture-fallback"
     assert row["synthetic"] is True
@@ -193,17 +194,11 @@ def test_fetch_public_rate_limit_retries_once_then_falls_back(demo_client):
     service.rest = _FailingTransport(
         HyperliquidUnavailableError("429 rate limit exceeded"), first_then_ok=True
     )
-    report = client.post(
-        "/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}
-    ).json()
+    report = client.post("/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}).json()
     assert report["rows"][0]["source"] == "hyperliquid-public"
     # A persistent rate limit still degrades, never errors.
-    service.rest = _FailingTransport(
-        HyperliquidUnavailableError("429 rate limit exceeded")
-    )
-    report = client.post(
-        "/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}
-    ).json()
+    service.rest = _FailingTransport(HyperliquidUnavailableError("429 rate limit exceeded"))
+    report = client.post("/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}).json()
     row = report["rows"][0]
     assert row["source"] == "fixture-fallback"
     assert row["degraded"] == "rate-limited"
@@ -212,9 +207,7 @@ def test_fetch_public_rate_limit_retries_once_then_falls_back(demo_client):
 def test_fetch_public_missing_sdk_is_instructive(demo_client):
     client, _, service = demo_client
     service.rest = _FailingTransport(HyperliquidSDKMissingError("sdk not importable"))
-    report = client.post(
-        "/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}
-    ).json()
+    report = client.post("/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]}).json()
     row = report["rows"][0]
     assert row["source"] == "fixture-fallback"
     assert row["degraded"] == "missing-software"
@@ -310,10 +303,22 @@ def test_csv_import_preview_mapping_commit(demo_client, tmp_path):
 def test_json_import_records(demo_client):
     client, _, _ = demo_client
     rows = [
-        {"ts": "2026-08-02T00:00:00+00:00", "open": 10, "high": 11, "low": 9,
-         "close": 10.5, "vol": 500},
-        {"ts": "2026-08-02T01:00:00+00:00", "open": 10.5, "high": 12, "low": 10,
-         "close": 11.5, "vol": 600},
+        {
+            "ts": "2026-08-02T00:00:00+00:00",
+            "open": 10,
+            "high": 11,
+            "low": 9,
+            "close": 10.5,
+            "vol": 500,
+        },
+        {
+            "ts": "2026-08-02T01:00:00+00:00",
+            "open": 10.5,
+            "high": 12,
+            "low": 10,
+            "close": 11.5,
+            "vol": 600,
+        },
     ]
     preview = _upload(client, "btc.json", json.dumps(rows).encode())
     assert preview["format"] == "JSON"
@@ -339,9 +344,7 @@ def test_parquet_import_via_duckdb(demo_client, tmp_path):
     client, _, _ = demo_client
     frame = pd.DataFrame(
         {
-            "timestamp": pd.to_datetime(
-                ["2026-08-03 00:00:00", "2026-08-03 01:00:00"], utc=True
-            ),
+            "timestamp": pd.to_datetime(["2026-08-03 00:00:00", "2026-08-03 01:00:00"], utc=True),
             "open": [1.0, 2.0],
             "high": [3.0, 4.0],
             "low": [0.5, 1.5],
@@ -424,14 +427,10 @@ def test_import_validation_reasons(demo_client):
 
 def test_import_unreadable_file_is_instructive(demo_client):
     client, _, _ = demo_client
-    response = client.post(
-        "/api/demo/import", files={"file": ("junk.txt", io.BytesIO(b"hello"))}
-    )
+    response = client.post("/api/demo/import", files={"file": ("junk.txt", io.BytesIO(b"hello"))})
     assert response.status_code == 422
     assert "unsupported file type" in response.json()["detail"]
-    response = client.post(
-        "/api/demo/import", files={"file": ("junk.csv", io.BytesIO(b""))}
-    )
+    response = client.post("/api/demo/import", files={"file": ("junk.csv", io.BytesIO(b""))})
     assert response.status_code == 422
     assert "no rows" in response.json()["detail"]
 
@@ -492,6 +491,60 @@ def test_reset_clears_imports_and_datalink(demo_client, tmp_path):
     )
     assert response.status_code == 422
     assert "upload the file again" in response.json()["detail"]
+
+
+def test_reset_refuses_unrelated_json_in_datalink_cache(demo_client):
+    client, _, service = demo_client
+    service.rest = ScriptedRestTransport(l2_books={"SOL": L2_PAYLOAD})
+    fetched = client.post("/api/demo/datalink/fetch", json={"symbols": ["SOL-USD"]})
+    assert fetched.status_code == 200
+    sentinel = service.root / ".datalink" / "hyperliquid" / "precious-user-file.json"
+    unrelated = {
+        "symbol": 7,
+        "coin": "precious-user-file",
+        "source": "hyperliquid-public",
+        "synthetic": False,
+        "fetched_at": "2026-08-12T00:00:00+00:00",
+        "payload": {},
+    }
+    sentinel.write_text(json.dumps(unrelated), encoding="utf-8")
+
+    response = client.post("/api/demo/reset")
+
+    assert response.status_code == 409
+    assert json.loads(sentinel.read_text(encoding="utf-8")) == unrelated
+
+
+def test_reset_refuses_unrelated_file_in_operator_import(demo_client):
+    client, _, service = demo_client
+    preview = _upload(client, "msft.csv", CSV_ROWS.encode())
+    committed = client.post(
+        "/api/demo/import/commit",
+        json={
+            "session_id": preview["session_id"],
+            "dataset": "imported-msft",
+            "interval": "1h",
+            "venue": "moomoo",
+            "symbol": "MSFT",
+            "mapping": preview["suggested_mapping"],
+        },
+    )
+    assert committed.status_code == 200
+    sentinel = (
+        service.root
+        / "market"
+        / "lake"
+        / "imported-msft"
+        / "precious-user-file.txt"
+    )
+    sentinel.write_text("operator data unrelated to the imported dataset", encoding="utf-8")
+
+    response = client.post("/api/demo/reset")
+
+    assert response.status_code == 409
+    assert sentinel.read_text(encoding="utf-8") == (
+        "operator data unrelated to the imported dataset"
+    )
 
 
 def test_import_write_is_origin_guarded(demo_client):

@@ -1,3 +1,7 @@
+import createClient from 'openapi-fetch'
+
+import type { components, paths } from '@/api/client'
+
 // The JSON surface contract (iteration 0014 Phase C, ADR-0013).
 // One route per screen; every route renders through the exact page
 // providers the RC1 templates use (src/quantmesh/api/workstation.py),
@@ -18,7 +22,7 @@ export interface Instrument {
 export interface InstrumentMark {
   venue: string
   symbol: string
-  mark: number
+  mark: number | null
 }
 
 export interface AccountSummary {
@@ -61,11 +65,13 @@ export interface OrderSummary {
 // --- Per-surface payloads (the page providers, verbatim) ----------------
 
 export interface Overview {
-  account: { cash: number; starting_cash: number; equity: number; kill_switch: boolean }
+  account: { cash: number; starting_cash: number; equity: number | null; kill_switch: boolean }
   marks: Record<string, number>
   missing_marks: string[]
-  venues: { venue: string; instruments: { symbol: string; mark: number }[] }[]
-  watchlist: { symbol: string; mark: number }[]
+  valuation_complete?: boolean
+  valuation_reason?: string | null
+  venues: { venue: string; instruments: { symbol: string; mark: number | null }[] }[]
+  watchlist: { symbol: string; mark: number | null }[]
 }
 
 export interface Markets {
@@ -73,7 +79,7 @@ export interface Markets {
 }
 
 export interface Watchlist {
-  entries: { symbol: string; mark: number }[]
+  entries: { venue: string | null; symbol: string; mark: number | null }[]
 }
 
 export interface Experiment {
@@ -209,6 +215,13 @@ export interface KillSwitch {
   kill_switches: Record<string, boolean>
 }
 
+export interface MarkStatus {
+  status: 'available' | 'stale' | 'unavailable'
+  provenance: string
+  received_at?: string | null
+  reason?: string | null
+}
+
 export interface Position {
   key: string
   instrument: Instrument
@@ -216,16 +229,20 @@ export interface Position {
   average_cost: number
   realized_pnl: number
   unrealized_pnl: number | null
+  mark_status?: MarkStatus | null
 }
 
 export interface PnL {
   starting_cash: number
   realized_pnl: number
-  unrealized_pnl: number
-  equity: number
-  total_pnl: number
+  unrealized_pnl: number | null
+  equity: number | null
+  total_pnl: number | null
   marks: Record<string, number>
+  mark_statuses?: Record<string, MarkStatus>
   missing_marks: string[]
+  valuation_complete?: boolean
+  valuation_reason?: string | null
 }
 
 export interface Health {
@@ -254,6 +271,12 @@ export interface DemoStatus {
   surfaces: Record<string, DemoSurfaceRow>
   last_update: string
   health: { status: string; seed: number }
+  retained_resets: { path: string; acknowledged: boolean; exists: boolean }[]
+  retained_reset_cleanup: {
+    mode: 'manual-only'
+    automatic_deletion_supported: false
+    instructions: string
+  }
 }
 
 export interface DemoOrderResult {
@@ -379,13 +402,16 @@ export interface LiveView {
 
 export interface LiveInstrumentState {
   venue: string
+  instrument: string
   label: LiveLabel
   kinds: Record<string, LiveView>
 }
 
+export type LiveInstrumentKey = `${string}:${string}`
+
 export interface LiveState {
   generated_at: string
-  instruments: Record<string, LiveInstrumentState>
+  instruments: Record<LiveInstrumentKey, LiveInstrumentState>
 }
 
 export interface LiveSource {
@@ -474,6 +500,45 @@ export interface ReplayWindow {
   updates: MarketUpdate[]
 }
 
+// --- Integrated instrument history (iteration 0020 Task 6) -----------------
+
+type DeepReadonly<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends readonly (infer Item)[]
+    ? readonly DeepReadonly<Item>[]
+    : T extends object
+      ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
+      : T
+
+export type HistoryRange = components['schemas']['HistoryRange']
+export type HistoricalVenue = components['schemas']['Venue']
+export type HistoricalInstrument = DeepReadonly<components['schemas']['InstrumentSnapshot']>
+export type HistoricalBar = DeepReadonly<components['schemas']['HistoricalBar']>
+export type HistoricalCoverage = DeepReadonly<components['schemas']['CoverageSnapshot']>
+export type HistoricalSeries = DeepReadonly<components['schemas']['HistoricalSeries']>
+export type ComparisonPoint = DeepReadonly<components['schemas']['ComparisonPoint']>
+export type ComparisonSeries = DeepReadonly<components['schemas']['ComparisonSeries']>
+export type ForecastPath = DeepReadonly<components['schemas']['ForecastPath']>
+export type HistoricalPayload = DeepReadonly<components['schemas']['HistoricalPayload']>
+type GeneratedInstrumentWorkspace = components['schemas']['InstrumentWorkspace']
+type WorkspaceValuation = {
+  valuation_complete?: boolean
+  valuation_reason?: string | null
+}
+type WorkspacePositionEvidence = Omit<
+  NonNullable<GeneratedInstrumentWorkspace['position']>,
+  'mark_status'
+> & { mark_status?: MarkStatus | null }
+export type InstrumentWorkspace = DeepReadonly<
+  Omit<GeneratedInstrumentWorkspace, 'position' | 'risk'> & {
+    position?: WorkspacePositionEvidence | null
+    risk: GeneratedInstrumentWorkspace['risk'] & WorkspaceValuation
+  }
+>
+export type PaperProposal = DeepReadonly<components['schemas']['PaperProposal']>
+export type ProposalConfirmation = DeepReadonly<components['schemas']['ProposalConfirmation']>
+export type ProposalCreateInput = components['schemas']['ProposalCreateBody']
+
 // --- Client --------------------------------------------------------------
 
 export class ApiError extends Error {
@@ -483,6 +548,16 @@ export class ApiError extends Error {
     super(message)
     this.name = 'ApiError'
     this.status = status
+  }
+}
+
+export class ProposalRefusalError extends ApiError {
+  readonly result: ProposalConfirmation
+
+  constructor(result: ProposalConfirmation) {
+    super(409, result.blocker ?? 'Paper proposal confirmation was refused')
+    this.name = 'ProposalRefusalError'
+    this.result = result
   }
 }
 
@@ -501,6 +576,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init)
   if (!response.ok) throw await parseError(response)
   return (await response.json()) as T
+}
+
+const generatedApi = createClient<paths>()
+
+function generatedApiError(response: Response, error: unknown): ApiError {
+  let detail = `${response.status} ${response.statusText}`
+  if (
+    typeof error === 'object'
+    && error !== null
+    && 'detail' in error
+    && typeof error.detail === 'string'
+  ) {
+    detail = error.detail
+  }
+  return new ApiError(response.status, detail)
 }
 
 export interface DemoOrderInput {
@@ -601,11 +691,81 @@ export const api = {
   liveStatus: () => request<LiveStatus>('/api/live/status'),
   prediction: () => request<PredictionRow[]>('/api/live/prediction'),
 
+  async history(
+    venue: HistoricalVenue,
+    symbol: string,
+    range: HistoryRange,
+    compare: readonly string[] = [],
+  ): Promise<HistoricalPayload> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/instruments/{venue}/{symbol}/history',
+      {
+        params: {
+          path: { venue, symbol },
+          query: {
+            range,
+            compare: compare.length > 0 ? [...compare] : undefined,
+          },
+        },
+      },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async instrumentWorkspace(
+    venue: HistoricalVenue,
+    symbol: string,
+    range: HistoryRange,
+    compare: readonly string[] = [],
+  ): Promise<InstrumentWorkspace> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/instruments/{venue}/{symbol}/workspace',
+      {
+        params: {
+          path: { venue, symbol },
+          query: {
+            range,
+            compare: compare.length > 0 ? [...compare] : undefined,
+          },
+        },
+      },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async createPaperProposal(input: ProposalCreateInput): Promise<PaperProposal> {
+    const { data, error, response } = await generatedApi.POST('/api/paper/proposals', {
+      body: input,
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async confirmPaperProposal(
+    proposalId: string,
+    confirmationToken: string,
+  ): Promise<ProposalConfirmation> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/paper/proposals/{proposal_id}/confirm',
+      {
+        params: { path: { proposal_id: proposalId } },
+        body: { confirmation_token: confirmationToken },
+      },
+    )
+    if (response.status === 409 && error !== undefined) {
+      throw new ProposalRefusalError(error as ProposalConfirmation)
+    }
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
   // Slice 4 — the recorded replay surface over the local lake.
   replayExtent: () => request<ReplayExtent>('/api/live/replay/windows'),
-  priceTrail: (params: { symbols: string; limit?: number }) =>
-    request<{ trail: Record<string, number[]> }>(
-      `/api/live/price-trail?symbols=${encodeURIComponent(params.symbols)}&limit=${params.limit ?? 20}`,
+  priceTrail: (params: { identities: string; limit?: number }) =>
+    request<{ trail: Record<LiveInstrumentKey, number[]> }>(
+      `/api/live/price-trail?identities=${encodeURIComponent(params.identities)}&limit=${params.limit ?? 20}`,
     ),
   replayWindow: (params: { start?: string; end?: string; limit?: number }) =>
     request<ReplayWindow>(

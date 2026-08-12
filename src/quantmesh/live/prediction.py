@@ -191,7 +191,7 @@ class PredictionBoard:
                 if symbol is None:
                     venues.append(self._venue_row(venue, None, None))
                     continue
-                entry = instruments.get(symbol)
+                entry = instruments.get(f"{venue.value}:{symbol}")
                 kinds = entry.get("kinds") if isinstance(entry, Mapping) else None
                 quote = (
                     kinds.get(UpdateKind.QUOTE.value) if isinstance(kinds, Mapping) else None

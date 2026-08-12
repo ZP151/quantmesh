@@ -33,8 +33,17 @@ export function OverviewScreen() {
       }
     >
       <Surface query={query} title={t('screen.overview.title')}>
-        {(overview) => (
-          <div className="space-y-5">
+        {(overview) => {
+          const valuationComplete = overview.valuation_complete
+            ?? (overview.missing_marks.length === 0
+              && typeof overview.account.equity === 'number'
+              && Number.isFinite(overview.account.equity))
+          const equityAvailable = valuationComplete
+            && overview.missing_marks.length === 0
+            && typeof overview.account.equity === 'number'
+            && Number.isFinite(overview.account.equity)
+          return (
+            <div className="space-y-5">
             {liveMode && (
               <Card className="border-emerald-500/30 bg-emerald-500/5">
                 <CardHeader>
@@ -58,7 +67,16 @@ export function OverviewScreen() {
               <CardContent className="space-y-2 text-sm">
                 <StatRow label={t('screen.overview.account.cash')}>{money(overview.account.cash)}</StatRow>
                 <StatRow label={t('screen.overview.account.startingCash')}>{money(overview.account.starting_cash)}</StatRow>
-                <StatRow label={t('screen.overview.account.equity')}>{money(overview.account.equity)}</StatRow>
+                <StatRow label={t('screen.overview.account.equity')}>
+                  {equityAvailable
+                    ? money(overview.account.equity)
+                    : t('screen.workspace.valueUnavailable')}
+                </StatRow>
+                {!equityAvailable && overview.valuation_reason && (
+                  <p className="text-xs text-destructive" role="status">
+                    {overview.valuation_reason}
+                  </p>
+                )}
                 <Separator className="my-2" />
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">{t('screen.overview.account.killSwitch')}</span>
@@ -135,8 +153,9 @@ export function OverviewScreen() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        )}
+            </div>
+          )
+        }}
       </Surface>
     </Page>
   )

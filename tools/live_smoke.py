@@ -312,7 +312,15 @@ def check_watchlist(
     except (urllib.error.URLError, OSError, ValueError, AssertionError) as error:
         return [SmokeCheck("watchlist present in the surface", False, str(error))]
     instruments = data.get("instruments")
-    present = set(instruments) if isinstance(instruments, dict) else set()
+    present = (
+        {
+            str(entry.get("instrument") or key.rsplit(":", maxsplit=1)[-1])
+            for key, entry in instruments.items()
+            if isinstance(entry, dict)
+        }
+        if isinstance(instruments, dict)
+        else set()
+    )
     checks: list[SmokeCheck] = []
     for instrument in watchlist:
         checks.append(

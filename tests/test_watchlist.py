@@ -1,9 +1,9 @@
 """Watchlist store discipline (M9, issue #52, Phase B).
 
-The watchlist is the one UI-owned write surface in the workstation,
-stored as JSONL on the ADR-0006 discipline: atomic temp+replace
-appends, fail-closed reads with line attribution, duplicate-symbol
-refusal, root-not-dir refusal. Reading a missing store is an empty
+The watchlist is the one UI-owned write surface in the workstation, stored as
+JSONL on the ADR-0006 discipline: atomic temp+replace appends, fail-closed reads
+with line attribution, duplicate venue/symbol refusal, legacy symbol-only
+compatibility, and root-not-dir refusal. Reading a missing store is an empty
 list, never an error.
 """
 
@@ -18,6 +18,7 @@ from quantmesh.api.watchlist import (
     WatchlistRecord,
     WatchlistStore,
 )
+from quantmesh.domain.models import Venue
 
 NOW = datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)
 
@@ -28,8 +29,9 @@ def store(tmp_path) -> WatchlistStore:
 
 class TestWatchlistRecord:
     def test_shape(self) -> None:
-        record = WatchlistRecord(symbol="BTC", added_at=NOW)
+        record = WatchlistRecord(symbol="BTC", venue=Venue.HYPERLIQUID, added_at=NOW)
         assert record.symbol == "BTC"
+        assert record.venue is Venue.HYPERLIQUID
         assert record.added_at == NOW
 
     def test_symbol_stripped_and_refused_when_empty(self) -> None:
@@ -48,7 +50,7 @@ class TestWatchlistRecord:
 
     def test_extra_fields_refused(self) -> None:
         with pytest.raises(ValidationError):
-            WatchlistRecord(symbol="BTC", added_at=NOW, venue="hyperliquid")
+            WatchlistRecord(symbol="BTC", added_at=NOW, unexpected=True)
 
 
 class TestWatchlistStore:
@@ -68,6 +70,24 @@ class TestWatchlistStore:
         watched.add("BTC", now=NOW)
         with pytest.raises(WatchlistError, match="already on the watchlist"):
             watched.add("BTC", now=NOW)
+
+    def test_same_symbol_on_two_venues_has_two_exact_identities(self, tmp_path) -> None:
+        watched = store(tmp_path)
+        watched.add("BTC-USD", venue=Venue.HYPERLIQUID, now=NOW)
+        watched.add("BTC-USD", venue=Venue.MOOMOO, now=NOW)
+
+        assert [(item.venue, item.symbol) for item in watched.all()] == [
+            (Venue.HYPERLIQUID, "BTC-USD"),
+            (Venue.MOOMOO, "BTC-USD"),
+        ]
+        with pytest.raises(WatchlistError, match="already on the watchlist"):
+            watched.add("BTC-USD", venue=Venue.MOOMOO, now=NOW)
+        with pytest.raises(WatchlistError, match="ambiguous"):
+            watched.remove("BTC-USD")
+        watched.remove("BTC-USD", venue=Venue.MOOMOO)
+        assert [(item.venue, item.symbol) for item in watched.all()] == [
+            (Venue.HYPERLIQUID, "BTC-USD")
+        ]
 
     def test_remove_unknown_refused(self, tmp_path) -> None:
         watched = store(tmp_path)

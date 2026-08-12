@@ -26,12 +26,14 @@ Steps, all under a temporary root:
      the frozen resolution, so the audit reads the pins directly with
      no re-resolution (pip's resolver would try to rebuild the
      Linux-only closure members on Windows).
-  8. Full pytest suite (E2E tests use the shared Playwright browser
+  8. ``npm ci``, deterministic npm license review, and ``npm audit``
+     over the exact frontend lock, followed by frontend build/tests.
+  9. Full pytest suite (E2E tests use the shared Playwright browser
      cache and are reported as skipped when it is unavailable).
-  9. The golden path (``tools/golden_path.py``: fixture -> data lake
+ 10. The golden path (``tools/golden_path.py``: fixture -> data lake
      -> strategy reports -> internal paper -> all 13 workstation
      screens -> restart recovery with every audit ledger re-read).
- 10. Clean-checkout proof: ``git status --porcelain`` in the clone
+ 11. Clean-checkout proof: ``git status --porcelain`` in the clone
      must be empty after all of the above.
 
 All generated state lives under the temporary root. On success it is
@@ -58,6 +60,22 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 STEPS: list[tuple[str, str]] = []
+
+
+def print_console(value: object = "", *, file=None, flush: bool = False) -> None:
+    """Print a summary line without crashing on a narrow Windows console.
+
+    Step logs are decoded fail-soft so diagnostics survive a child's encoding
+    mismatch.  A replacement character in that retained evidence must not make
+    an otherwise completed release gate exit non-zero while printing its final
+    summary.
+    """
+
+    stream = sys.stdout if file is None else file
+    text = str(value)
+    encoding = getattr(stream, "encoding", None) or "utf-8"
+    safe = text.encode(encoding, errors="replace").decode(encoding)
+    print(safe, file=stream, flush=flush)
 
 
 def _venv_python(venv: Path) -> Path:
@@ -249,6 +267,18 @@ def main() -> int:
             1800,
         ),
         step(
+            "frontend license review (locked closure)",
+            [_venv_python(temp / "release-venv"), "tools/npm_license_review.py"],
+            checkout,
+            120,
+        ),
+        step(
+            "npm audit --audit-level=high",
+            ["cmd", "/c", "npm", "audit", "--audit-level=high"],
+            checkout / "frontend",
+            600,
+        ),
+        step(
             "frontend bundle current (build_frontend --check)",
             [_venv_python(temp / "release-venv"), "tools/build_frontend.py", "--check"],
             checkout,
@@ -325,8 +355,9 @@ def main() -> int:
     print(f"clone clean at end (no generated state): {'yes' if clean else 'NO'}")
 
     # Counts worth recording in the iteration evidence.
-    pytest_log = logs / "09-full-pytest-suite.log"
-    if pytest_log.exists():
+    pytest_logs = tuple(logs.glob("*-full-pytest-suite.log"))
+    if pytest_logs:
+        pytest_log = pytest_logs[0]
         lines = [
             line for line in pytest_log.read_text(encoding="utf-8").splitlines() if line.strip()
         ]
@@ -335,11 +366,12 @@ def main() -> int:
             f"{counts[k]} {k}" for k in ("passed", "failed", "skipped", "error") if k in counts
         )
         print(f"  pytest: {printed}")
-    golden_log = logs / "10-golden-path.log"
-    if golden_log.exists():
+    golden_logs = tuple(logs.glob("*-golden-path-*.log"))
+    if golden_logs:
+        golden_log = golden_logs[0]
         for line in golden_log.read_text(encoding="utf-8").splitlines():
             if "checks" in line and ("PASSED" in line or "FAILED" in line):
-                print(f"  golden path: {line.strip()}")
+                print_console(f"  golden path: {line.strip()}")
     playwright_cache = Path(os.environ.get("LOCALAPPDATA", "")) / "ms-playwright"
     if playwright_cache.exists():
         print("  playwright browser cache: present (E2E tests ran)")

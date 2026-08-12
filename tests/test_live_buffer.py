@@ -1,8 +1,10 @@
 """Replay lake round-trip, filtering and retention (0015 Phase A, ADR-0014)."""
 
 import json
+import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -57,6 +59,48 @@ def _quote(instrument: str, bid: float = 100.0, **overrides: object) -> MarketUp
     )
 
 
+class _FailStatusWriteOnce:
+    """DuckDB boundary proxy that fails after the replay-event insert."""
+
+    def __init__(self, connection: Any) -> None:
+        self._connection = connection
+        self._armed = True
+        self.error = RuntimeError("injected source_status write failure")
+
+    def execute(self, query: str, parameters: object = None) -> Any:
+        if self._armed and query.startswith("INSERT INTO source_status"):
+            self._armed = False
+            raise self.error
+        if parameters is None:
+            return self._connection.execute(query)
+        return self._connection.execute(query, parameters)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._connection, name)
+
+
+class _PauseAfterSequenceQuery:
+    """Expose a competing replay between ``execute`` and ``fetchone``."""
+
+    def __init__(self, connection: Any) -> None:
+        self._connection = connection
+        self.sequence_query_ready = threading.Event()
+        self.competing_query_finished = threading.Event()
+
+    def execute(self, query: str, parameters: object = None) -> Any:
+        if parameters is None:
+            result = self._connection.execute(query)
+        else:
+            result = self._connection.execute(query, parameters)
+        if query.startswith("SELECT COALESCE(MAX(local_seq)"):
+            self.sequence_query_ready.set()
+            self.competing_query_finished.wait(timeout=1)
+        return result
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._connection, name)
+
+
 @pytest.fixture
 def buffer(tmp_path: Path) -> LiveBuffer:
     yield LiveBuffer(tmp_path, retention_days=7)
@@ -64,6 +108,109 @@ def buffer(tmp_path: Path) -> LiveBuffer:
 
 
 class TestAppendReplayRoundTrip:
+    def test_tail_limit_selects_latest_rows_but_preserves_replay_order(
+        self, buffer: LiveBuffer
+    ) -> None:
+        for sequence in (1, 2, 3):
+            buffer.append(_quote("BTC", sequence=sequence))
+
+        rows = buffer.replay(limit=2, tail=True)
+
+        assert [row.sequence for row in rows] == [2, 3]
+
+    def test_append_and_replay_serialize_access_to_the_shared_connection(
+        self, tmp_path: Path
+    ) -> None:
+        lake = LiveBuffer(tmp_path)
+        paused_connection = _PauseAfterSequenceQuery(lake._con)
+        lake._con = paused_connection
+        failures: list[BaseException] = []
+
+        def append() -> None:
+            try:
+                lake.append(_quote("BTC", sequence=1))
+            except BaseException as exc:
+                failures.append(exc)
+
+        def replay() -> None:
+            assert paused_connection.sequence_query_ready.wait(timeout=1)
+            try:
+                lake.replay()
+            except BaseException as exc:
+                failures.append(exc)
+            finally:
+                paused_connection.competing_query_finished.set()
+
+        writer = threading.Thread(target=append)
+        reader = threading.Thread(target=replay)
+        try:
+            writer.start()
+            reader.start()
+            writer.join(timeout=2)
+            reader.join(timeout=2)
+
+            assert not writer.is_alive()
+            assert not reader.is_alive()
+            assert failures == []
+            assert lake.replay() == [_quote("BTC", sequence=1)]
+        finally:
+            paused_connection.competing_query_finished.set()
+            writer.join(timeout=2)
+            reader.join(timeout=2)
+            lake.close()
+
+    def test_status_append_is_atomic_and_retry_reuses_the_local_sequence(
+        self, tmp_path: Path
+    ) -> None:
+        lake = LiveBuffer(tmp_path)
+        failing_connection = _FailStatusWriteOnce(lake._con)
+        lake._con = failing_connection
+        status = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.STATUS,
+            {},
+            state=SourceState.DISCONNECTED,
+            state_note="fault drill",
+        )
+        try:
+            with pytest.raises(
+                RuntimeError, match="injected source_status write failure"
+            ) as caught:
+                lake.append(status)
+            assert caught.value is failing_connection.error
+
+            assert lake.replay() == []
+            assert lake.statuses() == []
+
+            assert lake.append(status) == 1
+            assert lake.replay() == [status]
+            assert lake.statuses() == [
+                {
+                    "venue": Venue.HYPERLIQUID.value,
+                    "instrument": "BTC",
+                    "state": SourceState.DISCONNECTED.value,
+                    "note": "fault drill",
+                    "changed_at": status.received_at,
+                }
+            ]
+        finally:
+            lake.close()
+
+    def test_non_status_append_commits_for_a_reopened_long_lived_lake(
+        self, tmp_path: Path
+    ) -> None:
+        lake = LiveBuffer(tmp_path)
+        update = _quote("BTC", sequence=7)
+        assert lake.append(update) == 1
+        lake.close()
+
+        reopened = LiveBuffer(tmp_path)
+        try:
+            assert reopened.replay() == [update]
+        finally:
+            reopened.close()
+
     def test_all_kinds_round_trip(self, buffer: LiveBuffer) -> None:
         updates = [
             _quote("BTC"),
@@ -226,6 +373,37 @@ class TestReplayFilters:
     def test_local_sequence_cutoff_must_be_positive(self, buffer: LiveBuffer) -> None:
         with pytest.raises(ValueError, match="positive integer"):
             buffer.replay(through_local_seq=0)
+
+
+class TestPriceTrailIdentity:
+    def test_same_symbol_is_filtered_and_partitioned_by_venue(
+        self, buffer: LiveBuffer
+    ) -> None:
+        for venue, closes in (
+            (Venue.HYPERLIQUID, (100.0, 101.0)),
+            (Venue.MOOMOO, (200.0, 201.0)),
+        ):
+            for sequence, close in enumerate(closes, start=1):
+                buffer.append(
+                    _update(
+                        venue,
+                        "BTC",
+                        UpdateKind.CANDLE,
+                        {
+                            "open": close,
+                            "high": close + 1,
+                            "low": close - 1,
+                            "close": close,
+                        },
+                        sequence=sequence,
+                    )
+                )
+
+        trail = buffer.price_trail(
+            [(Venue.HYPERLIQUID.value, "BTC")], limit=20
+        )
+
+        assert trail == {"hyperliquid:BTC": [100.0, 101.0]}
 
 
 class TestLatest:

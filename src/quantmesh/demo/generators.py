@@ -22,7 +22,12 @@ import math
 import random
 from datetime import datetime, timedelta
 
-from quantmesh.demo.manifest import SESSIONS, DemoScenario, InstrumentSpec
+from quantmesh.demo.manifest import (
+    HISTORICAL_DAILY_SESSIONS,
+    SESSIONS,
+    DemoScenario,
+    InstrumentSpec,
+)
 
 
 class _Draw:
@@ -268,3 +273,102 @@ def latest_marks(series: dict[str, dict[str, list[float]]]) -> dict[str, dict[st
         venue: {symbol: round(closes[-1], 2) for symbol, closes in symbols.items()}
         for venue, symbols in series.items()
     }
+
+
+def _recent_equity_sessions(scenario: DemoScenario, count: int) -> list[datetime]:
+    candidate = scenario.anchor.replace(hour=20, minute=0, second=0, microsecond=0)
+    if candidate > scenario.anchor:
+        candidate -= timedelta(days=1)
+    sessions: list[datetime] = []
+    while len(sessions) < count:
+        if candidate.weekday() < 5:
+            sessions.append(candidate)
+        candidate -= timedelta(days=1)
+    return list(reversed(sessions))
+
+
+def _observed_row(
+    *,
+    timestamp: datetime,
+    interval: str,
+    open_: float,
+    close: float,
+    volume: float,
+) -> dict[str, object]:
+    spread = max(abs(close - open_) * 0.35, max(open_, close) * 0.0015)
+    return {
+        "timestamp": timestamp,
+        "interval": interval,
+        "open": open_,
+        "high": max(open_, close) + spread,
+        "low": min(open_, close) - spread,
+        "close": close,
+        "volume": volume,
+    }
+
+
+def analytical_history(
+    scenario: DemoScenario,
+    spec: InstrumentSpec,
+    *,
+    target_close: float | None = None,
+) -> dict[str, list[dict[str, object]]]:
+    """Deep deterministic equity history, independent of the live fixture RNG."""
+    sessions = _recent_equity_sessions(scenario, HISTORICAL_DAILY_SESSIONS)
+    phase = (scenario.seed % 997) / 997 + sum(ord(char) for char in spec.symbol) / 100
+    closes = [
+        spec.base_price
+        * math.exp(
+            0.0006 * index
+            + 0.010 * math.sin(index / 7 + phase)
+            + 0.003 * math.cos(index / 17 + phase)
+        )
+        for index in range(HISTORICAL_DAILY_SESSIONS)
+    ]
+    if target_close is not None:
+        scale = target_close / closes[-1]
+        closes = [value * scale for value in closes]
+    daily: list[dict[str, object]] = []
+    for index, (timestamp, close) in enumerate(zip(sessions, closes, strict=True)):
+        open_ = closes[index - 1] if index else close * 0.998
+        daily.append(
+            _observed_row(
+                timestamp=timestamp,
+                interval="1d",
+                open_=open_,
+                close=close,
+                volume=1_000_000 + index * 137,
+            )
+        )
+
+    specifications = {
+        "5m": (1, 5, 78),
+        "30m": (5, 30, 13),
+        "1h": (23, 60, 7),
+    }
+    result: dict[str, list[dict[str, object]]] = {"1d": daily}
+    for interval, (session_count, step_minutes, points_per_session) in specifications.items():
+        rows: list[dict[str, object]] = []
+        selected_sessions = sessions[-session_count:]
+        for session_index, session_end in enumerate(selected_sessions):
+            session_open = session_end.replace(hour=13, minute=30)
+            daily_close = closes[-session_count + session_index]
+            previous = daily_close * 0.996
+            for point in range(points_per_session):
+                timestamp = session_open + timedelta(minutes=step_minutes * point)
+                progress = (point + 1) / points_per_session
+                close = daily_close * (
+                    0.996 + 0.004 * progress + 0.0015 * math.sin(point / 3 + phase + session_index)
+                )
+                rows.append(
+                    _observed_row(
+                        timestamp=timestamp,
+                        interval=interval,
+                        open_=previous,
+                        close=close,
+                        volume=25_000 + 100 * point + 500 * session_index,
+                    )
+                )
+                previous = close
+        result[interval] = rows
+    return result

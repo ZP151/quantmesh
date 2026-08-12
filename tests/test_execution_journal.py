@@ -5,6 +5,7 @@ so its durability discipline is load-bearing: atomic writes, fail-closed
 reads with line attribution, duplicate ids refused.
 """
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -121,6 +122,28 @@ def test_corrupt_line_fails_closed_with_attribution(tmp_path: Path) -> None:
     path.write_text("this is not json\n", encoding="utf-8")
 
     with pytest.raises(ValueError, match="line 1 is invalid"):
+        journal.all()
+
+
+def test_read_refuses_order_state_that_disagrees_with_its_fill_history(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "orders"
+    journal = OrderJournal(root=root)
+    filled = OrderStateMachine.apply(
+        make_order(),
+        OrderEventType.FILL,
+        fill=order_fill(10.0, 100.0),
+        timestamp=CREATED_AT,
+    )
+    journal.record(filled)
+    path = root / JOURNAL_FILE
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["status"] = "pending"
+    payload["filled_quantity"] = 0.0
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="line 1.*derived state"):
         journal.all()
 
 

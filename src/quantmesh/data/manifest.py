@@ -17,16 +17,25 @@ honest record of "the bytes changed".
 import os
 import tempfile
 from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
 
 import duckdb
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
+from quantmesh._fs import atomic_replace
 from quantmesh.data.layout import shards_in, validate_dataset_name, validate_symbol
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Venue
 
 MANIFEST_NAME = "manifest.json"
+
+
+class DatasetClass(StrEnum):
+    """Trust-relevant classification of the bytes declared by a manifest."""
+
+    OBSERVED = "observed"
+    SYNTHETIC = "synthetic"
 
 
 def _utc(value: datetime | None) -> datetime | None:
@@ -63,6 +72,7 @@ class DatasetManifest(BaseModel):
     schema_version: int = 1
     dataset: str
     source: str = Field(min_length=1)
+    data_class: DatasetClass | None = None
     timezone: str = "UTC"
     license: str = Field(min_length=1)
     revision: int = Field(ge=1)
@@ -163,6 +173,7 @@ class ManifestWriter:
         *,
         source: str,
         license: str,
+        data_class: DatasetClass | None = None,
         revision: int | None = None,
         rewritten: frozenset[tuple[str, Venue, str]] = frozenset(),
         generated_at: datetime | None = None,
@@ -196,6 +207,13 @@ class ManifestWriter:
         previous = self._previous_manifest(dataset)
         if previous is not None:
             self._require_no_coverage_loss(dataset, previous, scan, rewritten)
+        effective_data_class = (
+            data_class
+            if data_class is not None
+            else previous.data_class
+            if previous is not None
+            else None
+        )
         if revision is None:
             revision = (previous.revision if previous is not None else 0) + 1
         if revision < 1:
@@ -203,6 +221,7 @@ class ManifestWriter:
         manifest = DatasetManifest(
             dataset=dataset,
             source=source,
+            data_class=effective_data_class,
             timezone="UTC",
             license=license,
             revision=revision,
@@ -227,7 +246,7 @@ class ManifestWriter:
         try:
             with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
                 handle.write(manifest.model_dump_json(indent=2))
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)

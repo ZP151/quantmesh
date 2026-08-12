@@ -16,7 +16,6 @@ byte-identically across independent roots.
 import csv
 import hashlib
 import json
-import os
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -24,6 +23,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
+from quantmesh._fs import atomic_replace
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.portfolio.exposure import PortfolioHolding
 from quantmesh.portfolio.scenarios import (
@@ -224,7 +224,7 @@ class ScenarioReportRegistry:
             except BaseException:
                 temporary.unlink(missing_ok=True)
                 raise
-        os.replace(temporary, self.path)
+        atomic_replace(temporary, self.path)
 
     def _read(self) -> list[ScenarioReport]:
         if not self.path.exists():

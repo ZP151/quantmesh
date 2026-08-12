@@ -2,7 +2,30 @@
 
 These projects are not all runtime dependencies. They are reference implementations or isolated companion services that can shorten QuantMesh development.
 
-## Priority A: inspect and reuse patterns now
+## Priority A: coherent-framework bake-off now
+
+### FinRL-X / FinRL-Trading
+
+Use the complete Apache-2.0 Python workflow as the first research-engine
+candidate: data, stock selection, allocation, timing, risk, backtest and paper
+execution expressed through portfolio weights.
+
+Recommended reuse: pin an isolated checkout, run the QuantMesh NVDA manifest
+end to end and adapt outputs to QuantMesh research-run, target-weight, risk and
+paper-proposal contracts. Admit a package/process dependency only after the
+iteration-0020 determinism, leakage, Windows, resource and license gates pass.
+
+### NautilusTrader
+
+Use its unified research/backtest/sandbox/live event model and official
+Hyperliquid, Polymarket and Interactive Brokers adapters to test whether a
+mature execution engine can replace future venue-specific plumbing.
+
+Recommended reuse: one isolated recorded Hyperliquid replay-to-sandbox
+comparator. Do not link or copy it into the permissive runtime until an ADR
+accepts the LGPL-3.0 and Rust/Python process boundary.
+
+## Priority B: inspect and reuse bounded companions
 
 ### Hummingbot
 
@@ -26,7 +49,7 @@ Recommended reuse: provider registry ideas and API shapes. Treat the AGPL applic
 
 Use it to study gateway/app separation and domain modules for CTA, portfolio, spread and algorithmic trading. Its MIT license makes selected code reuse easier, but the framework is broad and should not become a second core engine inside QuantMesh.
 
-## Priority B: AI research reference
+## Priority C: AI research reference
 
 ### TradingAgents
 
@@ -36,3 +59,6 @@ Use it to study multi-agent research roles, decision logs, checkpointing and loc
 
 Every copied file must keep its upstream copyright and license header. Prefer adapters, submodules and process boundaries over copying large portions of a framework into the QuantMesh core.
 
+The complete evidence matrix and Phase-0 gate are recorded in
+`docs/architecture/framework-adoption-review-2026-08-11.md`. No popularity or
+successful demo run is sufficient to approve a runtime dependency.

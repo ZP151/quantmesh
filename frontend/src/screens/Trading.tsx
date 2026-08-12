@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api, type OrderSummary } from '@/lib/api'
+import { instrumentPath } from '@/lib/instrument-route'
 import { dateTime, money, moneyPrecise, pnlClass, quantity } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
 function OrderAction() {
   const { t } = usePreferences()
   return (
-    <Button variant="outline" size="sm" render={<Link to="/trading/order" />}>
+    <Button nativeButton={false} variant="outline" size="sm" render={<Link to="/trading/order" />}>
       <Send className="size-3.5" aria-hidden /> {t('nav.paperOrder')}
     </Button>
   )
@@ -49,18 +50,51 @@ export function PositionsScreen() {
                   </thead>
                   <tbody>
                     {positions.map((position) => {
-                      const mark = marks.data?.marks[position.key] ?? null
+                      const evidence = position.mark_status ?? marks.data?.mark_statuses?.[position.key]
+                      const candidateMark = marks.data?.marks[position.key]
+                      const validAvailableMark = evidence?.status === 'available'
+                        && typeof candidateMark === 'number'
+                        && Number.isFinite(candidateMark)
+                      const status = validAvailableMark
+                        ? 'available'
+                        : evidence?.status === 'stale' ? 'stale' : 'unavailable'
+                      const reason = evidence?.reason
+                        ?? (evidence === undefined
+                          ? t('screen.valuation.legacyReason')
+                          : validAvailableMark ? null : t('screen.valuation.invalidMark'))
+                      const mark = validAvailableMark ? candidateMark : null
+                      const unrealized = status === 'available' ? position.unrealized_pnl : null
                       return (
                         <tr key={position.key} className="border-b border-border/60 last:border-0">
                           <td className="px-4 py-2.5">
-                            <p className="font-mono font-medium">{position.instrument.symbol}</p>
+                            <Link
+                              className="font-mono font-medium underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              to={instrumentPath(position.instrument.venue, position.instrument.symbol)}
+                            >
+                              {position.instrument.symbol}
+                            </Link>
                             <p className="font-mono text-[10px] text-muted-foreground">{position.key}</p>
                           </td>
                           <td className="px-4 py-2.5 text-right font-mono tabular-nums">{quantity(position.quantity)}</td>
                           <td className="px-4 py-2.5 text-right font-mono tabular-nums">{moneyPrecise(position.average_cost)}</td>
-                          <td className="px-4 py-2.5 text-right font-mono tabular-nums">{mark === null ? '—' : money(mark)}</td>
-                          <td className={`px-4 py-2.5 text-right font-mono tabular-nums ${pnlClass(position.unrealized_pnl)}`}>
-                            {money(position.unrealized_pnl)}
+                          <td className="px-4 py-2.5 text-right">
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="font-mono tabular-nums">{mark === null ? '—' : money(mark)}</span>
+                              <Badge
+                                variant={status === 'available' ? 'outline' : 'destructive'}
+                                className="font-mono text-[10px]"
+                              >
+                                {t(`screen.pnl.marks.status.${status}`)}
+                              </Badge>
+                              {reason && (
+                                <span className="max-w-64 text-right text-[10px] leading-snug text-muted-foreground">
+                                  {reason}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className={`px-4 py-2.5 text-right font-mono tabular-nums ${pnlClass(unrealized)}`}>
+                            {money(unrealized)}
                           </td>
                           <td className={`px-4 py-2.5 text-right font-mono tabular-nums ${pnlClass(position.realized_pnl)}`}>
                             {money(position.realized_pnl)}
@@ -162,6 +196,7 @@ export function OrdersScreen() {
 
 export function PnLScreen() {
   const query = useSurface(['pnl'], api.pnl)
+  const positions = useSurface(['positions'], api.positions)
   const { t } = usePreferences()
 
   return (
@@ -171,21 +206,69 @@ export function PnLScreen() {
       actions={<OrderAction />}
     >
       <Surface query={query} title={t('screen.pnl.title')}>
-        {(pnl) => (
-          <div className="space-y-5">
+        {(pnl) => {
+          const heldPositions = positions.data
+          const positionsKnown = heldPositions !== undefined
+          const statuses = pnl.mark_statuses ?? {}
+          const heldMarksAvailable = positionsKnown && heldPositions.every((position) => (
+            (position.mark_status ?? statuses[position.key])?.status === 'available'
+            && typeof pnl.marks[position.key] === 'number'
+            && Number.isFinite(pnl.marks[position.key])
+            && !pnl.missing_marks.includes(position.key)
+          ))
+          const totalsAvailable = typeof pnl.equity === 'number'
+            && Number.isFinite(pnl.equity)
+            && typeof pnl.total_pnl === 'number'
+            && Number.isFinite(pnl.total_pnl)
+            && typeof pnl.unrealized_pnl === 'number'
+            && Number.isFinite(pnl.unrealized_pnl)
+          const valuationComplete = pnl.valuation_complete === false
+            ? false
+            : pnl.valuation_complete === true
+              ? heldMarksAvailable && totalsAvailable
+              : positionsKnown && heldPositions.length === 0
+          const valuationReason = pnl.valuation_reason
+            ?? (!positionsKnown
+              ? t('screen.valuation.positionStateMissing')
+              : heldPositions.length > 0
+                ? pnl.valuation_complete === undefined
+                  ? t('screen.valuation.legacyReason')
+                  : t('screen.valuation.invalidMark')
+                : null)
+
+          return <div className="space-y-5">
+            {!valuationComplete && (
+              <div
+                className="rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-sm"
+                role="status"
+              >
+                <p className="font-medium text-amber-700 dark:text-amber-300">
+                  {t('screen.valuation.incomplete')}
+                </p>
+                {valuationReason && (
+                  <p className="mt-1 text-xs text-muted-foreground">{valuationReason}</p>
+                )}
+              </div>
+            )}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="pb-1">
                   <CardTitle className="text-xs font-medium text-muted-foreground">{t('screen.overview.account.equity')}</CardTitle>
                 </CardHeader>
-                <CardContent className="font-mono text-lg tabular-nums">{money(pnl.equity)}</CardContent>
+                <CardContent className="font-mono text-lg tabular-nums">
+                  {valuationComplete && pnl.equity !== null
+                    ? money(pnl.equity)
+                    : t('screen.workspace.valueUnavailable')}
+                </CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-1">
                   <CardTitle className="text-xs font-medium text-muted-foreground">{t('screen.pnl.total')}</CardTitle>
                 </CardHeader>
-                <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(pnl.total_pnl)}`}>
-                  {money(pnl.total_pnl)}
+                <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(valuationComplete ? pnl.total_pnl : null)}`}>
+                  {valuationComplete && pnl.total_pnl !== null
+                    ? money(pnl.total_pnl)
+                    : t('screen.workspace.valueUnavailable')}
                 </CardContent>
               </Card>
               <Card>
@@ -200,8 +283,10 @@ export function PnLScreen() {
                 <CardHeader className="pb-1">
                   <CardTitle className="text-xs font-medium text-muted-foreground">{t('screen.pnl.unrealized')}</CardTitle>
                 </CardHeader>
-                <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(pnl.unrealized_pnl)}`}>
-                  {money(pnl.unrealized_pnl)}
+                <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(valuationComplete ? pnl.unrealized_pnl : null)}`}>
+                  {valuationComplete && pnl.unrealized_pnl !== null
+                    ? money(pnl.unrealized_pnl)
+                    : t('screen.workspace.valueUnavailable')}
                 </CardContent>
               </Card>
             </div>
@@ -216,16 +301,38 @@ export function PnLScreen() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
-                {Object.entries(pnl.marks).map(([key, mark]) => (
-                  <span key={key} className="flex items-center gap-2 rounded-lg border border-border px-2.5 py-1.5 text-xs">
-                    <span className="font-mono">{key}</span>
-                    <span className="font-mono text-muted-foreground">{money(mark)}</span>
-                  </span>
-                ))}
+                {Array.from(new Set([...Object.keys(pnl.marks), ...pnl.missing_marks])).map((key) => {
+                  const mark = pnl.marks[key]
+                  const evidence = statuses[key]
+                  const displayMark = evidence?.status === 'available' ? mark : undefined
+                  return (
+                    <span
+                      key={key}
+                      className="flex items-center gap-2 rounded-lg border border-border px-2.5 py-1.5 text-xs"
+                      title={evidence?.reason ?? undefined}
+                    >
+                      <span className="font-mono">{key}</span>
+                      <span className="font-mono text-muted-foreground">
+                        {displayMark === undefined ? '—' : money(displayMark)}
+                      </span>
+                      {evidence && (
+                        <Badge
+                          variant={evidence.status === 'available' ? 'outline' : 'destructive'}
+                          className="font-mono text-[10px]"
+                        >
+                          {t(`screen.pnl.marks.status.${evidence.status}`)}
+                        </Badge>
+                      )}
+                      {evidence?.reason && (
+                        <span className="max-w-64 text-muted-foreground">{evidence.reason}</span>
+                      )}
+                    </span>
+                  )
+                })}
               </CardContent>
             </Card>
           </div>
-        )}
+        }}
       </Surface>
     </Page>
   )
