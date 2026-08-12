@@ -1,22 +1,22 @@
 # Active Goal
 
-- Status: `v0.1.0` released; iteration 0020 active
+- Status: iteration 0020 completed; `v0.1.1-rc1` verified and accepted for
+  prototype use; final `v0.1.1` promotion remains an explicit operator gate
 - Objective: first decide, with reproducible evidence, whether FinRL-X and/or a
   process-isolated NautilusTrader boundary can replace substantial engine work;
   then deliver the integrated instrument decision workspace without changing
   paper-only execution authority.
 - Started: 2026-08-11
-- Completed release: `v0.1.0` at `5a7f660` (PR #106)
-- Next iteration: `docs/iterations/0020-research-to-paper-loop.md`
-- Tracking issue: [#107](https://github.com/ZP151/quantmesh/issues/107)
-- Integration branch: `0020-research-to-paper-loop`
-- Baseline: released `main` at `5a7f660`; all release candidates remain
-  immutable historical tags.
-- Next delivery: `v0.1.1-rc1`, clean-checkout gate and isolated operator
-  acceptance. Promotion remains an explicit operator gate.
-- Blockers: none at planning time. Every framework, chart and forecasting
-  dependency must pass license, packaging, Windows, determinism, leakage and
-  evidence gates before adoption.
+- Completed candidate: `v0.1.1-rc1` at `b6b05b9` (PR #108)
+- Completed iteration: `docs/iterations/0020-research-to-paper-loop.md`
+- Tracking issue: [#107](https://github.com/ZP151/quantmesh/issues/107), closed
+- Integration branch: squash-merged and deleted remotely
+- Baseline: `main` at `b6b05b9`; all release candidates remain immutable tags.
+- Next decision: explicitly promote `v0.1.1-rc1` to `v0.1.1`, reject it with a
+  numbered acceptance defect, or start planning iteration 0021 without changing
+  the candidate.
+- Blockers: final promotion is intentionally withheld pending an explicit
+  operator command; no engineering blocker remains for iteration 0020.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 
@@ -132,6 +132,29 @@ credential boundary remains fail-closed, targeted coverage is `2/2`, and the
 complete FinRL-X isolation suite is `37/37`. PR #108 must rerun once more on
 this exact fix before merge.
 
+## Iteration 0020 completion checkpoint — 2026-08-12
+
+- PR #108 passed protected-branch CI and squash-merged at `b6b05b9`; issue #107
+  closed automatically and the remote integration branch was deleted. Local
+  `main` was reconciled by fast-forward only.
+- Annotated remote tag `v0.1.1-rc1` points to the same merged commit. The exact
+  immutable tagged tree passed all 17 clean-checkout release-gate steps:
+  Python `2595 passed, 4 skipped`, frontend Vitest `143/143`, integrated golden
+  path `60/60`, Ruff, browser E2E, TypeScript, Oxlint, production/package bundle,
+  Python/frontend license closure, pip-audit, npm audit and clone-clean proof.
+- A fresh detached acceptance clone reports package/import/API version
+  `0.1.1rc1`. Its deterministic demo and read-only live/degraded stations passed
+  the actual browser walk, keyboard/zh-CN/reduced-motion/390 px checks, paper
+  proposal-to-audit lineage, kill-switch 409 drill and live smoke `15/15`.
+  The dead-station drill failed `4/4` with exit 1 as required.
+- Hyperliquid supplied real read-only BTC frames before the external stream
+  disconnected; the retained frame is labeled stale. Moomoo OpenD is absent,
+  so AAPL/NVDA are labeled unavailable. No synthetic value is presented as
+  live and no real-money authority was enabled.
+- English-primary and Simplified-Chinese acceptance records live at the isolated
+  acceptance root. The recorded verdict is PASS for prototype use only; no
+  final `v0.1.1` tag exists and promotion remains a separate human decision.
+
 ## Current state
 
 Iteration 0015 live-cockpit hardening is merged at `c47b83d` (PR #95), and the
@@ -200,11 +223,12 @@ all market access remains read-only or paper-only.
 
 ## Current frontier
 
-1. Open, green and squash-merge the single integration PR; reconcile local
-   `main` by fast-forward only.
-2. Cut and verify immutable `v0.1.1-rc1` from merged `main`, create isolated
-   demo/live-degraded acceptance stations and stop at explicit operator
-   acceptance. Do not promote `v0.1.1` or enable real-money authority.
+1. Preserve the immutable accepted candidate and its acceptance evidence.
+2. Await an explicit `promote v0.1.1-rc1 to v0.1.1` command before creating the
+   final tag. A defect report keeps the candidate unchanged and starts a repair
+   candidate instead.
+3. The next product-planning frontier is iteration 0021, trusted data fabric;
+   it does not implicitly authorize promotion or real-money execution.
 
 ## Historical delivery frontier
 
@@ -427,13 +451,10 @@ labeled and isolated from non-demo operator state.
 ## Resume instruction
 
 Run `/goal`, then read this file, `PRODUCT.md`, `docs/product-strategy.md`,
-iteration 0020, the framework adoption review, the cross-agent execution
-contract, the roadmap, relevant ADRs and current Git/CI state. Start with the
-framework bake-off and its tool-neutral tracked implementation plan. Only after
-the ADR gate, continue the integrated workspace with the selected adapter or
-the recorded native fallback: venue-aware historical chart data, truthful
-forecast artifacts and operator-confirmed paper-decision lineage. Use one
-tested integration PR, mirror every phase checkpoint for Codex/Claude recovery,
-and cut `v0.1.1-rc1` only from merged `main` after the clean-checkout gate. Do
-not enable real-money, mainnet or AI order authority, and do not promote the
-candidate without explicit human acceptance.
+iteration 0020, the framework adoption ADR, the roadmap and current Git/tag/CI
+state. Do not repeat iteration 0020: PR #108 is merged and the immutable
+`v0.1.1-rc1` candidate has passed isolated acceptance. If the operator gives
+the exact promotion authority, run a separate final-release goal; if the
+operator reports a defect, preserve RC1 and cut a new repair candidate; if the
+operator requests continued product work, plan iteration 0021 from the trusted
+data-fabric frontier. Never infer real-money, mainnet or AI order authority.
