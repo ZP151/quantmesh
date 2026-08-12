@@ -744,6 +744,17 @@ not sufficient for cross-agent recovery.
   release/frontend-security tests green). A complete gate rerun on the final
   documentation commit remains mandatory; the first attempt is evidence, not
   a waiver.
+- Clean-checkout gate attempt 2 PASSED 17/17 on `4e90a81`: exact clone and
+  version checks, fresh `.[dev,research,e2e]` install, Ruff, Python/npm license
+  closures, pip/npm vulnerability audits, source-to-package SPA bundle
+  comparison, Vitest, full pytest (`2592 passed, 4 skipped`, 898.0 s), golden
+  path `60/60` (65.7 s), and clone-clean proof. The Playwright browser cache
+  was present, so E2E tests ran. The repaired CP1252 summary printed to
+  completion and the gate returned 0; its temporary root was removed.
+- The next commit records this gate result only. No runtime, dependency,
+  generated asset or test behavior changes after `4e90a81`; the PR CI is the
+  exact-final-tree verification before squash merge. The immutable tagged-tree
+  gate remains mandatory after merge.
 
 ## Acceptance criteria
 

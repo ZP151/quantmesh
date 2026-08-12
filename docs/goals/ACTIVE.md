@@ -109,6 +109,12 @@ release-tool bug with a failing-then-passing console regression. Because the
 verified commit changed, the full clean-checkout gate must run again before
 the PR; no partial result is promoted to PASS.
 
+The complete rerun on `4e90a81` PASSED 17/17 and returned 0: `2592 passed,
+4 skipped`, golden path `60/60`, Python/npm closure and audit gates green,
+package bundle current, Playwright browser cache present and clone clean. This
+record-only documentation commit is followed by exact-final-tree PR CI; after
+merge, the immutable tag still requires its own clean tagged-tree gate.
+
 ## Current state
 
 Iteration 0015 live-cockpit hardening is merged at `c47b83d` (PR #95), and the
@@ -177,12 +183,9 @@ all market access remains read-only or paper-only.
 
 ## Current frontier
 
-1. Run the clean-checkout release gate on committed branch head and record all
-   per-step evidence in iteration 0020. Local review and verification are
-   already green at `2e54909`.
-2. Open, green and squash-merge the single integration PR; reconcile local
+1. Open, green and squash-merge the single integration PR; reconcile local
    `main` by fast-forward only.
-3. Cut and verify immutable `v0.1.1-rc1` from merged `main`, create isolated
+2. Cut and verify immutable `v0.1.1-rc1` from merged `main`, create isolated
    demo/live-degraded acceptance stations and stop at explicit operator
    acceptance. Do not promote `v0.1.1` or enable real-money authority.
 

@@ -880,7 +880,7 @@ frozen release closure; in that environment `tools/license_review.py` must
 refuse them. Record the refusal, never allowlist ambient packages, and obtain
 the authoritative license PASS from Step 3's fresh release venv.
 
-- [ ] **Step 3: Run the clean-checkout release gate before opening the PR**
+- [x] **Step 3: Run the clean-checkout release gate before opening the PR**
 
 Run: `.\.venv\Scripts\python.exe tools/release_gate.py --branch HEAD`.
 
