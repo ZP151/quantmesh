@@ -62,6 +62,22 @@ REPO = Path(__file__).resolve().parents[1]
 STEPS: list[tuple[str, str]] = []
 
 
+def print_console(value: object = "", *, file=None, flush: bool = False) -> None:
+    """Print a summary line without crashing on a narrow Windows console.
+
+    Step logs are decoded fail-soft so diagnostics survive a child's encoding
+    mismatch.  A replacement character in that retained evidence must not make
+    an otherwise completed release gate exit non-zero while printing its final
+    summary.
+    """
+
+    stream = sys.stdout if file is None else file
+    text = str(value)
+    encoding = getattr(stream, "encoding", None) or "utf-8"
+    safe = text.encode(encoding, errors="replace").decode(encoding)
+    print(safe, file=stream, flush=flush)
+
+
 def _venv_python(venv: Path) -> Path:
     if os.name == "nt":
         return venv / "Scripts" / "python.exe"
@@ -355,7 +371,7 @@ def main() -> int:
         golden_log = golden_logs[0]
         for line in golden_log.read_text(encoding="utf-8").splitlines():
             if "checks" in line and ("PASSED" in line or "FAILED" in line):
-                print(f"  golden path: {line.strip()}")
+                print_console(f"  golden path: {line.strip()}")
     playwright_cache = Path(os.environ.get("LOCALAPPDATA", "")) / "ms-playwright"
     if playwright_cache.exists():
         print("  playwright browser cache: present (E2E tests ran)")
