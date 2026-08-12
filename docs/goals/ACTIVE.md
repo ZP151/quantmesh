@@ -115,6 +115,16 @@ package bundle current, Playwright browser cache present and clone clean. This
 record-only documentation commit is followed by exact-final-tree PR CI; after
 merge, the immutable tag still requires its own clean tagged-tree gate.
 
+PR #108 then caught a historical cross-platform lock defect in the newly
+enabled Linux frontend job: a Windows-only Rolldown binding was declared as a
+normal root dependency. The same PR now removes that direct dependency,
+declares and pins Node `22.12.0`, and adds a platform-neutral direct-dependency
+regression. Frozen install, lint and production build pass on both Windows and
+Linux Node 22.12; Vitest is `143/143`, focused release/security tests are `8/8`,
+the package bundle is current, and audit/license gates are green. The immediate
+frontier is the exact-tree PR CI rerun, squash merge, `v0.1.1-rc1` tag,
+tagged-tree gate and isolated operator acceptance.
+
 ## Current state
 
 Iteration 0015 live-cockpit hardening is merged at `c47b83d` (PR #95), and the

@@ -10,6 +10,7 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 LOCK = REPO / "frontend" / "package-lock.json"
+MANIFEST = REPO / "frontend" / "package.json"
 REVIEW = REPO / "tools" / "npm_license_review.py"
 
 
@@ -29,6 +30,42 @@ def test_frozen_frontend_lock_has_only_allowed_licenses() -> None:
 
     assert len(inventory) == 646
     assert inventory["node_modules/react"]["license"] == "MIT"
+
+
+def test_direct_frontend_dependencies_are_platform_neutral() -> None:
+    """A frozen install must work on every CI and operator platform."""
+
+    document = json.loads(LOCK.read_text(encoding="utf-8"))
+    packages = document["packages"]
+    root = packages[""]
+    direct = {
+        *root.get("dependencies", {}),
+        *root.get("devDependencies", {}),
+    }
+
+    constrained = {
+        name: {
+            key: packages[f"node_modules/{name}"][key]
+            for key in ("os", "cpu")
+            if key in packages[f"node_modules/{name}"]
+        }
+        for name in direct
+        if any(
+            key in packages[f"node_modules/{name}"]
+            for key in ("os", "cpu")
+        )
+    }
+
+    assert constrained == {}
+
+
+def test_frontend_declares_the_ci_supported_node_floor() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    ci = (REPO / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+
+    assert manifest["engines"]["node"] == "^20.19.0 || >=22.12.0"
+    assert (REPO / ".nvmrc").read_text(encoding="utf-8").strip() == "22.12.0"
+    assert 'node-version: "22.12.0"' in ci
 
 
 @pytest.mark.parametrize("license_name", [None, "GPL-3.0-only", "SEE LICENSE IN X"])

@@ -756,6 +756,32 @@ not sufficient for cross-agent recovery.
   exact-final-tree verification before squash merge. The immutable tagged-tree
   gate remains mandatory after merge.
 
+## Checkpoint 5 — cross-platform PR dependency closure (2026-08-12)
+
+- PR #108 exposed a pre-existing frontend portability defect as soon as the
+  new Linux frontend CI ran: `@rolldown/binding-win32-x64-msvc` was a normal
+  root dependency, so Linux `npm ci` failed with `EBADPLATFORM` before any
+  source check. The binding entered the product in the original SPA release
+  and was not required by the iteration-0020 chart adapter.
+- The platform-specific direct dependency is removed. Rolldown and Oxlint now
+  resolve their native binaries through their upstream optional-dependency
+  contracts, while the project declares the upstream Node floor
+  (`^20.19.0 || >=22.12.0`) and pins the CI/developer baseline in `.nvmrc` to
+  `22.12.0`. A regression rejects any `os`/`cpu`-constrained direct frontend
+  dependency and pins the manifest, `.nvmrc` and CI runtime agreement.
+- Diagnosis also proved why the first local reinstall looked inconsistent:
+  the ambient Node `22.11.0` is below the declared Vite/Rolldown/Oxlint engine
+  floor, so npm silently omitted optional native bindings. An isolated NVM
+  Node `22.12.0` install now completes frozen install, Oxlint and the production
+  build on Windows. A Linux Node `22.12.0` container completes the same frozen
+  install, audit, lint and build from the final lock.
+- Post-fix evidence is green: frontend Vitest `143/143`, generated API and
+  TypeScript checks, Windows and Linux lint/build, npm audit with zero known
+  vulnerabilities, 646-package fail-closed license review, packaged bundle
+  comparison, and focused release/frontend-security tests `8/8`. PR #108 CI
+  must rerun on this exact tree before merge; the tagged-tree 17-step gate is
+  still mandatory after squash merge.
+
 ## Acceptance criteria
 
 - From Markets, Watchlist, Cockpit or Positions, opening NVDA (or another
