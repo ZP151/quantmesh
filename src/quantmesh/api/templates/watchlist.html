@@ -11,6 +11,13 @@
   <form action="/watchlist/add" method="post">
     <label for="symbol">Symbol</label>
     <input id="symbol" name="symbol" type="text" autocomplete="off" required>
+    {% if venues %}
+    <label for="venue">Venue</label>
+    <select id="venue" name="venue">
+      <option value="">Auto-detect only when unique</option>
+      {% for venue in venues %}<option value="{{ venue }}">{{ venue }}</option>{% endfor %}
+    </select>
+    {% endif %}
     <button type="submit">Add to watchlist</button>
   </form>
 </section>
@@ -20,16 +27,18 @@
   {% if entries %}
   <table>
     <thead>
-      <tr><th scope="col">Symbol</th><th scope="col">Mark</th><th scope="col">Remove</th></tr>
+      <tr><th scope="col">Venue</th><th scope="col">Symbol</th><th scope="col">Mark</th><th scope="col">Remove</th></tr>
     </thead>
     <tbody>
       {% for entry in entries %}
       <tr>
+        <td>{% if entry.venue %}{{ entry.venue }}{% else %}legacy / unknown{% endif %}</td>
         <th scope="row">{{ entry.symbol }}</th>
         <td>{% if entry.mark is not none %}{{ "%.4f"|format(entry.mark) }}{% else %}no mark{% endif %}</td>
         <td>
           <form action="/watchlist/remove" method="post">
             <input type="hidden" name="symbol" value="{{ entry.symbol }}">
+            {% if entry.venue %}<input type="hidden" name="venue" value="{{ entry.venue }}">{% endif %}
             <button type="submit" aria-label="Remove {{ entry.symbol }} from watchlist">Remove</button>
           </form>
         </td>

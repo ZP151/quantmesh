@@ -13,13 +13,20 @@ import {
 } from '@/lib/api'
 import { dateTime, moneyPrecise, quantity } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
+import { evidenceText } from './evidence-copy'
 
 function errorText(error: unknown): string {
   if (error instanceof ProposalRefusalError) return error.result.blocker ?? error.message
   return error instanceof Error ? error.message : String(error)
 }
 
-export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) {
+export function ProposalConfirmation({
+  onDismiss,
+  proposal,
+}: {
+  onDismiss: () => void
+  proposal: PaperProposal
+}) {
   const { locale, t } = usePreferences()
   const queryClient = useQueryClient()
   const [confirmationToken, setConfirmationToken] = useState('')
@@ -42,30 +49,50 @@ export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) 
   })
   const confirmationError = confirmationErrorText(result, confirmation.error)
 
-  if (result?.order) {
+  if (
+    effectiveProposal.status === 'confirmed'
+    && effectiveProposal.order_id !== null
+    && effectiveProposal.order_id !== undefined
+  ) {
+    const order = result?.order
     return (
       <section className="space-y-3 border-t border-border px-4 pt-4" aria-live="polite">
-        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+        <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-400">
           {t('screen.workspace.orderCreated')}
         </p>
         <dl className="space-y-1 text-xs">
-          <Fact label={t('screen.workspace.orderId')} value={result.order.order_id} />
-          <Fact label={t('screen.workspace.orderStatus')} value={orderStatus(result.order.status, t)} />
-          <Fact label={t('screen.workspace.filledQuantity')} value={quantity(result.order.filled_quantity, locale)} />
-          <Fact label={t('screen.workspace.quoteProvenance')} value={result.quote_provenance ?? '—'} />
+          <Fact label={t('screen.workspace.orderId')} value={effectiveProposal.order_id} />
+          {order !== null && order !== undefined && (
+            <Fact label={t('screen.workspace.orderStatus')} value={orderStatus(order.status, t)} />
+          )}
+          {order !== null && order !== undefined && (
+            <Fact label={t('screen.workspace.filledQuantity')} value={quantity(order.filled_quantity, locale)} />
+          )}
+          <Fact
+            label={t('screen.workspace.quoteProvenance')}
+            value={result?.quote_provenance ?? effectiveProposal.quote_provenance ?? '—'}
+          />
         </dl>
         <Link
-          className="inline-flex text-xs font-medium text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"
-          to={`/ops/audit?order=${encodeURIComponent(result.order.order_id)}`}
+          className="inline-flex text-xs font-medium text-emerald-800 underline-offset-4 hover:underline dark:text-emerald-400"
+          to={`/ops/audit?order=${encodeURIComponent(effectiveProposal.order_id)}`}
         >
           {t('screen.workspace.openAuditLineage')}
         </Link>
+        <Button className="w-full" onClick={onDismiss} type="button" variant="outline">
+          {t('screen.workspace.startAnotherProposal')}
+        </Button>
       </section>
     )
   }
 
   return (
     <section className="space-y-4 border-t border-border px-4 pt-4">
+      {effectiveProposal.status === 'rejected' && (
+        <p className="text-sm font-semibold text-destructive" role="alert">
+          {t('screen.workspace.proposalRejected')}
+        </p>
+      )}
       <div>
         <h3 className="text-sm font-semibold">{t('screen.workspace.proposalPreview')}</h3>
         <p className="mt-1 text-xs text-muted-foreground">{t('screen.workspace.proposalPreviewNote')}</p>
@@ -91,8 +118,25 @@ export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) 
       </dl>
       {effectiveProposal.blockers.length > 0 && (
         <ul className="space-y-1 text-xs text-destructive" role="alert">
-          {effectiveProposal.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
+          {effectiveProposal.blockers.map((blocker) => (
+            <li key={blocker} title={blocker}>{evidenceText(blocker, locale, t)}</li>
+          ))}
         </ul>
+      )}
+      {result?.order && (
+        <dl className="space-y-1 border-y border-border py-3 text-xs">
+          <Fact label={t('screen.workspace.orderId')} value={result.order.order_id} />
+          <Fact label={t('screen.workspace.orderStatus')} value={orderStatus(result.order.status, t)} />
+          <Fact label={t('screen.workspace.filledQuantity')} value={quantity(result.order.filled_quantity, locale)} />
+        </dl>
+      )}
+      {effectiveProposal.order_id !== null && effectiveProposal.order_id !== undefined && (
+        <Link
+          className="inline-flex text-xs font-medium text-foreground underline underline-offset-4"
+          to={`/ops/audit?order=${encodeURIComponent(effectiveProposal.order_id)}`}
+        >
+          {t('screen.workspace.openAuditLineage')}
+        </Link>
       )}
       <div className="border-y border-border py-3">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -122,6 +166,13 @@ export function ProposalConfirmation({ proposal }: { proposal: PaperProposal }) 
           ? t('screen.workspace.confirmingProposal')
           : t('screen.workspace.confirmProposal')}
       </Button>
+      {(effectiveProposal.status === 'blocked'
+        || effectiveProposal.status === 'confirmed'
+        || effectiveProposal.status === 'rejected') && (
+        <Button className="w-full" onClick={onDismiss} type="button" variant="outline">
+          {t('screen.workspace.startAnotherProposal')}
+        </Button>
+      )}
     </section>
   )
 }

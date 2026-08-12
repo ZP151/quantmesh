@@ -12,7 +12,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/api')>()
   return {
     ...actual,
-    api: { ...actual.api, instrumentWorkspace: vi.fn() },
+    api: { ...actual.api, health: vi.fn(), instrumentWorkspace: vi.fn() },
   }
 })
 
@@ -28,6 +28,7 @@ vi.mock('@/components/charts/InstrumentChart', () => ({
 }))
 
 import { InstrumentWorkspaceScreen } from './InstrumentWorkspace'
+import { retainSameInstrument } from './instrument/workspace-query'
 
 const workspace: InstrumentWorkspace = {
   comparison: null,
@@ -120,6 +121,8 @@ const workspace: InstrumentWorkspace = {
     equity: 100_000,
     global_kill_switch: false,
     mark_available: true,
+    valuation_complete: true,
+    valuation_reason: null,
     max_notional: 50_000,
     max_order_quantity: 100,
     max_position_quantity: 1_000,
@@ -129,6 +132,7 @@ const workspace: InstrumentWorkspace = {
 }
 
 const mockedWorkspace = vi.mocked(api.instrumentWorkspace)
+const mockedHealth = vi.mocked(api.health)
 const mockedLiveConnection = vi.mocked(useLiveConnection)
 let publishLiveUpdate: Parameters<typeof useLiveConnection>[0]
 
@@ -156,14 +160,38 @@ beforeEach(() => {
     return 'live'
   })
   mockedWorkspace.mockResolvedValue(workspace)
+  mockedHealth.mockResolvedValue({
+    live_trading: false,
+    paper_mode: true,
+    project: 'QuantMesh',
+    runtime_mode: 'demo',
+    status: 'ok',
+    version: '0.1.1rc1',
+  })
 })
 
 describe('InstrumentWorkspaceScreen', () => {
+  it('reuses placeholder evidence only for the same venue and symbol', () => {
+    expect(retainSameInstrument(
+      workspace,
+      ['instrument-workspace', 'moomoo', 'NVDA', '6m', []],
+      'moomoo',
+      'NVDA',
+    )).toBe(workspace)
+    expect(retainSameInstrument(
+      workspace,
+      ['instrument-workspace', 'moomoo', 'AAPL', '6m', []],
+      'moomoo',
+      'NVDA',
+    )).toBeUndefined()
+  })
+
   it('loads the venue-aware instrument and renders the workspace hierarchy', async () => {
     renderWorkspace()
 
     await waitFor(() => expect(screen.getByRole('heading', { name: 'NVDA' })).toBeInTheDocument())
     expect(mockedWorkspace).toHaveBeenCalledWith('moomoo', 'NVDA', '6m', [])
+    expect(mockedLiveConnection).toHaveBeenLastCalledWith(expect.any(Function), false)
     expect(screen.getByTestId('workspace-grid')).toHaveClass('xl:grid-cols-[minmax(0,1fr)_18rem_22rem]')
     expect(screen.getByTestId('instrument-chart')).toHaveTextContent('NVDA chart')
     expect(screen.getByTestId('app-main').querySelector('main')).not.toBeInTheDocument()
@@ -219,6 +247,46 @@ describe('InstrumentWorkspaceScreen', () => {
     )
   })
 
+  it('keeps the active range control mounted and focused while its data refetches', async () => {
+    let resolveNext!: (value: InstrumentWorkspace) => void
+    mockedWorkspace
+      .mockResolvedValueOnce(workspace)
+      .mockReturnValueOnce(new Promise((resolve) => { resolveNext = resolve }))
+    const user = userEvent.setup()
+    renderWorkspace()
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'NVDA' })).toBeInTheDocument())
+
+    const oneMonth = screen.getByRole('button', { name: '1M' })
+    await user.click(oneMonth)
+    await waitFor(() => expect(mockedWorkspace).toHaveBeenCalledWith('moomoo', 'NVDA', '1m', []))
+
+    expect(screen.queryByLabelText('Loading instrument workspace')).not.toBeInTheDocument()
+    expect(screen.getByText(/Updating the selected evidence/)).toBeInTheDocument()
+    expect(oneMonth).toHaveFocus()
+    expect(oneMonth).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: '6M' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('heading', { name: 'NVDA' })).toBeInTheDocument()
+
+    await act(async () => resolveNext({
+      ...workspace,
+      history: { ...workspace.history, range: '1m' },
+    }))
+    await waitFor(() => expect(oneMonth).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.queryByText(/Updating the selected evidence/)).not.toBeInTheDocument()
+  })
+
+  it('shows the complete history license instead of permanently truncating it', async () => {
+    mockedWorkspace.mockResolvedValue({
+      ...workspace,
+      history: { ...workspace.history, license: 'A complete operator-supplied license notice' },
+    })
+    renderWorkspace()
+
+    const license = await screen.findByText('A complete operator-supplied license notice')
+    expect(license).toHaveAttribute('title', 'A complete operator-supplied license notice')
+    expect(license).not.toHaveClass('truncate')
+  })
+
   it('surfaces resolution fallback, history quality findings and a live sequence gap', async () => {
     mockedWorkspace.mockResolvedValue({
       ...workspace,
@@ -227,6 +295,14 @@ describe('InstrumentWorkspaceScreen', () => {
         duplicates: ['2026-08-06T20:00:00Z'],
         gaps: ['2026-08-05T20:00:00Z'],
         resolution_fallback: 'Requested 1h; serving trusted 1d bars.',
+        limitations: ['XNYS holiday gap detection was not run.'],
+      },
+      comparison: {
+        as_of: workspace.generated_at,
+        keys: ['moomoo:NVDA', 'moomoo:AAPL'],
+        limitations: ['Comparison uses a shared 1d resolution fallback.'],
+        points: [],
+        range: '6m',
       },
       live: { ...workspace.live, sequence_gap: true },
     })
@@ -236,6 +312,8 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(screen.getByText(/Historical gaps: 1/)).toBeInTheDocument()
     expect(screen.getByText(/Historical duplicates: 1/)).toBeInTheDocument()
     expect(screen.getByText('Live sequence gap detected')).toBeInTheDocument()
+    expect(screen.getByText(/History limitation: XNYS holiday gap detection was not run/)).toBeInTheDocument()
+    expect(screen.getByText(/Comparison limitation: Comparison uses a shared 1d resolution fallback/)).toBeInTheDocument()
   })
 
   it('refreshes authoritative quote, position and risk truth for matching live updates', async () => {
@@ -253,6 +331,12 @@ describe('InstrumentWorkspaceScreen', () => {
         position: {
           average_cost: 180,
           mark: 190,
+          mark_status: {
+            provenance: 'real',
+            reason: null,
+            received_at: '2026-08-08T12:00:01Z',
+            status: 'available',
+          },
           quantity: 5,
           realized_pnl: 12,
           unrealized_pnl: 50,
@@ -280,5 +364,31 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(mockedWorkspace).toHaveBeenCalledTimes(2)
     expect(screen.getByText('Account equity').closest('div')).toHaveTextContent('100,050')
     expect(screen.getByText('Unrealized P&L').closest('div')).toHaveTextContent('50')
+  })
+
+  it('retains last-known workspace truth when a background refresh fails', async () => {
+    mockedWorkspace
+      .mockResolvedValueOnce(workspace)
+      .mockRejectedValueOnce(new Error('refresh transport offline'))
+    renderWorkspace()
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'NVDA' })).toBeInTheDocument())
+
+    act(() => publishLiveUpdate({
+      data_time: '2026-08-08T12:00:01Z',
+      instrument: 'NVDA',
+      kind: 'quote',
+      payload: { last: 190 },
+      provenance: 'real',
+      received_at: '2026-08-08T12:00:01Z',
+      sequence: 13,
+      sequence_gap: false,
+      state: 'connected',
+      state_note: null,
+      venue: 'moomoo',
+    }))
+
+    expect(await screen.findByText('Background refresh failed — showing last known workspace')).toBeInTheDocument()
+    expect(screen.getByText('refresh transport offline')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'NVDA' })).toBeInTheDocument()
   })
 })

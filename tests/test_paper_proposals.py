@@ -20,6 +20,8 @@ from quantmesh.instruments.contracts import (
 )
 from quantmesh.instruments.forecast import run_price_forecast
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
+from quantmesh.live.contract import Provenance, UpdateKind
+from quantmesh.live.feed import ExactUpdateSnapshot
 from quantmesh.live.fence import QuoteFence
 
 NOW = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
@@ -39,6 +41,11 @@ class ForecastCatalog:
         if artifact_id != self.artifact.id:
             raise ValueError(f"forecast artifact {artifact_id!r} is unavailable")
         return self.artifact
+
+
+class UnavailableForecastCatalog:
+    def get(self, artifact_id: str):  # noqa: ANN201
+        raise ValueError(f"forecast artifact {artifact_id!r} is unavailable")
 
 
 @lru_cache(maxsize=2)
@@ -94,27 +101,29 @@ def _artifact(*, eligible: bool = True):  # noqa: ANN202
     return artifact
 
 
-def _snapshot(*, received_at: datetime = NOW, gap: bool = False) -> dict[str, object]:
-    return {
-        "instruments": {
-            "NVDA": {
-                "kinds": {
-                    "quote": {
-                        "kind": "quote",
-                        "provenance": "real",
-                        "received_at": received_at.isoformat(),
-                        "sequence_gap": gap,
-                        "payload": {
-                            "bid": 100.0,
-                            "ask": 100.1,
-                            "bid_size": 1_000.0,
-                            "ask_size": 1_000.0,
-                        },
-                    }
-                }
-            }
-        }
-    }
+def _snapshot(*, received_at: datetime = NOW, gap: bool = False) -> ExactUpdateSnapshot:
+    return ExactUpdateSnapshot(
+        venue=Venue.MOOMOO,
+        instrument="NVDA",
+        kind=UpdateKind.QUOTE,
+        source="moomoo",
+        provenance=Provenance.REAL,
+        data_time=received_at,
+        received_at=received_at,
+        sequence=2,
+        sequence_gap=gap,
+        payload={
+            "bid": 100.0,
+            "ask": 100.1,
+            "bid_size": 1_000.0,
+            "ask_size": 1_000.0,
+        },
+        continuity_proven=not gap,
+        predecessor_sequence=1,
+        predecessor_data_time=received_at - timedelta(milliseconds=1),
+        freshness_label="real",
+        age_ms=0,
+    )
 
 
 def _service(
@@ -135,7 +144,9 @@ def _service(
         account_provider=lambda: state["account"],
         account_sink=lambda value: state.__setitem__("account", value),
         journal=actual_journal,
-        snapshot_provider=lambda: snapshot if snapshot is not None else _snapshot(),
+        snapshot_provider=lambda _instrument, _now: (
+            snapshot if snapshot is not None else _snapshot()
+        ),
         quote_fence=QuoteFence(),
         demo_quote_provider=demo_quote,
         now=lambda: NOW,
@@ -157,6 +168,19 @@ def test_proposal_is_a_preview_and_pins_the_forecast_without_ordering(tmp_path: 
     assert proposal.confirmation_token
     assert state["account"].orders == {}
     assert journal.all() == []
+
+
+def test_ledger_recovery_is_chronological_not_hash_id_order(tmp_path: Path) -> None:
+    service, _, _ = _service(tmp_path)
+    times = iter(NOW + timedelta(seconds=index) for index in range(8))
+    service._now = lambda: next(times)  # noqa: SLF001 - deterministic ledger probe
+
+    created = tuple(
+        service.propose(_artifact().id, side=Side.BUY, quantity=float(index + 1))
+        for index in range(8)
+    )
+
+    assert service.ledger.all() == created
 
 
 def test_ineligible_forecast_creates_a_blocked_non_confirmable_record(tmp_path: Path) -> None:
@@ -330,7 +354,7 @@ def test_forecast_that_ages_after_preview_is_blocked_before_order(tmp_path: Path
     assert journal.all() == []
 
 
-def test_retry_recovers_after_order_was_journaled_before_proposal_transition(
+def test_later_retry_recovers_after_order_was_journaled_before_proposal_transition(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -354,13 +378,15 @@ def test_retry_recovers_after_order_was_journaled_before_proposal_transition(
             now=NOW,
         )
 
+    service._forecast_registry = UnavailableForecastCatalog()  # noqa: SLF001
     recovered = service.confirm(
         proposal.id,
         confirmation=proposal.confirmation_token,
-        now=NOW,
+        now=NOW + timedelta(days=5),
     )
 
     assert recovered.proposal.status == "confirmed"
+    assert service.ledger.events(proposal.id)[-1].recorded_at == NOW
     assert len(journal.all()) == 1
     assert state["account"].positions["moomoo:NVDA"].quantity == 1
 
@@ -476,7 +502,7 @@ def test_terminal_replay_rejects_a_journal_order_that_changed_intent(tmp_path: P
     order = journal.get(confirmed.order.order_id)
     journal.update(order.model_copy(update={"quantity": 999.0}))
 
-    with pytest.raises(ValueError, match="immutable proposal intent"):
+    with pytest.raises(ValueError, match="invalid derived state"):
         service.confirm(
             proposal.id,
             confirmation=proposal.confirmation_token,
@@ -485,16 +511,17 @@ def test_terminal_replay_rejects_a_journal_order_that_changed_intent(tmp_path: P
 
 
 @pytest.mark.parametrize(
-    "update",
+    ("update", "reason"),
     [
-        {"broker_order_id": "forged-broker-order"},
-        {"client_order_id": "forged-client-order"},
-        {"created_at": NOW + timedelta(seconds=1)},
+        ({"broker_order_id": "forged-broker-order"}, "immutable proposal intent"),
+        ({"client_order_id": "forged-client-order"}, "immutable proposal intent"),
+        ({"created_at": NOW + timedelta(seconds=1)}, "invalid derived state"),
     ],
 )
 def test_terminal_replay_rejects_unexpected_order_identity_fields(
     tmp_path: Path,
     update: dict[str, object],
+    reason: str,
 ) -> None:
     service, _, journal = _service(tmp_path)
     proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)
@@ -506,7 +533,7 @@ def test_terminal_replay_rejects_unexpected_order_identity_fields(
     order = journal.get(confirmed.order.order_id)
     journal.update(order.model_copy(update=update))
 
-    with pytest.raises(ValueError, match="immutable proposal intent"):
+    with pytest.raises(ValueError, match=reason):
         service.confirm(
             proposal.id,
             confirmation=proposal.confirmation_token,

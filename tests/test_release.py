@@ -63,18 +63,11 @@ class TestVersionMetadata:
         assert project["project"]["version"] == __version__
 
     def test_version_is_the_release_candidate_line(self) -> None:
-        # The 0.1.0 RC line: PEP 440 pre-release form. The operator-
-        # accepted release promotes this to 0.1.0 in the same verified
-        # line (docs/release-process.md); an accidental plain 0.1.0 or
-        # milestone-coupled number is caught here.
-        #
-        # rc6: the 2026-08-10 global-preferences integration (PR #97) merged
-        # into main after rc5 was tagged, so the release surface changed and
-        # the next candidate is cut from the merged tree; rc5 stays immutable.
-        # This pin tracks the RC line while the gate step
-        # tools/check_release_version.py owns the cross-check.
-        assert __version__ == "0.1.0"
-        assert not Version(__version__).is_prerelease
+        # Phase 0020 starts the compatible 0.1.1 candidate line. Operator
+        # acceptance may later promote the same verified scope to 0.1.1;
+        # it does not authorize live execution.
+        assert __version__ == "0.1.1rc1"
+        assert Version(__version__).is_prerelease
 
     def test_workstation_footer_shows_the_package_version(self) -> None:
         # The 13-screen workstation renders the package version in its

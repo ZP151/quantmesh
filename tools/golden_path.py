@@ -33,6 +33,7 @@ import urllib.request
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
 from quantmesh.ai.decisions import Citation, DecisionLog, DecisionRecord, ModelMeta
@@ -43,6 +44,7 @@ from quantmesh.api.workstation import create_workstation_app
 from quantmesh.data.ingestion import IngestionJob, Ingestor
 from quantmesh.data.lake import Lake
 from quantmesh.data.providers import HyperliquidFixtureProvider, ProviderRegistry
+from quantmesh.demo.runtime import create_demo_app
 from quantmesh.domain.models import (
     Instrument,
     InstrumentType,
@@ -96,6 +98,7 @@ HOST = "127.0.0.1"
 BASE = f"http://{HOST}:{PORT}"
 NOW = datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)
 COMMIT = "a" * 40
+DEMO_RESET_BUDGET_SECONDS = 30.0
 
 failures: list[str] = []
 checks_run = 0
@@ -566,6 +569,101 @@ def run(root: Path) -> None:
         enablement_rebound.state(Venue.HYPERLIQUID).value == "pending",
     )
 
+    # -------------------------------------------------------------------
+    # 6. Integrated instrument workspace -> proposal -> lineage -> safety
+    # -------------------------------------------------------------------
+
+    workstation.settings.legacy_ui = False
+    integrated = create_demo_app(root=root / "integrated-workspace", host=HOST)
+    with TestClient(integrated) as client:
+        workspace_response = client.get(
+            "/api/instruments/moomoo/NVDA/workspace?range=6m"
+        )
+        workspace = workspace_response.json()
+        check(
+            "workspace: GET composes observed history, forecast and paper authority",
+            workspace_response.status_code == 200
+            and len(workspace["history"]["bars"]) > 0
+            and workspace["forecast"]["eligible"] is True
+            and workspace["proposal"]["allowed"] is True,
+        )
+
+        order_rows_before = client.get("/api/demo/status").json()["surfaces"]["orders"]["rows"]
+        proposal_payload = {
+            "venue": "moomoo",
+            "symbol": "NVDA",
+            "artifact_id": workspace["forecast"]["artifact_id"],
+            "side": "buy",
+            "quantity": 1.0,
+            "limit_price": None,
+        }
+        preview_response = client.post("/api/paper/proposals", json=proposal_payload)
+        preview = preview_response.json()
+        order_rows_after_preview = client.get("/api/demo/status").json()["surfaces"][
+            "orders"
+        ]["rows"]
+        check(
+            "workspace: proposal preview is pending and creates no order",
+            preview_response.status_code == 200
+            and preview["status"] == "pending"
+            and order_rows_after_preview == order_rows_before,
+        )
+
+        confirmed_response = client.post(
+            f"/api/paper/proposals/{preview['id']}/confirm",
+            json={"confirmation_token": preview["confirmation_token"]},
+        )
+        confirmed = confirmed_response.json()
+        order_id = confirmed.get("order", {}).get("order_id")
+        check(
+            "workspace: exact-token confirmation creates one linked paper order",
+            confirmed_response.status_code == 200
+            and confirmed["proposal"]["status"] == "confirmed"
+            and confirmed["proposal"]["order_id"] == order_id
+            and confirmed["proposal"]["quote_provenance"] == "demo-synthetic",
+        )
+        audit_body = client.get("/api/audit").text
+        check(
+            "workspace: confirmed order is discoverable through audit lineage",
+            isinstance(order_id, str) and order_id in audit_body,
+        )
+
+        race_preview = client.post(
+            "/api/paper/proposals",
+            json={**proposal_payload, "quantity": 2.0},
+        ).json()
+        client.post("/api/kill-switch", json={"action": "engage"})
+        refused_response = client.post(
+            f"/api/paper/proposals/{race_preview['id']}/confirm",
+            json={"confirmation_token": race_preview["confirmation_token"]},
+        )
+        refused = refused_response.json()
+        check(
+            "workspace: kill-switch race refuses confirmation with typed evidence",
+            refused_response.status_code == 409
+            and refused["proposal"]["status"] in {"blocked", "rejected"}
+            and bool(refused["blocker"]),
+        )
+
+        reset_started = time.monotonic()
+        reset_response = client.post("/api/demo/reset")
+        reset_seconds = time.monotonic() - reset_started
+        restored = client.get(
+            "/api/instruments/moomoo/NVDA/workspace?range=6m"
+        ).json()
+        check(
+            "workspace: deterministic reset stays inside the operator latency budget",
+            reset_response.status_code == 200
+            and reset_seconds < DEMO_RESET_BUDGET_SECONDS,
+            f"reset took {reset_seconds:.2f}s (budget < {DEMO_RESET_BUDGET_SECONDS:.0f}s)",
+        )
+        check(
+            "workspace: reset clears mutations and restores deterministic authority",
+            reset_response.status_code == 200
+            and restored["proposal"]["proposals"] == []
+            and restored["risk"]["global_kill_switch"] is False,
+        )
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(
@@ -601,7 +699,7 @@ def main() -> int:
     print(
         "\nGOLDEN PATH PASSED: "
         f"{checks_run} checks — fixture -> lake -> reports -> paper -> "
-        "UI -> restart recovery"
+        "UI -> restart recovery -> integrated workspace decision loop"
     )
     return 0
 

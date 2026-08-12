@@ -19,7 +19,8 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from quantmesh.domain.orders import Order
+from quantmesh._fs import atomic_replace
+from quantmesh.domain.orders import Order, validate_order_replay
 from quantmesh.settings import settings
 
 JOURNAL_FILE = "journal.jsonl"
@@ -68,7 +69,7 @@ class OrderJournal:
                 for order in orders:
                     handle.write(order.model_dump_json())
                     handle.write("\n")
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)
@@ -94,9 +95,7 @@ class OrderJournal:
             try:
                 order = Order.model_validate_json(line)
             except ValidationError as error:
-                raise ValueError(
-                    f"order journal {path} line {line_number} is invalid"
-                ) from error
+                raise ValueError(f"order journal {path} line {line_number} is invalid") from error
             if order.order_id in seen:
                 raise ValueError(
                     f"order journal {path} lines {seen[order.order_id]} and "
@@ -113,6 +112,12 @@ class OrderJournal:
                         f"share an idempotency key"
                     )
                 seen_keys[order.idempotency_key] = line_number
+            try:
+                validate_order_replay(order)
+            except ValueError as error:
+                raise ValueError(
+                    f"order journal {path} line {line_number} has invalid derived state: {error}"
+                ) from error
             seen[order.order_id] = line_number
             orders.append(order)
         return orders

@@ -15,6 +15,7 @@ registration serves both prefixes; handlers read state from
 """
 
 import math
+from collections.abc import Mapping
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
@@ -24,7 +25,44 @@ from fastapi.responses import JSONResponse
 from quantmesh import __version__
 from quantmesh.domain.orders import Order
 from quantmesh.execution.accounting import PaperAccount
+from quantmesh.live.marks import (
+    AccountValuationSnapshot,
+    LiveMarkSnapshot,
+    account_valuation_snapshot,
+)
 from quantmesh.settings import settings
+
+
+def _valuation_state(
+    request: Request,
+) -> tuple[PaperAccount, dict[str, float], dict[str, object]]:
+    """One account revision plus its marks and optional runtime evidence.
+
+    A workstation may bind an atomic dynamic valuation provider; the plain
+    kernel API retains its injected-dict contract.
+    """
+    provider = getattr(request.app.state, "mark_snapshot_provider", None)
+    if not callable(provider):
+        snapshot = account_valuation_snapshot(
+            request.app.state.account,
+            LiveMarkSnapshot(marks=dict(request.app.state.marks), statuses={}),
+        )
+        return snapshot.account, snapshot.marks, snapshot.statuses
+    state = provider()
+    if isinstance(state, AccountValuationSnapshot):
+        return state.account, dict(state.marks), dict(state.statuses)
+    if not isinstance(state, Mapping):
+        raise RuntimeError("mark snapshot provider returned an invalid state")
+    account = state.get("account", request.app.state.account)
+    marks = state.get("marks")
+    statuses = state.get("statuses", {})
+    if (
+        not isinstance(account, PaperAccount)
+        or not isinstance(marks, Mapping)
+        or not isinstance(statuses, Mapping)
+    ):
+        raise RuntimeError("mark snapshot provider returned invalid valuation state")
+    return account, dict(marks), dict(statuses)
 
 
 def _json_finite(value):  # noqa: ANN001, ANN202
@@ -111,7 +149,7 @@ def observability_router() -> APIRouter:
 
     @router.get("/positions")
     def positions(request: Request) -> list[dict]:
-        marks = dict(request.app.state.marks)
+        current, marks, mark_statuses = _valuation_state(request)
         return [
             {
                 "key": key,
@@ -124,8 +162,9 @@ def observability_router() -> APIRouter:
                     if key in marks
                     else None
                 ),
+                "mark_status": mark_statuses.get(key),
             }
-            for key, position in request.app.state.account.positions.items()
+            for key, position in current.positions.items()
         ]
 
     @router.get("/orders")
@@ -141,20 +180,31 @@ def observability_router() -> APIRouter:
 
     @router.get("/pnl")
     def pnl(request: Request) -> dict:
-        current = request.app.state.account
-        marks = dict(request.app.state.marks)
+        current, marks, mark_statuses = _valuation_state(request)
+        missing_marks = sorted(key for key in current.positions if key not in marks)
+        valuation_complete = not missing_marks
+        valuation_reason = (
+            None
+            if valuation_complete
+            else f"missing valid marks for held positions: {', '.join(missing_marks)}"
+        )
         return {
             "starting_cash": (
                 current.starting_cash if current.starting_cash is not None else current.cash
             ),
             "realized_pnl": current.realized_pnl,
-            "unrealized_pnl": current.unrealized_pnl(marks),
-            "equity": current.equity(marks),
-            "total_pnl": current.total_pnl(marks),
+            "unrealized_pnl": (
+                current.unrealized_pnl(marks) if valuation_complete else None
+            ),
+            "equity": current.equity(marks) if valuation_complete else None,
+            "total_pnl": current.total_pnl(marks) if valuation_complete else None,
+            "valuation_complete": valuation_complete,
+            "valuation_reason": valuation_reason,
             "marks": marks,
+            "mark_statuses": mark_statuses,
             # Positions without a mark are excluded from equity-based
             # numbers; name them so understated equity is never silent.
-            "missing_marks": sorted(key for key in current.positions if key not in marks),
+            "missing_marks": missing_marks,
         }
 
     @router.get("/kill-switch")

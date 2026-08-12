@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 import math
+import time
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
+from threading import Event, Thread
 
 import pytest
 from fastapi import FastAPI
@@ -35,7 +37,7 @@ from quantmesh.instruments.forecast import run_price_forecast
 from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
 from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
-from quantmesh.live.feed import LiveFeed
+from quantmesh.live.feed import ExactUpdateSnapshot, LiveFeed
 from quantmesh.live.fence import QuoteFence
 
 NOW = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
@@ -230,6 +232,7 @@ def _quote_feed(
     stale: bool = False,
     future: bool = False,
     missing_depth: bool = False,
+    unproven: bool = False,
 ) -> LiveFeed:
     feed = LiveFeed()
     received_at = (
@@ -245,9 +248,19 @@ def _quote_feed(
     if missing_depth:
         payload.pop("bid_size")
         payload.pop("ask_size")
-    feed.ingest(
-        [
-            MarketUpdate(
+    updates = [
+        MarketUpdate(
+            venue=Venue.MOOMOO,
+            instrument="NVDA",
+            kind=UpdateKind.QUOTE,
+            provenance=Provenance.REAL,
+            data_time=received_at - timedelta(milliseconds=1),
+            received_at=received_at - timedelta(milliseconds=1),
+            sequence=7,
+            sequence_gap=False,
+            payload=payload,
+        ),
+        MarketUpdate(
                 venue=Venue.MOOMOO,
                 instrument="NVDA",
                 kind=UpdateKind.QUOTE,
@@ -257,9 +270,9 @@ def _quote_feed(
                 sequence=8,
                 sequence_gap=gap,
                 payload=payload,
-            )
-        ]
-    )
+        ),
+    ]
+    feed.ingest(updates[-1:] if unproven else updates)
     return feed
 
 
@@ -326,26 +339,28 @@ def _harness(
         account_provider=lambda: state["account"],
         account_sink=sink,
         journal=journal,
-        snapshot_provider=lambda: {
-            "instruments": {
-                "NVDA": {
-                    "kinds": {
-                        "quote": {
-                            "kind": "quote",
-                            "provenance": "real",
-                            "received_at": NOW.isoformat(),
-                            "sequence_gap": False,
-                            "payload": {
-                                "bid": 104.9,
-                                "ask": 105.1,
-                                "bid_size": 500.0,
-                                "ask_size": 600.0,
-                            },
-                        }
-                    }
-                }
-            }
-        },
+        snapshot_provider=lambda _instrument, _now: ExactUpdateSnapshot(
+            venue=Venue.MOOMOO,
+            instrument="NVDA",
+            kind=UpdateKind.QUOTE,
+            source="moomoo",
+            provenance=Provenance.REAL,
+            data_time=NOW,
+            received_at=NOW,
+            sequence=8,
+            sequence_gap=False,
+            payload={
+                "bid": 104.9,
+                "ask": 105.1,
+                "bid_size": 500.0,
+                "ask_size": 600.0,
+            },
+            continuity_proven=True,
+            predecessor_sequence=7,
+            predecessor_data_time=NOW - timedelta(milliseconds=1),
+            freshness_label="real",
+            age_ms=0,
+        ),
         quote_fence=QuoteFence(),
         now=lambda: NOW,
     )
@@ -409,6 +424,7 @@ def test_workspace_uses_one_clock_for_history_comparison_and_response(
         (_quote_feed(stale=True), "degraded", "stale"),
         (_quote_feed(future=True), "degraded", "future"),
         (_quote_feed(missing_depth=True), "degraded", "depth"),
+        (_quote_feed(unproven=True), "degraded", "continuity"),
     ],
 )
 def test_workspace_keeps_typed_live_absence_and_degradation(
@@ -469,6 +485,7 @@ def test_workspace_summarizes_the_latest_forecast_even_when_ineligible(
     assert response.status_code == 200
     forecast = response.json()["forecast"]
     assert forecast["artifact_id"] == artifact.id
+    assert forecast["synthetic"] is False
     assert forecast["eligible"] is eligible
     assert forecast["blockers"] == list(artifact.blockers)
     assert [path["sessions"] for path in forecast["paths"]] == [7, 30, 126]
@@ -507,6 +524,12 @@ def test_workspace_exposes_position_marks_pnl_risk_switches_and_capability(
         "realized_pnl": held.realized_pnl,
         "mark": 105.0,
         "unrealized_pnl": (105.0 - held.average_cost) * 2.0,
+        "mark_status": {
+            "status": "available",
+            "provenance": "injected",
+            "received_at": None,
+            "reason": None,
+        },
     }
     assert body["risk"] == {
         "cash": account.cash,
@@ -518,9 +541,176 @@ def test_workspace_exposes_position_marks_pnl_risk_switches_and_capability(
         "global_kill_switch": False,
         "venue_kill_switch": True,
         "mark_available": True,
+        "valuation_complete": True,
+        "valuation_reason": None,
     }
     assert body["proposal"]["allowed"] is False
     assert any("kill switch" in blocker for blocker in body["proposal"]["blockers"])
+
+
+def test_workspace_never_presents_cash_only_as_exact_equity_when_mark_is_missing(
+    tmp_path: Path,
+) -> None:
+    account = _account_with_position()
+    harness = _harness(tmp_path, account=account)
+    harness.app.state.marks.clear()
+
+    with TestClient(harness.app) as client:
+        body = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m").json()
+
+    assert body["position"]["mark"] is None
+    assert body["position"]["mark_status"]["status"] == "unavailable"
+    assert body["risk"]["valuation_complete"] is False
+    assert body["risk"]["equity"] is None
+    assert body["risk"]["valuation_reason"] == (
+        "missing valid marks for held positions: moomoo:NVDA"
+    )
+
+
+def test_workspace_account_marks_and_proposals_share_one_revision_during_confirmation(
+    tmp_path: Path,
+) -> None:
+    artifact = _artifact()
+    app = create_workstation_app(
+        account=PaperAccount(cash=100_000.0),
+        marks={position_key(NVDA): 105.0},
+        history=RecordingHistoryService(),
+        price_forecasts=ForecastCatalog((artifact,)),
+        proposal_ledger=ProposalLedger(tmp_path / "proposals"),
+        journal=OrderJournal(tmp_path / "orders"),
+        demo_quote_provider=lambda instrument, now: Quote(
+            instrument=instrument,
+            timestamp=now,
+            bid=104.9,
+            ask=105.1,
+            last=105.0,
+            volume=1_000.0,
+        ),
+        workspace_clock=lambda: NOW,
+        host="127.0.0.1",
+    )
+    valuation_captured = Event()
+    release_workspace = Event()
+    confirmation_finished = Event()
+    original_valuation_provider = app.state.mark_snapshot_provider
+
+    def paused_valuation_provider(as_of: datetime):
+        snapshot = original_valuation_provider(as_of)
+        valuation_captured.set()
+        assert release_workspace.wait(timeout=10)
+        return snapshot
+
+    app.state.mark_snapshot_provider = paused_valuation_provider
+    responses: dict[str, object] = {}
+    with TestClient(app) as client:
+        preview = client.post("/api/paper/proposals", json=_create_payload(artifact)).json()
+        workspace_thread = Thread(
+            target=lambda: responses.__setitem__(
+                "workspace",
+                client.get("/api/instruments/moomoo/NVDA/workspace?range=6m"),
+            ),
+            daemon=True,
+        )
+        workspace_thread.start()
+        assert valuation_captured.wait(timeout=10)
+
+        def confirm() -> None:
+            responses["confirm"] = client.post(
+                f"/api/paper/proposals/{preview['id']}/confirm",
+                json={"confirmation_token": preview["confirmation_token"]},
+            )
+            confirmation_finished.set()
+
+        confirmation_thread = Thread(target=confirm, daemon=True)
+        confirmation_thread.start()
+        confirmation_finished_before_snapshot = confirmation_finished.wait(timeout=0.2)
+
+        release_workspace.set()
+        workspace_thread.join(timeout=30)
+        confirmation_thread.join(timeout=30)
+
+    assert workspace_thread.is_alive() is False
+    assert confirmation_thread.is_alive() is False
+    assert confirmation_finished_before_snapshot is False
+    assert responses["workspace"].status_code == 200
+    workspace = responses["workspace"].json()
+    assert workspace["risk"]["cash"] == 100_000.0
+    assert workspace["position"] is None
+    assert [proposal["status"] for proposal in workspace["proposal"]["proposals"]] == [
+        "pending"
+    ]
+    assert responses["confirm"].status_code == 200
+    assert responses["confirm"].json()["proposal"]["status"] == "confirmed"
+
+
+def test_workspace_valuation_cannot_observe_a_quote_after_generated_at(
+    tmp_path: Path,
+) -> None:
+    feed = _quote_feed()
+
+    class QuoteRaceHistory(RecordingHistoryService):
+        def history(
+            self,
+            venue: Venue,
+            symbol: str,
+            range: HistoryRange,
+            *,
+            as_of: datetime | None = None,
+        ) -> HistoricalSeries:
+            feed.ingest(
+                [
+                    MarketUpdate(
+                        venue=Venue.MOOMOO,
+                        instrument="NVDA",
+                        kind=UpdateKind.QUOTE,
+                        provenance=Provenance.REAL,
+                        data_time=NOW + timedelta(seconds=1),
+                        received_at=NOW + timedelta(seconds=1),
+                        sequence=9,
+                        sequence_gap=False,
+                        payload={
+                            "bid": 204.9,
+                            "ask": 205.1,
+                            "last": 205.0,
+                            "bid_size": 500.0,
+                            "ask_size": 600.0,
+                        },
+                    )
+                ]
+            )
+            return super().history(venue, symbol, range, as_of=as_of)
+
+    clock_values = iter((NOW, NOW + timedelta(seconds=2)))
+    clock_calls: list[datetime] = []
+
+    def advancing_clock() -> datetime:
+        value = next(clock_values)
+        clock_calls.append(value)
+        return value
+
+    account = _account_with_position().model_copy(update={"kill_switches": {}})
+    app = create_workstation_app(
+        account=account,
+        history=QuoteRaceHistory(),
+        live_feed=feed,
+        workspace_clock=advancing_clock,
+        host="127.0.0.1",
+    )
+
+    with TestClient(app) as client:
+        response = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m")
+
+    assert response.status_code == 200
+    workspace = response.json()
+    assert workspace["generated_at"] == NOW.isoformat().replace("+00:00", "Z")
+    assert clock_calls == [NOW]
+    assert workspace["position"]["mark"] == 105.0
+    assert workspace["position"]["mark_status"]["received_at"] == NOW.isoformat().replace(
+        "+00:00", "Z"
+    )
+    assert workspace["risk"]["equity"] == pytest.approx(
+        account.equity({position_key(NVDA): 105.0})
+    )
 
 
 def test_create_proposal_is_preview_only(tmp_path: Path) -> None:
@@ -571,6 +761,81 @@ def test_confirm_places_exactly_one_order_and_terminal_replay_is_idempotent(
     assert harness.state["account"].positions["moomoo:NVDA"].quantity == 1.0
     assert len(harness.sink_calls) == 1
     assert len(harness.proposals.ledger.events(proposal["id"])) == 2
+
+
+def test_concurrent_kill_switch_cannot_be_overwritten_by_stale_confirmation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    artifact = _artifact()
+    persisted: list[PaperAccount] = []
+    app = create_workstation_app(
+        account=PaperAccount(cash=100_000.0),
+        price_forecasts=ForecastCatalog((artifact,)),
+        proposal_ledger=ProposalLedger(tmp_path / "proposals"),
+        journal=OrderJournal(tmp_path / "orders"),
+        account_sink=persisted.append,
+        demo_quote_provider=lambda instrument, now: Quote(
+            instrument=instrument,
+            timestamp=now,
+            bid=104.9,
+            ask=105.1,
+            last=105.0,
+            volume=1_000.0,
+        ),
+        workspace_clock=lambda: NOW,
+        host="127.0.0.1",
+    )
+    submit_entered = Event()
+    release_submit = Event()
+    kill_finished = Event()
+    original_submit = PaperAccount.submit
+
+    def paused_submit(account, *args, **kwargs):
+        submit_entered.set()
+        assert release_submit.wait(timeout=10)
+        return original_submit(account, *args, **kwargs)
+
+    monkeypatch.setattr(PaperAccount, "submit", paused_submit)
+    responses: dict[str, object] = {}
+    with TestClient(app) as client:
+        proposal_response = client.post(
+            "/api/paper/proposals",
+            json=_create_payload(artifact),
+        )
+        proposal = proposal_response.json()
+
+        confirm_thread = Thread(
+            target=lambda: responses.__setitem__(
+                "confirm",
+                client.post(
+                    f"/api/paper/proposals/{proposal['id']}/confirm",
+                    json={"confirmation_token": proposal["confirmation_token"]},
+                ),
+            ),
+            daemon=True,
+        )
+        confirm_thread.start()
+        assert submit_entered.wait(timeout=10)
+
+        def engage() -> None:
+            responses["kill"] = client.post("/api/kill-switch", json={"action": "engage"})
+            kill_finished.set()
+
+        kill_thread = Thread(target=engage, daemon=True)
+        kill_thread.start()
+        time.sleep(0.1)
+        assert kill_finished.is_set() is False
+
+        release_submit.set()
+        confirm_thread.join(timeout=30)
+        kill_thread.join(timeout=30)
+
+    assert responses["confirm"].status_code == 200
+    assert responses["kill"].status_code == 200
+    assert app.state.account.kill_switch is True
+    assert next(iter(app.state.account.orders.values())).status.value == "filled"
+    assert persisted[-1].kill_switch is True
 
 
 @pytest.mark.parametrize("field", ["account", "eligible", "risk_result"])

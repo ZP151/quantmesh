@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { LiveState, LiveStatus, LiveView, MarketUpdate } from '@/lib/api'
@@ -61,8 +62,9 @@ function view(payload: Record<string, unknown>, overrides: Partial<LiveView> = {
 const STATE: LiveState = {
   generated_at: T0,
   instruments: {
-    BTC: {
+    'hyperliquid:BTC': {
       venue: 'hyperliquid',
+      instrument: 'BTC',
       label: 'real',
       kinds: {
         quote: view({ bid: 100, ask: 100.5 }),
@@ -72,8 +74,9 @@ const STATE: LiveState = {
         ),
       },
     },
-    SOL: {
+    'hyperliquid:SOL': {
       venue: 'hyperliquid',
+      instrument: 'SOL',
       label: 'stale',
       kinds: {
         quote: view({ bid: 30, ask: 30.2 }, { label: 'stale', age_ms: 95_000 }),
@@ -113,16 +116,16 @@ function renderScreen() {
   )
 }
 
-function renderDetail(symbol = 'SOL') {
+function renderDetail(symbol = 'SOL', venue = 'hyperliquid') {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   return render(
     <QueryClientProvider client={client}>
       <PreferencesProvider>
-        <MemoryRouter initialEntries={[`/cockpit/${symbol}`]}>
+        <MemoryRouter initialEntries={[`/cockpit/${venue}/${symbol}`]}>
           <Routes>
-            <Route path="/cockpit/:symbol" element={<CockpitDetailScreen />} />
+            <Route path="/cockpit/:venue/:symbol" element={<CockpitDetailScreen />} />
           </Routes>
         </MemoryRouter>
       </PreferencesProvider>
@@ -163,7 +166,7 @@ describe('CockpitScreen', () => {
     expect(screen.getByText('49.9')).toBeInTheDocument()
   })
 
-  it('links every symbol to its detail screen', async () => {
+  it('links every symbol directly to its unified instrument workspace', async () => {
     renderScreen()
     await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
     expect(screen.getByRole('link', { name: 'BTC' })).toHaveAttribute('href', '/instruments/hyperliquid/BTC')
@@ -191,7 +194,7 @@ describe('CockpitScreen', () => {
     })
     renderScreen()
     await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
-    push({
+    act(() => push({
       venue: 'hyperliquid',
       instrument: 'HYPE',
       kind: 'quote',
@@ -203,8 +206,8 @@ describe('CockpitScreen', () => {
       payload: { bid: 1.2, ask: 1.25 },
       state: null,
       state_note: null,
-    })
-    await waitFor(() => expect(screen.getByText('HYPE')).toBeInTheDocument())
+    }))
+    await waitFor(() => expect(screen.getByRole('link', { name: 'HYPE' })).toBeInTheDocument())
     expect(screen.getByText(/7 ⚠ gap/)).toBeInTheDocument()
   })
 
@@ -225,7 +228,7 @@ describe('CockpitScreen', () => {
     })
     renderScreen()
     await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
-    push({
+    act(() => push({
       venue: 'hyperliquid',
       instrument: 'HYPE',
       kind: 'quote',
@@ -237,9 +240,50 @@ describe('CockpitScreen', () => {
       payload: { bid: 1.2, ask: 1.25 },
       state: null,
       state_note: null,
-    })
-    await waitFor(() => expect(screen.getByText('HYPE')).toBeInTheDocument())
+    }))
+    await waitFor(() => expect(screen.getByRole('link', { name: 'HYPE' })).toBeInTheDocument())
     expect(screen.getByText(/Local stream connected over WebSocket/)).toBeInTheDocument()
+  })
+
+  it('keeps same-symbol quotes isolated by venue', async () => {
+    let push: (update: MarketUpdate) => void = () => {}
+    mockedStream.mockImplementation((onUpdate) => {
+      push = onUpdate
+      return 'live'
+    })
+    renderScreen()
+    await waitFor(() => expect(screen.getByRole('link', { name: 'BTC' })).toBeInTheDocument())
+
+    act(() => {
+      push({
+        venue: 'moomoo',
+        instrument: 'BTC',
+        kind: 'quote',
+        provenance: 'real',
+        data_time: T0,
+        received_at: T0,
+        sequence: 8,
+        sequence_gap: false,
+        payload: { bid: 200, ask: 201 },
+        state: null,
+        state_note: null,
+      })
+    })
+
+    await waitFor(() => expect(screen.getAllByRole('link', { name: 'BTC' })).toHaveLength(2))
+    const links = screen.getAllByRole('link', { name: 'BTC' })
+    const hyperliquidLink = links.find(
+      (link) => link.getAttribute('href') === '/instruments/hyperliquid/BTC',
+    )
+    const moomooLink = links.find(
+      (link) => link.getAttribute('href') === '/instruments/moomoo/BTC',
+    )
+    expect(hyperliquidLink).toBeDefined()
+    expect(moomooLink).toBeDefined()
+    expect(hyperliquidLink.closest('tr')).toHaveTextContent('$100.00')
+    expect(hyperliquidLink.closest('tr')).not.toHaveTextContent('$200.00')
+    expect(moomooLink.closest('tr')).toHaveTextContent('$200.00')
+    expect(moomooLink.closest('tr')).not.toHaveTextContent('$100.00')
   })
 
   it('shows the fallback banner when the stream is on SSE', async () => {
@@ -249,6 +293,7 @@ describe('CockpitScreen', () => {
   })
 
   it('replays a recorded window from the lake under a visible banner', async () => {
+    const user = userEvent.setup()
     mocked.replayExtent.mockResolvedValue({
       source: 'lake',
       count: 3,
@@ -280,7 +325,7 @@ describe('CockpitScreen', () => {
     await waitFor(() =>
       expect(screen.getByText(/Recorded extent: 3 updates/)).toBeInTheDocument(),
     )
-    await fireEvent.click(screen.getByRole('button', { name: 'Replay all' }))
+    await user.click(screen.getByRole('button', { name: 'Replay all' }))
     await waitFor(() => expect(screen.getByText('Replay mode')).toBeInTheDocument())
     expect(
       screen.getByText(
@@ -291,7 +336,7 @@ describe('CockpitScreen', () => {
     expect(screen.getAllByText('BTC').length).toBeGreaterThan(0)
     expect(screen.getAllByText('real').length).toBeGreaterThan(0)
     expect(screen.getByText('$100.00 / $100.50')).toBeInTheDocument()
-    await fireEvent.click(screen.getByRole('button', { name: 'Clear replay' }))
+    await user.click(screen.getByRole('button', { name: 'Clear replay' }))
     expect(screen.queryByText('Replay mode')).not.toBeInTheDocument()
   })
 
@@ -303,11 +348,23 @@ describe('CockpitScreen', () => {
     )
   })
 
-  it('renders a price-trend sparkline per row when trail data is available', async () => {
-    mocked.priceTrail.mockResolvedValue({ trail: { BTC: [100.0, 100.5, 101.0], SOL: [30.0, 30.2] } })
+  it('requests and renders price trails by exact venue and symbol identity', async () => {
+    mocked.priceTrail.mockResolvedValue({
+      trail: {
+        'hyperliquid:BTC': [100.0, 100.5, 101.0],
+        'hyperliquid:SOL': [30.0, 30.2],
+        'moomoo:BTC': [200.0, 190.0],
+      },
+    })
     mocked.replayExtent.mockRejectedValue(new Error('no lake'))
     renderScreen()
     await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(mocked.priceTrail).toHaveBeenCalledWith({
+        identities: 'hyperliquid:BTC,hyperliquid:SOL',
+        limit: 20,
+      }),
+    )
     await waitFor(() =>
       expect(
         screen.getByRole('img', { name: 'Price trend: 3 data points' }),
@@ -343,12 +400,40 @@ describe('CockpitScreen', () => {
 })
 
 describe('CockpitDetailScreen', () => {
+  it('ignores same-symbol updates from another venue', async () => {
+    let push: (update: MarketUpdate) => void = () => {}
+    mockedStream.mockImplementation((onUpdate) => {
+      push = onUpdate
+      return 'live'
+    })
+    renderDetail('BTC', 'hyperliquid')
+    await waitFor(() => expect(screen.getByText(/mid \$100\.25/)).toBeInTheDocument())
+
+    act(() => {
+      push({
+        venue: 'moomoo',
+        instrument: 'BTC',
+        kind: 'quote',
+        provenance: 'real',
+        data_time: T0,
+        received_at: T0,
+        sequence: 8,
+        sequence_gap: false,
+        payload: { bid: 200, ask: 201 },
+        state: null,
+        state_note: null,
+      })
+    })
+
+    expect(screen.queryByText('$200.50')).not.toBeInTheDocument()
+    expect(screen.getByText(/mid \$100\.25/)).toBeInTheDocument()
+  })
   it('keeps the canonical workspace link when the live snapshot is unavailable', async () => {
     mocked.liveState.mockRejectedValue(new Error('live feed unavailable'))
     mocked.markets.mockResolvedValue({
       instruments: [{ venue: 'moomoo', symbol: 'NVDA', mark: 184 }],
     })
-    renderDetail('NVDA')
+    renderDetail('NVDA', 'moomoo')
 
     await waitFor(() => expect(
       screen.getByRole('link', { name: 'Open integrated workspace' }),
@@ -401,8 +486,9 @@ describe('CockpitDetailScreen', () => {
     mocked.liveState.mockResolvedValue({
       generated_at: T0,
       instruments: {
-        SOL: {
+        'hyperliquid:SOL': {
           venue: 'hyperliquid',
+          instrument: 'SOL',
           label: 'real',
           kinds: {
             quote: view({ bid: 30, ask: 30.2 }),
@@ -427,7 +513,7 @@ describe('CockpitDetailScreen', () => {
     // A single candle cannot carry a return — the rows appear only once
     // a second candle close arrives on the stream.
     expect(screen.queryByText('1-candle return')).not.toBeInTheDocument()
-    push({
+    act(() => push({
       venue: 'hyperliquid',
       instrument: 'SOL',
       kind: 'candle',
@@ -439,7 +525,7 @@ describe('CockpitDetailScreen', () => {
       payload: { open: 109, high: 110, low: 108, close: 109.5, volume: 12_345 },
       state: null,
       state_note: null,
-    })
+    }))
     await waitFor(() => expect(screen.getByText('1-candle return')).toBeInTheDocument())
     expect(screen.getByText('Realized vol (per candle)')).toBeInTheDocument()
     expect(screen.getByText('Last trade size')).toBeInTheDocument()
@@ -452,7 +538,7 @@ describe('CockpitDetailScreen', () => {
     // The book depth chart needs both sides: the bid side seeded, the
     // ask side streamed — until then it stays absent (never a guess).
     expect(screen.queryByRole('img', { name: /Book depth chart/ })).not.toBeInTheDocument()
-    push({
+    act(() => push({
       venue: 'hyperliquid',
       instrument: 'SOL',
       kind: 'l2_snapshot',
@@ -464,7 +550,7 @@ describe('CockpitDetailScreen', () => {
       payload: { side: 'ask', levels: [[30.2, 0.5], [30.7, 1.5]] },
       state: null,
       state_note: null,
-    })
+    }))
     await waitFor(() =>
       expect(screen.getByRole('img', { name: /Book depth chart/ })).toBeInTheDocument(),
     )

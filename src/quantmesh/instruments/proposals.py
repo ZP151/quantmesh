@@ -8,22 +8,21 @@ import os
 import re
 import tempfile
 import threading
-from collections.abc import Callable, Iterator, Mapping
-from contextlib import contextmanager
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Protocol
 
 from pydantic import ValidationError
 
+from quantmesh._fs import atomic_replace
 from quantmesh.domain.models import Instrument, InstrumentType, OrderRequest, Quote, Side, Venue
 from quantmesh.domain.orders import (
-    Fill,
     Order,
-    OrderEventType,
-    OrderStateMachine,
     OrderStatus,
     OrderType,
+    validate_order_replay,
 )
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
@@ -35,6 +34,7 @@ from quantmesh.instruments.contracts import (
     ProposalEvent,
     ProposalStatus,
 )
+from quantmesh.live.feed import ExactUpdateSnapshot
 from quantmesh.live.fence import QuoteFence
 from quantmesh.settings import settings
 
@@ -310,7 +310,7 @@ class ProposalLedger:
             latest: dict[str, PaperProposal] = {}
             for event in self._read():
                 latest[event.proposal_id] = event.proposal
-            return tuple(latest[key] for key in sorted(latest))
+            return tuple(sorted(latest.values(), key=lambda item: (item.created_at, item.id)))
 
     def _write(self, events: list[ProposalEvent]) -> None:
         self._safe_root()
@@ -325,7 +325,7 @@ class ProposalLedger:
                 for event in events:
                     handle.write(event.model_dump_json())
                     handle.write("\n")
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)
@@ -403,8 +403,9 @@ class PaperDecisionService:
         forecast_registry: ForecastRegistry,
         account_provider: Callable[[], PaperAccount],
         account_sink: Callable[[PaperAccount], None],
+        account_transaction: Callable[[], AbstractContextManager[None]] | None = None,
         journal: OrderJournal | None,
-        snapshot_provider: Callable[[], Mapping[str, object] | None],
+        snapshot_provider: Callable[[Instrument, datetime], ExactUpdateSnapshot | None],
         quote_fence: QuoteFence,
         demo_quote_provider: Callable[[Instrument, datetime], Quote] | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
@@ -413,6 +414,7 @@ class PaperDecisionService:
         self._forecast_registry = forecast_registry
         self._account_provider = account_provider
         self._account_sink = account_sink
+        self._account_transaction = account_transaction or nullcontext
         self._journal = journal
         self._snapshot_provider = snapshot_provider
         self._quote_fence = quote_fence
@@ -435,7 +437,7 @@ class PaperDecisionService:
         symbol: str,
     ) -> tuple[PaperAccount, tuple[PaperProposal, ...]]:
         """Read mutable account and proposal state under one ledger boundary."""
-        with self.ledger.transaction():
+        with self.ledger.transaction(), self._account_transaction():
             account = self._account_provider()
             proposals = tuple(
                 proposal
@@ -527,48 +529,6 @@ class PaperDecisionService:
             quote_provenance=proposal.quote_provenance,
         )
 
-    @staticmethod
-    def _replay_order(order: Order) -> None:
-        replay = order.model_copy(
-            update={
-                "status": OrderStatus.PENDING,
-                "filled_quantity": 0.0,
-                "events": [],
-            },
-            deep=True,
-        )
-        prior = order.created_at
-        for expected in order.events:
-            if expected.timestamp.tzinfo is None or expected.timestamp < prior:
-                raise ValueError("journal order event time is invalid or regresses")
-            if expected.sequence != len(replay.events) + 1:
-                raise ValueError("journal order event sequence is not contiguous")
-            fill = None
-            if expected.event_type is OrderEventType.FILL:
-                if expected.quantity is None or expected.price is None:
-                    raise ValueError("journal fill event is incomplete")
-                fill = Fill(
-                    timestamp=expected.timestamp,
-                    quantity=expected.quantity,
-                    price=expected.price,
-                    broker_fill_id=expected.broker_fill_id,
-                    fee=expected.fee,
-                )
-            replay = OrderStateMachine.apply(
-                replay,
-                expected.event_type,
-                fill=fill,
-                reason=expected.reason,
-                timestamp=expected.timestamp,
-            )
-            prior = expected.timestamp
-        if (
-            replay.events != order.events
-            or replay.status is not order.status
-            or replay.filled_quantity != order.filled_quantity
-        ):
-            raise ValueError("journal order derived state does not replay exactly")
-
     def _validate_order_binding(
         self,
         proposal: PaperProposal,
@@ -605,7 +565,7 @@ class PaperDecisionService:
             raise ValueError("confirmed proposal is not backed by a filled order")
         if proposal.status is ProposalStatus.REJECTED and order.status is not OrderStatus.REJECTED:
             raise ValueError("rejected proposal is not backed by a rejected order")
-        self._replay_order(order)
+        validate_order_replay(order)
 
     def _journal_order(self, proposal_id: str) -> Order | None:
         if self._journal is None:
@@ -637,13 +597,13 @@ class PaperDecisionService:
         proposal: PaperProposal,
         order: Order,
         *,
-        now: datetime,
+        confirmation_at: datetime,
         quote_provenance: str,
     ) -> ProposalConfirmation:
         self._validate_order_binding(
             proposal,
             order,
-            expected_created_at=now,
+            expected_created_at=confirmation_at,
         )
         rejected = order.status is OrderStatus.REJECTED
         reason = next(
@@ -659,7 +619,7 @@ class PaperDecisionService:
                 "quote_provenance": quote_provenance,
             }
         )
-        terminal = self.ledger.transition(terminal, recorded_at=now)
+        terminal = self.ledger.transition(terminal, recorded_at=confirmation_at)
         return self._terminal_result(terminal)
 
     def _block(
@@ -713,7 +673,7 @@ class PaperDecisionService:
         confirmation: str,
         now: datetime,
     ) -> ProposalConfirmation:
-        with self.ledger.transaction():
+        with self.ledger.transaction(), self._account_transaction():
             if now.tzinfo is None:
                 raise ValueError("confirmation time must be timezone-aware")
             now = now.astimezone(UTC)
@@ -732,6 +692,22 @@ class PaperDecisionService:
                     proposal=proposal,
                     blocker="paper order journal is not bound",
                 )
+
+            provenance = "demo-synthetic" if self._demo_quote_provider else "real"
+            existing = self._journal_order(proposal.id)
+            if existing is not None:
+                self._validate_order_binding(proposal, existing)
+                account = self._account_provider()
+                recovered = self._recover_account(account, existing)
+                if recovered is not account:
+                    self._account_sink(recovered)
+                return self._finish_from_order(
+                    proposal,
+                    existing,
+                    confirmation_at=existing.created_at.astimezone(UTC),
+                    quote_provenance=provenance,
+                )
+
             try:
                 artifact = self._resolve_artifact(proposal.artifact_id)
             except ValueError as error:
@@ -767,21 +743,7 @@ class PaperDecisionService:
                 blocked = self.ledger.transition(blocked, recorded_at=now)
                 return self._terminal_result(blocked)
 
-            provenance = "demo-synthetic" if self._demo_quote_provider else "real"
-            existing = self._journal_order(proposal.id)
             account = self._account_provider()
-            if existing is not None:
-                self._validate_order_binding(proposal, existing)
-                recovered = self._recover_account(account, existing)
-                if recovered is not account:
-                    self._account_sink(recovered)
-                return self._finish_from_order(
-                    proposal,
-                    existing,
-                    now=now,
-                    quote_provenance=provenance,
-                )
-
             request = OrderRequest(
                 instrument=Instrument(
                     symbol=proposal.instrument.symbol,
@@ -803,18 +765,18 @@ class PaperDecisionService:
                     return self._block(proposal, reason=demo_blocker, now=now)
                 result = account.submit(request, quote, now=now)
             else:
-                snapshot = self._snapshot_provider()
+                snapshot = self._snapshot_provider(request.instrument, now)
                 result = account.submit(
                     request,
                     now=now,
                     quote_fence=self._quote_fence,
-                    snapshot={} if snapshot is None else snapshot,
+                    snapshot=snapshot,
                 )
             self._journal.record(result.order)
             self._account_sink(result.account)
             return self._finish_from_order(
                 proposal,
                 result.order,
-                now=now,
+                confirmation_at=now,
                 quote_provenance=provenance,
             )

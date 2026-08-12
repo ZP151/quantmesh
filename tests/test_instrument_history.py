@@ -726,6 +726,64 @@ def test_comparison_rebases_only_the_shared_observed_window_without_forward_fill
     )
 
 
+def test_comparison_selects_the_coarsest_shared_resolution_without_resampling() -> None:
+    daily_times = [NOW - timedelta(days=1), NOW]
+    hourly_times = [NOW - timedelta(hours=2), NOW - timedelta(hours=1)]
+    dataset = FakeDataset(
+        "equities",
+        manifest(
+            coverage(
+                "NVDA",
+                interval="1h",
+                start=hourly_times[0],
+                end=hourly_times[-1],
+                rows=2,
+            ),
+            coverage(
+                "NVDA",
+                start=daily_times[0],
+                end=daily_times[-1],
+                rows=2,
+            ),
+            coverage(
+                "AAPL",
+                start=daily_times[0],
+                end=daily_times[-1],
+                rows=2,
+            ),
+        ),
+        {
+            ("1h", Venue.MOOMOO, "NVDA"): [
+                bar(timestamp=timestamp, interval="1h", close=100 + index)
+                for index, timestamp in enumerate(hourly_times)
+            ],
+            ("1d", Venue.MOOMOO, "NVDA"): [
+                bar(timestamp=timestamp, close=100 + index * 10)
+                for index, timestamp in enumerate(daily_times)
+            ],
+            ("1d", Venue.MOOMOO, "AAPL"): [
+                bar(AAPL, timestamp=timestamp, close=50 + index * 5)
+                for index, timestamp in enumerate(daily_times)
+            ],
+        },
+    )
+    service = fake_service(
+        [binding(interval="1h"), binding(), binding("AAPL")],
+        {"equities": dataset},
+    )
+
+    comparison = service.compare(
+        primary=(Venue.MOOMOO, "NVDA"),
+        peers=[(Venue.MOOMOO, "AAPL")],
+        range=HistoryRange.ONE_MONTH,
+    )
+
+    assert [point.timestamp for point in comparison.points] == daily_times
+    assert [call["interval"] for call in dataset.calls] == ["1d", "1d"]
+    assert comparison.points[-1].values["moomoo:NVDA"] == pytest.approx(110.0)
+    assert comparison.points[-1].values["moomoo:AAPL"] == pytest.approx(110.0)
+
+
 def test_comparison_refuses_fewer_than_two_shared_points() -> None:
     dataset = FakeDataset(
         "equities",
@@ -751,7 +809,7 @@ def test_comparison_refuses_duplicate_keys_and_invalid_base_values(monkeypatch) 
         manifest(coverage("NVDA")),
         {("1d", Venue.MOOMOO, "NVDA"): [bar(timestamp=NOW - timedelta(days=1)), bar()]},
     )
-    service = fake_service([binding()], {"equities": dataset})
+    service = fake_service([binding(), binding("AAPL")], {"equities": dataset})
     with pytest.raises(ValueError, match="duplicate comparison instrument"):
         service.compare(
             primary=(Venue.MOOMOO, "NVDA"),
@@ -803,7 +861,7 @@ def test_comparison_refuses_duplicate_keys_and_invalid_base_values(monkeypatch) 
         limitations=[],
         resolution_fallback=None,
     )
-    monkeypatch.setattr(service, "history", lambda *args, **kwargs: invalid)
+    monkeypatch.setattr(HistoryService, "history", lambda *args, **kwargs: invalid)
     with pytest.raises(ValueError, match="finite and positive"):
         service.compare(
             primary=(Venue.MOOMOO, "NVDA"),

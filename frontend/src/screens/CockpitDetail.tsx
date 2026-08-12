@@ -13,9 +13,11 @@ import {
   LABEL_TEXT,
   instrumentLabel,
   labelTone,
+  liveInstrumentKey,
   markIndexDivergence,
   mergeUpdate,
   midOf,
+  normalizeLiveInstruments,
   quoteNumbers,
   realizedVol,
   spreadBps,
@@ -230,7 +232,7 @@ function DepthChart({ bids, asks }: { bids: BookLevel[]; asks: BookLevel[] }) {
 }
 
 export function CockpitDetailScreen() {
-  const { symbol = '' } = useParams<{ symbol: string }>()
+  const { venue = '', symbol = '' } = useParams<{ venue: string; symbol: string }>()
   const { t } = usePreferences()
   const [updates, setUpdates] = useState<MarketUpdate[]>([])
   const [instruments, setInstruments] = useState<Record<string, LiveInstrumentState>>({})
@@ -245,9 +247,12 @@ export function CockpitDetailScreen() {
   })
 
   useEffect(() => {
-    const instrument = snapshot.data?.instruments[symbol]
+    const instrument = snapshot.data
+      ? normalizeLiveInstruments(snapshot.data.instruments)[liveInstrumentKey(venue, symbol)]
+      : undefined
     if (!instrument) return
-    setInstruments((previous) => ({ ...previous, [symbol]: instrument }))
+    const key = liveInstrumentKey(venue, symbol)
+    setInstruments((previous) => ({ ...previous, [key]: instrument }))
     const seeded = Object.values(instrument.kinds).map((view) =>
       snapshotUpdate(symbol, instrument.venue, view),
     )
@@ -261,10 +266,10 @@ export function CockpitDetailScreen() {
       const next = [...previous, ...missing]
       return next.slice(-(TAPE_LIMIT + CHART_LIMIT))
     })
-  }, [snapshot.data, symbol])
+  }, [snapshot.data, symbol, venue])
 
   const streamStatus = useLiveConnection((update) => {
-    if (update.instrument !== symbol) return
+    if (update.instrument !== symbol || update.venue !== venue) return
     setUpdates((previous) => {
       const next = [...previous, update]
       return next.length > TAPE_LIMIT + CHART_LIMIT ? next.slice(-(TAPE_LIMIT + CHART_LIMIT)) : next
@@ -273,11 +278,11 @@ export function CockpitDetailScreen() {
     setInstruments((previous) => mergeUpdate(previous, update))
   })
 
-  const instrument = instruments[symbol]
+  const instrument = instruments[liveInstrumentKey(venue, symbol)]
   const directoryMatches = marketDirectory.data?.instruments.filter(
     (candidate) => candidate.symbol === symbol,
   ) ?? []
-  const canonicalVenue = instrument?.venue
+  const canonicalVenue = instrument?.venue ?? venue
     ?? (directoryMatches.length === 1 ? directoryMatches[0].venue : null)
   const badgeLabel = instrument ? instrumentLabel(instrument) : 'unavailable'
 

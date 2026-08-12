@@ -89,7 +89,11 @@ const workspace: InstrumentWorkspace = {
     eligible: true,
     generated_at: '2026-08-08T12:00:00Z',
     history_digest: proposal.history_digest,
-    limitations: ['Deterministic synthetic demo artifact'],
+    synthetic: true,
+    limitations: [
+      'Intervals are empirical and do not imply a probability of profit or execution outcome.',
+      'The artifact is research evidence; the paper kernel remains the only order authority.',
+    ],
     metrics: [7, 30, 126].map((sessions) => ({
       benchmark_mae: sessions + 1,
       coverage_50: 0.5,
@@ -177,6 +181,12 @@ const workspace: InstrumentWorkspace = {
   position: {
     average_cost: 180,
     mark: 184,
+    mark_status: {
+      provenance: 'demo-synthetic',
+      reason: null,
+      received_at: '2026-08-08T12:00:00Z',
+      status: 'available',
+    },
     quantity: 5,
     realized_pnl: 12,
     unrealized_pnl: 20,
@@ -187,6 +197,8 @@ const workspace: InstrumentWorkspace = {
     equity: 100_020,
     global_kill_switch: false,
     mark_available: true,
+    valuation_complete: true,
+    valuation_reason: null,
     max_notional: 50_000,
     max_order_quantity: 100,
     max_position_quantity: 1_000,
@@ -243,6 +255,21 @@ describe('ForecastEvidence', () => {
     expect(screen.getByText('Residual samples').closest('div')).toHaveTextContent('20')
     expect(screen.getByText('Dataset revision').closest('div')).toHaveTextContent('demo-history · 1')
     expect(screen.getByText('Model version').closest('div')).toHaveTextContent('1.0.0')
+    expect(screen.getByText('Evaluation method').closest('div')).toHaveTextContent(
+      'Prequential / rolling out-of-sample',
+    )
+    const validationWindow = screen.getByText('Rolling validation window').closest('div')
+    expect(validationWindow).toHaveTextContent('→')
+    expect(validationWindow).toHaveAttribute(
+      'title',
+      '2026-06-01T20:00:00Z → 2026-06-30T20:00:00Z',
+    )
+    const testWindow = screen.getByText('Rolling test window').closest('div')
+    expect(testWindow).toHaveTextContent('→')
+    expect(testWindow).toHaveAttribute(
+      'title',
+      '2026-07-01T20:00:00Z → 2026-08-07T20:00:00Z',
+    )
     expect(screen.getByText(/Train cutoff/)).toBeInTheDocument()
     expect(screen.getByText(/Generated/)).toBeInTheDocument()
   })
@@ -265,10 +292,65 @@ describe('ForecastEvidence', () => {
     const trainCutoff = screen.getByText('训练截止').closest('div')
     expect(trainCutoff).toHaveTextContent('月')
     expect(trainCutoff).not.toHaveTextContent('May')
+    expect(screen.getByText('区间来自经验分布，不代表盈利概率或成交结果。')).toHaveAttribute(
+      'title',
+      'Intervals are empirical and do not imply a probability of profit or execution outcome.',
+    )
+    expect(screen.getByText('该产物仅是研究证据；模拟交易内核仍是唯一订单权威。')).toBeInTheDocument()
   })
 })
 
 describe('DecisionRail', () => {
+  it('does not present incomplete account equity as exact and explains the missing mark', () => {
+    const incomplete = {
+      ...workspace,
+      position: {
+        ...workspace.position!,
+        mark: null,
+        mark_status: {
+          provenance: 'real',
+          reason: 'Quote is older than the valuation fence.',
+          received_at: '2026-08-08T11:50:00Z',
+          status: 'stale',
+        },
+        unrealized_pnl: null,
+      },
+      risk: {
+        ...workspace.risk,
+        mark_available: false,
+        valuation_complete: false,
+        valuation_reason: 'One held position has no current mark.',
+      },
+    } as InstrumentWorkspace
+
+    render(<DecisionRail workspace={incomplete} />, { wrapper: Providers })
+
+    expect(screen.getByText('Account equity').closest('div')).toHaveTextContent('Unavailable')
+    expect(screen.getByText('Incomplete valuation')).toBeInTheDocument()
+    expect(screen.getByText('One held position has no current mark.')).toBeInTheDocument()
+    expect(screen.getByText('Stale')).toBeInTheDocument()
+    expect(screen.getByText('Quote is older than the valuation fence.')).toBeInTheDocument()
+  })
+
+  it('fails closed when completeness is asserted but the held mark is absent', () => {
+    const contradictory = {
+      ...workspace,
+      position: {
+        ...workspace.position!,
+        mark: null,
+      },
+      risk: {
+        ...workspace.risk,
+        valuation_complete: true,
+      },
+    } as InstrumentWorkspace
+
+    render(<DecisionRail workspace={contradictory} />, { wrapper: Providers })
+
+    expect(screen.getByText('Account equity').closest('div')).toHaveTextContent('Unavailable')
+    expect(screen.getByText('Incomplete valuation')).toBeInTheDocument()
+  })
+
   it('shows portfolio/risk truth and creates a preview without placing an order', async () => {
     const user = userEvent.setup()
     render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
@@ -277,6 +359,8 @@ describe('DecisionRail', () => {
     expect(screen.getByText('Unrealized P&L').closest('div')).toHaveTextContent('20')
     expect(screen.getByText('Account equity').closest('div')).toHaveTextContent('100,020')
     expect(screen.getByText('Quote age').closest('div')).toHaveTextContent('500 ms')
+    expect(screen.getByText('Snapshot as of').closest('div')).toHaveTextContent('Aug 8')
+    expect(screen.getByText('Authority').closest('div')).toHaveTextContent('Local paper kernel')
     await user.click(screen.getByRole('button', { name: 'Create paper proposal' }))
 
     await waitFor(() => expect(mocked.createPaperProposal).toHaveBeenCalledWith({
@@ -300,7 +384,7 @@ describe('DecisionRail', () => {
 
   it('requires the displayed token, confirms once, and links the resulting audit lineage', async () => {
     const user = userEvent.setup()
-    render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
+    const view = render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
     await user.click(screen.getByRole('button', { name: 'Create paper proposal' }))
     const confirm = await screen.findByRole('button', { name: 'Confirm paper proposal' })
     expect(confirm).toBeDisabled()
@@ -315,6 +399,19 @@ describe('DecisionRail', () => {
       '/ops/audit?order=paper-order-1',
     )
     expect(screen.queryByRole('button', { name: 'Confirm paper proposal' })).not.toBeInTheDocument()
+
+    view.rerender(
+      <DecisionRail
+        workspace={{
+          ...workspace,
+          proposal: { ...workspace.proposal, proposals: [confirmation.proposal] },
+        }}
+      />,
+    )
+    expect(screen.getByText(/paper-order-1/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open audit lineage' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Start another paper proposal' }))
+    expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeInTheDocument()
   })
 
   it('resumes an existing pending proposal after a workspace refresh', () => {
@@ -332,6 +429,118 @@ describe('DecisionRail', () => {
     expect(screen.getByText(proposal.confirmation_token)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Create paper proposal' })).not.toBeInTheDocument()
     expect(mocked.createPaperProposal).not.toHaveBeenCalled()
+  })
+
+  it('prioritizes a pending persisted proposal over a terminal proposal', () => {
+    render(
+      <DecisionRail
+        workspace={{
+          ...workspace,
+          proposal: {
+            ...workspace.proposal,
+            proposals: [proposal, confirmation.proposal],
+          },
+        }}
+      />,
+      { wrapper: Providers },
+    )
+
+    expect(screen.getByText('Immutable proposal preview')).toBeInTheDocument()
+    expect(screen.getByText(proposal.confirmation_token)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm paper proposal' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Start another paper proposal' })).not.toBeInTheDocument()
+  })
+
+  it('keeps a newly persisted pending proposal visible after terminal history is dismissed', async () => {
+    const user = userEvent.setup()
+    const nextPending = {
+      ...proposal,
+      confirmation_token: 'CONFIRM-NVDA-20',
+      id: 'proposal-2',
+    }
+    const view = render(
+      <DecisionRail
+        workspace={{
+          ...workspace,
+          proposal: { ...workspace.proposal, proposals: [confirmation.proposal] },
+        }}
+      />,
+      { wrapper: Providers },
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Start another paper proposal' }))
+    view.rerender(
+      <DecisionRail
+        workspace={{
+          ...workspace,
+          proposal: {
+            ...workspace.proposal,
+            proposals: [confirmation.proposal, nextPending],
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Immutable proposal preview')).toBeInTheDocument()
+    expect(screen.getByText(nextPending.confirmation_token)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm paper proposal' })).toBeInTheDocument()
+  })
+
+  it('restores confirmed order lineage after a full workspace remount', async () => {
+    const user = userEvent.setup()
+    render(
+      <DecisionRail
+        workspace={{
+          ...workspace,
+          proposal: { ...workspace.proposal, proposals: [confirmation.proposal] },
+        }}
+      />,
+      { wrapper: Providers },
+    )
+
+    expect(screen.getByText('Paper order created')).toBeInTheDocument()
+    expect(screen.getByText('Order ID').closest('div')).toHaveTextContent('paper-order-1')
+    expect(screen.getByRole('link', { name: 'Open audit lineage' })).toHaveAttribute(
+      'href',
+      '/ops/audit?order=paper-order-1',
+    )
+    await user.click(screen.getByRole('button', { name: 'Start another paper proposal' }))
+    expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeInTheDocument()
+  })
+
+  it('dismisses the existing terminal ledger in one start-another action', async () => {
+    const user = userEvent.setup()
+    const olderRejected: PaperProposal = {
+      ...proposal,
+      blockers: ['Earlier proposal was rejected.'],
+      id: 'proposal-older',
+      order_id: 'paper-order-older',
+      status: 'rejected',
+    }
+    render(
+      <DecisionRail
+        workspace={{
+          ...workspace,
+          proposal: {
+            ...workspace.proposal,
+            proposals: [olderRejected, confirmation.proposal],
+          },
+        }}
+      />,
+      { wrapper: Providers },
+    )
+
+    expect(screen.getByText('Paper order created')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Start another paper proposal' }))
+    expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeInTheDocument()
+    expect(screen.queryByText('Earlier proposal was rejected.')).not.toBeInTheDocument()
+  })
+
+  it('blocks proposal creation while retained evidence is updating', () => {
+    render(<DecisionRail evidenceUpdating workspace={workspace} />, { wrapper: Providers })
+
+    expect(screen.getByText('Paper action waits for the selected evidence to finish loading.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeDisabled()
   })
 
   it('drops local proposal and result state when refreshed authority removes it', async () => {
@@ -387,12 +596,17 @@ describe('DecisionRail', () => {
 
     const refused: ProposalConfirmation = {
       blocker: 'Quote crossed the freshness fence.',
-      order: null,
-      proposal: { ...proposal, blockers: ['Quote crossed the freshness fence.'], status: 'blocked' },
+      order: { ...confirmation.order!, filled_quantity: 0, status: 'rejected' },
+      proposal: {
+        ...proposal,
+        blockers: ['Quote crossed the freshness fence.'],
+        order_id: 'paper-order-1',
+        status: 'rejected',
+      },
       quote_provenance: null,
     }
     mocked.confirmPaperProposal.mockRejectedValue(new ProposalRefusalError(refused))
-    render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
+    const view = render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
     await user.click(screen.getByRole('button', { name: 'Create paper proposal' }))
     await user.type(await screen.findByLabelText('Confirmation token'), proposal.confirmation_token)
     await user.click(screen.getByRole('button', { name: 'Confirm paper proposal' }))
@@ -400,5 +614,21 @@ describe('DecisionRail', () => {
     expect(await screen.findByText('Quote crossed the freshness fence.')).toBeInTheDocument()
     expect(mocked.confirmPaperProposal).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('button', { name: 'Confirm paper proposal' })).toBeDisabled()
+    expect(screen.getByText('Proposal rejected')).toBeInTheDocument()
+    expect(screen.queryByText('Paper order created')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open audit lineage' })).toBeInTheDocument()
+
+    view.rerender(
+      <DecisionRail
+        workspace={{
+          ...workspace,
+          proposal: { ...workspace.proposal, proposals: [refused.proposal] },
+        }}
+      />,
+    )
+    expect(screen.getByText('Quote crossed the freshness fence.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm paper proposal' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Start another paper proposal' }))
+    expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeInTheDocument()
   })
 })

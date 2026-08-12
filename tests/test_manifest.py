@@ -8,7 +8,12 @@ import pytest
 from pydantic import ValidationError
 
 from quantmesh.data.lake import Lake
-from quantmesh.data.manifest import MANIFEST_NAME, DatasetManifest, ManifestWriter
+from quantmesh.data.manifest import (
+    MANIFEST_NAME,
+    DatasetClass,
+    DatasetManifest,
+    ManifestWriter,
+)
 from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 
@@ -66,6 +71,50 @@ def test_manifest_roundtrips_through_json(tmp_path: Path) -> None:
     parsed = DatasetManifest.model_validate_json(manifest_path(tmp_path, "ds").read_text())
 
     assert parsed == manifest
+
+
+def test_legacy_manifest_without_dataset_class_remains_compatible(tmp_path: Path) -> None:
+    payload = _payload(tmp_path)
+    payload.pop("data_class", None)
+    manifest_path(tmp_path, "ds").write_text(json.dumps(payload), encoding="utf-8")
+
+    parsed = Lake(tmp_path).dataset("ds").manifest
+
+    assert parsed.data_class is None
+
+
+def test_generate_records_structured_dataset_class(tmp_path: Path) -> None:
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar()])
+
+    manifest = ManifestWriter(tmp_path).generate(
+        "ds",
+        source="operator-import",
+        license="operator-supplied",
+        data_class=DatasetClass.OBSERVED,
+    )
+
+    assert manifest.data_class is DatasetClass.OBSERVED
+
+
+def test_regenerate_preserves_existing_dataset_class_when_unspecified(tmp_path: Path) -> None:
+    lake = Lake(tmp_path)
+    lake.write_bars("ds", [bar()])
+    writer = ManifestWriter(tmp_path)
+    writer.generate(
+        "ds",
+        source="operator-import",
+        license="operator-supplied",
+        data_class=DatasetClass.OBSERVED,
+    )
+
+    regenerated = writer.generate(
+        "ds",
+        source="operator-import",
+        license="operator-supplied",
+    )
+
+    assert regenerated.data_class is DatasetClass.OBSERVED
 
 
 def test_coverage_reflects_lake(tmp_path: Path) -> None:

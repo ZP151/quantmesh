@@ -218,8 +218,14 @@ class HistoryService:
         if len(set(keys)) != len(keys):
             raise HistoryUnavailableError("duplicate comparison instrument")
         selected_as_of = _aware_utc(as_of if as_of is not None else self._now(), "as_of")
+        comparison_bindings = self._select_comparison_bindings(identities, range)
+        comparison_reader = HistoryService(
+            comparison_bindings,
+            dataset_loader=self._dataset_loader,
+            now=lambda: selected_as_of,
+        )
         series = [
-            self.history(venue, symbol, range, as_of=selected_as_of)
+            comparison_reader.history(venue, symbol, range, as_of=selected_as_of)
             for venue, symbol in identities
         ]
         for current in series:
@@ -260,6 +266,19 @@ class HistoryService:
                 for limitation in current.limitations
             )
         )
+        resolution_fallbacks = tuple(
+            dict.fromkeys(
+                current.resolution_fallback
+                for current in series
+                if current.resolution_fallback is not None
+            )
+        )
+        if resolution_fallbacks:
+            limitations = (
+                *limitations,
+                "Comparison uses shared observed resolution fallback "
+                f"{', '.join(resolution_fallbacks)}.",
+            )
         return ComparisonSeries(
             range=range,
             as_of=selected_as_of,
@@ -267,6 +286,42 @@ class HistoryService:
             points=points,
             limitations=limitations,
         )
+
+    def _select_comparison_bindings(
+        self,
+        identities: list[tuple[Venue, str]],
+        requested_range: HistoryRange,
+    ) -> tuple[DatasetBinding, ...]:
+        """Select one observed resolution available for every instrument.
+
+        Comparison never resamples or forward-fills. When the preferred
+        resolution is not common to every instrument, use the finest common
+        coarser binding and preserve its fallback in each returned series.
+        """
+        preferred_step = interval_to_timedelta(_PREFERRED_INTERVAL[requested_range])
+        candidates: list[dict[timedelta, DatasetBinding]] = []
+        for venue, symbol in identities:
+            by_resolution = {
+                interval_to_timedelta(binding.interval): binding
+                for binding in self._bindings
+                if binding.venue is venue
+                and binding.symbol == symbol
+                and interval_to_timedelta(binding.interval) >= preferred_step
+            }
+            if not by_resolution:
+                raise HistoryUnavailableError(
+                    f"no preferred or coarser comparison binding for {venue.value}:{symbol}"
+                )
+            candidates.append(by_resolution)
+        shared_resolutions = set(candidates[0])
+        for current in candidates[1:]:
+            shared_resolutions.intersection_update(current)
+        if not shared_resolutions:
+            raise HistoryUnavailableError(
+                "comparison instruments have no shared observed resolution"
+            )
+        selected_resolution = min(shared_resolutions)
+        return tuple(current[selected_resolution] for current in candidates)
 
     def _select_binding(
         self,

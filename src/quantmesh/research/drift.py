@@ -22,7 +22,6 @@ report-only kill-switch flag (enforcement is M10).
 import hashlib
 import json
 import math
-import os
 import re
 import tempfile
 from datetime import UTC, datetime, timedelta
@@ -33,6 +32,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
+from quantmesh._fs import atomic_replace
 from quantmesh.research.features import frame_digest
 from quantmesh.research.reports import ID_PATTERN, Parameter, StrategyReport
 from quantmesh.settings import settings
@@ -915,7 +915,7 @@ class _JsonlLedger(Generic[_T]):
             except BaseException:
                 temporary.unlink(missing_ok=True)
                 raise
-        os.replace(temporary, self.path)
+        atomic_replace(temporary, self.path)
 
     def _read(self) -> list[_T]:
         if not self.path.exists():

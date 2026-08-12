@@ -15,7 +15,6 @@ dataset, interval, symbol and day — so no name can escape the lake root,
 cross partitions, or break the COPY statement.
 """
 
-import os
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -25,6 +24,7 @@ import duckdb
 import pandas as pd
 from pydantic import ValidationError
 
+from quantmesh._fs import atomic_replace
 from quantmesh.data.layout import (
     SHARD_NAME,
     shards_in,
@@ -161,7 +161,7 @@ class Lake:
                         "(FORMAT PARQUET)"
                     )
                     con.unregister("frame")
-                    os.replace(temp, path)
+                    atomic_replace(temp, path)
                 finally:
                     if temp.exists():
                         temp.unlink()

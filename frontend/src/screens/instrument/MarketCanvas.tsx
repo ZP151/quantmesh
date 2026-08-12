@@ -39,7 +39,7 @@ export interface MarketCanvasProps {
 }
 
 export function MarketCanvas(props: MarketCanvasProps) {
-  const { t } = usePreferences()
+  const { locale, resolvedTheme, t } = usePreferences()
   const chartLabels = useMemo(() => ({
     attribution: t('screen.workspace.chartAttribution'),
     caption: t('screen.workspace.chartCaption'),
@@ -128,20 +128,22 @@ export function MarketCanvas(props: MarketCanvasProps) {
       </div>
       <div className="flex items-center justify-between gap-3 px-1 text-[10px] text-muted-foreground">
         <span>{t('screen.workspace.observed')} · {props.history.interval}</span>
-        <span>{t('screen.workspace.asOf', { time: dateTime(props.history.as_of) })}</span>
+        <span>{t('screen.workspace.asOf', { time: dateTime(props.history.as_of, locale) })}</span>
       </div>
       {props.comparison !== null && props.comparison.points.length > 0 && (
         <p className="px-1 font-mono text-[10px] text-muted-foreground">
           {t('screen.workspace.indexedComparison', {
-            time: dateTime(props.comparison.points[0].timestamp),
+            time: dateTime(props.comparison.points[0].timestamp, locale),
           })}
         </p>
       )}
       <InstrumentChart
+        appearance={resolvedTheme}
         comparisons={props.comparison}
         forecast={props.forecast}
         indicators={indicators}
         labels={chartLabels}
+        locale={locale}
         mode={props.mode}
         primary={{ ...props.history, bars }}
         volume={props.volume && hasVolume}

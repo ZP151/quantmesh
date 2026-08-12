@@ -36,6 +36,7 @@ from datetime import datetime, timedelta
 
 from quantmesh.domain.models import Instrument, Quote
 from quantmesh.live.contract import Provenance, UpdateKind
+from quantmesh.live.feed import ExactUpdateSnapshot
 
 FENCE_DEFAULT_MAX_AGE = timedelta(seconds=30)  # same horizon family as the matcher
 
@@ -95,6 +96,11 @@ class QuoteFence:
             return FenceDecision(
                 False, "quote sequence is discontinuous — the venue dropped updates"
             )
+        if view.get("sequence_gap") is not False or view.get("continuity_proven") is not True:
+            return FenceDecision(
+                False,
+                "quote continuity is unproven — two clean ordered venue updates are required",
+            )
         received_at = view.get("received_at")
         if not isinstance(received_at, str):
             return FenceDecision(
@@ -125,26 +131,38 @@ class QuoteFence:
 
     def resolve(
         self,
-        snapshot: Mapping[str, object],
+        snapshot: ExactUpdateSnapshot | None,
         *,
         instrument: Instrument,
         now: datetime,
     ) -> FenceDecision:
-        """Bind the fence to a ``latest_state`` snapshot (the watchlist's
-        JSON shape): pull the instrument's latest QUOTE view and
-        evaluate it at ``now``."""
-        instruments = snapshot.get("instruments")
-        if not isinstance(instruments, Mapping):
+        """Evaluate one venue/symbol/kind-exact feed snapshot.
+
+        Presentation-oriented ``latest_state`` is intentionally not accepted:
+        its symbol-only merge can combine venues and is not order authority.
+        """
+        if not isinstance(snapshot, ExactUpdateSnapshot):
             return FenceDecision(False, f"no locally validated quote for {instrument.symbol}")
-        entry = instruments.get(instrument.symbol)
-        if not isinstance(entry, Mapping):
-            return FenceDecision(False, f"no locally validated quote for {instrument.symbol}")
-        kinds = entry.get("kinds")
-        if not isinstance(kinds, Mapping):
-            return FenceDecision(False, f"no locally validated quote for {instrument.symbol}")
-        view = kinds.get(UpdateKind.QUOTE.value)
+        if (
+            snapshot.venue is not instrument.venue
+            or snapshot.instrument != instrument.symbol
+            or snapshot.kind is not UpdateKind.QUOTE
+            or snapshot.source != instrument.venue.value
+        ):
+            return FenceDecision(
+                False,
+                f"exact quote snapshot does not match "
+                f"{instrument.venue.value}:{instrument.symbol}",
+            )
         return self.evaluate(
-            view if isinstance(view, Mapping) else None,
+            {
+                "kind": snapshot.kind.value,
+                "provenance": snapshot.provenance.value,
+                "received_at": snapshot.received_at.isoformat(),
+                "sequence_gap": snapshot.sequence_gap,
+                "continuity_proven": snapshot.continuity_proven,
+                "payload": snapshot.payload,
+            },
             instrument=instrument,
             now=now,
         )

@@ -1115,11 +1115,15 @@ export interface components {
         Body_watchlist_add_watchlist_add_post: {
             /** Symbol */
             symbol: string;
+            /** Venue */
+            venue?: string | null;
         };
         /** Body_watchlist_remove_watchlist_remove_post */
         Body_watchlist_remove_watchlist_remove_post: {
             /** Symbol */
             symbol: string;
+            /** Venue */
+            venue?: string | null;
         };
         /**
          * ComparisonPoint
@@ -1675,6 +1679,8 @@ export interface components {
             model_version: string;
             /** Paths */
             paths: components["schemas"]["ForecastPath"][];
+            /** Synthetic */
+            synthetic: boolean;
             /** Target */
             target: string;
             /** Test End */
@@ -1731,12 +1737,27 @@ export interface components {
              */
             status: "available" | "degraded" | "unavailable";
         };
+        /** WorkspaceMarkStatus */
+        WorkspaceMarkStatus: {
+            /** Provenance */
+            provenance: string;
+            /** Reason */
+            reason?: string | null;
+            /** Received At */
+            received_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "stale" | "unavailable";
+        };
         /** WorkspacePosition */
         WorkspacePosition: {
             /** Average Cost */
             average_cost: number;
             /** Mark */
             mark?: number | null;
+            mark_status?: components["schemas"]["WorkspaceMarkStatus"] | null;
             /** Quantity */
             quantity: number;
             /** Realized Pnl */
@@ -1749,7 +1770,7 @@ export interface components {
             /** Cash */
             cash: number;
             /** Equity */
-            equity: number;
+            equity?: number | null;
             /** Global Kill Switch */
             global_kill_switch: boolean;
             /** Mark Available */
@@ -1762,6 +1783,10 @@ export interface components {
             max_position_quantity?: number | null;
             /** Starting Cash */
             starting_cash: number;
+            /** Valuation Complete */
+            valuation_complete: boolean;
+            /** Valuation Reason */
+            valuation_reason?: string | null;
             /** Venue Kill Switch */
             venue_kill_switch: boolean;
         };
@@ -2114,8 +2139,8 @@ export interface operations {
     api_live_price_trail: {
         parameters: {
             query: {
-                /** @description Comma-separated instrument symbols */
-                symbols: string;
+                /** @description Comma-separated canonical venue:instrument identities */
+                identities: string;
                 limit?: number;
             };
             header?: never;
@@ -2835,8 +2860,8 @@ export interface operations {
     live_price_trail_live_price_trail_get: {
         parameters: {
             query: {
-                /** @description Comma-separated instrument symbols */
-                symbols: string;
+                /** @description Comma-separated canonical venue:instrument identities */
+                identities: string;
                 limit?: number;
             };
             header?: never;

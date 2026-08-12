@@ -14,9 +14,11 @@ import { usePreferences } from '@/lib/preferences'
 import { WorkspaceHeader } from './instrument/WorkspaceHeader'
 import { ComparisonPicker } from './instrument/ComparisonPicker'
 import { DecisionRail } from './instrument/DecisionRail'
+import { evidenceText } from './instrument/evidence-copy'
 import { ForecastEvidence, type ForecastHorizon } from './instrument/ForecastEvidence'
 import { MarketCanvas } from './instrument/MarketCanvas'
-import { WorkspaceDegraded, WorkspaceError } from './instrument/WorkspaceStates'
+import { WorkspaceDegraded, WorkspaceError, WorkspaceRefreshWarning } from './instrument/WorkspaceStates'
+import { retainSameInstrument } from './instrument/workspace-query'
 
 const VENUES: readonly HistoricalVenue[] = ['internal', 'moomoo', 'hyperliquid', 'polymarket', 'kalshi']
 const RANGES: readonly HistoryRange[] = ['1d', '5d', '1m', '3m', '6m', '1y']
@@ -34,7 +36,7 @@ function forecastHorizon(value: string | null): ForecastHorizon {
 }
 
 export function InstrumentWorkspaceScreen() {
-  const { t } = usePreferences()
+  const { locale, t } = usePreferences()
   const { symbol = '', venue = '' } = useParams<{ symbol: string; venue: string }>()
   const [search, setSearch] = useSearchParams()
   const range = historyRange(search.get('range'))
@@ -60,6 +62,7 @@ export function InstrumentWorkspaceScreen() {
     if (update.venue !== venue || update.instrument !== symbol) return
     const remaining = 500 - (Date.now() - lastLiveRefresh.current)
     if (remaining <= 0) {
+      if (trailingLiveRefresh.current !== null) clearTimeout(trailingLiveRefresh.current)
       refreshWorkspace()
       return
     }
@@ -70,11 +73,22 @@ export function InstrumentWorkspaceScreen() {
   useEffect(() => () => {
     if (trailingLiveRefresh.current !== null) clearTimeout(trailingLiveRefresh.current)
   }, [refreshWorkspace])
-  const stream = useLiveConnection(onLiveUpdate)
+  const health = useQuery({
+    queryKey: ['health'],
+    queryFn: api.health,
+    retry: false,
+  })
+  const stream = useLiveConnection(onLiveUpdate, health.data?.runtime_mode === 'live')
   const query = useQuery({
     enabled: validVenue && symbol.length > 0,
     queryKey: ['instrument-workspace', venue, symbol, range, compare],
     queryFn: () => api.instrumentWorkspace(venue as HistoricalVenue, symbol, range, compare),
+    placeholderData: (previous, previousQuery) => retainSameInstrument(
+      previous,
+      previousQuery?.queryKey,
+      venue,
+      symbol,
+    ),
     refetchInterval: 5_000,
     retry: false,
   })
@@ -83,19 +97,24 @@ export function InstrumentWorkspaceScreen() {
     return <WorkspaceError error={new Error(t('screen.workspace.invalidRoute'))} symbol={symbol} venue={venue} />
   }
   if (query.isPending) return <WorkspaceLoading />
-  if (query.isError) return <WorkspaceError error={query.error} symbol={symbol} venue={venue} />
+  if (query.isError && query.data === undefined) {
+    return <WorkspaceError error={query.error} symbol={symbol} venue={venue} />
+  }
   const workspace = query.data
+  const displayedRange = query.isPlaceholderData ? workspace.history.range : range
+  const displayedComparisons = query.isPlaceholderData
+    ? (workspace.comparison?.keys ?? []).filter(
+        (key) => key !== `${workspace.instrument.venue}:${workspace.instrument.symbol}`,
+      )
+    : compare
   const forecastPath = workspace.forecast?.paths.find((path) => path.sessions === horizon)
     ?? workspace.forecast?.paths[0]
     ?? null
-  const syntheticForecast = [
-    workspace.history.source,
-    workspace.history.license,
-    ...(workspace.forecast?.limitations ?? []),
-  ].some((value) => value.toLowerCase().includes('synthetic'))
-  const liveReason = workspace.live.reason
+  const syntheticForecast = workspace.forecast?.synthetic === true
+  const liveReasonRaw = workspace.live.reason
     ?? workspace.proposal.blockers[0]
     ?? t('screen.workspace.staleReason')
+  const liveReason = evidenceText(liveReasonRaw, locale, t)
   const historyGaps = workspace.history.gaps ?? []
   const historyDuplicates = workspace.history.duplicates ?? []
   const qualityWarnings = [
@@ -115,6 +134,13 @@ export function InstrumentWorkspaceScreen() {
           detail: historyDuplicates.join(', '),
         }),
     workspace.live.sequence_gap ? t('screen.workspace.sequenceGap') : null,
+    ...workspace.history.limitations.map((detail) => t('screen.workspace.historyLimitation', {
+      detail: evidenceText(detail, locale, t),
+    })),
+    ...(workspace.comparison?.limitations ?? []).map((detail) => t(
+      'screen.workspace.comparisonLimitation',
+      { detail: evidenceText(detail, locale, t) },
+    )),
   ].filter((warning): warning is string => warning !== null)
   const updateParam = (key: string, value: string | null) => {
     const next = new URLSearchParams(search)
@@ -132,7 +158,15 @@ export function InstrumentWorkspaceScreen() {
   return (
     <div className="space-y-4">
       <WorkspaceHeader stream={stream} workspace={workspace} />
-      {workspace.live.status !== 'available' && <WorkspaceDegraded reason={liveReason} />}
+      {query.isRefetchError && <WorkspaceRefreshWarning error={query.error} />}
+      {query.isPlaceholderData && (
+        <p className="border-l-2 border-sky-600 bg-sky-500/5 px-3 py-2 text-xs" role="status">
+          {t('screen.workspace.updatingEvidence')}
+        </p>
+      )}
+      {workspace.live.status !== 'available' && (
+        <WorkspaceDegraded rawReason={liveReasonRaw} reason={liveReason} />
+      )}
       {qualityWarnings.length > 0 && (
         <section
           aria-label={t('screen.workspace.dataQuality')}
@@ -162,7 +196,7 @@ export function InstrumentWorkspaceScreen() {
             onSma20Change={(enabled) => updateParam('sma20', enabled ? '1' : null)}
             onSma50Change={(enabled) => updateParam('sma50', enabled ? '1' : null)}
             onVolumeChange={(enabled) => updateParam('volume', enabled ? '1' : null)}
-            range={range}
+            range={displayedRange}
             showSma20={showSma20}
             showSma50={showSma50}
             volume={volume}
@@ -182,7 +216,7 @@ export function InstrumentWorkspaceScreen() {
           <ComparisonPicker
             onChange={updateComparisons}
             primary={`${workspace.instrument.venue}:${workspace.instrument.symbol}`}
-            selected={compare}
+            selected={displayedComparisons}
           />
           <dl className="divide-y divide-border border-y border-border text-xs">
             <div className="flex justify-between gap-3 px-3 py-2">
@@ -195,7 +229,12 @@ export function InstrumentWorkspaceScreen() {
             </div>
             <div className="flex justify-between gap-3 px-3 py-2">
               <dt className="text-muted-foreground">{t('screen.workspace.license')}</dt>
-              <dd className="max-w-36 truncate font-mono">{workspace.history.license}</dd>
+              <dd
+                className="max-w-40 break-words text-right font-mono"
+                title={workspace.history.license}
+              >
+                {workspace.history.license}
+              </dd>
             </div>
           </dl>
           <ForecastEvidence
@@ -210,6 +249,7 @@ export function InstrumentWorkspaceScreen() {
         <aside className="space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.decision')}>
           <DecisionRail
             key={`${workspace.instrument.venue}:${workspace.instrument.symbol}`}
+            evidenceUpdating={query.isPlaceholderData}
             workspace={workspace}
           />
         </aside>

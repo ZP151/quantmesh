@@ -68,6 +68,7 @@ def test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state(tmp_path: 
         assert workspace.status_code == 200
         body = workspace.json()
         assert body["forecast"]["eligible"] is True
+        assert body["forecast"]["synthetic"] is True
         assert body["proposal"]["allowed"] is True
 
         preview = client.post(

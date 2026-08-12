@@ -5,8 +5,8 @@ import { ageText } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
 
 function liveTone(status: InstrumentWorkspace['live']['status']): string {
-  if (status === 'available') return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-  if (status === 'degraded') return 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+  if (status === 'available') return 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-400'
+  if (status === 'degraded') return 'bg-amber-500/10 text-amber-800 dark:text-amber-400'
   return 'bg-muted text-muted-foreground'
 }
 
@@ -30,7 +30,7 @@ export function WorkspaceHeader({
   stream: 'connecting' | 'live' | 'fallback' | 'down'
   workspace: InstrumentWorkspace
 }) {
-  const { t } = usePreferences()
+  const { locale, t } = usePreferences()
   const live = workspace.live
   const mark = live.last ?? (
     live.bid !== null && live.bid !== undefined && live.ask !== null && live.ask !== undefined
@@ -58,7 +58,7 @@ export function WorkspaceHeader({
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {t('screen.workspace.mark')}
             </dt>
-            <dd className="font-mono text-sm tabular-nums">{moneyPrecise(mark)}</dd>
+            <dd className="font-mono text-sm tabular-nums">{moneyPrecise(mark, locale)}</dd>
           </div>
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -82,19 +82,19 @@ export function WorkspaceHeader({
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {t('screen.workspace.dataTime')}
             </dt>
-            <dd className="font-mono text-xs">{live.data_time ? dateTime(live.data_time) : '—'}</dd>
+            <dd className="font-mono text-xs">{live.data_time ? dateTime(live.data_time, locale) : '—'}</dd>
           </div>
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {t('screen.workspace.receivedAt')}
             </dt>
-            <dd className="font-mono text-xs">{live.received_at ? dateTime(live.received_at) : '—'}</dd>
+            <dd className="font-mono text-xs">{live.received_at ? dateTime(live.received_at, locale) : '—'}</dd>
           </div>
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {t('screen.workspace.age')}
             </dt>
-            <dd className="font-mono text-xs">{live.age_ms === null || live.age_ms === undefined ? '—' : ageText(live.age_ms)}</dd>
+            <dd className="font-mono text-xs">{live.age_ms === null || live.age_ms === undefined ? '—' : ageText(live.age_ms, locale)}</dd>
           </div>
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">

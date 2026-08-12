@@ -51,7 +51,12 @@ from pydantic import BaseModel, Field
 from quantmesh.api.workstation import _json_guard_origin
 from quantmesh.data.lake import Lake
 from quantmesh.data.layout import validate_dataset_name, validate_symbol
-from quantmesh.data.manifest import MANIFEST_NAME, DatasetManifest, ManifestWriter
+from quantmesh.data.manifest import (
+    MANIFEST_NAME,
+    DatasetClass,
+    DatasetManifest,
+    ManifestWriter,
+)
 from quantmesh.domain.market_data import Bar, interval_to_timedelta
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.hyperliquid.errors import (
@@ -797,6 +802,7 @@ class DatalinkService:
             body.dataset,
             source="operator-import",
             license=body.license,
+            data_class=DatasetClass.OBSERVED,
             generated_at=_utc_now(),
         )
         return {

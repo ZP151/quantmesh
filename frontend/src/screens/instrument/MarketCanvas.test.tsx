@@ -8,15 +8,18 @@ import { PreferencesProvider } from '@/lib/preferences'
 vi.mock('@/components/charts/InstrumentChart', () => ({
   InstrumentChart: ({
     indicators,
+    locale,
     mode,
     volume,
   }: {
     indicators: readonly { label: string }[]
+    locale: string
     mode: string
     volume: boolean
   }) => (
     <div
       data-testid="instrument-chart"
+      data-locale={locale}
       data-mode={mode}
       data-volume={String(volume)}
     >
@@ -225,6 +228,37 @@ describe('MarketCanvas', () => {
     expect(screen.getByText('Requires at least 50 observed bars.')).toBeInTheDocument()
     await user.click(sma50)
     expect(onSma50Change).not.toHaveBeenCalled()
+  })
+
+  it('formats market timestamps with the selected Chinese locale', () => {
+    window.localStorage.setItem(
+      'quantmesh.preferences',
+      JSON.stringify({ locale: 'zh-CN', theme: 'dark' }),
+    )
+    render(
+      <PreferencesProvider>
+        <MarketCanvas
+          comparison={null}
+          forecast={null}
+          history={history}
+          mode="candles"
+          onModeChange={vi.fn()}
+          onRangeChange={vi.fn()}
+          onSma20Change={vi.fn()}
+          onSma50Change={vi.fn()}
+          onVolumeChange={vi.fn()}
+          range="6m"
+          showSma20={false}
+          showSma50={false}
+          volume={false}
+        />
+      </PreferencesProvider>,
+    )
+
+    expect(screen.getByText(/^截至 /)).toHaveTextContent('月')
+    expect(screen.getByText(/^截至 /)).not.toHaveTextContent('Aug')
+    expect(screen.getByTestId('instrument-chart')).toHaveAttribute('data-locale', 'zh-CN')
+    window.localStorage.clear()
   })
 })
 

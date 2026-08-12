@@ -7,7 +7,7 @@ sequence continuous. These drills pin three surfaces:
 
 - the pure ``evaluate`` verdicts (every rejection reason, the bless
   path and the priority order) against scripted feed views;
-- ``resolve`` against ``latest_state``-shaped snapshots;
+- ``resolve`` against venue/symbol/kind-exact snapshots;
 - the full consumption path: ``PaperAccount.submit`` with the fence
   enabled — healthy quotes flow to fills, every rejection lands as an
   explicit REJECTED reason, idempotency replays bypass the fence, and
@@ -39,7 +39,8 @@ from quantmesh.domain.models import (
 from quantmesh.domain.orders import OrderEventType, OrderStatus
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.matcher import PaperMatcher
-from quantmesh.live.feed import LiveFeed
+from quantmesh.live.contract import Provenance, UpdateKind
+from quantmesh.live.feed import ExactUpdateSnapshot, LiveFeed
 from quantmesh.live.fence import QuoteFence
 from quantmesh.live.hyperliquid import HyperliquidVenueSupervisor, LiveHyperliquidTransport
 from tests.fixture_ws_venue import ScriptedVenue
@@ -68,6 +69,7 @@ def _view(
         "age_ms": 0,
         "sequence": 1,
         "sequence_gap": sequence_gap,
+        "continuity_proven": not sequence_gap,
         "label": "real",
         "payload": payload
         if payload is not None
@@ -75,11 +77,25 @@ def _view(
     }
 
 
-def _snapshot(btc_view: dict[str, object] | None = _view()) -> dict[str, object]:
-    instruments: dict[str, object] = {}
-    if btc_view is not None:
-        instruments["BTC"] = {"venue": "hyperliquid", "kinds": {"quote": btc_view}, "label": "real"}
-    return {"generated_at": T0.isoformat(), "instruments": instruments}
+def _snapshot(btc_view: dict[str, object] = _view()) -> ExactUpdateSnapshot:
+    received_at = datetime.fromisoformat(str(btc_view["received_at"]))
+    return ExactUpdateSnapshot(
+        venue=Venue.HYPERLIQUID,
+        instrument="BTC",
+        kind=UpdateKind.QUOTE,
+        source="hyperliquid",
+        provenance=Provenance(str(btc_view["provenance"])),
+        data_time=datetime.fromisoformat(str(btc_view["data_time"])),
+        received_at=received_at,
+        sequence=cast(int | None, btc_view["sequence"]),
+        sequence_gap=bool(btc_view["sequence_gap"]),
+        payload=cast(dict[str, object], btc_view["payload"]),
+        continuity_proven=bool(btc_view["continuity_proven"]),
+        predecessor_sequence=0,
+        predecessor_data_time=received_at - timedelta(milliseconds=1),
+        freshness_label="real",
+        age_ms=0,
+    )
 
 
 def _request(quantity: float = 1.0) -> OrderRequest:
@@ -142,6 +158,18 @@ def test_rejects_a_sequence_gapped_quote() -> None:
 
     assert not decision.allowed
     assert decision.reason == "quote sequence is discontinuous — the venue dropped updates"
+
+
+def test_rejects_missing_positive_continuity_evidence() -> None:
+    view = _view()
+    view["continuity_proven"] = False
+
+    decision = QuoteFence().evaluate(view, instrument=BTC, now=T0)
+
+    assert decision.allowed is False
+    assert decision.reason == (
+        "quote continuity is unproven — two clean ordered venue updates are required"
+    )
 
 
 def test_rejects_a_stale_quote_with_the_explicit_age() -> None:
@@ -207,15 +235,18 @@ def test_resolve_pulls_the_quote_view_from_the_snapshot() -> None:
     assert healthy.allowed
     assert healthy.quote is not None
 
-    for snapshot in (
-        {},
-        {"instruments": {}},
-        {"instruments": {"ETH": {"kinds": {"quote": _view()}}}},
-        {"instruments": {"BTC": {"kinds": {}}}},
-    ):
+    wrong_symbol = _snapshot()
+    wrong_symbol = ExactUpdateSnapshot(
+        **{**wrong_symbol.__dict__, "instrument": "ETH"}
+    )
+    wrong_venue = _snapshot()
+    wrong_venue = ExactUpdateSnapshot(
+        **{**wrong_venue.__dict__, "venue": Venue.MOOMOO, "source": "moomoo"}
+    )
+    for snapshot in (None, wrong_symbol, wrong_venue):
         decision = fence.resolve(snapshot, instrument=BTC, now=T0)
         assert not decision.allowed
-        assert decision.reason == "no locally validated quote for BTC"
+        assert "quote" in decision.reason
 
 
 # -- the consumption path: PaperAccount.submit with the fence -----------------
@@ -399,7 +430,10 @@ def live_quote_anchor() -> tuple[LiveFeed, datetime]:
     for _ in range(150):
         state = feed.latest_state()
         view = (
-            state.get("instruments", {}).get("BTC", {}).get("kinds", {}).get("quote")
+            state.get("instruments", {})
+            .get("hyperliquid:BTC", {})
+            .get("kinds", {})
+            .get("quote")
             if isinstance(state.get("instruments"), dict)
             else None
         )
@@ -428,7 +462,12 @@ def test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks(
 
     # Within the horizon: the fence blesses the venue's own quote and the
     # order fills against it.
-    fresh = feed.latest_state(now=received_at + timedelta(seconds=2))
+    fresh = feed.snapshot_exact(
+        Venue.HYPERLIQUID,
+        "BTC",
+        UpdateKind.QUOTE,
+        as_of=received_at + timedelta(seconds=2),
+    )
     result = _account().submit(
         _request(),
         now=received_at + timedelta(seconds=2),
@@ -441,7 +480,12 @@ def test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks(
 
     # Past the horizon (the venue went quiet): the same snapshot ages out
     # and the fence blocks with the explicit reason, before any matching.
-    stale = feed.latest_state(now=received_at + timedelta(seconds=6))
+    stale = feed.snapshot_exact(
+        Venue.HYPERLIQUID,
+        "BTC",
+        UpdateKind.QUOTE,
+        as_of=received_at + timedelta(seconds=6),
+    )
     blocked = _account().submit(
         _request(),
         now=received_at + timedelta(seconds=6),

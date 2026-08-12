@@ -5,17 +5,43 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { api, type InstrumentWorkspace, type PaperProposal } from '@/lib/api'
-import { money, moneyPrecise, quantity } from '@/lib/format'
+import { dateTime, money, moneyPrecise, quantity } from '@/lib/format'
 import { ageText } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
+import { evidenceText } from './evidence-copy'
 import { ProposalConfirmation } from './ProposalConfirmation'
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-export function DecisionRail({ workspace }: { workspace: InstrumentWorkspace }) {
+export function DecisionRail({
+  evidenceUpdating = false,
+  workspace,
+}: {
+  evidenceUpdating?: boolean
+  workspace: InstrumentWorkspace
+}) {
   const { locale, t } = usePreferences()
+  const heldPosition = workspace.position !== null && workspace.position !== undefined
+    && workspace.position.quantity !== 0
+  const positionMarkStatus = workspace.position?.mark_status
+  const finitePositionMark = typeof workspace.position?.mark === 'number'
+    && Number.isFinite(workspace.position.mark)
+  const positionMarkAvailable = !heldPosition || (
+    positionMarkStatus?.status === 'available' && finitePositionMark
+  )
+  const valuationComplete = workspace.risk.valuation_complete === false
+    ? false
+    : workspace.risk.valuation_complete === true
+      ? positionMarkAvailable
+      : !heldPosition
+  const valuationReason = workspace.risk.valuation_reason
+    ?? (heldPosition
+      ? positionMarkStatus === undefined
+        ? t('screen.valuation.legacyReason')
+        : positionMarkAvailable ? null : t('screen.valuation.invalidMark')
+      : null)
   const [side, setSide] = useState<'buy' | 'sell'>('buy')
   const [quantityValue, setQuantityValue] = useState('10')
   const [limitPrice, setLimitPrice] = useState('')
@@ -23,20 +49,36 @@ export function DecisionRail({ workspace }: { workspace: InstrumentWorkspace }) 
     authority: InstrumentWorkspace['proposal']['proposals']
     proposal: PaperProposal
   } | null>(null)
-  const resumedProposal = [...workspace.proposal.proposals]
+  const [dismissedProposalIds, setDismissedProposalIds] = useState<readonly string[]>([])
+  const visiblePersistedProposals = [...workspace.proposal.proposals]
     .reverse()
-    .find((candidate) => candidate.status === 'pending') ?? null
-  const localProposal = createdProposal?.authority === workspace.proposal.proposals
-    ? createdProposal.proposal
-    : null
-  const proposal = localProposal ?? resumedProposal
+    .filter((candidate) => (
+      !dismissedProposalIds.includes(candidate.id)
+      && ['pending', 'blocked', 'confirmed', 'rejected'].includes(candidate.status)
+    ))
+  const resumedPendingProposal = visiblePersistedProposals.find(
+    (candidate) => candidate.status === 'pending',
+  ) ?? null
+  const resumedProposal = resumedPendingProposal ?? visiblePersistedProposals[0] ?? null
+  const localProposalStillExists = createdProposal !== null && workspace.proposal.proposals.some(
+    (candidate) => candidate.id === createdProposal.proposal.id,
+  )
+  const localProposal = createdProposal !== null && (
+    createdProposal.authority === workspace.proposal.proposals || localProposalStillExists
+  ) ? createdProposal.proposal : null
+  const proposal = localProposal?.status === 'pending'
+    ? localProposal
+    : resumedPendingProposal ?? localProposal ?? resumedProposal
   const forecast = workspace.forecast
   const numericQuantity = Number(quantityValue)
   const numericLimit = limitPrice.trim() === '' ? null : Number(limitPrice)
   const validInput = Number.isFinite(numericQuantity)
     && numericQuantity > 0
     && (numericLimit === null || (Number.isFinite(numericLimit) && numericLimit > 0))
-  const actionAllowed = workspace.proposal.allowed && forecast?.eligible === true && validInput
+  const actionAllowed = !evidenceUpdating
+    && workspace.proposal.allowed
+    && forecast?.eligible === true
+    && validInput
   const create = useMutation({
     mutationFn: () => api.createPaperProposal({
       artifact_id: forecast!.artifact_id,
@@ -46,10 +88,13 @@ export function DecisionRail({ workspace }: { workspace: InstrumentWorkspace }) 
       symbol: workspace.instrument.symbol,
       venue: workspace.instrument.venue,
     }),
-    onSuccess: (next) => setCreatedProposal({
-      authority: workspace.proposal.proposals,
-      proposal: next,
-    }),
+    onSuccess: (next) => {
+      setDismissedProposalIds((current) => current.filter((id) => id !== next.id))
+      setCreatedProposal({
+        authority: workspace.proposal.proposals,
+        proposal: next,
+      })
+    },
   })
 
   return (
@@ -67,26 +112,52 @@ export function DecisionRail({ workspace }: { workspace: InstrumentWorkspace }) 
         </h3>
         <dl className="space-y-1 text-xs">
           <Fact label={t('screen.workspace.cash')} value={money(workspace.risk.cash, locale)} />
-          <Fact label={t('screen.workspace.accountEquity')} value={money(workspace.risk.equity, locale)} />
+          <Fact label={t('screen.workspace.accountEquity')} value={valuationComplete ? money(workspace.risk.equity, locale) : t('screen.workspace.valueUnavailable')} />
           <Fact label={t('screen.workspace.position')} value={workspace.position === null ? t('screen.workspace.noPosition') : quantity(workspace.position.quantity, locale)} />
           <Fact label={t('screen.workspace.averageCost')} value={workspace.position === null ? '—' : moneyPrecise(workspace.position.average_cost, locale)} />
-          <Fact label={t('screen.workspace.positionMark')} value={workspace.position?.mark === null || workspace.position?.mark === undefined ? t('screen.workspace.valueUnavailable') : moneyPrecise(workspace.position.mark, locale)} />
-          <Fact label={t('screen.workspace.unrealizedPnl')} value={workspace.position?.unrealized_pnl === null || workspace.position?.unrealized_pnl === undefined ? t('screen.workspace.valueUnavailable') : money(workspace.position.unrealized_pnl, locale)} />
+          <Fact label={t('screen.workspace.positionMark')} value={!positionMarkAvailable || workspace.position?.mark === null || workspace.position?.mark === undefined ? t('screen.workspace.valueUnavailable') : moneyPrecise(workspace.position.mark, locale)} />
+          <Fact label={t('screen.workspace.unrealizedPnl')} value={!positionMarkAvailable || workspace.position?.unrealized_pnl === null || workspace.position?.unrealized_pnl === undefined ? t('screen.workspace.valueUnavailable') : money(workspace.position.unrealized_pnl, locale)} />
           <Fact label={t('screen.workspace.realizedPnl')} value={workspace.position === null ? '—' : money(workspace.position.realized_pnl, locale)} />
+          {heldPosition && (
+            <Fact
+              label={t('screen.valuation.markStatus')}
+              value={t(`screen.pnl.marks.status.${positionMarkStatus?.status ?? 'unavailable'}`)}
+            />
+          )}
           <Fact label={t('screen.workspace.maxOrderQuantity')} value={quantity(workspace.risk.max_order_quantity, locale)} />
           <Fact label={t('screen.workspace.maxNotional')} value={money(workspace.risk.max_notional, locale)} />
           <Fact label={t('screen.workspace.maxPositionQuantity')} value={quantity(workspace.risk.max_position_quantity, locale)} />
           <Fact label={t('screen.workspace.globalKillSwitch')} value={t(workspace.risk.global_kill_switch ? 'screen.workspace.switchEngaged' : 'screen.workspace.switchDisarmed')} />
           <Fact label={t('screen.workspace.venueKillSwitch')} value={t(workspace.risk.venue_kill_switch ? 'screen.workspace.switchEngaged' : 'screen.workspace.switchDisarmed')} />
           <Fact label={t('screen.workspace.quoteFreshness')} value={liveLabel(workspace.live.label, t)} />
-          <Fact label={t('screen.workspace.quoteAge')} value={workspace.live.age_ms === null || workspace.live.age_ms === undefined ? t('screen.workspace.valueUnavailable') : ageText(workspace.live.age_ms)} />
+          <Fact label={t('screen.workspace.quoteAge')} value={workspace.live.age_ms === null || workspace.live.age_ms === undefined ? t('screen.workspace.valueUnavailable') : ageText(workspace.live.age_ms, locale)} />
+          <Fact label={t('screen.workspace.snapshotAsOf')} value={dateTime(workspace.generated_at, locale)} />
+          <Fact label={t('screen.workspace.accountAuthority')} value={t('screen.workspace.localPaperKernel')} />
         </dl>
+        {!valuationComplete && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 px-2.5 py-2 text-xs" role="status">
+            <p className="font-medium text-amber-700 dark:text-amber-300">
+              {t('screen.valuation.incomplete')}
+            </p>
+            {valuationReason && <p className="mt-1 text-muted-foreground">{valuationReason}</p>}
+            {positionMarkStatus?.reason && (
+              <p className="mt-1 text-muted-foreground">{positionMarkStatus.reason}</p>
+            )}
+          </div>
+        )}
       </section>
 
       {workspace.proposal.blockers.length > 0 && (
         <ul className="space-y-1 border-b border-border px-4 pb-3 text-xs text-destructive">
-          {workspace.proposal.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
+          {workspace.proposal.blockers.map((blocker) => (
+            <li key={blocker} title={blocker}>{evidenceText(blocker, locale, t)}</li>
+          ))}
         </ul>
+      )}
+      {evidenceUpdating && (
+        <p className="px-4 text-xs text-sky-700 dark:text-sky-300" role="status">
+          {t('screen.workspace.proposalWaitingForEvidence')}
+        </p>
       )}
 
       {proposal === null ? (
@@ -141,6 +212,16 @@ export function DecisionRail({ workspace }: { workspace: InstrumentWorkspace }) 
       ) : (
         <ProposalConfirmation
           key={`${proposal.id}:${proposal.status}:${proposal.order_id ?? ''}`}
+          onDismiss={() => {
+            setCreatedProposal(null)
+            setDismissedProposalIds((current) => [...new Set([
+              ...current,
+              ...workspace.proposal.proposals
+                .filter((candidate) => candidate.status !== 'pending')
+                .map((candidate) => candidate.id),
+              ...(proposal.status === 'pending' ? [] : [proposal.id]),
+            ])])
+          }}
           proposal={proposal}
         />
       )}

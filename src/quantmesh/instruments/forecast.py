@@ -24,6 +24,7 @@ from statistics import median
 
 from pydantic import ValidationError
 
+from quantmesh._fs import atomic_replace
 from quantmesh.data.lake import Dataset, Lake
 from quantmesh.domain.models import InstrumentType
 from quantmesh.instruments.contracts import (
@@ -821,7 +822,7 @@ class PriceForecastRegistry:
             (temp / "report.json").write_bytes(_report_file(artifact))
             (temp / "paths.csv").write_bytes(_paths_csv(artifact.paths))
             (temp / "oos.csv").write_bytes(_oos_csv(artifact.oos))
-            os.replace(temp, target)
+            atomic_replace(temp, target)
         finally:
             if temp.exists():
                 shutil.rmtree(temp)

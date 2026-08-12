@@ -11,6 +11,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type {
   LiveInstrumentState,
+  LiveInstrumentKey,
   LiveKind,
   LiveLabel,
   LiveView,
@@ -80,6 +81,51 @@ export function labelTone(label: LiveLabel): string {
 
 // --- Reconciliation (pure) ------------------------------------------------
 
+const LIVE_ID_SEPARATOR = ':'
+
+/** Canonical venue-scoped identity shared by the API snapshot and streamed
+ * updates. This prevents same-symbol instruments from different venues from
+ * overwriting each other in client state. */
+export function liveInstrumentKey(venue: string, instrument: string): LiveInstrumentKey {
+  return `${venue}${LIVE_ID_SEPARATOR}${instrument}`
+}
+
+export function liveInstrumentSymbol(key: string): string {
+  const separator = key.indexOf(LIVE_ID_SEPARATOR)
+  return separator === -1 ? key : key.slice(separator + LIVE_ID_SEPARATOR.length)
+}
+
+/** Validate the venue:instrument keyed wire snapshot at the frontend
+ * boundary. The wire key and both value identity fields must agree;
+ * contradictory or malformed rows are omitted rather than rewritten. */
+export function normalizeLiveInstruments(
+  instruments: Record<string, unknown>,
+): Record<string, LiveInstrumentState> {
+  const normalized: Record<string, LiveInstrumentState> = {}
+  for (const [wireKey, state] of Object.entries(instruments)) {
+    const separator = wireKey.indexOf(LIVE_ID_SEPARATOR)
+    if (separator <= 0 || separator !== wireKey.lastIndexOf(LIVE_ID_SEPARATOR)) continue
+    const venue = wireKey.slice(0, separator)
+    const instrument = wireKey.slice(separator + LIVE_ID_SEPARATOR.length)
+    if (!isLiveInstrumentState(state)) continue
+    if (!instrument || state.venue !== venue || state.instrument !== instrument) continue
+    normalized[wireKey] = state
+  }
+  return normalized
+}
+
+function isLiveInstrumentState(value: unknown): value is LiveInstrumentState {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
+  const candidate = value as Partial<LiveInstrumentState>
+  return typeof candidate.venue === 'string'
+    && typeof candidate.instrument === 'string'
+    && typeof candidate.label === 'string'
+    && candidate.label in LABEL_RANK
+    && candidate.kinds !== null
+    && typeof candidate.kinds === 'object'
+    && !Array.isArray(candidate.kinds)
+}
+
 /** Merge one streamed update into a latest-state map. The update's
  * kind replaces the previous view for venue+instrument+kind; the
  * instrument's badge label is recomputed from its data kinds. */
@@ -87,9 +133,11 @@ export function mergeUpdate(
   instruments: Record<string, LiveInstrumentState>,
   update: MarketUpdate,
 ): Record<string, LiveInstrumentState> {
-  const previous = instruments[update.instrument]
+  const key = liveInstrumentKey(update.venue, update.instrument)
+  const previous = instruments[key]
   const instrument: LiveInstrumentState = {
     venue: update.venue,
+    instrument: update.instrument,
     label: previous?.label ?? 'unavailable',
     kinds: { ...(previous?.kinds ?? {}) },
   }
@@ -105,7 +153,7 @@ export function mergeUpdate(
     payload: update.payload,
   }
   instrument.label = instrumentLabel(instrument)
-  return { ...instruments, [update.instrument]: instrument }
+  return { ...instruments, [key]: instrument }
 }
 
 // --- Quote math -----------------------------------------------------------
@@ -143,11 +191,14 @@ export function spreadBps(quote: QuoteNumbers): number | undefined {
   return ((quote.ask - quote.bid) / mid) * 10_000
 }
 
-export function ageText(ageMs: number): string {
-  if (ageMs < 1000) return `${ageMs} ms`
+export function ageText(ageMs: number, locale: 'en' | 'zh-CN' = 'en'): string {
+  const units = locale === 'zh-CN'
+    ? { millisecond: '毫秒', minute: '分', second: '秒' }
+    : { millisecond: 'ms', minute: 'm', second: 's' }
+  if (ageMs < 1000) return `${ageMs} ${units.millisecond}`
   const seconds = Math.round(ageMs / 1000)
-  if (seconds < 60) return `${seconds} s`
-  return `${Math.floor(seconds / 60)} m ${seconds % 60} s`
+  if (seconds < 60) return `${seconds} ${units.second}`
+  return `${Math.floor(seconds / 60)} ${units.minute} ${seconds % 60} ${units.second}`
 }
 
 /** The candle-close series the detail chart draws (newest last). */
@@ -312,6 +363,7 @@ export function openLiveConnection(
     const url = env.wsUrl ?? `ws${location.protocol === 'https:' ? 's' : ''}://${location.host}/api/live/ws`
     report('connecting')
     const socket = new WebSocketImpl(url)
+    let advanced = false
     current = { close: () => socket.close() }
     socket.onopen = () => report('live')
     socket.onmessage = (event: MessageEvent) => {
@@ -321,12 +373,15 @@ export function openLiveConnection(
         // Malformed frame; keep the socket — the next frame may be fine.
       }
     }
-    socket.onerror = () => {
-      if (closed) return
+    const advanceToFallback = () => {
+      if (closed || advanced) return
+      advanced = true
       socket.close()
       current = null
       openEventSource()
     }
+    socket.onerror = advanceToFallback
+    socket.onclose = advanceToFallback
   }
 
   openWebSocket()
@@ -342,16 +397,20 @@ export function openLiveConnection(
 /** React binding: one connection per mount, status surfaced for the
  * screen's banner. onUpdate is kept in a ref so a re-render cannot
  * re-arm the connection. */
-export function useLiveConnection(onUpdate: (update: MarketUpdate) => void) {
+export function useLiveConnection(onUpdate: (update: MarketUpdate) => void, enabled = true) {
   const callbackRef = useRef(onUpdate)
   callbackRef.current = onUpdate
-  const [status, setStatus] = useState<LiveConnectionStatus>('connecting')
+  const [status, setStatus] = useState<LiveConnectionStatus>(enabled ? 'connecting' : 'down')
   useEffect(() => {
+    if (!enabled) {
+      setStatus('down')
+      return undefined
+    }
     const connection = openLiveConnection({
       onUpdate: (update) => callbackRef.current(update),
       onStatus: setStatus,
     })
     return () => connection.close()
-  }, [])
+  }, [enabled])
   return status
 }

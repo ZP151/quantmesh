@@ -7,7 +7,6 @@ of the kernel: submission is risk-gated, then matched, then applied.
 """
 
 import math
-from collections.abc import Mapping
 from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
@@ -20,6 +19,7 @@ from quantmesh.domain.orders import (
     OrderStateMachine,
 )
 from quantmesh.execution.matcher import PaperMatcher
+from quantmesh.live.feed import ExactUpdateSnapshot
 from quantmesh.live.fence import QuoteFence
 
 DEFAULT_FEE_BPS = 10.0
@@ -100,14 +100,14 @@ class PaperAccount(BaseModel):
         *,
         now: datetime,
         quote_fence: QuoteFence | None = None,
-        snapshot: Mapping[str, object] | None = None,
+        snapshot: ExactUpdateSnapshot | None = None,
     ) -> SubmissionResult:
         """Risk-gated paper submission.
 
         Without a fence the caller supplies the quote (the demo path).
         With ``quote_fence`` the order may only read the locally
         validated latest quote: the fence resolves the instrument's
-        QUOTE view from the caller's ``latest_state`` snapshot and
+        venue/symbol/kind-exact snapshot and
         rejects the order with the fence's explicit reason when the
         quote is missing, unprovenanced, gapped, stale or depth-less
         (iteration 0015 Phase D). The blessed quote replaces the

@@ -204,8 +204,8 @@ class TestPointInTimeReplay:
         rebuilt = _feed()
         rebuilt.ingest(replayed)
         view = _instruments_view(rebuilt.latest_state(now=cutoff))
-        assert view["BTC"]["kinds"]["quote"]["sequence"] == 1
-        assert "BTC" in view and view["BTC"]["label"] == "real"
+        assert view["hyperliquid:BTC"]["kinds"]["quote"]["sequence"] == 1
+        assert view["hyperliquid:BTC"]["label"] == "real"
 
     def test_append_order_not_timestamp_order_determines_replay(
         self, buffer: LiveBuffer
@@ -226,7 +226,7 @@ class TestPointInTimeReplay:
         rebuilt = _feed()
         rebuilt.ingest(replayed)
         assert _instruments_view(rebuilt.latest_state(now=now)) == live
-        assert live["BTC"]["kinds"]["quote"]["sequence"] == 2
+        assert live["hyperliquid:BTC"]["kinds"]["quote"]["sequence"] == 2
 
     def test_replay_is_byte_identical_across_fresh_connections(
         self, tmp_path,
@@ -276,9 +276,9 @@ class TestPointInTimeReplay:
         rebuilt = _feed()
         rebuilt.ingest(replayed)
         view = _instruments_view(rebuilt.latest_state(now=_T0 + timedelta(seconds=10)))
-        assert view["BTC"]["kinds"]["quote"]["sequence_gap"] is True
-        assert view["BTC"]["kinds"]["quote"]["sequence"] == 2
-        assert view["AAPL"]["kinds"]["metrics"]["sequence_gap"] is False
+        assert view["hyperliquid:BTC"]["kinds"]["quote"]["sequence_gap"] is True
+        assert view["hyperliquid:BTC"]["kinds"]["quote"]["sequence"] == 2
+        assert view["moomoo:AAPL"]["kinds"]["metrics"]["sequence_gap"] is False
 
     def test_provenance_labels_survive_the_round_trip(self, buffer: LiveBuffer) -> None:
         """real/delayed/synthetic/unavailable updates replay with the same
@@ -331,7 +331,11 @@ class TestPointInTimeReplay:
                 rebuilt.latest_state(now=now)
             ).items()
         }
-        assert labels == {"BTC": "unavailable", "YES-1": "delayed", "K-1": "synthetic"}
+        assert labels == {
+            "hyperliquid:BTC": "unavailable",
+            "polymarket:YES-1": "delayed",
+            "kalshi:K-1": "synthetic",
+        }
 
     def test_replay_does_not_resurrect_old_data_as_fresh(self, buffer: LiveBuffer) -> None:
         """The age dimension survives replay: a real update received long
@@ -344,5 +348,5 @@ class TestPointInTimeReplay:
         rebuilt = _feed()
         rebuilt.ingest(buffer.replay())
         assert _instruments_view(rebuilt.latest_state(now=now)) == live
-        assert live["BTC"]["label"] == "stale"
-        assert live["BTC"]["kinds"]["quote"]["label"] == "stale"
+        assert live["hyperliquid:BTC"]["label"] == "stale"
+        assert live["hyperliquid:BTC"]["kinds"]["quote"]["label"] == "stale"

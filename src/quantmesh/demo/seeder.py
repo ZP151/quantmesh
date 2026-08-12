@@ -19,23 +19,32 @@ non-demo directory.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
-import shutil
 import stat
 import tempfile
+import zipfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from pydantic import BaseModel
 
+from quantmesh._fs import FilesystemIdentity, atomic_replace, filesystem_identity
 from quantmesh.ai.decisions import DecisionLog, DecisionRecord, ModelMeta
 from quantmesh.ai.retrieval import Citation, DocumentIndex
 from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.data.lake import Lake
 from quantmesh.data.layout import SHARD_NAME, shards_in, validate_symbol
-from quantmesh.data.manifest import MANIFEST_NAME, DatasetManifest, ManifestWriter
+from quantmesh.data.manifest import (
+    MANIFEST_NAME,
+    DatasetClass,
+    DatasetManifest,
+    ManifestWriter,
+)
 from quantmesh.data.providers.hyperliquid import HyperliquidFixtureProvider
 from quantmesh.data.providers.moomoo import MoomooFixtureProvider
 from quantmesh.demo import generators
@@ -107,6 +116,7 @@ from quantmesh.research.reports import (
 # registries' commit validators.
 DEMO_COMMIT = "0a1e2d3c4b5a69788796a5b4c3d2e1f0deadbeef"
 OWNERSHIP_NAME = "QUANTMESH_DEMO_OWNERSHIP.json"
+RESET_LOCK_SUFFIX = ".quantmesh-demo-reset.lock"
 
 # These seeded files are legitimately rewritten by public demo APIs. Their
 # path and regular-file type remain ownership evidence, but their bytes cannot
@@ -154,6 +164,10 @@ _DOCUMENT_TEXT = {
 
 class DemoRootError(ValueError):
     """A demo root is missing its marker, or refuses a requested op."""
+
+    def __init__(self, message: str, *, retained_paths: tuple[Path, ...] = ()) -> None:
+        super().__init__(message)
+        self.retained_paths = retained_paths
 
 
 class DemoProviders:
@@ -351,6 +365,64 @@ def _ownership_text(root: Path) -> str:
         )
         + "\n"
     )
+
+
+def build_demo_reset_archive(root: Path) -> bytes:
+    """Capture a validated pristine demo tree as an in-memory reset image."""
+    root = Path(root)
+    paths = _walk_owned_tree(root)
+    if paths is None or not is_demo_root(root):
+        raise DemoRootError(f"cannot capture unsafe demo reset image from {root}")
+    members = {
+        MARKER_NAME: "file",
+        OWNERSHIP_NAME: "file",
+        **paths,
+    }
+    payload = io.BytesIO()
+    with zipfile.ZipFile(payload, mode="w", compression=zipfile.ZIP_STORED) as archive:
+        for relative, kind in sorted(members.items()):
+            name = f"{relative}/" if kind == "directory" else relative
+            info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+            info.create_system = 0
+            archive.writestr(info, b"" if kind == "directory" else (root / relative).read_bytes())
+    return payload.getvalue()
+
+
+def build_trusted_demo_reset_image(scenario: DemoScenario) -> tuple[str, bytes]:
+    """Independently generate the pristine ownership truth and reset image."""
+    with tempfile.TemporaryDirectory(prefix="quantmesh-demo-reset-image-") as temp_dir:
+        trusted_root = Path(temp_dir) / "demo"
+        seed_demo_root(trusted_root, scenario)
+        ownership_text = (trusted_root / OWNERSHIP_NAME).read_text(encoding="utf-8")
+        return ownership_text, build_demo_reset_archive(trusted_root)
+
+
+def _restore_demo_reset_archive(payload: bytes, root: Path) -> None:
+    """Restore only the safe relative members emitted by our archive builder."""
+    root = Path(root)
+    if root.exists():
+        raise DemoRootError(f"reset replacement {root} already exists")
+    root.mkdir(parents=True, exist_ok=False)
+    try:
+        with zipfile.ZipFile(io.BytesIO(payload), mode="r") as archive:
+            infos = archive.infolist()
+            names = [info.filename.rstrip("/") for info in infos]
+            if len(names) != len(set(names)):
+                raise DemoRootError("trusted demo reset image has duplicate members")
+            for info, relative in zip(infos, names, strict=True):
+                parts = Path(relative).parts
+                if not relative or Path(relative).is_absolute() or ".." in parts:
+                    raise DemoRootError("trusted demo reset image has an unsafe member")
+                target = root.joinpath(*parts)
+                if info.is_dir():
+                    target.mkdir(parents=True, exist_ok=True)
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with target.open("xb") as handle:
+                        handle.write(archive.read(info))
+    except BaseException as error:
+        retained = f"; partial tree retained at {root}" if root.exists() else ""
+        raise DemoRootError(f"failed to restore trusted demo reset image{retained}") from error
 
 
 def _operator_import_inventory(root: Path, dataset: str) -> dict[str, str] | None:
@@ -596,16 +668,174 @@ def _trusted_ownership_text(scenario: DemoScenario) -> str:
         return (trusted_root / OWNERSHIP_NAME).read_text(encoding="utf-8")
 
 
-def _has_reset_structure(root: Path, scenario: DemoScenario) -> bool:
+def _has_reset_structure(
+    root: Path,
+    scenario: DemoScenario,
+    *,
+    trusted_ownership_text: str | None = None,
+) -> bool:
     ownership_path = root / OWNERSHIP_NAME
     if not is_demo_root(root) or not ownership_path.is_file():
         return False
     try:
         ownership_text = ownership_path.read_text(encoding="utf-8")
-        trusted_ownership_text = _trusted_ownership_text(scenario)
+        trusted_ownership_text = (
+            trusted_ownership_text
+            if trusted_ownership_text is not None
+            else _trusted_ownership_text(scenario)
+        )
     except (DemoRootError, OSError, UnicodeDecodeError):
         return False
     return _valid_ownership_structure(root, ownership_text, trusted_ownership_text)
+
+
+@contextmanager
+def _interprocess_reset_lock(root: Path) -> Iterator[None]:
+    """Serialize reset callers using a stable lock outside the replaced root."""
+    lock_path = root.parent / f".{root.name}{RESET_LOCK_SUFFIX}"
+    if lock_path.exists() and (not lock_path.is_file() or _is_link_or_junction(lock_path)):
+        raise DemoRootError(f"refusing unsafe demo reset lock {lock_path}")
+    with lock_path.open("a+b") as handle:
+        handle.seek(0, os.SEEK_END)
+        if handle.tell() == 0:
+            handle.write(b"\0")
+            handle.flush()
+        handle.seek(0)
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+            try:
+                yield
+            finally:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def _unused_reset_quarantine(root: Path) -> Path:
+    """Reserve no path; merely choose a collision-resistant sibling name."""
+    descriptor, name = tempfile.mkstemp(
+        dir=root.parent,
+        prefix=f".{root.name}.reset-quarantine-",
+    )
+    os.close(descriptor)
+    os.unlink(name)
+    return Path(name)
+
+
+def retained_demo_reset_paths(root: Path) -> tuple[Path, ...]:
+    """List retained reset siblings without claiming ownership or deleting them."""
+    root = Path(root)
+    prefix = f".{root.name}.reset-quarantine-"
+    try:
+        candidates = tuple(root.parent.iterdir())
+    except OSError:
+        return ()
+    return tuple(sorted((path for path in candidates if path.name.startswith(prefix)), key=str))
+
+
+def _require_demo_tree_identity(
+    root: Path,
+    scenario: DemoScenario,
+    *,
+    trusted_ownership_text: str,
+    expected_identity: FilesystemIdentity | None = None,
+    failure_message: str,
+) -> FilesystemIdentity:
+    """Bind trusted ownership validation to one filesystem object."""
+    try:
+        identity_before = filesystem_identity(root)
+    except OSError as error:
+        raise DemoRootError(
+            f"{failure_message}: identity unavailable; preserving {root}"
+        ) from error
+    if expected_identity is not None and identity_before != expected_identity:
+        raise DemoRootError(f"{failure_message}: identity changed; preserving {root}")
+    if not _has_reset_structure(
+        root,
+        scenario,
+        trusted_ownership_text=trusted_ownership_text,
+    ):
+        raise DemoRootError(
+            f"{failure_message}: trusted ownership/structure validation failed; "
+            f"preserving {root}"
+        )
+    try:
+        identity_after = filesystem_identity(root)
+    except OSError as error:
+        raise DemoRootError(
+            f"{failure_message}: identity unavailable; preserving {root}"
+        ) from error
+    if identity_after != identity_before or (
+        expected_identity is not None and identity_after != expected_identity
+    ):
+        raise DemoRootError(f"{failure_message}: identity changed; preserving {root}")
+    return identity_after
+
+
+def _restore_original_after_publish_mismatch(
+    root: Path,
+    quarantine: Path,
+    scenario: DemoScenario,
+    *,
+    trusted_ownership_text: str,
+    root_identity: FilesystemIdentity,
+    published_identity: FilesystemIdentity | None,
+) -> tuple[Path, ...]:
+    """Retain an unexpected public object and restore the original demo.
+
+    No path is recursively deleted. The unexpected occupant is moved to a new
+    sibling and its observed identity is checked after the move before the
+    identity-bound original quarantine is restored.
+    """
+    unexpected = _unused_reset_quarantine(root)
+    retained = (unexpected,)
+    try:
+        atomic_replace(root, unexpected)
+        if (
+            published_identity is None
+            or filesystem_identity(unexpected) != published_identity
+        ):
+            raise DemoRootError(
+                "unexpected published object changed while it was quarantined",
+                retained_paths=retained,
+            )
+        _require_demo_tree_identity(
+            quarantine,
+            scenario,
+            trusted_ownership_text=trusted_ownership_text,
+            expected_identity=root_identity,
+            failure_message="original demo rollback quarantine failed identity validation",
+        )
+        if root.exists():
+            raise DemoRootError(
+                f"refusing to overwrite a new public-path occupant at {root}",
+                retained_paths=retained,
+            )
+        atomic_replace(quarantine, root)
+        _require_demo_tree_identity(
+            root,
+            scenario,
+            trusted_ownership_text=trusted_ownership_text,
+            expected_identity=root_identity,
+            failure_message="restored demo failed identity validation",
+        )
+    except DemoRootError:
+        raise
+    except (OSError, ValueError) as error:
+        raise DemoRootError(
+            f"failed to restore original demo after publish mismatch; preserving {retained}",
+            retained_paths=retained,
+        ) from error
+    return retained
 
 
 def _write_account(root: Path, account: PaperAccount) -> None:
@@ -613,7 +843,7 @@ def _write_account(root: Path, account: PaperAccount) -> None:
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             handle.write(account.model_dump_json())
-        os.replace(temp_name, root / "account.json")
+        atomic_replace(temp_name, root / "account.json")
     finally:
         if os.path.exists(temp_name):
             os.unlink(temp_name)
@@ -771,6 +1001,7 @@ def _seed_lake(
             dataset,
             source="demo-synthetic",
             license="QuantMesh deterministic demo",
+            data_class=DatasetClass.SYNTHETIC,
             generated_at=generated_at,
         )
         datasets[dataset] = total
@@ -1373,8 +1604,17 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         journal.record(order)
 
     watchlist = WatchlistStore(root=root / "watchlists")
-    for symbol in ("BTC-USD", "AAPL", "NVDA", "SOL-USD"):
-        watchlist.add(symbol, now=scenario.anchor - timedelta(hours=1))
+    for venue, symbol in (
+        (Venue.HYPERLIQUID, "BTC-USD"),
+        (Venue.MOOMOO, "AAPL"),
+        (Venue.MOOMOO, "NVDA"),
+        (Venue.HYPERLIQUID, "SOL-USD"),
+    ):
+        watchlist.add(
+            symbol,
+            venue=venue,
+            now=scenario.anchor - timedelta(hours=1),
+        )
 
     enablement = ApprovalLedger(root=root / "enablement")
     enablement.request(
@@ -1543,23 +1783,166 @@ def _load_scenario(root: Path, default: DemoScenario) -> DemoScenario:
     )
 
 
-def reset_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoSeeded:
-    """Wipe and re-seed a demo root, marker-guarded.
+def reset_demo_root(
+    root: Path,
+    scenario: DemoScenario = DemoScenario(),
+    *,
+    trusted_ownership_text: str | None = None,
+    trusted_reset_archive: bytes | None = None,
+) -> DemoSeeded:
+    """Atomically replace a demo root and retain the old tree for recovery.
 
     The marker is the isolation contract: without it the root is not a
     demo root and reset refuses to touch it — a non-demo directory can
-    never be wiped by the demo runtime.
+    never be replaced by the demo runtime. Reset never recursively deletes
+    a runtime path because an external process could swap that path after
+    validation.
     """
     root = Path(root)
-    if not _has_reset_structure(root, scenario):
-        marker_note = (
-            f"no {MARKER_NAME} marker"
-            if not _marker(root).is_file()
-            else "no valid demo ownership record and complete seeded structure"
+    with _interprocess_reset_lock(root):
+        # Build the independent expected inventory once. Both the public-path
+        # check and the identity-bound quarantine check compare against this
+        # same immutable truth; regenerating it twice adds no safety property
+        # and makes full-history resets exceed the operator timeout.
+        trusted_ownership_text = (
+            trusted_ownership_text
+            if trusted_ownership_text is not None
+            else (_trusted_ownership_text(scenario) if is_demo_root(root) else None)
         )
-        raise DemoRootError(
-            f"refusing to reset {root}: {marker_note} — "
-            "the demo runtime never touches a non-demo root"
+        try:
+            root_identity = filesystem_identity(root)
+        except OSError:
+            root_identity = None
+        if (
+            trusted_ownership_text is None
+            or root_identity is None
+            or not _has_reset_structure(
+                root,
+                scenario,
+                trusted_ownership_text=trusted_ownership_text,
+            )
+        ):
+            marker_note = (
+                f"no {MARKER_NAME} marker"
+                if not _marker(root).is_file()
+                else "no valid demo ownership record and complete seeded structure"
+            )
+            raise DemoRootError(
+                f"refusing to reset {root}: {marker_note} — "
+                "the demo runtime never touches a non-demo root"
+            )
+        try:
+            if filesystem_identity(root) != root_identity:
+                raise DemoRootError(
+                    f"refusing to reset {root}: filesystem identity changed during "
+                    "trusted ownership validation"
+                )
+        except OSError as error:
+            raise DemoRootError(
+                f"refusing to reset {root}: filesystem identity unavailable after "
+                "trusted ownership validation"
+            ) from error
+
+        # Construct the replacement before moving the served root. This keeps
+        # the public demo available during deterministic generation and turns
+        # publication into two bounded atomic renames. The sibling
+        # starts empty and unmarked, so ``seed_demo_root`` retains ownership of
+        # every byte it creates.
+        replacement = _unused_reset_quarantine(root)
+        try:
+            if trusted_reset_archive is None:
+                seed_demo_root(replacement, scenario)
+            else:
+                _restore_demo_reset_archive(trusted_reset_archive, replacement)
+                load_demo_root(replacement, scenario)
+        except BaseException as error:
+            if replacement.exists():
+                raise DemoRootError(
+                    f"reset replacement could not establish trusted ownership; "
+                    f"preserving {replacement}"
+                ) from error
+            raise
+        replacement_identity = _require_demo_tree_identity(
+            replacement,
+            scenario,
+            trusted_ownership_text=trusted_ownership_text,
+            failure_message="reset replacement failed identity validation",
         )
-    shutil.rmtree(root)
-    return seed_demo_root(root, scenario)
+
+        # Move the exact directory object away from the public path first,
+        # then validate the quarantined object again. Runtime reset never
+        # recursively deletes the quarantine or replacement: path identity
+        # cannot stay bound between a completed validation and path-based
+        # recursive deletion. Every leftover is retained for operator recovery.
+        quarantine = _unused_reset_quarantine(root)
+        try:
+            atomic_replace(root, quarantine)
+            _require_demo_tree_identity(
+                quarantine,
+                scenario,
+                trusted_ownership_text=trusted_ownership_text,
+                expected_identity=root_identity,
+                failure_message=(
+                    f"demo root {root} changed after it was quarantined; "
+                    "preserving paths because identity or ownership changed"
+                ),
+            )
+            atomic_replace(replacement, root)
+            try:
+                published_identity = filesystem_identity(root)
+            except OSError:
+                published_identity = None
+            if published_identity != replacement_identity:
+                retained = _restore_original_after_publish_mismatch(
+                    root,
+                    quarantine,
+                    scenario,
+                    trusted_ownership_text=trusted_ownership_text,
+                    root_identity=root_identity,
+                    published_identity=published_identity,
+                )
+                raise DemoRootError(
+                    "published replacement identity did not match the validated replacement; "
+                    f"restored the original demo and retained {retained}",
+                    retained_paths=retained,
+                )
+            try:
+                _require_demo_tree_identity(
+                    root,
+                    scenario,
+                    trusted_ownership_text=trusted_ownership_text,
+                    expected_identity=replacement_identity,
+                    failure_message="published reset replacement failed identity validation",
+                )
+            except DemoRootError as error:
+                retained = _restore_original_after_publish_mismatch(
+                    root,
+                    quarantine,
+                    scenario,
+                    trusted_ownership_text=trusted_ownership_text,
+                    root_identity=root_identity,
+                    published_identity=published_identity,
+                )
+                raise DemoRootError(
+                    "published replacement failed trusted structure validation; "
+                    f"restored the original demo and retained {retained}",
+                    retained_paths=retained,
+                ) from error
+        except BaseException:
+            if not root.exists() and quarantine.exists():
+                try:
+                    quarantine_is_original = (
+                        filesystem_identity(quarantine) == root_identity
+                    )
+                except OSError:
+                    quarantine_is_original = False
+                if quarantine_is_original:
+                    atomic_replace(quarantine, root)
+            raise
+
+        # Return an assembly rebound to the public path. The prebuilt objects
+        # deliberately point at the temporary sibling and are never exposed.
+        # The old identity-validated tree remains at ``quarantine`` for an
+        # operator to inspect and remove outside the running reset boundary.
+        seeded = load_demo_root(root, scenario)
+        return seeded

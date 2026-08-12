@@ -33,14 +33,27 @@ export function WorkspaceError({
   )
 }
 
-export function WorkspaceDegraded({ reason }: { reason: string }) {
+export function WorkspaceDegraded({ rawReason, reason }: { rawReason?: string; reason: string }) {
   const { t } = usePreferences()
   return (
     <div className="border-l-2 border-amber-500 bg-amber-500/5 px-3 py-2" role="status">
       <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
         {t('screen.workspace.stale')}
       </p>
-      <p className="mt-1 text-xs text-muted-foreground">{reason}</p>
+      <p className="mt-1 text-xs text-muted-foreground" title={rawReason}>{reason}</p>
+    </div>
+  )
+}
+
+export function WorkspaceRefreshWarning({ error }: { error: unknown }) {
+  const { t } = usePreferences()
+  const detail = error instanceof Error ? error.message : String(error)
+  return (
+    <div className="border-l-2 border-amber-500 bg-amber-500/5 px-3 py-2" role="status">
+      <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+        {t('screen.workspace.refreshFailed')}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
     </div>
   )
 }

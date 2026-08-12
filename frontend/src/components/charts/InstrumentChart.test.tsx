@@ -47,7 +47,9 @@ vi.mock('lightweight-charts', () => ({
   ColorType: { Solid: 'solid' },
   CrosshairMode: { Normal: 0 },
   HistogramSeries: chartHarness.definitions.histogram,
+  LineStyle: { Dashed: 2, Dotted: 1, Solid: 0, SparseDotted: 4 },
   LineSeries: chartHarness.definitions.line,
+  TickMarkType: { DayOfMonth: 2, Month: 1, Time: 3, TimeWithSeconds: 4, Year: 0 },
   createChart: chartHarness.createChart,
 }))
 
@@ -235,6 +237,12 @@ describe('InstrumentChart', () => {
       expect.objectContaining({ title: 'moomoo:AAPL' }),
     )
     const table = screen.getByRole('table', { name: 'NVDA chart data' })
+    expect(table.parentElement).toHaveClass('sr-only')
+    expect(table).not.toHaveClass('sr-only')
+    expect(Array.from(table.querySelectorAll('thead th'))).toHaveLength(3)
+    for (const header of Array.from(table.querySelectorAll('thead th'))) {
+      expect(header).toHaveAttribute('scope', 'col')
+    }
     for (const series of [
       'Observed open',
       'Observed high',
@@ -258,6 +266,54 @@ describe('InstrumentChart', () => {
     )
   })
 
+  it('uses contrast-safe light colors, shape semantics and distinct forecast line styles', () => {
+    render(
+      <InstrumentChart
+        appearance="light"
+        forecast={forecast}
+        mode="candles"
+        primary={primary}
+        volume
+      />,
+    )
+
+    expect(chartHarness.createChart).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      expect.objectContaining({
+        layout: expect.objectContaining({ textColor: '#475569' }),
+      }),
+    )
+    expect(chartHarness.chart.addSeries).toHaveBeenCalledWith(
+      chartHarness.definitions.candlestick,
+      expect.objectContaining({
+        borderDownColor: '#be123c',
+        downColor: 'rgba(0, 0, 0, 0)',
+        upColor: '#047857',
+      }),
+    )
+    const addSeriesCalls = chartHarness.chart.addSeries.mock.calls as unknown as Array<[
+      unknown,
+      { lineStyle?: number } | undefined,
+    ]>
+    const forecastCalls = addSeriesCalls.filter(
+      ([definition]) => definition === chartHarness.definitions.line,
+    )
+    expect(forecastCalls.map(([, options]) => options?.lineStyle)).toEqual(
+      expect.arrayContaining([0, 1, 2, 4]),
+    )
+  })
+
+  it('exposes every observed bar in the accessible chart table', () => {
+    const bars = Array.from({ length: 55 }, (_, index) => ({
+      ...primary.bars[0],
+      timestamp: new Date(Date.UTC(2026, 0, index + 1)).toISOString(),
+    }))
+    render(<InstrumentChart mode="candles" primary={{ ...primary, bars }} />)
+
+    const rows = screen.getByRole('table', { name: 'NVDA chart data' }).querySelectorAll('tbody tr')
+    expect(rows).toHaveLength(55 * 5)
+  })
+
   it('localizes chart, fallback and attribution copy supplied by the workspace', () => {
     render(
       <InstrumentChart
@@ -278,6 +334,50 @@ describe('InstrumentChart', () => {
     expect(screen.getByRole('table', { name: 'NVDA 图表数据' })).toHaveTextContent('观测开盘价')
     expect(screen.getByText('观测值与概率预测值分开列示。')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '图表技术由 TradingView 提供' })).toBeInTheDocument()
+  })
+
+  it('formats chart prices with the selected app locale instead of the browser locale', () => {
+    vi.stubGlobal('navigator', { language: 'de-DE' })
+    render(<InstrumentChart locale="en" mode="candles" primary={primary} />)
+
+    const createCalls = chartHarness.createChart.mock.calls as unknown as Array<[
+      HTMLElement,
+      { localization: { priceFormatter: (price: number) => string } },
+    ]>
+    const createOptions = createCalls[0][1]
+    expect(createOptions.localization.priceFormatter(1234.5)).toBe('1,234.50')
+  })
+
+  it.each([
+    {
+      crosshair: 'Aug 8, 2026, 12:05 UTC',
+      locale: 'en' as const,
+      ticks: ['2026', 'Aug', 'Aug 8', '12:05', '12:05:09'],
+    },
+    {
+      crosshair: '2026年8月8日 12:05 UTC',
+      locale: 'zh-CN' as const,
+      ticks: ['2026', '8月', '8月8日', '12:05', '12:05:09'],
+    },
+  ])('formats $locale chart time independently of the browser locale', ({ crosshair, locale, ticks }) => {
+    vi.stubGlobal('navigator', { language: locale === 'en' ? 'zh-CN' : 'en-US' })
+    render(<InstrumentChart locale={locale} mode="candles" primary={primary} />)
+
+    const createCalls = chartHarness.createChart.mock.calls as unknown as Array<[
+      HTMLElement,
+      {
+        localization: { locale: string; timeFormatter: (time: number) => string }
+        timeScale: { tickMarkFormatter: (time: number, tickMarkType: number) => string }
+      },
+    ]>
+    const createOptions = createCalls[0][1]
+    const timestamp = Date.UTC(2026, 7, 8, 12, 5, 9) / 1_000
+
+    expect(createOptions.localization.locale).toBe(locale === 'en' ? 'en-US' : 'zh-CN')
+    expect(createOptions.localization.timeFormatter(timestamp)).toBe(crosshair)
+    expect(ticks.map((_, tickMarkType) => (
+      createOptions.timeScale.tickMarkFormatter(timestamp, tickMarkType)
+    ))).toEqual(ticks)
   })
 
   it('fits only for instrument or range changes and preserves the visible range for live tails', () => {

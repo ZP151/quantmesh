@@ -159,9 +159,10 @@ class TestStateEndpoint:
         response = client.get("/api/live/state")
         assert response.status_code == 200
         instruments = response.json()["instruments"]
-        assert set(instruments["BTC"]["kinds"]) == {"quote", "trade"}
-        assert instruments["BTC"]["label"] == "real"
-        assert instruments["BTC"]["venue"] == "hyperliquid"
+        assert set(instruments["hyperliquid:BTC"]["kinds"]) == {"quote", "trade"}
+        assert instruments["hyperliquid:BTC"]["label"] == "real"
+        assert instruments["hyperliquid:BTC"]["venue"] == "hyperliquid"
+        assert instruments["hyperliquid:BTC"]["instrument"] == "BTC"
 
     def test_label_derivation_on_the_wire(self, live_app) -> None:
         client, _app, feed = live_app
@@ -175,7 +176,7 @@ class TestStateEndpoint:
             )
         )
         response = client.get("/api/live/state")
-        kinds = response.json()["instruments"]["BTC"]["kinds"]
+        kinds = response.json()["instruments"]["hyperliquid:BTC"]["kinds"]
         assert kinds["quote"]["label"] == "stale"
         assert kinds["quote"]["age_ms"] >= 30_000
         assert kinds["trade"]["label"] == "synthetic"
@@ -519,9 +520,16 @@ class TestPriceTrail:
 
     _TRAIL_LIMIT = 20
 
-    def _candle(self, instrument: str, close: float, *, at: datetime) -> MarketUpdate:
+    def _candle(
+        self,
+        instrument: str,
+        close: float,
+        *,
+        at: datetime,
+        venue: Venue = Venue.HYPERLIQUID,
+    ) -> MarketUpdate:
         return MarketUpdate(
-            venue=Venue.HYPERLIQUID,
+            venue=venue,
             instrument=instrument,
             kind=UpdateKind.CANDLE,
             provenance=Provenance.REAL,
@@ -536,20 +544,29 @@ class TestPriceTrail:
         feed.publish_threadsafe(self._candle("BTC", 100.5, at=t0))
         feed.publish_threadsafe(self._candle("BTC", 101.5, at=t0 + timedelta(seconds=60)))
         feed.publish_threadsafe(self._candle("SOL", 30.2, at=t0))
-        response = client.get("/api/live/price-trail?symbols=BTC,SOL&limit=10")
+        response = client.get(
+            "/api/live/price-trail?identities=hyperliquid:BTC,hyperliquid:SOL&limit=10"
+        )
         assert response.status_code == 200
         trail = response.json()["trail"]
-        assert trail["BTC"] == [100.5, 101.5]
-        assert trail["SOL"] == [30.2]
+        assert trail["hyperliquid:BTC"] == [100.5, 101.5]
+        assert trail["hyperliquid:SOL"] == [30.2]
 
     def test_returns_oldest_first_order(self, live_app) -> None:
         client, _app, feed = live_app
         t0 = T0
         for i, close in enumerate([100.0, 101.0, 102.0, 103.0]):
             feed.publish_threadsafe(self._candle("BTC", close, at=t0 + timedelta(seconds=60 * i)))
-        response = client.get("/api/live/price-trail?symbols=BTC&limit=10")
+        response = client.get(
+            "/api/live/price-trail?identities=hyperliquid:BTC&limit=10"
+        )
         assert response.status_code == 200
-        assert response.json()["trail"]["BTC"] == [100.0, 101.0, 102.0, 103.0]
+        assert response.json()["trail"]["hyperliquid:BTC"] == [
+            100.0,
+            101.0,
+            102.0,
+            103.0,
+        ]
 
     def test_limits_per_instrument(self, live_app) -> None:
         client, _app, feed = live_app
@@ -558,24 +575,48 @@ class TestPriceTrail:
             feed.publish_threadsafe(
                 self._candle("BTC", 100.5 + i, at=t0 + timedelta(seconds=60 * i))
             )
-        response = client.get("/api/live/price-trail?symbols=BTC&limit=20")
+        response = client.get(
+            "/api/live/price-trail?identities=hyperliquid:BTC&limit=20"
+        )
         assert response.status_code == 200
-        assert len(response.json()["trail"]["BTC"]) == 20
+        assert len(response.json()["trail"]["hyperliquid:BTC"]) == 20
 
     def test_skips_non_candle_kinds(self, live_app) -> None:
         client, _app, feed = live_app
         t0 = T0
         feed.publish_threadsafe(_upd())  # quote, not candle — must be ignored
         feed.publish_threadsafe(self._candle("BTC", 100.5, at=t0))
-        response = client.get("/api/live/price-trail?symbols=BTC&limit=10")
+        response = client.get(
+            "/api/live/price-trail?identities=hyperliquid:BTC&limit=10"
+        )
         assert response.status_code == 200
-        assert response.json()["trail"]["BTC"] == [100.5]
+        assert response.json()["trail"]["hyperliquid:BTC"] == [100.5]
 
     def test_missing_symbol_returns_empty_list(self, live_app) -> None:
         client, _app, _feed = live_app
-        response = client.get("/api/live/price-trail?symbols=GHOST&limit=10")
+        response = client.get(
+            "/api/live/price-trail?identities=hyperliquid:GHOST&limit=10"
+        )
         assert response.status_code == 200
-        assert response.json()["trail"]["GHOST"] == []
+        assert response.json()["trail"]["hyperliquid:GHOST"] == []
+
+    def test_vanished_duplicate_venue_cannot_contaminate_remaining_trail(
+        self, live_app
+    ) -> None:
+        client, _app, feed = live_app
+        feed.publish_threadsafe(
+            self._candle("BTC", 100.0, at=T0, venue=Venue.HYPERLIQUID)
+        )
+        feed.publish_threadsafe(
+            self._candle("BTC", 200.0, at=T0, venue=Venue.MOOMOO)
+        )
+
+        response = client.get(
+            "/api/live/price-trail?identities=hyperliquid:BTC&limit=10"
+        )
+
+        assert response.status_code == 200
+        assert response.json()["trail"] == {"hyperliquid:BTC": [100.0]}
 
     def test_404_without_a_lake(self, tmp_path) -> None:
         feed = LiveFeed(lag=LAG, stale=STALE)
@@ -583,21 +624,41 @@ class TestPriceTrail:
             account=PaperAccount(cash=100_000.0), live_feed=feed, host="127.0.0.1"
         )
         with TestClient(app) as client:
-            response = client.get("/api/live/price-trail?symbols=BTC")
+            response = client.get(
+                "/api/live/price-trail?identities=hyperliquid:BTC"
+            )
         assert response.status_code == 404
         assert response.json()["detail"] == "no replay lake is attached"
 
-    def test_422_when_empty_symbols(self, live_app) -> None:
+    def test_422_when_empty_identities(self, live_app) -> None:
         client, _app, _feed = live_app
-        response = client.get("/api/live/price-trail?symbols=&limit=10")
+        response = client.get("/api/live/price-trail?identities=&limit=10")
         assert response.status_code == 422
-        assert response.json()["detail"] == "at least one symbol is required"
+        assert response.json()["detail"] == "at least one identity is required"
+
+    def test_symbol_only_identity_is_rejected_as_ambiguous(self, live_app) -> None:
+        client, _app, _feed = live_app
+        response = client.get("/api/live/price-trail?identities=BTC&limit=10")
+        assert response.status_code == 422
+        assert response.json()["detail"] == (
+            "identities must use canonical venue:instrument form"
+        )
+
+    def test_legacy_symbols_parameter_is_not_accepted(self, live_app) -> None:
+        client, _app, _feed = live_app
+        response = client.get("/api/live/price-trail?symbols=BTC&limit=10")
+        assert response.status_code == 422
+        assert response.json()["detail"][0]["loc"] == ["query", "identities"]
 
     def test_mounts_agree(self, live_app) -> None:
         client, _app, feed = live_app
         feed.publish_threadsafe(self._candle("BTC", 100.5, at=T0))
-        root = client.get("/live/price-trail?symbols=BTC").json()
-        api = client.get("/api/live/price-trail?symbols=BTC").json()
+        root = client.get(
+            "/live/price-trail?identities=hyperliquid:BTC"
+        ).json()
+        api = client.get(
+            "/api/live/price-trail?identities=hyperliquid:BTC"
+        ).json()
         assert root == api
 
 

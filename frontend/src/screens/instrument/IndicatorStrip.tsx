@@ -31,7 +31,7 @@ export function IndicatorStrip({ values }: { values: IndicatorValues }) {
         <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
           {t('screen.workspace.observed')}
         </dt>
-        <dd className="text-xs text-emerald-600 dark:text-emerald-400">
+        <dd className="text-xs text-emerald-800 dark:text-emerald-400">
           {t('screen.workspace.observedOnly')}
         </dd>
       </div>

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quantmesh"
-version = "0.1.0"  # Operator-accepted first product release; future compatible fixes increment the patch version.
+version = "0.1.1rc1"  # Phase 0020 candidate; promotion to 0.1.1 requires operator acceptance.
 description = "Local-first cross-market quantitative research and trading workstation"
 readme = "README.md"
 requires-python = ">=3.11"

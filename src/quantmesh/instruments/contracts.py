@@ -1063,6 +1063,7 @@ class WorkspaceForecast(StrictContract):
     dataset_revision: int = Field(ge=1)
     history_digest: str
     benchmark_name: str
+    synthetic: bool
     eligible: bool
     blockers: tuple[str, ...]
     limitations: tuple[str, ...]
@@ -1103,17 +1104,30 @@ class WorkspaceForecast(StrictContract):
         return self
 
 
+class WorkspaceMarkStatus(StrictContract):
+    status: Literal["available", "stale", "unavailable"]
+    provenance: str
+    received_at: datetime | None = None
+    reason: str | None = None
+
+    @field_validator("received_at")
+    @classmethod
+    def received_at_is_utc(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else _utc(value, "received_at")
+
+
 class WorkspacePosition(StrictContract):
     quantity: float
     average_cost: float = Field(ge=0)
     realized_pnl: float
     mark: float | None = Field(default=None, gt=0)
     unrealized_pnl: float | None = None
+    mark_status: WorkspaceMarkStatus | None = None
 
 
 class WorkspaceRisk(StrictContract):
     cash: float = Field(ge=0)
-    equity: float = Field(ge=0)
+    equity: float | None = Field(default=None, ge=0)
     starting_cash: float = Field(ge=0)
     max_order_quantity: float | None = Field(default=None, gt=0)
     max_notional: float | None = Field(default=None, gt=0)
@@ -1121,6 +1135,16 @@ class WorkspaceRisk(StrictContract):
     global_kill_switch: bool
     venue_kill_switch: bool
     mark_available: bool
+    valuation_complete: bool
+    valuation_reason: str | None = None
+
+    @model_validator(mode="after")
+    def valuation_is_explicit(self) -> "WorkspaceRisk":
+        if self.valuation_complete != (self.equity is not None):
+            raise ValueError("complete workspace valuation must have exact equity")
+        if self.valuation_complete != (self.valuation_reason is None):
+            raise ValueError("incomplete workspace valuation must name a reason")
+        return self
 
 
 class ProposalCapability(StrictContract):

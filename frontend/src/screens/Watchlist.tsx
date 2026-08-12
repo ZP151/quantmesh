@@ -4,22 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api } from '@/lib/api'
+import { instrumentPath } from '@/lib/instrument-route'
 import { money } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
-/** The watchlist: the seeded favorites with their marks. The venue for
- * a "Trade" link is resolved from the overview board — never guessed. */
+/** The watchlist: venue-scoped favorites with their marks. Every action
+ * consumes the identity carried by its own API row; symbols are never
+ * resolved by a first-match lookup across venues. */
 export function WatchlistScreen() {
   const query = useSurface(['watchlist'], api.watchlist)
-  const venues = useSurface(['overview'], api.overview)
   const { t } = usePreferences()
-
-  const venueOf = (symbol: string): string | undefined => {
-    for (const entry of venues.data?.venues ?? []) {
-      if (entry.instruments.some((instrument) => instrument.symbol === symbol)) return entry.venue
-    }
-    return undefined
-  }
 
   return (
     <Page
@@ -45,38 +39,53 @@ export function WatchlistScreen() {
                   <thead>
                     <tr className="border-b border-border text-left text-xs text-muted-foreground">
                       <th className="px-4 py-2.5 font-medium">{t('table.symbol')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('table.venue')}</th>
                       <th className="px-4 py-2.5 text-right font-medium">{t('table.mark')}</th>
                       <th className="px-4 py-2.5 text-right font-medium">{t('table.action')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {watchlist.entries.map((entry) => {
-                      const venue = venueOf(entry.symbol)
+                      const venue = typeof entry.venue === 'string' && entry.venue.trim().length > 0
+                        ? entry.venue
+                        : null
                       return (
-                        <tr key={entry.symbol} className="border-b border-border/60 last:border-0">
-                          <td className="px-4 py-2.5 font-mono font-medium">{entry.symbol}</td>
+                        <tr key={`${entry.venue ?? 'unknown'}:${entry.symbol}`} className="border-b border-border/60 last:border-0">
+                          <td className="px-4 py-2.5 font-mono font-medium">
+                            {venue !== null ? (
+                              <Link
+                                className="underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                to={instrumentPath(venue, entry.symbol)}
+                              >
+                                {entry.symbol}
+                              </Link>
+                            ) : entry.symbol}
+                          </td>
+                          <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
+                            {venue ?? '—'}
+                          </td>
                           <td className="px-4 py-2.5 text-right font-mono tabular-nums">{money(entry.mark)}</td>
                           <td className="px-4 py-2.5 text-right">
-                            {venue ? (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="font-mono text-[11px]"
-                                render={
-                                  <Link
-                                    to={`/trading/order?venue=${encodeURIComponent(venue)}&symbol=${encodeURIComponent(entry.symbol)}`}
-                                  />
-                                }
-                              >
-                                {t('table.trade')}
-                              </Button>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">{t('screen.watchlist.notInUniverse')}</span>
+                            {venue !== null ? <Button
+                              nativeButton={false}
+                              size="sm"
+                              variant="ghost"
+                              className="font-mono text-[11px]"
+                              render={
+                                <Link
+                                  to={`/trading/order?venue=${encodeURIComponent(venue)}&symbol=${encodeURIComponent(entry.symbol)}`}
+                                />
+                              }
+                            >
+                              {t('table.trade')}
+                            </Button> : (
+                              <span className="text-xs text-muted-foreground">
+                                {t('screen.watchlist.notInUniverse')}
+                              </span>
                             )}
                           </td>
                         </tr>
-                      )
-                    })}
+                      )})}
                   </tbody>
                 </table>
               </div>

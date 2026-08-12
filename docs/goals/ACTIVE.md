@@ -87,8 +87,21 @@ remaining Critical, Important or Minor issue. Task 6 (historical/live-tail API)
 is complete through `629d3c8`: 211 focused tests, independent transaction
 fault probes and the 100-update/eight-writer exactly-once drill passed, with
 zero remaining Critical, Important or Minor issue. Task 7 (truthful multi-
-horizon forecast artifacts) is now the active frontier.
-Lightweight Charts remains a candidate until its later explicit admission gate.
+horizon forecast artifacts) is complete through `6c28df5`. Tasks 8-10 are
+complete through `94006fc`; Tasks 11-14 are complete through `29d5a42`.
+Lightweight Charts 5.2.0 is admitted only behind the licensed chart adapter.
+Task 15 implementation is complete, but Task 16's independent release review
+remains an active gate. Current evidence after the first two rejection/fix
+rounds is Vitest 140/140, combined review regressions 307 passed plus one
+environment skip, browser E2E 7/7, and golden path 60/60. The second review
+closed canonical navigation, live-history resolution, account/order-set
+validation, proposal/account locking, npm gates, version metadata and the
+runtime recursive-delete defect, then found narrower remaining work: rebuild
+and validate account aggregates from the journal, pass the workspace's single
+clock into valuation, close replacement-publication identity swapping, and
+make retained reset quarantines operator-visible. Those fixes are implemented
+and locally regression-tested; no merge or release tag is allowed until a
+fresh review and full clean-checkout gate pass.
 
 ## Current state
 
@@ -158,18 +171,20 @@ all market access remains read-only or paper-only.
 
 ## Current frontier
 
-1. Start iteration 0020 from the released `v0.1.0` baseline and record the
-   implementation checkpoints in
-   `docs/iterations/0020-research-to-paper-loop.md`.
-2. Establish venue-aware instrument identity and a historical OHLCV/manifest
-   API before replacing the current instrument sparkline.
-3. Spike TradingView Lightweight Charts behind a local adapter; admit the
-   dependency only after license/NOTICE, package, a11y, compact-width and
-   deterministic browser checks pass.
-4. Deliver the observed chart first, then transparent multi-horizon forecast
-   baselines and uncertainty gates, then the contextual paper decision rail.
-5. Cut `v0.1.1-rc1` only after complete lineage, safety and clean-checkout
-   evidence; wait for explicit operator acceptance before final promotion.
+1. Run a fresh broad review against `origin/main`; verify account aggregate
+   reconstruction, workspace single-clock valuation, identity-bound reset
+   publication and operator-visible retained paths; fix every material finding
+   on the same integration branch.
+2. Stage every intentional tracked and new file with `git add -A`, audit the
+   staged inventory, commit once, and prove a clean clone contains every
+   imported runtime module, CI tool and referenced SPA asset.
+3. Run the complete local and clean-checkout release gates, recording exact
+   totals and elapsed evidence in iteration 0020.
+4. Open, green and squash-merge the single integration PR; reconcile local
+   `main` by fast-forward only.
+5. Cut and verify immutable `v0.1.1-rc1` from merged `main`, create isolated
+   demo/live-degraded acceptance stations and stop at explicit operator
+   acceptance. Do not promote `v0.1.1` or enable real-money authority.
 
 ## Historical delivery frontier
 

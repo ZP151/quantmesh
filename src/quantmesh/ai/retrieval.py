@@ -22,6 +22,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from quantmesh._fs import atomic_replace
 from quantmesh.ai.errors import CitationResolutionError, RetrievalError
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.research.experiments import ExperimentRegistry
@@ -241,7 +242,7 @@ class DocumentIndex:
                 for record in existing + [document]:
                     handle.write(record.model_dump_json())
                     handle.write("\n")
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)

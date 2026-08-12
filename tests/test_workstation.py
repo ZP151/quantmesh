@@ -568,6 +568,47 @@ class TestConsoleScript:
         assert calls["host"] == "127.0.0.1"
         assert calls["port"] == 8766
 
+    def test_main_live_wires_workspace_forecasts_and_paper_services(
+        self, tmp_path, monkeypatch
+    ) -> None:
+        calls: dict = {}
+
+        def fake_run(app, *args, **kwargs) -> None:  # noqa: ANN001
+            calls["app"] = app
+            calls.update(kwargs)
+
+        monkeypatch.setitem(sys.modules, "uvicorn", types.SimpleNamespace(run=fake_run))
+        monkeypatch.setattr(settings, "workstation_host", "127.0.0.1")
+        monkeypatch.setattr(settings, "workstation_port", 8767)
+        monkeypatch.setattr(settings, "live_watchlist", "BTC")
+        monkeypatch.setattr(settings, "prediction_watchlist", "")
+        monkeypatch.setattr(settings, "moomoo_watchlist", "")
+        monkeypatch.setattr(settings, "lake_root", tmp_path / "lake")
+        monkeypatch.setattr(settings, "orders_dir", tmp_path / "orders")
+
+        workstation.main(["--live"])
+
+        app = calls["app"]
+        assert app.state.history is not None
+        assert app.state.instrument_workspace is not None
+        assert app.state.price_forecasts is not None
+        assert app.state.paper_decisions is not None
+        assert app.state.proposal_service is app.state.paper_decisions
+        assert app.state.live.replay_buffer is not None
+        assert calls["host"] == "127.0.0.1"
+        assert calls["port"] == 8767
+        app.state.live.replay_buffer.close()
+
+        # Policy state survives restart, but derived sequence state cannot be
+        # invented without matching durable journal orders.
+        restored = app.state.account.model_copy(update={"kill_switch": True})
+        app.state.account_store.replace(restored)
+        workstation.main(["--live"])
+        restarted = calls["app"]
+        assert restarted.state.account.kill_switch is True
+        assert restarted.state.account.order_sequence == 0
+        restarted.state.live.replay_buffer.close()
+
     def test_main_refuses_an_out_of_range_port_override(self, monkeypatch) -> None:
         monkeypatch.setitem(sys.modules, "uvicorn", types.SimpleNamespace(run=lambda **kw: None))
 
@@ -619,10 +660,20 @@ class TestPhaseBScreens:
         watched.add("ETH", now=NOW)
         html = client(markets=dict(self.MARKETS), watchlist=watched).get("/").text
 
-        # ETH resolves its mark through the first (sorted) venue; SOL has none.
+        # Legacy unscoped rows remain readable but never guess a venue/mark.
         assert html.index(">ETH<") < html.index(">SOL<")
-        assert "3200.0000" in html
         assert "no mark" in html
+
+    def test_watchlist_json_preserves_same_symbol_venue_identity(self, tmp_path) -> None:
+        watched = self.watched(tmp_path)
+        watched.add("BTC", venue="hyperliquid", now=NOW)
+        watched.add("BTC", venue="moomoo", now=NOW)
+        app_client = client(markets=dict(self.MARKETS), watchlist=watched)
+
+        assert app_client.get("/api/watchlist").json()["entries"] == [
+            {"venue": "hyperliquid", "symbol": "BTC", "mark": 65_000.0},
+            {"venue": "moomoo", "symbol": "BTC", "mark": 65_010.0},
+        ]
 
     def test_overview_empty_watchlist_prompt(self, tmp_path) -> None:
         html = client(markets=dict(self.MARKETS), watchlist=self.watched(tmp_path)).get("/").text
@@ -655,7 +706,9 @@ class TestPhaseBScreens:
 
         assert response.status_code == 303
         assert response.headers["location"] == "/watchlist"
-        assert [record.symbol for record in watched.all()] == ["ETH"]
+        assert [(record.venue.value, record.symbol) for record in watched.all()] == [
+            ("hyperliquid", "ETH")
+        ]
         html = app_client.get("/watchlist").text
         assert ">ETH<" in html
         assert "3200.0000" in html

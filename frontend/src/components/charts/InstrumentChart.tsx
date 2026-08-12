@@ -4,7 +4,9 @@ import {
   ColorType,
   CrosshairMode,
   HistogramSeries,
+  LineStyle,
   LineSeries,
+  TickMarkType,
   createChart,
   type IChartApi,
   type ISeriesApi,
@@ -14,12 +16,15 @@ import {
 } from 'lightweight-charts'
 
 import type { ComparisonSeries, ForecastPath, HistoricalSeries } from '@/lib/api'
+import type { Locale } from '@/lib/preferences'
 
 export interface InstrumentChartProps {
+  appearance?: 'dark' | 'light'
   comparisons?: ComparisonSeries | null
   forecast?: ForecastPath | null
   indicators?: readonly ChartLine[]
   labels?: Partial<InstrumentChartLabels>
+  locale?: Locale
   mode: 'candles' | 'line'
   primary: HistoricalSeries
   volume?: boolean
@@ -42,9 +47,29 @@ interface ChartRefs {
   volume: ISeriesApi<'Histogram'>
 }
 
-const COMPARISON_COLORS = ['#5eead4', '#a78bfa', '#fbbf24'] as const
 const FORECAST_KEYS = ['p025', 'p10', 'p25', 'p50', 'p75', 'p90', 'p975'] as const
 type ForecastKey = (typeof FORECAST_KEYS)[number]
+
+const PALETTES = {
+  dark: {
+    axis: '#cbd5e1',
+    border: 'rgba(203, 213, 225, 0.28)',
+    comparison: ['#5eead4', '#c4b5fd', '#fcd34d'],
+    down: '#fb7185',
+    grid: 'rgba(203, 213, 225, 0.12)',
+    up: '#34d399',
+    volume: '#94a3b8',
+  },
+  light: {
+    axis: '#475569',
+    border: 'rgba(71, 85, 105, 0.38)',
+    comparison: ['#0f766e', '#6d28d9', '#92400e'],
+    down: '#be123c',
+    grid: 'rgba(71, 85, 105, 0.16)',
+    up: '#047857',
+    volume: '#475569',
+  },
+} as const
 
 export interface InstrumentChartLabels {
   attribution: string
@@ -102,14 +127,15 @@ function forecastLabel(labels: InstrumentChartLabels, key: ForecastKey): string 
   return labels.forecastP975
 }
 
-const FORECAST_STYLE: Record<ForecastKey, { color: string; lineWidth: 1 | 2 }> = {
-  p025: { color: 'rgba(16, 185, 129, 0.24)', lineWidth: 1 },
-  p10: { color: 'rgba(16, 185, 129, 0.36)', lineWidth: 1 },
-  p25: { color: 'rgba(16, 185, 129, 0.52)', lineWidth: 1 },
-  p50: { color: '#34d399', lineWidth: 2 },
-  p75: { color: 'rgba(16, 185, 129, 0.52)', lineWidth: 1 },
-  p90: { color: 'rgba(16, 185, 129, 0.36)', lineWidth: 1 },
-  p975: { color: 'rgba(16, 185, 129, 0.24)', lineWidth: 1 },
+function forecastStyle(
+  appearance: 'dark' | 'light',
+  key: ForecastKey,
+): { color: string; lineStyle: LineStyle; lineWidth: 1 | 2 } {
+  const color = appearance === 'light' ? '#0f766e' : '#5eead4'
+  if (key === 'p50') return { color: appearance === 'light' ? '#065f46' : '#34d399', lineStyle: LineStyle.Solid, lineWidth: 2 }
+  if (key === 'p25' || key === 'p75') return { color, lineStyle: LineStyle.Dotted, lineWidth: 1 }
+  if (key === 'p10' || key === 'p90') return { color, lineStyle: LineStyle.Dashed, lineWidth: 1 }
+  return { color, lineStyle: LineStyle.SparseDotted, lineWidth: 1 }
 }
 
 function utcTimestamp(value: string): UTCTimestamp | null {
@@ -131,11 +157,87 @@ function chartContext(primary: HistoricalSeries): string {
   return `${primary.instrument.venue}:${primary.instrument.symbol}:${primary.range}`
 }
 
+function utcDate(time: Time): Date | null {
+  let milliseconds: number
+  if (typeof time === 'number') {
+    milliseconds = time * 1_000
+  } else if (typeof time === 'string') {
+    milliseconds = Date.parse(time.length === 10 ? `${time}T00:00:00Z` : time)
+  } else {
+    milliseconds = Date.UTC(time.year, time.month - 1, time.day)
+  }
+  return Number.isFinite(milliseconds) ? new Date(milliseconds) : null
+}
+
+function datePart(
+  formatter: Intl.DateTimeFormat,
+  date: Date,
+  type: Intl.DateTimeFormatPartTypes,
+): string {
+  return formatter.formatToParts(date).find((part) => part.type === type)?.value ?? ''
+}
+
+function chartTimeFormatters(locale: Locale) {
+  const appLocale = locale === 'zh-CN' ? 'zh-CN' : 'en-US'
+  const dateFormatter = new Intl.DateTimeFormat(appLocale, {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+    year: 'numeric',
+  })
+  const timeFormatter = new Intl.DateTimeFormat(appLocale, {
+    hour: '2-digit',
+    hourCycle: 'h23',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZone: 'UTC',
+  })
+
+  const parts = (date: Date) => ({
+    day: datePart(dateFormatter, date, 'day'),
+    hour: datePart(timeFormatter, date, 'hour'),
+    minute: datePart(timeFormatter, date, 'minute'),
+    month: locale === 'zh-CN'
+      ? `${datePart(dateFormatter, date, 'month')}月`
+      : datePart(dateFormatter, date, 'month'),
+    second: datePart(timeFormatter, date, 'second'),
+    year: datePart(dateFormatter, date, 'year'),
+  })
+
+  return {
+    locale: appLocale,
+    tickMarkFormatter(time: Time, tickMarkType: TickMarkType): string {
+      const date = utcDate(time)
+      if (date === null) return '—'
+      const value = parts(date)
+      if (tickMarkType === TickMarkType.Year) return value.year
+      if (tickMarkType === TickMarkType.Month) return value.month
+      if (tickMarkType === TickMarkType.DayOfMonth) {
+        return locale === 'zh-CN' ? `${value.month}${value.day}日` : `${value.month} ${value.day}`
+      }
+      if (tickMarkType === TickMarkType.TimeWithSeconds) {
+        return `${value.hour}:${value.minute}:${value.second}`
+      }
+      return `${value.hour}:${value.minute}`
+    },
+    timeFormatter(time: Time): string {
+      const date = utcDate(time)
+      if (date === null) return '—'
+      const value = parts(date)
+      return locale === 'zh-CN'
+        ? `${value.year}年${value.month}${value.day}日 ${value.hour}:${value.minute} UTC`
+        : `${value.month} ${value.day}, ${value.year}, ${value.hour}:${value.minute} UTC`
+    },
+  }
+}
+
 export function InstrumentChart({
+  appearance = 'dark',
   comparisons = null,
   forecast = null,
   indicators = [],
   labels,
+  locale = 'en',
   mode,
   primary,
   volume = false,
@@ -147,15 +249,16 @@ export function InstrumentChart({
   const indicatorRefs = useRef(new Map<string, LineApi>())
   const contextRef = useRef<string | null>(null)
   const chartLabels = useMemo(() => ({ ...DEFAULT_LABELS, ...labels }), [labels])
+  const palette = PALETTES[appearance]
+  const timeFormatters = useMemo(() => chartTimeFormatters(locale), [locale])
 
   const priceFormatter = useMemo(() => {
-    const locale = typeof navigator === 'undefined' ? 'en-US' : navigator.language
-    const formatter = new Intl.NumberFormat(locale, {
+    const formatter = new Intl.NumberFormat(locale === 'zh-CN' ? 'zh-CN' : 'en-US', {
       maximumFractionDigits: 4,
       minimumFractionDigits: 2,
     })
     return (price: number) => formatter.format(price)
-  }, [])
+  }, [locale])
 
   useEffect(() => {
     const container = containerRef.current
@@ -168,35 +271,40 @@ export function InstrumentChart({
       autoSize: true,
       crosshair: { mode: CrosshairMode.Normal },
       grid: {
-        horzLines: { color: 'rgba(148, 163, 184, 0.08)' },
-        vertLines: { color: 'rgba(148, 163, 184, 0.08)' },
+        horzLines: { color: palette.grid },
+        vertLines: { color: palette.grid },
       },
       kineticScroll: { mouse: !reduceMotion, touch: !reduceMotion },
       layout: {
         attributionLogo: true,
         background: { color: 'transparent', type: ColorType.Solid },
-        textColor: '#94a3b8',
+        textColor: palette.axis,
       },
-      localization: { priceFormatter },
-      rightPriceScale: { borderColor: 'rgba(148, 163, 184, 0.18)' },
+      localization: {
+        locale: timeFormatters.locale,
+        priceFormatter,
+        timeFormatter: timeFormatters.timeFormatter,
+      },
+      rightPriceScale: { borderColor: palette.border },
       timeScale: {
-        borderColor: 'rgba(148, 163, 184, 0.18)',
+        borderColor: palette.border,
         secondsVisible: false,
+        tickMarkFormatter: timeFormatters.tickMarkFormatter,
         timeVisible: true,
       },
     })
     const candles = chart.addSeries(CandlestickSeries, {
-      borderDownColor: '#fb7185',
-      borderUpColor: '#34d399',
-      downColor: '#fb7185',
+      borderDownColor: palette.down,
+      borderUpColor: palette.up,
+      downColor: 'rgba(0, 0, 0, 0)',
       priceLineVisible: false,
       title: chartLabels.observed,
-      upColor: '#34d399',
-      wickDownColor: '#fb7185',
-      wickUpColor: '#34d399',
+      upColor: palette.up,
+      wickDownColor: palette.down,
+      wickUpColor: palette.up,
     })
     const close = chart.addSeries(LineSeries, {
-      color: '#34d399',
+      color: palette.up,
       lineWidth: 2,
       priceLineVisible: false,
       title: chartLabels.observedClose,
@@ -216,7 +324,7 @@ export function InstrumentChart({
       FORECAST_KEYS.map((key) => [
         key,
         chart.addSeries(LineSeries, {
-          ...FORECAST_STYLE[key],
+          ...forecastStyle(appearance, key),
           lastValueVisible: key === 'p50',
           priceLineVisible: false,
           title: forecastLabel(chartLabels, key),
@@ -257,7 +365,7 @@ export function InstrumentChart({
       chart.unsubscribeCrosshairMove(onCrosshairMove)
       chart.remove()
     }
-  }, [chartLabels, priceFormatter])
+  }, [appearance, chartLabels, palette, priceFormatter, timeFormatters])
 
   useEffect(() => {
     const current = refs.current
@@ -286,7 +394,7 @@ export function InstrumentChart({
       const time = utcTimestamp(bar.timestamp)
       if (time === null || !finite(bar.volume)) return []
       return [{
-        color: bar.close >= bar.open ? 'rgba(52, 211, 153, 0.28)' : 'rgba(251, 113, 133, 0.28)',
+        color: palette.volume,
         time,
         value: bar.volume,
       }]
@@ -308,7 +416,7 @@ export function InstrumentChart({
       let series = comparisonRefs.current.get(key)
       if (series === undefined) {
         series = chart.addSeries(LineSeries, {
-          color: COMPARISON_COLORS[index % COMPARISON_COLORS.length],
+          color: palette.comparison[index % palette.comparison.length],
           lineWidth: 1,
           priceLineVisible: false,
           priceScaleId: 'comparison',
@@ -316,7 +424,7 @@ export function InstrumentChart({
         })
         comparisonRefs.current.set(key, series)
       }
-      series.applyOptions({ color: COMPARISON_COLORS[index % COMPARISON_COLORS.length] })
+      series.applyOptions({ color: palette.comparison[index % palette.comparison.length] })
       series.setData((comparisons?.points ?? []).flatMap((point) => {
         const time = utcTimestamp(point.timestamp)
         const value = point.values[key]
@@ -363,9 +471,9 @@ export function InstrumentChart({
     } else if (visibleRange !== null && primary.bars.some((bar) => bar.is_live_tail)) {
       chart.timeScale().setVisibleRange(visibleRange)
     }
-  }, [comparisons, forecast, indicators, mode, primary, volume])
+  }, [comparisons, forecast, indicators, mode, palette, primary, volume])
 
-  const accessibleObserved = primary.bars.slice(-50)
+  const accessibleObserved = primary.bars
   return (
     <figure className="relative min-h-80 w-full" aria-label={`${primary.instrument.symbol} ${chartLabels.chart}`}>
       <div
@@ -388,12 +496,16 @@ export function InstrumentChart({
         hidden
         role="tooltip"
       />
-      <table className="sr-only" aria-label={`${primary.instrument.symbol} ${chartLabels.dataTable}`}>
-        <caption>{chartLabels.caption}</caption>
-        <thead>
-          <tr><th>{chartLabels.timestamp}</th><th>{chartLabels.series}</th><th>{chartLabels.value}</th></tr>
-        </thead>
-        <tbody>
+      <div className="sr-only">
+        <table
+          aria-label={`${primary.instrument.symbol} ${chartLabels.dataTable}`}
+          className="w-px max-w-px table-fixed whitespace-normal [&_*]:break-all"
+        >
+          <caption>{chartLabels.caption}</caption>
+          <thead>
+            <tr><th scope="col">{chartLabels.timestamp}</th><th scope="col">{chartLabels.series}</th><th scope="col">{chartLabels.value}</th></tr>
+          </thead>
+          <tbody>
           {accessibleObserved.flatMap((bar) => ([
             [chartLabels.observedOpen, bar.open],
             [chartLabels.observedHigh, bar.high],
@@ -418,13 +530,14 @@ export function InstrumentChart({
               <td>{point.timestamp}</td><td>{forecastLabel(chartLabels, key)}</td><td>{point[key]}</td>
             </tr>
           )))}
-          {indicators.flatMap((indicator) => indicator.points.slice(-50).map((point) => (
+          {indicators.flatMap((indicator) => indicator.points.map((point) => (
             <tr key={`${indicator.key}-${point.timestamp}`}>
               <td>{point.timestamp}</td><td>{indicator.label}</td><td>{point.value}</td>
             </tr>
           )))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </figure>
   )
 }

@@ -463,7 +463,7 @@ not sufficient for cross-agent recovery.
   generated path through `openapi-fetch`; an empty comparison remains omitted.
   CI runs `check:api`. Exact additions are `openapi-fetch==0.17.0` (MIT) and
   `openapi-typescript==7.13.0` (MIT); generator peer compatibility pins
-  `typescript==5.9.3` (Apache-2.0). The 644-entry lock closure is fully
+  `typescript==5.9.3` (Apache-2.0). The then-current 644-entry lock closure was fully
   allowlisted and `npm audit` reports zero advisories.
 - Fix-round verification is 168/168 across Task 5, Task 6, SPA API, live feed
   and supervisor suites, plus 73/73 Vitest tests. OpenAPI stale generation
@@ -514,7 +514,7 @@ not sufficient for cross-agent recovery.
   stale checks passed twice at byte-identical SHA-256
   `9f2d93cdf638d0de9ac84eca1c92e10c516cff6fa78b5bb0487ef8ba193b5693`;
   `npm run typecheck`, frontend lint, focused Ruff and diff checks pass. The
-  npm closure is unchanged at 644 allowlisted entries and `npm audit` reports
+  then-current npm closure was unchanged at 644 allowlisted entries and `npm audit` reports
   zero advisories. Existing frontend warning debt is unchanged; no execution
   authority, dependency, generated client or built asset changed.
 
@@ -599,6 +599,92 @@ not sufficient for cross-agent recovery.
   through kernel, BFF and confirmation updates, and the generated OpenAPI client
   plus handwritten adapter typecheck cleanly. Existing instrument/workstation/
   proposal/history regressions pass 225/225; this is not yet the Task 9 gate.
+
+## Checkpoint 2 — integrated product implementation and finish review (2026-08-12)
+
+- Tasks 7-10 are complete through `94006fc`. QuantMesh now owns replayable
+  7/30/126-session forecast artifacts, chronological OOS evidence, append-only
+  proposal lineage, an aggregated instrument workspace API and deterministic
+  deep demo history. Framework candidates remain isolated; no copied FinRL-X
+  or Nautilus runtime code entered the product or order path.
+- Tasks 11-14 are complete through `29d5a42`. Lightweight Charts 5.2.0 is
+  admitted behind the single `InstrumentChart` adapter with Apache-2.0 notice
+  and visible attribution. The venue-aware workspace joins historical/live
+  evidence, chart controls, comparisons, bounded indicators, forecast
+  uncertainty and explicit two-stage paper confirmation. Terminal success and
+  typed refusal evidence survive authoritative refresh and remain dismissible.
+- Demo reset ownership was hardened in `591348f` and `2db2f1a`: reset compares
+  against an independently regenerated trusted inventory, rejects unknown
+  dynamic files and Windows reparse points, validates cache/import structure,
+  and returns typed 503 degradation while a serialized reset is in progress.
+- Task 15 finish work is implemented in the current checkpoint. Range changes
+  retain the mounted workspace and keyboard focus; the server contract owns
+  forecast synthetic classification; the paper/risk rail identifies its
+  snapshot time and local-kernel authority; licenses wrap instead of
+  truncating; known server evidence is localized while preserving raw text.
+  Light-mode chart colors meet contrast targets, down candles are hollow,
+  volume is direction-neutral, forecast boundaries use line patterns, and the
+  screen-reader table contains the complete observed history.
+- The Impeccable detector was run exactly once with zero mechanical findings.
+  `DESIGN.md` and `.impeccable/design.json` record the implemented visual and
+  accessibility contract. Fresh screenshots cover desktop dark/light and
+  390 px zh-CN; all three had zero console errors, and the compact viewport had
+  equal 390 px document/client widths.
+- Verification at this checkpoint: frontend Vitest 109/109, TypeScript,
+  Oxlint (zero errors; four existing Fast Refresh warnings), generated OpenAPI
+  freshness and production build pass; focused workspace/runtime contracts
+  25/25; reset-safety regression 47 passed and one environment skip; real
+  browser acceptance 18/18; extended golden path 59/59; focused Ruff clean.
+  Vite reports the known Node 22.11 vs 22.12 recommendation and a 568 kB main
+  chunk warning; neither changes correctness, but bundle splitting remains a
+  later performance item.
+- Task 15 awaits only the final no-material-finding rereview and checkpoint
+  commit. Task 16 is the next frontier: broad branch review, complete suite,
+  clean-checkout release gate, one PR/merge, then `v0.1.1-rc1` from merged
+  `main` and an isolated operator acceptance station.
+
+## Checkpoint 3 — Task 16 release review and correction (2026-08-12)
+
+- The first broad review rejected release with two Critical, eight Important
+  and two Minor findings. Test-first corrections closed delayed proposal
+  recovery, order replay validation, history filtering before the 10,000-row
+  bound, account/mark snapshot consistency, truthful incomplete valuation,
+  canonical venue/symbol watchlists, reset identity checks, npm audit/license
+  gates and reset timing evidence.
+- A full backend run after those fixes passed 2,557 with four skips. Frontend
+  API freshness, TypeScript, Vitest 138/138, production build, npm audit (zero
+  vulnerabilities) and the 646-package locked-license review passed. That run
+  also found and fixed two Windows writers which attempted `os.replace` before
+  closing their JSONL handles; the research regression matrix passed 173/173.
+- The next independent review rejected release again. Corrections completed so
+  far: live history now uses exact-or-coarser resolution only; all primary
+  instrument links go directly to `/instruments/{venue}/{symbol}`; account and
+  journal order sets/map keys/replay agree; proposal/account/mark state is read
+  under one lock order; package/import/notes report `0.1.1rc1`; runtime reset no
+  longer recursively deletes any replaceable path. Joint regressions passed
+  189 with one environment skip, Vitest 139/139, browser E2E 7/7, and the
+  integrated golden path 60/60.
+- Release remains refused pending fresh review and clean-checkout proof. The
+  completed second-round test-first fixes rebuild and compare all account
+  aggregate state from journal fills, pass the workspace's one
+  `generated_at` into valuation, bind and revalidate replacement identity when
+  publishing a reset, restore the prior demo if an external path swap occurs,
+  and expose retained quarantine paths in the API and global SPA warning. Every
+  reset quarantine
+  is intentionally retained because safe runtime recursive deletion cannot be
+  bound to a Windows path identity; an explicit operator cleanup design is a
+  separate follow-up, never part of the reset request.
+- The combined third-round regression matrix passed 307 with one environment
+  skip; frontend Vitest passed 140/140, TypeScript and Ruff passed, and the
+  regenerated SPA bundle includes the retained-reset warning. An adjacent
+  post-publication content-tamper probe was added after manual review: any
+  trusted-structure failure now also isolates the unexpected tree and restores
+  the original demo.
+- The working tree intentionally contains new runtime modules, tests, CI tools,
+  release notes and generated SPA assets. This remains a Critical reproducible-
+  build issue until `git add -A`, staged-inventory review, commit and a clean
+  clone gate prove all imports and referenced assets are present. `git commit
+  -am` is forbidden for this release.
 
 ## Acceptance criteria
 

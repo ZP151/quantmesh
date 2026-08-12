@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import type { InstrumentWorkspace } from '@/lib/api'
 import { dateTime, moneyPrecise, number, percent, shortHash } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
+import { evidenceText } from './evidence-copy'
 
 export type ForecastHorizon = 7 | 30 | 126
 type ForecastInterval = 50 | 80 | 95
@@ -42,7 +43,9 @@ export function ForecastEvidence({
           {t('screen.workspace.forecast')}
         </h2>
         <p className="text-xs text-muted-foreground">
-          {unavailableReason ?? t('screen.workspace.noForecast')}
+          {unavailableReason === null || unavailableReason === undefined
+            ? t('screen.workspace.noForecast')
+            : evidenceText(unavailableReason, locale, t)}
         </p>
       </section>
     )
@@ -52,6 +55,10 @@ export function ForecastEvidence({
   const metrics = forecast.metrics.find((candidate) => candidate.sessions === horizon)
   const finalPoint = path?.points[path.points.length - 1]
   const [lower, upper] = intervalValues(finalPoint, interval)
+  const validationStart = metrics?.validation_start ?? forecast.validation_start
+  const validationEnd = metrics?.validation_end ?? forecast.validation_end
+  const testStart = metrics?.test_start ?? forecast.test_start
+  const testEnd = metrics?.test_end ?? forecast.test_end
 
   return (
     <section className="space-y-4 px-3" aria-label={t('screen.workspace.forecast')}>
@@ -130,27 +137,49 @@ export function ForecastEvidence({
         <Fact label={t('screen.workspace.modelVersion')} value={forecast.model_version} />
         <Fact label={t('screen.workspace.configDigest')} value={shortHash(forecast.config_digest)} />
         <Fact label={t('screen.workspace.historyDigest')} value={shortHash(forecast.history_digest)} />
+        <Fact
+          label={t('screen.workspace.evaluationMethod')}
+          value={t('screen.workspace.prequentialEvaluation')}
+        />
+        {validationStart && validationEnd && (
+          <Fact
+            label={t('screen.workspace.validationWindow')}
+            title={`${validationStart} → ${validationEnd}`}
+            value={`${dateTime(validationStart, locale)} → ${dateTime(validationEnd, locale)}`}
+          />
+        )}
+        {testStart && testEnd && (
+          <Fact
+            label={t('screen.workspace.testWindow')}
+            title={`${testStart} → ${testEnd}`}
+            value={`${dateTime(testStart, locale)} → ${dateTime(testEnd, locale)}`}
+          />
+        )}
         <Fact label={t('screen.workspace.trainCutoff')} value={dateTime(forecast.train_end, locale)} />
         <Fact label={t('screen.workspace.generated')} value={dateTime(forecast.generated_at, locale)} />
       </dl>
 
       {!forecast.eligible && forecast.blockers.length > 0 && (
         <ul className="space-y-1 text-xs text-destructive">
-          {forecast.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
+          {forecast.blockers.map((blocker) => (
+            <li key={blocker} title={blocker}>{evidenceText(blocker, locale, t)}</li>
+          ))}
         </ul>
       )}
       {forecast.limitations.length > 0 && (
         <ul className="space-y-1 text-[10px] text-muted-foreground">
-          {forecast.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}
+          {forecast.limitations.map((limitation) => (
+            <li key={limitation} title={limitation}>{evidenceText(limitation, locale, t)}</li>
+          ))}
         </ul>
       )}
     </section>
   )
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({ label, title, value }: { label: string; title?: string; value: string }) {
   return (
-    <div className="flex justify-between gap-3">
+    <div className="flex justify-between gap-3" title={title}>
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="max-w-44 text-right font-mono tabular-nums">{value}</dd>
     </div>

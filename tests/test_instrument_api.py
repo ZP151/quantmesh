@@ -606,6 +606,10 @@ def test_invalid_matching_live_candle_is_not_joined_and_names_a_limitation(
     update: MarketUpdate,
     expected: str,
 ) -> None:
+    # Parametrized updates are constructed during collection. Refresh the
+    # receipt clock here so a long-running full suite cannot turn every case
+    # into the unrelated stale-receipt rejection before its intended check.
+    update = update.model_copy(update={"received_at": datetime.now(UTC)})
     feed = LiveFeed()
     _ingest_with_predecessor(feed, update)
 

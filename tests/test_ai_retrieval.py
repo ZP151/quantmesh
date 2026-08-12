@@ -27,7 +27,7 @@ from quantmesh.ai.retrieval import (
     tokenize,
 )
 from quantmesh.domain.models import Instrument, InstrumentType, Side, Venue
-from quantmesh.domain.orders import Order, OrderStatus, OrderType
+from quantmesh.domain.orders import Fill, Order, OrderEventType, OrderStateMachine, OrderType
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.research.experiments import (
     EXPERIMENTS_FILE,
@@ -67,15 +67,20 @@ def _instrument(symbol: str = "BTC") -> Instrument:
 
 
 def _order(order_id: str, symbol: str = "BTC") -> Order:
-    return Order(
+    created_at = datetime.now(UTC)
+    order = Order(
         order_id=order_id,
         instrument=_instrument(symbol),
         side=Side.BUY,
         quantity=1.0,
         order_type=OrderType.MARKET,
-        created_at=datetime.now(UTC),
-        status=OrderStatus.FILLED,
-        filled_quantity=1.0,
+        created_at=created_at,
+    )
+    return OrderStateMachine.apply(
+        order,
+        OrderEventType.FILL,
+        fill=Fill(timestamp=created_at, quantity=1.0, price=100.0),
+        timestamp=created_at,
     )
 
 

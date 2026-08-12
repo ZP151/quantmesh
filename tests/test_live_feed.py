@@ -181,7 +181,7 @@ class TestIngestAndCache:
         feed.ingest([_upd(payload={"bid": 100.0, "ask": 100.5})])
 
         rendered = feed.latest_state(now=T0)
-        rendered["instruments"]["BTC"]["kinds"]["quote"]["payload"]["bid"] = 999.0
+        rendered["instruments"]["hyperliquid:BTC"]["kinds"]["quote"]["payload"]["bid"] = 999.0
         snapshot = feed.snapshot_exact(
             Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0
         )
@@ -191,6 +191,36 @@ class TestIngestAndCache:
 
 
 class TestExactContinuity:
+    def test_quote_proof_and_payload_are_isolated_by_venue(self) -> None:
+        feed = _feed()
+        for venue, bid in ((Venue.HYPERLIQUID, 100.0), (Venue.MOOMOO, 200.0)):
+            feed.ingest(
+                [
+                    _upd(venue=venue, sequence=1, payload={"bid": bid, "ask": bid + 0.5}),
+                    _upd(
+                        venue=venue,
+                        sequence=2,
+                        received_at=T0 + timedelta(milliseconds=1),
+                        payload={"bid": bid, "ask": bid + 0.5},
+                    ),
+                ]
+            )
+
+        hyperliquid = feed.snapshot_exact(
+            Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0 + timedelta(seconds=1)
+        )
+        moomoo = feed.snapshot_exact(
+            Venue.MOOMOO, "BTC", UpdateKind.QUOTE, as_of=T0 + timedelta(seconds=1)
+        )
+
+        assert hyperliquid is not None and hyperliquid.continuity_proven is True
+        assert moomoo is not None and moomoo.continuity_proven is True
+        assert hyperliquid.payload["bid"] == 100.0
+        assert moomoo.payload["bid"] == 200.0
+        presented = feed.latest_state(now=T0 + timedelta(seconds=1))["instruments"]
+        assert presented["hyperliquid:BTC"]["kinds"]["quote"]["payload"]["bid"] == 100.0
+        assert presented["moomoo:BTC"]["kinds"]["quote"]["payload"]["bid"] == 200.0
+
     def test_first_observation_is_unproven_and_valid_second_update_is_proven(self) -> None:
         feed = _feed()
         feed.ingest([_candle(sequence=80)])
@@ -583,22 +613,26 @@ class TestExactContinuity:
         )
         state = feed.latest_state(now=T0 + timedelta(seconds=1))
         instruments = state["instruments"]
-        assert set(instruments) == {"BTC"}
-        kinds = instruments["BTC"]["kinds"]
+        assert set(instruments) == {"hyperliquid:BTC"}
+        kinds = instruments["hyperliquid:BTC"]["kinds"]
         assert set(kinds) == {"quote", "candle"}
         assert kinds["quote"]["payload"]["bid"] == 101.0  # latest won
-        assert instruments["BTC"]["label"] == "real"
+        assert instruments["hyperliquid:BTC"]["label"] == "real"
+        assert instruments["hyperliquid:BTC"]["instrument"] == "BTC"
 
     def test_distinct_instruments_coexist(self) -> None:
         feed = _feed()
         feed.ingest([_upd(), _upd(instrument="ETH")])
-        assert set(feed.latest_state(now=T0)["instruments"]) == {"BTC", "ETH"}
+        assert set(feed.latest_state(now=T0)["instruments"]) == {
+            "hyperliquid:BTC",
+            "hyperliquid:ETH",
+        }
 
     def test_age_ms_and_sequence_are_preserved(self) -> None:
         feed = _feed()
         feed.ingest([_upd(sequence=42, sequence_gap=True, received_at=T0)])
         state = feed.latest_state(now=T0 + timedelta(seconds=3))
-        view = state["instruments"]["BTC"]["kinds"]["quote"]
+        view = state["instruments"]["hyperliquid:BTC"]["kinds"]["quote"]
         assert view["age_ms"] == 3000
         assert view["sequence"] == 42
         assert view["sequence_gap"] is True
@@ -674,7 +708,7 @@ class TestFanOut:
     def test_publish_threadsafe_ingests_even_before_the_pump(self) -> None:
         feed = _feed()
         feed.publish_threadsafe(_upd())
-        assert "BTC" in feed.latest_state(now=T0)["instruments"]
+        assert "hyperliquid:BTC" in feed.latest_state(now=T0)["instruments"]
 
 
 class TestLake:

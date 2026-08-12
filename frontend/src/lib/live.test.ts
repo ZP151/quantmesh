@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { renderHook } from '@testing-library/react'
 import type { LiveInstrumentState, LiveKind, LiveLabel, LiveView, MarketUpdate } from '@/lib/api'
 import {
   ageText,
@@ -8,14 +9,25 @@ import {
   candleReturn,
   dataViews,
   instrumentLabel,
+  liveInstrumentKey,
   markIndexDivergence,
   mergeUpdate,
   midOf,
+  normalizeLiveInstruments,
   openLiveConnection,
   quoteNumbers,
   realizedVol,
   spreadBps,
+  useLiveConnection,
 } from './live'
+
+describe('useLiveConnection', () => {
+  it('stays down without opening a browser transport when streaming is disabled', () => {
+    const { result } = renderHook(() => useLiveConnection(vi.fn(), false))
+
+    expect(result.current).toBe('down')
+  })
+})
 
 // The deterministic half of the live client: label derivation, the
 // update-into-snapshot reconciliation, quote math and the WS→SSE
@@ -77,7 +89,7 @@ function instrument(kinds: Record<string, MarketUpdate>): LiveInstrumentState {
       payload: update.payload,
     }
   }
-  return { venue: 'hyperliquid', label: 'real', kinds: views }
+  return { venue: 'hyperliquid', instrument: 'BTC', label: 'real', kinds: views }
 }
 
 describe('instrument labels', () => {
@@ -99,27 +111,76 @@ describe('instrument labels', () => {
 })
 
 describe('mergeUpdate', () => {
+  it('retains canonical venue:instrument wire identities at ingestion', () => {
+    const state = instrument({ quote: quote('BTC', 100, 101) })
+    expect(normalizeLiveInstruments({ 'hyperliquid:BTC': state })).toEqual({
+      'hyperliquid:BTC': state,
+    })
+  })
+
+  it('rejects snapshots whose wire key and value identity disagree', () => {
+    const valid = instrument({ quote: quote('BTC', 100, 101) })
+    const wrongVenue = { ...valid, venue: 'moomoo' }
+    const wrongInstrument = { ...valid, instrument: 'ETH' }
+
+    expect(normalizeLiveInstruments({
+      'hyperliquid:BTC': valid,
+      'hyperliquid:SOL': wrongInstrument,
+      'hyperliquid:ETH': wrongVenue,
+      malformed: valid,
+    })).toEqual({
+      'hyperliquid:BTC': valid,
+    })
+  })
+
+  it('drops structurally malformed snapshot values without throwing', () => {
+    const valid = instrument({ quote: quote('BTC', 100, 101) })
+
+    expect(normalizeLiveInstruments({
+      'hyperliquid:BTC': valid,
+      'hyperliquid:EMPTY': null,
+      'hyperliquid:PARTIAL': { venue: 'hyperliquid' },
+    } as unknown as Record<string, LiveInstrumentState>)).toEqual({
+      'hyperliquid:BTC': valid,
+    })
+  })
+
   it('writes a fresh kind and recomputes the badge', () => {
     const first = quote('BTC', 100, 100.5)
     const after = mergeUpdate({}, first)
-    expect(after.BTC.kinds.quote.payload).toEqual({ bid: 100, ask: 100.5 })
-    expect(after.BTC.label).toBe('real')
+    const key = liveInstrumentKey('hyperliquid', 'BTC')
+    expect(after[key].kinds.quote.payload).toEqual({ bid: 100, ask: 100.5 })
+    expect(after[key].label).toBe('real')
 
     const stale = mergeUpdate(after, quote('BTC', 99, 99.5, { provenance: 'delayed' }))
-    expect(stale.BTC.kinds.quote.provenance).toBe('delayed')
-    expect(stale.BTC.label).toBe('delayed')
+    expect(stale[key].kinds.quote.provenance).toBe('delayed')
+    expect(stale[key].label).toBe('delayed')
   })
 
   it('keeps other instruments untouched', () => {
     const after = mergeUpdate({}, quote('BTC', 100, 100.5))
     const withEth = mergeUpdate(after, quote('ETH', 3, 3.1))
-    expect(Object.keys(withEth).sort()).toEqual(['BTC', 'ETH'])
-    expect(withEth.BTC.kinds.quote.payload.bid).toBe(100)
+    expect(Object.keys(withEth).sort()).toEqual([
+      liveInstrumentKey('hyperliquid', 'BTC'),
+      liveInstrumentKey('hyperliquid', 'ETH'),
+    ].sort())
+    expect(withEth[liveInstrumentKey('hyperliquid', 'BTC')].kinds.quote.payload.bid).toBe(100)
   })
 
   it('carries the sequence gap flag into the view', () => {
     const after = mergeUpdate({}, quote('BTC', 100, 100.5, { sequence_gap: true }))
-    expect(after.BTC.kinds.quote.sequence_gap).toBe(true)
+    expect(after[liveInstrumentKey('hyperliquid', 'BTC')].kinds.quote.sequence_gap).toBe(true)
+  })
+
+  it('never merges the same symbol across venues', () => {
+    const hyperliquid = mergeUpdate({}, quote('BTC', 100, 101))
+    const both = mergeUpdate(
+      hyperliquid,
+      quote('BTC', 200, 201, { venue: 'moomoo' }),
+    )
+
+    expect(both[liveInstrumentKey('hyperliquid', 'BTC')].kinds.quote.payload.bid).toBe(100)
+    expect(both[liveInstrumentKey('moomoo', 'BTC')].kinds.quote.payload.bid).toBe(200)
   })
 })
 
@@ -142,6 +203,7 @@ describe('age and chart helpers', () => {
     expect(ageText(450)).toBe('450 ms')
     expect(ageText(3_200)).toBe('3 s')
     expect(ageText(65_000)).toBe('1 m 5 s')
+    expect(ageText(65_000, 'zh-CN')).toBe('1 分 5 秒')
   })
 
   it('collects candle closes in arrival order', () => {
@@ -249,6 +311,7 @@ describe('openLiveConnection', () => {
     onopen: (() => void) | null = null
     onmessage: ((event: MessageEvent) => void) | null = null
     onerror: (() => void) | null = null
+    onclose: (() => void) | null = null
     close = vi.fn(() => {
       this.onerror = null
       this.onmessage = null
@@ -326,6 +389,29 @@ describe('openLiveConnection', () => {
     FakeEventSource.instances[0].onmessage?.({ data: JSON.stringify(quote('BTC', 1, 2)) } as MessageEvent)
     expect(updates).toHaveLength(1)
     expect(FakeSocket.instances[0].close).toHaveBeenCalled()
+    connection.close()
+  })
+
+  it('falls back to SSE when the socket closes normally', () => {
+    const connection = open()
+    FakeSocket.instances[0].onopen?.()
+    FakeSocket.instances[0].onclose?.()
+
+    expect(statuses).toEqual(['connecting', 'live', 'fallback'])
+    expect(FakeEventSource.instances).toHaveLength(1)
+    connection.close()
+  })
+
+  it('advances the fallback ladder only once when error and close both fire', () => {
+    const connection = open()
+    const socket = FakeSocket.instances[0]
+    const closeHandler = socket.onclose
+
+    socket.onerror?.()
+    closeHandler?.()
+
+    expect(statuses).toEqual(['connecting', 'fallback'])
+    expect(FakeEventSource.instances).toHaveLength(1)
     connection.close()
   })
 

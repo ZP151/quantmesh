@@ -40,6 +40,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
+from quantmesh._fs import atomic_replace
 from quantmesh.events.models import EventMarket
 from quantmesh.settings import settings
 
@@ -426,7 +427,7 @@ class MappingLedger:
                 for record in records:
                     handle.write(record.model_dump_json())
                     handle.write("\n")
-            os.replace(temp_name, path)
+            atomic_replace(temp_name, path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)

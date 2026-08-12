@@ -77,7 +77,7 @@ export interface Markets {
 }
 
 export interface Watchlist {
-  entries: { symbol: string; mark: number }[]
+  entries: { venue: string | null; symbol: string; mark: number | null }[]
 }
 
 export interface Experiment {
@@ -213,6 +213,13 @@ export interface KillSwitch {
   kill_switches: Record<string, boolean>
 }
 
+export interface MarkStatus {
+  status: 'available' | 'stale' | 'unavailable'
+  provenance: string
+  received_at?: string | null
+  reason?: string | null
+}
+
 export interface Position {
   key: string
   instrument: Instrument
@@ -220,16 +227,20 @@ export interface Position {
   average_cost: number
   realized_pnl: number
   unrealized_pnl: number | null
+  mark_status?: MarkStatus | null
 }
 
 export interface PnL {
   starting_cash: number
   realized_pnl: number
-  unrealized_pnl: number
-  equity: number
-  total_pnl: number
+  unrealized_pnl: number | null
+  equity: number | null
+  total_pnl: number | null
   marks: Record<string, number>
+  mark_statuses?: Record<string, MarkStatus>
   missing_marks: string[]
+  valuation_complete?: boolean
+  valuation_reason?: string | null
 }
 
 export interface Health {
@@ -258,6 +269,12 @@ export interface DemoStatus {
   surfaces: Record<string, DemoSurfaceRow>
   last_update: string
   health: { status: string; seed: number }
+  retained_resets: { path: string; acknowledged: boolean; exists: boolean }[]
+  retained_reset_cleanup: {
+    mode: 'manual-only'
+    automatic_deletion_supported: false
+    instructions: string
+  }
 }
 
 export interface DemoOrderResult {
@@ -383,13 +400,16 @@ export interface LiveView {
 
 export interface LiveInstrumentState {
   venue: string
+  instrument: string
   label: LiveLabel
   kinds: Record<string, LiveView>
 }
 
+export type LiveInstrumentKey = `${string}:${string}`
+
 export interface LiveState {
   generated_at: string
-  instruments: Record<string, LiveInstrumentState>
+  instruments: Record<LiveInstrumentKey, LiveInstrumentState>
 }
 
 export interface LiveSource {
@@ -498,7 +518,21 @@ export type ComparisonPoint = DeepReadonly<components['schemas']['ComparisonPoin
 export type ComparisonSeries = DeepReadonly<components['schemas']['ComparisonSeries']>
 export type ForecastPath = DeepReadonly<components['schemas']['ForecastPath']>
 export type HistoricalPayload = DeepReadonly<components['schemas']['HistoricalPayload']>
-export type InstrumentWorkspace = DeepReadonly<components['schemas']['InstrumentWorkspace']>
+type GeneratedInstrumentWorkspace = components['schemas']['InstrumentWorkspace']
+type WorkspaceValuation = {
+  valuation_complete?: boolean
+  valuation_reason?: string | null
+}
+type WorkspacePositionEvidence = Omit<
+  NonNullable<GeneratedInstrumentWorkspace['position']>,
+  'mark_status'
+> & { mark_status?: MarkStatus | null }
+export type InstrumentWorkspace = DeepReadonly<
+  Omit<GeneratedInstrumentWorkspace, 'position' | 'risk'> & {
+    position?: WorkspacePositionEvidence | null
+    risk: GeneratedInstrumentWorkspace['risk'] & WorkspaceValuation
+  }
+>
 export type PaperProposal = DeepReadonly<components['schemas']['PaperProposal']>
 export type ProposalConfirmation = DeepReadonly<components['schemas']['ProposalConfirmation']>
 export type ProposalCreateInput = components['schemas']['ProposalCreateBody']
@@ -727,9 +761,9 @@ export const api = {
 
   // Slice 4 — the recorded replay surface over the local lake.
   replayExtent: () => request<ReplayExtent>('/api/live/replay/windows'),
-  priceTrail: (params: { symbols: string; limit?: number }) =>
-    request<{ trail: Record<string, number[]> }>(
-      `/api/live/price-trail?symbols=${encodeURIComponent(params.symbols)}&limit=${params.limit ?? 20}`,
+  priceTrail: (params: { identities: string; limit?: number }) =>
+    request<{ trail: Record<LiveInstrumentKey, number[]> }>(
+      `/api/live/price-trail?identities=${encodeURIComponent(params.identities)}&limit=${params.limit ?? 20}`,
     ),
   replayWindow: (params: { start?: string; end?: string; limit?: number }) =>
     request<ReplayWindow>(

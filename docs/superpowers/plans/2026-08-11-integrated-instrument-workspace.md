@@ -6,7 +6,7 @@
 
 **Architecture:** Frameworks run only in pinned subprocess environments and emit a small QuantMesh-owned JSON evidence contract. Product runtime remains FastAPI plus React; owned historical, forecast, proposal, and workspace services compose existing lake, live-feed, registry, paper-account, risk, and audit contracts. The SPA uses a single venue-aware route and a locally wrapped Lightweight Charts dependency, while all orders still cross the existing quote fence, deterministic risk gate, kill switches, matcher, and journal.
 
-**Tech Stack:** Python 3.13, Pydantic, FastAPI, DuckDB/Parquet, pandas/numpy/scikit-learn, React 19, TypeScript 6, Vite 8, TanStack Query, shadcn/ui, Tailwind 4, Lightweight Charts 5.2.0, Vitest, Playwright, Ruff, pytest.
+**Tech Stack:** Python 3.13, Pydantic, FastAPI, DuckDB/Parquet, pandas/numpy/scikit-learn, React 19, TypeScript 5.9.3, Vite 8, TanStack Query, shadcn/ui, Tailwind 4, Lightweight Charts 5.2.0, Vitest, Playwright, Ruff, pytest.
 
 ## Global Constraints
 
@@ -439,7 +439,7 @@ Run: `npm exec tsc -- --noEmit` in `frontend/`.
 
 Commit: `git commit -m "feat: expose historical instrument API (#107)"`.
 
-### Task 7: Truthful multi-horizon price forecast artifact
+### Task 7: Truthful multi-horizon price forecast artifact — completed
 
 **Files:**
 - Modify: `src/quantmesh/instruments/contracts.py`
@@ -450,7 +450,7 @@ Commit: `git commit -m "feat: expose historical instrument API (#107)"`.
 - Consumes: one manifest-gated daily `HistoricalSeries` with at least 315 observed sessions.
 - Produces: `PriceForecastArtifact`, `PriceForecastRegistry`, and `run_price_forecast(series, generated_at, model_version) -> PriceForecastArtifact`.
 
-- [ ] **Step 1: Write artifact, leakage, reproducibility, and gate tests**
+- [x] **Step 1: Write artifact, leakage, reproducibility, and gate tests**
 
 ```python
 def test_forecast_has_three_horizons_quantiles_and_lineage(nvda_series):
@@ -470,7 +470,7 @@ def test_future_flip_does_not_change_earlier_oos_predictions(nvda_series):
     assert original[:-1] == flipped[:-1]
 ```
 
-- [ ] **Step 2: Run red and define the artifact models**
+- [x] **Step 2: Run red and define the artifact models**
 
 Each artifact includes id, instrument, dataset/revision/source, generated-at,
 train start/end, model name/version/config digest, benchmark name, three
@@ -479,7 +479,7 @@ MAE/RMSE and 50/80/95-percent interval coverage per horizon, benchmark MAE,
 residual sample count, eligible flag, blockers, limitations, and artifact
 hashes.
 
-- [ ] **Step 3: Implement deterministic drift plus conformal intervals**
+- [x] **Step 3: Implement deterministic drift plus conformal intervals**
 
 For each origin, estimate median daily log-return from only the preceding 252
 observations; project `last_close * exp(median_return * k)`. Compute
@@ -488,7 +488,7 @@ empirical residual quantiles for the 50/80/95-percent boundaries, and use
 last-price random walk as benchmark. Generate future equity dates by
 Monday-Friday sessions and crypto dates daily.
 
-- [ ] **Step 4: Implement promotion gates**
+- [x] **Step 4: Implement promotion gates**
 
 Block when history has fewer than 315 sessions, any unexplained calendar gap
 or duplicate, fewer than 30 OOS residuals for 7/30 or 12 for 126,
@@ -497,17 +497,17 @@ benchmark MAE by more than 10 percent, artifact age exceeds one session, or
 any lineage field is absent. Always report 50/80/95 coverage; only the
 predeclared 80-percent range is an admission gate in this prototype.
 
-- [ ] **Step 5: Implement append-only registry and byte-stable artifacts**
+- [x] **Step 5: Implement append-only registry and byte-stable artifacts**
 
 Write `report.json`, `paths.csv`, `oos.csv` under `artifacts/forecasts/{artifact_id}/`; exclude `created_at` only from byte-identity if and only if it is not part of setup. Registry reads fail closed with file/line attribution, duplicate IDs refuse, and dataset pins re-resolve through the lake gate.
 
-- [ ] **Step 6: Verify and commit**
+- [x] **Step 6: Verify and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_price_forecast.py tests/test_research_models.py tests/test_research_reports.py --basetemp .pytest-0020-task7`
 
 Commit: `git commit -m "feat: add truthful multi-horizon price forecasts (#107)"`.
 
-### Task 8: Paper proposal lineage and operator confirmation
+### Task 8: Paper proposal lineage and operator confirmation — completed
 
 **Files:**
 - Modify: `src/quantmesh/instruments/contracts.py`
@@ -518,7 +518,7 @@ Commit: `git commit -m "feat: add truthful multi-horizon price forecasts (#107)"
 - Consumes: `PriceForecastArtifact`, `PaperAccount.submit`, `QuoteFence`, `OrderJournal`.
 - Produces: `ProposalLedger`, `PaperDecisionService.propose(...)`, and `PaperDecisionService.confirm(...) -> ProposalConfirmation`.
 
-- [ ] **Step 1: Write safety and idempotency tests**
+- [x] **Step 1: Write safety and idempotency tests**
 
 ```python
 def test_confirm_requires_operator_token_and_crosses_quote_fence(service, eligible_artifact):
@@ -533,25 +533,25 @@ def test_ineligible_forecast_kill_switch_and_stale_quote_each_block(service):
     assert service.propose(ineligible_artifact(), side=Side.BUY, quantity=1).status == "blocked"
 ```
 
-- [ ] **Step 2: Run red and define append-only proposal states**
+- [x] **Step 2: Run red and define append-only proposal states**
 
 Use states `pending`, `blocked`, `confirmed`, `rejected`; proposal identity pins artifact id, venue/symbol, side, quantity, order type, limit price, and confirmation nonce. The ledger records every transition with aware UTC time and rejects illegal or duplicate transitions.
 
-- [ ] **Step 3: Implement deterministic confirmation**
+- [x] **Step 3: Implement deterministic confirmation**
 
 Confirmation resolves the latest account and live snapshot, invokes `PaperAccount.submit(..., quote_fence=QuoteFence(), snapshot=...)` for real/delayed operation or an explicitly injected synthetic demo quote provider, records the order once with idempotency key `proposal:<id>`, then appends the proposal-to-order link. It never calls a broker SDK.
 
-- [ ] **Step 4: Preserve all existing safety failures verbatim**
+- [x] **Step 4: Preserve all existing safety failures verbatim**
 
 Return typed blockers for ineligible forecast, stale/gapped/unprovenanced quote, global/per-venue kill switch, max quantity/notional/position, matcher liquidity, duplicate confirmation, and missing journal. Do not translate a refusal into an order retry.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_paper_proposals.py tests/test_live_fence.py tests/test_orders.py --basetemp .pytest-0020-task8`
 
 Commit: `git commit -m "feat: add confirmed paper proposal lineage (#107)"`.
 
-### Task 9: Integrated workspace BFF and proposal API
+### Task 9: Integrated workspace BFF and proposal API — completed
 
 **Files:**
 - Create: `src/quantmesh/instruments/workspace.py`
@@ -564,23 +564,23 @@ Commit: `git commit -m "feat: add confirmed paper proposal lineage (#107)"`.
 - Consumes: history, live feed, price forecast registry, account, marks, risk limits, proposal service.
 - Produces: `GET /api/instruments/{venue}/{symbol}/workspace`, `POST /api/paper/proposals`, `POST /api/paper/proposals/{id}/confirm`, and frontend `InstrumentWorkspace` types.
 
-- [ ] **Step 1: Write one-response truth and mutation tests**
+- [x] **Step 1: Write one-response truth and mutation tests**
 
 Assert the workspace response carries one `generated_at`, history, live evidence, latest eligible/ineligible forecast, current position, P&L, paper limits, kill switches, and proposal capability. Assert proposal creation does not place an order, and confirmation creates exactly one journal order.
 
-- [ ] **Step 2: Run red and implement `InstrumentWorkspaceService.render`**
+- [x] **Step 2: Run red and implement `InstrumentWorkspaceService.render`**
 
 Capture one explicit clock, resolve each read model at that clock, and return typed unavailable sections instead of dropping keys. Position keys use existing `position_key(instrument)`; P&L uses existing `PaperAccount` methods and the same mark map as `/api/pnl`.
 
-- [ ] **Step 3: Add guarded mutation routes**
+- [x] **Step 3: Add guarded mutation routes**
 
 Apply `_json_guard_origin`, Pydantic request validation, 404 for unknown proposal, 409 for blocked/refused confirmation, and 200 for idempotent replay. Never accept account, quote, forecast eligibility, or risk result from browser input.
 
-- [ ] **Step 4: Add the typed frontend client**
+- [x] **Step 4: Add the typed frontend client**
 
 Expose `api.instrumentWorkspace`, `api.createPaperProposal`, and `api.confirmPaperProposal`; request bodies contain only venue, symbol, artifact id, side, quantity, optional limit, and confirmation token.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_instrument_workspace_api.py tests/test_api.py tests/test_spa_api.py --basetemp .pytest-0020-task9`
 
@@ -588,7 +588,7 @@ Run: `npm exec tsc -- --noEmit` in `frontend/`.
 
 Commit: `git commit -m "feat: compose instrument workspace API (#107)"`.
 
-### Task 10: Deep deterministic demo history and forecast/proposal assembly
+### Task 10: Deep deterministic demo history and forecast/proposal assembly — completed
 
 **Files:**
 - Modify: `src/quantmesh/demo/manifest.py`
@@ -601,29 +601,29 @@ Commit: `git commit -m "feat: compose instrument workspace API (#107)"`.
 - Consumes: Tasks 5-9 services.
 - Produces: seeded NVDA multi-resolution history, one eligible forecast artifact, one blocked artifact example, and resettable proposal ledger under the demo root.
 
-- [ ] **Step 1: Write deterministic seed/reset tests**
+- [x] **Step 1: Write deterministic seed/reset tests**
 
 Seed two roots and assert identical history/forecast/proposal artifact bytes; assert NVDA has 650 daily sessions and short-range intraday coverage; create and confirm one proposal, reset, and assert the proposal disappears while seeded state returns. The 650-session floor is required to fit 252 returns, observe 126-session outcomes, and evaluate later 126-session intervals without leakage.
 
-- [ ] **Step 2: Run red and expand the generator without wall-clock reads**
+- [x] **Step 2: Run red and expand the generator without wall-clock reads**
 
 Keep the current five-session live fixture contract unchanged. Add a separate historical generator for 650 daily sessions plus bounded 5-minute/30-minute/hourly windows, all derived from scenario seed and anchor and labeled `demo-synthetic`.
 
-- [ ] **Step 3: Seed the forecast registry and proposal service**
+- [x] **Step 3: Seed the forecast registry and proposal service**
 
 Run the real Task 7 pipeline over seeded NVDA history; bind history, price forecast, proposal ledger, and decision service into `create_workstation_app`. Demo confirmation uses the seeded order-book touch and labels the quote synthetic; non-demo confirmation continues to require the live quote fence.
 
-- [ ] **Step 4: Update demo provenance row counts**
+- [x] **Step 4: Update demo provenance row counts**
 
 Add surfaces `history`, `price_forecasts`, and `paper_proposals`; status/reset must derive counts from disk, not constants that can drift.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_demo_instrument_workspace.py tests/test_demo.py tests/test_datalink.py --basetemp .pytest-0020-task10`
 
 Commit: `git commit -m "feat: seed the integrated NVDA demo decision loop (#107)"` and push the backend phase checkpoint.
 
-### Task 11: Licensed market-chart adapter
+### Task 11: Licensed market-chart adapter — completed
 
 **Files:**
 - Modify: `frontend/package.json`
@@ -637,28 +637,28 @@ Commit: `git commit -m "feat: seed the integrated NVDA demo decision loop (#107)
 - Consumes: `HistoricalPayload` and forecast path DTOs.
 - Produces: `<InstrumentChart mode="candles|line" primary comparisons forecast volume />` with no direct library usage elsewhere.
 
-- [ ] **Step 1: Install the exact permissive dependency**
+- [x] **Step 1: Install the exact permissive dependency**
 
 Run: `npm install --save-exact lightweight-charts@5.2.0` in `frontend/`.
 
 Record Apache-2.0, package URL, version, unpacked size, TradingView attribution requirement, and NOTICE handling in license docs.
 
-- [ ] **Step 2: Write adapter lifecycle and accessible-fallback tests**
+- [x] **Step 2: Write adapter lifecycle and accessible-fallback tests**
 
 Mock `createChart`; assert one chart per mount, `remove()` on unmount, no
 duplicate series on rerender, resize handling, candlestick/line mode, volume
 histogram, comparison lines, forecast median plus 50/80/95 interval
 boundaries, and an off-canvas accessible summary table.
 
-- [ ] **Step 3: Run red and implement the single adapter**
+- [x] **Step 3: Run red and implement the single adapter**
 
 Use v5 APIs `createChart`, `CandlestickSeries`, `LineSeries`, and `HistogramSeries`. All numeric data arrives through props; set `autoSize`, UTC time scale, crosshair, locale-aware price formatting, and semantic green/neutral/red tokens. No venue fetch occurs in the component.
 
-- [ ] **Step 4: Implement state-safe updates**
+- [x] **Step 4: Implement state-safe updates**
 
 Create chart and series once in `useEffect`, update series with `setData`, preserve visible range on live-tail updates, call `fitContent` only on instrument/range changes, and honor reduced motion by disabling animated transitions.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `npm exec vitest run -- src/components/charts/InstrumentChart.test.tsx`.
 
@@ -666,7 +666,7 @@ Run: `npm run lint && npm run build`.
 
 Commit: `git commit -m "feat(frontend): add licensed instrument chart adapter (#107)"`.
 
-### Task 12: Venue-aware route and workspace state shell
+### Task 12: Venue-aware route and workspace state shell — completed
 
 **Files:**
 - Modify: `frontend/src/App.tsx`
@@ -682,23 +682,23 @@ Commit: `git commit -m "feat(frontend): add licensed instrument chart adapter (#
 - Consumes: `api.instrumentWorkspace` and existing live WebSocket hook.
 - Produces: canonical `/instruments/:venue/:symbol` screen and compatibility navigation from cockpit.
 
-- [ ] **Step 1: Write route, loading, error, and degraded-state tests**
+- [x] **Step 1: Write route, loading, error, and degraded-state tests**
 
 Render `/instruments/moomoo/NVDA`; assert venue and symbol are both sent to API, skeleton matches the three-column final layout, a 404 explains missing history, stale live state remains visible but blocks paper action, and `/cockpit/NVDA` links to the venue-aware route.
 
-- [ ] **Step 2: Run red and add the route**
+- [x] **Step 2: Run red and add the route**
 
 Add `<Route path="instruments/:venue/:symbol" element={<InstrumentWorkspaceScreen />} />`; retain the old cockpit detail route as a compatibility surface, not the primary implementation.
 
-- [ ] **Step 3: Implement the shell hierarchy**
+- [x] **Step 3: Implement the shell hierarchy**
 
 Use one sticky context header, one dominant chart canvas, a compact evidence strip, and a right decision rail at `xl`; collapse to chart then evidence then decision at 390 px. Use separators/negative space instead of nested cards; all numbers are tabular mono.
 
-- [ ] **Step 4: Add English and Simplified-Chinese state copy**
+- [x] **Step 4: Add English and Simplified-Chinese state copy**
 
 Add keys for ranges, chart modes, loading, missing history, resolution fallback, stale/gap, forecast blocked, no position, proposal blocked, confirm, rejected, and audit lineage. Do not add visible untranslated literals.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `npm exec vitest run -- src/screens/InstrumentWorkspace.test.tsx src/lib/messages.test.ts`.
 
@@ -706,7 +706,7 @@ Run: `npm exec tsc -- --noEmit && npm run lint`.
 
 Commit: `git commit -m "feat(frontend): add venue-aware instrument workspace shell (#107)"`.
 
-### Task 13: Observed chart, ranges, indicators, and comparisons
+### Task 13: Observed chart, ranges, indicators, and comparisons — completed
 
 **Files:**
 - Create: `frontend/src/screens/instrument/MarketCanvas.tsx`
@@ -719,29 +719,29 @@ Commit: `git commit -m "feat(frontend): add venue-aware instrument workspace she
 - Consumes: Task 11 chart adapter and Task 6 historical payload.
 - Produces: operator controls for `1D/5D/1M/3M/6M/1Y`, line/candle mode, volume, SMA20/SMA50, realized volatility, drawdown, and at most three normalized peers.
 
-- [ ] **Step 1: Write interaction and truthfulness tests**
+- [x] **Step 1: Write interaction and truthfulness tests**
 
 Assert range changes refetch with the selected range, comparison selection is capped at three, indicators derive only from observed closes, live tails do not duplicate the last bar, disabled controls explain unavailable resolution, and tooltip text identifies observed versus forecast values.
 
-- [ ] **Step 2: Run red and implement range/chart controls**
+- [x] **Step 2: Run red and implement range/chart controls**
 
 Use shadcn-owned button/toggle primitives with real labels and `aria-pressed`; preserve controls in URL query parameters so refresh/back navigation retains context.
 
-- [ ] **Step 3: Implement bounded indicators**
+- [x] **Step 3: Implement bounded indicators**
 
 Compute SMA20, SMA50, annualized realized volatility from log returns, and drawdown in pure TypeScript helpers with finite-number guards. No RSI/MACD library or unbounded indicator menu enters this slice.
 
-- [ ] **Step 4: Implement normalized peer comparison**
+- [x] **Step 4: Implement normalized peer comparison**
 
 Render API-produced rebased series and label them `Indexed to 100 at <shared timestamp>`; never normalize independently in the browser or forward-fill a gap.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `npm exec vitest run -- src/screens/instrument/MarketCanvas.test.tsx src/components/charts/InstrumentChart.test.tsx`.
 
 Commit: `git commit -m "feat(frontend): add observed chart analysis controls (#107)"`.
 
-### Task 14: Forecast evidence and paper decision rail
+### Task 14: Forecast evidence and paper decision rail — completed
 
 **Files:**
 - Create: `frontend/src/screens/instrument/ForecastEvidence.tsx`
@@ -754,7 +754,7 @@ Commit: `git commit -m "feat(frontend): add observed chart analysis controls (#1
 - Consumes: Task 9 workspace/proposal APIs.
 - Produces: horizon selector, uncertainty/quality/lineage evidence, current position/P&L/risk, proposal preview, explicit confirmation, and resulting order/audit link.
 
-- [ ] **Step 1: Write decision-flow tests**
+- [x] **Step 1: Write decision-flow tests**
 
 Assert 7/30/126-session paths display the median, selectable 50/80/95
 intervals and vintage; ineligible forecasts show blockers and disable
@@ -762,19 +762,19 @@ proposal; proposal preview does not order; confirmation requires the displayed
 token/action; stale quote and kill switch refusals remain visible; successful
 confirmation shows order id and audit link; retry does not duplicate.
 
-- [ ] **Step 2: Run red and implement forecast evidence**
+- [x] **Step 2: Run red and implement forecast evidence**
 
 Show benchmark comparison, OOS MAE/RMSE/coverage, sample count, dataset revision, model version/config digest, train cutoff, generated-at, limitations, and promotion state. Label synthetic demo artifacts on every forecast block.
 
-- [ ] **Step 3: Implement current portfolio/risk context**
+- [x] **Step 3: Implement current portfolio/risk context**
 
 Show position quantity, average cost, marked/unmarked P&L, account equity, max quantity/notional/position, global/per-venue kill-switch state, and quote freshness. Missing marks render `Unavailable`, never zero.
 
-- [ ] **Step 4: Implement two-stage paper action**
+- [x] **Step 4: Implement two-stage paper action**
 
 Stage one creates a proposal from side/quantity/optional limit. Stage two renders the immutable proposal facts and requires explicit confirmation. Disable action while mutation is pending; preserve the backend refusal message; on success invalidate workspace/orders/positions/P&L/audit queries.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `npm exec vitest run -- src/screens/instrument/DecisionRail.test.tsx src/screens/InstrumentWorkspace.test.tsx`.
 
@@ -796,35 +796,35 @@ Commit: `git commit -m "feat(frontend): complete forecast-to-paper decision rail
 - Consumes: complete demo workspace.
 - Produces: browser-proven NVDA inspect-to-paper loop and durable visual/operational record.
 
-- [ ] **Step 1: Write the failing Playwright acceptance**
+- [x] **Step 1: Write the failing Playwright acceptance**
 
 Walk: open NVDA route, switch 6M to 1M, toggle candles/line, enable volume/SMA20, compare AAPL, inspect 30-session forecast and lineage, create BUY 10 proposal, confirm, observe fill/position/P&L/risk/audit link, engage kill switch, verify next proposal receives 409, reset, verify deterministic state.
 
-- [ ] **Step 2: Add keyboard, locale, and 390 px assertions**
+- [x] **Step 2: Add keyboard, locale, and 390 px assertions**
 
 Tab through all controls in logical order; use controls without mouse; switch zh-CN and assert translated range/forecast/proposal copy; assert no horizontal overflow at 390 px; assert focus visibility and reduced-motion behavior; include landmarks and chart accessible summary.
 
-- [ ] **Step 3: Run the browser suite and fix product defects test-first**
+- [x] **Step 3: Run the browser suite and fix product defects test-first**
 
 Run: `.\.venv\Scripts\python.exe -m pytest -q tests/test_instrument_workspace_e2e.py tests/test_workstation_e2e.py --basetemp .pytest-0020-task15`
 
 Expected after fixes: PASS with no browser skip in the acceptance environment.
 
-- [ ] **Step 4: Run the Impeccable mechanical detector once**
+- [x] **Step 4: Run the Impeccable mechanical detector once**
 
 Run: `node .codex/skills/impeccable/scripts/detect.mjs --json frontend/src/screens/InstrumentWorkspace.tsx frontend/src/screens/instrument frontend/src/components/charts/InstrumentChart.tsx frontend/src/index.css`.
 
 Fix all mechanical findings, then do not rerun the detector. Capture desktop dark/light and 390 px screenshots for the fresh finish reviewer.
 
-- [ ] **Step 5: Run the fresh Impeccable finish review and close findings**
+- [x] **Step 5: Run the fresh Impeccable finish review and close findings**
 
 Provide the reviewer the original objective, screenshots, design read, changed files, PRODUCT.md, and the product-register constraints. Apply one batched fix round, recapture, and obtain a verdict with no open material finding before claiming UI completion.
 
-- [ ] **Step 6: Record the built visual system and golden path**
+- [x] **Step 6: Record the built visual system and golden path**
 
 Write `DESIGN.md` from the implemented tokens/components: restrained black/green palette, Geist/mono numeric hierarchy, 10 px base radius, separator-first dense layout, chart palette, semantic states, motion durations, responsive rail collapse, and accessibility rules. Extend `tools/golden_path.py` with the workspace GET, proposal preview, confirmation, lineage, kill-switch refusal, and reset checks.
 
-- [ ] **Step 7: Verify and commit**
+- [x] **Step 7: Verify and commit**
 
 Run: `.\.venv\Scripts\python.exe tools/golden_path.py`.
 

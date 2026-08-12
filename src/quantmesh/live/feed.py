@@ -102,11 +102,9 @@ def _continuity_proof(
     if previous is None:
         return _ContinuityProof(False, None, None)
     predecessor = _ContinuityProof(False, previous.sequence, previous.data_time)
-    if current.kind is not UpdateKind.CANDLE or previous.kind is not UpdateKind.CANDLE:
+    if current.kind is not previous.kind:
         return predecessor
     if current.sequence_gap or previous.sequence_gap:
-        return predecessor
-    if type(current.sequence) is not int or type(previous.sequence) is not int:
         return predecessor
     if not all(
         _is_aware(value)
@@ -118,6 +116,27 @@ def _continuity_proof(
         )
     ):
         return predecessor
+    if current.received_at < previous.received_at:
+        return predecessor
+    if current.kind is not UpdateKind.CANDLE:
+        sequence_ordered = (
+            type(current.sequence) is int
+            and type(previous.sequence) is int
+            and current.sequence > previous.sequence
+        )
+        receipt_ordered = (
+            current.sequence is None
+            and previous.sequence is None
+            and current.received_at > previous.received_at
+        )
+        if (
+            not (sequence_ordered or receipt_ordered)
+            or current.data_time < previous.data_time
+        ):
+            return predecessor
+        return _ContinuityProof(True, previous.sequence, previous.data_time)
+    if type(current.sequence) is not int or type(previous.sequence) is not int:
+        return predecessor
     previous_interval = previous.payload.get("interval")
     current_interval = current.payload.get("interval")
     if not isinstance(previous_interval, str) or current_interval != previous_interval:
@@ -125,8 +144,6 @@ def _continuity_proof(
     try:
         duration = interval_to_timedelta(current_interval)
     except ValueError:
-        return predecessor
-    if current.received_at < previous.received_at:
         return predecessor
     same_bar = current.data_time == previous.data_time
     next_bar = current.data_time == previous.data_time + duration
@@ -200,6 +217,11 @@ class LiveFeed:
         self._supervisors: list[VenueSupervisor] = []
         self._subscribers: set[asyncio.Queue[MarketUpdate]] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
+
+    @property
+    def replay_buffer(self) -> LiveBuffer | None:
+        """The attached local replay authority, when persistence is enabled."""
+        return self._lake
 
     # -- deterministic surface (drills) -------------------------------------
 
@@ -306,8 +328,11 @@ class LiveFeed:
         )
 
     def latest_state(self, *, now: datetime | None = None) -> dict[str, object]:
-        """One entry per instrument: the latest update per kind plus the
-        newest update's provenance/age label (the watchlist badge)."""
+        """One entry per venue/instrument identity with latest views by kind.
+
+        The canonical ``venue:instrument`` key keeps equal symbols from
+        different venues independent through the wire and frontend state.
+        """
         now = now if now is not None else datetime.now(UTC)
         instruments: dict[str, dict[str, object]] = {}
         newest: dict[str, MarketUpdate] = {}
@@ -317,13 +342,14 @@ class LiveFeed:
                 for key, update in sorted(self._latest.items())
             ]
         for (venue, instrument, kind), update in latest:
-            entry = instruments.setdefault(instrument, {"venue": venue})
+            identity = f"{venue}:{instrument}"
+            entry = instruments.setdefault(identity, {"venue": venue, "instrument": instrument})
             kinds = entry.setdefault("kinds", {})  # type: ignore[assignment]
             kinds[kind] = _view(update, now, lag=self.lag)  # type: ignore[index]
-            if instrument not in newest or update.received_at > newest[instrument].received_at:
-                newest[instrument] = update
-        for instrument, update in newest.items():
-            instruments[instrument]["label"] = label(update, now, lag=self.lag)
+            if identity not in newest or update.received_at > newest[identity].received_at:
+                newest[identity] = update
+        for identity, update in newest.items():
+            instruments[identity]["label"] = label(update, now, lag=self.lag)
         return {"generated_at": now.isoformat(), "instruments": instruments}
 
     def statuses(self, *, now: datetime | None = None) -> dict[str, object]:
@@ -402,11 +428,11 @@ class LiveFeed:
         return self._lake.replay(start=start, end=end, limit=limit)
 
     def price_trail(
-        self, symbols: list[str], limit: int = 20
+        self, identities: list[tuple[str, str]], limit: int = 20
     ) -> dict[str, list[float]]:
         if self._lake is None:
             raise ValueError("no replay lake is attached")
-        return self._lake.price_trail(symbols, limit=limit)
+        return self._lake.price_trail(identities, limit=limit)
 
     def replay_extent(self) -> dict[str, object] | None:
         """The recorded extent of the attached lake: earliest/latest

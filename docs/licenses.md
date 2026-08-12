@@ -161,9 +161,11 @@ part of the Python runtime dependency closure:
 
 ADR-0013 Decision 5 budget: permissive licenses only; any dependency
 outside the adopted set enters through a license/maintenance check
-recorded here and in `docs/REUSE_MATRIX.md`. The check: `npm audit`
-for advisories plus an allowlist scan of `package-lock.json`
-(`node -e` walk of `lock.packages` — no network). **646 packages**
+recorded here and in `docs/REUSE_MATRIX.md`. The checks are `npm audit
+--audit-level=high` for advisories plus the fail-closed, stdlib-only
+`python tools/npm_license_review.py` scan of `package-lock.json` (no network).
+They run in PR CI, the path-filtered Security workflow and the clean-checkout
+release gate. **646 packages**
 (lockfile v3, root entry excluded, all platform variants included), **every license
 allowlisted**: MIT 562, ISC 26, MPL-2.0 24, Apache-2.0 11,
 BSD-3-Clause 8, BSD-2-Clause 7, BlueOak-1.0.0 2, 0BSD 1, MIT-0 1,
@@ -212,9 +214,10 @@ source-available restriction, no untracked package.
   `@fontsource-variable/geist`, `@rolldown/binding-win32-x64-msvc`
   (Vite's bundler binary) — all permissive (MIT / Apache-2.0 /
   BSD-3-Clause / OFL-1.1 as scanned above).
-- Maintenance: `npm audit` runs as part of the release gate; a
-  dependency change beyond patch level triggers a re-check of this
-  section and the lockfile scan.
+- Maintenance: both frontend gates run on every PR and release candidate;
+  package/lock changes also trigger the Security workflow. A dependency
+  change beyond patch level requires a re-check of this section and the
+  explicit SPDX allowlist.
 
 ## Inventory (generated 2026-08-08; 64 packages in the release
 closure `.[dev,research,e2e]`)

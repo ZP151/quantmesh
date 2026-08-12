@@ -8,13 +8,13 @@ inside the gate's clean checkout:
 
 1. ``pyproject.toml`` and ``quantmesh/__init__.py`` agree on the package
    version (already unit-pinned in tests/test_release.py).
-2. The newest ``docs/release-notes/v0.1.0-rc*.md`` file declares the
+2. The newest English ``docs/release-notes/v*.md`` file declares the
    *same* version — the notes are the human-declared release intent, so
    a notes/metadata drift (the rc2 defect) fails here before any tag.
-3. If any ``v<version>`` tag points at HEAD, the tag version equals the
+3. If any release-version tag points at HEAD, the tag version equals the
    package version — a mismatched tag can never be gated green.
-4. The version is either a PEP 440 prerelease or the explicitly accepted first
-   product release ``0.1.0``.
+4. The version is either a PEP 440 prerelease or an explicitly accepted stable
+   ``0.1.x`` product release.
 
 Exits 0 with a one-line summary; exits 1 naming the first mismatch.
 """
@@ -40,18 +40,17 @@ def _git(*args: str) -> str:
 
 
 def _release_note_version() -> str | None:
-    """The version declared by the current 0.1.0 release notes, if any."""
-    if (NOTES_DIR / "v0.1.0.md").exists():
-        return "0.1.0"
-    newest: tuple[int, Path] | None = None
-    for path in NOTES_DIR.glob("v0.1.0-rc*.md"):
-        match = re.fullmatch(r"v0\.1\.0-rc(\d+)\.md", path.name)
-        if not match:
+    """Return the highest PEP 440 version declared by English release notes."""
+    versions: list[Version] = []
+    for path in NOTES_DIR.glob("v*.md"):
+        match = re.fullmatch(r"v(\d+\.\d+\.\d+)(?:-rc(\d+))?\.md", path.name)
+        if match is None:
             continue
-        number = int(match.group(1))
-        if newest is None or number > newest[0]:
-            newest = (number, path)
-    return None if newest is None else f"0.1.0rc{newest[0]}"
+        candidate = match.group(1)
+        if match.group(2) is not None:
+            candidate += f"rc{match.group(2)}"
+        versions.append(Version(candidate))
+    return None if not versions else str(max(versions))
 
 
 def _head_version_tags() -> list[str]:
@@ -59,7 +58,7 @@ def _head_version_tags() -> list[str]:
     return [
         tag
         for tag in tags
-        if re.fullmatch(r"v0\.1\.0(-rc\d+)?", tag) and tag != "v0.1.0-rc1"
+        if re.fullmatch(r"v\d+\.\d+\.\d+(-rc\d+)?", tag)
     ]
 
 
@@ -91,8 +90,10 @@ def main() -> int:
             return 1
 
     parsed_version = Version(version)
-    if not parsed_version.is_prerelease and parsed_version != Version("0.1.0"):
-        print(f"FAIL: {version} is neither a prerelease nor the accepted 0.1.0 release")
+    if not parsed_version.is_prerelease and not (
+        parsed_version.major == 0 and parsed_version.minor == 1
+    ):
+        print(f"FAIL: {version} is neither a prerelease nor an accepted 0.1.x release")
         return 1
 
     tag_summary = ",".join(_head_version_tags()) or "none"

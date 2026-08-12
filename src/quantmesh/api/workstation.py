@@ -64,22 +64,35 @@ from quantmesh import __version__
 from quantmesh.ai.decisions import DecisionLog
 from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.api.app import _order_summary, create_app
-from quantmesh.api.watchlist import WatchlistError, WatchlistStore
+from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
 from quantmesh.domain.models import Instrument, Quote, Venue
 from quantmesh.domain.orders import Order
 from quantmesh.events.forecast import ForecastReportRegistry, forecast_artifact_paths
 from quantmesh.events.mapping import MappingLedger
+from quantmesh.execution.account_store import (
+    PaperAccountFile,
+    PaperAccountStore,
+    recover_account_from_journal,
+)
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
 from quantmesh.instruments.api import instrument_router
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.live_history import LiveHistoryService
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.api import live_router
+from quantmesh.live.contract import UpdateKind
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.fence import QuoteFence
+from quantmesh.live.marks import (
+    AccountValuationSnapshot,
+    LiveMarkSnapshot,
+    account_valuation_snapshot,
+    live_mark_snapshot,
+)
 from quantmesh.live.prediction import PredictionBoard
 from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
@@ -224,12 +237,13 @@ class Page:
     label: str
 
 
-def _mark_for(markets: Mapping[str, Mapping[str, float]], symbol: str) -> float | None:
-    """The first venue's mark for a symbol, venues sorted — deterministic."""
-    for venue in sorted(markets):
-        if symbol in markets[venue]:
-            return markets[venue][symbol]
-    return None
+def _watchlist_entry(
+    markets: Mapping[str, Mapping[str, float]],
+    record: WatchlistRecord,
+) -> dict[str, object]:
+    venue = record.venue.value if record.venue is not None else None
+    mark = markets.get(venue, {}).get(record.symbol) if venue is not None else None
+    return {"venue": venue, "symbol": record.symbol, "mark": mark}
 
 
 def _overview_provider(context: PageContext) -> dict[str, object]:
@@ -243,8 +257,11 @@ def _overview_provider(context: PageContext) -> dict[str, object]:
         venues.append({"venue": venue, "instruments": instruments})
     watchlist_entries = (
         [
-            {"symbol": record.symbol, "mark": _mark_for(context.markets, record.symbol)}
-            for record in sorted(context.watchlist.all(), key=lambda item: item.symbol)
+            _watchlist_entry(context.markets, record)
+            for record in sorted(
+                context.watchlist.all(),
+                key=lambda item: (item.symbol, item.venue.value if item.venue else ""),
+            )
         ]
         if context.watchlist is not None
         else []
@@ -277,10 +294,13 @@ def _instruments_provider(context: PageContext) -> dict[str, object]:
 def _watchlist_provider(context: PageContext) -> dict[str, object]:
     records = context.watchlist.all() if context.watchlist is not None else []
     entries = [
-        {"symbol": record.symbol, "mark": _mark_for(context.markets, record.symbol)}
-        for record in sorted(records, key=lambda item: item.symbol)
+        _watchlist_entry(context.markets, record)
+        for record in sorted(
+            records,
+            key=lambda item: (item.symbol, item.venue.value if item.venue else ""),
+        )
     ]
-    return {"entries": entries}
+    return {"entries": entries, "venues": sorted(context.markets)}
 
 
 def _fmt_parameter(value: object) -> str:
@@ -767,6 +787,20 @@ def _json_context(request: Request) -> PageContext:
     context = getattr(request.app.state, "page_context", None)
     if context is None:
         raise HTTPException(status_code=404, detail="no workstation context is attached")
+    provider = getattr(request.app.state, "mark_snapshot_provider", None)
+    if callable(provider):
+        state = provider()
+        if isinstance(state, AccountValuationSnapshot):
+            return replace(
+                context,
+                account=state.account,
+                marks=dict(state.marks),
+            )
+        return replace(
+            context,
+            account=request.app.state.account,
+            marks=dict(state["marks"]),
+        )
     return context
 
 
@@ -831,10 +865,8 @@ def spa_router() -> APIRouter:
     @router.post("/kill-switch")
     def kill_switch_json(request: Request, body: _KillSwitchBody) -> dict[str, object]:
         _json_guard_origin(request, "kill-switch")
-        context = _json_context(request)
-        if body.venue is None:
-            flipped = context.account.model_copy(update={"kill_switch": body.action == "engage"})
-        else:
+        venue_enum = None
+        if body.venue is not None:
             try:
                 venue_enum = Venue(body.venue)
             except ValueError:
@@ -842,16 +874,20 @@ def spa_router() -> APIRouter:
                     status_code=422,
                     detail=f"kill-switch POST refused: unknown venue {body.venue!r}",
                 ) from None
-            kill_switches = dict(context.account.kill_switches)
+
+        def flip(current: PaperAccount) -> PaperAccount:
+            if venue_enum is None:
+                return current.model_copy(update={"kill_switch": body.action == "engage"})
+            kill_switches = dict(current.kill_switches)
             if body.action == "engage":
                 kill_switches[venue_enum] = True
             else:
                 kill_switches.pop(venue_enum, None)
-            flipped = context.account.model_copy(update={"kill_switches": kill_switches})
-        flipped_context = replace(context, account=flipped)
-        request.app.state.account = flipped
-        request.app.state.page_context = flipped_context
-        return _kill_switch_provider(flipped_context)
+            return current.model_copy(update={"kill_switches": kill_switches})
+
+        store: PaperAccountStore = request.app.state.account_store
+        flipped = store.update(flip)
+        return _kill_switch_provider(replace(_json_context(request), account=flipped))
 
     return router
 
@@ -1060,16 +1096,43 @@ def create_workstation_app(
         hl_posture=hl_posture,
         enablement=enablement,
     )
-    app.state.history = history
+    effective_history = (
+        LiveHistoryService(history, live_feed) if live_feed is not None else history
+    )
+    app.state.history = effective_history
     app.state.price_forecasts = price_forecasts
     clock = workspace_clock if workspace_clock is not None else lambda: datetime.now(UTC)
     app.state.instrument_clock = clock
 
-    def replace_account(updated: PaperAccount) -> None:
-        app.state.account = updated
-        app.state.page_context = replace(app.state.page_context, account=updated)
+    def publish_account(updated: PaperAccount) -> None:
         if account_sink is not None:
             account_sink(updated)
+        app.state.account = updated
+        app.state.page_context = replace(app.state.page_context, account=updated)
+
+    account_store = PaperAccountStore(account, publish=publish_account)
+    app.state.account_store = account_store
+
+    def mark_snapshot_provider(as_of: datetime | None = None) -> AccountValuationSnapshot:
+        valuation_at = clock() if as_of is None else as_of
+        current = account_store.get()
+        if live_feed is None:
+            return account_valuation_snapshot(
+                current,
+                LiveMarkSnapshot(marks=dict(app.state.marks), statuses={}),
+            )
+        snapshot = live_mark_snapshot(
+            current,
+            base_marks=dict(app.state.marks),
+            feed=live_feed,
+            as_of=valuation_at,
+        )
+        return account_valuation_snapshot(current, snapshot)
+
+    app.state.mark_snapshot_provider = mark_snapshot_provider
+
+    def replace_account(updated: PaperAccount) -> None:
+        account_store.replace(updated)
 
     app.state.replace_account = replace_account
 
@@ -1078,13 +1141,21 @@ def create_workstation_app(
         paper_decisions = PaperDecisionService(
             ledger=proposal_ledger,
             forecast_registry=price_forecasts,
-            account_provider=lambda: app.state.account,
+            account_provider=account_store.get,
             account_sink=replace_account,
+            account_transaction=account_store.transaction,
             journal=journal,
             snapshot_provider=(
-                (lambda: live_feed.latest_state(now=clock()))
+                (
+                    lambda instrument, now: live_feed.snapshot_exact(
+                        instrument.venue,
+                        instrument.symbol,
+                        UpdateKind.QUOTE,
+                        as_of=now,
+                    )
+                )
                 if live_feed is not None
-                else lambda: None
+                else lambda _instrument, _now: None
             ),
             quote_fence=QuoteFence(),
             demo_quote_provider=demo_quote_provider,
@@ -1092,12 +1163,13 @@ def create_workstation_app(
         )
         app.state.paper_decisions = paper_decisions
         app.state.proposal_service = paper_decisions
-    if history is not None:
+    if effective_history is not None:
         app.state.instrument_workspace = InstrumentWorkspaceService(
-            history=history,
+            history=effective_history,
             forecasts=price_forecasts,
-            account_provider=lambda: app.state.account,
-            marks_provider=lambda: app.state.marks,
+            account_provider=account_store.get,
+            marks_provider=lambda: mark_snapshot_provider(clock()).marks,
+            valuation_provider=mark_snapshot_provider,
             live_feed=live_feed,
             decisions=paper_decisions,
             now=clock,
@@ -1250,7 +1322,11 @@ def _register_spa_serving(app: FastAPI) -> None:
 
 def _register_watchlist_forms(app: FastAPI) -> None:
     @app.post("/watchlist/add", response_class=HTMLResponse)
-    def watchlist_add(request: Request, symbol: str = Form(...)) -> Response:
+    def watchlist_add(
+        request: Request,
+        symbol: str = Form(...),
+        venue: str | None = Form(None),
+    ) -> Response:
         refused = _guard_origin(app, request, "/watchlist", "watchlist")
         if refused is not None:
             return refused
@@ -1258,13 +1334,22 @@ def _register_watchlist_forms(app: FastAPI) -> None:
         if context.watchlist is None:
             return _error_page(app, request, "/watchlist", "no watchlist store is bound")
         try:
-            context.watchlist.add(symbol)
+            selected_venue = venue.strip() if venue and venue.strip() else None
+            if selected_venue is None:
+                matches = [name for name, rows in context.markets.items() if symbol in rows]
+                if len(matches) == 1:
+                    selected_venue = matches[0]
+            context.watchlist.add(symbol, venue=selected_venue)
         except WatchlistError as error:
             return _error_page(app, request, "/watchlist", str(error))
         return RedirectResponse("/watchlist", status_code=303)
 
     @app.post("/watchlist/remove", response_class=HTMLResponse)
-    def watchlist_remove(request: Request, symbol: str = Form(...)) -> Response:
+    def watchlist_remove(
+        request: Request,
+        symbol: str = Form(...),
+        venue: str | None = Form(None),
+    ) -> Response:
         refused = _guard_origin(app, request, "/watchlist", "watchlist")
         if refused is not None:
             return refused
@@ -1272,7 +1357,8 @@ def _register_watchlist_forms(app: FastAPI) -> None:
         if context.watchlist is None:
             return _error_page(app, request, "/watchlist", "no watchlist store is bound")
         try:
-            context.watchlist.remove(symbol)
+            selected_venue = venue.strip() if venue and venue.strip() else None
+            context.watchlist.remove(symbol, venue=selected_venue)
         except WatchlistError as error:
             return _error_page(app, request, "/watchlist", str(error))
         return RedirectResponse("/watchlist", status_code=303)
@@ -1398,10 +1484,8 @@ def _register_kill_switch(app: FastAPI) -> None:
                 "kill-switch POST refused: expected a confirm form "
                 "(action=engage|disarm and confirm=confirm)",
             )
-        context = app.state.page_context
-        if venue is None:
-            flipped = context.account.model_copy(update={"kill_switch": action == "engage"})
-        else:
+        venue_enum = None
+        if venue is not None:
             try:
                 venue_enum = Venue(venue)
             except ValueError:
@@ -1411,14 +1495,18 @@ def _register_kill_switch(app: FastAPI) -> None:
                     "/kill-switch/control",
                     f"kill-switch POST refused: unknown venue {venue!r}",
                 )
-            kill_switches = dict(context.account.kill_switches)
+        def flip(current: PaperAccount) -> PaperAccount:
+            if venue_enum is None:
+                return current.model_copy(update={"kill_switch": action == "engage"})
+            kill_switches = dict(current.kill_switches)
             if action == "engage":
                 kill_switches[venue_enum] = True
             else:
                 kill_switches.pop(venue_enum, None)
-            flipped = context.account.model_copy(update={"kill_switches": kill_switches})
-        app.state.account = flipped
-        app.state.page_context = replace(context, account=flipped)
+            return current.model_copy(update={"kill_switches": kill_switches})
+
+        store: PaperAccountStore = app.state.account_store
+        store.update(flip)
         return RedirectResponse("/kill-switch/control", status_code=303)
 
 
@@ -1549,6 +1637,12 @@ def main(argv: list[str] | None = None) -> None:
     else:
         account = PaperAccount(cash=100_000.0)
         if args.live:
+            from quantmesh.data.lake import Lake
+            from quantmesh.execution.journal import OrderJournal
+            from quantmesh.instruments.forecast import PriceForecastRegistry
+            from quantmesh.instruments.history import HistoryService
+            from quantmesh.instruments.live_history import discover_history_bindings
+            from quantmesh.instruments.proposals import ProposalLedger
             from quantmesh.live.buffer import LiveBuffer
             from quantmesh.live.feed import LiveFeed
             from quantmesh.live.hyperliquid import (
@@ -1564,7 +1658,15 @@ def main(argv: list[str] | None = None) -> None:
                     "--live requires a watchlist: set QUANTMESH_LIVE_WATCHLIST "
                     "(e.g. BTC,ETH,SOL,HYPE)"
                 )
-            feed = LiveFeed(lake=LiveBuffer(root=settings.lake_root))
+            replay = LiveBuffer(root=settings.lake_root)
+            account_snapshot = PaperAccountFile(settings.orders_dir)
+            account = account_snapshot.load_or_create(account)
+            journal = OrderJournal(settings.orders_dir)
+            recovered_account = recover_account_from_journal(account, journal.all())
+            if recovered_account != account:
+                account_snapshot.save(recovered_account)
+                account = recovered_account
+            feed = LiveFeed(lake=replay)
             supervisor = HyperliquidVenueSupervisor(
                 LiveHyperliquidTransport(settings.hyperliquid_ws_url)
             )
@@ -1640,8 +1742,25 @@ def main(argv: list[str] | None = None) -> None:
                 )
                 moomoo.subscribe(symbols)
                 feed.attach(moomoo)
+            bindings = discover_history_bindings(settings.lake_root)
+            history = (
+                HistoryService(bindings, dataset_loader=Lake(settings.lake_root).dataset)
+                if bindings
+                else None
+            )
             app = create_workstation_app(
-                account=account, live_feed=feed, prediction=prediction, host=host
+                account=account,
+                history=history,
+                price_forecasts=PriceForecastRegistry(
+                    lake_root=settings.lake_root,
+                    bindings=bindings,
+                ),
+                proposal_ledger=ProposalLedger(settings.orders_dir / "proposals"),
+                journal=journal,
+                account_sink=account_snapshot.save,
+                live_feed=feed,
+                prediction=prediction,
+                host=host,
             )
         else:
             app = create_workstation_app(account=account, host=host)
