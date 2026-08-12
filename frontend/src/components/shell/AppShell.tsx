@@ -205,9 +205,12 @@ export function AppShell() {
                 className="gap-1 border-amber-500/60 bg-amber-500/10 font-mono text-[10px] text-amber-800 dark:text-amber-300"
               >
                 <AlertTriangle className="size-3" aria-hidden />
-                {t('shell.retainedResetWarning', {
-                  count: String(retainedResets.length),
-                })}
+                <span className="sm:hidden" aria-hidden>{retainedResets.length}</span>
+                <span className="hidden sm:inline">
+                  {t('shell.retainedResetWarning', {
+                    count: String(retainedResets.length),
+                  })}
+                </span>
               </Badge>
             )}
 
