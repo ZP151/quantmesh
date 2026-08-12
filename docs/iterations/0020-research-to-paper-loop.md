@@ -732,6 +732,18 @@ not sufficient for cross-agent recovery.
   release frontier is the clean-checkout gate, single PR/CI/squash merge,
   immutable tag on merged `main`, and isolated operator acceptance. No
   `v0.1.1-rc1` tag exists yet.
+- Clean-checkout gate attempt 1 on `73ef855` completed all 17 substantive
+  steps successfully: exact clone/version, fresh install, Ruff, Python/npm
+  license closures, pip/npm audits, bundle check, Vitest, full pytest
+  (`2591 passed, 4 skipped`, 896.6 s), golden path (73.2 s) and clone-clean
+  proof. The gate process nevertheless exited 1 while echoing the golden-path
+  log into a CP1252 Windows console: a retained Unicode replacement character
+  was not encodable. That is a release-tool defect, so the attempt is not
+  accepted as a passing gate. Commit `fafe519` adds a narrow console-safe
+  summary printer and a CP1252 regression (red before implementation; 6/6
+  release/frontend-security tests green). A complete gate rerun on the final
+  documentation commit remains mandatory; the first attempt is evidence, not
+  a waiver.
 
 ## Acceptance criteria
 

@@ -102,6 +102,13 @@ vulnerabilities, 646 locked frontend licenses accepted, current generated API
 and packaged SPA bundle. No merge or release tag is allowed until the fresh
 clean-checkout gate and protected-branch CI pass.
 
+The first clean-checkout gate attempt on `73ef855` proved every one of its 17
+substantive steps, including clone-clean state, but the runner exited 1 while
+printing a replacement character into a CP1252 console. `fafe519` closes that
+release-tool bug with a failing-then-passing console regression. Because the
+verified commit changed, the full clean-checkout gate must run again before
+the PR; no partial result is promoted to PASS.
+
 ## Current state
 
 Iteration 0015 live-cockpit hardening is merged at `c47b83d` (PR #95), and the
