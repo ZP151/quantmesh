@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Task 1 green
+- Status: iteration 0021 active — Tasks 1–2 green
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,8 +12,8 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: implement Task 2, canonical instruments and versioned
-  calendars, with pinned dependency/license evidence and a fresh read-only
+- Current frontier: implement Task 3, content-addressed objects and immutable
+  manifest reads, with RED/GREEN immutability evidence and a fresh read-only
   review.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
@@ -47,6 +47,18 @@
 - Legacy fixture access remains compatible but cannot be relabeled or resolved
   as real data. No execution authority, credential, release tag or synthetic
   repair path changed.
+
+## Checkpoint 2 — 2026-08-14
+
+- Task 2 canonical instruments and versioned market calendars is GREEN after
+  two corrective read-only review rounds and a final CLEAN verdict.
+- Exact evidence is recorded in
+  `docs/iterations/0021-trusted-data-fabric.md`: 56 focused checks, 82 Task 1–2
+  integration checks, Ruff, dependency integrity, release-lock ordering and
+  the 68-package license closure are green.
+- Alias history is bitemporal and content-addressed; XNYS regular sessions are
+  schedule-validated, extended sessions fail explicitly, and 24/7 sessions are
+  exact UTC days. No execution or release authority changed.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

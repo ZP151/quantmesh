@@ -198,7 +198,7 @@ read-only Reviewer over the task diff.
 - Calendar version is `exchange-calendars:4.13.2:XNYS` or
   `quantmesh:1:24/7`.
 
-- [ ] **Step 1: Write failing calendar and alias tests**
+- [x] **Step 1: Write failing calendar and alias tests**
 
 ```python
 def test_xnys_skips_weekend_and_honors_early_close() -> None:
@@ -218,20 +218,20 @@ def test_alias_is_resolved_at_knowledge_date() -> None:
     )
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 `.\.venv\Scripts\python.exe -m pytest tests/test_trusted_instruments.py tests/test_market_calendars.py -q`
 
 Expected: imports fail because the modules are absent.
 
-- [ ] **Step 3: Add the pinned calendar dependency and implementations**
+- [x] **Step 3: Add the pinned calendar dependency and implementations**
 
 Add `exchange-calendars==4.13.2` to runtime dependencies. Record Apache-2.0
 license evidence. Reject unknown calendars and dates outside the package's
 supported range. Do not replace session calendars with weekday arithmetic.
 
-- [ ] **Step 4: Verify GREEN, dependency closure and license**
+- [x] **Step 4: Verify GREEN, dependency closure and license**
 
 Run:
 `.\.venv\Scripts\python.exe -m pytest tests/test_trusted_instruments.py tests/test_market_calendars.py tests/test_security.py -q`
@@ -241,7 +241,7 @@ Run:
 
 Expected: tests and license closure pass.
 
-- [ ] **Step 5: Record and review**
+- [x] **Step 5: Record and review**
 
 Commit `feat(data): add canonical instruments and market calendars`; append
 evidence and receive a clean read-only review.

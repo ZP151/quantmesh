@@ -219,7 +219,7 @@ source-available restriction, no untracked package.
   change beyond patch level requires a re-check of this section and the
   explicit SPDX allowlist.
 
-## Inventory (generated 2026-08-08; 64 packages in the release
+## Inventory (generated 2026-08-14; 68 packages in the release
 closure `.[dev,research,e2e]`)
 
 Regenerate with `python tools/license_review.py` in an environment
@@ -238,6 +238,7 @@ Version numbers drift with the lock; the license key is the contract.
 | colorama | 0.4.6 (Windows-only) | BSD-3-Clause |
 | cryptography | 50.0.0 (Linux-only) | Apache-2.0 | BSD-3-Clause |
 | duckdb | 1.5.5 | MIT |
+| exchange_calendars | 4.13.2 | Apache-2.0 |
 | fastapi | 0.141.1 | MIT |
 | greenlet | 3.5.4 | MIT | PSF-2.0 |
 | h11 | 0.16.0 | MIT |
@@ -253,6 +254,7 @@ Version numbers drift with the lock; the license key is the contract.
 | Jinja2 | 3.1.6 | BSD-3-Clause |
 | joblib | 1.5.3 | BSD-3-Clause |
 | keyring | 25.7.0 | MIT |
+| korean_lunar_calendar | 0.4.0 | MIT |
 | lightgbm | 4.7.0 | MIT |
 | MarkupSafe | 3.0.3 | BSD-3-Clause |
 | more-itertools | 11.1.0 | MIT |
@@ -271,6 +273,7 @@ Version numbers drift with the lock; the license key is the contract.
 | Pygments | 2.20.0 | BSD-2-Clause |
 | pytest | 9.1.1 | MIT |
 | pytest-asyncio | 1.4.0 | Apache-2.0 |
+| pyluach | 2.3.0 | MIT |
 | python-dateutil | 2.9.0.post0 | BSD-3-Clause |
 | python-dotenv | 1.2.2 | BSD-3-Clause |
 | python-multipart | 0.0.32 | Apache-2.0 |
@@ -285,6 +288,7 @@ Version numbers drift with the lock; the license key is the contract.
 | starlette | 1.5.0 | BSD-3-Clause |
 | statsmodels | 0.14.6 | BSD-3-Clause |
 | threadpoolctl | 3.6.0 | BSD-3-Clause |
+| toolz | 1.1.0 | BSD-3-Clause |
 | typing-inspection | 0.4.2 | MIT |
 | typing_extensions | 4.16.0 | PSF-2.0 |
 | tzdata | 2026.3 | Apache-2.0 (documented exception) |

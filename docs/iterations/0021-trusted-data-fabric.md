@@ -61,7 +61,7 @@ checkpoint.
 
 | Slice | Status | Dependency | Evidence |
 | --- | --- | --- | --- |
-| 1. Immutable AAPL daily tracer | in progress | None | Task 1 complete |
+| 1. Immutable AAPL daily tracer | in progress | None | Tasks 1–2 complete |
 | 2. Moomoo AAPL/NVDA | planned | Slice 1 | pending |
 | 3. Hyperliquid BTC candles | planned | Slice 1 | pending |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | planned | Slice 3 | pending |
@@ -132,9 +132,45 @@ checkpoint.
   GREEN commands use an isolated repository-local `--basetemp`; the complete
   post-change suite is tracked separately from the Task 1 focused gate.
 
+## Checkpoint 2 — Canonical instruments and versioned calendars, 2026-08-14
+
+- RED: `python -m pytest tests/test_trusted_instruments.py
+  tests/test_market_calendars.py -q` failed at collection because both owned
+  modules were absent. Two later RED cycles reproduced bitemporal, session
+  policy, forged-window and support-boundary defects found during review.
+- GREEN: 56 focused instrument, calendar, security and release-lock checks
+  passed; the Task 1–2 integration selection passed 82 tests. Ruff,
+  `pip check`, `git diff --check` and the deterministic license review passed.
+- The five bounded canonical IDs now resolve from exact Task 1 provider IDs
+  through immutable aliases with independent effective and knowledge windows.
+  Each catalog exposes a stable SHA-256 content identity; cross-provider and
+  cross-instrument mappings fail closed.
+- `CalendarService` pins `exchange-calendars==4.13.2`, fixed support ranges and
+  explicit `regular`, `extended` and `continuous` policies. XNYS extended
+  sessions remain an explicit unavailable state. XNYS windows validate against
+  the pinned schedule, including holidays, DST and early closes; 24/7 windows
+  cover exact UTC days.
+- The release closure grew from 64 to 68 packages. The direct Apache-2.0
+  dependency and its permissive transitive closure are pinned in
+  `requirements-audit.txt`, inventoried in `docs/licenses.md` and recorded in
+  the reuse matrix. The local license gate reviewed all 68 packages.
+- Review round 1 found provider-ID drift, conflated effective/knowledge time,
+  missing session policy, cross-provider mappings, forgeable window identity
+  and missing adversarial tests. Review round 2 found direct forged XNYS
+  sessions and an invalid documented lower bound. All findings have direct
+  regressions and are resolved. Final read-only Reviewer verdict: CLEAN, with
+  no remaining Critical or Important finding.
+- The full-suite diagnostic reached `2622 passed, 4 skipped` and exposed one
+  Task 2 audit-lock ordering failure while this task's lock edit was present.
+  The ordering defect was fixed and its exact release-lock test is GREEN; the
+  next complete milestone verification will run from the committed tree.
+- The pinned upstream calendar emits five NumPy deprecation warnings in the
+  focused suite. They are upstream warnings under the current supported NumPy
+  range, not suppressed or represented as project failures.
+
 ## Current frontier
 
-Implement Task 2, canonical instruments and versioned calendars. Start the seven-day
+Implement Task 3, content-addressed objects and immutable manifests. Start the seven-day
 evidence window only after Slices 1–6 are merged into a frozen candidate
 configuration.
 

@@ -13,6 +13,7 @@ click==8.4.2
 colorama==0.4.6
 cryptography==50.0.0
 duckdb==1.5.5
+exchange_calendars==4.13.2
 fastapi==0.141.1
 greenlet==3.5.4
 h11==0.16.0
@@ -27,6 +28,7 @@ jaraco.functools==4.6.0
 jeepney==0.9.0
 joblib==1.5.3
 keyring==25.7.0
+korean_lunar_calendar==0.4.0
 lightgbm==4.7.0
 more-itertools==11.1.0
 narwhals==2.24.0
@@ -41,6 +43,7 @@ pydantic-settings==2.15.0
 pydantic==2.13.4
 pydantic_core==2.46.4
 pyee==13.0.1
+pyluach==2.3.0
 pytest-asyncio==1.4.0
 pytest==9.1.1
 python-dateutil==2.9.0.post0
@@ -55,6 +58,7 @@ six==1.17.0
 starlette==1.5.0
 statsmodels==0.14.6
 threadpoolctl==3.6.0
+toolz==1.1.0
 typing-inspection==0.4.2
 typing_extensions==4.16.0
 tzdata==2026.3
