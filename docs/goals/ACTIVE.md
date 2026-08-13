@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — planning checkpoint
+- Status: iteration 0021 active — Task 1 green
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,8 +12,9 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: implement Task 1, capability-aware provider resolution,
-  with RED/GREEN evidence and a fresh read-only review.
+- Current frontier: implement Task 2, canonical instruments and versioned
+  calendars, with pinned dependency/license evidence and a fresh read-only
+  review.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -35,6 +36,17 @@
   findings are incorporated into the design and iteration role evidence.
 - Created a clean Python environment from `origin/main`; dependency setup
   succeeded. Baseline verification remains in progress before behavior changes.
+
+## Checkpoint 1 — 2026-08-14
+
+- Task 1 capability-aware provider resolution is GREEN after three corrective
+  read-only review rounds and one final implementation-clean verdict.
+- Exact evidence is recorded in
+  `docs/iterations/0021-trusted-data-fabric.md`; the final focused gate is 160
+  passed, with Ruff and `git diff --check` green.
+- Legacy fixture access remains compatible but cannot be relabeled or resolved
+  as real data. No execution authority, credential, release tag or synthetic
+  repair path changed.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

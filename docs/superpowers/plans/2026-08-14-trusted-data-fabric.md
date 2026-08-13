@@ -106,7 +106,7 @@ Existing modules remain the compatibility and product integration points:
 - Existing `ProviderRegistry.get(Venue)` remains fixture-compatible until all
   v1 callers migrate.
 
-- [ ] **Step 1: Write failing capability tests**
+- [x] **Step 1: Write failing capability tests**
 
 ```python
 def test_registry_never_upgrades_read_only_access() -> None:
@@ -129,14 +129,14 @@ def test_registry_resolves_one_exact_data_capability() -> None:
     assert registry.resolve(_aapl_bars_request()) is provider
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 `.\.venv\Scripts\python.exe -m pytest tests/test_provider_capabilities.py -q`
 
 Expected: collection fails because `quantmesh.data.capabilities` does not exist.
 
-- [ ] **Step 3: Implement the minimal contracts and exact resolver**
+- [x] **Step 3: Implement the minimal contracts and exact resolver**
 
 ```python
 class ProviderAccess(StrEnum):
@@ -160,14 +160,14 @@ Make provider ID plus capability the registry key. Reject duplicate provider
 IDs, ambiguous matches, unsupported symbols/intervals and access-class
 mismatches. Do not add execution methods to `Provider`.
 
-- [ ] **Step 4: Verify GREEN and regressions**
+- [x] **Step 4: Verify GREEN and regressions**
 
 Run:
 `.\.venv\Scripts\python.exe -m pytest tests/test_provider_capabilities.py tests/test_providers.py tests/test_ingestion.py -q`
 
 Expected: all selected tests pass.
 
-- [ ] **Step 5: Record and review**
+- [x] **Step 5: Record and review**
 
 Update the iteration ledger with RED/GREEN commands, run Ruff on changed files,
 commit `feat(data): add capability-aware provider resolution`, then dispatch a

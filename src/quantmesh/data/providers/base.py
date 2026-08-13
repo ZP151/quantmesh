@@ -5,10 +5,9 @@ provider-specific payload shapes live inside adapters and their bundled
 fixture files. A consumer of the lake or of ``Provider.fetch_*`` never
 sees a vendor's schema — the M3 provider-isolation exit criterion.
 
-M3 ships fixture providers only: ``ProviderMode`` is the explicit,
-reviewable flag that a future adapter is trying to reach a real venue,
-and the registry refuses everything except ``FIXTURE`` until that gate
-is deliberately unwired (AGENTS.md safety invariants).
+Legacy providers remain fixture-only in the registry unless they expose an
+immutable, bounded capability descriptor. A descriptor can admit read-only
+live data, but it grants no order method or execution authority.
 """
 
 import json
@@ -18,6 +17,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 
+from quantmesh.data.capabilities import ProviderDescriptor
 from quantmesh.domain.market_data import Bar, OrderBook, TradeEvent
 from quantmesh.domain.models import Instrument, Side, Venue
 
@@ -38,6 +38,7 @@ class Provider(ABC):
 
     venue: Venue
     mode: ProviderMode = ProviderMode.FIXTURE
+    descriptor: ProviderDescriptor | None = None
 
     def _require_venue(self, instrument: Instrument) -> None:
         """Fail closed when an instrument belongs to another venue's adapter."""

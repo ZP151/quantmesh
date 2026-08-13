@@ -52,14 +52,16 @@ the tracked TDD plan is committed.
 
 ### Reviewer and Verifier
 
-Both roles remain read-only. A fresh review follows every independently tested
-task; verification evidence is recorded here at each durable checkpoint.
+Both roles remain read-only. Task 1 required three corrective review rounds;
+the final implementation review was clean, with only this ledger update
+requested before commit. Verification evidence is recorded at each durable
+checkpoint.
 
 ## Delivery ledger
 
 | Slice | Status | Dependency | Evidence |
 | --- | --- | --- | --- |
-| 1. Immutable AAPL daily tracer | planned | None | pending |
+| 1. Immutable AAPL daily tracer | in progress | None | Task 1 complete |
 | 2. Moomoo AAPL/NVDA | planned | Slice 1 | pending |
 | 3. Hyperliquid BTC candles | planned | Slice 1 | pending |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | planned | Slice 3 | pending |
@@ -98,9 +100,41 @@ task; verification evidence is recorded here at each durable checkpoint.
 - No source behavior, execution authority, release tag or provider credential
   changed in this checkpoint.
 
+## Checkpoint 1 — Capability-aware provider resolution, 2026-08-14
+
+- RED: `python -m pytest tests/test_provider_capabilities.py -q` failed at
+  collection because `quantmesh.data.capabilities` did not exist.
+- GREEN: the final capability suite passed 28 tests. The provider/ingestion and
+  existing Moomoo, Hyperliquid, Polymarket and Kalshi regression selection
+  passed 160 tests with repository-local `--basetemp` isolation.
+- Static verification: Ruff passed for every changed Python file and
+  `git diff --check` passed.
+- The registry now resolves exact provider, venue, access, data-kind, symbol
+  and interval capabilities without access upgrades. Legacy fixture providers
+  remain available through `get(Venue)` but their implicit descriptors are
+  explicitly legacy-only and cannot qualify as real data.
+- Capability metadata now has structured history, pagination, rate-limit,
+  entitlement-probe, rights, calendar and latency contracts. Every operation
+  declares either no history or enforceably bounded history; cursor paging
+  requires a bounded page size.
+- Review round 1 found unbounded fixture resolution, incomplete capability
+  metadata, invalid-mode admission, legacy membership drift and stale ADR
+  wording. Review round 2 found fixture-to-live misclassification,
+  provider-scoped fixture identity and non-bar history partition defects.
+  Review round 3 found default fixture-mode leakage, incomplete historical
+  semantics, weak timezone awareness and remaining ADR wording. All findings
+  were reproduced or converted to regression tests and resolved.
+- Final read-only Reviewer verdict: implementation clean; this checkpoint was
+  the only remaining requested change. No provider credential, order method,
+  execution authority, release tag or synthetic repair path was added.
+- A Windows global pytest temporary-link cleanup error affected the first
+  baseline command after all collected test bodies reached 100%. All recorded
+  GREEN commands use an isolated repository-local `--basetemp`; the complete
+  post-change suite is tracked separately from the Task 1 focused gate.
+
 ## Current frontier
 
-Implement Task 1, capability-aware provider resolution. Start the seven-day
+Implement Task 2, canonical instruments and versioned calendars. Start the seven-day
 evidence window only after Slices 1–6 are merged into a frozen candidate
 configuration.
 
