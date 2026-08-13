@@ -1,22 +1,40 @@
 # Active Goal
 
-- Status: iteration 0020 completed; `v0.1.1-rc1` verified and accepted for
-  prototype use; final `v0.1.1` promotion remains an explicit operator gate
-- Objective: first decide, with reproducible evidence, whether FinRL-X and/or a
-  process-isolated NautilusTrader boundary can replace substantial engine work;
-  then deliver the integrated instrument decision workspace without changing
-  paper-only execution authority.
-- Started: 2026-08-11
-- Completed candidate: `v0.1.1-rc1` at `b6b05b9` (PR #108)
-- Completed iteration: `docs/iterations/0020-research-to-paper-loop.md`
-- Tracking issue: [#107](https://github.com/ZP151/quantmesh/issues/107), closed
-- Integration branch: squash-merged and deleted remotely
-- Baseline: `main` at `b6b05b9`; all release candidates remain immutable tags.
-- Next decision: explicitly promote `v0.1.1-rc1` to `v0.1.1`, reject it with a
-  numbered acceptance defect, or start planning iteration 0021 without changing
-  the candidate.
-- Blockers: final promotion is intentionally withheld pending an explicit
-  operator command; no engineering blocker remains for iteration 0020.
+- Status: iteration 0021 active — planning checkpoint
+- Objective: deliver the Trusted Data Fabric defined by issue #110 without
+  changing release or execution authority.
+- Started: 2026-08-14
+- Tracking issue: [#110](https://github.com/ZP151/quantmesh/issues/110)
+- Active iteration: `docs/iterations/0021-trusted-data-fabric.md`
+- Design: `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`
+- Executable plan: `docs/superpowers/plans/2026-08-14-trusted-data-fabric.md`
+- Integration branch: `0021-trusted-data-fabric`
+- Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
+- Delivery mode: one integration branch and one final milestone PR; the main
+  thread is the only source writer and all subagents are read-only.
+- Current frontier: implement Task 1, capability-aware provider resolution,
+  with RED/GREEN evidence and a fresh read-only review.
+- Blockers: none for implementation. Real Moomoo acceptance later requires a
+  locally available OpenD and entitlements; credentials or paid services need
+  explicit operator authorization.
+
+## Non-negotiable constraints
+
+- Do not modify or promote `v0.1.1-rc1` or create final `v0.1.1`.
+- Keep external venues read-only and execution paper-only.
+- Add no algorithm, model, AI workflow or real-order authority.
+- Never use synthetic data to repair or qualify a real dataset.
+- Stop for credentials, paid services or a major architecture change.
+
+## Checkpoint 0 — 2026-08-14
+
+- Created issue #110 and the isolated integration branch.
+- Recorded the product-readiness assessment, approved design and iteration
+  ledger in English-primary project format.
+- Planner and Quant Researcher completed independent read-only audits; their
+  findings are incorporated into the design and iteration role evidence.
+- Created a clean Python environment from `origin/main`; dependency setup
+  succeeded. Baseline verification remains in progress before behavior changes.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

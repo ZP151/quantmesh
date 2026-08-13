@@ -328,16 +328,19 @@ passed the 17-step clean-checkout gate and isolated demo/live-degraded browser
 acceptance. It is accepted for prototype use; final `v0.1.1` promotion remains
 a separate explicit operator gate.
 
-### M14 — Trusted data and algorithm expansion (`LATER`)
+### M14 — Trusted data and algorithm expansion (`ACTIVE`)
 
 Outcome: enable many data and model candidates to be compared safely behind
 stable adapters instead of increasing product complexity per provider.
 
 Sequence for operator review:
 
-1. Trusted data fabric: provider registry, symbol/calendar/corporate-action
-   normalization, raw/normalized/feature layers, manifests, source rights and
-   quality SLAs.
+1. **Active as iteration 0021:** trusted data fabric: provider registry,
+   symbol/calendar/corporate-action normalization, raw/normalized/feature
+   layers, manifests, source rights and
+   quality SLAs. See [issue #110](https://github.com/ZP151/quantmesh/issues/110),
+   `docs/iterations/0021-trusted-data-fabric.md` and
+   `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`.
 2. Algorithm evaluation lab: extend the iteration-0020 FinRL-X/Nautilus
    decision with Qlib and Darts comparisons, then selected LEAN or other
    candidates under common walk-forward, cost, leakage and calibration gates.

@@ -6,18 +6,21 @@ QuantMesh is a local-first workstation for cross-market quantitative research, f
 
 ## Current stage
 
-M0 through M10 are implemented and merged, and `v0.1.0-rc1` is published as a
-fixture-verified engineering baseline. It spans normalized market data,
-reproducible research, paper execution, Moomoo and Hyperliquid adapters,
-prediction-market intelligence, local AI research, risk controls, recovery,
-audit and guarded enablement. Its clean-checkout release gate passed 1,801
-tests and a 53-check golden path. Operator browser review nevertheless rejected
-RC1 as a product release because the runtime starts empty and the minimally
-styled server-rendered UI does not expose a demonstrable business workflow.
-Iteration 0014 now targets `v0.1.0-rc2`: a React/shadcn-based interface,
-deterministic demo runtime, visible provider/import paths and an end-to-end
-paper-trading acceptance flow. Real-money execution remains disabled behind
-the explicit human gate.
+M0 through M13 and iterations 0014–0020 are implemented and merged.
+`v0.1.1-rc1` is the immutable accepted prototype baseline. It includes the
+React workstation, deterministic demo and paper authority, read-only live
+cockpit, venue-aware history, integrated instrument decision workspace,
+reproducible research evidence, local AI boundaries and guarded execution
+controls.
+
+Iteration 0021, Trusted Data Fabric, is active under issue #110. It unifies real
+Moomoo AAPL/NVDA and Hyperliquid BTC/ETH/SOL observations through a
+capability-aware read-only provider registry, bitemporal raw evidence,
+content-addressed manifests, normalized/adjusted/feature lineage, durable
+collection checkpoints, quality SLAs and a local catalog. Completion requires
+a clean-install real-data drill and at least 168 continuous hours of immutable
+quality evidence. Final `v0.1.1` promotion and real-money execution remain
+outside this iteration.
 
 ## Bounded context
 

@@ -24,5 +24,6 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0018 | completed | 2026-08-10 | 2026-08-10 | Global localization completion | [PR #100](https://github.com/ZP151/quantmesh/pull/100) |
 | 0019 | completed | 2026-08-10 | 2026-08-10 | Live research surface | [PR #101](https://github.com/ZP151/quantmesh/pull/101) |
 | 0020 | completed | 2026-08-11 | 2026-08-12 | Framework-first integrated instrument decision workspace | [Issue #107](https://github.com/ZP151/quantmesh/issues/107) / [PR #108](https://github.com/ZP151/quantmesh/pull/108) / [Plan](0020-research-to-paper-loop.md) |
+| 0021 | active | 2026-08-14 | — | Trusted Data Fabric | [Issue #110](https://github.com/ZP151/quantmesh/issues/110) / [Ledger](0021-trusted-data-fabric.md) |
 
 <!-- quantmesh-iterations:append-above -->
