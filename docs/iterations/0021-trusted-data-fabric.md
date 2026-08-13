@@ -52,16 +52,16 @@ the tracked TDD plan is committed.
 
 ### Reviewer and Verifier
 
-Both roles remain read-only. Task 1 required three corrective review rounds;
-the final implementation review was clean, with only this ledger update
-requested before commit. Verification evidence is recorded at each durable
-checkpoint.
+Both roles remain read-only. Tasks 1–4 received independent Standards and
+implementation reviews; every finding was reproduced before correction and
+each final task verdict was clean. Verification evidence is recorded at each
+durable checkpoint.
 
 ## Delivery ledger
 
 | Slice | Status | Dependency | Evidence |
 | --- | --- | --- | --- |
-| 1. Immutable AAPL daily tracer | in progress | None | Tasks 1–3 complete |
+| 1. Immutable AAPL daily tracer | complete | None | Checkpoint 4 |
 | 2. Moomoo AAPL/NVDA | planned | Slice 1 | pending |
 | 3. Hyperliquid BTC candles | planned | Slice 1 | pending |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | planned | Slice 3 | pending |
@@ -197,9 +197,40 @@ checkpoint.
   trust-root limitation. No provider credential, execution authority, release
   tag or synthetic repair path changed.
 
+## Checkpoint 4 — Bitemporal raw-to-feature AAPL tracer, 2026-08-14
+
+- RED began with the three planned modules absent. Later RED cycles reproduced
+  raw tampering, future-event leakage, retroactive knowledge time, pending
+  manifest visibility, fabricated source identities, stale cross-revision
+  feature linkage and historical-retry non-idempotence.
+- GREEN: 25 focused envelope, lineage, derivation, tamper, correction, crash
+  and knowledge-time tests passed. The final Task 1–4 integration, v1
+  compatibility, feature and security selection passed `277 passed, 3
+  skipped`; Ruff and `git diff --check` passed. The five warnings are the
+  already recorded pinned `exchange-calendars` NumPy deprecations.
+- `RawEnvelope` now binds exact provider bytes to request, event, receipt,
+  ingestion, rights, entitlement, schema, canonical instrument and source
+  event identities. Fixture provenance is structurally isolated and cannot
+  qualify as real data.
+- The AAPL daily tracer publishes raw, normalized, explicitly unadjusted and
+  `log_return(window=2)` feature artifacts through four immutable linked
+  manifests. Lineage validation recomputes canonical parent-to-child
+  derivation and rejects metadata, transformation or object substitution.
+- Knowledge-time reads expose only current-pointer-committed revisions. A
+  crash after manifest creation but before pointer advance cannot leak the
+  pending vintage; changed revisions move knowledge forward, while retries of
+  old requests return their original IDs without changing current state.
+- Eight corrective review cycles identified 16 Important integrity gaps,
+  including uncommitted-vintage visibility, retroactive knowledge, unrooted
+  provenance, unverified derivation and preflight partial publication. Every
+  finding received a direct regression and was corrected. Final read-only
+  security and implementation verdicts: CLEAN. No real provider, credential,
+  order authority, release tag or synthetic repair path changed.
+
 ## Current frontier
 
-Implement Task 4, the bitemporal raw-to-feature AAPL tracer. Start the
+Implement Task 5, complete Moomoo pagination and corporate-action transport.
+Start the
 seven-day evidence window only after Slices 1–6 are merged into a frozen
 candidate configuration.
 

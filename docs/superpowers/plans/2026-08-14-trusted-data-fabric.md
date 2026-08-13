@@ -352,7 +352,7 @@ accepted v2 decision and v1 compatibility boundary. Commit
 - `ArtifactDataset.read_bars(known_at=...)` selects the valid vintage by
   knowledge time.
 
-- [ ] **Step 1: Write failing lineage tests**
+- [x] **Step 1: Write failing lineage tests**
 
 ```python
 def test_correction_does_not_leak_before_knowledge_time(fabric) -> None:
@@ -373,26 +373,26 @@ def test_raw_normalized_adjusted_feature_chain_is_complete(fabric) -> None:
     ]
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 `.\.venv\Scripts\python.exe -m pytest tests/test_raw_envelopes.py tests/test_fabric_pipeline.py tests/test_bitemporal_history.py -q`
 
 Expected: modules are absent.
 
-- [ ] **Step 3: Implement the narrow AAPL fixture tracer**
+- [x] **Step 3: Implement the narrow AAPL fixture tracer**
 
 Publish fixture provenance only as nonqualifying evidence. Use an explicit
 `unadjusted-identity-v1` policy for this tracer and the existing
 `log_return(window=2)` implementation for its feature artifact. Do not claim a
 real equity adjustment before Task 6.
 
-- [ ] **Step 4: Verify GREEN and tamper probes**
+- [x] **Step 4: Verify GREEN and tamper probes**
 
 Run focused tests plus one probe that changes the raw object after publication;
 expected result is a hash-mismatch failure before normalization.
 
-- [ ] **Step 5: Record Slice 1 checkpoint and review**
+- [x] **Step 5: Record Slice 1 checkpoint and review**
 
 Commit `feat(data): add bitemporal AAPL lineage tracer`, update Slice 1 evidence
 and receive a clean review.

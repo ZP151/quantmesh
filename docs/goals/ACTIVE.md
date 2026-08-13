@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–3 green
+- Status: iteration 0021 active — Tasks 1–4 green
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,9 +12,8 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: implement Task 4, the bitemporal raw-to-feature AAPL
-  tracer, on Task 3's immutable identities with RED/GREEN lineage and
-  knowledge-time evidence plus a fresh read-only review.
+- Current frontier: implement Task 5, complete Moomoo pagination and
+  corporate-action transport without credentials or execution authority.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -79,6 +78,23 @@
 - ADR-0016 records the local filesystem trust root and does not claim defense
   against an administrator rolling back every local v2 evidence file together.
   No credential, order authority, release tag or synthetic repair path changed.
+
+## Checkpoint 4 — 2026-08-14
+
+- Task 4 completes Slice 1: one nonqualifying fixture AAPL response now traces
+  through exact raw evidence, normalized daily bars, explicit
+  `unadjusted-identity-v1` output and the existing `log_return(window=2)`
+  feature implementation.
+- Knowledge-time selection is committed-pointer bounded and idempotent across
+  historical retries. Future-event, retroactive-correction and crash-pending
+  leakage fail closed.
+- Lineage validates canonical bytes, raw-envelope-rooted provenance, pinned
+  XNYS sessions, declared policies and actual derivation rather than trusting
+  parent IDs alone. Sixteen Important review findings were reproduced and
+  corrected; both final read-only verdicts are CLEAN.
+- Verification is `25 passed` focused and `277 passed, 3 skipped` for the
+  Task 1–4 integration/security selection, with Ruff and `git diff --check`
+  green. Exact evidence is in the active iteration ledger.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

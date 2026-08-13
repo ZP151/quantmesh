@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -64,6 +64,7 @@ def _payload(close: float) -> bytes:
 
 def _manifest(store: ManifestStore, close: float, revision: int) -> ArtifactManifest:
     object_ref = store.objects.put_bytes("application/vnd.quantmesh.bars+json", _payload(close))
+    knowledge_time = T0 + timedelta(seconds=revision - 1)
     return ArtifactManifest.build(
         dataset_id="aapl-daily",
         compatibility_revision=revision,
@@ -84,11 +85,11 @@ def _manifest(store: ManifestStore, close: float, revision: int) -> ArtifactMani
         entitlement=EntitlementState.AVAILABLE,
         event_start=T0,
         event_end=T0,
-        knowledge_start=T0,
-        knowledge_end=T0,
+        knowledge_start=knowledge_time,
+        knowledge_end=knowledge_time,
         adjustment_policy=None,
         quality_report_id=None,
-        created_at=T0,
+        created_at=knowledge_time,
         code_commit="3" * 40,
         collection_run_id="run-20260814",
     )

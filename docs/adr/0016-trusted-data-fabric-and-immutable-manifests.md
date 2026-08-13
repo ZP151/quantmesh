@@ -87,10 +87,25 @@ identity fixes the admitted calendar and session policy: bounded Moomoo
 equities use the pinned XNYS regular calendar, while bounded Hyperliquid
 perpetuals use the continuous UTC calendar.
 
-The manifest carries both event-time and knowledge-time ranges. This task does
-not yet implement point-in-time vintage selection; Task 4 will build that
-selection and the complete raw-to-feature lineage on these immutable
-identities.
+The manifest carries both event-time and knowledge-time ranges.
+`open_known_at(manifest_id, known_at=...)` selects only revisions at or below
+the validated current-pointer high-water mark, then returns the latest
+revision whose complete knowledge range ends no later than the UTC query
+time. A manifest written before a crashed pointer advance is therefore not
+visible as committed evidence. The manifest store requires every changed
+revision's knowledge range to begin strictly after the committed predecessor
+ends, including pending-pointer recovery. An exact retry of any historical revision
+resolves to its original immutable identity without moving the current
+pointer.
+
+The first complete tracer is deliberately bounded to fixture AAPL daily bars.
+It records the exact response and canonical raw envelope, derives normalized
+bars, applies an explicit nonqualifying `unadjusted-identity-v1` policy and
+reuses the owned `log_return(window=2)` feature. Its lineage reader verifies
+canonical bytes, shared provenance, transformation declarations and actual
+parent-to-child derivation. Fixture output never qualifies as real-provider or
+corporate-action-adjusted evidence; real Moomoo adjustment semantics remain a
+later task.
 
 ## Decision 3 — Preserve the version-1 Lake contract
 

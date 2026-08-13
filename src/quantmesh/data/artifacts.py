@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import shutil
 import stat
@@ -212,14 +213,26 @@ class ArtifactManifest(_ArtifactManifestBody):
 class ArtifactDataset:
     """A reader permanently bound to one immutable manifest."""
 
-    def __init__(self, manifest: ArtifactManifest, objects: ObjectStore) -> None:
+    def __init__(
+        self,
+        manifest: ArtifactManifest,
+        objects: ObjectStore,
+        manifest_store: ManifestStore | None = None,
+    ) -> None:
         self.manifest = manifest
         self.objects = objects
+        self.manifest_store = manifest_store
 
     def read_bytes(self) -> bytes:
         return b"".join(self.objects.get_bytes(reference) for reference in self.manifest.objects)
 
-    def read_bars(self) -> list[Bar]:
+    def read_bars(self, *, known_at: datetime | None = None) -> list[Bar]:
+        if known_at is not None:
+            if self.manifest_store is None:
+                raise ValueError("knowledge-time reads require a manifest store")
+            return self.manifest_store.open_known_at(
+                self.manifest.manifest_id, known_at=known_at
+            ).read_bars()
         if self.manifest.data_kind is not DataKind.BARS:
             raise ValueError("artifact does not contain bars")
         bars: list[Bar] = []
@@ -239,6 +252,53 @@ class ArtifactDataset:
                 ) from error
         self._validate_bar_declarations(bars)
         return bars
+
+    def read_features(self) -> list[dict[str, Any]]:
+        if self.manifest.layer is not ArtifactLayer.FEATURE:
+            raise ValueError("artifact is not a feature layer")
+        rows: list[dict[str, Any]] = []
+        for reference in self.manifest.objects:
+            if reference.media_type != "application/vnd.quantmesh.features+json":
+                raise ManifestIntegrityError(
+                    f"feature artifact has unsupported media type {reference.media_type!r}"
+                )
+            try:
+                decoded = json.loads(self.objects.get_bytes(reference))
+            except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                raise ManifestIntegrityError("feature object is invalid JSON") from error
+            if not isinstance(decoded, list):
+                raise ManifestIntegrityError("feature object must be a JSON list")
+            for item in decoded:
+                required = {"name", "timestamp", "value", "window"}
+                if not isinstance(item, dict) or set(item) != required:
+                    raise ManifestIntegrityError("feature row has an invalid shape")
+                if item["name"] != "log_return" or item["window"] != 2:
+                    raise ManifestIntegrityError("feature row is outside the tracer contract")
+                if (
+                    isinstance(item["value"], bool)
+                    or not isinstance(item["value"], (int, float))
+                    or not math.isfinite(item["value"])
+                ):
+                    raise ManifestIntegrityError("feature value must be finite")
+                try:
+                    timestamp = datetime.fromisoformat(item["timestamp"])
+                except (TypeError, ValueError) as error:
+                    raise ManifestIntegrityError("feature timestamp is invalid") from error
+                if not _is_utc(timestamp):
+                    raise ManifestIntegrityError("feature timestamp must be UTC")
+                rows.append(item)
+        identities = tuple(f"log_return:{item['timestamp']}" for item in rows)
+        if identities != self.manifest.row_identities:
+            raise ManifestIntegrityError("feature rows disagree with manifest row identities")
+        timestamps = [datetime.fromisoformat(item["timestamp"]) for item in rows]
+        if not timestamps:
+            raise ManifestIntegrityError("feature artifact must contain at least one row")
+        if (
+            min(timestamps) != self.manifest.event_start
+            or max(timestamps) != self.manifest.event_end
+        ):
+            raise ManifestIntegrityError("feature timestamps disagree with manifest event coverage")
+        return rows
 
     def _validate_bar_declarations(self, bars: list[Bar]) -> None:
         canonical = self.manifest.canonical_instrument.value
@@ -372,6 +432,8 @@ class ManifestStore:
             if current["manifest_id"] == manifest.manifest_id:
                 return
             self._require_expected(current, expected_current)
+            current_manifest = self.open(current["manifest_id"]).manifest
+            self._require_forward_knowledge(current_manifest, manifest)
             pending = current.get("_pending_history")
             if pending is not None:
                 if manifest.manifest_id != pending["manifest_id"]:
@@ -414,6 +476,8 @@ class ManifestStore:
                     raise ManifestConflictError(
                         "only the pending manifest may complete pointer recovery"
                     )
+                current_manifest = self.open(current["manifest_id"]).manifest
+                self._require_forward_knowledge(current_manifest, target)
                 self._write_revision_reservation(target)
                 self._write_pointer(target)
                 return
@@ -423,6 +487,8 @@ class ManifestStore:
                     f"current revision {current['compatibility_revision']}, "
                     f"target revision {target.compatibility_revision}"
                 )
+            current_manifest = self.open(current["manifest_id"]).manifest
+            self._require_forward_knowledge(current_manifest, target)
             expected_revision = current["compatibility_revision"] + 1
             if target.compatibility_revision != expected_revision:
                 raise ManifestConflictError(
@@ -458,9 +524,53 @@ class ManifestStore:
         manifest = self._read_manifest_file(matches[0], manifest_id)
         for reference in manifest.objects:
             self.objects.get_bytes(reference)
-        dataset = ArtifactDataset(manifest, self.objects)
+        dataset = ArtifactDataset(manifest, self.objects, self)
         self._validate_typed_dataset(dataset)
         return dataset
+
+    def current(self, dataset_id: str) -> ArtifactDataset | None:
+        """Open the validated current revision for a dataset, if initialized."""
+        validate_dataset_name(dataset_id)
+        if not self._pointer_path(dataset_id).exists():
+            return None
+        pointer = self._read_pointer(dataset_id)
+        if pointer is None:
+            return None
+        return self.open(pointer["manifest_id"])
+
+    def manifests(self, dataset_id: str) -> tuple[ArtifactManifest, ...]:
+        """Return all committed revisions in immutable history order."""
+        validate_dataset_name(dataset_id)
+        if not self._pointer_path(dataset_id).exists():
+            return ()
+        pointer = self._read_pointer(dataset_id)
+        if pointer is None:
+            return ()
+        records = self._read_history(dataset_id)
+        committed = records[: pointer["compatibility_revision"]]
+        return tuple(self.open(record["manifest_id"]).manifest for record in committed)
+
+    def open_known_at(self, manifest_id: str, *, known_at: datetime) -> ArtifactDataset:
+        """Open the latest committed revision visible at one UTC knowledge time."""
+        if not _is_utc(known_at):
+            raise ValueError("known_at must be UTC")
+        base = self.open(manifest_id).manifest
+        visible = [
+            item for item in self.manifests(base.dataset_id) if item.knowledge_end <= known_at
+        ]
+        if not visible:
+            raise ValueError(
+                f"no artifact was known for {base.dataset_id!r} at {known_at.isoformat()}"
+            )
+        selected = max(
+            visible,
+            key=lambda item: (
+                item.knowledge_end,
+                item.knowledge_start,
+                item.compatibility_revision,
+            ),
+        )
+        return self.open(selected.manifest_id)
 
     def _read_manifest_file(self, path: Path, manifest_id: str) -> ArtifactManifest:
         if is_reparse_point(path):
@@ -479,8 +589,19 @@ class ManifestStore:
     @staticmethod
     def _validate_typed_dataset(dataset: ArtifactDataset) -> None:
         manifest = dataset.manifest
-        if manifest.layer is not ArtifactLayer.RAW and manifest.data_kind is DataKind.BARS:
+        if manifest.layer is ArtifactLayer.FEATURE:
+            dataset.read_features()
+        elif manifest.layer is not ArtifactLayer.RAW and manifest.data_kind is DataKind.BARS:
             dataset.read_bars()
+
+    @staticmethod
+    def _require_forward_knowledge(current: ArtifactManifest, target: ArtifactManifest) -> None:
+        if target.knowledge_start <= current.knowledge_end:
+            raise ManifestConflictError(
+                "knowledge time must advance beyond the current revision: "
+                f"current ends {current.knowledge_end.isoformat()}, "
+                f"target starts {target.knowledge_start.isoformat()}"
+            )
 
     def _write_immutable_manifest(self, manifest: ArtifactManifest) -> None:
         path = self.manifest_path(manifest.dataset_id, manifest.manifest_id)
