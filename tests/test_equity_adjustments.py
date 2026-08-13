@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -8,6 +8,7 @@ from quantmesh.data.adjustments import (
     EquitySplitAction,
     adjust_split,
     build_adjusted_series,
+    normalize_moomoo_split_actions,
 )
 from quantmesh.data.instruments import CanonicalInstrumentId
 from quantmesh.domain.market_data import Bar
@@ -131,3 +132,136 @@ def test_action_timestamps_must_be_utc_and_announcement_precedes_effective_date(
             announced_at=T0 + timedelta(days=3),
             effective_at=T0 + timedelta(days=2),
         )
+
+
+def test_official_factor_and_action_surfaces_cross_check_forward_split() -> None:
+    announced = datetime(2020, 8, 17, tzinfo=UTC)
+    actions = normalize_moomoo_split_actions(
+        canonical_instrument=AAPL_ID,
+        factor_rows=[
+            {
+                "ex_div_date": "2020-08-31",
+                "split_base": 1.0,
+                "split_ert": 4.0,
+                "join_base": None,
+                "join_ert": None,
+                "split_ratio": 0.25,
+            }
+        ],
+        split_rows=[
+            {
+                "dir_deci_pub_date": int(announced.timestamp()),
+                "dir_deci_pub_date_str": "2020-08-17",
+                "reform_type": "Split",
+                "rate": "1->4",
+            }
+        ],
+    )
+
+    assert len(actions) == 1
+    assert actions[0].ratio == 4.0
+    assert actions[0].effective_at == datetime(2020, 8, 31, 4, tzinfo=UTC)
+
+
+def test_same_ratio_actions_match_nearest_effective_factor_independent_of_order() -> None:
+    first_announcement = datetime(2019, 8, 17, tzinfo=UTC)
+    second_announcement = datetime(2021, 8, 17, tzinfo=UTC)
+    actions = normalize_moomoo_split_actions(
+        canonical_instrument=AAPL_ID,
+        factor_rows=[
+            {
+                "ex_div_date": "2021-08-31",
+                "split_base": 1.0,
+                "split_ert": 4.0,
+                "split_ratio": 0.25,
+            },
+            {
+                "ex_div_date": "2019-08-31",
+                "split_base": 1.0,
+                "split_ert": 4.0,
+                "split_ratio": 0.25,
+            },
+        ],
+        split_rows=[
+            {
+                "dir_deci_pub_date": int(first_announcement.timestamp()),
+                "dir_deci_pub_date_str": "2019-08-17",
+                "reform_type": "Split",
+                "rate": "1->4",
+            },
+            {
+                "dir_deci_pub_date": int(second_announcement.timestamp()),
+                "dir_deci_pub_date_str": "2021-08-17",
+                "reform_type": "Split",
+                "rate": "1->4",
+            },
+        ],
+    )
+
+    assert [item.effective_at.date() for item in actions] == [
+        date(2019, 8, 31),
+        date(2021, 8, 31),
+    ]
+    assert [item.announced_at for item in actions] == [
+        first_announcement,
+        second_announcement,
+    ]
+
+
+def test_reverse_split_uses_new_shares_over_old_shares() -> None:
+    announced = datetime(2020, 8, 17, tzinfo=UTC)
+    actions = normalize_moomoo_split_actions(
+        canonical_instrument=AAPL_ID,
+        factor_rows=[
+            {
+                "ex_div_date": "2020-08-31",
+                "split_base": None,
+                "split_ert": None,
+                "join_base": 5.0,
+                "join_ert": 1.0,
+                "split_ratio": 5.0,
+            }
+        ],
+        split_rows=[
+            {
+                "dir_deci_pub_date": int(announced.timestamp()),
+                "dir_deci_pub_date_str": "2020-08-17",
+                "reform_type": "Merge",
+                "rate": "5->1",
+            }
+        ],
+    )
+
+    assert actions[0].ratio == 0.2
+
+
+def test_factor_action_mismatch_refuses_adjustment() -> None:
+    announced = datetime(2020, 8, 17, tzinfo=UTC)
+    with pytest.raises(AdjustmentUnavailableError, match="ambiguous or incomplete"):
+        normalize_moomoo_split_actions(
+            canonical_instrument=AAPL_ID,
+            factor_rows=[
+                {
+                    "ex_div_date": "2020-08-31",
+                    "split_base": 4.0,
+                    "split_ert": 1.0,
+                    "split_ratio": 4.0,
+                }
+            ],
+            split_rows=[
+                {
+                    "dir_deci_pub_date": int(announced.timestamp()),
+                    "dir_deci_pub_date_str": "2020-08-17",
+                    "reform_type": "Split",
+                    "rate": "1->5",
+                }
+            ],
+        )
+
+
+def test_dividend_only_factor_rows_need_no_split_action() -> None:
+    assert normalize_moomoo_split_actions(
+        canonical_instrument=AAPL_ID,
+        factor_rows=[{"ex_div_date": "2026-01-01", "per_cash_div": 0.25}],
+        split_rows=[],
+    ) == []

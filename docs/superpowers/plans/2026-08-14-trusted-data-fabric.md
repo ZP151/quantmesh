@@ -509,7 +509,7 @@ def test_closed_xnys_session_is_not_a_gap() -> None:
 Run the three focused files. Expected: collection and adjustment contracts are
 missing.
 
-- [ ] **Step 3: Implement bounded collection and fail-closed adjustment**
+- [x] **Step 3: Implement bounded collection and fail-closed adjustment**
 
 Keep raw OHLCV, factor, split and dividend manifests separate. Implement only
 the evidenced split-adjusted policy. Record dividends but leave total return
@@ -521,14 +521,14 @@ bounded. Real collection requires a Task 6-pinned and audited compatible SDK
 closure and must report an older SDK without the official action methods as
 incompatible.
 
-- [ ] **Step 4: Verify GREEN and unavailable states**
+- [x] **Step 4: Verify GREEN and unavailable states**
 
 Run focused tests with stub OpenD plus a real probe when OpenD is locally
 available. A missing SDK/daemon/entitlement must return a typed unavailable
 result and must not create a real manifest. Verify the optional Moomoo closure
 and Apache-2.0 package evidence before admitting it to the operator environment.
 
-- [ ] **Step 5: Record Slice 2 checkpoint and review**
+- [x] **Step 5: Record Slice 2 checkpoint and review**
 
 Commit `feat(moomoo): publish trusted equity data lineage`; record whether the
 optional real probe ran and receive a clean review.

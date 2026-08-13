@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–5 green; Task 6 foundation green
+- Status: iteration 0021 active — Tasks 1–6 green; Slice 2 complete
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,10 +12,9 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: finish Task 6 publication: parse and cross-check official
-  factor/split evidence, then publish separate raw, normalized and
-  split-adjusted AAPL/NVDA manifests. The audited SDK and process deadline are
-  complete.
+- Current frontier: Task 7 public-mainnet Hyperliquid candle collection through
+  the read-only `/info` endpoint. Keep wallet, signing, account and order
+  surfaces structurally absent.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -128,6 +127,57 @@
 - Verification: 41 dependency/security/release tests and 81 focused
   adjustment/collection/OpenD/provider tests passed; focused Ruff passed.
   Publication and real OpenD evidence remain pending and are not claimed.
+
+## Checkpoint 6B — 2026-08-14
+
+- The Task 6 implementation candidate publishes separate real raw history,
+  factor, split and dividend evidence, then canonical bars/actions,
+  split-adjusted bars and deterministic log-return features. Publication
+  validation recomputes the chain from immutable source bytes and rejects
+  forged adjusted objects; idempotent input retains all eight manifest IDs.
+- Forward and reverse splits require a unique agreement between official factor
+  and action surfaces under a UTC knowledge cutoff. Dividends are recorded but
+  total return remains explicitly unavailable. Historical and live-tail paths
+  no longer fabricate `adjusted_close` from labels or raw closes.
+- The process-isolated worker now carries the minimum non-secret Windows runtime
+  paths required by Python/Moomoo, maps `US.*` market metadata explicitly and
+  classifies a refused OpenD socket before the SDK retry loop. API keys and
+  credential-bearing environment variables remain excluded.
+- The real read-only probe used audited SDK `10.10.7008`; local OpenD was not
+  listening and correctly returned `unavailable/daemon-unavailable` with zero
+  manifest IDs and no dataset directory. This is honest negative evidence, not
+  a positive real-data acceptance claim.
+- Verification is `172 passed, 1 skipped`, focused Ruff clean and
+  `git diff --check` clean. Two fresh read-only reviews are running; Task 6 is
+  not complete and its final commit remains pending their verdicts.
+
+## Checkpoint 6C — 2026-08-14
+
+- Both fresh reviews rejected the 6B candidate. Reviewer-driven RED tests then
+  reproduced official factor-orientation drift, order-dependent equal-ratio
+  action pairing, worker-controlled knowledge time, raw-role substitution,
+  forged feature declarations and unbounded stdout/stderr buffering.
+- The corrected contract uses the inverse of Moomoo's documented old/new
+  `split_ratio`, pairs actions chronologically, replaces worker receipt time with
+  parent-observed UTC time, authenticates every raw and derived role/declaration,
+  and accepts worker output only through the bounded staged JSON file.
+- Six correction regressions and the full Task 6 selection are GREEN:
+  `176 passed, 1 skipped`, Ruff clean and `git diff --check` clean. Task 9 owns
+  bundle-level crash recovery; a fresh scoped reviewer is deciding whether that
+  explicit phase boundary leaves any Task 6 blocker.
+
+## Checkpoint 6D — 2026-08-14
+
+- Final review corrections recompute every raw role's identities and event
+  coverage from immutable source bytes, bind bar interval to decoded source,
+  bind factor/split/dividend source codes to the canonical provider symbol and
+  derive empty action coverage from empty source evidence.
+- Final Task 6 verification is `181 passed, 1 skipped`, Ruff clean and
+  `git diff --check` clean. The real negative OpenD probe remained honestly
+  unavailable with zero manifests; `pip check` and the 72-package license review
+  passed.
+- Final fresh read-only scoped review: PASS, no Critical/Important issue. Task 6
+  and Slice 2 are complete. Task 9 retains bundle crash atomicity ownership.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

@@ -4,7 +4,9 @@ import math
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
+from zoneinfo import ZoneInfo
 
+from quantmesh.data.calendars import CalendarService, SessionPolicy
 from quantmesh.data.manifest import DatasetManifest
 from quantmesh.domain.market_data import Bar, find_gaps, interval_to_timedelta
 from quantmesh.domain.models import Venue
@@ -35,6 +37,7 @@ _WINDOW = {
     HistoryRange.ONE_YEAR: timedelta(days=366),
 }
 _CONTINUOUS_CALENDAR = "24/7"
+_NEW_YORK = ZoneInfo("America/New_York")
 
 
 class ReadableDataset(Protocol):
@@ -174,11 +177,31 @@ class HistoryService:
         if selected.calendar == _CONTINUOUS_CALENDAR:
             gaps = tuple(find_gaps(timestamps, interval=selected.interval))
             limitations: tuple[str, ...] = ()
+        elif selected.calendar == "XNYS" and selected.interval == "1d":
+            sessions = CalendarService().sessions(
+                "XNYS",
+                historical[0].timestamp.astimezone(_NEW_YORK).date(),
+                historical[-1].timestamp.astimezone(_NEW_YORK).date(),
+                policy=SessionPolicy.REGULAR,
+            )
+            observed_dates = {
+                item.timestamp.astimezone(_NEW_YORK).date() for item in historical
+            }
+            gaps = tuple(
+                session.open_at
+                for session in sessions
+                if session.session_date not in observed_dates
+            )
+            limitations = ()
         else:
             gaps = ()
             limitations = (
                 "Gap detection requires a session calendar and was not run for "
                 f"{selected.calendar}.",
+            )
+        if selected.adjustment != "unadjusted":
+            limitations += (
+                "adjusted_close is unavailable without immutable adjustment lineage.",
             )
         return HistoricalSeries(
             instrument=historical[0].instrument,
@@ -411,7 +434,7 @@ class HistoryService:
                     low=row.low,
                     close=row.close,
                     volume=row.volume,
-                    adjusted_close=(row.close if selected.adjustment != "unadjusted" else None),
+                    adjusted_close=None,
                     is_live_tail=False,
                 )
             )

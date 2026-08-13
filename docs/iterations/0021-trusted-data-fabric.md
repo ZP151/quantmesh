@@ -62,7 +62,7 @@ durable checkpoint.
 | Slice | Status | Dependency | Evidence |
 | --- | --- | --- | --- |
 | 1. Immutable AAPL daily tracer | complete | None | Checkpoint 4 |
-| 2. Moomoo AAPL/NVDA | in progress | Slice 1 | Task 6 foundation complete; Checkpoint 6A |
+| 2. Moomoo AAPL/NVDA | complete | Slice 1 | Task 6; Checkpoints 6A–6D |
 | 3. Hyperliquid BTC candles | planned | Slice 1 | pending |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | planned | Slice 3 | pending |
 | 5. Idempotent collection and recovery | planned | Slices 2 and 4 | pending |
@@ -290,13 +290,110 @@ durable checkpoint.
   OpenD evidence, credential, execution authority or synthetic repair was
   claimed.
 
+## Checkpoint 6B — Moomoo trusted-lineage implementation candidate, 2026-08-14
+
+- Official `get_rehab` factor rows and the independently collected stock-split
+  action rows are normalized only when one unique forward- or reverse-split
+  pair agrees on type, ratio, announcement time and effective date. Dividend
+  rows remain a separate immutable raw surface and are not represented as a
+  total-return adjustment.
+- Each qualifying bundle publishes eight content-addressed manifests: raw
+  history pages, raw factors, raw split actions, raw dividends, canonical bars,
+  canonical split actions, split-adjusted bars and `log_return(window=2)`
+  features. Publication reopens immutable bytes and recomputes every derivation;
+  a forged adjusted object is rejected even when its manifest shape and parent
+  identifiers are otherwise valid. Exact retry input returns the same IDs.
+- Equity history no longer copies a raw close into `adjusted_close` because a
+  legacy binding label says `split-adjusted`. XNYS daily coverage uses the
+  pinned exchange calendar, so weekends and market holidays are not reported
+  as missing sessions. The existing live-tail path remains fail-closed for
+  adjusted series and never fabricates an adjusted live value.
+- The isolated worker now preserves only the non-secret Windows runtime paths
+  required by Python and the official SDK while continuing to strip proxy,
+  token, password and API-key variables. Provider market metadata is explicit,
+  an unreachable local OpenD socket is classified before the SDK's unbounded
+  retry loop, and the outer whole-process deadline remains authoritative.
+- Real read-only probe: the audited SDK reported version `10.10.7008`; local
+  `127.0.0.1:11111` was not listening, so the result was the honest typed state
+  `unavailable/daemon-unavailable`, `manifest_ids=[]`, with no dataset directory
+  created. No credential, entitlement, synthetic fallback or positive real-data
+  claim was introduced.
+- RED evidence reproduced missing validator imports, strict JSON/datetime
+  deserialization failure, omitted provider market metadata, missing child
+  home/APPDATA runtime paths and daemon misclassification. GREEN verification:
+  `172 passed, 1 skipped` across collection, adjustment, fabric, history, OpenD
+  and provider regressions; focused Ruff and `git diff --check` passed. The five
+  warnings remain the recorded pinned `exchange-calendars` NumPy deprecations.
+- This checkpoint records an implementation candidate, not Task 6 completion.
+  Two fresh read-only reviews are in progress; Step 5 and the Task 6 commit stay
+  open until every Critical/Important finding is resolved.
+
+## Checkpoint 6C — Moomoo review correction round 1, 2026-08-14
+
+- The first fresh specification review returned FAIL with two Important
+  findings. The independent integrity review returned CHANGES_REQUIRED with two
+  Critical and three Important findings. Task 6 therefore remained open and no
+  completion commit was created.
+- Official Moomoo documentation resolved the reviewers' conflicting ratio
+  interpretations: `get_rehab.split_ratio` is old/new for both a forward split
+  and a share consolidation. The adjustment factor consumed by QuantMesh is its
+  inverse, new/old. Official-shape forward and reverse fixtures now pin this
+  contract. Equal-ratio actions are paired by effective-date order with the
+  latest unique preceding announcement, independent of provider row order.
+- A worker-provided receipt timestamp is no longer authoritative publication
+  knowledge. The collector overwrites it with a parent-observed UTC completion
+  time before validating or publishing any payload, preventing a staged result
+  from backdating historical availability.
+- Publication validation now requires eight distinct roles, exact raw data kind
+  and endpoint, envelope/manifest time and rights agreement, canonical raw
+  transformation declarations, and exact normalized/action/adjusted/feature
+  layer, schema, policy, row identity and parent declarations. Raw-role
+  substitution and feature-transformation forgery have direct regressions.
+- Child stdout and stderr now go to the null device rather than unbounded memory
+  pipes; the bounded staged JSON file remains the worker's sole accepted output.
+  Runtime home/APPDATA paths remain allowlisted while API keys and credentials
+  remain excluded.
+- Bundle-level crash recovery is intentionally owned by Task 9. Task 6 collects
+  every provider result before its first write, and every individually published
+  child is truthful and independently valid; unavailable provider states still
+  publish nothing. A fresh reviewer must confirm this phase boundary before Task
+  6 can close.
+- Correction GREEN: six new reviewer-driven regressions passed. The complete
+  Task 6 selection passed `176 passed, 1 skipped`; focused Ruff and
+  `git diff --check` passed. A fresh scoped re-review is in progress.
+
+## Checkpoint 6D — Moomoo trusted lineage accepted, 2026-08-14
+
+- Scoped review round 2 confirmed factor orientation, chronological action
+  matching, parent-observed knowledge time and bounded worker output, but kept
+  Task 6 open because self-consistent raw identity/range declarations were not
+  yet recomputed from source bytes. It also found missing source-symbol binding.
+- Raw validation now recomputes bar, factor, split and dividend identities plus
+  event coverage from immutable provider bytes; bar interval is source-derived.
+  Factor, split and dividend `code` values must match the canonical provider
+  symbol, preventing cross-symbol evidence substitution. Empty normalized-action
+  coverage is pinned to empty factor/split evidence time rather than inherited
+  from the bar request window.
+- Three source-declaration attacks and two final source-symbol/empty-coverage
+  attacks were reproduced RED before correction. Final Task 6 verification is
+  `181 passed, 1 skipped`; focused Ruff and `git diff --check` passed. The real
+  negative OpenD probe remained `unavailable/daemon-unavailable`, zero manifest
+  IDs and no dataset directory. `pip check` and the 72-package deterministic
+  license review passed.
+- Final fresh read-only scoped review verdict: PASS. Both remaining findings are
+  addressed, prior source-derived checks remain intact, and no new Critical or
+  Important issue exists. Bundle-level crash atomicity remains explicitly owned
+  by Task 9 and is non-blocking at this boundary.
+- Task 6 and Slice 2 are complete. No positive real OpenD/entitlement evidence,
+  credential, synthetic repair, execution authority or release change is
+  claimed.
+
 ## Current frontier
 
-Finish Task 6 by cross-checking official factor/split evidence and publishing
-bounded raw, normalized and split-adjusted AAPL/NVDA manifests or an honest
-typed unavailable state. The compatible SDK closure and enforceable process
-deadline are complete. Start the seven-day evidence window only after Slices
-1–6 are merged into a frozen candidate configuration.
+Task 7 is the current implementation frontier: bounded public-mainnet
+Hyperliquid candles for BTC/ETH/SOL through a data-only `/info` transport, with
+no wallet, signing, account or order surface. Start the seven-day evidence
+window only after Slices 1–6 are merged into a frozen candidate configuration.
 
 ## Resume instructions
 

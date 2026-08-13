@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import socket
 import sys
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
@@ -36,6 +37,15 @@ def _unavailable(reason_code: str, detail: str) -> MoomooWorkerResult:
     )
 
 
+def _opend_reachable(host: str, port: int, timeout_seconds: float) -> bool:
+    """Return whether the local read-only OpenD TCP endpoint accepts a connection."""
+    try:
+        with socket.create_connection((host, port), timeout=timeout_seconds):
+            return True
+    except OSError:
+        return False
+
+
 def collect(request: MoomooWorkerRequest) -> MoomooWorkerResult:
     """Collect one complete target bundle; never publish or write outside staging."""
     try:
@@ -47,6 +57,12 @@ def collect(request: MoomooWorkerRequest) -> MoomooWorkerResult:
             "sdk-incompatible",
             f"the Moomoo SDK must be exactly {_SDK_VERSION}",
         )
+    if not _opend_reachable(
+        request.host,
+        request.port,
+        request.connect_timeout_seconds,
+    ):
+        return _unavailable("daemon-unavailable", "local OpenD is unavailable")
 
     settings = Settings(
         moomoo_opend_host=request.host,
@@ -54,12 +70,13 @@ def collect(request: MoomooWorkerRequest) -> MoomooWorkerResult:
         moomoo_opend_connect_timeout_s=request.connect_timeout_seconds,
         moomoo_opend_request_timeout_s=request.request_timeout_seconds,
     )
-    symbol = request.target.provider_symbol.split(".", maxsplit=1)[1]
+    market, symbol = request.target.provider_symbol.split(".", maxsplit=1)
     instrument = Instrument(
         symbol=symbol,
         venue=Venue.MOOMOO,
         instrument_type=InstrumentType.EQUITY,
         currency="USD",
+        metadata={"market": market},
     )
     provider = MoomooOpenDProvider(MoomooOpenDClient.from_settings(settings))
     try:
@@ -79,7 +96,11 @@ def collect(request: MoomooWorkerRequest) -> MoomooWorkerResult:
     except OpenDUnavailableError:
         return _unavailable("daemon-unavailable", "local OpenD is unavailable")
     except OpenDProtocolError:
-        return _unavailable("protocol-invalid", "OpenD returned untrusted source data")
+        return MoomooWorkerResult(
+            status=CollectionStatus.FAILED,
+            reason_code="protocol-invalid",
+            detail="OpenD returned untrusted source data",
+        )
     finally:
         provider.close()
 

@@ -17,6 +17,7 @@ _REQUEST_MARKER = "{request}"
 _OUTPUT_MARKER = "{output}"
 _MAX_OUTPUT_BYTES = 64 * 1024 * 1024
 _INHERITED_ENVIRONMENT = {
+    "APPDATA",
     "COMSPEC",
     "PATH",
     "PATHEXT",
@@ -24,6 +25,9 @@ _INHERITED_ENVIRONMENT = {
     "SYSTEMROOT",
     "TEMP",
     "TMP",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "USERPROFILE",
     "WINDIR",
 }
 
@@ -123,8 +127,8 @@ def run_bounded_json_process(
             cwd=root,
             env=_child_environment(),
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             text=True,
             encoding="utf-8",
             errors="replace",
@@ -132,17 +136,15 @@ def run_bounded_json_process(
             start_new_session=os.name != "nt",
         )
         try:
-            _, stderr = process.communicate(timeout=timeout_seconds)
+            process.communicate(timeout=timeout_seconds)
         except subprocess.TimeoutExpired as error:
             _terminate_process_tree(process)
             raise CollectionProcessTimeout(
                 f"collection worker exceeded {timeout_seconds:g}-second process deadline"
             ) from error
         if process.returncode != 0:
-            summary = " ".join(stderr.strip().splitlines())[-500:]
-            detail = f": {summary}" if summary else ""
             raise CollectionProcessError(
-                f"collection worker exited with code {process.returncode}{detail}"
+                f"collection worker exited with code {process.returncode}"
             )
         if not output_path.is_file():
             raise CollectionProcessError("collection worker produced no staged output")

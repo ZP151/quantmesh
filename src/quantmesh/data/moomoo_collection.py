@@ -4,19 +4,26 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date, datetime, timedelta
+from collections.abc import Callable
+from datetime import UTC, date, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
 from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from quantmesh.data.artifacts import ManifestStore
 from quantmesh.data.calendars import CalendarService, SessionPolicy
-from quantmesh.data.collection_process import run_bounded_json_process
+from quantmesh.data.collection_process import (
+    CollectionProcessError,
+    CollectionProcessTimeout,
+    run_bounded_json_process,
+)
 from quantmesh.data.instruments import CanonicalInstrumentId
 from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.moomoo.market_data import MoomooDataAdapter
+from quantmesh.settings import Settings
 
 _APPROVED_TARGETS = {
     ("US.AAPL", "moomoo:US:AAPL:XNAS", "1d"),
@@ -302,4 +309,83 @@ class MoomooCollectionResult(_FrozenContract):
             status=CollectionStatus.UNAVAILABLE,
             reason_code=reason_code,
             detail=detail,
+        )
+
+
+class MoomooCollector:
+    """Collect every target before publishing any result into the fabric."""
+
+    def __init__(
+        self,
+        store: ManifestStore,
+        *,
+        code_commit: str,
+        scratch_root: Path,
+        settings: Settings | None = None,
+        worker: Callable[..., MoomooWorkerResult] = run_moomoo_worker,
+    ) -> None:
+        self.store = store
+        self.code_commit = code_commit
+        self.scratch_root = Path(scratch_root)
+        self.settings = settings or Settings()
+        self.worker = worker
+
+    def collect(
+        self,
+        plan: MoomooCollectionPlan,
+        window: CollectionWindow,
+    ) -> MoomooCollectionResult:
+        """Collect bounded real bundles, or publish nothing for unavailable input."""
+        requests = [
+            MoomooWorkerRequest(
+                target=target,
+                window=window,
+                host=self.settings.moomoo_opend_host,
+                port=self.settings.moomoo_opend_port,
+                connect_timeout_seconds=self.settings.moomoo_opend_connect_timeout_s,
+                request_timeout_seconds=self.settings.moomoo_opend_request_timeout_s,
+            )
+            for target in plan.targets
+        ]
+        collected: list[tuple[MoomooWorkerRequest, MoomooRawPayload]] = []
+        for request in requests:
+            try:
+                result = self.worker(
+                    request,
+                    process_deadline_seconds=plan.process_deadline_seconds,
+                    scratch_root=self.scratch_root,
+                )
+            except CollectionProcessTimeout:
+                return MoomooCollectionResult(
+                    status=CollectionStatus.FAILED,
+                    reason_code="process-timeout",
+                    detail="Moomoo collection exceeded the process deadline",
+                )
+            except CollectionProcessError:
+                return MoomooCollectionResult(
+                    status=CollectionStatus.FAILED,
+                    reason_code="worker-failed",
+                    detail="Moomoo collection worker failed before publication",
+                )
+            if result.status is not CollectionStatus.PUBLISHED or result.payload is None:
+                return MoomooCollectionResult(
+                    status=result.status,
+                    reason_code=result.reason_code or "unavailable",
+                    detail=result.detail or "Moomoo collection is unavailable",
+                )
+            payload = result.payload.model_copy(update={"received_at": datetime.now(UTC)})
+            payload.validate_for(request)
+            collected.append((request, payload))
+
+        # Local import keeps the collection contracts independent from their
+        # concrete manifest publisher while avoiding a module cycle.
+        from quantmesh.data.fabric import MoomooFabricPublisher
+
+        publisher = MoomooFabricPublisher(self.store, code_commit=self.code_commit)
+        manifest_ids: list[str] = []
+        for request, payload in collected:
+            manifest_ids.extend(publisher.publish(request, payload).manifest_ids)
+        return MoomooCollectionResult(
+            status=CollectionStatus.PUBLISHED,
+            manifest_ids=tuple(manifest_ids),
         )
