@@ -7,7 +7,11 @@ from quantmesh.data.capabilities import DataKind, ProviderAccess, ProviderReques
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Venue
 from quantmesh.hyperliquid.errors import HyperliquidProtocolError
-from quantmesh.hyperliquid.public_info import MAINNET_INFO_URL, PublicInfoTransport
+from quantmesh.hyperliquid.public_info import (
+    MAINNET_INFO_URL,
+    PublicInfoRecoverySource,
+    PublicInfoTransport,
+)
 
 NOW = datetime(2026, 8, 14, tzinfo=UTC)
 
@@ -126,3 +130,16 @@ def test_l2_book_uses_only_public_info_surface() -> None:
         symbol="BTC",
     )
     assert sum(item.supports(request) for item in PublicInfoTransport.descriptor.capabilities) == 1
+
+
+def test_recovery_adapter_unwraps_only_public_market_data() -> None:
+    candles = [{"t": 1, "T": 2, "s": "BTC", "i": "1m"}]
+    book = {"coin": "BTC", "time": 2, "levels": [[], []]}
+    source = PublicInfoRecoverySource(
+        PublicInfoTransport(client=StubClient([StubResponse(candles), StubResponse(book)]))
+    )
+
+    assert source.candles("BTC", "1m", start=NOW, end=NOW) == candles
+    assert source.l2_book("BTC", at=NOW) == book
+    for name in ("exchange", "order", "wallet", "sign", "cancel", "account"):
+        assert not hasattr(source, name)

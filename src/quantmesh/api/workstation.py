@@ -1646,6 +1646,7 @@ def main(argv: list[str] | None = None) -> None:
         if args.live:
             from quantmesh.data.lake import Lake
             from quantmesh.execution.journal import OrderJournal
+            from quantmesh.hyperliquid.public_info import PublicInfoRecoverySource
             from quantmesh.instruments.forecast import PriceForecastRegistry
             from quantmesh.instruments.history import HistoryService
             from quantmesh.instruments.live_history import discover_history_bindings
@@ -1675,7 +1676,8 @@ def main(argv: list[str] | None = None) -> None:
                 account = recovered_account
             feed = LiveFeed(lake=replay)
             supervisor = HyperliquidVenueSupervisor(
-                LiveHyperliquidTransport(settings.hyperliquid_ws_url)
+                LiveHyperliquidTransport(settings.hyperliquid_ws_url),
+                rest=PublicInfoRecoverySource(),
             )
             supervisor.subscribe(watchlist)
             feed.attach(supervisor)

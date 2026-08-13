@@ -70,6 +70,7 @@ from quantmesh.execution.accounting import (
     RiskLimits,
 )
 from quantmesh.execution.journal import OrderJournal
+from quantmesh.hyperliquid.public_info import PublicInfoRecoverySource
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
 from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import (
@@ -618,6 +619,10 @@ class TestConsoleScript:
         assert app.state.paper_decisions is not None
         assert app.state.proposal_service is app.state.paper_decisions
         assert app.state.live.replay_buffer is not None
+        [hyperliquid] = app.state.live._supervisors
+        assert isinstance(hyperliquid._rest, PublicInfoRecoverySource)
+        for name in ("exchange", "order", "wallet", "sign", "cancel"):
+            assert not hasattr(hyperliquid._rest, name)
         assert calls["host"] == "127.0.0.1"
         assert calls["port"] == 8767
         app.state.live.replay_buffer.close()

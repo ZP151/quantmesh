@@ -34,8 +34,22 @@ from quantmesh.data.objects import ObjectRef
 from quantmesh.domain.market_data import Bar, interval_to_timedelta
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.hyperliquid.errors import HyperliquidProtocolError
+from quantmesh.hyperliquid.identity import (
+    book_side_source_event_id,
+    book_snapshot_epoch,
+    trade_source_event_id,
+)
 from quantmesh.hyperliquid.market_data import HyperliquidDataAdapter
 from quantmesh.hyperliquid.public_info import PublicInfoResponse, PublicInfoTransport
+
+__all__ = [
+    "HyperliquidCollectionWindow",
+    "HyperliquidCollector",
+    "HyperliquidPublication",
+    "book_side_source_event_id",
+    "book_snapshot_epoch",
+    "trade_source_event_id",
+]
 
 _SYMBOLS = frozenset({"BTC", "ETH", "SOL"})
 _MAX_CANDLES = 5_000

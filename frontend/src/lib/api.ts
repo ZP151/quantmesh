@@ -387,6 +387,21 @@ export type LiveSourceState =
   | 'stale'
   | 'disconnected'
   | 'unavailable'
+export type LiveContinuityState =
+  | 'complete'
+  | 'known-gap'
+  | 'unknown-after-disconnect'
+  | 'recovered'
+  | 'unrecoverable'
+
+export interface LiveContinuityEvidence {
+  channel: string
+  disconnected_at: string
+  last_durable_source_event_id: string | null
+  first_recovered_source_event_id: string
+  recovered_at: string
+  recovery_source: string
+}
 
 export interface LiveView {
   kind: LiveKind
@@ -396,6 +411,11 @@ export interface LiveView {
   age_ms: number
   sequence: number | null
   sequence_gap: boolean
+  continuity?: LiveContinuityState
+  source_event_id?: string
+  content_digest?: string
+  snapshot_epoch?: string | null
+  continuity_evidence?: LiveContinuityEvidence | null
   label: LiveLabel
   payload: Record<string, unknown>
 }
@@ -405,6 +425,7 @@ export interface LiveInstrumentState {
   instrument: string
   label: LiveLabel
   kinds: Record<string, LiveView>
+  book_sides?: Partial<Record<'bid' | 'ask', LiveView>>
 }
 
 export type LiveInstrumentKey = `${string}:${string}`
@@ -473,6 +494,11 @@ export interface MarketUpdate {
   received_at: string
   sequence: number | null
   sequence_gap: boolean
+  continuity?: LiveContinuityState
+  source_event_id?: string
+  content_digest?: string
+  snapshot_epoch?: string | null
+  continuity_evidence?: LiveContinuityEvidence | null
   payload: Record<string, unknown>
   state: LiveSourceState | null
   state_note: string | null

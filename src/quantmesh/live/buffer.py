@@ -21,7 +21,29 @@ from pathlib import Path
 
 import duckdb
 
-from quantmesh.live.contract import MarketUpdate, SourceState, UpdateKind
+from quantmesh.live.contract import (
+    ContinuityEvidence,
+    ContinuityState,
+    MarketUpdate,
+    SourceState,
+    UpdateKind,
+)
+
+
+class LiveIdentityConflictError(RuntimeError):
+    """A provider identity was redelivered with different normalized content."""
+
+
+class AppendSequence(int):
+    """Backward-compatible sequence result carrying exactly-once admission state."""
+
+    inserted: bool
+
+    def __new__(cls, value: int, *, inserted: bool) -> AppendSequence:
+        instance = int.__new__(cls, value)
+        instance.inserted = inserted
+        return instance
+
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS market_updates (
@@ -34,6 +56,11 @@ CREATE TABLE IF NOT EXISTS market_updates (
     received_at   TIMESTAMPTZ NOT NULL,
     sequence      BIGINT,
     sequence_gap  BOOLEAN NOT NULL DEFAULT FALSE,
+    continuity    VARCHAR,
+    source_event_id VARCHAR,
+    content_digest VARCHAR,
+    snapshot_epoch VARCHAR,
+    continuity_evidence_json VARCHAR,
     state         VARCHAR,
     state_note    VARCHAR,
     payload_json  VARCHAR NOT NULL
@@ -50,11 +77,27 @@ CREATE INDEX IF NOT EXISTS idx_updates_partition
     ON market_updates (venue, instrument, kind, local_seq);
 CREATE INDEX IF NOT EXISTS idx_updates_received
     ON market_updates (received_at);
+CREATE TABLE IF NOT EXISTS identity_quarantine (
+    quarantine_id BIGINT PRIMARY KEY,
+    venue VARCHAR NOT NULL,
+    instrument VARCHAR NOT NULL,
+    kind VARCHAR NOT NULL,
+    source_event_id VARCHAR NOT NULL,
+    existing_content_digest VARCHAR NOT NULL,
+    conflicting_content_digest VARCHAR NOT NULL,
+    observed_at TIMESTAMPTZ NOT NULL,
+    conflicting_update_json VARCHAR NOT NULL
+);
+CREATE TABLE IF NOT EXISTS live_schema_metadata (
+    component VARCHAR PRIMARY KEY,
+    version INTEGER NOT NULL
+);
 """
 
 _UPDATE_COLUMNS = (
     "local_seq, venue, instrument, kind, provenance, data_time, received_at, "
-    "sequence, sequence_gap, state, state_note, payload_json"
+    "sequence, sequence_gap, continuity, source_event_id, content_digest, "
+    "snapshot_epoch, continuity_evidence_json, state, state_note, payload_json"
 )
 
 
@@ -74,7 +117,28 @@ class LiveBuffer:
         # UTC instants they were written with — replay output (and its
         # ISO representations) must not depend on the host's TZ
         self._con.execute("SET TimeZone = 'UTC'")
+        self._assert_supported_schema()
         self._con.execute(_SCHEMA)
+        self._migrate_market_updates()
+
+    def _assert_supported_schema(self) -> None:
+        """Fail closed before mutating a lake written by newer software."""
+        metadata_exists = self._con.execute(
+            "SELECT COUNT(*) FROM information_schema.tables "
+            "WHERE table_name = 'live_schema_metadata'"
+        ).fetchone()[0]
+        if not metadata_exists:
+            return
+        row = self._con.execute(
+            "SELECT version FROM live_schema_metadata "
+            "WHERE component = 'market_updates'"
+        ).fetchone()
+        if row is not None and row[0] > 2:
+            version = row[0]
+            self._con.close()
+            raise RuntimeError(
+                f"live lake schema {version} is newer than supported version 2"
+            )
 
     # -- writes -----------------------------------------------------------
 
@@ -86,53 +150,266 @@ class LiveBuffer:
         replay insertion and that conditional upsert commit atomically.
         Raises on any validation or storage failure without a partial row.
         """
+        return self.append_many([update])[0]
+
+    def append_many(self, updates: list[MarketUpdate]) -> list[AppendSequence]:
+        """Atomically admit a normalized batch, including both book sides."""
+        if not updates:
+            return []
+        validated = [
+            MarketUpdate.model_validate(update.model_dump(mode="python"))
+            for update in updates
+        ]
+        self._validate_snapshot_batches(validated)
         with self._connection_lock:
+            existing_by_key: dict[tuple[str, str, str, str], tuple[int, str]] = {}
+            for update in validated:
+                key = self._identity_key(update)
+                existing = existing_by_key.get(key)
+                if existing is None:
+                    row = self._con.execute(
+                        "SELECT local_seq, content_digest FROM market_updates "
+                        "WHERE venue = ? AND instrument = ? AND kind = ? "
+                        "AND source_event_id = ?",
+                        list(key),
+                    ).fetchone()
+                    if row is not None:
+                        existing = (row[0], row[1])
+                        existing_by_key[key] = existing
+                if existing is not None and existing[1] != update.content_digest:
+                    self._quarantine(update, existing[1])
+                    raise LiveIdentityConflictError(
+                        f"source event {update.source_event_id!r} conflicts with stored content"
+                    )
+
+            next_seq = self._con.execute(
+                "SELECT COALESCE(MAX(local_seq), 0) + 1 FROM market_updates"
+            ).fetchone()[0]
+            receipts: list[AppendSequence] = []
+            pending: list[tuple[int, MarketUpdate]] = []
+            admitted_by_key = dict(existing_by_key)
+            for update in validated:
+                key = self._identity_key(update)
+                admitted = admitted_by_key.get(key)
+                if admitted is not None:
+                    if admitted[1] != update.content_digest:
+                        self._quarantine(update, admitted[1])
+                        raise LiveIdentityConflictError(
+                            f"source event {update.source_event_id!r} conflicts within batch"
+                        )
+                    receipts.append(AppendSequence(admitted[0], inserted=False))
+                    continue
+                local_seq = next_seq
+                next_seq += 1
+                admitted_by_key[key] = (local_seq, update.content_digest or "")
+                pending.append((local_seq, update))
+                receipts.append(AppendSequence(local_seq, inserted=True))
+
             self._con.execute("BEGIN TRANSACTION")
             try:
-                local_seq = self._con.execute(
-                    "SELECT COALESCE(MAX(local_seq), 0) + 1 FROM market_updates"
-                ).fetchone()[0]
-                self._con.execute(
-                    f"INSERT INTO market_updates ({_UPDATE_COLUMNS}) VALUES "
-                    "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    [
-                        local_seq,
-                        update.venue.value,
-                        update.instrument,
-                        update.kind.value,
-                        update.provenance.value,
-                        update.data_time,
-                        update.received_at,
-                        update.sequence,
-                        update.sequence_gap,
-                        update.state.value if update.state is not None else None,
-                        update.state_note,
-                        json.dumps(update.payload, sort_keys=True),
-                    ],
-                )
-                if update.kind is UpdateKind.STATUS:
-                    self._con.execute(
-                        "INSERT INTO source_status "
-                        "(venue, instrument, state, note, changed_at) "
-                        "VALUES (?, ?, ?, ?, ?) "
-                        "ON CONFLICT (venue, instrument) DO UPDATE SET "
-                        "state = excluded.state, note = excluded.note, "
-                        "changed_at = excluded.changed_at",
-                        [
-                            update.venue.value,
-                            update.instrument,
-                            update.state.value if update.state is not None else None,
-                            update.state_note,
-                            update.received_at,
-                        ],
-                    )
+                for local_seq, update in pending:
+                    self._insert_update(local_seq, update)
                 self._con.execute("COMMIT")
             except BaseException:
-                # Preserve the write failure even if DuckDB also refuses rollback.
                 with suppress(BaseException):
                     self._con.execute("ROLLBACK")
                 raise
-        return local_seq
+        return receipts
+
+    @staticmethod
+    def _identity_key(update: MarketUpdate) -> tuple[str, str, str, str]:
+        assert update.source_event_id is not None
+        return (
+            update.venue.value,
+            update.instrument,
+            update.kind.value,
+            update.source_event_id,
+        )
+
+    @staticmethod
+    def _validate_snapshot_batches(updates: list[MarketUpdate]) -> None:
+        epochs: dict[tuple[str, str, str], set[str]] = {}
+        for update in updates:
+            if (
+                update.kind is not UpdateKind.L2_SNAPSHOT
+                or update.venue.value != "hyperliquid"
+            ):
+                continue
+            assert update.snapshot_epoch is not None
+            key = (update.venue.value, update.instrument, update.snapshot_epoch)
+            epochs.setdefault(key, set()).add(str(update.payload["side"]))
+        for sides in epochs.values():
+            if sides != {"bid", "ask"}:
+                raise ValueError("L2 snapshot batches require atomic bid and ask sides")
+
+    def _insert_update(self, local_seq: int, update: MarketUpdate) -> None:
+        self._con.execute(
+            f"INSERT INTO market_updates ({_UPDATE_COLUMNS}) VALUES "
+            "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                local_seq,
+                update.venue.value,
+                update.instrument,
+                update.kind.value,
+                update.provenance.value,
+                update.data_time,
+                update.received_at,
+                update.sequence,
+                update.sequence_gap,
+                update.continuity.value,
+                update.source_event_id,
+                update.content_digest,
+                update.snapshot_epoch,
+                (
+                    update.continuity_evidence.model_dump_json()
+                    if update.continuity_evidence is not None
+                    else None
+                ),
+                update.state.value if update.state is not None else None,
+                update.state_note,
+                json.dumps(update.payload, sort_keys=True),
+            ],
+        )
+        if update.kind is UpdateKind.STATUS:
+            self._con.execute(
+                "INSERT INTO source_status "
+                "(venue, instrument, state, note, changed_at) "
+                "VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT (venue, instrument) DO UPDATE SET "
+                "state = excluded.state, note = excluded.note, "
+                "changed_at = excluded.changed_at",
+                [
+                    update.venue.value,
+                    update.instrument,
+                    update.state.value if update.state is not None else None,
+                    update.state_note,
+                    update.received_at,
+                ],
+            )
+
+    def _quarantine(self, update: MarketUpdate, existing_digest: str) -> None:
+        assert update.source_event_id is not None
+        assert update.content_digest is not None
+        quarantined = self._con.execute(
+            "SELECT quarantine_id FROM identity_quarantine "
+            "WHERE venue = ? AND instrument = ? AND kind = ? "
+            "AND source_event_id = ? AND existing_content_digest = ? "
+            "AND conflicting_content_digest = ?",
+            [*self._identity_key(update), existing_digest, update.content_digest],
+        ).fetchone()
+        if quarantined is not None:
+            return
+        quarantine_id = self._con.execute(
+            "SELECT COALESCE(MAX(quarantine_id), 0) + 1 FROM identity_quarantine"
+        ).fetchone()[0]
+        self._con.execute(
+            "INSERT INTO identity_quarantine VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                quarantine_id,
+                *self._identity_key(update),
+                existing_digest,
+                update.content_digest,
+                datetime.now(UTC),
+                update.model_dump_json(),
+            ],
+        )
+
+    def _migrate_market_updates(self) -> None:
+        """Upgrade pre-0021 lakes without inventing provider identities."""
+        columns = {
+            row[1] for row in self._con.execute("PRAGMA table_info('market_updates')").fetchall()
+        }
+        additions = {
+            "continuity": "VARCHAR",
+            "source_event_id": "VARCHAR",
+            "content_digest": "VARCHAR",
+            "snapshot_epoch": "VARCHAR",
+            "continuity_evidence_json": "VARCHAR",
+        }
+        self._con.execute("BEGIN TRANSACTION")
+        try:
+            for name, data_type in additions.items():
+                if name not in columns:
+                    self._con.execute(
+                        f"ALTER TABLE market_updates ADD COLUMN {name} {data_type}"
+                    )
+            legacy_rows = self._con.execute(
+                "SELECT local_seq, venue, instrument, kind, provenance, data_time, "
+                "received_at, sequence, sequence_gap, state, state_note, payload_json "
+                "FROM market_updates WHERE source_event_id IS NULL "
+                "OR content_digest IS NULL OR continuity IS NULL"
+            ).fetchall()
+            for row in legacy_rows:
+                local_seq = row[0]
+                snapshot_epoch = (
+                    f"legacy-v1-book:{local_seq}"
+                    if row[3] == UpdateKind.L2_SNAPSHOT.value
+                    else None
+                )
+                update = MarketUpdate(
+                    venue=row[1],
+                    instrument=row[2],
+                    kind=row[3],
+                    provenance=row[4],
+                    data_time=row[5],
+                    received_at=row[6],
+                    sequence=row[7],
+                    sequence_gap=bool(row[8]),
+                    state=SourceState(row[9]) if row[9] is not None else None,
+                    state_note=row[10],
+                    payload=json.loads(row[11]),
+                    source_event_id=f"legacy-v1:{local_seq}",
+                    snapshot_epoch=snapshot_epoch,
+                )
+                self._con.execute(
+                    "UPDATE market_updates SET continuity = ?, source_event_id = ?, "
+                    "content_digest = ?, snapshot_epoch = ?, "
+                    "continuity_evidence_json = NULL WHERE local_seq = ?",
+                    [
+                        update.continuity.value,
+                        update.source_event_id,
+                        update.content_digest,
+                        update.snapshot_epoch,
+                        local_seq,
+                    ],
+                )
+            missing = self._con.execute(
+                "SELECT COUNT(*) FROM market_updates WHERE continuity IS NULL "
+                "OR source_event_id IS NULL OR content_digest IS NULL"
+            ).fetchone()[0]
+            if missing:
+                raise RuntimeError("live lake migration left incomplete identities")
+            self._con.execute("COMMIT")
+        except BaseException:
+            with suppress(BaseException):
+                self._con.execute("ROLLBACK")
+            raise
+        # DuckDB cannot create an index in a transaction with outstanding row
+        # updates. A second idempotent transaction installs constraints before
+        # advancing the version, so interruption leaves an old version that is
+        # safely retried rather than a falsely complete migration.
+        self._con.execute("BEGIN TRANSACTION")
+        try:
+            self._con.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_updates_source_identity "
+                "ON market_updates "
+                "(venue, instrument, kind, source_event_id)"
+            )
+            self._con.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_quarantine_conflict_identity "
+                "ON identity_quarantine "
+                "(venue, instrument, kind, source_event_id, "
+                "existing_content_digest, conflicting_content_digest)"
+            )
+            self._con.execute(
+                "INSERT INTO live_schema_metadata VALUES ('market_updates', 2) "
+                "ON CONFLICT (component) DO UPDATE SET version = excluded.version"
+            )
+            self._con.execute("COMMIT")
+        except BaseException:
+            with suppress(BaseException):
+                self._con.execute("ROLLBACK")
+            raise
 
     def prune(self) -> int:
         """Delete updates older than the retention window (bounded lake).
@@ -146,7 +423,20 @@ class LiveBuffer:
         cutoff = datetime.now(UTC) - self.retention
         with self._connection_lock:
             before = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
-            self._con.execute("DELETE FROM market_updates WHERE received_at < ?", [cutoff])
+            self._con.execute(
+                "DELETE FROM market_updates WHERE "
+                "(kind != 'l2_snapshot' AND received_at < ?) OR "
+                "(kind = 'l2_snapshot' AND snapshot_epoch IS NULL "
+                "AND received_at < ?) OR "
+                "(kind = 'l2_snapshot' AND "
+                "(venue, instrument, snapshot_epoch) IN ("
+                "  SELECT venue, instrument, snapshot_epoch FROM market_updates "
+                "  WHERE kind = 'l2_snapshot' "
+                "  GROUP BY venue, instrument, snapshot_epoch "
+                "  HAVING MAX(received_at) < ?"
+                "))",
+                [cutoff, cutoff, cutoff],
+            )
             after = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
         return before - after
 
@@ -251,7 +541,7 @@ class LiveBuffer:
     def latest(
         self, *, venue: str | None = None, instrument: str | None = None
     ) -> list[MarketUpdate]:
-        """The most recent update per (venue, instrument, kind)."""
+        """The most recent update per stream, preserving both L2 sides."""
         clauses: list[str] = []
         params: list[object] = []
         if venue is not None:
@@ -265,8 +555,48 @@ class LiveBuffer:
             rows = self._con.execute(
                 f"SELECT {_UPDATE_COLUMNS} FROM market_updates {where} "
                 "QUALIFY ROW_NUMBER() OVER ("
-                "  PARTITION BY venue, instrument, kind ORDER BY local_seq DESC"
-                ") = 1",
+                "  PARTITION BY venue, instrument, kind, "
+                "  CASE WHEN kind = 'l2_snapshot' "
+                "    THEN json_extract_string(payload_json, '$.side') "
+                "  WHEN kind = 'metrics' "
+                "    THEN CASE WHEN json_extract(payload_json, '$.mid') IS NOT NULL "
+                "      THEN 'allMids' ELSE 'activeAssetCtx' END "
+                "  ELSE '' END "
+                "  ORDER BY local_seq DESC"
+                ") = 1 ORDER BY local_seq",
+                params,
+            ).fetchall()
+        return [_row_to_update(row) for row in rows]
+
+    def recovery_checkpoints(
+        self, *, venue: str, instruments: list[str]
+    ) -> list[MarketUpdate]:
+        """Latest durable rows used to restore a venue supervisor's cursors."""
+        if not instruments:
+            return []
+        placeholders = ", ".join("?" for _ in instruments)
+        clauses = ["venue = ?", f"instrument IN ({placeholders})"]
+        params: list[object] = [venue, *instruments]
+        if venue == "hyperliquid":
+            clauses.append(
+                "(kind != 'candle' OR ("
+                "json_extract_string(payload_json, '$.final') = 'true' "
+                "AND continuity IN ('complete', 'recovered')))"
+            )
+        where = " AND ".join(clauses)
+        with self._connection_lock:
+            rows = self._con.execute(
+                f"SELECT {_UPDATE_COLUMNS} FROM market_updates WHERE {where} "
+                "QUALIFY ROW_NUMBER() OVER ("
+                "  PARTITION BY venue, instrument, kind, "
+                "  CASE WHEN kind = 'l2_snapshot' "
+                "    THEN json_extract_string(payload_json, '$.side') "
+                "  WHEN kind = 'metrics' "
+                "    THEN CASE WHEN json_extract(payload_json, '$.mid') IS NOT NULL "
+                "      THEN 'allMids' ELSE 'activeAssetCtx' END "
+                "  ELSE '' END "
+                "  ORDER BY local_seq DESC"
+                ") = 1 ORDER BY local_seq",
                 params,
             ).fetchall()
         return [_row_to_update(row) for row in rows]
@@ -288,6 +618,26 @@ class LiveBuffer:
             }
             for venue, instrument, state, note, changed_at in rows
         ]
+
+    def quarantined(self) -> list[dict[str, object]]:
+        """Persisted identity/content conflicts, in observation order."""
+        with self._connection_lock:
+            rows = self._con.execute(
+                "SELECT quarantine_id, venue, instrument, kind, source_event_id, "
+                "existing_content_digest, conflicting_content_digest, observed_at "
+                "FROM identity_quarantine ORDER BY quarantine_id"
+            ).fetchall()
+        keys = (
+            "quarantine_id",
+            "venue",
+            "instrument",
+            "kind",
+            "source_event_id",
+            "existing_content_digest",
+            "conflicting_content_digest",
+            "observed_at",
+        )
+        return [dict(zip(keys, row, strict=True)) for row in rows]
 
     def extent(self) -> dict[str, object]:
         """The recorded extent: earliest/latest ``received_at``, row
@@ -331,6 +681,11 @@ def _row_to_update(row: tuple[object, ...]) -> MarketUpdate:
         received_at,
         sequence,
         sequence_gap,
+        continuity,
+        source_event_id,
+        content_digest,
+        snapshot_epoch,
+        continuity_evidence_json,
         state,
         state_note,
         payload_json,
@@ -344,6 +699,15 @@ def _row_to_update(row: tuple[object, ...]) -> MarketUpdate:
         received_at=received_at,
         sequence=sequence,
         sequence_gap=bool(sequence_gap),
+        continuity=ContinuityState(continuity),
+        source_event_id=source_event_id,
+        content_digest=content_digest,
+        snapshot_epoch=snapshot_epoch,
+        continuity_evidence=(
+            ContinuityEvidence.model_validate_json(continuity_evidence_json)
+            if continuity_evidence_json is not None
+            else None
+        ),
         state=SourceState(state) if state is not None else None,
         state_note=state_note,
         payload=json.loads(payload_json),

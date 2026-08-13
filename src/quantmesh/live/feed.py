@@ -37,7 +37,13 @@ from typing import Any
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Venue
 from quantmesh.live.buffer import LiveBuffer
-from quantmesh.live.contract import MarketUpdate, Provenance, SourceState, UpdateKind
+from quantmesh.live.contract import (
+    ContinuityState,
+    MarketUpdate,
+    Provenance,
+    SourceState,
+    UpdateKind,
+)
 from quantmesh.live.supervisor import VenueSupervisor
 
 _POLL_SECONDS = 0.05  # supervisor outbox poll cadence (drain loop)
@@ -72,6 +78,10 @@ class ExactUpdateSnapshot:
     predecessor_data_time: datetime | None
     freshness_label: str | None
     age_ms: int | None
+    continuity: ContinuityState = ContinuityState.COMPLETE
+    source_event_id: str = ""
+    content_digest: str = ""
+    snapshot_epoch: str | None = None
 
 
 @dataclass(frozen=True)
@@ -104,7 +114,10 @@ def _continuity_proof(
     predecessor = _ContinuityProof(False, previous.sequence, previous.data_time)
     if current.kind is not previous.kind:
         return predecessor
-    if current.sequence_gap or previous.sequence_gap:
+    if (
+        current.continuity is not ContinuityState.COMPLETE
+        or previous.continuity is not ContinuityState.COMPLETE
+    ):
         return predecessor
     if not all(
         _is_aware(value)
@@ -118,6 +131,17 @@ def _continuity_proof(
         return predecessor
     if current.received_at < previous.received_at:
         return predecessor
+    if (
+        current.venue is Venue.HYPERLIQUID
+        and current.kind is UpdateKind.TRADE
+    ):
+        if (
+            current.source_event_id == previous.source_event_id
+            or current.received_at <= previous.received_at
+            or current.data_time < previous.data_time
+        ):
+            return predecessor
+        return _ContinuityProof(True, previous.sequence, previous.data_time)
     if current.kind is not UpdateKind.CANDLE:
         sequence_ordered = (
             type(current.sequence) is int
@@ -188,6 +212,15 @@ def _view(update: MarketUpdate, now: datetime, *, lag: timedelta) -> dict[str, o
         "age_ms": _age_ms(now, update.received_at),
         "sequence": update.sequence,
         "sequence_gap": update.sequence_gap,
+        "continuity": update.continuity.value,
+        "source_event_id": update.source_event_id,
+        "content_digest": update.content_digest,
+        "snapshot_epoch": update.snapshot_epoch,
+        "continuity_evidence": (
+            update.continuity_evidence.model_dump(mode="json")
+            if update.continuity_evidence is not None
+            else None
+        ),
         "label": label(update, now, lag=lag),
         "payload": update.payload,
     }
@@ -212,11 +245,15 @@ class LiveFeed:
         self._queue_size = queue_size
         self._lock = RLock()
         self._latest: dict[tuple[str, str, str], MarketUpdate] = {}
+        self._book_sides: dict[tuple[str, str, str], MarketUpdate] = {}
         self._continuity: dict[tuple[str, str, str], _ContinuityProof] = {}
         self._continuity_barriers: set[tuple[str, str, str]] = set()
         self._supervisors: list[VenueSupervisor] = []
         self._subscribers: set[asyncio.Queue[MarketUpdate]] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
+        if self._lake is not None:
+            for update in self._lake.latest():
+                self._ingest_cached(update.model_copy(deep=True))
 
     @property
     def replay_buffer(self) -> LiveBuffer | None:
@@ -229,56 +266,86 @@ class LiveFeed:
         """Register a supervisor; the pump runs it and drains its outbox."""
         with self._lock:
             self._supervisors.append(supervisor)
-
-    def ingest(self, updates: list[MarketUpdate]) -> None:
-        """Cache + replay lake; the wall-clock-free path every drill drives."""
-        for update in updates:
-            cached = update.model_copy(deep=True)
-            key = (cached.venue.value, cached.instrument, cached.kind.value)
-            with self._lock:
-                proof = _continuity_proof(self._latest.get(key), cached)
-                barrier_consumed = key in self._continuity_barriers
-                if barrier_consumed:
-                    proof = _ContinuityProof(
-                        False,
-                        proof.predecessor_sequence,
-                        proof.predecessor_data_time,
+            if self._lake is not None:
+                supervisor.on_persisted(
+                    self._lake.recovery_checkpoints(
+                        venue=supervisor.venue.value,
+                        instruments=supervisor.watchlist,
                     )
-                if self._lake is not None:
-                    self._lake.append(cached)
-                self._continuity[key] = proof
-                self._latest[key] = cached
-                if barrier_consumed:
-                    self._continuity_barriers.discard(key)
-                if cached.kind is UpdateKind.STATUS and cached.state in (
-                    SourceState.DISCONNECTED,
-                    SourceState.UNAVAILABLE,
-                ):
-                    affected = [
-                        stream_key
-                        for stream_key in self._latest
-                        if stream_key[:2] == key[:2]
-                        and stream_key[2] != UpdateKind.STATUS.value
-                    ]
-                    for stream_key in affected:
-                        previous = self._latest[stream_key]
-                        self._continuity[stream_key] = _ContinuityProof(
-                            False,
-                            previous.sequence,
-                            previous.data_time,
-                        )
-                        self._continuity_barriers.add(stream_key)
+                )
+
+    def ingest(self, updates: list[MarketUpdate]) -> list[MarketUpdate]:
+        """Cache + replay lake; the wall-clock-free path every drill drives."""
+        cached_updates = [update.model_copy(deep=True) for update in updates]
+        admitted: list[MarketUpdate] = []
+        with self._lock:
+            if self._lake is None:
+                receipts = [None] * len(cached_updates)
+            elif len(cached_updates) == 1:
+                receipts = [self._lake.append(cached_updates[0])]
+            else:
+                receipts = self._lake.append_many(cached_updates)
+            for cached, receipt in zip(cached_updates, receipts, strict=True):
+                if receipt is not None and not getattr(receipt, "inserted", True):
+                    continue
+                admitted.append(cached)
+                self._ingest_cached(cached)
+        return admitted
+
+    def _ingest_cached(self, cached: MarketUpdate) -> None:
+        """Fold one already-persisted update while holding ``_lock``."""
+        key = (cached.venue.value, cached.instrument, cached.kind.value)
+        proof = _continuity_proof(self._latest.get(key), cached)
+        barrier_consumed = key in self._continuity_barriers
+        if barrier_consumed:
+            proof = _ContinuityProof(
+                False,
+                proof.predecessor_sequence,
+                proof.predecessor_data_time,
+            )
+        self._continuity[key] = proof
+        self._latest[key] = cached
+        if cached.kind is UpdateKind.L2_SNAPSHOT:
+            side = cached.payload.get("side")
+            if side in ("bid", "ask"):
+                self._book_sides[(cached.venue.value, cached.instrument, side)] = cached
+        if barrier_consumed:
+            self._continuity_barriers.discard(key)
+        if cached.kind is UpdateKind.STATUS and cached.state in (
+            SourceState.DISCONNECTED,
+            SourceState.UNAVAILABLE,
+        ):
+            affected = [
+                stream_key
+                for stream_key in self._latest
+                if stream_key[:2] == key[:2]
+                and stream_key[2] != UpdateKind.STATUS.value
+            ]
+            for stream_key in affected:
+                previous = self._latest[stream_key]
+                self._continuity[stream_key] = _ContinuityProof(
+                    False,
+                    previous.sequence,
+                    previous.data_time,
+                )
+                self._continuity_barriers.add(stream_key)
 
     async def publish(self, update: MarketUpdate) -> None:
         """Ingest and fan out to every subscriber (server-loop path)."""
-        self.ingest([update])
-        await self._deliver(update)
+        admitted = self.ingest([update])
+        if admitted:
+            await self._deliver(admitted[0])
+
+    async def publish_many(self, updates: list[MarketUpdate]) -> None:
+        """Atomically ingest a supervisor batch, then fan out admitted rows."""
+        for update in self.ingest(updates):
+            await self._deliver(update)
 
     def publish_threadsafe(self, update: MarketUpdate) -> None:
         """Publish from another thread (TestClient drills): ingested
         synchronously, delivered on the server loop once the pump runs."""
-        self.ingest([update])
-        if self._loop is not None:
+        admitted = self.ingest([update])
+        if admitted and self._loop is not None:
             self._loop.call_soon_threadsafe(self._schedule_deliver, update)
 
     def _schedule_deliver(self, update: MarketUpdate) -> None:
@@ -319,6 +386,10 @@ class LiveFeed:
             received_at=copied.received_at,
             sequence=copied.sequence,
             sequence_gap=copied.sequence_gap,
+            continuity=copied.continuity,
+            source_event_id=copied.source_event_id or "",
+            content_digest=copied.content_digest or "",
+            snapshot_epoch=copied.snapshot_epoch,
             payload=_freeze(copied.payload),
             continuity_proven=proof.proven,
             predecessor_sequence=proof.predecessor_sequence,
@@ -341,11 +412,22 @@ class LiveFeed:
                 (key, update.model_copy(deep=True))
                 for key, update in sorted(self._latest.items())
             ]
+            book_sides = [
+                (key, update.model_copy(deep=True))
+                for key, update in sorted(self._book_sides.items())
+            ]
         for (venue, instrument, kind), update in latest:
             identity = f"{venue}:{instrument}"
             entry = instruments.setdefault(identity, {"venue": venue, "instrument": instrument})
             kinds = entry.setdefault("kinds", {})  # type: ignore[assignment]
             kinds[kind] = _view(update, now, lag=self.lag)  # type: ignore[index]
+            if identity not in newest or update.received_at > newest[identity].received_at:
+                newest[identity] = update
+        for (venue, instrument, side), update in book_sides:
+            identity = f"{venue}:{instrument}"
+            entry = instruments.setdefault(identity, {"venue": venue, "instrument": instrument})
+            sides = entry.setdefault("book_sides", {})  # type: ignore[assignment]
+            sides[side] = _view(update, now, lag=self.lag)  # type: ignore[index]
             if identity not in newest or update.received_at > newest[identity].received_at:
                 newest[identity] = update
         for identity, update in newest.items():
@@ -491,8 +573,12 @@ class LiveFeed:
     async def _drain_loop(self) -> None:
         while True:
             for supervisor in self._supervisors:
-                for update in supervisor.drain():
-                    await self.publish(update)
+                updates = supervisor.drain()
+                admitted = self.ingest(updates)
+                if self._lake is not None:
+                    supervisor.on_persisted(admitted)
+                for update in admitted:
+                    await self._deliver(update)
             await asyncio.sleep(_POLL_SECONDS)
 
     async def _tick_loop(self) -> None:
@@ -501,5 +587,9 @@ class LiveFeed:
             now = datetime.now(UTC)
             for supervisor in self._supervisors:
                 supervisor.on_tick(now)
-                for update in supervisor.drain():
-                    await self.publish(update)
+                updates = supervisor.drain()
+                admitted = self.ingest(updates)
+                if self._lake is not None:
+                    supervisor.on_persisted(admitted)
+                for update in admitted:
+                    await self._deliver(update)

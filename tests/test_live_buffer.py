@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 import quantmesh.live.buffer as buffer_module
 from quantmesh.domain.models import Venue
-from quantmesh.live.buffer import LiveBuffer
+from quantmesh.live.buffer import LiveBuffer, LiveIdentityConflictError
 from quantmesh.live.contract import (
     MarketUpdate,
     Provenance,
@@ -33,6 +33,8 @@ def _update(
     provenance: Provenance = Provenance.REAL,
     state: SourceState | None = None,
     state_note: str | None = None,
+    source_event_id: str | None = None,
+    snapshot_epoch: str | None = None,
 ) -> MarketUpdate:
     return MarketUpdate(
         venue=venue,
@@ -46,6 +48,8 @@ def _update(
         payload=payload,
         state=state,
         state_note=state_note,
+        source_event_id=source_event_id,
+        snapshot_epoch=snapshot_epoch,
     )
 
 
@@ -101,6 +105,24 @@ class _PauseAfterSequenceQuery:
         return getattr(self._connection, name)
 
 
+class _FailSecondMarketInsertOnce:
+    def __init__(self, connection: Any) -> None:
+        self._connection = connection
+        self._count = 0
+
+    def execute(self, query: str, parameters: object = None) -> Any:
+        if query.startswith("INSERT INTO market_updates"):
+            self._count += 1
+            if self._count == 2:
+                raise RuntimeError("injected second snapshot-side failure")
+        if parameters is None:
+            return self._connection.execute(query)
+        return self._connection.execute(query, parameters)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._connection, name)
+
+
 @pytest.fixture
 def buffer(tmp_path: Path) -> LiveBuffer:
     yield LiveBuffer(tmp_path, retention_days=7)
@@ -108,6 +130,207 @@ def buffer(tmp_path: Path) -> LiveBuffer:
 
 
 class TestAppendReplayRoundTrip:
+    def test_redelivery_after_restart_is_a_noop(self, tmp_path: Path) -> None:
+        first_update = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.TRADE,
+            {"price": 100.25, "size": 0.5, "side": "buy"},
+            sequence=11,
+            source_event_id="trade-a",
+        )
+        first = LiveBuffer(tmp_path)
+        assert first.append(first_update) == 1
+        first.close()
+
+        reopened = LiveBuffer(tmp_path)
+        redelivery = first_update.model_copy(
+            update={"received_at": first_update.received_at + timedelta(seconds=10)}
+        )
+        try:
+            assert reopened.append(redelivery) == 1
+            assert reopened.replay() == [first_update]
+        finally:
+            reopened.close()
+
+    def test_identity_content_conflict_is_quarantined(self, tmp_path: Path) -> None:
+        lake = LiveBuffer(tmp_path)
+        original = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.TRADE,
+            {"price": 100.25, "size": 0.5, "side": "buy"},
+            source_event_id="trade-a",
+        )
+        conflict = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.TRADE,
+            {"price": 101.0, "size": 0.5, "side": "buy"},
+            source_event_id="trade-a",
+        )
+        try:
+            assert lake.append(original) == 1
+            with pytest.raises(LiveIdentityConflictError, match="trade-a"):
+                lake.append(conflict)
+            with pytest.raises(LiveIdentityConflictError, match="trade-a"):
+                lake.append(conflict)
+
+            assert lake.replay() == [original]
+            [quarantined] = lake.quarantined()
+            assert quarantined["source_event_id"] == "trade-a"
+            assert quarantined["existing_content_digest"] == original.content_digest
+            assert quarantined["conflicting_content_digest"] == conflict.content_digest
+        finally:
+            lake.close()
+
+        reopened = LiveBuffer(tmp_path)
+        try:
+            assert len(reopened.quarantined()) == 1
+        finally:
+            reopened.close()
+
+    def test_same_source_identity_is_scoped_by_venue_instrument_and_kind(
+        self, buffer: LiveBuffer
+    ) -> None:
+        first = _quote("BTC", source_event_id="shared")
+        second = _quote("ETH", source_event_id="shared")
+
+        assert buffer.append(first) == 1
+        assert buffer.append(second) == 2
+
+    def test_append_revalidates_digest_after_mutable_payload_change(
+        self, buffer: LiveBuffer
+    ) -> None:
+        update = _quote("BTC", source_event_id="quote-a")
+        update.payload["bid"] = 99.0
+
+        with pytest.raises(ValidationError, match="content_digest"):
+            buffer.append(update)
+
+        assert buffer.replay() == []
+
+    def test_two_sided_snapshot_rolls_back_atomically_on_second_insert(
+        self, tmp_path: Path
+    ) -> None:
+        lake = LiveBuffer(tmp_path)
+        bid = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.L2_SNAPSHOT,
+            {"side": "bid", "levels": [[99.5, 1.0]]},
+        )
+        ask = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.L2_SNAPSHOT,
+            {"side": "ask", "levels": [[100.5, 1.0]]},
+            snapshot_epoch=bid.snapshot_epoch,
+        )
+        lake._con = _FailSecondMarketInsertOnce(lake._con)
+        try:
+            with pytest.raises(RuntimeError, match="second snapshot-side"):
+                lake.append_many([bid, ask])
+            assert lake.replay() == []
+        finally:
+            lake.close()
+
+    def test_pre_0021_lake_migrates_transactionally_and_idempotently(
+        self, tmp_path: Path
+    ) -> None:
+        path = tmp_path / "live" / "updates.duckdb"
+        path.parent.mkdir(parents=True)
+        connection = buffer_module.duckdb.connect(str(path))
+        connection.execute(
+            "CREATE TABLE market_updates ("
+            "local_seq BIGINT PRIMARY KEY, venue VARCHAR NOT NULL, "
+            "instrument VARCHAR NOT NULL, kind VARCHAR NOT NULL, "
+            "provenance VARCHAR NOT NULL, data_time TIMESTAMPTZ NOT NULL, "
+            "received_at TIMESTAMPTZ NOT NULL, sequence BIGINT, "
+            "sequence_gap BOOLEAN NOT NULL DEFAULT FALSE, state VARCHAR, "
+            "state_note VARCHAR, payload_json VARCHAR NOT NULL)"
+        )
+        connection.execute(
+            "INSERT INTO market_updates VALUES "
+            "(7, 'hyperliquid', 'BTC', 'quote', 'real', ?, ?, 9, true, "
+            "NULL, NULL, ?)",
+            [
+                datetime(2026, 8, 9, 10, 0, tzinfo=UTC),
+                datetime(2026, 8, 9, 10, 0, tzinfo=UTC),
+                json.dumps({"bid": 100.0, "ask": 100.5}),
+            ],
+        )
+        connection.close()
+
+        migrated = LiveBuffer(tmp_path)
+        [row] = migrated.replay()
+        assert row.source_event_id == "legacy-v1:7"
+        assert row.continuity.value == "known-gap"
+        migrated.close()
+
+        reopened = LiveBuffer(tmp_path)
+        try:
+            [same] = reopened.replay()
+            assert same == row
+            assert reopened._con.execute(
+                "SELECT version FROM live_schema_metadata "
+                "WHERE component = 'market_updates'"
+            ).fetchone() == (2,)
+        finally:
+            reopened.close()
+
+    def test_future_schema_fails_before_mutating_the_lake(self, tmp_path: Path) -> None:
+        path = tmp_path / "live" / "updates.duckdb"
+        path.parent.mkdir(parents=True)
+        connection = buffer_module.duckdb.connect(str(path))
+        connection.execute(
+            "CREATE TABLE live_schema_metadata "
+            "(component VARCHAR PRIMARY KEY, version INTEGER NOT NULL)"
+        )
+        connection.execute("INSERT INTO live_schema_metadata VALUES ('market_updates', 99)")
+        connection.close()
+
+        with pytest.raises(RuntimeError, match="newer than supported"):
+            LiveBuffer(tmp_path)
+
+        inspected = buffer_module.duckdb.connect(str(path))
+        try:
+            assert inspected.execute(
+                "SELECT version FROM live_schema_metadata"
+            ).fetchone() == (99,)
+            assert inspected.execute(
+                "SELECT COUNT(*) FROM information_schema.tables "
+                "WHERE table_name = 'market_updates'"
+            ).fetchone() == (0,)
+        finally:
+            inspected.close()
+
+    def test_recovery_checkpoints_preserve_both_metrics_channels(
+        self, buffer: LiveBuffer
+    ) -> None:
+        buffer.append(
+            _update(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.METRICS,
+                {"mid": 100.25},
+                source_event_id="all-mids-1",
+            )
+        )
+        buffer.append(
+            _update(
+                Venue.HYPERLIQUID,
+                "BTC",
+                UpdateKind.METRICS,
+                {"funding_rate": 0.0001, "mark_price": 100.3},
+                source_event_id="asset-ctx-1",
+            )
+        )
+
+        rows = buffer.recovery_checkpoints(venue="hyperliquid", instruments=["BTC"])
+
+        assert {row.source_event_id for row in rows} == {"all-mids-1", "asset-ctx-1"}
+
     def test_tail_limit_selects_latest_rows_but_preserves_replay_order(
         self, buffer: LiveBuffer
     ) -> None:
@@ -212,6 +435,19 @@ class TestAppendReplayRoundTrip:
             reopened.close()
 
     def test_all_kinds_round_trip(self, buffer: LiveBuffer) -> None:
+        book_bid = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.L2_SNAPSHOT,
+            {"side": "bid", "levels": [[99.5, 3.0], [99.0, 5.0]]},
+        )
+        book_ask = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.L2_SNAPSHOT,
+            {"side": "ask", "levels": [[100.5, 2.0], [101.0, 1.0]]},
+            snapshot_epoch=book_bid.snapshot_epoch,
+        )
         updates = [
             _quote("BTC"),
             _update(
@@ -227,12 +463,8 @@ class TestAppendReplayRoundTrip:
                 UpdateKind.CANDLE,
                 {"open": 99.0, "high": 101.0, "low": 98.5, "close": 100.0, "volume": 3},
             ),
-            _update(
-                Venue.HYPERLIQUID,
-                "BTC",
-                UpdateKind.L2_SNAPSHOT,
-                {"side": "bid", "levels": [[99.5, 3.0], [99.0, 5.0]]},
-            ),
+            book_bid,
+            book_ask,
             _update(
                 Venue.HYPERLIQUID,
                 "BTC",
@@ -247,7 +479,10 @@ class TestAppendReplayRoundTrip:
                 state=SourceState.CONNECTED,
             ),
         ]
-        for update in updates:
+        for update in updates[:3]:
+            buffer.append(update)
+        buffer.append_many([book_bid, book_ask])
+        for update in updates[5:]:
             buffer.append(update)
         replayed = buffer.replay()
         assert len(replayed) == len(updates)
@@ -514,6 +749,35 @@ class TestRetention:
         finally:
             buffer.close()
 
+    def test_prune_never_splits_one_l2_snapshot_epoch(self, tmp_path: Path) -> None:
+        old = datetime.now(UTC) - timedelta(days=2)
+        fresh = datetime.now(UTC)
+        bid = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.L2_SNAPSHOT,
+            {"side": "bid", "levels": [[100.0, 1.0]]},
+            received_at=old,
+            source_event_id="epoch-1:bid",
+            snapshot_epoch="epoch-1",
+        )
+        ask = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.L2_SNAPSHOT,
+            {"side": "ask", "levels": [[100.5, 1.0]]},
+            received_at=fresh,
+            source_event_id="epoch-1:ask",
+            snapshot_epoch="epoch-1",
+        )
+        buffer = LiveBuffer(tmp_path, retention_days=1)
+        try:
+            buffer.append_many([bid, ask])
+            assert buffer.prune() == 0
+            assert {row.payload["side"] for row in buffer.replay()} == {"bid", "ask"}
+        finally:
+            buffer.close()
+
 
 class TestFailClosed:
     def test_corrupt_payload_raises_on_replay(self, tmp_path: Path) -> None:
@@ -557,13 +821,34 @@ class TestFailClosed:
 
     def test_json_round_trip_of_payload_shape(self, buffer: LiveBuffer) -> None:
         payload = {"levels": [[99.5, 3.0], [99.0, 5.0]], "side": "bid"}
-        buffer.append(
-            _update(Venue.HYPERLIQUID, "BTC", UpdateKind.L2_SNAPSHOT, payload)
+        bid = _update(Venue.HYPERLIQUID, "BTC", UpdateKind.L2_SNAPSHOT, payload)
+        ask = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.L2_SNAPSHOT,
+            {"levels": [[100.5, 1.0]], "side": "ask"},
+            snapshot_epoch=bid.snapshot_epoch,
         )
-        [row] = buffer.replay()
-        assert row.payload == payload
+        buffer.append_many([bid, ask])
+        rows = buffer.replay()
+        assert rows[0].payload == payload
         # stored form is stable JSON text, ready for Parquet-style reads
         stored = buffer._con.execute(
-            "SELECT payload_json FROM market_updates"
+            "SELECT payload_json FROM market_updates ORDER BY local_seq LIMIT 1"
         ).fetchone()[0]
         assert json.loads(stored) == payload
+
+    def test_hyperliquid_book_cannot_persist_only_one_side(
+        self, buffer: LiveBuffer
+    ) -> None:
+        bid = _update(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.L2_SNAPSHOT,
+            {"levels": [[99.5, 3.0]], "side": "bid"},
+        )
+
+        with pytest.raises(ValueError, match="atomic bid and ask"):
+            buffer.append(bid)
+
+        assert buffer.replay() == []

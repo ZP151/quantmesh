@@ -214,3 +214,37 @@ class PublicInfoTransport:
             raw_bytes=raw,
             received_at=self._clock(),
         )
+
+
+class PublicInfoRecoverySource:
+    """Read-only adapter from immutable `/info` responses to live recovery rows."""
+
+    __slots__ = ("_transport",)
+
+    def __init__(self, transport: PublicInfoTransport | None = None) -> None:
+        self._transport = transport or PublicInfoTransport()
+
+    def candles(
+        self,
+        symbol: str,
+        interval: str,
+        *,
+        start: datetime,
+        end: datetime,
+    ) -> list[dict[str, Any]]:
+        payload = self._transport.candles(
+            symbol,
+            interval,
+            start=start,
+            end=end,
+        ).payload
+        if not isinstance(payload, list):  # defensive boundary for scripted transports
+            raise HyperliquidProtocolError("public candle recovery payload must be a list")
+        return payload
+
+    def l2_book(self, symbol: str, *, at: datetime | None = None) -> dict[str, Any]:
+        del at  # provider returns its authoritative current snapshot
+        payload = self._transport.l2_book(symbol).payload
+        if not isinstance(payload, dict):
+            raise HyperliquidProtocolError("public book recovery payload must be an object")
+        return payload

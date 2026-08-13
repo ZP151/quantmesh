@@ -17,11 +17,17 @@ deterministically, mirroring ``SimulatedStreamTransport``.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import UTC, datetime, timedelta
 
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.hyperliquid.errors import HyperliquidProtocolError
+from quantmesh.hyperliquid.identity import (
+    book_side_source_event_id,
+    book_snapshot_epoch,
+    trade_source_event_id,
+)
 from quantmesh.hyperliquid.rest import RestTransport, to_ms
 from quantmesh.hyperliquid.wire import (
     parse_all_mids,
@@ -31,11 +37,18 @@ from quantmesh.hyperliquid.wire import (
     parse_l2_book_frame,
     parse_trades_frame,
 )
-from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
+from quantmesh.live.contract import (
+    ContinuityEvidence,
+    ContinuityState,
+    MarketUpdate,
+    Provenance,
+    UpdateKind,
+)
 from quantmesh.live.supervisor import GapFinding, VenueSupervisor
 
 _CANDLE_INTERVAL = "1m"
 _RESYNC_WINDOW = timedelta(minutes=5)  # REST candle backfill window on reconnect
+_RESYNC_MAX_CANDLES = 5_000
 
 
 def _instrument(coin: str) -> Instrument:
@@ -54,7 +67,10 @@ def _update(
     *,
     data_time: datetime,
     sequence: int | None = None,
-    sequence_gap: bool = False,
+    continuity: ContinuityState = ContinuityState.COMPLETE,
+    source_event_id: str | None = None,
+    snapshot_epoch: str | None = None,
+    continuity_evidence: ContinuityEvidence | None = None,
 ) -> MarketUpdate:
     return MarketUpdate(
         venue=Venue.HYPERLIQUID,
@@ -63,13 +79,23 @@ def _update(
         provenance=Provenance.REAL,
         data_time=data_time,
         sequence=sequence,
-        sequence_gap=sequence_gap,
+        continuity=continuity,
+        source_event_id=source_event_id,
+        snapshot_epoch=snapshot_epoch,
+        continuity_evidence=continuity_evidence,
         payload=payload,
     )
 
 
 def _levels(rows: list) -> list[list[float]]:
     return [[level.price, level.quantity] for level in rows]
+
+
+def _source_id(value: object) -> str:
+    canonical = json.dumps(value, separators=(",", ":"), ensure_ascii=False).encode(
+        "utf-8"
+    )
+    return hashlib.sha256(canonical).hexdigest()
 
 
 class HyperliquidVenueSupervisor(VenueSupervisor):
@@ -89,7 +115,13 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
         super().__init__(transport, **kwargs)
         self._rest = rest
         self._coins: list[str] = []
-        self._last_tid: dict[str, int] = {}
+        self._last_trade_identity: dict[str, str] = {}
+        self._last_candle_open: dict[str, datetime] = {}
+        self._continuity_pending: dict[tuple[str, str], ContinuityState] = {}
+        self._last_event_id: dict[tuple[str, str], str] = {}
+        self._disconnect_context: dict[
+            tuple[str, str], tuple[datetime, str | None]
+        ] = {}
 
     def specs(self, watchlist: list[str]) -> dict[str, dict]:
         """identifier -> subscription spec (the SDK's identifier rules)."""
@@ -126,13 +158,13 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                 f"frame for unsubscribed identifier {identifier!r} (channel {channel!r})"
             )
         if identifier.startswith("candle:"):
-            return self._on_candle(identifier, frame.get("data"))
+            return self._on_candle(identifier, frame.get("data"), now)
         if identifier.startswith("l2Book:"):
-            return self._on_book(identifier, frame.get("data"))
+            return self._on_book(identifier, frame.get("data"), now)
         if identifier.startswith("trades:"):
-            return self._on_trades(identifier, frame.get("data"))
+            return self._on_trades(identifier, frame.get("data"), now)
         if identifier.startswith("bbo:"):
-            return self._on_bbo(identifier, frame.get("data"))
+            return self._on_bbo(identifier, frame.get("data"), now)
         if identifier == "allMids":
             return self._on_all_mids(frame.get("data"), now)
         if identifier == "activeAssetCtx":
@@ -141,9 +173,31 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             f"frame for unsubscribed identifier {identifier!r} (channel {channel!r})"
         )
 
-    def _on_candle(self, identifier: str, data: object) -> list[MarketUpdate]:
+    def _on_candle(
+        self, identifier: str, data: object, now: datetime
+    ) -> list[MarketUpdate]:
         coin = identifier.split(":")[1].rsplit(",", 1)[0].upper()
         bar = parse_candle_frame(data, _instrument(coin), interval=_CANDLE_INTERVAL)
+        final = bar.timestamp + timedelta(minutes=1) <= now
+        candle_content = [bar.open, bar.high, bar.low, bar.close, bar.volume]
+        source_event_id = _source_id(
+            [
+                int(to_ms(bar.timestamp)),
+                coin,
+                _CANDLE_INTERVAL,
+                "final" if final else "provisional",
+                None if final else candle_content,
+            ]
+        )
+        continuity, evidence = self._resume_evidence(
+            coin,
+            "candle",
+            source_event_id,
+            now,
+            recovery_source="hyperliquid-websocket",
+            consume=final,
+            durable=final,
+        )
         return [
             _update(
                 _instrument(coin),
@@ -155,42 +209,75 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                     "low": bar.low,
                     "close": bar.close,
                     "volume": bar.volume,
+                    "final": final,
                 },
                 data_time=bar.timestamp,
                 sequence=int(to_ms(bar.timestamp)),
+                continuity=continuity,
+                source_event_id=source_event_id,
+                continuity_evidence=evidence,
             )
         ]
 
-    def _on_book(self, identifier: str, data: object) -> list[MarketUpdate]:
+    def _on_book(
+        self, identifier: str, data: object, now: datetime
+    ) -> list[MarketUpdate]:
         coin = identifier.split(":")[1].upper()
         book = parse_l2_book_frame(data, _instrument(coin))
+        bids = _levels(book.bids)
+        asks = _levels(book.asks)
+        epoch = book_snapshot_epoch(int(to_ms(book.timestamp)), coin, bids, asks)
+        bid_id = book_side_source_event_id(epoch, "bid")
+        ask_id = book_side_source_event_id(epoch, "ask")
+        continuity, evidence = self._resume_evidence(
+            coin,
+            "l2Book",
+            bid_id,
+            now,
+            recovery_source="hyperliquid-websocket",
+        )
         return [
             _update(
                 _instrument(coin),
                 UpdateKind.L2_SNAPSHOT,
-                {"side": "bid", "levels": _levels(book.bids)},
+                {"side": "bid", "levels": bids},
                 data_time=book.timestamp,
+                continuity=continuity,
+                snapshot_epoch=epoch,
+                source_event_id=bid_id,
+                continuity_evidence=evidence,
             ),
             _update(
                 _instrument(coin),
                 UpdateKind.L2_SNAPSHOT,
-                {"side": "ask", "levels": _levels(book.asks)},
+                {"side": "ask", "levels": asks},
                 data_time=book.timestamp,
+                continuity=continuity,
+                snapshot_epoch=epoch,
+                source_event_id=ask_id,
+                continuity_evidence=evidence,
             ),
         ]
 
-    def _on_trades(self, identifier: str, data: object) -> list[MarketUpdate]:
+    def _on_trades(
+        self, identifier: str, data: object, now: datetime
+    ) -> list[MarketUpdate]:
         coin = identifier.split(":")[1].upper()
         events = parse_trades_frame(data, _instrument(coin))
         updates: list[MarketUpdate] = []
         for event in events:
             tid = event.venue_sequence
-            last = self._last_tid.get(coin)
-            # a gap needs a continuity reference: the first trade after a
-            # subscription (or reconnect) has none, so it is never a gap
-            gap = last is not None and tid is not None and tid > last + 1
-            if tid is not None and (last is None or tid > last):
-                self._last_tid[coin] = tid
+            if tid is None:
+                raise HyperliquidProtocolError("trade is missing its provider tid identity")
+            block_time = int(to_ms(event.timestamp))
+            source_event_id = trade_source_event_id(block_time, coin, tid)
+            continuity, evidence = self._resume_evidence(
+                coin,
+                "trades",
+                source_event_id,
+                now,
+                recovery_source="unavailable-no-public-trade-history",
+            )
             updates.append(
                 _update(
                     _instrument(coin),
@@ -203,42 +290,192 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                             if event.aggressor_side is None
                             else event.aggressor_side.value
                         ),
+                        "tid": tid,
+                        "block_time_ms": block_time,
                     },
                     data_time=event.timestamp,
                     sequence=tid,
-                    sequence_gap=gap,
+                    continuity=continuity,
+                    source_event_id=source_event_id,
+                    continuity_evidence=evidence,
                 )
             )
         return updates
 
-    def _on_bbo(self, identifier: str, data: object) -> list[MarketUpdate]:
+    def _resume_evidence(
+        self,
+        coin: str,
+        channel: str,
+        source_event_id: str,
+        now: datetime,
+        *,
+        recovery_source: str,
+        consume: bool = True,
+        durable: bool = True,
+    ) -> tuple[ContinuityState, ContinuityEvidence | None]:
+        del consume, durable  # acknowledgement, not parsing, advances durable state
+        continuity = self._continuity_pending.get(
+            (coin, channel), ContinuityState.COMPLETE
+        )
+        evidence = None
+        if continuity is not ContinuityState.COMPLETE:
+            disconnected_at, last_id = self._disconnect_context.get(
+                (coin, channel), (now, self._last_event_id.get((coin, channel)))
+            )
+            evidence = ContinuityEvidence(
+                channel=channel,
+                disconnected_at=disconnected_at,
+                last_durable_source_event_id=last_id,
+                first_recovered_source_event_id=source_event_id,
+                recovered_at=now,
+                recovery_source=recovery_source,
+            )
+        return continuity, evidence
+
+    def on_persisted(self, updates: list[MarketUpdate]) -> None:
+        """Advance reconnect cursors only after LiveBuffer commits the rows."""
+        acknowledged: set[tuple[str, str]] = set()
+        for update in updates:
+            if update.venue is not Venue.HYPERLIQUID or not update.source_event_id:
+                continue
+            coin = update.instrument
+            channel: str | None = None
+            if update.kind is UpdateKind.CANDLE and update.payload.get("final") is True:
+                channel = "candle"
+                if update.continuity not in (
+                    ContinuityState.KNOWN_GAP,
+                    ContinuityState.UNRECOVERABLE,
+                ):
+                    self._last_candle_open[coin] = update.data_time
+                else:
+                    # The row is durable evidence of an unresolved hole, not
+                    # proof that the channel resumed continuous delivery.
+                    self._last_event_id[(coin, channel)] = update.source_event_id
+                    continue
+            elif update.kind is UpdateKind.L2_SNAPSHOT:
+                channel = "l2Book"
+            elif update.kind is UpdateKind.TRADE:
+                channel = "trades"
+                self._last_trade_identity[coin] = update.source_event_id
+            elif update.kind is UpdateKind.QUOTE:
+                channel = "bbo"
+            elif update.kind is UpdateKind.METRICS:
+                channel = (
+                    "allMids" if set(update.payload) == {"mid"} else "activeAssetCtx"
+                )
+            if channel is None:
+                continue
+            self._last_event_id[(coin, channel)] = update.source_event_id
+            acknowledged.add((coin, channel))
+        for key in acknowledged:
+            self._continuity_pending.pop(key, None)
+            self._disconnect_context.pop(key, None)
+
+    def on_disconnect(self, now: datetime) -> list[GapFinding]:
+        for coin in self._coins:
+            for channel in (
+                "candle",
+                "l2Book",
+                "bbo",
+                "allMids",
+                "activeAssetCtx",
+            ):
+                self._continuity_pending[(coin, channel)] = (
+                    ContinuityState.UNKNOWN_AFTER_DISCONNECT
+                )
+                self._disconnect_context[(coin, channel)] = (
+                    now,
+                    self._last_event_id.get((coin, channel)),
+                )
+            self._continuity_pending[(coin, "trades")] = (
+                ContinuityState.UNRECOVERABLE
+            )
+            self._disconnect_context[(coin, "trades")] = (
+                now,
+                self._last_event_id.get((coin, "trades")),
+            )
+        return super().on_disconnect(now)
+
+    def _on_bbo(
+        self, identifier: str, data: object, now: datetime
+    ) -> list[MarketUpdate]:
         coin = identifier.split(":")[1].upper()
         payload = parse_bbo_frame(data)
         assert isinstance(data, dict)
+        data_time = _frame_time(data)
+        source_event_id = _source_id(
+            [int(to_ms(data_time)), coin, "bbo", payload]
+        )
+        continuity, evidence = self._resume_evidence(
+            coin,
+            "bbo",
+            source_event_id,
+            now,
+            recovery_source="hyperliquid-websocket",
+        )
         return [
             _update(
                 _instrument(coin),
                 UpdateKind.QUOTE,
                 payload,
-                data_time=_frame_time(data),
+                data_time=data_time,
+                continuity=continuity,
+                source_event_id=source_event_id,
+                continuity_evidence=evidence,
             )
         ]
 
     def _on_all_mids(self, data: object, now: datetime) -> list[MarketUpdate]:
         mids = parse_all_mids(data)
-        return [
-            _update(_instrument(coin), UpdateKind.METRICS, {"mid": price}, data_time=now)
-            for coin, price in mids.items()
-            if coin in self._coins
-        ]
+        updates: list[MarketUpdate] = []
+        for coin, price in mids.items():
+            if coin not in self._coins:
+                continue
+            source_event_id = _source_id([int(to_ms(now)), coin, "allMids"])
+            continuity, evidence = self._resume_evidence(
+                coin,
+                "allMids",
+                source_event_id,
+                now,
+                recovery_source="hyperliquid-websocket",
+            )
+            updates.append(_update(
+                _instrument(coin),
+                UpdateKind.METRICS,
+                {"mid": price},
+                data_time=now,
+                continuity=continuity,
+                source_event_id=source_event_id,
+                continuity_evidence=evidence,
+            ))
+        return updates
 
     def _on_asset_ctx(self, data: object, now: datetime) -> list[MarketUpdate]:
         ctx = parse_asset_ctx_map(data)
-        return [
-            _update(_instrument(coin), UpdateKind.METRICS, metrics, data_time=now)
-            for coin, metrics in ctx.items()
-            if coin in self._coins
-        ]
+        updates: list[MarketUpdate] = []
+        for coin, metrics in ctx.items():
+            if coin not in self._coins:
+                continue
+            source_event_id = _source_id(
+                [int(to_ms(now)), coin, "activeAssetCtx"]
+            )
+            continuity, evidence = self._resume_evidence(
+                coin,
+                "activeAssetCtx",
+                source_event_id,
+                now,
+                recovery_source="hyperliquid-websocket",
+            )
+            updates.append(_update(
+                _instrument(coin),
+                UpdateKind.METRICS,
+                metrics,
+                data_time=now,
+                continuity=continuity,
+                source_event_id=source_event_id,
+                continuity_evidence=evidence,
+            ))
+        return updates
 
     # -- reconnect recovery -----------------------------------------------------
 
@@ -248,19 +485,90 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             self._gap_pending.append(
                 GapFinding("hyperliquid", "no REST transport; reconnect gaps reported only")
             )
+            for coin in self._coins:
+                self._gap_pending.append(
+                    GapFinding(
+                        coin,
+                        "disconnect continuity is unknown; trades are unrecoverable",
+                    )
+                )
             return []
         updates: list[MarketUpdate] = []
         for coin in self._coins:
             instrument = _instrument(coin)
-            try:
-                rows = self._rest.candles(
-                    coin, _CANDLE_INTERVAL, start=now - _RESYNC_WINDOW, end=now
+            durable_start = self._last_candle_open.get(coin)
+            if durable_start is None:
+                start = _floor_minute(now) - _RESYNC_WINDOW
+            else:
+                start = durable_start + timedelta(minutes=1)
+            final_open = _floor_minute(now) - timedelta(minutes=1)
+            expected_count = _minute_open_count(start, final_open)
+            expected_opens = (
+                _minute_opens(start, expected_count)
+                if expected_count <= _RESYNC_MAX_CANDLES
+                else []
+            )
+            bars = []
+            recovery_state = ContinuityState.KNOWN_GAP
+            if expected_count > _RESYNC_MAX_CANDLES:
+                self._continuity_pending[(coin, "candle")] = (
+                    ContinuityState.UNRECOVERABLE
                 )
-            except Exception as error:  # REST transport may fail like any network call
-                self._gap_pending.append(GapFinding(coin, f"candle re-sync unavailable: {error}"))
-                continue
-            for row in rows:
-                bar = parse_candle_frame(row, instrument, interval=_CANDLE_INTERVAL)
+                self._gap_pending.append(
+                    GapFinding(
+                        coin,
+                        "candle outage exceeds the 5,000-row public recovery horizon",
+                    )
+                )
+            elif expected_opens:
+                try:
+                    rows = self._rest.candles(
+                        coin, _CANDLE_INTERVAL, start=start, end=final_open
+                    )
+                    parsed = [
+                        parse_candle_frame(row, instrument, interval=_CANDLE_INTERVAL)
+                        for row in rows
+                    ]
+                    expected_set = set(expected_opens)
+                    finalized = [bar for bar in parsed if bar.timestamp <= final_open]
+                    bars = [bar for bar in finalized if bar.timestamp in expected_set]
+                    exact = [bar.timestamp for bar in finalized] == expected_opens
+                    if exact and durable_start is not None:
+                        recovery_state = ContinuityState.RECOVERED
+                    else:
+                        self._gap_pending.append(
+                            GapFinding(
+                                coin,
+                                "candle re-sync did not prove the complete outage window",
+                            )
+                        )
+                except Exception as error:  # network and protocol both fail closed
+                    self._gap_pending.append(
+                        GapFinding(coin, f"candle re-sync unavailable: {error}")
+                    )
+                self._continuity_pending[(coin, "candle")] = recovery_state
+            batch_evidence: ContinuityEvidence | None = None
+            for index, bar in enumerate(bars):
+                source_event_id = _source_id(
+                    [
+                        int(to_ms(bar.timestamp)),
+                        coin,
+                        _CANDLE_INTERVAL,
+                        "final",
+                        None,
+                    ]
+                )
+                if index == 0:
+                    continuity, evidence = self._resume_evidence(
+                        coin,
+                        "candle",
+                        source_event_id,
+                        now,
+                        recovery_source="hyperliquid-public-info",
+                    )
+                    batch_evidence = evidence
+                else:
+                    continuity, evidence = recovery_state, batch_evidence
                 updates.append(
                     _update(
                         instrument,
@@ -272,41 +580,65 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                             "low": bar.low,
                             "close": bar.close,
                             "volume": bar.volume,
+                            "final": True,
                         },
                         data_time=bar.timestamp,
                         sequence=int(to_ms(bar.timestamp)),
-                        sequence_gap=True,
+                        continuity=continuity,
+                        source_event_id=source_event_id,
+                        continuity_evidence=evidence,
                     )
                 )
             try:
                 snapshot = self._rest.l2_book(coin, at=now)
                 book = parse_l2_book_frame(snapshot, instrument)
+                bids = _levels(book.bids)
+                asks = _levels(book.asks)
+                epoch = book_snapshot_epoch(
+                    int(to_ms(book.timestamp)), coin, bids, asks
+                )
+                bid_id = book_side_source_event_id(epoch, "bid")
+                ask_id = book_side_source_event_id(epoch, "ask")
+                continuity, evidence = self._resume_evidence(
+                    coin,
+                    "l2Book",
+                    bid_id,
+                    now,
+                    recovery_source="hyperliquid-public-info",
+                )
+                continuity = ContinuityState.RECOVERED
                 updates.extend(
                     [
                         _update(
                             instrument,
                             UpdateKind.L2_SNAPSHOT,
-                            {"side": "bid", "levels": _levels(book.bids)},
-                            data_time=now,
-                            sequence_gap=True,
+                            {"side": "bid", "levels": bids},
+                            data_time=book.timestamp,
+                            continuity=continuity,
+                            snapshot_epoch=epoch,
+                            source_event_id=bid_id,
+                            continuity_evidence=evidence,
                         ),
                         _update(
                             instrument,
                             UpdateKind.L2_SNAPSHOT,
-                            {"side": "ask", "levels": _levels(book.asks)},
-                            data_time=now,
-                            sequence_gap=True,
+                            {"side": "ask", "levels": asks},
+                            data_time=book.timestamp,
+                            continuity=continuity,
+                            snapshot_epoch=epoch,
+                            source_event_id=ask_id,
+                            continuity_evidence=evidence,
                         ),
                     ]
                 )
             except Exception as error:
                 self._gap_pending.append(GapFinding(coin, f"book re-sync unavailable: {error}"))
-            if coin in self._last_tid:
+            if coin in self._last_trade_identity:
                 self._gap_pending.append(
                     GapFinding(
                         coin,
-                        f"trades cannot be REST re-synced; sequence resumes at tid "
-                        f"{self._last_tid[coin]}",
+                        "trades cannot be REST re-synced; last durable event is "
+                        f"{self._last_trade_identity[coin]}",
                     )
                 )
         return updates
@@ -318,6 +650,20 @@ def _frame_time(row: dict) -> datetime:
     if not isinstance(millis, int):
         raise HyperliquidProtocolError("bbo row missing an integer 'time'")
     return datetime.fromtimestamp(millis / 1000, tz=UTC)
+
+
+def _floor_minute(value: datetime) -> datetime:
+    return value.astimezone(UTC).replace(second=0, microsecond=0)
+
+
+def _minute_open_count(start: datetime, end: datetime) -> int:
+    if start > end:
+        return 0
+    return int((end - start) / timedelta(minutes=1)) + 1
+
+
+def _minute_opens(start: datetime, count: int) -> list[datetime]:
+    return [start + timedelta(minutes=index) for index in range(count)]
 
 
 def _frame_identifier(frame: dict) -> str:

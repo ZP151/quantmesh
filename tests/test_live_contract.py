@@ -13,11 +13,71 @@ from pydantic import ValidationError
 
 from quantmesh.domain.models import Venue
 from quantmesh.live.contract import (
+    ContinuityState,
     MarketUpdate,
     Provenance,
     SourceState,
     UpdateKind,
 )
+
+
+def test_continuity_states_are_an_exact_stable_contract() -> None:
+    assert [state.value for state in ContinuityState] == [
+        "complete",
+        "known-gap",
+        "unknown-after-disconnect",
+        "recovered",
+        "unrecoverable",
+    ]
+
+
+def test_legacy_sequence_gap_maps_to_known_gap() -> None:
+    update = _update(UpdateKind.QUOTE, _quote(), sequence_gap=True)
+
+    assert update.continuity is ContinuityState.KNOWN_GAP
+    assert update.sequence_gap is True
+
+
+def test_noncomplete_continuity_preserves_legacy_gap_surface() -> None:
+    update = _update(
+        UpdateKind.CANDLE,
+        {"open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5},
+        continuity=ContinuityState.RECOVERED,
+    )
+
+    assert update.sequence_gap is True
+    assert update.source_event_id
+    assert len(update.content_digest) == 64
+
+
+@pytest.mark.parametrize("continuity", list(ContinuityState))
+def test_continuity_and_legacy_gap_have_one_exact_mapping(
+    continuity: ContinuityState,
+) -> None:
+    update = _update(UpdateKind.QUOTE, _quote(), continuity=continuity)
+
+    assert update.sequence_gap is (continuity is not ContinuityState.COMPLETE)
+
+
+def test_explicit_contradictory_gap_and_continuity_are_rejected() -> None:
+    with pytest.raises(ValidationError, match="contradicts continuity"):
+        _update(
+            UpdateKind.QUOTE,
+            _quote(),
+            continuity=ContinuityState.RECOVERED,
+            sequence_gap=False,
+        )
+
+
+def test_content_digest_ignores_receipt_but_changes_with_source_content() -> None:
+    original = _update(UpdateKind.QUOTE, _quote())
+    redelivery = original.model_copy(
+        update={"received_at": original.received_at.replace(microsecond=1)}
+    )
+    changed = _update(UpdateKind.QUOTE, _quote(bid=100.1))
+
+    assert redelivery.content_digest == original.content_digest
+    assert changed.content_digest != original.content_digest
 
 
 def _quote(**overrides: object) -> dict:

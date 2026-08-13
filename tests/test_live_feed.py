@@ -15,7 +15,13 @@ import pytest
 
 from quantmesh.domain.models import Venue
 from quantmesh.live.buffer import LiveBuffer
-from quantmesh.live.contract import MarketUpdate, Provenance, SourceState, UpdateKind
+from quantmesh.live.contract import (
+    ContinuityState,
+    MarketUpdate,
+    Provenance,
+    SourceState,
+    UpdateKind,
+)
 from quantmesh.live.feed import LiveFeed, label
 from quantmesh.live.hyperliquid import HyperliquidVenueSupervisor, ScriptedHyperliquidTransport
 
@@ -56,6 +62,8 @@ def _upd(
     sequence: int | None = None,
     sequence_gap: bool = False,
     payload: dict | None = None,
+    source_event_id: str | None = None,
+    snapshot_epoch: str | None = None,
 ) -> MarketUpdate:
     return MarketUpdate(
         venue=venue,
@@ -75,6 +83,8 @@ def _upd(
         state_note="drill" if state is not None else None,
         sequence=sequence,
         sequence_gap=sequence_gap,
+        source_event_id=source_event_id,
+        snapshot_epoch=snapshot_epoch,
     )
 
 
@@ -107,6 +117,7 @@ def _candle(
             "low": 99.0,
             "close": 100.5,
             "volume": 10.0,
+            "final": True,
         },
     )
 
@@ -191,6 +202,38 @@ class TestIngestAndCache:
 
 
 class TestExactContinuity:
+    def test_hyperliquid_trade_tid_order_is_not_a_continuity_signal(self) -> None:
+        feed = _feed()
+        feed.ingest(
+            [
+                _upd(
+                    kind=UpdateKind.TRADE,
+                    sequence=999_999,
+                    source_event_id="trade-a",
+                    payload={"price": 100.0, "size": 1.0, "side": "buy"},
+                ),
+                _upd(
+                    kind=UpdateKind.TRADE,
+                    sequence=11,
+                    source_event_id="trade-b",
+                    data_time=T0 + timedelta(seconds=1),
+                    received_at=T0 + timedelta(seconds=1),
+                    payload={"price": 100.5, "size": 1.0, "side": "sell"},
+                ),
+            ]
+        )
+
+        snapshot = feed.snapshot_exact(
+            Venue.HYPERLIQUID,
+            "BTC",
+            UpdateKind.TRADE,
+            as_of=T0 + timedelta(seconds=1),
+        )
+
+        assert snapshot is not None
+        assert snapshot.continuity_proven is True
+        assert snapshot.sequence == 11
+
     def test_quote_proof_and_payload_are_isolated_by_venue(self) -> None:
         feed = _feed()
         for venue, bid in ((Venue.HYPERLIQUID, 100.0), (Venue.MOOMOO, 200.0)):
@@ -636,6 +679,9 @@ class TestExactContinuity:
         assert view["age_ms"] == 3000
         assert view["sequence"] == 42
         assert view["sequence_gap"] is True
+        assert view["continuity"] == ContinuityState.KNOWN_GAP.value
+        assert view["source_event_id"]
+        assert len(view["content_digest"]) == 64
 
 
 class TestStatuses:
@@ -712,6 +758,31 @@ class TestFanOut:
 
 
 class TestLake:
+    def test_redelivery_does_not_refresh_cache_lake_or_subscribers(
+        self, tmp_path
+    ) -> None:
+        with LiveBuffer(root=tmp_path) as lake:
+            feed = _feed(lake=lake)
+            queue = feed.subscribe()
+            original = _upd(source_event_id="quote-a", received_at=T0)
+            redelivery = original.model_copy(
+                update={"received_at": T0 + timedelta(seconds=10)}
+            )
+
+            async def publish_both() -> None:
+                await feed.publish(original)
+                await feed.publish(redelivery)
+
+            asyncio.run(publish_both())
+
+            assert len(lake.replay()) == 1
+            assert queue.qsize() == 1
+            snapshot = feed.snapshot_exact(
+                Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0
+            )
+            assert snapshot is not None
+            assert snapshot.received_at == T0
+
     def test_attached_lake_ingest_is_one_serialized_exactly_once_transaction(
         self, tmp_path
     ) -> None:
@@ -905,6 +976,77 @@ class TestLake:
             rows = lake.statuses()
             assert len(rows) == 1
             assert rows[0]["state"] == "connected"
+
+    def test_state_and_restart_preserve_both_book_sides(self, tmp_path) -> None:
+        bid = _upd(
+            kind=UpdateKind.L2_SNAPSHOT,
+            payload={"side": "bid", "levels": [[100.0, 2.0]]},
+            source_event_id="book-epoch-1:bid",
+            snapshot_epoch="book-epoch-1",
+        )
+        ask = _upd(
+            kind=UpdateKind.L2_SNAPSHOT,
+            payload={"side": "ask", "levels": [[100.5, 3.0]]},
+            source_event_id="book-epoch-1:ask",
+            snapshot_epoch="book-epoch-1",
+        )
+        lake = LiveBuffer(root=tmp_path)
+        feed = _feed(lake=lake)
+        feed.ingest([bid, ask])
+        state = feed.latest_state(now=T0)["instruments"]["hyperliquid:BTC"]
+        assert set(state["book_sides"]) == {"bid", "ask"}
+        assert {
+            view["snapshot_epoch"] for view in state["book_sides"].values()
+        } == {"book-epoch-1"}
+        lake.close()
+
+        reopened = LiveBuffer(root=tmp_path)
+        try:
+            restored = _feed(lake=reopened).latest_state(now=T0)["instruments"]
+            sides = restored["hyperliquid:BTC"]["book_sides"]
+            assert set(sides) == {"bid", "ask"}
+            assert {view["source_event_id"] for view in sides.values()} == {
+                "book-epoch-1:bid",
+                "book-epoch-1:ask",
+            }
+        finally:
+            reopened.close()
+
+    def test_attach_restores_hyperliquid_candle_recovery_cursor(self, tmp_path) -> None:
+        class RecordingRest:
+            def __init__(self) -> None:
+                self.start: datetime | None = None
+
+            def candles(self, coin: str, interval: str, *, start, end) -> list[dict]:
+                del coin, interval, end
+                self.start = start
+                return []
+
+            def l2_book(self, coin: str, *, at=None) -> dict:
+                raise RuntimeError("book irrelevant")
+
+        prior = T0 - timedelta(minutes=1)
+        lake = LiveBuffer(root=tmp_path)
+        lake.append(_candle(data_time=prior, received_at=prior, sequence=1))
+        lake.close()
+
+        reopened = LiveBuffer(root=tmp_path)
+        try:
+            feed = _feed(lake=reopened)
+            rest = RecordingRest()
+            transport = ScriptedHyperliquidTransport([])
+            supervisor = HyperliquidVenueSupervisor(transport, rest=rest)
+            supervisor.subscribe(["BTC"])
+            feed.attach(supervisor)
+            supervisor.on_open(T0)
+            transport.connected = False
+            supervisor.on_disconnect(T0 + timedelta(seconds=1))
+            supervisor.drain()
+            supervisor.on_open(T0 + timedelta(minutes=5), reconnected=True)
+
+            assert rest.start == T0
+        finally:
+            reopened.close()
 
 
 class TestConstruction:

@@ -15,6 +15,9 @@ from quantmesh.data.artifacts import (
 from quantmesh.data.hyperliquid_collection import (
     HyperliquidCollectionWindow,
     HyperliquidCollector,
+    book_side_source_event_id,
+    book_snapshot_epoch,
+    trade_source_event_id,
 )
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.hyperliquid.errors import HyperliquidProtocolError
@@ -26,6 +29,35 @@ from quantmesh.hyperliquid.public_info import (
 )
 
 NOW = datetime(2026, 8, 14, tzinfo=UTC)
+
+
+def test_microstructure_identities_are_provider_semantic_and_shared() -> None:
+    first = trade_source_event_id(1_750_000_000_000, "btc", 11)
+    same = trade_source_event_id(1_750_000_000_000, "BTC", 11)
+    later_block = trade_source_event_id(1_750_000_000_001, "BTC", 11)
+    epoch = book_snapshot_epoch(
+        1_750_000_000_000,
+        "btc",
+        [[100.0, 1.0]],
+        [[100.5, 2.0]],
+    )
+
+    assert first == same
+    assert first != later_block
+    assert book_side_source_event_id(epoch, "bid") != book_side_source_event_id(
+        epoch, "ask"
+    )
+
+
+@pytest.mark.parametrize(
+    ("block_time", "tid"),
+    [(True, 1), (1, False), ("1", 1), (1, "1")],
+)
+def test_trade_identity_rejects_non_integer_wire_values(
+    block_time: object, tid: object
+) -> None:
+    with pytest.raises(ValueError, match="integer"):
+        trade_source_event_id(block_time, "BTC", tid)  # type: ignore[arg-type]
 
 
 def _candle(index: int) -> dict:
