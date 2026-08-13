@@ -20,6 +20,29 @@ adjust data through immutable lineage, support deterministic features,
 backfill/recover idempotently, expose quality and catalog state, and produce a
 qualifying seven-day real-data evidence window.
 
+## Product direction and readiness decision
+
+- Current product stage: accepted local research-workstation prototype with a
+  credible paper-trading safety boundary; it is not yet a trusted-data alpha or
+  an autonomous trading product.
+- Primary constraint: feature breadth is ahead of real-data trust. The next
+  product threshold therefore depends on immutable real-provider evidence,
+  truthful gaps, recovery and operator-visible quality state rather than more
+  strategies, AI features or execution adapters.
+- Approved direction: complete this Trusted Data Fabric across Moomoo and
+  Hyperliquid first, then integrate catalog-qualified datasets into charts,
+  experiments, forecasts and paper automation. Prediction-market expansion
+  remains downstream of the same source-rights and lineage contract.
+- Delivery distance: iteration 0021 is the gate to a real-data acceptance
+  alpha. A dependable local research beta still requires subsequent vertical
+  slices for operator workflows, strategy evaluation and guarded paper
+  orchestration. Any live-money product remains a separate, explicitly
+  authorized program with additional security, risk and operational evidence.
+- Next-stage decision rule: do not advance the product stage on UI presence or
+  endpoint reachability alone. Advance only when the frozen candidate satisfies
+  this iteration's seven-day evidence, replay, quality, safety and clean-checkout
+  acceptance ledger.
+
 ## Scope boundaries
 
 - Keep `v0.1.1-rc1` immutable and do not promote `v0.1.1`.

@@ -197,7 +197,9 @@ class InstrumentCatalog(_FrozenContract):
 
     @classmethod
     def bounded_default(cls) -> "InstrumentCatalog":
-        known_from = datetime(2026, 8, 14, tzinfo=UTC)
+        # Iteration 0021 activated at 2026-08-14 local midnight in
+        # Asia/Singapore, which is 2026-08-13 16:00 UTC.
+        known_from = datetime(2026, 8, 13, 16, tzinfo=UTC)
         aliases = tuple(
             (
                 provider_id,

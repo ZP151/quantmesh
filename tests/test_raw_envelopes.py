@@ -46,6 +46,39 @@ def test_fixture_envelope_captures_raw_object_and_is_nonqualifying(tmp_path: Pat
     assert envelope.qualifies is False
 
 
+def test_real_public_envelope_needs_no_entitlement_to_qualify(tmp_path: Path) -> None:
+    objects = ObjectStore(tmp_path)
+    envelope = RawEnvelope.capture(
+        objects=objects,
+        payload=b"[]",
+        content_type="application/json",
+        provider_id="hyperliquid-public",
+        endpoint="https://api.hyperliquid.xyz/info",
+        request_id="hyperliquid-public-window",
+        request_window_start=T0,
+        request_window_end=T0,
+        cursor=None,
+        canonical_instrument=CanonicalInstrumentId(value="hyperliquid:perp:BTC"),
+        provider_symbol="BTC",
+        data_kind=DataKind.BARS,
+        source_event_ids=("BTC:2026-08-12T13:30:00+00:00",),
+        event_start=T0,
+        event_end=T0,
+        session_date=date(2026, 8, 12),
+        provider_available_at=None,
+        received_at=T0 + timedelta(minutes=1),
+        ingested_at=T0 + timedelta(minutes=1),
+        provider_version="public-info-v1",
+        adapter_version="quantmesh-hyperliquid-public-v1",
+        schema_version="hyperliquid-candleSnapshot-v1",
+        source_rights_id="hyperliquid-public-market-data",
+        entitlement=EntitlementState.NOT_REQUIRED,
+        provenance=ProvenanceClass.REAL,
+    )
+
+    assert envelope.qualifies is True
+
+
 def test_envelope_rejects_ingestion_before_receipt(tmp_path: Path) -> None:
     objects = ObjectStore(tmp_path)
     with pytest.raises(ValueError, match="ingested_at"):

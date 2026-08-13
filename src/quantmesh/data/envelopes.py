@@ -144,9 +144,9 @@ class RawEnvelope(BaseModel):
     @property
     def qualifies(self) -> bool:
         """Whether this response can contribute to real-provider evidence."""
-        return (
-            self.provenance is ProvenanceClass.REAL
-            and self.entitlement is EntitlementState.AVAILABLE
+        return self.provenance is ProvenanceClass.REAL and self.entitlement in (
+            EntitlementState.AVAILABLE,
+            EntitlementState.NOT_REQUIRED,
         )
 
     def canonical_bytes(self) -> bytes:

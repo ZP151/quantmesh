@@ -19,6 +19,19 @@
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
 
+## Product-readiness decision
+
+QuantMesh is currently an accepted local research-workstation prototype, not a
+trusted-data alpha or autonomous trading product. The shortest product path is
+to finish iteration 0021's immutable real-data lineage, recovery, catalog and
+seven-day evidence gate before adding strategies, AI orchestration or new venue
+breadth. Passing that gate establishes the real-data acceptance alpha; local
+research beta and guarded paper automation remain later vertical slices, while
+live-money authority remains a separately approved program. The durable detail
+and advancement criteria are recorded in
+`docs/iterations/0021-trusted-data-fabric.md` under **Product direction and
+readiness decision**.
+
 ## Non-negotiable constraints
 
 - Do not modify or promote `v0.1.1-rc1` or create final `v0.1.1`.

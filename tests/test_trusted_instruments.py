@@ -12,6 +12,7 @@ from quantmesh.data.instruments import (
 
 AS_OF = date(2026, 8, 14)
 KNOWN_AT = datetime(2026, 8, 14, 12, 0, tzinfo=UTC)
+ITERATION_ACTIVATED_AT = datetime(2026, 8, 13, 16, 0, tzinfo=UTC)
 
 
 @pytest.mark.parametrize(
@@ -64,6 +65,20 @@ def test_default_catalog_resolves_all_provider_aliases_at_effective_date(
         effective_at=AS_OF,
         known_at=KNOWN_AT,
     ).value == expected
+
+
+def test_default_catalog_knowledge_starts_at_local_iteration_midnight() -> None:
+    catalog = InstrumentCatalog.bounded_default()
+
+    assert (
+        catalog.resolve(
+            "hyperliquid-public",
+            "BTC",
+            effective_at=date(2026, 8, 13),
+            known_at=ITERATION_ACTIVATED_AT,
+        ).value
+        == "hyperliquid:perp:BTC"
+    )
 
 
 def test_alias_resolution_is_effective_dated() -> None:
