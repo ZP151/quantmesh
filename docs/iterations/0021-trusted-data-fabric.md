@@ -75,7 +75,7 @@ the tracked TDD plan is committed.
 
 ### Reviewer and Verifier
 
-Both roles remain read-only. Tasks 1–5 received independent Standards and
+Both roles remain read-only. Tasks 1–8 received independent Standards and
 implementation reviews; every finding was reproduced before correction and
 each final task verdict was clean. Verification evidence is recorded at each
 durable checkpoint.
@@ -87,7 +87,7 @@ durable checkpoint.
 | 1. Immutable AAPL daily tracer | complete | None | Checkpoint 4 |
 | 2. Moomoo AAPL/NVDA | complete | Slice 1 | Task 6; Checkpoints 6A–6D |
 | 3. Hyperliquid BTC candles | complete | Slice 1 | Checkpoint 7 |
-| 4. Hyperliquid BTC/ETH/SOL microstructure | planned | Slice 3 | pending |
+| 4. Hyperliquid BTC/ETH/SOL microstructure | complete | Slice 3 | Checkpoint 8 |
 | 5. Idempotent collection and recovery | planned | Slices 2 and 4 | pending |
 | 6. SLA catalog and downstream lineage | planned | Slice 5 | pending |
 | 7. Seven-day real-data evidence | planned | Slice 6 | pending |
@@ -459,12 +459,60 @@ durable checkpoint.
 - Task 7 and Slice 3 are complete. The smoke evidence is tied to the producing
   code commit rather than this later record-only commit.
 
+## Checkpoint 8 — Hyperliquid microstructure identity and gap evidence, 2026-08-14
+
+- Task 8 implementation is committed at `11f99cc`. A shared identity module
+  defines Hyperliquid trade IDs from canonical `(block_time_ms, uppercase coin,
+  tid)` and bid/ask IDs from one content-derived L2 snapshot epoch. Nonconsecutive
+  `tid` values are valid identities and never imply missing trades.
+- `MarketUpdate` now carries a canonical content digest, scoped source event ID,
+  snapshot epoch and structured continuity evidence. Contradictory states fail
+  validation. LiveBuffer schema v2 performs an idempotent legacy migration,
+  rejects newer schemas before mutation, deduplicates exact redelivery and
+  quarantines same-identity/different-content corrections without overwriting
+  accepted evidence.
+- Hyperliquid reconnect recovery starts from the last database-acknowledged final
+  candle, requests only the completed provider window, ignores a provider's
+  extra provisional row and keeps every partial-recovery row visibly gapped.
+  Trades are explicitly unrecoverable because no official public trade-history
+  endpoint is used; books recover through an authoritative public `/info`
+  snapshot and receive a new epoch.
+- The production `--live` assembly injects `PublicInfoRecoverySource`, a sealed
+  data-only adapter exposing only candles and L2 books. No wallet, signing,
+  account, exchange, order or cancel method is reachable. WebSocket failure
+  closes the dead transport before reconnecting.
+- Supervisor output is row-bounded under backpressure while preserving one L2
+  bid/ask epoch as an indivisible two-row unit. Findings identify the stream
+  actually dropped and survive into reconnect surfacing. Retention prunes L2
+  epochs atomically. Restart hydration restores the last proven candle cursor,
+  trade identity, both book sides and both `allMids`/`activeAssetCtx` channels.
+- The API and React workstation retain continuity and identity declarations.
+  Poll snapshots and WebSocket updates reconcile monotonically under the full
+  `(venue, instrument, kind, source_event_id)` identity; delayed HTTP responses
+  cannot roll back badges, evidence, quotes, metrics or books. Depth is rendered
+  only when bid and ask belong to the same newest complete epoch.
+- Corrective review rounds reproduced and closed every reported Important issue,
+  including pre-persistence cursor advancement, process-restart cursor loss,
+  partial-gap clearing, split book backpressure/pruning, future-schema downgrade,
+  dead-socket reuse, incomplete state hydration and delayed-snapshot rollback.
+  Final independent Standards and implementation verdicts were both CLEAN with
+  no Critical or Important finding.
+- Verification evidence: `711 passed` for the broad live, Hyperliquid and
+  workstation selection; final corrected focus `122 passed`; frontend Vitest
+  `147 passed`; Ruff, TypeScript, production build, OpenAPI-client consistency,
+  packaged-bundle freshness and `git diff --check` all passed. Four existing
+  Fast Refresh warnings are unchanged. One broad-run Uvicorn shutdown warning
+  occurred after a WebSocket test had already passed and did not fail the gate.
+- Task 8 and Slice 4 are complete. Task 9 owns immutable collection-run state,
+  one-writer compare-and-swap checkpoints and crash-boundary recovery; this
+  checkpoint does not claim those later guarantees.
+
 ## Current frontier
 
-Task 8 is the current implementation frontier: Hyperliquid microstructure event
-identity, snapshot semantics and truthful disconnect/gap evidence for
-BTC/ETH/SOL. Start the seven-day evidence window only after Slices 1–6 are
-merged into a frozen candidate configuration.
+Task 9 is the current implementation frontier: deterministic collection-run
+identity, compare-and-swap checkpoints and crash-boundary recovery. Start the
+seven-day evidence window only after Slices 1–6 are merged into a frozen
+candidate configuration.
 
 ## Resume instructions
 

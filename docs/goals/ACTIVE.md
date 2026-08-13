@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–7 green; Slice 3 complete
+- Status: iteration 0021 active — Tasks 1–8 green; Slice 4 complete
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,8 +12,8 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: Task 8 Hyperliquid microstructure identity and truthful gap
-  evidence. Keep wallet, signing, account and order surfaces structurally
+- Current frontier: Task 9 durable collection runs, checkpoints and crash
+  recovery. Keep wallet, signing, account and order surfaces structurally
   absent.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
@@ -216,6 +216,40 @@ readiness decision**.
   and replayed without synthetic repair. Exact dataset IDs are recorded in
   iteration 0021 Checkpoint 7.
 - Task 7 and Slice 3 are complete. Task 8 is the active frontier.
+
+## Checkpoint 8 — 2026-08-14
+
+- Commit `11f99cc` completes Task 8 and Slice 4. Hyperliquid trade identity is
+  SHA-256 over canonical `(block_time_ms, uppercase coin, tid)`; `tid` remains
+  a provider identity and is never treated as a consecutive sequence.
+- Candle, trade and L2 continuity now uses explicit `complete`, `known-gap`,
+  `unknown-after-disconnect`, `recovered` and `unrecoverable` states with
+  disconnect time, last durable identity, first recovered identity and recovery
+  source. Durable cursors advance only after LiveBuffer commits and restore
+  from the replay lake after process restart.
+- L2 data is admitted as atomic bid/ask snapshot epochs. Backpressure remains
+  row-bounded without splitting an epoch, retention never prunes one side, and
+  dropped-stream findings survive the reconnect pump. The production live
+  workstation now has the read-only public `/info` candle/book recovery source;
+  wallet, signing, account, exchange and order surfaces remain absent.
+- LiveBuffer schema v2 migrates old lakes idempotently, rejects future schema
+  versions before mutation, deduplicates scoped provider identities, quarantines
+  content conflicts and restores both L2 sides and both Hyperliquid metrics
+  channels. The frontend preserves identity/continuity evidence, reconciles
+  snapshot polling monotonically and renders depth only from one complete epoch.
+- Reviewer-driven regressions closed durable-cursor restart loss, partial-gap
+  clearing, dead-socket reuse, unbounded reconnect batches, split pruning,
+  wrong dropped-instrument evidence and delayed snapshot rollback. Final fresh
+  Standards and implementation reviews both returned CLEAN with no Critical or
+  Important finding.
+- Verification is `711 passed` across the broad live/Hyperliquid/workstation
+  selection, followed by `122 passed` for the final corrected backend focus and
+  `147 passed` frontend tests. Ruff, TypeScript, production build, OpenAPI client,
+  committed-bundle freshness and `git diff --check` passed. Four pre-existing
+  Fast Refresh lint warnings remain unchanged.
+- Task 8 and Slice 4 are complete. Task 9 is the active frontier and retains
+  immutable collection-run publication, compare-and-swap checkpoints and
+  crash-boundary recovery ownership.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

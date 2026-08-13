@@ -615,7 +615,7 @@ read-only review.
 - LiveBuffer enforces unique `(venue, instrument, kind, source_event_id,
   content_digest)` and quarantines identity/content conflicts.
 
-- [ ] **Step 1: Write the failing nonconsecutive-trade regression**
+- [x] **Step 1: Write the failing nonconsecutive-trade regression**
 
 ```python
 def test_nonconsecutive_hyperliquid_tids_are_not_a_gap() -> None:
@@ -632,24 +632,24 @@ def test_redelivery_after_restart_is_a_noop(tmp_path: Path) -> None:
     assert len(reopened.replay()) == 1
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the four focused files. Expected: the existing consecutive-ID assertion or
 missing source identity fails.
 
-- [ ] **Step 3: Correct identity, persistence and disconnect semantics**
+- [x] **Step 3: Correct identity, persistence and disconnect semantics**
 
 Remove `tid > last + 1`. Preserve block time and tid. Record unknown intervals
 for disconnect/backpressure. Backfill candles from the durable checkpoint,
 replace books with a new snapshot epoch and mark trades unrecoverable where no
 official history endpoint exists.
 
-- [ ] **Step 4: Verify GREEN and long-outage drill**
+- [x] **Step 4: Verify GREEN and long-outage drill**
 
 Run focused tests including a scripted outage longer than five minutes,
 redelivery and identity/content conflict quarantine.
 
-- [ ] **Step 5: Record Slice 4 checkpoint and review**
+- [x] **Step 5: Record Slice 4 checkpoint and review**
 
 Commit `fix(hyperliquid): use provider-defined trade identity`; receive a clean
 review.
