@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–6 green; Slice 2 complete
+- Status: iteration 0021 active — Tasks 1–7 green; Slice 3 complete
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,9 +12,9 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: Task 7 public-mainnet Hyperliquid candle collection through
-  the read-only `/info` endpoint. Keep wallet, signing, account and order
-  surfaces structurally absent.
+- Current frontier: Task 8 Hyperliquid microstructure identity and truthful gap
+  evidence. Keep wallet, signing, account and order surfaces structurally
+  absent.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -191,6 +191,31 @@ readiness decision**.
   passed.
 - Final fresh read-only scoped review: PASS, no Critical/Important issue. Task 6
   and Slice 2 are complete. Task 9 retains bundle crash atomicity ownership.
+
+## Checkpoint 7 — 2026-08-14
+
+- Commit `97fee3087345` completes public-mainnet Hyperliquid candle lineage for
+  BTC, ETH and SOL through an immutable data-only `/info` transport pinned to
+  `https://api.hyperliquid.xyz/info`. Wallet, signing, account, exchange and
+  order surfaces remain structurally absent.
+- Publication is bounded by the provider's 5,000-row contract, requires exact
+  interval-aligned UTC windows and complete continuity, and fails closed unless
+  each direct request and final publication occur on the exact clean producing
+  commit. Scripted or injected clients remain fixture evidence and cannot
+  qualify as real data.
+- The collector publishes and rederives the complete immutable raw,
+  normalized, identity-adjusted and log-return feature graph before activating
+  any catalog pointer. Cross-pointer crash recovery remains explicitly owned by
+  Task 9.
+- Final independent Standards and specification reviews both returned PASS with
+  no Critical or Important finding. Verification passed 348 scoped regressions,
+  Ruff, `pip check`, the 72-package license review and `git diff --check`.
+- A post-commit public-mainnet smoke collected the closed UTC window
+  `2026-08-13T21:54:00Z` through `2026-08-13T21:56:00Z` for BTC, ETH and SOL.
+  All three publications qualified as real, produced 12 immutable manifests
+  and replayed without synthetic repair. Exact dataset IDs are recorded in
+  iteration 0021 Checkpoint 7.
+- Task 7 and Slice 3 are complete. Task 8 is the active frontier.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

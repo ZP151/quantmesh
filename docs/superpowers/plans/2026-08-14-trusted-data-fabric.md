@@ -555,7 +555,7 @@ optional real probe ran and receive a clean review.
 - `HyperliquidCollector.collect_candles(symbols, interval, window)` publishes
   the same four-layer lineage, using `identity-no-corporate-actions-v1`.
 
-- [ ] **Step 1: Write failing data-only boundary tests**
+- [x] **Step 1: Write failing data-only boundary tests**
 
 ```python
 def test_public_info_transport_has_no_execution_surface() -> None:
@@ -569,23 +569,23 @@ def test_candle_backfill_is_bounded_by_provider_limit() -> None:
         _collector().collect_candles(["BTC"], "1m", _window_with_5001_minutes())
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the focused files. Expected: `public_info` is absent.
 
-- [ ] **Step 3: Implement the HTTP info transport and BTC tracer**
+- [x] **Step 3: Implement the HTTP info transport and BTC tracer**
 
 Pin the mainnet data URL in code and settings. Validate response shapes before
 writing a raw envelope. Split longer requested periods into bounded windows
 only where the official endpoint can still supply them; otherwise mark the
 unattainable horizon explicitly.
 
-- [ ] **Step 4: Verify GREEN, wallet isolation and optional live smoke**
+- [x] **Step 4: Verify GREEN, wallet isolation and optional live smoke**
 
 Run focused tests and an opt-in one-window BTC fetch into a temporary root.
 Verify raw bytes, manifest hashes, real provenance and deterministic replay.
 
-- [ ] **Step 5: Record Slice 3 checkpoint and review**
+- [x] **Step 5: Record Slice 3 checkpoint and review**
 
 Commit `feat(hyperliquid): collect public candle lineage`; receive a clean
 read-only review.

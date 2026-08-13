@@ -86,7 +86,7 @@ durable checkpoint.
 | --- | --- | --- | --- |
 | 1. Immutable AAPL daily tracer | complete | None | Checkpoint 4 |
 | 2. Moomoo AAPL/NVDA | complete | Slice 1 | Task 6; Checkpoints 6A–6D |
-| 3. Hyperliquid BTC candles | planned | Slice 1 | pending |
+| 3. Hyperliquid BTC candles | complete | Slice 1 | Checkpoint 7 |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | planned | Slice 3 | pending |
 | 5. Idempotent collection and recovery | planned | Slices 2 and 4 | pending |
 | 6. SLA catalog and downstream lineage | planned | Slice 5 | pending |
@@ -411,12 +411,60 @@ durable checkpoint.
   credential, synthetic repair, execution authority or release change is
   claimed.
 
+## Checkpoint 7 — Hyperliquid candle lineage accepted, 2026-08-14
+
+- Commit `97fee3087345` completes bounded BTC, ETH and SOL candle collection
+  from Hyperliquid's public-mainnet `/info` endpoint. `PublicInfoTransport`
+  exposes only candle and L2-book reads against the immutable pinned URL; it has
+  no wallet, signing, account, exchange, cancel or order surface.
+- The provider capability contract records exact per-interval history limits.
+  Collection accepts no more than 5,000 inclusive opens, requires exact
+  interval-aligned UTC boundaries, verifies a complete requested window and
+  publishes only exclusively closed candles. The provider's inclusive final
+  millisecond is normalized only at the collection boundary.
+- Direct transport identity, exact endpoint identity and a clean producing Git
+  commit are mandatory qualification gates before every request and again
+  before publication. Injected or scripted clients remain reproducible fixture
+  paths and cannot qualify as real data. Public data requires no entitlement,
+  but fixture provenance remains disqualifying.
+- Candidate publication constructs, rederives and validates the complete raw,
+  normalized, identity-adjusted and log-return graph before activating its
+  first catalog pointer. Dataset IDs, canonical-byte digests, media types,
+  schema and transformation digests, declarations and parent links are exact.
+  Multi-pointer crash recovery remains the explicit Task 9 boundary.
+- RED/GREEN and reviewer-driven correction cycles closed invalid zero intervals,
+  malformed wire rows, host-timezone drift, mutable transport state, dirty-tree
+  races, source substitution and partial-graph publication. Final independent
+  Standards and specification reviews both returned PASS with no Critical or
+  Important finding.
+- Final verification passed 116 focused tests and 348 scoped regressions, with
+  only five recorded `exchange-calendars` NumPy deprecation warnings. Ruff,
+  `pip check`, the deterministic 72-package license review and
+  `git diff --check` passed.
+- A clean post-commit public-mainnet smoke used UTC window
+  `2026-08-13T21:54:00Z` through `2026-08-13T21:56:00Z`. BTC, ETH and SOL each
+  qualified as real and produced four immutable manifests:
+  - BTC: raw `11812e8d7e1b657a58c14c5c608c13aad229fd522595bf07ce08e6a696826e10`,
+    normalized `f43308861c59494cfc1877fd6f3188d3e1a7694461b199235adb414c75fc9058`,
+    adjusted `80facac599048ead6b3dc5ace4e452c5ce2388fb70775f92cb89b125957a684a`,
+    feature `6157ca9ba295ca124d27037c94a2d1e2bca743d94e776997f71ad1d698583307`.
+  - ETH: raw `1004f766785948ab55ad203f52236f518f8cd4495989a997c61dc52e6711d98a`,
+    normalized `9e722bc2f52e75601def3714ef8d35fd5585bed37013106ff228b8052262edd9`,
+    adjusted `3682b831f3eb6ff29637afe83b9b489e516652ab929904bce44228e451e33d2d`,
+    feature `08815b1e6058930511318817bc25a6a7c6498c847edf3c03b530f73b0f04ca60`.
+  - SOL: raw `b4e6bd4ebae844222b178eb7ecd1499aaa40cb56d99afdb315483e782be62aea`,
+    normalized `84b23602ace57f76ab6d51cc2bad8f2011e93a2d228a7a7b508ff378dfd5189a`,
+    adjusted `bcb92243aaa326ec4e2dd79d215e7d178624d6388c38b53c897827c792017650`,
+    feature `e03b02f93c8086797cb4fb444992ed7fba763b05ef845d45d18987b476712798`.
+- Task 7 and Slice 3 are complete. The smoke evidence is tied to the producing
+  code commit rather than this later record-only commit.
+
 ## Current frontier
 
-Task 7 is the current implementation frontier: bounded public-mainnet
-Hyperliquid candles for BTC/ETH/SOL through a data-only `/info` transport, with
-no wallet, signing, account or order surface. Start the seven-day evidence
-window only after Slices 1–6 are merged into a frozen candidate configuration.
+Task 8 is the current implementation frontier: Hyperliquid microstructure event
+identity, snapshot semantics and truthful disconnect/gap evidence for
+BTC/ETH/SOL. Start the seven-day evidence window only after Slices 1–6 are
+merged into a frozen candidate configuration.
 
 ## Resume instructions
 
