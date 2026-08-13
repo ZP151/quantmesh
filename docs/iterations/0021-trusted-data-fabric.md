@@ -62,7 +62,7 @@ durable checkpoint.
 | Slice | Status | Dependency | Evidence |
 | --- | --- | --- | --- |
 | 1. Immutable AAPL daily tracer | complete | None | Checkpoint 4 |
-| 2. Moomoo AAPL/NVDA | in progress | Slice 1 | Task 5 transport complete; Checkpoint 5 |
+| 2. Moomoo AAPL/NVDA | in progress | Slice 1 | Task 6 foundation complete; Checkpoint 6A |
 | 3. Hyperliquid BTC candles | planned | Slice 1 | pending |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | planned | Slice 3 | pending |
 | 5. Idempotent collection and recovery | planned | Slices 2 and 4 | pending |
@@ -259,15 +259,44 @@ durable checkpoint.
   the reuse matrix now record the exact compatibility, timeout and dependency
   boundaries.
 
+## Checkpoint 6A — Moomoo adjustment and process foundation, 2026-08-14
+
+- RED first proved the adjustment, bounded-plan, XNYS holiday, unavailable
+  result and process-deadline contracts were absent. The implemented tests now
+  reject future-known or ambiguous splits, closed-session false gaps,
+  out-of-scope targets, escaped worker results and timed-out workers.
+- `moomoo-api==10.10.7008` is now part of the full release closure
+  `.[dev,research,e2e,moomoo]`, not an unaudited side extra. CI, Security and
+  the clean-checkout release gate install the same closure. The regenerated
+  lock contains 72 packages; `moomoo_api`, `protobuf`, `pycryptodome` and
+  `simplejson` are inventoried and the local deterministic license review
+  passed all 66 packages installed on Windows, with six documented Linux-only
+  members.
+- The split-adjustment kernel pins independent factor/action manifest IDs and
+  a UTC knowledge cutoff. It backward-adjusts OHLC by division and volume by
+  multiplication, refuses later-announced actions and conflicting effective
+  ratios, and never relabels unadjusted bars as adjusted.
+- The synchronous SDK now has a credential-free subprocess boundary with a
+  whole-process deadline, sanitized environment, bounded staged JSON and
+  process-tree termination. Timeout/failure output is removed and cannot be a
+  manifest. Parent-side strict decoding revalidates symbol, interval, window,
+  payload code, ordering and SDK version before publication is possible.
+- Verification: dependency/license/security/release selection passed 41 tests;
+  adjustment, collection, OpenD and provider selection passed 81 tests with
+  one expected missing-SDK-era skip; focused Ruff passed. The five warnings
+  remain the already recorded pinned `exchange-calendars` NumPy deprecations.
+- This is a durable mid-task checkpoint, not Task 6 acceptance. The collector
+  and real manifest publication are intentionally still pending, and no real
+  OpenD evidence, credential, execution authority or synthetic repair was
+  claimed.
+
 ## Current frontier
 
-Implement Task 6, real Moomoo AAPL/NVDA adjusted lineage. First admit an
-audited compatible SDK closure and enforce the collection-process deadline;
-then publish bounded raw, normalized and split-adjusted evidence or an honest
-typed unavailable state.
-Start the
-seven-day evidence window only after Slices 1–6 are merged into a frozen
-candidate configuration.
+Finish Task 6 by cross-checking official factor/split evidence and publishing
+bounded raw, normalized and split-adjusted AAPL/NVDA manifests or an honest
+typed unavailable state. The compatible SDK closure and enforceable process
+deadline are complete. Start the seven-day evidence window only after Slices
+1–6 are merged into a frozen candidate configuration.
 
 ## Resume instructions
 

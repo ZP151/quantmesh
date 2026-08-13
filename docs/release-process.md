@@ -35,7 +35,7 @@ git submodule status         # clean (vendored components pinned)
 ```
 
 Clean-checkout baseline on 2026-08-08: 1,790 passed / 0 skipped with the
-`.[dev,research,e2e]` extras and Chromium available. A release checkpoint must
+`.[dev,research,e2e,moomoo]` extras and Chromium available. A release checkpoint must
 record its own current count; do not copy this historical number as proof.
 Release checkpoints additionally run the one-command clean-checkout
 release gate (next section) before publication.
@@ -50,7 +50,7 @@ python tools/release_gate.py
 ```
 
 It clones the current commit into a temporary directory, creates a
-fresh venv there, installs the release extras `.[dev,research,e2e]`,
+fresh venv there, installs the release extras `.[dev,research,e2e,moomoo]`,
 then runs Ruff, the license review (closure contract), pip-audit over
 the audit lock from an isolated tooling venv (``--disable-pip``: the
 lock is the frozen resolution, so the pins are audited directly with
@@ -83,13 +83,13 @@ records counts, dates and any debugging detours.
   inventory) — and, when the change is a removal, ADR-0009-style
   dependency-contract decisions.
 - The release closure is the full release extras install
-  `.[dev,research,e2e]` (iteration 0013 Phase B): the audit lock, the
+  `.[dev,research,e2e,moomoo]` (Moomoo admitted in iteration 0021 Task 6): the audit lock, the
   license gate and the CI security job all cover it, so playwright's
   own dependencies are audited too.
 - Regenerate the audit lock after any dependency change:
 
   ```text
-  python -m pip install --dry-run --ignore-installed -e ".[dev,research,e2e]" \
+  python -m pip install --dry-run --ignore-installed -e ".[dev,research,e2e,moomoo]" \
       --report audit-report.json
   ```
 

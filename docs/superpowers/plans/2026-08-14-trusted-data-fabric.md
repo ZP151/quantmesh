@@ -483,7 +483,7 @@ official API versions and receive a clean review.
 - `EquityAdjustmentPolicy` pins factor/action manifests and refuses ambiguous
   or future-known actions.
 
-- [ ] **Step 1: Write failing adjustment/session tests**
+- [x] **Step 1: Write failing adjustment/session tests**
 
 ```python
 def test_split_adjustment_changes_ohlc_and_inverse_volume() -> None:
@@ -504,7 +504,7 @@ def test_closed_xnys_session_is_not_a_gap() -> None:
     assert report.missing == ()
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the three focused files. Expected: collection and adjustment contracts are
 missing.

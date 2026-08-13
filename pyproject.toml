@@ -56,6 +56,12 @@ e2e = [
   # the suite skips cleanly when the package or the browser is missing.
   "playwright>=1.44,<2",
 ]
+moomoo = [
+  # Iteration 0021 Task 6: first official SDK release inspected with all
+  # required read-only history/factor/split/dividend methods. OpenD remains
+  # local and collection-only; no credential or execution surface is used.
+  "moomoo-api==10.10.7008",
+]
 
 [project.scripts]
 quantmesh-iteration = "quantmesh.dev.iterations:main"

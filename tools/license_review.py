@@ -107,6 +107,16 @@ LICENSE_EXCEPTIONS = {
     "tzdata": "Apache-2.0",
 }
 
+# Exact package/version/expression choices whose permitted branch QuantMesh
+# selects. This stays separate from the generic parser, which deliberately
+# refuses ``MIT OR GPL``-shaped expressions when any branch violates policy.
+LICENSE_EXPRESSION_EXCEPTIONS = {
+    ("simplejson", "4.1.1", "MIT OR AFL-2.1"): "MIT",
+}
+LICENSE_TEXT_EXCEPTIONS = {
+    ("simplejson", "4.1.1", "MIT OR AFL-2.1"): "MIT",
+}
+
 # SPDX expressions sometimes carry a versioned form we do not model.
 _SPDX_ALIASES = {
     "MIT License": "MIT",
@@ -149,6 +159,7 @@ def _from_expression(expr: str) -> str | None:
 # credit a bundled text as the project's own license. Unknown first
 # lines (copyright lines, prose) fall through to the keyword scan.
 _LINE1_NAMES = {
+    "3-Clause BSD License": "BSD-3-Clause",
     "BSD 3-Clause License": "BSD-3-Clause",
     "BSD 2-Clause License": "BSD-2-Clause",
     "The MIT License": "MIT",
@@ -210,12 +221,18 @@ def classify(dist: md.Distribution) -> str:
     name = dist.metadata["Name"]
     expr = dist.metadata.get("License-Expression", "")
     if expr:
+        selected = LICENSE_EXPRESSION_EXCEPTIONS.get((name, dist.version, expr))
+        if selected is not None:
+            return f"{selected} (documented exception)"
         resolved = _from_expression(expr)
         if resolved is not None:
             return resolved
         return f"UNKNOWN (expression {expr!r})"
     text = dist.metadata.get("License", "")
     if text:
+        selected = LICENSE_TEXT_EXCEPTIONS.get((name, dist.version, text))
+        if selected is not None:
+            return f"{selected} (documented exception)"
         resolved = _from_text(text)
         if resolved is not None:
             return resolved

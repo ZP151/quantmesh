@@ -52,7 +52,7 @@ jobs:
       - name: Install project environment
         # The license review reads the installed distributions'
         # metadata, so the environment must be the deterministic
-        # release closure: `.[dev,research,e2e]`, the same install the
+        # release closure: `.[dev,research,e2e,moomoo]`, the same install the
         # release gate and operator acceptance use (iteration 0013
         # Phase B). The review refuses any installed distribution that
         # is not pinned in requirements-audit.txt, so the environment
@@ -60,7 +60,7 @@ jobs:
         # separate step/environment so its own CLI dependencies
         # (license-expression, boolean.py, ...) never contaminate the
         # application's license inventory.
-        run: python -m pip install -e ".[dev,research,e2e]"
+        run: python -m pip install -e ".[dev,research,e2e,moomoo]"
       - name: License review (deterministic inventory check)
         run: python tools/license_review.py
       - name: Install audit tooling

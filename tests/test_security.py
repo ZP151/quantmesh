@@ -146,6 +146,16 @@ class TestLicenseReview:
         assert review._from_expression("GPL-3.0-only") is None
         assert review._from_expression("MIT OR GPL-3.0-only") is None
 
+    def test_moomoo_closure_license_metadata_is_classified_conservatively(self) -> None:
+        review = _load_license_review()
+        assert review._from_text("3-Clause BSD License") == "BSD-3-Clause"
+        simplejson = _FakeDist(
+            "simplejson",
+            "4.1.1",
+            License="MIT OR AFL-2.1",
+        )
+        assert review.classify(simplejson) == "MIT (documented exception)"
+
     def test_every_installed_closure_member_classifies_allowed(
         self,
     ) -> None:

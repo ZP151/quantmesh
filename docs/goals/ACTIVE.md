@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–5 green
+- Status: iteration 0021 active — Tasks 1–5 green; Task 6 foundation green
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,8 +12,10 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: implement Task 6, real Moomoo AAPL/NVDA adjusted lineage;
-  admit the audited compatible SDK closure and process deadline first.
+- Current frontier: finish Task 6 publication: parse and cross-check official
+  factor/split evidence, then publish separate raw, normalized and
+  split-adjusted AAPL/NVDA manifests. The audited SDK and process deadline are
+  complete.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -109,9 +111,23 @@
   security and release/audit selection, with Ruff and `git diff --check` green.
   Repeated corrective review rounds closed every Critical/Important finding;
   final Standards and adversarial implementation/security verdicts were CLEAN.
-- The 10.10 compatible SDK candidate is not yet a release dependency. Task 6
-  must pin and audit its complete optional closure and enforce a process-level
-  deadline before any real Moomoo manifest can qualify.
+- At this checkpoint the 10.10 compatible SDK candidate was not yet a release
+  dependency; Checkpoint 6A records its later audited admission.
+
+## Checkpoint 6A — 2026-08-14
+
+- Task 6 foundation admits `moomoo-api==10.10.7008` into the same audited
+  `.[dev,research,e2e,moomoo]` closure used by CI, Security and the release
+  gate. The 72-pin inventory and local 66-package Windows license review pass.
+- Split adjustment is knowledge-bounded and independently pins factor/action
+  manifests. Ambiguous, future-known or wrong-instrument actions fail closed;
+  OHLC and inverse-volume behavior is regression-tested.
+- The SDK worker is process-isolated, deadline-bounded and credential-free.
+  Staged output is bounded and removed after strict parent-side validation;
+  timeout or unavailable results cannot claim manifests.
+- Verification: 41 dependency/security/release tests and 81 focused
+  adjustment/collection/OpenD/provider tests passed; focused Ruff passed.
+  Publication and real OpenD evidence remain pending and are not claimed.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

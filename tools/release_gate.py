@@ -16,7 +16,7 @@ Steps, all under a temporary root:
      the rc2 rejection (tag ``v0.1.0-rc2`` vs metadata ``0.1.0rc1``)
      closed this hole in the gate.
   4. Create a fresh venv there and install the release extras
-     ``.[dev,research,e2e]``.
+     ``.[dev,research,e2e,moomoo]``.
   5. Ruff over ``src tests tools``.
   6. License review (the closure contract: every pinned package
      installed and allowed, nothing untracked installed).
@@ -191,7 +191,7 @@ def main() -> int:
             600,
         ),
         step(
-            "install release extras .[dev,research,e2e]",
+            "install release extras .[dev,research,e2e,moomoo]",
             [
                 _venv_python(temp / "release-venv"),
                 "-m",
@@ -199,7 +199,7 @@ def main() -> int:
                 "install",
                 "-q",
                 "-e",
-                ".[dev,research,e2e]",
+                ".[dev,research,e2e,moomoo]",
             ],
             checkout,
             1800,
