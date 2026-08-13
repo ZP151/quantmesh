@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–4 green
+- Status: iteration 0021 active — Tasks 1–5 green
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,8 +12,8 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: implement Task 5, complete Moomoo pagination and
-  corporate-action transport without credentials or execution authority.
+- Current frontier: implement Task 6, real Moomoo AAPL/NVDA adjusted lineage;
+  admit the audited compatible SDK closure and process deadline first.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -95,6 +95,23 @@
 - Verification is `25 passed` focused and `277 passed, 3 skipped` for the
   Task 1–4 integration/security selection, with Ruff and `git diff --check`
   green. Exact evidence is in the active iteration ledger.
+
+## Checkpoint 5 — 2026-08-14
+
+- Task 5 completes bounded, quote-only Moomoo history and corporate-action
+  transport. Opaque history cursors are followed in one context and encoded as
+  strict-JSON evidence; factors, splits and dividends remain raw source data.
+- Silent truncation, repeated cursors, malformed SDK tuples/status, row-symbol
+  drift, invalid/missing scalars, non-finite or coercive OHLCV, timestamp shape,
+  date bounds and reversed UTC windows all fail closed. Legacy one-page reads
+  remain compatible but cannot qualify as complete trusted bundles.
+- Verification is `106 passed` focused and `310 passed` for the Task 1–5,
+  security and release/audit selection, with Ruff and `git diff --check` green.
+  Repeated corrective review rounds closed every Critical/Important finding;
+  final Standards and adversarial implementation/security verdicts were CLEAN.
+- The 10.10 compatible SDK candidate is not yet a release dependency. Task 6
+  must pin and audit its complete optional closure and enforce a process-level
+  deadline before any real Moomoo manifest can qualify.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

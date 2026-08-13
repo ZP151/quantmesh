@@ -419,7 +419,7 @@ and receive a clean review.
 - `MoomooOpenDProvider.fetch_raw_bundle(...)` returns bars and source action
   payloads without deriving adjusted values.
 
-- [ ] **Step 1: Write failing pagination/action tests**
+- [x] **Step 1: Write failing pagination/action tests**
 
 ```python
 def test_history_follows_every_page_and_preserves_cursors() -> None:
@@ -438,23 +438,23 @@ def test_history_rejects_repeated_cursor() -> None:
         )
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the three focused test files. Expected: missing paginated/action methods.
 
-- [ ] **Step 3: Implement bounded complete pagination and action payloads**
+- [x] **Step 3: Implement bounded complete pagination and action payloads**
 
 Pass `page_req_key` back to the SDK until no cursor remains. Preserve each page
-as a raw response. Add official `request_rehab`, split and dividend calls using
+as a raw response. Add official `get_rehab`, split and dividend calls using
 the same error classification and context lifetime as existing quote reads.
 Never unlock a trade context.
 
-- [ ] **Step 4: Verify GREEN and no-secret boundary**
+- [x] **Step 4: Verify GREEN and no-secret boundary**
 
 Run the focused tests and `tests/test_security.py`. Expected: 1,300-row case,
 cursor-loop rejection and typed unavailable/auth states all pass.
 
-- [ ] **Step 5: Record and review**
+- [x] **Step 5: Record and review**
 
 Commit `fix(moomoo): collect complete read-only history evidence`; record the
 official API versions and receive a clean review.
@@ -515,12 +515,18 @@ Keep raw OHLCV, factor, split and dividend manifests separate. Implement only
 the evidenced split-adjusted policy. Record dividends but leave total return
 unavailable until a later authorized design. Delete the current behavior that
 copies raw close into `adjusted_close` based only on a binding label.
+Run the synchronous OpenD worker under an enforceable collection-process
+deadline; the SDK's in-process timeout settings alone do not qualify a run as
+bounded. Real collection requires a Task 6-pinned and audited compatible SDK
+closure and must report an older SDK without the official action methods as
+incompatible.
 
 - [ ] **Step 4: Verify GREEN and unavailable states**
 
 Run focused tests with stub OpenD plus a real probe when OpenD is locally
 available. A missing SDK/daemon/entitlement must return a typed unavailable
-result and must not create a real manifest.
+result and must not create a real manifest. Verify the optional Moomoo closure
+and Apache-2.0 package evidence before admitting it to the operator environment.
 
 - [ ] **Step 5: Record Slice 2 checkpoint and review**
 

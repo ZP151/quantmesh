@@ -52,7 +52,7 @@ the tracked TDD plan is committed.
 
 ### Reviewer and Verifier
 
-Both roles remain read-only. Tasks 1–4 received independent Standards and
+Both roles remain read-only. Tasks 1–5 received independent Standards and
 implementation reviews; every finding was reproduced before correction and
 each final task verdict was clean. Verification evidence is recorded at each
 durable checkpoint.
@@ -62,7 +62,7 @@ durable checkpoint.
 | Slice | Status | Dependency | Evidence |
 | --- | --- | --- | --- |
 | 1. Immutable AAPL daily tracer | complete | None | Checkpoint 4 |
-| 2. Moomoo AAPL/NVDA | planned | Slice 1 | pending |
+| 2. Moomoo AAPL/NVDA | in progress | Slice 1 | Task 5 transport complete; Checkpoint 5 |
 | 3. Hyperliquid BTC candles | planned | Slice 1 | pending |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | planned | Slice 3 | pending |
 | 5. Idempotent collection and recovery | planned | Slices 2 and 4 | pending |
@@ -227,9 +227,44 @@ durable checkpoint.
   security and implementation verdicts: CLEAN. No real provider, credential,
   order authority, release tag or synthetic repair path changed.
 
+## Checkpoint 5 — Complete read-only Moomoo evidence transport, 2026-08-14
+
+- RED began with seven missing pagination/action behaviors, then expanded with
+  adversarial regressions for silent truncation, cursor cycles, structural
+  legacy transports, malformed SDK result envelopes, per-row instrument drift,
+  strict scalar/timestamp handling and reversed UTC windows.
+- GREEN: 106 focused OpenD, adapter and provider tests passed. The final Task
+  1–5 integration, security and release/audit selection passed `310 passed`;
+  Ruff and `git diff --check` passed. The five warnings are the already
+  recorded pinned `exchange-calendars` NumPy deprecations.
+- History collection now follows every opaque cursor under cumulative page and
+  row bounds while keeping one quote context for the chain. Repeated cursors,
+  empty nonterminal pages, out-of-window rows, malformed result tuples/status,
+  metadata drift, duplicates and non-monotonic rows fail closed.
+- Raw pagination evidence encodes cursor bytes losslessly as base64 and
+  normalizes SDK values to strict JSON. Missing `NaN`/`NaT`/`NA` values become
+  null; infinities, unsupported scalars, booleans/numeric strings in OHLCV,
+  wrong row symbols and date-only intraday timestamps are rejected.
+- Adjustment factors, stock splits and dividends use official quote-only
+  surfaces and remain unadjusted source evidence. No trade context, unlock,
+  credential or execution authority was added. A legacy one-page transport can
+  still serve compatibility reads but cannot qualify as a complete raw bundle.
+- The repository's `10.02.6208` audit snapshot lacks the split/dividend
+  methods. Apache-2.0 candidate `moomoo-api==10.10.7008` was inspected and has
+  the required surfaces, but was deliberately not admitted: Task 6 must pin
+  and audit its complete optional dependency closure before real collection.
+- Repeated corrective review rounds closed every reproduced Critical/Important
+  finding. Fresh final Standards and adversarial implementation/security
+  verdicts were both CLEAN. ADR-0004 and
+  the reuse matrix now record the exact compatibility, timeout and dependency
+  boundaries.
+
 ## Current frontier
 
-Implement Task 5, complete Moomoo pagination and corporate-action transport.
+Implement Task 6, real Moomoo AAPL/NVDA adjusted lineage. First admit an
+audited compatible SDK closure and enforce the collection-process deadline;
+then publish bounded raw, normalized and split-adjusted evidence or an honest
+typed unavailable state.
 Start the
 seven-day evidence window only after Slices 1–6 are merged into a frozen
 candidate configuration.

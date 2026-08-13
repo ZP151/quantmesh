@@ -8,7 +8,6 @@ Beijing (HKT) time — so the fixture times encode that contract: the
 adapter's UTC conversion is exactly what these tests pin down.
 """
 
-
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.moomoo.opend import OpenDProtocolError, OpenDTransport
 
@@ -33,6 +32,7 @@ US_AAPL_1D = {
     "autype": "None",
     "rows": [
         {
+            "code": "US.AAPL",
             "time_key": "2026-08-03",
             "open": 200.0,
             "high": 205.0,
@@ -42,6 +42,7 @@ US_AAPL_1D = {
             "turnover": 204000.0,
         },
         {
+            "code": "US.AAPL",
             "time_key": "2026-08-04",
             "open": 204.0,
             "high": 208.0,
@@ -51,6 +52,7 @@ US_AAPL_1D = {
             "turnover": 185000.0,
         },
         {
+            "code": "US.AAPL",
             "time_key": "2026-08-05",
             "open": 207.0,
             "high": 210.0,
@@ -68,6 +70,7 @@ US_AAPL_5M = {
     "autype": "None",
     "rows": [
         {
+            "code": "US.AAPL",
             "time_key": "2026-08-03 09:30:00",
             "open": 200.0,
             "high": 202.0,
@@ -76,6 +79,7 @@ US_AAPL_5M = {
             "volume": 500,
         },
         {
+            "code": "US.AAPL",
             "time_key": "2026-08-03 09:35:00",
             "open": 201.0,
             "high": 204.0,
@@ -84,6 +88,7 @@ US_AAPL_5M = {
             "volume": 700,
         },
         {
+            "code": "US.AAPL",
             "time_key": "2026-08-03 09:40:00",
             "open": 203.5,
             "high": 205.0,
@@ -100,6 +105,7 @@ HK_00700_1D = {
     "autype": "None",
     "rows": [
         {
+            "code": "HK.00700",
             "time_key": "2026-08-03",
             "open": 380.0,
             "high": 385.0,
@@ -108,6 +114,7 @@ HK_00700_1D = {
             "volume": 20000,
         },
         {
+            "code": "HK.00700",
             "time_key": "2026-08-04",
             "open": 383.0,
             "high": 390.0,
@@ -124,6 +131,7 @@ HK_00700_5M = {
     "autype": "None",
     "rows": [
         {
+            "code": "HK.00700",
             "time_key": "2026-08-03 09:30:00",
             "open": 380.0,
             "high": 382.0,
@@ -132,6 +140,7 @@ HK_00700_5M = {
             "volume": 3000,
         },
         {
+            "code": "HK.00700",
             "time_key": "2026-08-03 09:35:00",
             "open": 381.0,
             "high": 384.0,
@@ -236,8 +245,25 @@ class WireTransport(OpenDTransport):
         if self._kline_by_code is not None:
             if code not in self._kline_by_code:
                 raise OpenDProtocolError(f"no wire fixture for code {code!r}")
-            return self._kline_by_code[code]
-        return self._kline
+            payload = self._kline_by_code[code]
+        else:
+            payload = self._kline
+        if not isinstance(payload, dict) or (start is None and end is None):
+            return payload
+        rows = payload.get("rows")
+        if not isinstance(rows, list):
+            return payload
+        return {
+            **payload,
+            "rows": [
+                row
+                for row in rows
+                if isinstance(row, dict)
+                and isinstance(row.get("time_key"), str)
+                and (start is None or row["time_key"][:10] >= start)
+                and (end is None or row["time_key"][:10] <= end)
+            ],
+        }
 
     def rt_ticker(self, code: str, *, num: int) -> dict:
         self.ticker_requests.append((code, num))

@@ -30,6 +30,7 @@ adapter = MoomooDataAdapter()
 
 # --- kline → Bar -----------------------------------------------------------
 
+
 def test_daily_us_bars_convert_eastern_time_to_utc() -> None:
     bars = adapter.history_kline_to_bars(AAPL, US_AAPL_1D)
     assert len(bars) == 3
@@ -38,6 +39,44 @@ def test_daily_us_bars_convert_eastern_time_to_utc() -> None:
     assert bars[0].instrument == AAPL
     assert bars[0].interval == "1d"
     assert bars[0].volume == 1000.0
+
+
+def test_history_pages_map_in_order_without_duplicate_rows() -> None:
+    first = {**US_AAPL_1D, "rows": US_AAPL_1D["rows"][:2]}
+    second = {**US_AAPL_1D, "rows": US_AAPL_1D["rows"][2:]}
+
+    bars = adapter.history_pages_to_bars(AAPL, [first, second])
+
+    assert [bar.close for bar in bars] == [204.0, 207.0, 209.5]
+
+
+def test_history_pages_reject_duplicate_boundary_row() -> None:
+    first = {**US_AAPL_1D, "rows": US_AAPL_1D["rows"][:2]}
+    second = {**US_AAPL_1D, "rows": US_AAPL_1D["rows"][1:]}
+
+    with pytest.raises(OpenDProtocolError, match="duplicate history row"):
+        adapter.history_pages_to_bars(AAPL, [first, second])
+
+
+def test_history_row_code_must_match_requested_instrument() -> None:
+    payload = {
+        **US_AAPL_1D,
+        "rows": [dict(US_AAPL_1D["rows"][0], code="US.NVDA")],
+    }
+
+    with pytest.raises(OpenDProtocolError, match="row 0 code"):
+        adapter.history_kline_to_bars(AAPL, payload)
+
+
+@pytest.mark.parametrize("bad_value", [True, False, "100.0", float("inf"), float("nan")])
+def test_history_ohlcv_requires_finite_non_boolean_numbers(bad_value) -> None:
+    payload = {
+        **US_AAPL_1D,
+        "rows": [dict(US_AAPL_1D["rows"][0], close=bad_value)],
+    }
+
+    with pytest.raises(OpenDProtocolError, match="row 0 close"):
+        adapter.history_kline_to_bars(AAPL, payload)
 
 
 def test_intraday_us_bars_convert_eastern_time_to_utc() -> None:
@@ -50,6 +89,17 @@ def test_intraday_us_bars_convert_eastern_time_to_utc() -> None:
     assert all(bar.interval == "5m" for bar in bars)
 
 
+def test_intraday_bar_rejects_date_only_time_key() -> None:
+    payload = {
+        **US_AAPL_1D,
+        "interval": "1m",
+        "rows": [dict(US_AAPL_1D["rows"][0], time_key="2026-08-03")],
+    }
+
+    with pytest.raises(OpenDProtocolError, match="unparseable"):
+        adapter.history_kline_to_bars(AAPL, payload)
+
+
 def test_us_bars_respect_daylight_saving_boundary() -> None:
     payload = {
         "code": "US.AAPL",
@@ -57,6 +107,7 @@ def test_us_bars_respect_daylight_saving_boundary() -> None:
         "autype": "None",
         "rows": [
             {
+                "code": "US.AAPL",
                 "time_key": "2026-01-05 09:30:00",
                 "open": 1.0,
                 "high": 2.0,
@@ -88,6 +139,7 @@ def test_extra_vendor_keys_are_tolerated() -> None:
         "autype": "None",
         "rows": [
             {
+                "code": "US.AAPL",
                 "time_key": "2026-08-03",
                 "open": 200.0,
                 "high": 205.0,
@@ -103,7 +155,7 @@ def test_extra_vendor_keys_are_tolerated() -> None:
     assert bar.close == 204.0
 
 
-@pytest.mark.parametrize("dropped", ["time_key", "open", "high", "low", "close", "volume"])
+@pytest.mark.parametrize("dropped", ["code", "time_key", "open", "high", "low", "close", "volume"])
 def test_kline_row_missing_required_key_fails_closed(dropped: str) -> None:
     row = {key: value for key, value in US_AAPL_1D["rows"][1].items() if key != dropped}
     payload = {
@@ -178,6 +230,7 @@ def test_kline_payload_not_a_mapping_fails_closed() -> None:
 
 # --- ticker → TradeEvent ----------------------------------------------------
 
+
 def test_ticker_maps_to_trades() -> None:
     trades = adapter.ticker_to_trades(AAPL, US_AAPL_TICKER)
     assert len(trades) == 3
@@ -246,6 +299,7 @@ def test_ticker_bad_sequence_type_fails_closed() -> None:
 
 # --- stock quote → Quote ----------------------------------------------------
 
+
 def test_quote_maps_to_canonical_quote() -> None:
     quote = adapter.stock_quote_to_quote(AAPL, US_AAPL_QUOTE)
     assert quote.last == 204.0
@@ -279,6 +333,7 @@ def test_quote_multiple_rows_fail_closed() -> None:
 
 
 # --- shared helpers ----------------------------------------------------------
+
 
 def test_market_tz_resolves_vendor_local_zones() -> None:
     assert str(market_tz("US.AAPL")) == str(ZoneInfo("America/New_York"))
