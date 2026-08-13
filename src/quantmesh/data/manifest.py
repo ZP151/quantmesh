@@ -1,4 +1,4 @@
-"""Dataset manifests: versioned JSON beside each dataset (issue #16).
+"""Legacy mutable Parquet dataset manifests (schema version 1, issue #16).
 
 A manifest pins what a dataset claims to be: source, canonical timezone
 (must be UTC — the lake normalizes to UTC), revision, license and the
@@ -7,6 +7,10 @@ shards on disk and writes ``<dataset>/manifest.json``; the lake's
 ``Lake.dataset()`` gate refuses to open a dataset without a valid, fresh
 manifest. Experiments pin ``(dataset, revision)`` and trust that the
 bytes match the declaration — the M3 "pinned dataset" exit criterion.
+
+This interface remains for existing Parquet consumers. New trusted-data
+pipelines publish content-addressed objects and immutable schema-version-2
+manifests through :mod:`quantmesh.data.artifacts`.
 
 Freshness is declared coverage: series set, per-series row counts and
 first/last timestamps. A same-count, same-range content change is not

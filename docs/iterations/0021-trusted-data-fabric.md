@@ -61,7 +61,7 @@ checkpoint.
 
 | Slice | Status | Dependency | Evidence |
 | --- | --- | --- | --- |
-| 1. Immutable AAPL daily tracer | in progress | None | Tasks 1–2 complete |
+| 1. Immutable AAPL daily tracer | in progress | None | Tasks 1–3 complete |
 | 2. Moomoo AAPL/NVDA | planned | Slice 1 | pending |
 | 3. Hyperliquid BTC candles | planned | Slice 1 | pending |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | planned | Slice 3 | pending |
@@ -168,11 +168,40 @@ checkpoint.
   focused suite. They are upstream warnings under the current supported NumPy
   range, not suppressed or represented as project failures.
 
+## Checkpoint 3 — Content-addressed objects and immutable manifests, 2026-08-14
+
+- RED began with absent object and artifact modules. Every later Reviewer
+  finding was reproduced as a focused regression before correction.
+- GREEN: the final Task 1–3 integration, v1 manifest/Lake compatibility and
+  security selection passed `195 passed, 3 skipped`. Ruff passed all changed
+  Python files and `git diff --check` passed. The five warnings are the already
+  recorded pinned `exchange-calendars` NumPy deprecations.
+- V2 objects, manifests and immutable revision reservations live beneath
+  `.trusted-data-v2`, which cannot collide with a legal v1 dataset name. Exact
+  readers validate content hashes plus typed bar instrument, interval, event
+  coverage and row identity declarations.
+- Genesis is one atomic same-filesystem directory activation. Later revisions
+  use a hard-link- and reparse-safe cross-process lock, append/fsync
+  hash-chained history, immutable revision binding and compare-and-swap
+  pointer. Old readers remain stable; rollback, deletion reset and revision
+  reuse fail closed.
+- Crash tests cover before/after genesis activation, manifest before pointer,
+  missing pending evidence, concurrent publishers and torn history. Tail
+  repair requires matching CAS, exact candidate identity and compatible
+  reservation/manifest evidence; committed, conflicting or ambiguous tails
+  are never repaired.
+- A real Windows junction probe returned `JUNCTION_REJECTED=True` and left its
+  external target empty. Independent Standards review and final implementation
+  review were CLEAN after all reproduced Critical/Important findings closed.
+- ADR-0016 records the v1 boundary, v2 storage contract and local-filesystem
+  trust-root limitation. No provider credential, execution authority, release
+  tag or synthetic repair path changed.
+
 ## Current frontier
 
-Implement Task 3, content-addressed objects and immutable manifests. Start the seven-day
-evidence window only after Slices 1–6 are merged into a frozen candidate
-configuration.
+Implement Task 4, the bitemporal raw-to-feature AAPL tracer. Start the
+seven-day evidence window only after Slices 1–6 are merged into a frozen
+candidate configuration.
 
 ## Resume instructions
 

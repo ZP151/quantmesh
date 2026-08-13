@@ -272,7 +272,7 @@ evidence and receive a clean read-only review.
 - `ManifestStore.open(manifest_id) -> ArtifactDataset` binds exact object refs.
 - Existing `Lake.dataset()` keeps reading v1 datasets.
 
-- [ ] **Step 1: Write failing immutability tests**
+- [x] **Step 1: Write failing immutability tests**
 
 ```python
 def test_same_range_content_change_has_a_new_manifest_id(store) -> None:
@@ -299,30 +299,32 @@ def test_current_pointer_rejects_rollback(store) -> None:
         store.point_current(first.manifest_id, expected_current=second.manifest_id)
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run:
 `.\.venv\Scripts\python.exe -m pytest tests/test_object_store.py tests/test_artifact_manifests.py -q`
 
 Expected: imports fail because v2 storage is absent.
 
-- [ ] **Step 3: Implement canonical object and manifest publication**
+- [x] **Step 3: Implement canonical object and manifest publication**
 
 Use `json.dumps(..., sort_keys=True, separators=(",", ":"), ensure_ascii=False)`
 for canonical JSON. Store objects under
-`objects/sha256/<first-two>/<digest>` and manifests under
-`datasets/<dataset>/manifests/<manifest_id>.json`. Validate hashes on every
-read. Atomically replace only `current.json`; never replace an object or
-manifest.
+`.trusted-data-v2/objects/sha256/<first-two>/<digest>` and manifests under
+`.trusted-data-v2/datasets/<dataset>/manifests/<manifest_id>.json`; the
+leading-dot namespace cannot collide with a legal v1 dataset name. Validate
+hashes on every read. Atomically replace only `current.json`; never replace an
+object or manifest. Atomically activate the complete first dataset directory
+from same-filesystem staging so genesis has no visible partial state.
 
-- [ ] **Step 4: Verify GREEN and v1 compatibility**
+- [x] **Step 4: Verify GREEN and v1 compatibility**
 
 Run:
 `.\.venv\Scripts\python.exe -m pytest tests/test_object_store.py tests/test_artifact_manifests.py tests/test_manifest.py tests/test_lake.py -q`
 
 Expected: v2 immutability and all v1 regressions pass.
 
-- [ ] **Step 5: Record ADR and review**
+- [x] **Step 5: Record ADR and review**
 
 Create `docs/adr/0016-trusted-data-fabric-and-immutable-manifests.md` with the
 accepted v2 decision and v1 compatibility boundary. Commit

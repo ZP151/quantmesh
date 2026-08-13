@@ -19,6 +19,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import duckdb
 import pandas as pd
@@ -42,6 +43,9 @@ from quantmesh.domain.market_data import (
 )
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.settings import Settings
+
+if TYPE_CHECKING:
+    from quantmesh.data.artifacts import ManifestStore
 
 
 def _require_aware(timestamp: datetime | None, name: str) -> None:
@@ -95,6 +99,12 @@ class Lake:
     @classmethod
     def from_settings(cls, settings: Settings) -> "Lake":
         return cls(settings.lake_root)
+
+    def artifact_store(self) -> "ManifestStore":
+        """Return the immutable v2 artifact store sharing this lake root."""
+        from quantmesh.data.artifacts import ManifestStore
+
+        return ManifestStore(self.root)
 
     def shard_file(self, dataset: str, interval: str, venue: Venue, symbol: str, day: str) -> Path:
         validate_dataset_name(dataset)

@@ -140,7 +140,9 @@ it never rewrites the earlier vintage.
 Fabric objects are stored under a SHA-256 object namespace. Canonical JSON is
 used for envelopes, manifests, checkpoints and quality reports; Parquet object
 bytes are hashed after deterministic creation. Existing v1 data remains
-readable but cannot qualify as v2 immutable evidence.
+readable but cannot qualify as v2 immutable evidence. All v2 state lives below
+`.trusted-data-v2`, a namespace impossible under the v1 dataset-name grammar,
+so provider evidence cannot collide with a legal v1 dataset.
 
 An `ArtifactManifest` records:
 

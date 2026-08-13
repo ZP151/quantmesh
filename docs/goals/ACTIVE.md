@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–2 green
+- Status: iteration 0021 active — Tasks 1–3 green
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,9 +12,9 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: implement Task 3, content-addressed objects and immutable
-  manifest reads, with RED/GREEN immutability evidence and a fresh read-only
-  review.
+- Current frontier: implement Task 4, the bitemporal raw-to-feature AAPL
+  tracer, on Task 3's immutable identities with RED/GREEN lineage and
+  knowledge-time evidence plus a fresh read-only review.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -59,6 +59,26 @@
 - Alias history is bitemporal and content-addressed; XNYS regular sessions are
   schedule-validated, extended sessions fail explicitly, and 24/7 sessions are
   exact UTC days. No execution or release authority changed.
+
+## Checkpoint 3 — 2026-08-14
+
+- Task 3 content-addressed objects and immutable manifests is GREEN. The final
+  Task 1–3 integration, v1 compatibility and security selection passed 195
+  tests with 3 expected skips; Ruff and `git diff --check` passed.
+- V2 state is isolated under `.trusted-data-v2`. Objects, manifests and
+  revision reservations are write-once; canonical hashes and typed bar
+  declarations are verified on exact-manifest reads.
+- Genesis activates one complete staged directory atomically. Later
+  publication uses a reparse- and hard-link-safe cross-process lock, immutable
+  revisions, hash-chained history and compare-and-swap pointer. Strict recovery
+  accepts only exact uncommitted evidence; committed or ambiguous damage fails
+  closed.
+- A real Windows junction probe was rejected before any external write. Review
+  reproduced and closed the path, semantic, concurrency, crash, truncation and
+  torn-tail attacks; the final read-only Reviewer verdict was CLEAN.
+- ADR-0016 records the local filesystem trust root and does not claim defense
+  against an administrator rolling back every local v2 evidence file together.
+  No credential, order authority, release tag or synthetic repair path changed.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 
