@@ -1,6 +1,7 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–12 green; Slices 1–6 complete
+- Status: iteration 0021 active — Tasks 1–12 green; Task 13 implementation and
+  clean-install verification green; soak candidate not frozen
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,12 +13,14 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: Task 13 clean-install collector, replay, inspection and
-  immutable daily evidence tooling. Keep wallet, signing, account and order
-  surfaces structurally absent.
-- Blockers: none for implementation. Real Moomoo acceptance later requires a
-  locally available OpenD and entitlements; credentials or paid services need
-  explicit operator authorization.
+- Current frontier: complete Task 13 candidate freeze only after the fixed
+  Moomoo AAPL/NVDA target can produce qualifying real read-only evidence from a
+  locally available OpenD. Task 14 has not started. Keep wallet, signing,
+  account and order surfaces structurally absent.
+- External gate: the tooling and clean-install gate are complete, but the fixed
+  five-target soak matrix cannot freeze without local OpenD and AAPL/NVDA market
+  data entitlement. No credential, paid-service or target-matrix substitution
+  is authorized.
 
 ## Product-readiness decision
 
@@ -340,6 +343,53 @@ readiness decision**.
 - Task 13 is active: add bounded clean-install collect/replay/inspect commands
   and immutable daily soak evidence without changing release or execution
   authority.
+
+## Checkpoint 13 — 2026-08-14
+
+- Task 13 tooling is implemented and reviewed. The installed `quantmesh-data`
+  entry point provides bounded clean-checkout `collect`, exact hash-verifying
+  `replay` and catalog `inspect`; `tools/trusted_data_soak.py` binds immutable
+  daily reports to the exact code/configuration and fixed BTC/ETH/SOL plus
+  AAPL/NVDA target matrix. Its verifier reopens the complete catalog,
+  checkpoint, quality, manifest and object closure. Detectable local rollback,
+  late backfill, stale targets, noncanonical reports, links and incomplete
+  evidence fail closed. A local administrator able to rewrite every file and
+  timestamp remains outside ADR-0016's filesystem threat model; Task 14's daily
+  issue/CI record is the independent witness.
+- Review-driven corrections closed incomplete closure verification,
+  stale-target reuse, link/reparse handling, candidate-controlled target and
+  policy identities, and invalid first-observation freezing. Final focused
+  review returned CLEAN/PASS. The acceptance run then found and fixed one real
+  quality-policy defect: grace and maximum latency had been equal, leaving no
+  practical post-grace PASS interval. Authoritative latency is now 600 seconds
+  for Hyperliquid after a 300-second grace and 7,200 seconds for Moomoo after a
+  3,600-second grace.
+- Four clean-checkout release-gate attempts exposed two additional
+  environment-dependent test defects and one fixed-port race. API and SPA
+  connector probes now inject deterministic offline Moomoo behavior under
+  test without changing the production OpenD path; live-prediction E2E reserves
+  an OS-assigned socket and shuts down scripted venue loops normally. The final
+  gate passed all 18 steps on exact candidate
+  `0a9796769c1ca98f0fc5f4dab187950167f4d0ab`: `3039 passed, 6 skipped`, Ruff,
+  dependency/license audits, frontend reproducibility and Vitest, golden path
+  `60` checks, and clean-clone proof before and after.
+- A fresh isolated collection from that candidate covered
+  `2026-08-14T08:12:00Z/2026-08-14T08:14:00Z`. All 12 Hyperliquid
+  raw/normalized/adjusted/feature layers for BTC, ETH and SOL passed immutable
+  quality with three bars, no issue codes, no synthetic rows and 379–380 second
+  latency. Adjusted manifests are BTC
+  `12562839ec2cd8b1af697e55911e2bc86b25d18c78d5029e06c88c82eacfdedf`, ETH
+  `b77395c4198615dca0ef80535d9848fd1f0e6fd05e454b6d47648992ef4b79f2`
+  and SOL
+  `68966758e583b6645cd9b22fe026ab253b7c41551e808cea3cc0583267710aa1`.
+  Each replayed twice in separate CLI processes with `verified=true` and three
+  rows.
+- The final-candidate Moomoo probe returned
+  `unavailable/daemon-unavailable`, detail `local OpenD is unavailable`, zero
+  manifest IDs and no synthetic substitution. Consequently Task 13 Step 4 is
+  complete, Step 5 remains open, no soak candidate/configuration is frozen and
+  Task 14's 168-hour evidence window has not started. No milestone PR, release,
+  credential, execution or synthetic-repair authority changed.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

@@ -961,7 +961,7 @@ append-only report IDs. Retain evidence beyond the soak window.
 Freeze the exact BTC/ETH/SOL and AAPL/NVDA adjusted-bar target matrix; require
 fresh or calendar-current passing evidence and monotonic immutable progress.
 
-- [ ] **Step 4: Verify GREEN and clean installation**
+- [x] **Step 4: Verify GREEN and clean installation**
 
 Create a fresh clone and venv, install `.[dev,research,e2e,moomoo]`, collect a
 bounded real Hyperliquid window, replay it, restart the process and rerun. Run Moomoo
@@ -973,6 +973,12 @@ unavailable state and record that real Moomoo acceptance remains pending.
 Commit `feat(ops): add trusted data acceptance tooling`; run full pre-soak
 review and record the exact candidate commit/config digest. No code or policy
 change may enter its evidence directory.
+
+Implementation review and the final clean-install gate are green at `0a97967`.
+Candidate freeze remains intentionally incomplete: the fixed Moomoo AAPL/NVDA
+targets returned `unavailable/daemon-unavailable` because local OpenD was not
+available, so no complete five-target configuration digest or first soak report
+was created. Do not start Task 14 or weaken the matrix to bypass this gate.
 
 ---
 

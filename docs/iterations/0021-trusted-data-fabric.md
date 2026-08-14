@@ -657,12 +657,64 @@ durable checkpoint.
   wallet/signing or synthetic-repair authority changed. Task 13 now owns the
   clean-install collector, replay, inspection and daily evidence tooling.
 
+## Checkpoint 13 — Clean-install acceptance tooling, 2026-08-14
+
+- Commits `c069a15`, `e801e31`, `a594408`, `e1f75c9` and `0a97967` deliver the
+  bounded installed CLI, immutable soak observer/verifier, the practical
+  post-grace quality window, deterministic connector-test isolation and
+  race-free live-prediction E2E server lifecycle. Production still contacts
+  real OpenD when explicitly probed; only tests receive offline injected state.
+- `quantmesh-data collect` requires an exact clean producing commit, bounded
+  provider/symbol/window inputs and read-only adapters. `replay` reopens hashes
+  and typed contracts before output, while `inspect` exposes the verified
+  catalog/quality/checkpoint state. The soak verifier fixes the target matrix to
+  Hyperliquid BTC/ETH/SOL 1-minute adjusted bars and Moomoo AAPL/NVDA daily
+  adjusted bars, rederives policy/calendar/schema/config identities and rejects
+  stale, incomplete, linked, late-created or noncanonical evidence.
+- Reviewer corrections closed four initial Important findings and two follow-up
+  findings: complete closure reopening, per-target freshness/progress, honest
+  Windows timestamp claims, report/ancestor link rejection, trusted fixed
+  target/config identities and all-or-nothing first observation. Final scoped
+  read-only review returned CLEAN/PASS. The documented filesystem boundary does
+  not claim defense against a local administrator coherently rewriting every
+  evidence file and timestamp; Task 14's daily remote issue/CI checkpoint is the
+  independent witness.
+- The final clean-checkout release gate passed all 18 steps on
+  `0a9796769c1ca98f0fc5f4dab187950167f4d0ab`: release consistency, fresh
+  `.[dev,research,e2e,moomoo]` installation, Ruff, installed CLI probe,
+  Python/frontend license and vulnerability audits, reproducible frontend
+  bundle, Vitest, `3039 passed, 6 skipped`, golden path `60` checks and a clean
+  clone at both boundaries. Three earlier attempts were preserved as negative
+  evidence: one API connector probe and one SPA probe contacted OpenD when the
+  optional SDK was installed, and one live-prediction E2E used a racy fixed
+  port. All three received focused regressions before the passing run.
+- The isolated final-candidate Hyperliquid collection used UTC window
+  `2026-08-14T08:12:00Z/2026-08-14T08:14:00Z`. The catalog contains 12 passing
+  layers, no issue codes, no synthetic rows, three adjusted rows per symbol and
+  379–380 second latency. The adjusted manifest IDs are BTC
+  `12562839ec2cd8b1af697e55911e2bc86b25d18c78d5029e06c88c82eacfdedf`, ETH
+  `b77395c4198615dca0ef80535d9848fd1f0e6fd05e454b6d47648992ef4b79f2`
+  and SOL
+  `68966758e583b6645cd9b22fe026ab253b7c41551e808cea3cc0583267710aa1`.
+  Each exact manifest replayed twice from separate CLI processes with
+  `verified=true` and three rows. Shared quality report
+  `7a4dc2290e6c55d2fff0c15311c0b14bdc52fc46159e948edac6e7103568bbd6`
+  binds collection run
+  `874300d501c1f66188bb34b508311cbb8758b72fb40b07c73a887f8a2d7bbcfd`.
+- The same candidate's bounded Moomoo AAPL/NVDA attempt returned
+  `status=unavailable`, `reason_code=daemon-unavailable`, detail
+  `local OpenD is unavailable` and `manifest_ids=[]`. No candidate or soak
+  report was created. Task 13 Step 4 is complete; Step 5 remains pending local
+  OpenD plus entitlement. Task 14 is not started, and no release, milestone PR,
+  credential, execution or synthetic-repair authority changed.
+
 ## Current frontier
 
-Task 13 is the current implementation frontier: clean-install collection,
-hash-verifying replay, catalog inspection and immutable daily soak evidence.
-Start the seven-day evidence window only after the collector and evidence tools
-are verified against the frozen candidate configuration.
+Task 13 implementation and clean-install verification are complete. Candidate
+freeze remains the current frontier because the fixed Moomoo AAPL/NVDA targets
+cannot yet produce qualifying real evidence without a locally available OpenD
+and entitlement. Task 14 has not started; do not create daily soak reports or
+claim a 168-hour window until the exact five-target candidate is frozen.
 
 ## Resume instructions
 
