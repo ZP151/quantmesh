@@ -225,7 +225,7 @@ def _quality_builder(
     store: ManifestStore,
     reports: list[str],
     *,
-    max_latency_seconds: int = 300,
+    max_latency_seconds: int = 600,
     authoritative_window: bool = True,
 ):
     evidence = CollectionCoordinator(store).quality
@@ -294,6 +294,30 @@ def _quality_builder(
         return report
 
     return build
+
+
+def test_authoritative_policies_have_a_post_grace_observation_window(
+    tmp_path: Path,
+) -> None:
+    store = ManifestStore(tmp_path)
+    envelope = _envelope(store)
+    staging = StagingManifestStore(store, collection_run_id="policy-window")
+    manifest_ids = _producer(store, envelope)(staging)
+    manifests = tuple(store.open(item).manifest for item in manifest_ids)
+    coordinator = CollectionCoordinator(store)
+    hyperliquid = coordinator._quality_policy_for_manifest(manifests[0])
+    moomoo_manifest = manifests[0].model_copy(
+        update={
+            "canonical_instrument": CanonicalInstrumentId(value="moomoo:US:AAPL:XNAS"),
+            "interval": "1d",
+            "calendar_version": XNYS_REGULAR_VERSION,
+            "session_policy": SessionPolicy.REGULAR,
+        }
+    )
+    moomoo = coordinator._quality_policy_for_manifest(moomoo_manifest)
+
+    assert hyperliquid.max_latency_seconds > hyperliquid.grace_period_seconds
+    assert moomoo.max_latency_seconds > moomoo.grace_period_seconds
 
 
 def test_quality_report_is_checkpoint_bound_and_retry_stable(tmp_path: Path) -> None:
@@ -474,7 +498,7 @@ def test_real_custom_builder_cannot_relax_the_authoritative_policy(
             quality_builder=_quality_builder(
                 store,
                 [],
-                max_latency_seconds=301,
+                max_latency_seconds=601,
             ),
         )
 
