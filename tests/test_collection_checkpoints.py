@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+import quantmesh.data.checkpoints as checkpoint_module
 from quantmesh.data.checkpoints import (
     CheckpointConflictError,
     CheckpointIntegrityError,
@@ -28,6 +29,16 @@ MANIFEST_1 = "e" * 64
 MANIFEST_2 = "f" * 64
 KNOWLEDGE_1 = datetime(2026, 8, 14, 1, tzinfo=UTC)
 KNOWLEDGE_2 = datetime(2026, 8, 14, 2, tzinfo=UTC)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_graph_journal_contract_from_quality_closure(monkeypatch) -> None:
+    """These synthetic digest tests exercise journal mechanics, not data closure."""
+    monkeypatch.setattr(
+        checkpoint_module,
+        "_verify_committed_quality_evidence",
+        lambda *args, **kwargs: None,
+    )
 
 _PRELINK_CRASH = r"""
 import os

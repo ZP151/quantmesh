@@ -9,6 +9,7 @@ from pathlib import Path
 import duckdb
 import pytest
 
+import quantmesh.data.checkpoints as checkpoint_module
 from quantmesh.data.artifacts import (
     ArtifactLayer,
     ArtifactManifest,
@@ -44,6 +45,16 @@ NVDA = Instrument(
     instrument_type=InstrumentType.EQUITY,
     currency="USD",
 )
+
+
+@pytest.fixture(autouse=True)
+def _isolate_manifest_contract_from_quality_closure(monkeypatch) -> None:
+    """Manifest identity tests use synthetic rows without raw provenance."""
+    monkeypatch.setattr(
+        checkpoint_module,
+        "_verify_committed_quality_evidence",
+        lambda *args, **kwargs: None,
+    )
 
 
 def _instrument_bar(instrument: Instrument, close: float) -> Bar:

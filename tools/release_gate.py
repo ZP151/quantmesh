@@ -18,22 +18,23 @@ Steps, all under a temporary root:
   4. Create a fresh venv there and install the release extras
      ``.[dev,research,e2e,moomoo]``.
   5. Ruff over ``src tests tools``.
-  6. License review (the closure contract: every pinned package
+  6. Verify the installed ``quantmesh-data`` console entry point.
+  7. License review (the closure contract: every pinned package
      installed and allowed, nothing untracked installed).
-  7. pip-audit over ``requirements-audit.txt`` from an *isolated*
+  8. pip-audit over ``requirements-audit.txt`` from an *isolated*
      tooling venv, so the scanner's own CLI dependencies never enter
      the release environment. ``--disable-pip``: the lock is already
      the frozen resolution, so the audit reads the pins directly with
      no re-resolution (pip's resolver would try to rebuild the
      Linux-only closure members on Windows).
-  8. ``npm ci``, deterministic npm license review, and ``npm audit``
+  9. ``npm ci``, deterministic npm license review, and ``npm audit``
      over the exact frontend lock, followed by frontend build/tests.
-  9. Full pytest suite (E2E tests use the shared Playwright browser
+ 10. Full pytest suite (E2E tests use the shared Playwright browser
      cache and are reported as skipped when it is unavailable).
- 10. The golden path (``tools/golden_path.py``: fixture -> data lake
+ 11. The golden path (``tools/golden_path.py``: fixture -> data lake
      -> strategy reports -> internal paper -> all 13 workstation
      screens -> restart recovery with every audit ledger re-read).
- 11. Clean-checkout proof: ``git status --porcelain`` in the clone
+ 12. Clean-checkout proof: ``git status --porcelain`` in the clone
      must be empty after all of the above.
 
 All generated state lives under the temporary root. On success it is
@@ -82,6 +83,12 @@ def _venv_python(venv: Path) -> Path:
     if os.name == "nt":
         return venv / "Scripts" / "python.exe"
     return venv / "bin" / "python"
+
+
+def _venv_script(venv: Path, name: str) -> Path:
+    if os.name == "nt":
+        return venv / "Scripts" / f"{name}.exe"
+    return venv / "bin" / name
 
 
 def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -217,6 +224,12 @@ def main() -> int:
             ],
             checkout,
             600,
+        ),
+        step(
+            "trusted data tooling installed",
+            [str(_venv_script(temp / "release-venv", "quantmesh-data")), "--help"],
+            checkout,
+            120,
         ),
         step(
             "license review (closure contract)",

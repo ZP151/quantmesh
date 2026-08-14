@@ -928,10 +928,12 @@ Build and commit the packaged frontend as
 - `quantmesh-data replay --manifest ID` verifies hashes before output.
 - `quantmesh-data inspect` prints catalog/quality/checkpoint state.
 - `trusted_data_soak.py observe` writes one immutable UTC daily report.
-- `trusted_data_soak.py verify --minimum-hours 168 --minimum-xnys-sessions 4`
-  rejects fabricated, late, changed-baseline or incomplete evidence.
+- `trusted_data_soak.py verify --data-root PATH --minimum-hours 168
+  --minimum-xnys-sessions 4` reopens the complete immutable data closure and
+  rejects detectable late, changed-baseline, stale-target or incomplete
+  evidence within the documented local-filesystem trust model.
 
-- [ ] **Step 1: Write failing CLI/evidence tests**
+- [x] **Step 1: Write failing CLI/evidence tests**
 
 ```python
 def test_soak_rejects_seven_reports_generated_after_the_fact(tmp_path) -> None:
@@ -947,20 +949,22 @@ def test_replay_refuses_tampered_object(tmp_path) -> None:
     assert cli(["replay", "--manifest", manifest.manifest_id]) == 1
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the two new test files. Expected: tooling imports/entry point are absent.
 
-- [ ] **Step 3: Implement the CLI, observer and runbook**
+- [x] **Step 3: Implement the CLI, observer and runbook**
 
 Pin each report to code commit, config digest, policy/calendar/schema versions,
 manifests, quality evaluations and checkpoints. Require original timestamps and
 append-only report IDs. Retain evidence beyond the soak window.
+Freeze the exact BTC/ETH/SOL and AAPL/NVDA adjusted-bar target matrix; require
+fresh or calendar-current passing evidence and monotonic immutable progress.
 
 - [ ] **Step 4: Verify GREEN and clean installation**
 
-Create a fresh clone and venv, install `.[dev,research,e2e]`, collect a bounded
-real Hyperliquid window, replay it, restart the process and rerun. Run Moomoo
+Create a fresh clone and venv, install `.[dev,research,e2e,moomoo]`, collect a
+bounded real Hyperliquid window, replay it, restart the process and rerun. Run Moomoo
 only if the local OpenD probe is available; otherwise verify the exact typed
 unavailable state and record that real Moomoo acceptance remains pending.
 
