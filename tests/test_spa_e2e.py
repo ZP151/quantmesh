@@ -21,7 +21,9 @@ import pytest
 import uvicorn
 
 from quantmesh.api import workstation
+from quantmesh.demo.datalink import ConnectorState, DatalinkService
 from quantmesh.demo.runtime import create_demo_app
+from quantmesh.hyperliquid.errors import HyperliquidSDKMissingError
 
 pytest.importorskip(
     "playwright.sync_api",
@@ -44,6 +46,38 @@ def _restore_legacy_ui() -> None:
 HOST = "127.0.0.1"
 
 
+class _MissingSdkTransport:
+    """Deterministic public-data failure for the browser fallback walk."""
+
+    def l2_book(self, symbol: str, *, at=None) -> dict:
+        raise HyperliquidSDKMissingError("SDK intentionally unavailable in SPA E2E")
+
+    def candles(self, symbol, interval, *, start, end):
+        raise NotImplementedError
+
+    def funding_history(self, symbol, *, start, end):
+        raise NotImplementedError
+
+    def meta(self) -> dict:
+        raise NotImplementedError
+
+    def spot_meta(self) -> dict:
+        raise NotImplementedError
+
+
+def _offline_moomoo_probe() -> ConnectorState:
+    return ConnectorState(
+        venue="moomoo",
+        kind="execution-sim",
+        mode="sandbox",
+        credentials_required=True,
+        read_only=False,
+        wired=False,
+        state="unavailable",
+        detail="Offline deterministic SPA E2E probe; no OpenD contact.",
+    )
+
+
 def _wait_for_server(server: uvicorn.Server) -> None:
     for _ in range(400):  # seeding a demo root can take ~40 s
         if server.started:
@@ -61,6 +95,11 @@ def base_url(tmp_path_factory) -> str:
     port = listener.getsockname()[1]
     root = Path(tmp_path_factory.mktemp("spa-e2e")) / "demo"
     app = create_demo_app(root=root, host=HOST)
+    app.state.datalink = DatalinkService(
+        root=app.state.demo.root,
+        rest=_MissingSdkTransport(),
+        moomoo_probe=_offline_moomoo_probe,
+    )
     server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=port, log_level="warning"))
     thread = threading.Thread(
         target=server.run,
