@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import duckdb
 import pytest
 
 from quantmesh.data.artifacts import (
@@ -17,6 +18,14 @@ from quantmesh.data.artifacts import (
 )
 from quantmesh.data.calendars import SessionPolicy
 from quantmesh.data.capabilities import DataKind, EntitlementState
+from quantmesh.data.checkpoints import (
+    CheckpointIntegrityError,
+    CheckpointStore,
+    CollectionCheckpoint,
+    GraphAdvance,
+    GraphMember,
+)
+from quantmesh.data.collection import CollectionCoordinator, StagingManifestStore
 from quantmesh.data.instruments import CanonicalInstrumentId, InstrumentCatalog
 from quantmesh.data.lake import Lake
 from quantmesh.domain.market_data import Bar
@@ -54,29 +63,41 @@ def _bar(close: float) -> Bar:
     return _instrument_bar(AAPL, close)
 
 
-def _payload(close: float) -> bytes:
+def _payload(close: float, instrument: Instrument = AAPL) -> bytes:
     return json.dumps(
-        [_bar(close).model_dump(mode="json")],
+        [_instrument_bar(instrument, close).model_dump(mode="json")],
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
 
 
-def _manifest(store: ManifestStore, close: float, revision: int) -> ArtifactManifest:
-    object_ref = store.objects.put_bytes("application/vnd.quantmesh.bars+json", _payload(close))
-    knowledge_time = T0 + timedelta(seconds=revision - 1)
+def _manifest(
+    store: ManifestStore,
+    close: float,
+    revision: int,
+    *,
+    knowledge_time: datetime | None = None,
+    dataset_id: str = "aapl-daily",
+    instrument: Instrument = AAPL,
+) -> ArtifactManifest:
+    object_ref = store.objects.put_bytes(
+        "application/vnd.quantmesh.bars+json", _payload(close, instrument)
+    )
+    knowledge_time = knowledge_time or T0 + timedelta(seconds=revision - 1)
     return ArtifactManifest.build(
-        dataset_id="aapl-daily",
+        dataset_id=dataset_id,
         compatibility_revision=revision,
         layer=ArtifactLayer.NORMALIZED,
-        canonical_instrument=CanonicalInstrumentId(value="moomoo:US:AAPL:XNAS"),
+        canonical_instrument=CanonicalInstrumentId(
+            value=f"moomoo:US:{instrument.symbol}:XNAS"
+        ),
         instrument_catalog_id=InstrumentCatalog.bounded_default().catalog_id,
         data_kind=DataKind.BARS,
         interval="1d",
         calendar_version="exchange-calendars:4.13.2:XNYS",
         session_policy=SessionPolicy.REGULAR,
         objects=(object_ref,),
-        row_identities=(f"AAPL:{T0.isoformat()}",),
+        row_identities=(f"{instrument.symbol}:{T0.isoformat()}",),
         schema_digest="1" * 64,
         adapter_version="moomoo-v1",
         parent_manifest_ids=(),
@@ -119,6 +140,440 @@ def test_open_reader_is_stable_after_new_publication(tmp_path: Path) -> None:
 
     assert reader.read_bars()[0].close == 100.0
     assert store.open(second.manifest_id).read_bars()[0].close == 101.0
+
+
+def test_graph_staging_does_not_corrupt_legacy_revision_history(tmp_path: Path) -> None:
+    store = ManifestStore(tmp_path)
+    first = _manifest(store, close=100.0, revision=1)
+    store.publish(first, expected_current=None)
+    second = _manifest(store, close=101.0, revision=2)
+
+    store.stage(second)
+
+    assert store.current(first.dataset_id).manifest == first
+    assert store.manifests(first.dataset_id) == (first,)
+    assert store.open(second.manifest_id).manifest == second
+
+
+def test_graph_genesis_candidate_is_not_visible_before_commit(tmp_path: Path) -> None:
+    store = ManifestStore(tmp_path)
+    candidate = _manifest(store, close=100.0, revision=1)
+
+    store.stage(candidate)
+
+    assert store.current(candidate.dataset_id) is None
+    assert store.manifests(candidate.dataset_id) == ()
+    assert store.open(candidate.manifest_id).manifest == candidate
+
+
+def test_graph_staging_rejects_nonforward_knowledge_time(tmp_path: Path) -> None:
+    store = ManifestStore(tmp_path)
+    first = _manifest(store, close=100.0, revision=1)
+    store.publish(first, expected_current=None)
+    overlapping = _manifest(
+        store,
+        close=101.0,
+        revision=2,
+        knowledge_time=first.knowledge_end,
+    )
+
+    with pytest.raises(ManifestConflictError, match="knowledge time"):
+        StagingManifestStore(store).publish(
+            overlapping,
+            expected_current=first.manifest_id,
+        )
+
+
+def test_legacy_current_migrates_to_graph_current_without_split_history(
+    tmp_path: Path,
+) -> None:
+    store = ManifestStore(tmp_path)
+    first = _manifest(store, close=100.0, revision=1)
+    store.publish(first, expected_current=None)
+    second = _manifest(store, close=101.0, revision=2)
+    store.stage(second)
+    checkpoint = CollectionCheckpoint(
+        job_id="1" * 64,
+        generation=1,
+        provider_cursor="cursor",
+        last_complete_source_event="event",
+        raw_object_digests=(first.objects[0].digest,),
+        manifest_ids=(second.manifest_id,),
+        preflight_id="2" * 64,
+        quality_report_id=None,
+        run_id="3" * 64,
+        attempt=1,
+        updated_at=T0 + timedelta(seconds=1),
+    )
+    with CheckpointStore(tmp_path) as checkpoints:
+        with checkpoints.writer():
+            checkpoints.commit(
+                previous=None,
+                next_checkpoint=checkpoint,
+                advances=(
+                    GraphAdvance(
+                        dataset_id=first.dataset_id,
+                        expected_current=first.manifest_id,
+                        expected_revision=1,
+                        expected_knowledge_end=first.knowledge_end,
+                        manifest_id=second.manifest_id,
+                        revision=2,
+                        knowledge_start=second.knowledge_start,
+                        knowledge_end=second.knowledge_end,
+                    ),
+                ),
+                commit_id="4" * 64,
+            )
+
+    assert store.current(first.dataset_id).manifest == second
+    assert store.manifests(first.dataset_id) == (first, second)
+
+
+def test_missing_graph_current_does_not_fall_back_to_legacy_pointer(
+    tmp_path: Path,
+) -> None:
+    store = ManifestStore(tmp_path)
+    first = _manifest(store, close=100.0, revision=1)
+    store.publish(first, expected_current=None)
+    second = _manifest(store, close=101.0, revision=2)
+    store.stage(second)
+    checkpoint = CollectionCheckpoint(
+        job_id="1" * 64,
+        generation=1,
+        provider_cursor="cursor",
+        last_complete_source_event="event",
+        raw_object_digests=(first.objects[0].digest,),
+        manifest_ids=(second.manifest_id,),
+        preflight_id="2" * 64,
+        quality_report_id=None,
+        run_id="3" * 64,
+        attempt=1,
+        updated_at=T0 + timedelta(seconds=1),
+    )
+    with CheckpointStore(tmp_path) as checkpoints:
+        with checkpoints.writer():
+            checkpoints.commit(
+                previous=None,
+                next_checkpoint=checkpoint,
+                advances=(
+                    GraphAdvance(
+                        dataset_id=first.dataset_id,
+                        expected_current=first.manifest_id,
+                        expected_revision=1,
+                        expected_knowledge_end=first.knowledge_end,
+                        manifest_id=second.manifest_id,
+                        revision=2,
+                        knowledge_start=second.knowledge_start,
+                        knowledge_end=second.knowledge_end,
+                    ),
+                ),
+                commit_id="4" * 64,
+            )
+    database = tmp_path / ".trusted-data-v2" / "control" / "collection-checkpoints.duckdb"
+    with duckdb.connect(str(database)) as connection:
+        connection.execute("DELETE FROM graph_currents WHERE dataset_id = ?", [first.dataset_id])
+
+    with pytest.raises(CheckpointIntegrityError, match="graph current is missing"):
+        store.current(first.dataset_id)
+
+    with duckdb.connect(str(database)) as connection:
+        connection.execute("DELETE FROM graph_history WHERE dataset_id = ?", [first.dataset_id])
+
+    with pytest.raises(CheckpointIntegrityError, match="commit journal"):
+        store.current(first.dataset_id)
+
+
+def test_deleted_checkpoint_database_cannot_revive_legacy_pointer(
+    tmp_path: Path,
+) -> None:
+    store = ManifestStore(tmp_path)
+    first = _manifest(store, close=100.0, revision=1)
+    store.publish(first, expected_current=None)
+    second = _manifest(store, close=101.0, revision=2)
+    store.stage(second)
+    checkpoint = CollectionCheckpoint(
+        job_id="1" * 64,
+        generation=1,
+        provider_cursor="cursor",
+        last_complete_source_event="event",
+        raw_object_digests=(first.objects[0].digest,),
+        manifest_ids=(second.manifest_id,),
+        preflight_id="2" * 64,
+        quality_report_id=None,
+        run_id="3" * 64,
+        attempt=1,
+        updated_at=T0 + timedelta(seconds=1),
+    )
+    with CheckpointStore(tmp_path) as checkpoints:
+        with checkpoints.writer():
+            checkpoints.commit(
+                previous=None,
+                next_checkpoint=checkpoint,
+                advances=(
+                    GraphAdvance(
+                        dataset_id=first.dataset_id,
+                        expected_current=first.manifest_id,
+                        expected_revision=1,
+                        expected_knowledge_end=first.knowledge_end,
+                        manifest_id=second.manifest_id,
+                        revision=2,
+                        knowledge_start=second.knowledge_start,
+                        knowledge_end=second.knowledge_end,
+                    ),
+                ),
+                commit_id="4" * 64,
+            )
+    database = tmp_path / ".trusted-data-v2" / "control" / "collection-checkpoints.duckdb"
+    database.unlink()
+
+    with pytest.raises(CheckpointIntegrityError, match="database is missing"):
+        store.current(first.dataset_id)
+    with pytest.raises(CheckpointIntegrityError, match="database is missing"):
+        CheckpointStore(tmp_path)
+
+
+def test_owner_write_crash_cannot_expose_the_legacy_pointer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = ManifestStore(tmp_path)
+    first = _manifest(store, close=100.0, revision=1)
+    store.publish(first, expected_current=None)
+    pending = json.dumps(
+        {
+            "job_id": "1" * 64,
+            "advances": [{"dataset_id": first.dataset_id}],
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    with CheckpointStore(tmp_path) as checkpoints:
+        monkeypatch.setattr(
+            checkpoints,
+            "_write_graph_owner",
+            lambda _dataset_id: (_ for _ in ()).throw(RuntimeError("owner crash")),
+        )
+        with checkpoints.writer(), pytest.raises(RuntimeError, match="owner crash"):
+            checkpoints.save_pending("1" * 64, pending)
+
+    with pytest.raises(CheckpointIntegrityError, match="reservation.*owner"):
+        store.current(first.dataset_id)
+
+
+def test_unchanged_graph_member_is_permanently_owned_with_advancing_member(
+    tmp_path: Path,
+) -> None:
+    store = ManifestStore(tmp_path)
+    aapl = _manifest(store, close=100.0, revision=1)
+    nvda = _manifest(
+        store,
+        close=120.0,
+        revision=1,
+        dataset_id="nvda-daily",
+        instrument=NVDA,
+    )
+    store.publish(aapl, expected_current=None)
+    store.publish(nvda, expected_current=None)
+    next_nvda = _manifest(
+        store,
+        close=121.0,
+        revision=2,
+        dataset_id="nvda-daily",
+        instrument=NVDA,
+    )
+    store.stage(next_nvda)
+    checkpoint = CollectionCheckpoint(
+        job_id="1" * 64,
+        generation=1,
+        provider_cursor="cursor",
+        last_complete_source_event="event",
+        raw_object_digests=(aapl.objects[0].digest,),
+        manifest_ids=(aapl.manifest_id, next_nvda.manifest_id),
+        preflight_id="2" * 64,
+        quality_report_id=None,
+        run_id="3" * 64,
+        attempt=1,
+        updated_at=T0 + timedelta(seconds=2),
+    )
+    pending = json.dumps(
+        {
+            "advances": [{"dataset_id": "nvda-daily"}],
+            "dataset_ids": ["aapl-daily", "nvda-daily"],
+            "job_id": checkpoint.job_id,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    advance = GraphAdvance(
+        dataset_id="nvda-daily",
+        expected_current=nvda.manifest_id,
+        expected_revision=1,
+        expected_knowledge_end=nvda.knowledge_end,
+        manifest_id=next_nvda.manifest_id,
+        revision=2,
+        knowledge_start=next_nvda.knowledge_start,
+        knowledge_end=next_nvda.knowledge_end,
+    )
+    with CheckpointStore(tmp_path) as checkpoints:
+        with checkpoints.writer():
+            checkpoints.save_pending(checkpoint.job_id, pending)
+            checkpoints.commit(
+                previous=None,
+                next_checkpoint=checkpoint,
+                advances=(advance,),
+                commit_id="4" * 64,
+                owned_dataset_ids=("aapl-daily", "nvda-daily"),
+                members=(
+                    GraphMember(
+                        dataset_id="aapl-daily",
+                        manifest_id=aapl.manifest_id,
+                        revision=1,
+                        knowledge_end=aapl.knowledge_end,
+                    ),
+                    GraphMember(
+                        dataset_id="nvda-daily",
+                        manifest_id=next_nvda.manifest_id,
+                        revision=2,
+                        knowledge_end=next_nvda.knowledge_end,
+                    ),
+                ),
+            )
+
+    assert store.current("aapl-daily").manifest.manifest_id == aapl.manifest_id
+    assert store.current("nvda-daily").manifest.manifest_id == next_nvda.manifest_id
+    next_aapl = _manifest(store, close=101.0, revision=2)
+    with pytest.raises(ManifestConflictError, match="graph-managed"):
+        store.publish(next_aapl, expected_current=aapl.manifest_id)
+    store._pointer_path("aapl-daily").unlink()
+    with pytest.raises(ManifestIntegrityError, match="legacy predecessor"):
+        store.current("aapl-daily")
+
+
+def test_unchanged_graph_member_rejects_coherent_legacy_rollback(
+    tmp_path: Path,
+) -> None:
+    store = ManifestStore(tmp_path)
+    first = _manifest(store, close=100.0, revision=1)
+    store.publish(first, expected_current=None)
+    old_pointer = store._pointer_path(first.dataset_id).read_bytes()
+    old_history = store._history_path(first.dataset_id).read_bytes()
+    second = _manifest(store, close=101.0, revision=2)
+    store.publish(second, expected_current=first.manifest_id)
+    checkpoint = CollectionCheckpoint(
+        job_id="1" * 64,
+        generation=1,
+        provider_cursor="cursor",
+        last_complete_source_event="event",
+        raw_object_digests=(second.objects[0].digest,),
+        manifest_ids=(second.manifest_id,),
+        preflight_id="2" * 64,
+        quality_report_id=None,
+        run_id="3" * 64,
+        attempt=1,
+        updated_at=T0 + timedelta(seconds=2),
+    )
+    with CheckpointStore(tmp_path) as checkpoints:
+        with checkpoints.writer():
+            checkpoints.commit(
+                previous=None,
+                next_checkpoint=checkpoint,
+                advances=(),
+                commit_id="4" * 64,
+                owned_dataset_ids=(first.dataset_id,),
+                members=(
+                    GraphMember(
+                        dataset_id=first.dataset_id,
+                        manifest_id=second.manifest_id,
+                        revision=2,
+                        knowledge_end=second.knowledge_end,
+                    ),
+                ),
+            )
+
+    store._pointer_path(first.dataset_id).write_bytes(old_pointer)
+    store._history_path(first.dataset_id).write_bytes(old_history)
+    (
+        tmp_path
+        / ".trusted-data-v2"
+        / "datasets"
+        / first.dataset_id
+        / "revisions"
+        / f"{2:020d}.json"
+    ).unlink()
+    with pytest.raises(ManifestIntegrityError, match="legacy predecessor"):
+        store.current(first.dataset_id)
+
+
+def test_collection_graph_rejects_an_uncommitted_external_parent(
+    tmp_path: Path,
+) -> None:
+    store = ManifestStore(tmp_path)
+    parent = _manifest(
+        store, close=100.0, revision=1, dataset_id="orphan-parent"
+    )
+    store.stage(parent)
+    candidate = _manifest(
+        store, close=101.0, revision=1, dataset_id="candidate-child"
+    )
+    values = candidate.model_dump(exclude={"manifest_id", "compatibility_revision"})
+    values["parent_manifest_ids"] = (parent.manifest_id,)
+    child = ArtifactManifest.build(compatibility_revision=1, **values)
+    store.stage(child)
+
+    with pytest.raises(ValueError, match="committed history"):
+        CollectionCoordinator(store)._verify_graph((child.manifest_id,))
+
+
+def test_graph_migration_rejects_deleted_legacy_predecessor(tmp_path: Path) -> None:
+    store = ManifestStore(tmp_path)
+    first = _manifest(store, close=100.0, revision=1)
+    store.publish(first, expected_current=None)
+    second = _manifest(store, close=101.0, revision=2)
+    store.stage(second)
+    checkpoint = CollectionCheckpoint(
+        job_id="1" * 64,
+        generation=1,
+        provider_cursor="cursor",
+        last_complete_source_event="event",
+        raw_object_digests=(first.objects[0].digest,),
+        manifest_ids=(second.manifest_id,),
+        preflight_id="2" * 64,
+        quality_report_id=None,
+        run_id="3" * 64,
+        attempt=1,
+        updated_at=T0 + timedelta(seconds=1),
+    )
+    with CheckpointStore(tmp_path) as checkpoints:
+        with checkpoints.writer():
+            checkpoints.commit(
+                previous=None,
+                next_checkpoint=checkpoint,
+                advances=(
+                    GraphAdvance(
+                        dataset_id=first.dataset_id,
+                        expected_current=first.manifest_id,
+                        expected_revision=1,
+                        expected_knowledge_end=first.knowledge_end,
+                        manifest_id=second.manifest_id,
+                        revision=2,
+                        knowledge_start=second.knowledge_start,
+                        knowledge_end=second.knowledge_end,
+                    ),
+                ),
+                commit_id="4" * 64,
+            )
+    pointer = (
+        tmp_path
+        / ".trusted-data-v2"
+        / "datasets"
+        / first.dataset_id
+        / "current.json"
+    )
+    pointer.unlink()
+
+    with pytest.raises(ManifestIntegrityError, match="legacy predecessor"):
+        store.current(first.dataset_id)
+    with pytest.raises(ManifestIntegrityError, match="legacy predecessor"):
+        store.manifests(first.dataset_id)
 
 
 def test_publish_rejects_stale_compare_and_swap(tmp_path: Path) -> None:

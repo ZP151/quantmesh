@@ -15,6 +15,13 @@ fixture data does not grow on its own, and a deterministic run loop
 is the honest shape for a no-execution-surface milestone: the caller
 triggers ``run`` (cron, notebook, CI).
 
+This module is the mutable M3 fixture-compatibility path. The registry's
+``get(Venue)`` lookup admits fixture providers only; qualifying real Moomoo
+and Hyperliquid evidence must use their bounded collectors and the atomic
+``CollectionCoordinator`` graph commit. Keeping those paths separate prevents
+a live provider from bypassing immutable source snapshots, graph reservations,
+integrity preflight evidence and collection checkpoints.
+
 ``coverage_gaps`` compares observed lake coverage against a dataset's
 manifest — the diagnostic the manifest gate cannot give you, because
 the gate refuses stale datasets outright. It reports series that
@@ -69,7 +76,7 @@ class IngestionJob(BaseModel):
 
 
 class Ingestor:
-    """Scheduled ingestion: providers → lake → fresh manifest (issue #19)."""
+    """Fixture compatibility ingestion: providers → mutable M3 lake manifest."""
 
     def __init__(
         self,

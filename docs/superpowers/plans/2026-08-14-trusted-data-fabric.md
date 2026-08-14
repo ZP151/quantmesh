@@ -673,12 +673,12 @@ review.
 - `CollectionJob.job_id` hashes provider, endpoint, canonical instrument, kind,
   interval/session, window, adjustment and schema versions.
 - `CollectionRun.run_id` is deterministic for the job; `attempt` is monotonic.
-- `CheckpointStore.advance(previous, next)` is a DuckDB transaction with
-  compare-and-swap and one-writer lease.
-- `Collector.run(job, crash_after: PublicationStage | None = None)` exposes
-  deterministic crash injection only to tests.
+- `CheckpointStore.commit(previous, next_checkpoint, advances, commit_id)` is a
+  DuckDB graph transaction with compare-and-swap and a one-writer lease.
+- `CollectionCoordinator.run(job, ..., crash_after: PublicationStage | None =
+  None)` exposes deterministic crash injection only to tests.
 
-- [ ] **Step 1: Write failing crash-boundary tests**
+- [x] **Step 1: Write failing crash-boundary tests**
 
 ```python
 @pytest.mark.parametrize("stage", list(PublicationStage))
@@ -692,23 +692,23 @@ def test_retry_after_every_crash_boundary_is_idempotent(tmp_path, stage) -> None
     assert collector.checkpoint(_job().job_id).manifest_id == recovered.manifest_id
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the three new files. Expected: checkpoint contracts are absent.
 
-- [ ] **Step 3: Implement the five-stage publication transaction**
+- [x] **Step 3: Implement the five-stage publication transaction**
 
 Persist raw, derived objects, manifest and quality report before advancing the
 checkpoint/current pointer. If retrying identical data, return the same
 manifest. If source identity has changed content, quarantine it and fail the
 checkpoint. Refuse a concurrent writer instead of racing.
 
-- [ ] **Step 4: Verify GREEN, restart and concurrency**
+- [x] **Step 4: Verify GREEN, restart and concurrency**
 
 Run focused tests, eight concurrent attempts and a process reopen. Expected:
 one logical publication, stable IDs and no orphaned current pointer.
 
-- [ ] **Step 5: Record Slice 5 checkpoint and review**
+- [x] **Step 5: Record Slice 5 checkpoint and review**
 
 Commit `feat(data): add idempotent collection checkpoints`; receive a clean
 review.

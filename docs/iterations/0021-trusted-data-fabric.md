@@ -75,7 +75,7 @@ the tracked TDD plan is committed.
 
 ### Reviewer and Verifier
 
-Both roles remain read-only. Tasks 1–8 received independent Standards and
+Both roles remain read-only. Tasks 1–9 received independent Standards and
 implementation reviews; every finding was reproduced before correction and
 each final task verdict was clean. Verification evidence is recorded at each
 durable checkpoint.
@@ -88,8 +88,8 @@ durable checkpoint.
 | 2. Moomoo AAPL/NVDA | complete | Slice 1 | Task 6; Checkpoints 6A–6D |
 | 3. Hyperliquid BTC candles | complete | Slice 1 | Checkpoint 7 |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | complete | Slice 3 | Checkpoint 8 |
-| 5. Idempotent collection and recovery | planned | Slices 2 and 4 | pending |
-| 6. SLA catalog and downstream lineage | planned | Slice 5 | pending |
+| 5. Idempotent collection and recovery | complete | Slices 2 and 4 | Checkpoint 9 |
+| 6. SLA catalog and downstream lineage | active | Slice 5 | Task 10 next |
 | 7. Seven-day real-data evidence | planned | Slice 6 | pending |
 
 ## Acceptance ledger
@@ -507,10 +507,60 @@ durable checkpoint.
   one-writer compare-and-swap checkpoints and crash-boundary recovery; this
   checkpoint does not claim those later guarantees.
 
+## Checkpoint 9 — Atomic collection graph recovery, 2026-08-14
+
+- Task 9 defines collection-job schema v2 over the complete bounded provider
+  request, producing Git commit and explicit collection cycle. Exact-cycle
+  retries keep one deterministic run identity while attempts increase
+  monotonically; a later cycle may preserve a provider correction as a new
+  knowledge-time revision.
+- Exact provider output is captured before transformation as one immutable
+  aggregate source object plus the ordered digest sequence of all raw endpoint
+  payloads. Duplicate payload multiplicity is preserved and a changed payload
+  for the same job is quarantined rather than rebound.
+- `CollectionCoordinator` stages raw, derived and canonical manifest evidence,
+  creates a typed integrity-only preflight and advances the complete graph in
+  one compare-and-swap DuckDB transaction. Quality remains deliberately
+  unclaimed until Task 10.
+- ADR-0017 records the graph authority: canonical manifests retain their
+  ADR-0016 paths; immutable, hash-chained commit journals independently verify
+  DuckDB; permanent graph-owner markers fence legacy publication; and the exact
+  legacy predecessor remains required after migration.
+- Every public control-plane read verifies the complete journal, checkpoint,
+  history, current, row-level commit identity and ownership graph. Every graph
+  member records an immutable manifest/revision high-water and is permanently
+  owned even when its manifest is unchanged. Deleted or coherently rolled-back
+  legacy pointers cannot weaken that anchor.
+  Cross-dataset corruption, coherent checkpoint forgery, missing rows and
+  reservation/owner crash windows fail closed instead of exposing stale legacy
+  state.
+- Recovery runs only under the cross-process writer lease. It reconstructs
+  committed markers, source rows and owner evidence; recovers both pre-link and
+  post-link publication interruptions; and reuses a complete pending graph
+  without contacting the provider. Source batch identity is independently
+  anchored before graph construction and repeated in pending/commit evidence.
+- Completed retries re-read the aggregate source object, all raw/derived
+  objects, integrity preflight and committed parent lineage. External staged
+  parents are rejected unless included in the same graph. Positive one-page
+  and multi-page Moomoo collector-to-coordinator tests prove source digest
+  granularity agrees with the four raw endpoint envelopes per request.
+- The crash matrix covers every public publication stage in a fresh subprocess;
+  eight independent processes converge on one logical graph publication.
+  Historical retries, source conflicts, duplicate source bytes, graph-history
+  deletion, checkpoint tampering and Windows lock boundaries have dedicated
+  regressions.
+- Verification evidence is `220 passed` for the final Task 9 integration
+  selection and `120 passed` for the final control-plane, recovery, manifest
+  and Moomoo focus.
+  Ruff and `git diff --check` passed. Final fresh Standards and adversarial
+  reviews returned CLEAN with no Critical or Important finding.
+- Task 9 and Slice 5 are complete. No credential, execution authority, quality
+  qualification, release tag or synthetic repair path changed.
+
 ## Current frontier
 
-Task 9 is the current implementation frontier: deterministic collection-run
-identity, compare-and-swap checkpoints and crash-boundary recovery. Start the
+Task 10 is the current implementation frontier: versioned quality policies and
+immutable daily SLA evidence bound to committed graph manifests. Start the
 seven-day evidence window only after Slices 1–6 are merged into a frozen
 candidate configuration.
 

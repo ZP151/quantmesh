@@ -27,6 +27,11 @@ from quantmesh.data.capabilities import (
     ProviderCapability,
     ProviderRequest,
 )
+from quantmesh.data.collection import (
+    CollectionCoordinator,
+    CollectionJob,
+    StagingManifestStore,
+)
 from quantmesh.data.envelopes import ProvenanceClass, RawEnvelope
 from quantmesh.data.fabric import FabricFeatureSpec, FabricPublisher
 from quantmesh.data.instruments import CanonicalInstrumentId, InstrumentCatalog
@@ -180,32 +185,146 @@ class HyperliquidCollector:
         symbols: list[str],
         interval: str,
         window: HyperliquidCollectionWindow,
+        *,
+        collection_cycle: str = "initial",
     ) -> tuple[HyperliquidPublication, ...]:
         """Publish one four-layer identity-adjusted lineage per symbol."""
         start, end = window.start, window.end
         step = interval_to_timedelta(interval)
         self._validate_request(symbols, start=start, end=end, step=step)
-        responses: list[tuple[str, PublicInfoResponse, list[Bar]]] = []
-        for symbol in symbols:
-            self._source_admission(symbol, interval)
-            response = self.transport.candles(
-                symbol,
-                interval,
-                start=start,
-                end=end,
-            )
-            bars = self._decode_bars(
-                symbol,
-                interval,
-                response,
-                start=start,
-                end=end,
-            )
-            responses.append((symbol, response, bars))
-        return tuple(
-            self._publish(symbol, interval, start, end, response, bars)
-            for symbol, response, bars in responses
+        provider_id = (
+            PublicInfoTransport.descriptor.provider_id
+            if type(self.transport) is PublicInfoTransport
+            and self.transport._is_direct_network_source
+            else "fixture-hyperliquid-public"
         )
+        job = CollectionJob(
+            provider_id=provider_id,
+            endpoints=("https://api.hyperliquid.xyz/info",),
+            source_request_ids=tuple(
+                "hyperliquid:"
+                + _digest(
+                    {
+                        "symbol": symbol,
+                        "interval": interval,
+                        "start": start.isoformat(),
+                        "end": end.isoformat(),
+                    }
+                )
+                for symbol in symbols
+            ),
+            canonical_instruments=tuple(
+                CanonicalInstrumentId(value=f"hyperliquid:perp:{symbol}")
+                for symbol in symbols
+            ),
+            data_kinds=(DataKind.BARS,),
+            intervals=(interval,),
+            calendar_version=CONTINUOUS_UTC_VERSION,
+            session_policy=SessionPolicy.CONTINUOUS,
+            window_start=start,
+            window_end=end,
+            adjustment_policy=_ADJUSTMENT_POLICY,
+            schema_versions=("hyperliquid-candleSnapshot-v1",),
+            mapping_version=self.catalog.catalog_id,
+            code_commit=self.code_commit,
+            collection_cycle=collection_cycle,
+        )
+        coordinator = CollectionCoordinator(self.store)
+        if coordinator.has_state(job):
+            committed = coordinator.run(
+                job,
+                producer=self._unexpected_recollection,
+                provider_cursor=f"{interval}:{end.isoformat()}",
+                last_complete_source_event=end.isoformat(),
+                updated_at=end,
+            )
+            return self._publications_from_graph(committed.manifest_ids)
+
+        responses: list[tuple[str, PublicInfoResponse, list[Bar]]] = []
+        source_snapshot = coordinator.source(job)
+        if source_snapshot is None:
+            for symbol in symbols:
+                self._source_admission(symbol, interval)
+                response = self.transport.candles(
+                    symbol,
+                    interval,
+                    start=start,
+                    end=end,
+                )
+                bars = self._decode_bars(
+                    symbol,
+                    interval,
+                    response,
+                    start=start,
+                    end=end,
+                )
+                responses.append((symbol, response, bars))
+            snapshot_payload = canonical_json_bytes(
+                [
+                    {
+                        "raw_text": response.raw_bytes.decode("utf-8"),
+                        "received_at": response.received_at.isoformat(),
+                        "symbol": symbol,
+                    }
+                    for symbol, response, _ in responses
+                ]
+            )
+            coordinator.capture_source(
+                job,
+                media_type="application/vnd.quantmesh.hyperliquid-source-batch+json",
+                payload=snapshot_payload,
+                raw_payloads=tuple(response.raw_bytes for _, response, _ in responses),
+            )
+        else:
+            decoded = json.loads(source_snapshot)
+            if not isinstance(decoded, list):
+                raise HyperliquidProtocolError("source snapshot must be a response list")
+            for item in decoded:
+                if not isinstance(item, dict) or set(item) != {
+                    "raw_text",
+                    "received_at",
+                    "symbol",
+                }:
+                    raise HyperliquidProtocolError("source snapshot has an invalid shape")
+                raw_bytes = item["raw_text"].encode("utf-8")
+                response = PublicInfoResponse(
+                    payload=json.loads(raw_bytes),
+                    raw_bytes=raw_bytes,
+                    received_at=datetime.fromisoformat(item["received_at"]),
+                )
+                bars = self._decode_bars(
+                    item["symbol"], interval, response, start=start, end=end
+                )
+                responses.append((item["symbol"], response, bars))
+            if [item[0] for item in responses] != symbols:
+                raise HyperliquidProtocolError(
+                    "source snapshot symbols disagree with collection job"
+                )
+        def producer(staging: StagingManifestStore) -> tuple[str, ...]:
+            staged = HyperliquidCollector(
+                staging,
+                transport=self.transport,
+                code_commit=self.code_commit,
+                catalog=self.catalog,
+            )
+            publications = tuple(
+                staged._publish(symbol, interval, start, end, response, bars)
+                for symbol, response, bars in responses
+            )
+            return tuple(
+                manifest_id
+                for publication in publications
+                for manifest_id in publication.manifest_ids
+            )
+
+        committed = coordinator.run(
+            job,
+            producer=producer,
+            provider_cursor=f"{interval}:{end.isoformat()}",
+            last_complete_source_event=end.isoformat(),
+            updated_at=max(response.received_at for _, response, _ in responses),
+        )
+        return self._publications_from_graph(committed.manifest_ids)
 
     @staticmethod
     def _validate_request(
@@ -374,7 +493,8 @@ class HyperliquidCollector:
             "quality_report_id": None,
             "created_at": response.received_at,
             "code_commit": self.code_commit,
-            "collection_run_id": run_id,
+            "collection_run_id": getattr(self.store, "collection_run_id", None)
+            or run_id,
         }
         raw = self._candidate_manifest(
             dataset_id=f"{prefix}-raw",
@@ -615,7 +735,7 @@ class HyperliquidCollector:
             "quality_report_id": None,
             "created_at": envelope.ingested_at,
             "code_commit": self.code_commit,
-            "collection_run_id": envelope.request_id,
+            "collection_run_id": raw.collection_run_id,
         }
         for manifest in (raw, normalized, adjusted, feature):
             if any(getattr(manifest, name) != value for name, value in common.items()):
@@ -739,6 +859,15 @@ class HyperliquidCollector:
     ) -> None:
         """Activate a fully validated graph; Task 9 owns cross-pointer crash recovery."""
         for manifest in manifests:
+            if getattr(self.store, "stages_graphs", False):
+                current = self.store.current(manifest.dataset_id)
+                self.store.publish(
+                    manifest,
+                    expected_current=(
+                        None if current is None else current.manifest.manifest_id
+                    ),
+                )
+                continue
             path = self.store.manifest_path(manifest.dataset_id, manifest.manifest_id)
             if path.exists():
                 existing = self.store.open(manifest.manifest_id).manifest
@@ -752,6 +881,33 @@ class HyperliquidCollector:
                 manifest,
                 expected_current=(None if current is None else current.manifest.manifest_id),
             )
+
+    def _publications_from_graph(
+        self, manifest_ids: tuple[str, ...]
+    ) -> tuple[HyperliquidPublication, ...]:
+        if not manifest_ids or len(manifest_ids) % 4:
+            raise ManifestIntegrityError(
+                "Hyperliquid committed graph is not grouped into four-layer lineages"
+            )
+        publications: list[HyperliquidPublication] = []
+        for index in range(0, len(manifest_ids), 4):
+            group = manifest_ids[index : index + 4]
+            candidate = HyperliquidPublication(
+                raw_id=group[0],
+                normalized_id=group[1],
+                adjusted_id=group[2],
+                feature_id=group[3],
+                qualifies=False,
+            )
+            envelope = self.raw_envelope(candidate)
+            publication = candidate.model_copy(update={"qualifies": envelope.qualifies})
+            self.validate_publication(publication)
+            publications.append(publication)
+        return tuple(publications)
+
+    @staticmethod
+    def _unexpected_recollection(_store: StagingManifestStore) -> tuple[str, ...]:
+        raise AssertionError("durable Hyperliquid graph unexpectedly recollected")
 
     def _source_admission(
         self,

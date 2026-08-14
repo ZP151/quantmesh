@@ -12,6 +12,11 @@ from quantmesh.data.artifacts import (
     ManifestIntegrityError,
     ManifestStore,
 )
+from quantmesh.data.collection import (
+    CollectionCoordinator,
+    InjectedCrash,
+    PublicationStage,
+)
 from quantmesh.data.hyperliquid_collection import (
     HyperliquidCollectionWindow,
     HyperliquidCollector,
@@ -271,7 +276,9 @@ def test_public_candles_publish_four_layer_identity_lineage(tmp_path: Path) -> N
     )[0]
 
     assert repeated == publication
-    assert transport.calls == 2
+    # The exact completed job is replayed from its committed checkpoint;
+    # idempotent retries do not contact the provider again.
+    assert transport.calls == 1
     assert len(set(publication.manifest_ids)) == 4
     raw, normalized, adjusted, feature = [
         store.open(item).manifest for item in publication.manifest_ids
@@ -287,6 +294,64 @@ def test_public_candles_publish_four_layer_identity_lineage(tmp_path: Path) -> N
     assert adjusted.adjustment_policy == "identity-no-corporate-actions-v1"
     assert feature.parent_manifest_ids == (adjusted.manifest_id,)
     assert publication.qualifies is False
+
+
+def test_explicit_collection_cycle_can_capture_a_later_provider_correction(
+    tmp_path: Path,
+) -> None:
+    store = ManifestStore(tmp_path)
+    transport = ScriptedPublicInfo([_candle(index) for index in range(3)])
+    collector = HyperliquidCollector(store, transport=transport, code_commit="b" * 40)
+    first = collector.collect_candles(
+        ["BTC"], "1m", _window(), collection_cycle="2026-08-14T00:10Z"
+    )[0]
+    corrected = [_candle(index) for index in range(3)]
+    corrected[-1] = {**corrected[-1], "c": "109"}
+    transport.rows = corrected
+    transport.received_at += timedelta(minutes=1)
+
+    second = collector.collect_candles(
+        ["BTC"], "1m", _window(), collection_cycle="2026-08-14T00:11Z"
+    )[0]
+
+    assert second != first
+    assert transport.calls == 2
+    for first_id, second_id in zip(first.manifest_ids, second.manifest_ids, strict=True):
+        first_manifest = store.open(first_id).manifest
+        second_manifest = store.open(second_id).manifest
+        assert second_manifest.compatibility_revision == 2
+        assert second_manifest.knowledge_start > first_manifest.knowledge_end
+
+
+def test_raw_crash_retries_from_source_snapshot_without_network(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = ManifestStore(tmp_path)
+    transport = ScriptedPublicInfo([_candle(index) for index in range(3)])
+    collector = HyperliquidCollector(
+        store,
+        transport=transport,
+        code_commit="b" * 40,
+    )
+    original = CollectionCoordinator.run
+    calls = 0
+
+    def crash_once(self, *args, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            kwargs["crash_after"] = PublicationStage.RAW
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(CollectionCoordinator, "run", crash_once)
+    with pytest.raises(InjectedCrash, match="raw"):
+        collector.collect_candles(["BTC"], "1m", _window())
+
+    publication = collector.collect_candles(["BTC"], "1m", _window())[0]
+    assert transport.calls == 1
+    current = store.current("hyperliquid-btc-1m-feature-log-return-2")
+    assert current is not None
+    assert current.manifest.manifest_id == publication.feature_id
 
 
 def test_injected_http_client_cannot_publish_qualifying_lineage(

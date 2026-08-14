@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import quantmesh.data.moomoo_collection as collection_module
 from quantmesh.data.artifacts import (
     ArtifactLayer,
     ArtifactManifest,
@@ -313,11 +314,13 @@ def test_isolated_moomoo_result_is_revalidated_before_publication(
             "received_at": "2026-08-13T00:00:00Z",
             "bars": [bar.model_dump(mode="json")],
             "history_pages": [
-                {
-                    "code": "US.AAPL",
-                    "interval": "1d",
-                    "autype": "None",
-                    "rows": [
+                    {
+                        "code": "US.AAPL",
+                        "interval": "1d",
+                        "autype": "None",
+                        "request_page_req_key": None,
+                        "next_page_req_key": None,
+                        "rows": [
                         {
                             "code": "US.AAPL",
                             "time_key": "2026-08-10",
@@ -331,7 +334,14 @@ def test_isolated_moomoo_result_is_revalidated_before_publication(
                 }
             ],
             "adjustment_factors": {"code": "US.AAPL", "rows": []},
-            "stock_split_pages": [{"code": "US.AAPL", "rows": []}],
+            "stock_split_pages": [
+                {
+                    "code": "US.AAPL",
+                    "request_next_key": None,
+                    "next_key": "-1",
+                    "rows": [],
+                }
+            ],
             "dividends": {"code": "US.AAPL", "rows": []},
         },
     }
@@ -400,7 +410,14 @@ def _split_payload(request: MoomooWorkerRequest) -> MoomooRawPayload:
         received_at=datetime(2020, 9, 2, tzinfo=UTC),
         bars=bars,
         history_pages=(
-            {"code": "US.AAPL", "interval": "1d", "autype": "None", "rows": rows},
+            {
+                "code": "US.AAPL",
+                "interval": "1d",
+                "autype": "None",
+                "request_page_req_key": None,
+                "next_page_req_key": None,
+                "rows": rows,
+            },
         ),
         adjustment_factors={
             "code": "US.AAPL",
@@ -416,6 +433,8 @@ def _split_payload(request: MoomooWorkerRequest) -> MoomooRawPayload:
         stock_split_pages=(
             {
                 "code": "US.AAPL",
+                "request_next_key": None,
+                "next_key": "-1",
                 "rows": [
                     {
                         "dir_deci_pub_date": int(announcement.timestamp()),
@@ -428,6 +447,200 @@ def _split_payload(request: MoomooWorkerRequest) -> MoomooRawPayload:
         ),
         dividends={"code": "US.AAPL", "rows": []},
     )
+
+
+def test_raw_payload_rejects_nonterminal_stock_split_cursor_chain() -> None:
+    target = next(
+        item
+        for item in MoomooCollectionPlan.bounded_default().targets
+        if item.provider_symbol == "US.AAPL" and item.interval == "1d"
+    )
+    request = MoomooWorkerRequest(
+        target=target,
+        window=CollectionWindow(
+            start=datetime(2020, 8, 28, tzinfo=UTC),
+            end=datetime(2020, 9, 1, 23, 59, tzinfo=UTC),
+        ),
+        host="127.0.0.1",
+        port=11111,
+        connect_timeout_seconds=1.0,
+        request_timeout_seconds=2.0,
+    )
+    payload = _split_payload(request)
+    page = {**payload.stock_split_pages[0], "next_key": "page-2"}
+
+    with pytest.raises(ValueError, match="stock-split pagination is not terminal"):
+        payload.model_copy(update={"stock_split_pages": (page,)}).validate_for(request)
+
+
+@pytest.mark.parametrize("surface", ["history", "splits"])
+def test_raw_payload_rejects_pages_after_terminal_cursor(surface: str) -> None:
+    target = next(
+        item
+        for item in MoomooCollectionPlan.bounded_default().targets
+        if item.provider_symbol == "US.AAPL" and item.interval == "1d"
+    )
+    request = MoomooWorkerRequest(
+        target=target,
+        window=CollectionWindow(
+            start=datetime(2020, 8, 28, tzinfo=UTC),
+            end=datetime(2020, 9, 1, 23, 59, tzinfo=UTC),
+        ),
+        host="127.0.0.1",
+        port=11111,
+        connect_timeout_seconds=1.0,
+        request_timeout_seconds=2.0,
+    )
+    payload = _split_payload(request)
+    if surface == "history":
+        extra = {**payload.history_pages[0], "rows": []}
+        payload = payload.model_copy(
+            update={"history_pages": (*payload.history_pages, extra)}
+        )
+    else:
+        extra = {**payload.stock_split_pages[0], "rows": []}
+        payload = payload.model_copy(
+            update={"stock_split_pages": (*payload.stock_split_pages, extra)}
+        )
+
+    with pytest.raises(ValueError, match="pages after terminal"):
+        payload.validate_for(request)
+
+
+@pytest.mark.parametrize("surface", ["history", "splits"])
+def test_raw_payload_rejects_empty_nonterminal_page(surface: str) -> None:
+    target = next(
+        item
+        for item in MoomooCollectionPlan.bounded_default().targets
+        if item.provider_symbol == "US.AAPL" and item.interval == "1d"
+    )
+    request = MoomooWorkerRequest(
+        target=target,
+        window=CollectionWindow(
+            start=datetime(2020, 8, 28, tzinfo=UTC),
+            end=datetime(2020, 9, 1, 23, 59, tzinfo=UTC),
+        ),
+        host="127.0.0.1",
+        port=11111,
+        connect_timeout_seconds=1.0,
+        request_timeout_seconds=2.0,
+    )
+    payload = _split_payload(request)
+    if surface == "history":
+        page = {
+            **payload.history_pages[0],
+            "next_page_req_key": "base64:bmV4dA==",
+            "rows": [],
+        }
+        payload = payload.model_copy(update={"history_pages": (page,)})
+    else:
+        page = {**payload.stock_split_pages[0], "next_key": "next", "rows": []}
+        payload = payload.model_copy(update={"stock_split_pages": (page,)})
+
+    with pytest.raises(ValueError, match="empty nonterminal"):
+        payload.validate_for(request)
+
+
+@pytest.mark.parametrize("surface", ["history", "splits"])
+def test_raw_payload_rejects_repeated_cursor(surface: str) -> None:
+    target = next(
+        item
+        for item in MoomooCollectionPlan.bounded_default().targets
+        if item.provider_symbol == "US.AAPL" and item.interval == "1d"
+    )
+    request = MoomooWorkerRequest(
+        target=target,
+        window=CollectionWindow(
+            start=datetime(2020, 8, 28, tzinfo=UTC),
+            end=datetime(2020, 9, 1, 23, 59, tzinfo=UTC),
+        ),
+        host="127.0.0.1",
+        port=11111,
+        connect_timeout_seconds=1.0,
+        request_timeout_seconds=2.0,
+    )
+    payload = _split_payload(request)
+    if surface == "history":
+        first = {
+            **payload.history_pages[0],
+            "next_page_req_key": "base64:cmVwZWF0",
+        }
+        second = {
+            **payload.history_pages[0],
+            "request_page_req_key": "base64:cmVwZWF0",
+            "next_page_req_key": "base64:cmVwZWF0",
+        }
+        payload = payload.model_copy(update={"history_pages": (first, second)})
+    else:
+        first = {**payload.stock_split_pages[0], "next_key": "repeat"}
+        second = {
+            **payload.stock_split_pages[0],
+            "request_next_key": "repeat",
+            "next_key": "repeat",
+        }
+        payload = payload.model_copy(update={"stock_split_pages": (first, second)})
+
+    with pytest.raises(ValueError, match="repeated"):
+        payload.validate_for(request)
+
+
+def test_raw_surfaces_preserve_endpoint_specific_pagination_evidence(tmp_path: Path) -> None:
+    target = next(
+        item
+        for item in MoomooCollectionPlan.bounded_default().targets
+        if item.provider_symbol == "US.AAPL" and item.interval == "1d"
+    )
+    request = MoomooWorkerRequest(
+        target=target,
+        window=CollectionWindow(
+            start=datetime(2020, 8, 28, tzinfo=UTC),
+            end=datetime(2020, 9, 1, 23, 59, tzinfo=UTC),
+        ),
+        host="127.0.0.1",
+        port=11111,
+        connect_timeout_seconds=1.0,
+        request_timeout_seconds=2.0,
+    )
+    payload = _split_payload(request)
+    first_page = {**payload.stock_split_pages[0], "next_key": "page-2"}
+    terminal_page = {
+        "code": "US.AAPL",
+        "request_next_key": "page-2",
+        "next_key": "-1",
+        "rows": [],
+    }
+    payload = payload.model_copy(
+        update={"stock_split_pages": (first_page, terminal_page)}
+    )
+    store = ManifestStore(tmp_path)
+
+    publication = MoomooFabricPublisher(store, code_commit="c" * 40).publish(
+        request, payload
+    )
+
+    cursors: dict[DataKind, object] = {}
+    for manifest_id in (publication.bars_raw_id, publication.splits_raw_id):
+        manifest = store.open(manifest_id).manifest
+        envelope_ref = next(
+            item
+            for item in manifest.objects
+            if item.media_type == "application/vnd.quantmesh.raw-envelope+json"
+        )
+        envelope = RawEnvelope.model_validate_json(store.objects.get_bytes(envelope_ref))
+        cursors[manifest.data_kind] = json.loads(envelope.cursor or "null")
+    assert cursors == {
+        DataKind.BARS: {
+            "contract": "moomoo-history-pagination-v1",
+            "pages": [{"request": None, "next": None}],
+        },
+        DataKind.SPLITS: {
+            "contract": "moomoo-stock-split-pagination-v1",
+            "pages": [
+                {"request": None, "next": "page-2"},
+                {"request": "page-2", "next": "-1"},
+            ],
+        },
+    }
 
 
 def test_real_bundle_publishes_separate_raw_and_adjusted_lineage(tmp_path: Path) -> None:
@@ -751,7 +964,14 @@ def test_empty_action_coverage_is_bound_to_empty_source_evidence(tmp_path: Path)
     payload = _split_payload(request).model_copy(
         update={
             "adjustment_factors": {"code": "US.AAPL", "rows": []},
-            "stock_split_pages": ({"code": "US.AAPL", "rows": []},),
+            "stock_split_pages": (
+                {
+                    "code": "US.AAPL",
+                    "request_next_key": None,
+                    "next_key": "-1",
+                    "rows": [],
+                },
+            ),
         }
     )
     store = ManifestStore(tmp_path)
@@ -834,7 +1054,46 @@ def test_collector_publishes_nothing_when_worker_is_unavailable(tmp_path: Path) 
     assert not (tmp_path / "fabric" / ".quantmesh-fabric" / "datasets").exists()
 
 
-def test_collector_publishes_complete_single_target_result(tmp_path: Path) -> None:
+def test_injected_worker_cannot_publish_qualifying_moomoo_evidence(
+    tmp_path: Path,
+) -> None:
+    target = next(
+        item
+        for item in MoomooCollectionPlan.bounded_default().targets
+        if item.provider_symbol == "US.AAPL" and item.interval == "1d"
+    )
+    window = CollectionWindow(
+        start=datetime(2020, 8, 28, tzinfo=UTC),
+        end=datetime(2020, 9, 1, 23, 59, tzinfo=UTC),
+    )
+
+    result = MoomooCollector(
+        ManifestStore(tmp_path / "fabric"),
+        code_commit="e" * 40,
+        scratch_root=tmp_path / "scratch",
+        worker=lambda *args, **kwargs: MoomooWorkerResult(
+            status=CollectionStatus.PUBLISHED,
+            payload=_split_payload(
+                MoomooWorkerRequest(
+                    target=target,
+                    window=window,
+                    host="127.0.0.1",
+                    port=11111,
+                    connect_timeout_seconds=5.0,
+                    request_timeout_seconds=10.0,
+                )
+            ),
+        ),
+    ).collect(MoomooCollectionPlan(targets=(target,)), window)
+
+    assert result.status is CollectionStatus.FAILED
+    assert result.reason_code == "untrusted-worker"
+    assert result.manifest_ids == ()
+
+
+def test_collector_publishes_complete_single_target_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     target = next(
         item
         for item in MoomooCollectionPlan.bounded_default().targets
@@ -853,11 +1112,17 @@ def test_collector_publishes_complete_single_target_result(tmp_path: Path) -> No
         request_timeout_seconds=10.0,
     )
 
+    worker_calls = 0
+
     def successful(*args, **kwargs) -> MoomooWorkerResult:
+        nonlocal worker_calls
+        worker_calls += 1
         return MoomooWorkerResult(
             status=CollectionStatus.PUBLISHED,
             payload=_split_payload(request),
         )
+
+    monkeypatch.setattr(collection_module, "run_moomoo_worker", successful)
 
     store = ManifestStore(tmp_path / "fabric")
     parent_observed_before = datetime.now(UTC)
@@ -865,9 +1130,85 @@ def test_collector_publishes_complete_single_target_result(tmp_path: Path) -> No
         store,
         code_commit="f" * 40,
         scratch_root=tmp_path / "scratch",
-        worker=successful,
+    ).collect(MoomooCollectionPlan(targets=(target,)), window)
+    repeated = MoomooCollector(
+        store,
+        code_commit="f" * 40,
+        scratch_root=tmp_path / "scratch",
+    ).collect(MoomooCollectionPlan(targets=(target,)), window)
+
+    assert result.status is CollectionStatus.PUBLISHED
+    assert repeated == result
+    assert worker_calls == 1
+    assert len(result.manifest_ids) == 8
+    assert store.open(result.manifest_ids[0]).manifest.knowledge_end >= parent_observed_before
+
+
+def test_collector_commits_multi_page_source_snapshot_at_envelope_granularity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = next(
+        item
+        for item in MoomooCollectionPlan.bounded_default().targets
+        if item.provider_symbol == "US.AAPL" and item.interval == "1d"
+    )
+    window = CollectionWindow(
+        start=datetime(2020, 8, 28, tzinfo=UTC),
+        end=datetime(2020, 9, 1, 23, 59, tzinfo=UTC),
+    )
+    request = MoomooWorkerRequest(
+        target=target,
+        window=window,
+        host="127.0.0.1",
+        port=11111,
+        connect_timeout_seconds=5.0,
+        request_timeout_seconds=10.0,
+    )
+    payload = _split_payload(request)
+    history = payload.history_pages[0]
+    history_cursor = "base64:cGFnZS0y"
+    split = payload.stock_split_pages[0]
+    split_cursor = "page-2"
+    payload = payload.model_copy(
+        update={
+            "history_pages": (
+                {
+                    **history,
+                    "next_page_req_key": history_cursor,
+                    "rows": history["rows"][:1],
+                },
+                {
+                    **history,
+                    "request_page_req_key": history_cursor,
+                    "rows": history["rows"][1:],
+                },
+            ),
+            "stock_split_pages": (
+                {**split, "next_key": split_cursor},
+                {
+                    **split,
+                    "request_next_key": split_cursor,
+                    "next_key": "-1",
+                    "rows": [],
+                },
+            ),
+        }
+    )
+    payload.validate_for(request)
+    monkeypatch.setattr(
+        collection_module,
+        "run_moomoo_worker",
+        lambda *args, **kwargs: MoomooWorkerResult(
+            status=CollectionStatus.PUBLISHED,
+            payload=payload,
+        ),
+    )
+
+    result = MoomooCollector(
+        ManifestStore(tmp_path / "fabric"),
+        code_commit="f" * 40,
+        scratch_root=tmp_path / "scratch",
     ).collect(MoomooCollectionPlan(targets=(target,)), window)
 
     assert result.status is CollectionStatus.PUBLISHED
     assert len(result.manifest_ids) == 8
-    assert store.open(result.manifest_ids[0]).manifest.knowledge_end >= parent_observed_before

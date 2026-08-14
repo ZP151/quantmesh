@@ -1,3 +1,4 @@
+import json
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
@@ -9,6 +10,69 @@ from quantmesh.data.instruments import CanonicalInstrumentId
 from quantmesh.data.objects import ObjectStore
 
 T0 = datetime(2026, 8, 12, 13, 30, tzinfo=UTC)
+
+
+def test_schema_v1_canonical_bytes_round_trip_without_new_window_nulls(
+    tmp_path: Path,
+) -> None:
+    objects = ObjectStore(tmp_path)
+    envelope = RawEnvelope.capture(
+        objects=objects,
+        payload=b"[]",
+        content_type="application/json",
+        provider_id="hyperliquid-public",
+        endpoint="https://api.hyperliquid.xyz/info",
+        request_id="request-1",
+        request_window_start=T0,
+        request_window_end=T0 + timedelta(minutes=1),
+        cursor=None,
+        canonical_instrument=CanonicalInstrumentId(value="hyperliquid:perp:BTC"),
+        provider_symbol="BTC",
+        data_kind=DataKind.BARS,
+        source_event_ids=("BTC:1m:1",),
+        event_start=T0,
+        event_end=T0 + timedelta(minutes=1),
+        session_date=T0.date(),
+        provider_available_at=None,
+        received_at=T0 + timedelta(minutes=2),
+        ingested_at=T0 + timedelta(minutes=2),
+        provider_version="public-info-v1",
+        adapter_version="adapter-v1",
+        schema_version="candleSnapshot-v1",
+        source_rights_id="hyperliquid-public-market-data",
+        entitlement=EntitlementState.NOT_REQUIRED,
+        provenance=ProvenanceClass.REAL,
+    )
+    legacy_body = envelope.model_dump(
+        mode="json",
+        exclude={"collection_window_start", "collection_window_end"},
+    )
+    legacy_bytes = json.dumps(
+        legacy_body,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode()
+
+    restored = RawEnvelope.model_validate_json(legacy_bytes)
+
+    assert restored.envelope_version == 1
+    assert restored.canonical_bytes() == legacy_bytes
+
+    version_two = envelope.model_dump()
+    version_two.update(
+        envelope_version=2,
+        collection_window_start=T0,
+        collection_window_end=T0 + timedelta(minutes=1),
+    )
+    upgraded = RawEnvelope.model_validate(version_two)
+    assert upgraded.envelope_version == 2
+    assert b'"collection_window_start"' in upgraded.canonical_bytes()
+
+    version_two["envelope_version"] = 1
+    with pytest.raises(ValueError, match="version 1"):
+        RawEnvelope.model_validate(version_two)
 
 
 def test_fixture_envelope_captures_raw_object_and_is_nonqualifying(tmp_path: Path) -> None:

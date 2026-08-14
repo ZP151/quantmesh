@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–8 green; Slice 4 complete
+- Status: iteration 0021 active — Tasks 1–9 green; Slice 5 complete
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,8 +12,8 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: Task 9 durable collection runs, checkpoints and crash
-  recovery. Keep wallet, signing, account and order surfaces structurally
+- Current frontier: Task 10 versioned quality policies and immutable daily SLA
+  evidence. Keep wallet, signing, account and order surfaces structurally
   absent.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
@@ -250,6 +250,32 @@ readiness decision**.
 - Task 8 and Slice 4 are complete. Task 9 is the active frontier and retains
   immutable collection-run publication, compare-and-swap checkpoints and
   crash-boundary recovery ownership.
+
+## Checkpoint 9 — 2026-08-14
+
+- Task 9 and Slice 5 are complete. Collection-job schema v2 binds the complete
+  provider request, producing commit and explicit collection cycle; exact
+  retries preserve a deterministic run while later cycles may capture provider
+  corrections as new knowledge-time revisions.
+- Provider batches are immutable source snapshots with ordered raw-payload
+  digests and an independent per-job marker repeated in pending/commit evidence.
+  Complete raw/derived/manifest/preflight graphs become visible only through
+  one compare-and-swap DuckDB transaction; Task 9 makes no quality claim.
+- ADR-0017 records the durable authority: hash-chained immutable commit
+  journals, permanent dataset owner markers, canonical manifests, retained
+  legacy predecessor evidence and full-graph fail-closed reads.
+- Recovery under the one-writer lease repairs exact committed intents, owner
+  markers, source rows and both pre-link and post-link hard-link interruptions.
+  All graph members have exact immutable high-water anchors and are permanently
+  owned, including unchanged manifests. Completed retries revalidate the
+  aggregate source object and reject uncommitted external parents.
+  Subprocess tests cover every public crash stage, and eight independent
+  processes converge on one logical publication.
+- Final evidence is `220 passed` for the Task 9 integration selection and `120
+  passed` for the corrected control-plane/recovery/Moomoo focus. Ruff and `git diff --check`
+  passed; fresh Standards and adversarial reviews returned CLEAN.
+- Task 10 is now active: add versioned quality policies and immutable daily SLA
+  evidence without changing release or execution authority.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

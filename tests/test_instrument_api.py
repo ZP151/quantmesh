@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -239,6 +240,29 @@ def _candle(
     volume: float = 1_002.0,
     received_at: datetime | None = None,
 ) -> MarketUpdate:
+    payload = {
+        "interval": interval,
+        "open": open_,
+        "high": high,
+        "low": low,
+        "close": close,
+        "volume": volume,
+    }
+    if any(not math.isfinite(value) for value in (open_, high, low, close, volume)):
+        # MarketUpdate now fails closed while deriving its canonical content
+        # digest. Bypass validation only to prove the downstream history join
+        # still rejects a corrupted in-memory update rather than trusting it.
+        valid = _candle(
+            venue=venue,
+            symbol=symbol,
+            timestamp=timestamp,
+            interval=interval,
+            provenance=provenance,
+            sequence=sequence,
+            sequence_gap=sequence_gap,
+            received_at=received_at,
+        )
+        return valid.model_copy(update={"payload": payload, "content_digest": None})
     return MarketUpdate(
         venue=venue,
         instrument=symbol,
@@ -248,14 +272,7 @@ def _candle(
         received_at=received_at if received_at is not None else datetime.now(UTC),
         sequence=sequence,
         sequence_gap=sequence_gap,
-        payload={
-            "interval": interval,
-            "open": open_,
-            "high": high,
-            "low": low,
-            "close": close,
-            "volume": volume,
-        },
+        payload=payload,
     )
 
 

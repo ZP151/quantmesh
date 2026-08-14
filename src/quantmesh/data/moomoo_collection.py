@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from collections.abc import Callable
@@ -12,14 +13,20 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from quantmesh.data.artifacts import ManifestStore
-from quantmesh.data.calendars import CalendarService, SessionPolicy
+from quantmesh.data.artifacts import ManifestStore, canonical_json_bytes
+from quantmesh.data.calendars import XNYS_REGULAR_VERSION, CalendarService, SessionPolicy
+from quantmesh.data.capabilities import DataKind
+from quantmesh.data.collection import (
+    CollectionCoordinator,
+    CollectionJob,
+    StagingManifestStore,
+)
 from quantmesh.data.collection_process import (
     CollectionProcessError,
     CollectionProcessTimeout,
     run_bounded_json_process,
 )
-from quantmesh.data.instruments import CanonicalInstrumentId
+from quantmesh.data.instruments import CanonicalInstrumentId, InstrumentCatalog
 from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.moomoo.market_data import MoomooDataAdapter
@@ -174,6 +181,56 @@ class MoomooRawPayload(_FrozenContract):
                 raise ValueError(f"worker {label} payload rows must be a list")
         if any(not isinstance(payload.get("rows"), list) for payload in self.stock_split_pages):
             raise ValueError("worker stock-split payload rows must be lists")
+        expected_cursor: str | None = None
+        history_terminal = False
+        history_cursors: set[str] = set()
+        for index, page in enumerate(self.history_pages):
+            if history_terminal:
+                raise ValueError("worker history pagination has pages after terminal cursor")
+            if "request_page_req_key" not in page or "next_page_req_key" not in page:
+                raise ValueError("worker history page has no pagination evidence")
+            if page["request_page_req_key"] != expected_cursor:
+                raise ValueError(f"worker history page {index} breaks the cursor chain")
+            next_cursor = page["next_page_req_key"]
+            if next_cursor is not None and (
+                not isinstance(next_cursor, str) or not next_cursor.startswith("base64:")
+            ):
+                raise ValueError("worker history page has an invalid next cursor")
+            if next_cursor is None:
+                history_terminal = True
+            else:
+                if not page["rows"]:
+                    raise ValueError("worker history page is empty nonterminal evidence")
+                if next_cursor in history_cursors:
+                    raise ValueError("worker history pagination has a repeated cursor")
+                history_cursors.add(next_cursor)
+                expected_cursor = next_cursor
+        if not history_terminal:
+            raise ValueError("worker history pagination is not terminal")
+        expected_split_cursor: str | None = None
+        split_terminal = False
+        split_cursors: set[str] = set()
+        for index, page in enumerate(self.stock_split_pages):
+            if split_terminal:
+                raise ValueError("worker stock-split pagination has pages after terminal cursor")
+            if "request_next_key" not in page or "next_key" not in page:
+                raise ValueError("worker stock-split page has no pagination evidence")
+            if page["request_next_key"] != expected_split_cursor:
+                raise ValueError(f"worker stock-split page {index} breaks the cursor chain")
+            next_cursor = page["next_key"]
+            if not isinstance(next_cursor, str) or not next_cursor:
+                raise ValueError("worker stock-split page has an invalid next cursor")
+            if next_cursor == "-1":
+                split_terminal = True
+            else:
+                if not page["rows"]:
+                    raise ValueError("worker stock-split page is empty nonterminal evidence")
+                if next_cursor in split_cursors:
+                    raise ValueError("worker stock-split pagination has a repeated cursor")
+                split_cursors.add(next_cursor)
+                expected_split_cursor = next_cursor
+        if not split_terminal:
+            raise ValueError("worker stock-split pagination is not terminal")
         instrument = Instrument(
             symbol=symbol,
             venue=Venue.MOOMOO,
@@ -186,6 +243,49 @@ class MoomooRawPayload(_FrozenContract):
         if derived != self.bars:
             raise ValueError("worker bars are not the canonical derivation of history pages")
         return self
+
+    @property
+    def pagination_evidence(self) -> str:
+        """Canonical cursor chains for every paginated Moomoo endpoint."""
+        return canonical_json_bytes(
+            {
+                "contract": "moomoo-pagination-v1",
+                "history": json.loads(self.history_pagination_evidence),
+                "stock_splits": json.loads(self.stock_split_pagination_evidence),
+            }
+        ).decode()
+
+    @property
+    def history_pagination_evidence(self) -> str:
+        """Canonical history cursor chain, including the terminal null cursor."""
+        return canonical_json_bytes(
+            {
+                "contract": "moomoo-history-pagination-v1",
+                "pages": [
+                    {
+                        "request": page["request_page_req_key"],
+                        "next": page["next_page_req_key"],
+                    }
+                    for page in self.history_pages
+                ],
+            }
+        ).decode()
+
+    @property
+    def stock_split_pagination_evidence(self) -> str:
+        """Canonical stock-split cursor chain, including the provider sentinel."""
+        return canonical_json_bytes(
+            {
+                "contract": "moomoo-stock-split-pagination-v1",
+                "pages": [
+                    {
+                        "request": page["request_next_key"],
+                        "next": page["next_key"],
+                    }
+                    for page in self.stock_split_pages
+                ],
+            }
+        ).decode()
 
 
 class MoomooWorkerResult(_FrozenContract):
@@ -322,18 +422,21 @@ class MoomooCollector:
         code_commit: str,
         scratch_root: Path,
         settings: Settings | None = None,
-        worker: Callable[..., MoomooWorkerResult] = run_moomoo_worker,
+        worker: Callable[..., MoomooWorkerResult] | None = None,
     ) -> None:
         self.store = store
         self.code_commit = code_commit
         self.scratch_root = Path(scratch_root)
         self.settings = settings or Settings()
-        self.worker = worker
+        self.worker = run_moomoo_worker if worker is None else worker
+        self._trusted_worker = worker is None
 
     def collect(
         self,
         plan: MoomooCollectionPlan,
         window: CollectionWindow,
+        *,
+        collection_cycle: str = "initial",
     ) -> MoomooCollectionResult:
         """Collect bounded real bundles, or publish nothing for unavailable input."""
         requests = [
@@ -347,8 +450,90 @@ class MoomooCollector:
             )
             for target in plan.targets
         ]
+        job = CollectionJob(
+            provider_id="moomoo-opend",
+            endpoints=tuple(
+                f"opend://{self.settings.moomoo_opend_host}:"
+                f"{self.settings.moomoo_opend_port}/{endpoint}"
+                for endpoint in (
+                    "request_history_kline",
+                    "get_rehab",
+                    "get_corporate_actions_stock_splits",
+                    "get_corporate_actions_dividends",
+                )
+            ),
+            source_request_ids=tuple(
+                "moomoo:"
+                + hashlib.sha256(
+                    canonical_json_bytes(
+                        {
+                            "request": request.model_dump(mode="json"),
+                            "endpoint": endpoint,
+                        }
+                    )
+                ).hexdigest()
+                for request in requests
+                for endpoint in (
+                    "request_history_kline",
+                    "get_rehab",
+                    "get_corporate_actions_stock_splits",
+                    "get_corporate_actions_dividends",
+                )
+            ),
+            canonical_instruments=tuple(
+                dict.fromkeys(target.canonical_instrument for target in plan.targets)
+            ),
+            data_kinds=(
+                DataKind.BARS,
+                DataKind.ADJUSTMENT_FACTORS,
+                DataKind.SPLITS,
+                DataKind.DIVIDENDS,
+            ),
+            intervals=tuple(dict.fromkeys(target.interval for target in plan.targets)),
+            calendar_version=XNYS_REGULAR_VERSION,
+            session_policy=SessionPolicy.REGULAR,
+            window_start=window.start,
+            window_end=window.end,
+            adjustment_policy="split-adjusted-v1",
+            schema_versions=tuple(
+                f"moomoo-{kind.value}-v1"
+                for kind in (
+                    DataKind.BARS,
+                    DataKind.ADJUSTMENT_FACTORS,
+                    DataKind.SPLITS,
+                    DataKind.DIVIDENDS,
+                )
+            ),
+            mapping_version=InstrumentCatalog.bounded_default().catalog_id,
+            code_commit=self.code_commit,
+            collection_cycle=collection_cycle,
+        )
+        coordinator = CollectionCoordinator(self.store)
+        if coordinator.has_state(job):
+            committed = coordinator.run(
+                job,
+                producer=self._unexpected_recollection,
+                provider_cursor="durable-source-snapshot",
+                last_complete_source_event=window.end.isoformat(),
+                updated_at=window.end,
+            )
+            return MoomooCollectionResult(
+                status=CollectionStatus.PUBLISHED,
+                manifest_ids=committed.manifest_ids,
+            )
         collected: list[tuple[MoomooWorkerRequest, MoomooRawPayload]] = []
-        for request in requests:
+        source_snapshot = coordinator.source(job)
+        if source_snapshot is not None:
+            decoded = json.loads(source_snapshot)
+            if not isinstance(decoded, list) or len(decoded) != len(requests):
+                raise ValueError("Moomoo source snapshot disagrees with collection plan")
+            for request, item in zip(requests, decoded, strict=True):
+                payload = MoomooRawPayload.model_validate_json(
+                    canonical_json_bytes(item)
+                )
+                payload.validate_for(request)
+                collected.append((request, payload))
+        for request in (() if source_snapshot is not None else requests):
             try:
                 result = self.worker(
                     request,
@@ -373,19 +558,67 @@ class MoomooCollector:
                     reason_code=result.reason_code or "unavailable",
                     detail=result.detail or "Moomoo collection is unavailable",
                 )
+            if not self._trusted_worker:
+                return MoomooCollectionResult(
+                    status=CollectionStatus.FAILED,
+                    reason_code="untrusted-worker",
+                    detail="Injected workers cannot publish qualifying Moomoo evidence",
+                )
             payload = result.payload.model_copy(update={"received_at": datetime.now(UTC)})
             payload.validate_for(request)
             collected.append((request, payload))
+        if source_snapshot is None:
+            coordinator.capture_source(
+                job,
+                media_type="application/vnd.quantmesh.moomoo-source-batch+json",
+                payload=canonical_json_bytes(
+                    [payload.model_dump(mode="json") for _, payload in collected]
+                ),
+                raw_payloads=tuple(
+                    canonical_json_bytes(source)
+                    for _, payload in collected
+                    for source in (
+                        list(payload.history_pages),
+                        payload.adjustment_factors,
+                        list(payload.stock_split_pages),
+                        payload.dividends,
+                    )
+                ),
+            )
 
         # Local import keeps the collection contracts independent from their
         # concrete manifest publisher while avoiding a module cycle.
         from quantmesh.data.fabric import MoomooFabricPublisher
 
-        publisher = MoomooFabricPublisher(self.store, code_commit=self.code_commit)
-        manifest_ids: list[str] = []
-        for request, payload in collected:
-            manifest_ids.extend(publisher.publish(request, payload).manifest_ids)
+        def producer(staging: StagingManifestStore) -> tuple[str, ...]:
+            publisher = MoomooFabricPublisher(staging, code_commit=self.code_commit)
+            return tuple(
+                manifest_id
+                for request, payload in collected
+                for manifest_id in publisher.publish(request, payload).manifest_ids
+            )
+
+        committed = coordinator.run(
+            job,
+            producer=producer,
+            provider_cursor=canonical_json_bytes(
+                {
+                    request.target.provider_symbol
+                    + ":"
+                    + request.target.interval: json.loads(payload.pagination_evidence)
+                    for request, payload in collected
+                }
+            ).decode(),
+            last_complete_source_event=max(
+                bar.timestamp for _, payload in collected for bar in payload.bars
+            ).isoformat(),
+            updated_at=max(payload.received_at for _, payload in collected),
+        )
         return MoomooCollectionResult(
             status=CollectionStatus.PUBLISHED,
-            manifest_ids=tuple(manifest_ids),
+            manifest_ids=committed.manifest_ids,
         )
+
+    @staticmethod
+    def _unexpected_recollection(_store: StagingManifestStore) -> tuple[str, ...]:
+        raise AssertionError("durable Moomoo graph unexpectedly recollected")

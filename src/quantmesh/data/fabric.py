@@ -46,6 +46,10 @@ def _digest(value: Any) -> str:
     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
 
 
+def _manifest_run_id(store: object, fallback: str) -> str:
+    return getattr(store, "collection_run_id", None) or fallback
+
+
 class FabricFeatureSpec(BaseModel):
     """The one feature admitted to the first end-to-end tracer."""
 
@@ -338,7 +342,7 @@ class FabricPublisher:
             "quality_report_id": None,
             "created_at": envelope.ingested_at,
             "code_commit": self.code_commit,
-            "collection_run_id": envelope.request_id,
+            "collection_run_id": _manifest_run_id(self.store, envelope.request_id),
         }
 
     def _publish(
@@ -461,7 +465,8 @@ class FabricPublisher:
             or raw.entitlement != envelope.entitlement
             or raw.knowledge_start != envelope.knowledge_time
             or raw.knowledge_end != envelope.knowledge_time
-            or raw.collection_run_id != envelope.request_id
+            or raw.collection_run_id
+            != _manifest_run_id(self.store, envelope.request_id)
             or raw.event_start != envelope.event_start
             or raw.event_end != envelope.event_end
             or raw.schema_digest != _digest({"raw_schema": envelope.schema_version})
@@ -832,6 +837,7 @@ class MoomooFabricPublisher:
             "knowledge_end",
             "created_at",
             "code_commit",
+            "collection_run_id",
         )
         if any(
             any(getattr(item, field) != getattr(bar_raw, field) for field in shared)
@@ -1011,7 +1017,6 @@ class MoomooFabricPublisher:
             or manifest.knowledge_start != envelope.knowledge_time
             or manifest.knowledge_end != envelope.knowledge_time
             or manifest.created_at != envelope.ingested_at
-            or manifest.collection_run_id != envelope.request_id
             or manifest.adapter_version != envelope.adapter_version
             or manifest.source_rights_id != envelope.source_rights_id
             or manifest.entitlement is not envelope.entitlement
@@ -1019,6 +1024,42 @@ class MoomooFabricPublisher:
             or manifest.transformation_policy_digest
             != _digest({"operation": "capture-sdk-json-v1"})
             or manifest.adjustment_policy is not None
+            or (
+                expected_kind is DataKind.BARS
+                and envelope.cursor
+                != canonical_json_bytes(
+                    {
+                        "contract": "moomoo-history-pagination-v1",
+                        "pages": [
+                            {
+                                "request": page["request_page_req_key"],
+                                "next": page["next_page_req_key"],
+                            }
+                            for page in source
+                        ],
+                    }
+                ).decode()
+            )
+            or (
+                expected_kind is DataKind.SPLITS
+                and envelope.cursor
+                != canonical_json_bytes(
+                    {
+                        "contract": "moomoo-stock-split-pagination-v1",
+                        "pages": [
+                            {
+                                "request": page["request_next_key"],
+                                "next": page["next_key"],
+                            }
+                            for page in source
+                        ],
+                    }
+                ).decode()
+            )
+            or (
+                expected_kind not in (DataKind.BARS, DataKind.SPLITS)
+                and envelope.cursor is not None
+            )
         ):
             raise ManifestIntegrityError("Moomoo raw manifest disagrees with its envelope")
         try:
@@ -1140,7 +1181,15 @@ class MoomooFabricPublisher:
             request_id=request_id,
             request_window_start=min(request.window.start, event_start),
             request_window_end=max(request.window.end, event_end),
-            cursor=None,
+            collection_window_start=request.window.start,
+            collection_window_end=request.window.end,
+            cursor=(
+                payload.history_pagination_evidence
+                if data_kind is DataKind.BARS
+                else payload.stock_split_pagination_evidence
+                if data_kind is DataKind.SPLITS
+                else None
+            ),
             canonical_instrument=request.target.canonical_instrument,
             provider_symbol=request.target.provider_symbol,
             data_kind=data_kind,
@@ -1174,7 +1223,9 @@ class MoomooFabricPublisher:
             event_end=event_end,
             data_kind=data_kind,
             interval=request.target.interval if data_kind is DataKind.BARS else None,
-            collection_run_id=request_id,
+            collection_run_id=_manifest_run_id(
+                self.store, self._run_id(request, "collection-bundle")
+            ),
             **self._common(request, payload, include_run_id=False),
         )
 
@@ -1200,7 +1251,9 @@ class MoomooFabricPublisher:
             "code_commit": self.code_commit,
         }
         if include_run_id:
-            values["collection_run_id"] = self._run_id(request, "derived")
+            values["collection_run_id"] = _manifest_run_id(
+                self.store, self._run_id(request, "collection-bundle")
+            )
         return values
 
     def _publish_manifest(self, **values: Any) -> ArtifactManifest:

@@ -410,6 +410,27 @@ class ManifestStore:
         expected_current: str | None,
     ) -> None:
         """Publish immutable bytes, then CAS the mutable current pointer."""
+        from quantmesh.data.checkpoints import control_writer_guard
+
+        with control_writer_guard(self.root):
+            self._publish_locked(manifest, expected_current=expected_current)
+
+    def _publish_locked(
+        self,
+        manifest: ArtifactManifest,
+        *,
+        expected_current: str | None,
+    ) -> None:
+        from quantmesh.data.checkpoints import committed_owner, reserved_job
+
+        if reserved_job(self.root, manifest.dataset_id) is not None:
+            raise ManifestConflictError(
+                "dataset is reserved by a pending collection graph"
+            )
+        if committed_owner(self.root, manifest.dataset_id):
+            raise ManifestConflictError(
+                "graph-managed datasets must be advanced by the collection coordinator"
+            )
         for reference in manifest.objects:
             self.objects.get_bytes(reference)
         self._validate_typed_dataset(ArtifactDataset(manifest, self.objects))
@@ -459,7 +480,27 @@ class ManifestStore:
 
     def point_current(self, manifest_id: str, *, expected_current: str | None) -> None:
         """Advance a pointer to an already-published manifest; never roll back."""
+        from quantmesh.data.checkpoints import control_writer_guard
+
+        with control_writer_guard(self.root):
+            self._point_current_locked(
+                manifest_id, expected_current=expected_current
+            )
+
+    def _point_current_locked(
+        self, manifest_id: str, *, expected_current: str | None
+    ) -> None:
         target = self.open(manifest_id).manifest
+        from quantmesh.data.checkpoints import committed_owner, reserved_job
+
+        if reserved_job(self.root, target.dataset_id) is not None:
+            raise ManifestConflictError(
+                "dataset is reserved by a pending collection graph"
+            )
+        if committed_owner(self.root, target.dataset_id):
+            raise ManifestConflictError(
+                "graph-managed datasets must be advanced by the collection coordinator"
+            )
         with _exclusive_lock(self._lock_path(target.dataset_id), allowed_root=self.root):
             self._repair_history_tail(target, expected_current=expected_current)
             current = self._read_pointer(target.dataset_id)
@@ -528,9 +569,30 @@ class ManifestStore:
         self._validate_typed_dataset(dataset)
         return dataset
 
+    def stage(self, manifest: ArtifactManifest) -> None:
+        """Publish a canonical immutable manifest without making it current."""
+        for reference in manifest.objects:
+            self.objects.get_bytes(reference)
+        self._validate_typed_dataset(ArtifactDataset(manifest, self.objects))
+        self._write_manifest_at(
+            self.manifest_path(manifest.dataset_id, manifest.manifest_id),
+            manifest,
+        )
+
     def current(self, dataset_id: str) -> ArtifactDataset | None:
         """Open the validated current revision for a dataset, if initialized."""
         validate_dataset_name(dataset_id)
+        from quantmesh.data.checkpoints import (
+            committed_current,
+            committed_legacy_predecessor,
+        )
+
+        graph_current = committed_current(self.root, dataset_id)
+        predecessor = committed_legacy_predecessor(self.root, dataset_id)
+        if graph_current is not None:
+            self._require_legacy_predecessor(dataset_id, predecessor)
+            return self.open(graph_current)
+        self._require_legacy_predecessor(dataset_id, predecessor)
         if not self._pointer_path(dataset_id).exists():
             return None
         pointer = self._read_pointer(dataset_id)
@@ -541,14 +603,48 @@ class ManifestStore:
     def manifests(self, dataset_id: str) -> tuple[ArtifactManifest, ...]:
         """Return all committed revisions in immutable history order."""
         validate_dataset_name(dataset_id)
-        if not self._pointer_path(dataset_id).exists():
-            return ()
+        from quantmesh.data.checkpoints import (
+            committed_history,
+            committed_legacy_predecessor,
+        )
+
+        manifest_ids: list[str] = []
+        self._require_legacy_predecessor(
+            dataset_id,
+            committed_legacy_predecessor(self.root, dataset_id),
+        )
+        if self._pointer_path(dataset_id).exists():
+            pointer = self._read_pointer(dataset_id)
+            if pointer is not None:
+                records = self._read_history(dataset_id)
+                manifest_ids.extend(
+                    record["manifest_id"]
+                    for record in records[: pointer["compatibility_revision"]]
+                )
+        manifest_ids.extend(committed_history(self.root, dataset_id))
+        unique_ids = tuple(dict.fromkeys(manifest_ids))
+        return tuple(self.open(manifest_id).manifest for manifest_id in unique_ids)
+
+    def _require_legacy_predecessor(
+        self,
+        dataset_id: str,
+        predecessor: tuple[str, int] | None,
+    ) -> None:
+        if predecessor is None:
+            return
         pointer = self._read_pointer(dataset_id)
         if pointer is None:
-            return ()
-        records = self._read_history(dataset_id)
-        committed = records[: pointer["compatibility_revision"]]
-        return tuple(self.open(record["manifest_id"]).manifest for record in committed)
+            raise ManifestIntegrityError(
+                "graph migration lost its committed legacy predecessor"
+            )
+        expected_manifest, expected_revision = predecessor
+        if (
+            pointer["manifest_id"],
+            pointer["compatibility_revision"],
+        ) != (expected_manifest, expected_revision):
+            raise ManifestIntegrityError(
+                "graph migration legacy predecessor disagrees with its journal"
+            )
 
     def open_known_at(self, manifest_id: str, *, known_at: datetime) -> ArtifactDataset:
         """Open the latest committed revision visible at one UTC knowledge time."""
@@ -605,6 +701,10 @@ class ManifestStore:
 
     def _write_immutable_manifest(self, manifest: ArtifactManifest) -> None:
         path = self.manifest_path(manifest.dataset_id, manifest.manifest_id)
+        self._write_manifest_at(path, manifest)
+
+    @staticmethod
+    def _write_manifest_at(path: Path, manifest: ArtifactManifest) -> None:
         payload = manifest.canonical_bytes()
         path.parent.mkdir(parents=True, exist_ok=True)
         if is_reparse_point(path):
@@ -1043,7 +1143,7 @@ class ManifestStore:
                 raise ManifestIntegrityError(
                     "revision reservation disagrees with hash-chained history"
                 )
-        published: dict[int, ArtifactManifest] = {}
+        published: dict[str, ArtifactManifest] = {}
         for manifest_path in self._published_manifests(dataset_id):
             try:
                 self._validate_manifest_id(manifest_path.stem)
@@ -1052,29 +1152,25 @@ class ManifestStore:
                 raise ManifestIntegrityError(
                     f"published manifest is invalid: {manifest_path.name}"
                 ) from error
-            if item.compatibility_revision in published:
-                raise ManifestIntegrityError(
-                    f"compatibility revision {item.compatibility_revision} is reused"
-                )
-            published[item.compatibility_revision] = item
-        reserved_revisions = {reservation["compatibility_revision"] for reservation in reservations}
+            published[item.manifest_id] = item
+        reserved_revisions = {
+            reservation["compatibility_revision"] for reservation in reservations
+        }
         for record in history:
             revision = record["compatibility_revision"]
-            item = published.get(revision)
+            item = published.get(record["manifest_id"])
             if item is None:
                 if revision <= pointer_revision:
                     raise ManifestIntegrityError(
                         f"reserved manifest for revision {revision} is missing"
                     )
                 continue
-            if item.manifest_id != record["manifest_id"]:
+            if item.compatibility_revision != revision:
                 raise ManifestIntegrityError(
                     f"manifest for revision {revision} disagrees with history"
                 )
             if revision not in reserved_revisions:
                 raise ManifestIntegrityError(f"manifest for revision {revision} has no reservation")
-        if set(published) - reserved_revisions:
-            raise ManifestIntegrityError("published manifest exists without a revision reservation")
         if len(history) == pointer_revision + 1:
             value["_pending_history"] = history[-1]
         return value

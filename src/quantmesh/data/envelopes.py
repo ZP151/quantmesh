@@ -29,12 +29,14 @@ class RawEnvelope(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
-    envelope_version: int = Field(default=1, ge=1, le=1)
+    envelope_version: int = Field(default=1, ge=1, le=2)
     provider_id: str = Field(pattern=r"^[a-z][a-z0-9_-]*$")
     endpoint: str = Field(min_length=1)
     request_id: str = Field(min_length=1)
     request_window_start: datetime
     request_window_end: datetime
+    collection_window_start: datetime | None = None
+    collection_window_end: datetime | None = None
     cursor: str | None = None
     canonical_instrument: CanonicalInstrumentId
     provider_symbol: str = Field(min_length=1)
@@ -65,11 +67,21 @@ class RawEnvelope(BaseModel):
     ) -> Self:
         """Store exact response bytes, then bind them to validated metadata."""
         raw_object = objects.put_bytes(content_type, payload)
-        return cls.model_validate({**metadata, "raw_object": raw_object})
+        version = (
+            2
+            if metadata.get("collection_window_start") is not None
+            or metadata.get("collection_window_end") is not None
+            else 1
+        )
+        return cls.model_validate(
+            {**metadata, "envelope_version": version, "raw_object": raw_object}
+        )
 
     @field_validator(
         "request_window_start",
         "request_window_end",
+        "collection_window_start",
+        "collection_window_end",
         "event_start",
         "event_end",
         "provider_available_at",
@@ -113,8 +125,20 @@ class RawEnvelope(BaseModel):
 
     @model_validator(mode="after")
     def temporal_and_provenance_contract_is_valid(self) -> Self:
+        collection_fields = (
+            self.collection_window_start,
+            self.collection_window_end,
+        )
+        if self.envelope_version == 1 and any(item is not None for item in collection_fields):
+            raise ValueError("version 1 envelopes cannot declare collection windows")
+        if self.envelope_version == 2 and any(item is None for item in collection_fields):
+            raise ValueError("version 2 envelopes require a complete collection window")
         if self.request_window_start > self.request_window_end:
             raise ValueError("request_window_start must not be after request_window_end")
+        collection_start = self.collection_window_start or self.request_window_start
+        collection_end = self.collection_window_end or self.request_window_end
+        if collection_start > collection_end:
+            raise ValueError("collection_window_start must not be after collection_window_end")
         if self.event_start > self.event_end:
             raise ValueError("event_start must not be after event_end")
         if self.event_start < self.request_window_start or self.event_end > self.request_window_end:
@@ -153,4 +177,9 @@ class RawEnvelope(BaseModel):
         """Return the canonical metadata representation used in raw lineage."""
         from quantmesh.data.artifacts import canonical_json_bytes
 
-        return canonical_json_bytes(self.model_dump(mode="json"))
+        exclude = {
+            field
+            for field in ("collection_window_start", "collection_window_end")
+            if getattr(self, field) is None
+        }
+        return canonical_json_bytes(self.model_dump(mode="json", exclude=exclude))
