@@ -75,7 +75,7 @@ the tracked TDD plan is committed.
 
 ### Reviewer and Verifier
 
-Both roles remain read-only. Tasks 1–10 received independent Standards and
+Both roles remain read-only. Tasks 1–11 received independent Standards and
 implementation reviews; every finding was reproduced before correction and
 each final task verdict was clean. Verification evidence is recorded at each
 durable checkpoint.
@@ -89,7 +89,7 @@ durable checkpoint.
 | 3. Hyperliquid BTC candles | complete | Slice 1 | Checkpoint 7 |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | complete | Slice 3 | Checkpoint 8 |
 | 5. Idempotent collection and recovery | complete | Slices 2 and 4 | Checkpoint 9 |
-| 6. SLA catalog and downstream lineage | active | Slice 5 | Task 10 complete; Task 11 next |
+| 6. SLA catalog and downstream lineage | active | Slice 5 | Tasks 10–11 complete; Task 12 next |
 | 7. Seven-day real-data evidence | planned | Slice 6 | pending |
 
 ## Acceptance ledger
@@ -591,11 +591,44 @@ durable checkpoint.
 - Task 11 is now active: expose catalog and downstream immutable lineage without
   changing release, execution, credential or synthetic-data authority.
 
+## Checkpoint 11 — Trusted lineage catalog backend, 2026-08-14
+
+- Task 11 adds a read-only catalog over v2 manifests, exact quality evidence,
+  source rights, entitlement, provider access, checkpoint state and recursive
+  immutable parents. `GET /api/data/catalog` lists dataset heads and `GET
+  /api/data/catalog/{manifest_id}` returns one exact manifest plus lineage;
+  exact identity and dataset-current identity are represented separately.
+- Production workstation assembly now binds one `TrustedDataCatalog` to the API,
+  history service and forecast registry. History, feature, experiment and
+  forecast contracts carry an all-or-none `manifest_id` and
+  `quality_evaluation_id` pin while legacy v1 JSON bytes and deterministic IDs
+  remain unchanged when those fields are absent.
+- Downstream readers reopen the exact qualified manifest and fail closed on
+  failed quality, a mismatched dataset/revision/evaluation, wrong layer/kind/
+  interval, adjustment drift, source-rights drift or instrument mismatch.
+  Unrelated quality corruption is scoped away from exact lineage reads; direct
+  legacy-v2 catalog reads remain non-mutating.
+- The first independent review found four Important issues: target corruption
+  was masked as not-found, exact reads could create control state, historical
+  entries mislabeled themselves as current, and the production composition
+  root left the catalog unbound. TDD regressions closed all four. Main-thread
+  review additionally restored two accidentally nested legacy feature tests
+  and closed trusted-feature cross-instrument substitution.
+- Final verification passed `185` data/catalog/history/research/quality tests and
+  `193` API/workstation regressions. OpenAPI generation and freshness,
+  TypeScript, Oxlint, Ruff and `git diff --check` are green; Oxlint retains only
+  four pre-existing Fast Refresh warnings. A fresh read-only re-review returned
+  CLEAN/PASS with no Critical or Important finding.
+- Task 11 completes the backend half of Slice 6 without changing release,
+  credential, execution or synthetic-repair authority. Task 12 is now active:
+  deliver the bilingual operator data-catalog screen from these exact contracts.
+
 ## Current frontier
 
-Task 11 is the current implementation frontier: catalog API and fail-closed
-downstream manifest/quality lineage. Start the seven-day evidence window only
-after Slices 1–6 are merged into a frozen candidate configuration.
+Task 12 is the current implementation frontier: the bilingual, accessible
+operator data-catalog screen with explicit quality, rights, entitlement,
+checkpoint and lineage states. Start the seven-day evidence window only after
+Slices 1–6 are merged into a frozen candidate configuration.
 
 ## Resume instructions
 

@@ -33,6 +33,7 @@ from quantmesh.api.workstation import (
     WorkstationConfigError,
     create_workstation_app,
 )
+from quantmesh.data.catalog import TrustedDataCatalog
 from quantmesh.data.lake import Lake
 from quantmesh.data.manifest import ManifestWriter
 from quantmesh.domain.market_data import Bar
@@ -616,6 +617,9 @@ class TestConsoleScript:
         assert app.state.history is not None
         assert app.state.instrument_workspace is not None
         assert app.state.price_forecasts is not None
+        assert isinstance(app.state.data_catalog, TrustedDataCatalog)
+        assert app.state.price_forecasts.trusted_catalog is app.state.data_catalog
+        assert app.state.history._historical._trusted_catalog is app.state.data_catalog
         assert app.state.paper_decisions is not None
         assert app.state.proposal_service is app.state.paper_decisions
         assert app.state.live.replay_buffer is not None

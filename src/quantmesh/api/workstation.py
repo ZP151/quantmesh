@@ -64,7 +64,9 @@ from quantmesh import __version__
 from quantmesh.ai.decisions import DecisionLog
 from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.api.app import _order_summary, create_app
+from quantmesh.api.data_catalog import DataCatalogReader, data_catalog_router
 from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
+from quantmesh.data.catalog import TrustedDataCatalog
 from quantmesh.domain.models import Instrument, Quote, Venue
 from quantmesh.domain.orders import Order
 from quantmesh.events.forecast import ForecastReportRegistry, forecast_artifact_paths
@@ -1038,6 +1040,7 @@ def create_workstation_app(
     workspace_clock: Callable[[], datetime] | None = None,
     live_feed: LiveFeed | None = None,
     prediction: PredictionBoard | None = None,
+    data_catalog: DataCatalogReader | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1108,6 +1111,7 @@ def create_workstation_app(
     )
     app.state.history = effective_history
     app.state.price_forecasts = price_forecasts
+    app.state.data_catalog = data_catalog
     clock = workspace_clock if workspace_clock is not None else lambda: datetime.now(UTC)
     app.state.instrument_clock = clock
 
@@ -1188,6 +1192,11 @@ def create_workstation_app(
     # discipline as the observability router.
     app.include_router(
         spa_router(),
+        prefix="/api",
+        generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
+    app.include_router(
+        data_catalog_router(),
         prefix="/api",
         generate_unique_id_function=lambda route: f"api_{route.name}",
     )
@@ -1643,6 +1652,7 @@ def main(argv: list[str] | None = None) -> None:
         )
     else:
         account = PaperAccount(cash=100_000.0)
+        trusted_catalog = TrustedDataCatalog(settings.lake_root)
         if args.live:
             from quantmesh.data.lake import Lake
             from quantmesh.execution.journal import OrderJournal
@@ -1763,10 +1773,10 @@ def main(argv: list[str] | None = None) -> None:
                 prediction=prediction,
                 bindings=bindings,
             )
-            history = (
-                HistoryService(bindings, dataset_loader=Lake(settings.lake_root).dataset)
-                if bindings
-                else None
+            history = HistoryService(
+                bindings,
+                dataset_loader=Lake(settings.lake_root).dataset,
+                trusted_catalog=trusted_catalog,
             )
             app = create_workstation_app(
                 account=account,
@@ -1775,16 +1785,22 @@ def main(argv: list[str] | None = None) -> None:
                 price_forecasts=PriceForecastRegistry(
                     lake_root=settings.lake_root,
                     bindings=bindings,
+                    trusted_catalog=trusted_catalog,
                 ),
                 proposal_ledger=ProposalLedger(settings.orders_dir / "proposals"),
                 journal=journal,
                 account_sink=account_snapshot.save,
                 live_feed=feed,
                 prediction=prediction,
+                data_catalog=trusted_catalog,
                 host=host,
             )
         else:
-            app = create_workstation_app(account=account, host=host)
+            app = create_workstation_app(
+                account=account,
+                data_catalog=trusted_catalog,
+                host=host,
+            )
     uvicorn.run(app, host=host, port=port)
 
 

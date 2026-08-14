@@ -8,8 +8,14 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from quantmesh.data.artifacts import ArtifactLayer, ArtifactManifest
+from quantmesh.data.calendars import XNYS_REGULAR_VERSION, SessionPolicy
+from quantmesh.data.capabilities import DataKind, EntitlementState
+from quantmesh.data.catalog import CatalogQualificationError
+from quantmesh.data.instruments import CanonicalInstrumentId, InstrumentCatalog
 from quantmesh.data.lake import Lake
 from quantmesh.data.manifest import DatasetManifest, ManifestWriter, SeriesCoverage
+from quantmesh.data.objects import ObjectRef
 from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.instruments.contracts import (
@@ -168,6 +174,102 @@ def fake_service(
     datasets: dict[str, FakeDataset],
 ) -> HistoryService:
     return HistoryService(bindings, dataset_loader=datasets.__getitem__, now=lambda: NOW)
+
+
+class TrustedDataset:
+    def __init__(self, dataset_manifest: ArtifactManifest, rows: list[Bar]) -> None:
+        self.manifest = dataset_manifest
+        self._rows = rows
+
+    def read_bars(self) -> list[Bar]:
+        return list(self._rows)
+
+
+class TrustedCatalog:
+    def __init__(self, *, accepted: bool) -> None:
+        self.accepted = accepted
+
+    def require_research(self, manifest_id: str):
+        if not self.accepted:
+            raise CatalogQualificationError(
+                f"manifest {manifest_id} quality status is fail"
+            )
+        return SimpleNamespace(
+            provider_id="moomoo-opend",
+            manifest_id=manifest_id,
+            current_manifest_id=manifest_id,
+            dataset_id="trusted-equities",
+            compatibility_revision=1,
+            quality=SimpleNamespace(evaluation_id="2" * 64),
+        )
+
+
+def trusted_manifest() -> ArtifactManifest:
+    return ArtifactManifest.build(
+        dataset_id="trusted-equities",
+        compatibility_revision=1,
+        layer=ArtifactLayer.ADJUSTED,
+        canonical_instrument=CanonicalInstrumentId(value="moomoo:US:NVDA:XNAS"),
+        instrument_catalog_id=InstrumentCatalog.bounded_default().catalog_id,
+        data_kind=DataKind.BARS,
+        interval="1d",
+        calendar_version=XNYS_REGULAR_VERSION,
+        session_policy=SessionPolicy.REGULAR,
+        objects=(
+            ObjectRef(
+                digest="3" * 64,
+                media_type="application/vnd.quantmesh.bars+json",
+                byte_length=1,
+            ),
+        ),
+        row_identities=(f"NVDA:{NOW.isoformat()}",),
+        schema_digest="4" * 64,
+        adapter_version="trusted-history-test-v1",
+        parent_manifest_ids=("5" * 64,),
+        transformation_policy_digest="6" * 64,
+        source_rights_id="moomoo-us-market-data",
+        entitlement=EntitlementState.AVAILABLE,
+        event_start=NOW,
+        event_end=NOW,
+        knowledge_start=NOW,
+        knowledge_end=NOW,
+        adjustment_policy="unadjusted-identity-v1",
+        quality_report_id=None,
+        created_at=NOW,
+        code_commit="7" * 40,
+        collection_run_id="8" * 64,
+    )
+
+
+def trusted_history_service(*, accepted: bool) -> HistoryService:
+    dataset = TrustedDataset(trusted_manifest(), [bar()])
+    return HistoryService(
+        [binding(dataset_id="trusted-equities")],
+        dataset_loader=lambda _dataset_id: dataset,
+        trusted_catalog=TrustedCatalog(accepted=accepted),
+        now=lambda: NOW,
+    )
+
+
+def test_history_rejects_failed_quality_manifest() -> None:
+    with pytest.raises(HistoryUnavailableError, match="quality status is fail"):
+        trusted_history_service(accepted=False).history(
+            Venue.MOOMOO,
+            "NVDA",
+            HistoryRange.ONE_YEAR,
+        )
+
+
+def test_history_returns_exact_passing_manifest_and_quality_ids() -> None:
+    series = trusted_history_service(accepted=True).history(
+        Venue.MOOMOO,
+        "NVDA",
+        HistoryRange.ONE_YEAR,
+    )
+
+    assert series.manifest_id == trusted_manifest().manifest_id
+    assert series.quality_evaluation_id == "2" * 64
+    assert series.dataset_revision == 1
 
 
 def test_history_ranges_are_the_public_wire_values() -> None:

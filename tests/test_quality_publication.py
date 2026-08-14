@@ -15,6 +15,7 @@ from quantmesh.data.calendars import (
     SessionPolicy,
 )
 from quantmesh.data.capabilities import DataKind, EntitlementState
+from quantmesh.data.catalog import TrustedDataCatalog
 from quantmesh.data.checkpoints import CheckpointIntegrityError
 from quantmesh.data.collection import (
     CollectionCoordinator,
@@ -378,6 +379,51 @@ def test_real_graph_uses_default_quality_builder(tmp_path: Path) -> None:
         )
 
 
+def test_catalog_projects_exact_committed_quality_and_lineage(tmp_path: Path) -> None:
+    store = ManifestStore(tmp_path)
+    coordinator = CollectionCoordinator(store)
+    job = _job()
+    envelope = _envelope(store)
+    coordinator.capture_source(
+        job,
+        media_type="application/vnd.quantmesh.hyperliquid-source-batch+json",
+        payload=b"[]",
+        raw_payloads=(b"[]",),
+    )
+    publication = coordinator.run(
+        job,
+        producer=_producer(store, envelope),
+        provider_cursor="terminal",
+        last_complete_source_event=envelope.source_event_ids[-1],
+        updated_at=T0 + timedelta(minutes=10),
+    )
+
+    entries = TrustedDataCatalog(tmp_path).entries()
+
+    assert {entry.current_manifest_id for entry in entries} == set(
+        publication.manifest_ids
+    )
+    assert all(entry.quality is not None for entry in entries)
+    assert all(
+        entry.latest_checkpoint is not None
+        and entry.latest_checkpoint.quality_report_id == publication.quality_report_id
+        for entry in entries
+    )
+    for entry in entries:
+        assert entry.trusted_for_research is (
+            entry.quality is not None and entry.quality.status is QualityStatus.PASS
+        )
+
+    feature = next(entry for entry in entries if entry.layer is ArtifactLayer.FEATURE)
+    lineage = TrustedDataCatalog(tmp_path).lineage(feature.current_manifest_id)
+    assert lineage.entry == feature
+    assert [item.layer for item in lineage.ancestors] == [
+        ArtifactLayer.RAW,
+        ArtifactLayer.NORMALIZED,
+        ArtifactLayer.ADJUSTED,
+    ]
+
+
 def test_fixture_checkpoint_rejects_a_quality_report_identity(tmp_path: Path) -> None:
     store = ManifestStore(tmp_path)
     coordinator = CollectionCoordinator(store)
@@ -587,3 +633,5 @@ def test_quality_corruption_is_isolated_to_the_owning_job_and_datasets(
         coordinator.checkpoints.get(jobs[0].job_id)
     assert coordinator.checkpoints.get(jobs[1].job_id) is not None
     assert store.current("quality-independent-b-raw") is not None
+    lineage = TrustedDataCatalog(tmp_path).lineage(publications[1].manifest_ids[0])
+    assert lineage.entry.current_manifest_id == publications[1].manifest_ids[0]

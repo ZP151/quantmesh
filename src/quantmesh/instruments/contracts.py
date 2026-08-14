@@ -288,6 +288,11 @@ class HistoricalSeries(StrictContract):
     bars: tuple[HistoricalBar, ...] = Field(min_length=1)
     dataset_id: str
     dataset_revision: int = Field(ge=1)
+    manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    quality_evaluation_id: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
     source: str = Field(min_length=1)
     license: str = Field(min_length=1)
     generated_at: datetime
@@ -358,6 +363,10 @@ class HistoricalSeries(StrictContract):
 
     @model_validator(mode="after")
     def observed_series_is_self_consistent(self) -> "HistoricalSeries":
+        if (self.manifest_id is None) != (self.quality_evaluation_id is None):
+            raise ValueError(
+                "manifest_id and quality_evaluation_id must be present together"
+            )
         identity = (self.instrument.venue, self.instrument.symbol)
         live_indices = [index for index, item in enumerate(self.bars) if item.is_live_tail]
         if len(live_indices) > 1:
@@ -626,6 +635,11 @@ class PriceForecastArtifact(StrictContract):
     instrument: InstrumentSnapshot
     dataset_id: str
     dataset_revision: int = Field(ge=1)
+    manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    quality_evaluation_id: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
     source: str = Field(min_length=1)
     license: str = Field(min_length=1)
     dataset_generated_at: datetime
@@ -733,6 +747,10 @@ class PriceForecastArtifact(StrictContract):
 
     @model_validator(mode="after")
     def artifact_is_self_consistent(self) -> "PriceForecastArtifact":
+        if (self.manifest_id is None) != (self.quality_evaluation_id is None):
+            raise ValueError(
+                "manifest_id and quality_evaluation_id must be present together"
+            )
         if (
             self.history_start > self.train_start
             or self.train_start > self.train_end
@@ -1061,6 +1079,11 @@ class WorkspaceForecast(StrictContract):
     config_digest: str
     dataset_id: str
     dataset_revision: int = Field(ge=1)
+    manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    quality_evaluation_id: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
     history_digest: str
     benchmark_name: str
     synthetic: bool
@@ -1099,6 +1122,10 @@ class WorkspaceForecast(StrictContract):
 
     @model_validator(mode="after")
     def eligibility_is_explicit(self) -> "WorkspaceForecast":
+        if (self.manifest_id is None) != (self.quality_evaluation_id is None):
+            raise ValueError(
+                "manifest_id and quality_evaluation_id must be present together"
+            )
         if self.eligible != (not self.blockers):
             raise ValueError("workspace forecast eligibility must match blockers")
         return self

@@ -817,7 +817,7 @@ review.
   `manifest_id` and `quality_evaluation_id` while retaining integer revision
   compatibility.
 
-- [ ] **Step 1: Write failing fail-closed downstream tests**
+- [x] **Step 1: Write failing fail-closed downstream tests**
 
 ```python
 def test_history_rejects_failed_quality_manifest() -> None:
@@ -833,21 +833,21 @@ def test_forecast_resolves_exact_manifest_and_quality() -> None:
     assert artifact.quality_evaluation_id == QUALITY_ID
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the listed focused files. Expected: new fields/API are absent.
 
-- [ ] **Step 3: Implement catalog and compatibility fields**
+- [x] **Step 3: Implement catalog and compatibility fields**
 
 Allow v1 demo artifacts to remain explicitly legacy. Only v2 manifest IDs with
 passing quality may qualify as trusted real data. Do not rewrite historical
 research records.
 
-- [ ] **Step 4: Generate OpenAPI and verify GREEN**
+- [x] **Step 4: Generate OpenAPI and verify GREEN**
 
 Run focused tests, generate the OpenAPI client and run the API freshness check.
 
-- [ ] **Step 5: Record backend Slice 6 checkpoint and review**
+- [x] **Step 5: Record backend Slice 6 checkpoint and review**
 
 Commit `feat(data): expose trusted lineage catalog`; receive a clean review.
 

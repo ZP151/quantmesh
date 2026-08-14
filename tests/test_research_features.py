@@ -11,11 +11,14 @@ lake roots (a clean checkout).
 """
 
 import math
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
 from research_fixtures import fixture_bars, pinned_lake
 
+from quantmesh.data.artifacts import ArtifactLayer
+from quantmesh.data.capabilities import DataKind
 from quantmesh.data.lake import Lake
 from quantmesh.data.manifest import ManifestWriter
 from quantmesh.domain.models import Venue
@@ -89,6 +92,25 @@ class TestFeatureId:
     def test_same_setup_same_id(self) -> None:
         assert _fid() == _fid()
 
+    def test_trusted_lineage_is_part_of_feature_identity(self) -> None:
+        legacy = _fid()
+        trusted = _fid(
+            manifest_id="1" * 64,
+            quality_evaluation_id="2" * 64,
+        )
+
+        assert trusted != legacy
+        pinned = spec(
+            manifest_id="1" * 64,
+            quality_evaluation_id="2" * 64,
+        )
+        assert pinned.manifest_id == "1" * 64
+        assert pinned.quality_evaluation_id == "2" * 64
+
+    def test_feature_rejects_partial_trusted_lineage(self) -> None:
+        with pytest.raises(ValueError, match="manifest_id and quality_evaluation_id"):
+            spec(manifest_id="1" * 64)
+
     def test_any_setup_change_changes_the_id(self) -> None:
         base = _fid()
         variations = [
@@ -108,6 +130,116 @@ class TestFeatureId:
         first = featureset_id("set", ["a" * 16, "b" * 16])
         assert first == featureset_id("set", ["b" * 16, "a" * 16])
         assert first != featureset_id("set2", ["a" * 16, "b" * 16])
+
+
+def test_registry_refuses_unverified_trusted_feature_lineage(tmp_path) -> None:
+    pinned = spec(
+        manifest_id="1" * 64,
+        quality_evaluation_id="2" * 64,
+    )
+
+    with pytest.raises(ValueError, match="requires a data catalog"):
+        FeatureRegistry(tmp_path / "registry", lake_root=tmp_path / "lake").record_spec(
+            **pinned.model_dump(exclude={"id"})
+        )
+
+
+def test_registry_resolves_trusted_feature_through_exact_catalog(tmp_path) -> None:
+    marker = SimpleNamespace(
+        manifest=SimpleNamespace(
+            layer=ArtifactLayer.ADJUSTED,
+            data_kind=DataKind.BARS,
+            interval="1h",
+        )
+    )
+
+    class Catalog:
+        def open_research_dataset(self, *args, **kwargs):
+            assert args == ("1" * 64,)
+            assert kwargs == {
+                "evaluation_id": "2" * 64,
+                "dataset_id": DATASET,
+                "compatibility_revision": 1,
+            }
+            return marker
+
+    registry = FeatureRegistry(
+        tmp_path / "registry",
+        lake_root=tmp_path / "lake",
+        trusted_catalog=Catalog(),
+    )
+    pinned = spec(
+        manifest_id="1" * 64,
+        quality_evaluation_id="2" * 64,
+    )
+    recorded = registry.record_spec(**pinned.model_dump(exclude={"id"}))
+
+    assert registry.resolve(recorded.id) is marker
+
+
+def test_compute_features_reads_exact_trusted_manifest_without_v1_fallback(
+    tmp_path,
+) -> None:
+    pinned = spec(
+        manifest_id="1" * 64,
+        quality_evaluation_id="2" * 64,
+    )
+
+    class Dataset:
+        manifest = SimpleNamespace(
+            layer=ArtifactLayer.ADJUSTED,
+            data_kind=DataKind.BARS,
+            interval="1h",
+        )
+
+        def read_bars(self):
+            return fixture_bars("AAA")
+
+    class Catalog:
+        def open_research_dataset(self, *args, **kwargs):
+            assert args == ("1" * 64,)
+            assert kwargs["evaluation_id"] == "2" * 64
+            return Dataset()
+
+    frames = compute_features(
+        [pinned],
+        lake_root=tmp_path / "unused-v1-lake",
+        trusted_catalog=Catalog(),
+    )
+
+    assert list(frames) == ["momentum"]
+    assert len(frames["momentum"]) == 50
+
+
+def test_compute_features_rejects_trusted_manifest_for_another_instrument(
+    tmp_path,
+) -> None:
+    pinned = spec(
+        symbol="BBB",
+        manifest_id="1" * 64,
+        quality_evaluation_id="2" * 64,
+    )
+
+    class Dataset:
+        manifest = SimpleNamespace(
+            layer=ArtifactLayer.ADJUSTED,
+            data_kind=DataKind.BARS,
+            interval="1h",
+        )
+
+        def read_bars(self):
+            return fixture_bars("AAA")
+
+    class Catalog:
+        def open_research_dataset(self, *args, **kwargs):
+            return Dataset()
+
+    with pytest.raises(ValueError, match="instrument does not match"):
+        compute_features(
+            [pinned],
+            lake_root=tmp_path / "unused-v1-lake",
+            trusted_catalog=Catalog(),
+        )
 
 
 # --- model validation --------------------------------------------------------

@@ -118,6 +118,8 @@ def _forecast_summary(artifact: PriceForecastArtifact) -> WorkspaceForecast:
         config_digest=artifact.config_digest,
         dataset_id=artifact.dataset_id,
         dataset_revision=artifact.dataset_revision,
+        manifest_id=artifact.manifest_id,
+        quality_evaluation_id=artifact.quality_evaluation_id,
         history_digest=artifact.history_digest,
         benchmark_name=artifact.benchmark_name,
         synthetic=artifact.source == "demo-synthetic",

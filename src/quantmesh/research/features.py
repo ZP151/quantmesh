@@ -31,6 +31,7 @@ from collections.abc import Callable
 from datetime import UTC
 from enum import StrEnum
 from pathlib import Path
+from typing import Any, Protocol
 
 import pandas as pd
 from pydantic import (
@@ -42,11 +43,24 @@ from pydantic import (
 )
 
 from quantmesh._fs import atomic_replace
-from quantmesh.data.lake import Dataset, Lake
+from quantmesh.data.artifacts import ArtifactLayer
+from quantmesh.data.capabilities import DataKind
+from quantmesh.data.lake import Lake
 from quantmesh.data.layout import validate_dataset_name, validate_symbol
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Venue
 from quantmesh.settings import settings
+
+
+class TrustedResearchCatalog(Protocol):
+    def open_research_dataset(
+        self,
+        manifest_id: str,
+        *,
+        evaluation_id: str,
+        dataset_id: str,
+        compatibility_revision: int,
+    ) -> Any: ...
 
 FEATURES_FILE = "features.jsonl"
 FEATURE_SETS_FILE = "feature_sets.jsonl"
@@ -140,8 +154,14 @@ def feature_id(
     symbol: str,
     interval: str,
     parameters: dict[str, Parameter],
+    manifest_id: str | None = None,
+    quality_evaluation_id: str | None = None,
 ) -> str:
     """Deterministic identity of a feature: setup only, never results."""
+    if (manifest_id is None) != (quality_evaluation_id is None):
+        raise ValueError(
+            "manifest_id and quality_evaluation_id must be present together"
+        )
     setup = {
         "commit": commit,
         "name": name,
@@ -153,6 +173,9 @@ def feature_id(
         "revision": revision,
         "parameters": parameters,
     }
+    if manifest_id is not None:
+        setup["manifest_id"] = manifest_id
+        setup["quality_evaluation_id"] = quality_evaluation_id
     canonical = json.dumps(setup, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(f"feature\0{canonical}".encode()).hexdigest()[:16]
 
@@ -168,6 +191,11 @@ class FeatureSpec(BaseModel):
     interval: str
     dataset: str
     revision: int = Field(ge=1)
+    manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    quality_evaluation_id: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
     commit: str = Field(pattern=COMMIT_PATTERN)
     parameters: dict[str, Parameter] = Field(default_factory=dict)
 
@@ -181,6 +209,10 @@ class FeatureSpec(BaseModel):
 
     @model_validator(mode="after")
     def spec_is_consistent(self) -> "FeatureSpec":
+        if (self.manifest_id is None) != (self.quality_evaluation_id is None):
+            raise ValueError(
+                "manifest_id and quality_evaluation_id must be present together"
+            )
         validate_dataset_name(self.dataset)
         interval_to_timedelta(self.interval)
         validate_symbol(self.symbol)
@@ -195,6 +227,8 @@ class FeatureSpec(BaseModel):
             symbol=self.symbol,
             interval=self.interval,
             parameters=self.parameters,
+            manifest_id=self.manifest_id,
+            quality_evaluation_id=self.quality_evaluation_id,
         )
         if self.id != expected:
             raise ValueError(
@@ -254,7 +288,7 @@ def _trim_leading_nan(series: pd.Series) -> pd.Series:
     return series.loc[first_valid:]
 
 
-def compute_feature(spec: FeatureSpec, dataset: Dataset) -> pd.Series:
+def compute_feature(spec: FeatureSpec, dataset: Any) -> pd.Series:
     """Compute one registered feature over a manifest-gated dataset.
 
     Bar-derived features read the spec's partition, validate the bars
@@ -267,13 +301,27 @@ def compute_feature(spec: FeatureSpec, dataset: Dataset) -> pd.Series:
             f"feature kind {spec.kind.value!r} is not computable yet "
             "(documented extension; only bar-derived features land in Phase A)"
         )
-    bars = dataset.read_bars(
-        interval=spec.interval, venue=spec.venue, symbol=spec.symbol
-    )
+    if spec.manifest_id is not None:
+        bars = dataset.read_bars()
+    else:
+        bars = dataset.read_bars(
+            interval=spec.interval,
+            venue=spec.venue,
+            symbol=spec.symbol,
+        )
     if not bars:
         raise ValueError(
             f"feature {spec.name!r} has no bars for {spec.venue.value}/{spec.symbol} "
             f"at {spec.interval} in dataset {spec.dataset!r}"
+        )
+    if spec.manifest_id is not None and any(
+        bar.instrument.venue is not spec.venue
+        or bar.instrument.symbol != spec.symbol
+        for bar in bars
+    ):
+        raise ValueError(
+            f"feature {spec.name!r} trusted manifest instrument does not match "
+            f"{spec.venue.value}/{spec.symbol}"
         )
     timestamps = [bar.timestamp for bar in bars]
     if timestamps != sorted(timestamps) or len(set(timestamps)) != len(timestamps):
@@ -298,8 +346,24 @@ def compute_feature(spec: FeatureSpec, dataset: Dataset) -> pd.Series:
     return frame
 
 
+def _require_trusted_feature_input(spec: FeatureSpec, dataset: Any) -> Any:
+    manifest = getattr(dataset, "manifest", None)
+    if (
+        getattr(manifest, "layer", None) is not ArtifactLayer.ADJUSTED
+        or getattr(manifest, "data_kind", None) is not DataKind.BARS
+        or getattr(manifest, "interval", None) != spec.interval
+    ):
+        raise ValueError(
+            "trusted feature input must be an adjusted bar manifest at the spec interval"
+        )
+    return dataset
+
+
 def compute_features(
-    specs: list[FeatureSpec], *, lake_root: Path
+    specs: list[FeatureSpec],
+    *,
+    lake_root: Path,
+    trusted_catalog: TrustedResearchCatalog | None = None,
 ) -> dict[str, pd.Series]:
     """Compute every spec's frame; the result is keyed by spec name.
 
@@ -314,18 +378,34 @@ def compute_features(
     if len(set(names)) != len(names):
         raise ValueError(f"duplicate feature names in spec list: {names}")
     lake = Lake(lake_root)
-    by_pin: dict[tuple[str, int], Dataset] = {}
+    by_pin: dict[tuple[str, int, str | None, str | None], Any] = {}
     frames: dict[str, pd.Series] = {}
     for spec in specs:
-        pin = (spec.dataset, spec.revision)
+        pin = (
+            spec.dataset,
+            spec.revision,
+            spec.manifest_id,
+            spec.quality_evaluation_id,
+        )
         if pin not in by_pin:
-            dataset = lake.dataset(spec.dataset)
-            if dataset.manifest.revision != spec.revision:
-                raise ValueError(
-                    f"feature {spec.name!r} pins manifest revision {spec.revision}, "
-                    f"but dataset {spec.dataset!r} is now revision "
-                    f"{dataset.manifest.revision}"
+            if spec.manifest_id is not None:
+                if trusted_catalog is None or spec.quality_evaluation_id is None:
+                    raise ValueError("trusted feature lineage requires a data catalog")
+                dataset = trusted_catalog.open_research_dataset(
+                    spec.manifest_id,
+                    evaluation_id=spec.quality_evaluation_id,
+                    dataset_id=spec.dataset,
+                    compatibility_revision=spec.revision,
                 )
+                _require_trusted_feature_input(spec, dataset)
+            else:
+                dataset = lake.dataset(spec.dataset)
+                if dataset.manifest.revision != spec.revision:
+                    raise ValueError(
+                        f"feature {spec.name!r} pins manifest revision {spec.revision}, "
+                        f"but dataset {spec.dataset!r} is now revision "
+                        f"{dataset.manifest.revision}"
+                    )
             by_pin[pin] = dataset
         frames[spec.name] = compute_feature(spec, by_pin[pin])
     return frames
@@ -354,9 +434,16 @@ def frame_digest(frames: dict[str, pd.Series]) -> str:
 class FeatureRegistry:
     """Append-only store of feature specs and sets under one registry root."""
 
-    def __init__(self, root: Path | None = None, lake_root: Path | None = None) -> None:
+    def __init__(
+        self,
+        root: Path | None = None,
+        lake_root: Path | None = None,
+        *,
+        trusted_catalog: TrustedResearchCatalog | None = None,
+    ) -> None:
         self.root = root if root is not None else settings.features_dir
         self.lake_root = lake_root if lake_root is not None else settings.lake_root
+        self.trusted_catalog = trusted_catalog
 
     def record_spec(
         self,
@@ -368,6 +455,8 @@ class FeatureRegistry:
         interval: str,
         dataset: str,
         revision: int,
+        manifest_id: str | None = None,
+        quality_evaluation_id: str | None = None,
         commit: str | None = None,
         parameters: dict[str, Parameter] | None = None,
     ) -> FeatureSpec:
@@ -390,6 +479,8 @@ class FeatureRegistry:
                 symbol=symbol,
                 interval=interval,
                 parameters=parameters or {},
+                manifest_id=manifest_id,
+                quality_evaluation_id=quality_evaluation_id,
             ),
             name=name,
             kind=kind,
@@ -398,6 +489,8 @@ class FeatureRegistry:
             interval=interval,
             dataset=dataset,
             revision=revision,
+            manifest_id=manifest_id,
+            quality_evaluation_id=quality_evaluation_id,
             commit=commit,
             parameters=parameters or {},
         )
@@ -449,19 +542,29 @@ class FeatureRegistry:
                 return feature_set
         raise ValueError(f"no feature set recorded with id {featureset_id_value!r}")
 
-    def resolve(self, feature_id_value: str) -> Dataset:
+    def resolve(self, feature_id_value: str) -> Any:
         """Re-open the feature's dataset, pinned to its revision (lake gate)."""
         spec = self.get_spec(feature_id_value)
-        self._require_pin(spec)
-        return Lake(self.lake_root).dataset(spec.dataset)
+        return self._require_pin(spec)
 
-    def _require_pin(self, spec: FeatureSpec) -> None:
+    def _require_pin(self, spec: FeatureSpec) -> Any:
+        if spec.manifest_id is not None:
+            if self.trusted_catalog is None or spec.quality_evaluation_id is None:
+                raise ValueError("trusted feature lineage requires a data catalog")
+            dataset = self.trusted_catalog.open_research_dataset(
+                spec.manifest_id,
+                evaluation_id=spec.quality_evaluation_id,
+                dataset_id=spec.dataset,
+                compatibility_revision=spec.revision,
+            )
+            return _require_trusted_feature_input(spec, dataset)
         dataset = Lake(self.lake_root).dataset(spec.dataset)
         if dataset.manifest.revision != spec.revision:
             raise ValueError(
                 f"feature {spec.id!r} pins manifest revision {spec.revision}, "
                 f"but dataset {spec.dataset!r} is now revision {dataset.manifest.revision}"
             )
+        return dataset
 
 
 def _append_records(root: Path, filename: str, records: list[BaseModel]) -> None:
@@ -473,7 +576,12 @@ def _append_records(root: Path, filename: str, records: list[BaseModel]) -> None
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             for record in records:
-                handle.write(record.model_dump_json())
+                excluded = (
+                    {"manifest_id", "quality_evaluation_id"}
+                    if getattr(record, "manifest_id", None) is None
+                    else set()
+                )
+                handle.write(record.model_dump_json(exclude=excluded))
                 handle.write("\n")
         atomic_replace(temp_name, path)
     finally:

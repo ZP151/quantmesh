@@ -21,11 +21,14 @@ from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from statistics import median
+from typing import Any, Protocol
 
 from pydantic import ValidationError
 
 from quantmesh._fs import atomic_replace
-from quantmesh.data.lake import Dataset, Lake
+from quantmesh.data.artifacts import ArtifactLayer
+from quantmesh.data.capabilities import DataKind
+from quantmesh.data.lake import Lake
 from quantmesh.domain.models import InstrumentType
 from quantmesh.instruments.contracts import (
     FORECAST_ID_PATTERN,
@@ -52,6 +55,19 @@ LIMITATIONS = (
     "Intervals are empirical and do not imply a probability of profit or execution outcome.",
     "The artifact is research evidence; the paper kernel remains the only order authority.",
 )
+
+
+class TrustedForecastCatalog(Protocol):
+    def require_research(self, manifest_id: str) -> Any: ...
+
+    def open_research_dataset(
+        self,
+        manifest_id: str,
+        *,
+        evaluation_id: str,
+        dataset_id: str,
+        compatibility_revision: int,
+    ) -> Any: ...
 
 
 def _sha256(data: bytes) -> str:
@@ -321,11 +337,19 @@ def _oos_csv(rows: Sequence[OOSForecast]) -> bytes:
 
 
 def _report_core(artifact: PriceForecastArtifact) -> bytes:
-    return _canonical_json(artifact.model_dump(mode="json", exclude={"artifact_hashes"}))
+    excluded = {"artifact_hashes"}
+    if artifact.manifest_id is None:
+        excluded.update({"manifest_id", "quality_evaluation_id"})
+    return _canonical_json(artifact.model_dump(mode="json", exclude=excluded))
 
 
 def _report_file(artifact: PriceForecastArtifact) -> bytes:
-    return _canonical_json(artifact.model_dump(mode="json"))
+    excluded = (
+        {"manifest_id", "quality_evaluation_id"}
+        if artifact.manifest_id is None
+        else set()
+    )
+    return _canonical_json(artifact.model_dump(mode="json", exclude=excluded))
 
 
 def _expected_hashes(artifact: PriceForecastArtifact) -> dict[str, str]:
@@ -382,7 +406,7 @@ def _identity(
     age_sessions: int | None = None,
 ) -> dict[str, object]:
     if artifact is not None:
-        return {
+        identity = {
             "adjustment": artifact.adjustment,
             "age_sessions": artifact.age_sessions,
             "bar_digest": artifact.history_digest,
@@ -406,6 +430,10 @@ def _identity(
             "train_end": artifact.train_end.isoformat(),
             "train_start": artifact.train_start.isoformat(),
         }
+        if artifact.manifest_id is not None:
+            identity["manifest_id"] = artifact.manifest_id
+            identity["quality_evaluation_id"] = artifact.quality_evaluation_id
+        return identity
     if (
         series is None
         or generated_at is None
@@ -418,7 +446,7 @@ def _identity(
         or age_sessions is None
     ):
         raise ValueError("forecast identity inputs are incomplete")
-    return {
+    identity = {
         "adjustment": series.adjustment,
         "age_sessions": age_sessions,
         "bar_digest": history_digest,
@@ -442,6 +470,10 @@ def _identity(
         "train_end": bars[-1].timestamp.isoformat(),
         "train_start": bars[max(0, len(bars) - RETURN_WINDOW - 1)].timestamp.isoformat(),
     }
+    if series.manifest_id is not None:
+        identity["manifest_id"] = series.manifest_id
+        identity["quality_evaluation_id"] = series.quality_evaluation_id
+    return identity
 
 
 def _promotion_blockers(
@@ -663,6 +695,8 @@ def run_price_forecast(
         "instrument": series.instrument,
         "dataset_id": series.dataset_id,
         "dataset_revision": series.dataset_revision,
+        "manifest_id": series.manifest_id,
+        "quality_evaluation_id": series.quality_evaluation_id,
         "source": series.source,
         "license": series.license,
         "dataset_generated_at": series.generated_at,
@@ -734,17 +768,19 @@ class PriceForecastRegistry:
         *,
         lake_root: Path | None = None,
         bindings: Iterable[DatasetBinding] = (),
+        trusted_catalog: TrustedForecastCatalog | None = None,
     ) -> None:
         self.root = root if root is not None else settings.reports_dir / "forecasts"
         self.lake_root = lake_root if lake_root is not None else settings.lake_root
         self._bindings = tuple(bindings)
+        self.trusted_catalog = trusted_catalog
 
     def _safe_root(self) -> None:
         _reject_reparse_components(self.root)
         if self.root.exists() and not self.root.is_dir():
             raise ValueError(f"forecast registry root {self.root} is not a safe directory")
 
-    def resolve_pin(self, artifact: PriceForecastArtifact) -> Dataset:
+    def resolve_pin(self, artifact: PriceForecastArtifact) -> Any:
         matches = [
             binding
             for binding in self._bindings
@@ -758,50 +794,98 @@ class PriceForecastRegistry:
         binding = matches[0]
         if binding.calendar != artifact.calendar or binding.adjustment != artifact.adjustment:
             raise ValueError("forecast calendar or adjustment does not match its trusted binding")
-        dataset = Lake(self.lake_root).dataset(artifact.dataset_id)
-        if dataset.manifest.revision != artifact.dataset_revision:
+        if artifact.manifest_id is not None:
+            if self.trusted_catalog is None or artifact.quality_evaluation_id is None:
+                raise ValueError("trusted forecast lineage requires a data catalog")
+            dataset = self.trusted_catalog.open_research_dataset(
+                artifact.manifest_id,
+                evaluation_id=artifact.quality_evaluation_id,
+                dataset_id=artifact.dataset_id,
+                compatibility_revision=artifact.dataset_revision,
+            )
+            catalog_entry = self.trusted_catalog.require_research(
+                artifact.manifest_id
+            )
+            if (
+                dataset.manifest.layer is not ArtifactLayer.ADJUSTED
+                or dataset.manifest.data_kind is not DataKind.BARS
+                or dataset.manifest.interval != "1d"
+            ):
+                raise ValueError(
+                    "trusted forecast input must be an adjusted daily bar manifest"
+                )
+            dataset_revision = dataset.manifest.compatibility_revision
+            dataset_source = catalog_entry.provider_id
+            dataset_license = catalog_entry.source_rights_id
+            dataset_generated_at = dataset.manifest.created_at
+        else:
+            dataset = Lake(self.lake_root).dataset(artifact.dataset_id)
+            dataset_revision = dataset.manifest.revision
+            dataset_source = dataset.manifest.source
+            dataset_license = dataset.manifest.license
+            dataset_generated_at = dataset.manifest.generated_at
+        if dataset_revision != artifact.dataset_revision:
             raise ValueError(
                 f"dataset {artifact.dataset_id!r} is now revision "
-                f"{dataset.manifest.revision}, but the pin asks for revision "
+                f"{dataset_revision}, but the pin asks for revision "
                 f"{artifact.dataset_revision}"
             )
-        if dataset.manifest.source != artifact.source:
+        if dataset_source != artifact.source:
             raise ValueError(
                 f"dataset {artifact.dataset_id!r} source no longer matches the artifact pin"
             )
-        if dataset.manifest.license != artifact.license:
+        if dataset_license != artifact.license:
             raise ValueError(
                 f"dataset {artifact.dataset_id!r} license no longer matches the artifact pin"
             )
-        if dataset.manifest.generated_at.astimezone(UTC) != artifact.dataset_generated_at:
+        if dataset_generated_at.astimezone(UTC) != artifact.dataset_generated_at:
             raise ValueError(
                 f"dataset {artifact.dataset_id!r} manifest generation no longer matches "
                 "the artifact pin"
             )
         if artifact.generated_at < artifact.dataset_generated_at:
             raise ValueError("forecast predates the pinned dataset manifest")
-        coverage = next(
-            (
-                item
-                for item in dataset.manifest.coverage
-                if item.interval == "1d"
-                and item.venue == artifact.instrument.venue
-                and item.symbol == artifact.instrument.symbol
-            ),
-            None,
-        )
-        if coverage is None:
-            raise ValueError("dataset pin no longer covers the artifact training window")
-        observed_coverage = artifact.coverage.model_validate(coverage.model_dump())
+        if artifact.manifest_id is not None:
+            observed_coverage = artifact.coverage.model_validate(
+                {
+                    "interval": dataset.manifest.interval,
+                    "venue": artifact.instrument.venue,
+                    "symbol": artifact.instrument.symbol,
+                    "start": dataset.manifest.event_start,
+                    "end": dataset.manifest.event_end,
+                    "rows": len(dataset.manifest.row_identities),
+                }
+            )
+        else:
+            coverage = next(
+                (
+                    item
+                    for item in dataset.manifest.coverage
+                    if item.interval == "1d"
+                    and item.venue == artifact.instrument.venue
+                    and item.symbol == artifact.instrument.symbol
+                ),
+                None,
+            )
+            if coverage is None:
+                raise ValueError("dataset pin no longer covers the artifact training window")
+            observed_coverage = artifact.coverage.model_validate(coverage.model_dump())
         if observed_coverage != artifact.coverage:
             raise ValueError("dataset coverage no longer exactly matches the artifact pin")
-        bars = dataset.read_bars(
-            interval="1d",
-            venue=artifact.instrument.venue,
-            symbol=artifact.instrument.symbol,
-            start=artifact.history_start,
-            end=artifact.train_end,
-        )
+        if artifact.manifest_id is not None:
+            bars = [
+                bar
+                for bar in dataset.read_bars()
+                if artifact.history_start <= bar.timestamp <= artifact.train_end
+            ]
+        else:
+            bars = dataset.read_bars(
+                interval="1d",
+                venue=artifact.instrument.venue,
+                symbol=artifact.instrument.symbol,
+                start=artifact.history_start,
+                end=artifact.train_end,
+            )
         _validate_against_bars(artifact, bars)
         return dataset
 

@@ -97,6 +97,68 @@ def test_experiment_id_is_deterministic_setup_only() -> None:
     )
 
 
+def test_trusted_lineage_is_part_of_experiment_identity() -> None:
+    parameters = {"lr": 0.01}
+    legacy = experiment_id("algo", 1, COMMIT, parameters)
+    trusted = experiment_id(
+        "algo",
+        1,
+        COMMIT,
+        parameters,
+        manifest_id="1" * 64,
+        quality_evaluation_id="2" * 64,
+    )
+
+    assert trusted != legacy
+
+
+def test_registry_refuses_unverified_trusted_experiment_lineage(tmp_path: Path) -> None:
+    registry = ExperimentRegistry(
+        root=tmp_path / "registry",
+        lake_root=tmp_path / "lake",
+    )
+
+    with pytest.raises(ValueError, match="requires a data catalog"):
+        registry.record(
+            dataset="algo",
+            revision=1,
+            manifest_id="1" * 64,
+            quality_evaluation_id="2" * 64,
+            commit=COMMIT,
+        )
+
+
+def test_registry_resolves_trusted_experiment_through_exact_catalog(
+    tmp_path: Path,
+) -> None:
+    marker = object()
+
+    class Catalog:
+        def open_research_dataset(self, *args, **kwargs):
+            assert args == ("1" * 64,)
+            assert kwargs == {
+                "evaluation_id": "2" * 64,
+                "dataset_id": "algo",
+                "compatibility_revision": 1,
+            }
+            return marker
+
+    registry = ExperimentRegistry(
+        root=tmp_path / "registry",
+        lake_root=tmp_path / "lake",
+        trusted_catalog=Catalog(),
+    )
+    recorded = registry.record(
+        dataset="algo",
+        revision=1,
+        manifest_id="1" * 64,
+        quality_evaluation_id="2" * 64,
+        commit=COMMIT,
+    )
+
+    assert registry.resolve(recorded.id) is marker
+
+
 def test_metrics_do_not_change_experiment_identity(roots: tuple[Path, Path]) -> None:
     lake_root, registry_root = roots
     _pinned_dataset(lake_root)

@@ -334,6 +334,46 @@ class CheckpointStore:
             )
         return checkpoint
 
+    def list_checkpoints(self) -> tuple[CollectionCheckpoint, ...]:
+        """Return each latest checkpoint in stable job order with scoped verification."""
+        with self._read_guard(), self._connect(read_only=True) as connection:
+            job_ids = tuple(
+                str(row[0])
+                for row in connection.execute(
+                    "SELECT job_id FROM collection_checkpoints ORDER BY job_id"
+                ).fetchall()
+            )
+        return tuple(
+            checkpoint
+            for job_id in job_ids
+            if (checkpoint := self.get(job_id)) is not None
+        )
+
+    def checkpoints_for_manifests(
+        self, manifest_ids: tuple[str, ...]
+    ) -> dict[str, CollectionCheckpoint]:
+        """Return checkpoint owners while verifying only the requested quality closures."""
+        if any(not _is_digest(manifest_id) for manifest_id in manifest_ids):
+            raise ValueError("manifest IDs must be lowercase SHA-256 digests")
+        requested = frozenset(manifest_ids)
+        with self._read_guard(), self._connect(read_only=True) as connection:
+            evidence = _journal_advances(self.root, connection)
+        result: dict[str, CollectionCheckpoint] = {}
+        for checkpoint in evidence.checkpoints.values():
+            for manifest_id in requested.intersection(checkpoint.manifest_ids):
+                previous = result.get(manifest_id)
+                if previous is not None and previous.job_id != checkpoint.job_id:
+                    raise CheckpointIntegrityError(
+                        "manifest is owned by multiple collection jobs"
+                    )
+                result[manifest_id] = checkpoint
+        _verify_committed_quality_evidence(
+            self.root,
+            evidence,
+            job_ids=frozenset(checkpoint.job_id for checkpoint in result.values()),
+        )
+        return result
+
     def next_attempt(self, job_id: str) -> int:
         """Durably allocate the next retry number while holding the writer lease."""
         self._require_writer_owner("attempt allocation")

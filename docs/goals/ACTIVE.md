@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–10 green; Slice 5 complete
+- Status: iteration 0021 active — Tasks 1–11 green; Slice 6 backend complete
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,8 +12,8 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: Task 11 catalog API and fail-closed downstream immutable
-  lineage. Keep wallet, signing, account and order surfaces structurally absent.
+- Current frontier: Task 12 bilingual operator data-catalog screen. Keep wallet,
+  signing, account and order surfaces structurally absent.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -295,6 +295,27 @@ readiness decision**.
 - Task 11 is active: implement the catalog API and downstream manifest/quality
   lineage. No release, credential, execution or synthetic-repair authority
   changed.
+
+## Checkpoint 11 — 2026-08-14
+
+- Task 11 is GREEN. The read-only catalog exposes exact manifest identity,
+  dataset-current identity, immutable parents, provider/access, coverage,
+  rights, entitlement, checkpoint and complete immutable quality evidence.
+- The live production composition root binds the same catalog to the catalog
+  API, history service and forecast registry. History, features, experiments
+  and forecasts preserve exact manifest/evaluation pins while legacy v1 records
+  retain their historical bytes and identities.
+- Fail-closed regressions cover failed quality, mismatched pins, wrong artifact
+  semantics, cross-instrument feature substitution, target corruption,
+  historical-vs-current labeling, non-mutating legacy-v2 reads and unrelated
+  quality-corruption isolation.
+- Final evidence is `185 passed` for the complete Task 11 data/research selection
+  and `193 passed` for API/workstation regression. OpenAPI freshness,
+  TypeScript, Oxlint, Ruff and `git diff --check` pass; four pre-existing Fast
+  Refresh warnings remain. The final fresh read-only re-review is CLEAN/PASS.
+- Task 12 is active: implement and verify the English/Simplified-Chinese operator
+  data-catalog screen. No release, credential, execution or synthetic-repair
+  authority changed.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 
