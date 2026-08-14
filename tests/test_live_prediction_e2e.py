@@ -67,8 +67,6 @@ def _restore_legacy_ui() -> None:
 
 
 HOST = "127.0.0.1"
-PORT = 8646  # 8643/8644/8645 are taken by the other suites
-BASE_URL = f"http://{HOST}:{PORT}"
 
 # The feed's freshness policy: a real quote older than the lag is
 # Stale. The venues' keep-alive cadence (4 s) stays under it while
@@ -232,12 +230,15 @@ def _venue_fixture(name: str, plan: list[tuple[float, object]]):
             async def serve() -> None:
                 async with ScriptedVenue(plan=plan) as venue:
                     holder["url"] = venue.url
-                    held: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+                    held = asyncio.Event()
                     holder["held"] = held
                     ready.set()
-                    await held
+                    await held.wait()
 
-            loop.run_until_complete(serve())
+            try:
+                loop.run_until_complete(serve())
+            finally:
+                loop.close()
 
         thread = threading.Thread(target=runner, daemon=True)
         thread.start()
@@ -248,7 +249,7 @@ def _venue_fixture(name: str, plan: list[tuple[float, object]]):
         finally:
             held = holder.get("held")
             if held is not None:
-                loop.call_soon_threadsafe(cast(asyncio.Future, held).cancel)
+                loop.call_soon_threadsafe(cast(asyncio.Event, held).set)
             thread.join(timeout=5)
 
     return venue_url
@@ -261,30 +262,23 @@ ks_venue_url = _venue_fixture("kalshi", kalshi_plan())
 # -- the workstation server with the feed and the board attached --------------
 
 
-def _port_in_use() -> bool:
-    with socket.socket() as probe:
-        try:
-            probe.bind((HOST, PORT))
-        except OSError:
-            return True
-    return False
-
-
-def _wait_for_server() -> None:
+def _wait_for_server(server: uvicorn.Server) -> None:
     for _ in range(400):
-        if _port_in_use():
+        if server.started:
             return
         threading.Event().wait(0.1)
-    raise AssertionError(f"uvicorn never came up on {HOST}:{PORT}")
+    raise AssertionError("uvicorn never came up on its reserved loopback socket")
 
 
-def _wait_for_feed() -> None:
+def _wait_for_feed(base_url: str) -> None:
     """The lifespan pump must have delivered the burst and the Kalshi
     REST seed before the tests start, so the comparison always carries
     both venues' probabilities for the btc-100k pair."""
     for _ in range(150):
         try:
-            with urllib.request.urlopen(f"{BASE_URL}/api/live/prediction", timeout=1) as response:
+            with urllib.request.urlopen(
+                f"{base_url}/api/live/prediction", timeout=1
+            ) as response:
                 rows = json.loads(response.read())
         except OSError:
             rows = []
@@ -297,8 +291,12 @@ def _wait_for_feed() -> None:
 
 @pytest.fixture(scope="module")
 def base_url(pm_venue_url: str, ks_venue_url: str) -> str:
-    if _port_in_use():
-        pytest.skip(f"port {PORT} is already bound — the pinned E2E port must be free")
+    listener = socket.socket()
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listener.bind((HOST, 0))
+    listener.listen(128)
+    port = listener.getsockname()[1]
+    url = f"http://{HOST}:{port}"
     account = PaperAccount(cash=100_000.0)
     feed = LiveFeed(lag=FEED_LAG, stale=FEED_STALE)
     board = demo_board()
@@ -313,16 +311,21 @@ def base_url(pm_venue_url: str, ks_venue_url: str) -> str:
     ks.subscribe(watchlists[Venue.KALSHI])
     feed.attach(ks)
     app = create_workstation_app(account=account, live_feed=feed, prediction=board, host=HOST)
-    server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=PORT, log_level="warning"))
-    thread = threading.Thread(target=server.run, daemon=True)
+    server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=port, log_level="warning"))
+    thread = threading.Thread(
+        target=server.run,
+        kwargs={"sockets": [listener]},
+        daemon=True,
+    )
     thread.start()
     try:
-        _wait_for_server()
-        _wait_for_feed()
-        yield BASE_URL
+        _wait_for_server(server)
+        _wait_for_feed(url)
+        yield url
     finally:
         server.should_exit = True
         thread.join(timeout=15)
+        listener.close()
 
 
 # -- browser fixtures (mirror test_spa_e2e) ------------------------------------
