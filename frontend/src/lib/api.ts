@@ -565,6 +565,11 @@ export type PaperProposal = DeepReadonly<components['schemas']['PaperProposal']>
 export type ProposalConfirmation = DeepReadonly<components['schemas']['ProposalConfirmation']>
 export type ProposalCreateInput = components['schemas']['ProposalCreateBody']
 
+// --- Trusted data catalog (iteration 0021 Slice 6) -----------------------
+
+export type CatalogEntry = DeepReadonly<components['schemas']['CatalogEntry']>
+export type CatalogLineage = DeepReadonly<components['schemas']['CatalogLineage']>
+
 // --- Client --------------------------------------------------------------
 
 export class ApiError extends Error {
@@ -645,6 +650,20 @@ export const api = {
   enablement: () => request<Enablement>('/api/enablement'),
   killSwitch: () => request<KillSwitch>('/api/kill-switch'),
   demoStatus: () => request<DemoStatus>('/api/demo/status'),
+
+  async dataCatalog(): Promise<readonly CatalogEntry[]> {
+    const { data, error, response } = await generatedApi.GET('/api/data/catalog')
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async dataCatalogLineage(manifestId: string): Promise<CatalogLineage> {
+    const { data, error, response } = await generatedApi.GET('/api/data/catalog/{manifest_id}', {
+      params: { path: { manifest_id: manifestId } },
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
 
   // Writes — every one is gated by the kernel (origin guard, kill
   // switch, risk limits); the browser only calls what the UI shows.

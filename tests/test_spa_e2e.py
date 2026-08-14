@@ -177,6 +177,92 @@ def test_connector_panel_and_provider_failure(page, base_url) -> None:
     assert "synthetic" in fallback_text.lower()
 
 
+def test_data_catalog_populated_state_has_no_mobile_overflow(
+    page, base_url
+) -> None:
+    """The package-served route remains bounded with production-length
+    manifest, report, checkpoint and run identities at the minimum viewport."""
+    manifest_id = "a" * 64
+    report_id = "b" * 64
+    run_id = "c" * 64
+    entry = {
+        "adjustment_policy": "split-adjusted-v1",
+        "calendar_version": "XNYS-2026a",
+        "canonical_instrument": "moomoo:AAPL",
+        "compatibility_revision": 2,
+        "current_manifest_id": manifest_id,
+        "data_kind": "bars",
+        "dataset_id": "moomoo-aapl-1d",
+        "entitlement": "available",
+        "event_end": "2026-08-13T20:00:00Z",
+        "event_start": "2026-08-01T13:30:00Z",
+        "interval": "1d",
+        "is_current": True,
+        "knowledge_end": "2026-08-13T20:05:00Z",
+        "knowledge_start": "2026-08-01T13:35:00Z",
+        "latest_checkpoint": {
+            "attempt": 1,
+            "generation": 4,
+            "job_id": "d" * 64,
+            "last_complete_source_event": "2026-08-13T20:00:00Z",
+            "provider_cursor": "cursor-42",
+            "quality_report_id": report_id,
+            "run_id": run_id,
+            "updated_at": "2026-08-13T20:06:00Z",
+        },
+        "layer": "adjusted",
+        "manifest_id": manifest_id,
+        "object_digests": ["e" * 64],
+        "parent_manifest_ids": ["f" * 64],
+        "provider_access": "authenticated-read-only",
+        "provider_id": "moomoo",
+        "quality": {
+            "duplicate_count": 0,
+            "evaluated_at": "2026-08-13T20:06:00Z",
+            "evaluation_id": "1" * 64,
+            "expected_count": 9,
+            "freshness_seconds": 360,
+            "gap_count": 0,
+            "hash_mismatch_count": 0,
+            "issue_codes": [],
+            "latency_seconds": 12,
+            "observed_count": 9,
+            "order_violation_count": 0,
+            "overlap_conflict_count": 0,
+            "pagination_terminal": True,
+            "policy_id": "2" * 64,
+            "report_id": report_id,
+            "schema_mismatch_count": 0,
+            "source_rights_known": True,
+            "status": "pass",
+            "synthetic_row_count": 0,
+            "unavailable_reason": None,
+        },
+        "row_count": 9,
+        "session_policy": "regular",
+        "source_rights_id": "rights-moomoo-read-only",
+        "trusted_for_research": True,
+    }
+    page.route(
+        f"**/api/data/catalog/{manifest_id}",
+        lambda route: route.fulfill(json={"entry": entry, "ancestors": []}),
+    )
+    page.route("**/api/data/catalog", lambda route: route.fulfill(json=[entry]))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(f"{base_url}/app/ops/data")
+    page.get_by_role("heading", name="Trusted data catalog", exact=True).first.wait_for()
+    _wait_demo_attached(page)
+    page.get_by_text(manifest_id, exact=True).wait_for()
+    assert run_id in _main_text(page)
+    page.get_by_role("button", name="Show lineage").click()
+    page.get_by_role("heading", name="Exact quality checks", exact=True).wait_for()
+    page.get_by_text("Checkpoint run ID", exact=True).wait_for()
+    overflow = page.evaluate(
+        "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+    )
+    assert overflow <= 1
+
+
 def test_csv_import_validation_and_commit(page, base_url) -> None:
     """Upload -> preview -> mapping -> commit: rejected rows carry their
     reason, the accepted bars land under an operator-import manifest."""

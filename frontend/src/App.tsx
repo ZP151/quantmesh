@@ -6,6 +6,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { AuditScreen } from '@/screens/Audit'
 import { CockpitScreen } from '@/screens/Cockpit'
 import { ConnectorsScreen } from '@/screens/Connectors'
+import { DataCatalogScreen } from '@/screens/DataCatalog'
 import { ImportsScreen } from '@/screens/Imports'
 import { MarketsScreen } from '@/screens/Markets'
 import { LegacyCockpitRedirect } from '@/screens/LegacyCockpitRedirect'
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="trading/orders" element={<OrdersScreen />} />
         <Route path="trading/pnl" element={<PnLScreen />} />
         <Route path="risk" element={<RiskScreen />} />
+        <Route path="ops/data" element={<DataCatalogScreen />} />
         <Route path="ops/connectors" element={<ConnectorsScreen />} />
         <Route path="ops/imports" element={<ImportsScreen />} />
         <Route path="ops/audit" element={<AuditScreen />} />

@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–11 green; Slice 6 backend complete
+- Status: iteration 0021 active — Tasks 1–12 green; Slices 1–6 complete
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,8 +12,9 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: Task 12 bilingual operator data-catalog screen. Keep wallet,
-  signing, account and order surfaces structurally absent.
+- Current frontier: Task 13 clean-install collector, replay, inspection and
+  immutable daily evidence tooling. Keep wallet, signing, account and order
+  surfaces structurally absent.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -316,6 +317,29 @@ readiness decision**.
 - Task 12 is active: implement and verify the English/Simplified-Chinese operator
   data-catalog screen. No release, credential, execution or synthetic-repair
   authority changed.
+
+## Checkpoint 12 — 2026-08-14
+
+- Task 12 and Slice 6 are GREEN. The package-served `/app/ops/data` route now
+  presents the exact provider, artifact, coverage, rights, entitlement,
+  qualification, checkpoint and immutable parent-lineage evidence in English
+  and Simplified Chinese.
+- All trust states remain textual and fail closed. Freshness-stale evidence is
+  amber and cannot hide a failed evaluation; loading, empty and unavailable
+  states make no qualification promise. The complete quality and checkpoint
+  contracts are inspectable through one keyboard-operable disclosure.
+- Reviewer-driven regressions closed incomplete exact evidence, raw-control
+  drift, status-insensitive issue styling, optimistic empty copy and long-ID
+  mobile overflow. A package-served populated and expanded catalog with
+  production-length identities passed the 390 px browser check with zero
+  horizontal overflow; final fresh read-only review returned CLEAN/PASS.
+- Final evidence is frontend Vitest `152 passed`, focused backend/API `132
+  passed`, explicit API-boundary and Playwright checks green, TypeScript,
+  OpenAPI freshness, package-bundle freshness, Ruff and `git diff --check`
+  green, with only four unchanged Fast Refresh warnings from Oxlint.
+- Task 13 is active: add bounded clean-install collect/replay/inspect commands
+  and immutable daily soak evidence without changing release or execution
+  authority.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

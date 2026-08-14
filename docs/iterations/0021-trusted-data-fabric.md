@@ -623,12 +623,46 @@ durable checkpoint.
   credential, execution or synthetic-repair authority. Task 12 is now active:
   deliver the bilingual operator data-catalog screen from these exact contracts.
 
+## Checkpoint 12 — Bilingual trusted-data catalog, 2026-08-14
+
+- Task 12 completes Slice 6 with the package-served `/app/ops/data` operator
+  screen. The English and Simplified-Chinese surface lists provider/access,
+  canonical instrument, artifact layer, event and knowledge coverage, exact
+  manifest identity, source rights, entitlement and checkpoint state without
+  introducing a new frontend dependency.
+- Keyboard-operable disclosure loads one exact manifest on demand and presents
+  its immutable parents, complete quality evaluation and bound collection
+  checkpoint. Pass, fail, not-due, unavailable and freshness-stale evidence use
+  distinct text states; a freshness failure remains visibly failed as well as
+  stale, and stale evidence follows the design system's amber semantics.
+- Loading, empty and API-unavailable states are instructive and do not claim
+  that collection guarantees qualification. The typed OpenAPI client remains
+  current, and all material identifiers wrap rather than truncate or widen the
+  workstation.
+- Independent review first found incomplete quality/checkpoint evidence and a
+  production-length mobile overflow gap. A second standards review also found
+  raw-button drift, status-insensitive issue styling and overpromising empty
+  copy. RED regressions closed each issue: all generated quality/checkpoint
+  fields are visible, the owned Button primitive is used, issue colors follow
+  qualification state, and a package-served populated plus expanded catalog
+  with 64-character identities has zero horizontal overflow at 390 px.
+- Final verification is frontend Vitest `152 passed`, TypeScript clean,
+  OpenAPI-client freshness clean, package-bundle freshness clean and Oxlint
+  clean apart from four pre-existing Fast Refresh warnings. Focused backend/API
+  regression passed `132` tests, the explicit plain-app API boundary passed,
+  Ruff and `git diff --check` passed, the populated/expanded 390 px Playwright
+  check passed, and the Impeccable detector returned no findings. Final fresh
+  read-only review verdict: CLEAN/PASS.
+- Task 12 and Slice 6 are complete. No release, credential, real-order,
+  wallet/signing or synthetic-repair authority changed. Task 13 now owns the
+  clean-install collector, replay, inspection and daily evidence tooling.
+
 ## Current frontier
 
-Task 12 is the current implementation frontier: the bilingual, accessible
-operator data-catalog screen with explicit quality, rights, entitlement,
-checkpoint and lineage states. Start the seven-day evidence window only after
-Slices 1–6 are merged into a frozen candidate configuration.
+Task 13 is the current implementation frontier: clean-install collection,
+hash-verifying replay, catalog inspection and immutable daily soak evidence.
+Start the seven-day evidence window only after the collector and evidence tools
+are verified against the frozen candidate configuration.
 
 ## Resume instructions
 

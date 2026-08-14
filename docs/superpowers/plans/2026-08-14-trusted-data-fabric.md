@@ -859,11 +859,10 @@ Commit `feat(data): expose trusted lineage catalog`; receive a clean review.
 
 - Create: `frontend/src/screens/DataCatalog.tsx`
 - Create: `frontend/src/screens/DataCatalog.test.tsx`
-- Modify: `frontend/src/api/index.ts`
+- Modify: `frontend/src/lib/api.ts`
 - Modify: `frontend/src/App.tsx`
-- Modify: `frontend/src/i18n/catalog.ts`
-- Modify: `frontend/src/layout/navigation.ts`
-- Modify: generated `frontend/src/api/client.ts`
+- Modify: `frontend/src/lib/messages.ts`
+- Modify: `frontend/src/lib/nav.ts`
 - Test: `tests/test_spa_api.py`
 - Test: `tests/test_spa_e2e.py`
 
@@ -875,7 +874,7 @@ Commit `feat(data): expose trusted lineage catalog`; receive a clean review.
 - Empty, unavailable, not-due, failed and stale states remain explicit in
   English and Simplified Chinese.
 
-- [ ] **Step 1: Write the failing component test**
+- [x] **Step 1: Write the failing component test**
 
 ```tsx
 it('shows failed quality and lineage without presenting data as usable', async () => {
@@ -886,23 +885,23 @@ it('shows failed quality and lineage without presenting data as usable', async (
 })
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npm exec vitest run -- src/screens/DataCatalog.test.tsx`
 
 Expected: screen/module is missing.
 
-- [ ] **Step 3: Implement the bounded screen using existing components**
+- [x] **Step 3: Implement the bounded screen using existing components**
 
 Reuse the workstation's Card, Badge, table, query-state and disclosure
 components. Add no new frontend dependency and no unrelated navigation change.
 
-- [ ] **Step 4: Verify GREEN, accessibility and responsive behavior**
+- [x] **Step 4: Verify GREEN, accessibility and responsive behavior**
 
 Run component tests, TypeScript, Oxlint and Playwright at desktop and 390 px.
 Verify keyboard expansion and no horizontal page overflow.
 
-- [ ] **Step 5: Record frontend Slice 6 checkpoint and review**
+- [x] **Step 5: Record frontend Slice 6 checkpoint and review**
 
 Build and commit the packaged frontend as
 `feat(frontend): add trusted data catalog`; receive a clean review.
