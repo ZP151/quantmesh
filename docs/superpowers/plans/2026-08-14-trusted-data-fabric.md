@@ -722,20 +722,30 @@ review.
 - Create: `src/quantmesh/data/quality.py`
 - Modify: `src/quantmesh/data/artifacts.py`
 - Modify: `src/quantmesh/data/calendars.py`
+- Modify: `src/quantmesh/data/checkpoints.py`
+- Modify: `src/quantmesh/data/collection.py`
+- Modify: `tests/test_collection_recovery.py`
+- Modify: `tests/test_moomoo_collection.py`
+- Modify: `tests/test_hyperliquid_collection.py`
 - Test: `tests/test_quality_policies.py`
 - Test: `tests/test_quality_evidence.py`
+- Test: `tests/test_quality_publication.py`
 - Test: `tests/test_market_calendars.py`
+- Create: `docs/adr/0018-derived-quality-evidence-and-checkpoint-binding.md`
 
 **Interfaces:**
 
 - `QualityStatus`: `pass`, `fail`, `not-due`, `unavailable`.
-- `QualityPolicy.policy_id` hashes venue/kind/interval/calendar/thresholds.
+- `QualityPolicy.policy_id` hashes venue/layer/kind/interval/calendar/thresholds.
 - `QualityEvaluation.evaluation_id` hashes policy, manifest, window and exact
   numerators/denominators.
 - `QualityEvaluator.evaluate(...)` fails hard integrity rules and represents
-  weekends/holidays as `not-due`.
+  weekends/holidays as `not-due`; measurements are derived from immutable
+  manifest, object and raw-envelope evidence.
+- `QualityReport` binds every graph member to one exact evaluation and hashes
+  the candidate checkpoint projection before the checkpoint records its ID.
 
-- [ ] **Step 1: Write failing SLA tests**
+- [x] **Step 1: Write failing SLA tests**
 
 ```python
 def test_real_dataset_rejects_synthetic_parent() -> None:
@@ -755,22 +765,22 @@ def test_original_failure_remains_after_amended_pass(store) -> None:
     assert passed.amends == failed.evaluation_id
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the two new files. Expected: quality module absent.
 
-- [ ] **Step 3: Implement immutable policy/evaluation objects**
+- [x] **Step 3: Implement immutable policy/evaluation objects**
 
 Record expected/observed values, grace periods, entitlement and rights states,
-duplicate/gap/hash/schema/overlap checks. Make every accepted artifact point to
-one exact evaluation ID.
+duplicate/gap/hash/schema/overlap checks. Bind every committed real graph to
+one exact report and one evaluation per manifest through its checkpoint.
 
-- [ ] **Step 4: Verify GREEN and adversarial probes**
+- [x] **Step 4: Verify GREEN and adversarial probes**
 
 Run focused tests for missing page, duplicate source ID, hidden candle gap,
 unknown entitlement and synthetic contamination.
 
-- [ ] **Step 5: Record and review**
+- [x] **Step 5: Record and review**
 
 Commit `feat(data): add immutable quality SLA evidence`; receive a clean
 review.

@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 from enum import StrEnum
 from pathlib import Path
 from typing import Any, Literal
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
@@ -21,10 +22,12 @@ from quantmesh.data.artifacts import (
 from quantmesh.data.calendars import (
     CONTINUOUS_UTC_VERSION,
     XNYS_REGULAR_VERSION,
+    CalendarService,
     SessionPolicy,
 )
 from quantmesh.data.capabilities import DataKind
 from quantmesh.data.checkpoints import (
+    CheckpointIntegrityError,
     CheckpointStore,
     CollectionCheckpoint,
     GraphAdvance,
@@ -34,7 +37,16 @@ from quantmesh.data.envelopes import RawEnvelope
 from quantmesh.data.instruments import CanonicalInstrumentId
 from quantmesh.data.layout import validate_dataset_name
 from quantmesh.data.objects import FABRIC_NAMESPACE, ObjectRef
+from quantmesh.data.quality import (
+    QualityBinding,
+    QualityEvaluator,
+    QualityEvidenceStore,
+    QualityIntegrityError,
+    QualityPolicy,
+    QualityReport,
+)
 from quantmesh.domain.market_data import interval_to_timedelta
+from quantmesh.domain.models import Venue
 
 
 class _FrozenContract(BaseModel):
@@ -42,9 +54,7 @@ class _FrozenContract(BaseModel):
 
 
 def _canonical_bytes(value: Any) -> bytes:
-    return json.dumps(
-        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode()
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
 
 
 def _digest(value: Any) -> str:
@@ -171,6 +181,7 @@ class PublicationStage(StrEnum):
     DERIVED = "derived"
     MANIFEST = "manifest"
     PREFLIGHT = "preflight"
+    QUALITY = "quality"
     COMMIT = "commit"
 
 
@@ -185,9 +196,7 @@ class PreflightStatus(StrEnum):
 class IntegrityPreflight(_FrozenContract):
     """Typed non-qualifying evidence; Task 10 alone may issue quality status."""
 
-    contract: Literal["publication-integrity-preflight-v1"] = (
-        "publication-integrity-preflight-v1"
-    )
+    contract: Literal["publication-integrity-preflight-v1"] = "publication-integrity-preflight-v1"
     status: PreflightStatus = PreflightStatus.INTEGRITY_ONLY
     job_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     run_id: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -201,6 +210,33 @@ class IntegrityPreflight(_FrozenContract):
     @property
     def preflight_id(self) -> str:
         return _digest(self.model_dump(mode="json", exclude={"preflight_id"}))
+
+
+class QualityPublicationContext(_FrozenContract):
+    """Exact candidate checkpoint projection supplied to a quality builder."""
+
+    job_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    run_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    attempt: int = Field(ge=1)
+    manifest_ids: tuple[str, ...] = Field(min_length=1)
+    preflight_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    checkpoint_body_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    window_start: datetime
+    window_end: datetime
+    updated_at: datetime
+
+    @field_validator("window_start", "window_end", "updated_at")
+    @classmethod
+    def times_are_utc(cls, value: datetime, info) -> datetime:
+        if value.tzinfo is None or value.utcoffset() != timedelta(0):
+            raise ValueError(f"{info.field_name} must be UTC")
+        return value
+
+    @model_validator(mode="after")
+    def window_is_positive(self) -> QualityPublicationContext:
+        if self.window_end <= self.window_start:
+            raise ValueError("quality publication window must be positive")
+        return self
 
 
 class PendingGraph(_FrozenContract):
@@ -226,12 +262,9 @@ class PendingGraph(_FrozenContract):
 
     @field_validator("manifest_ids")
     @classmethod
-    def manifest_ids_are_unique_digests(
-        cls, values: tuple[str, ...]
-    ) -> tuple[str, ...]:
+    def manifest_ids_are_unique_digests(cls, values: tuple[str, ...]) -> tuple[str, ...]:
         if len(values) != len(set(values)) or any(
-            len(value) != 64
-            or any(char not in "0123456789abcdef" for char in value)
+            len(value) != 64 or any(char not in "0123456789abcdef" for char in value)
             for value in values
         ):
             raise ValueError("pending manifest IDs must be unique SHA-256 digests")
@@ -239,9 +272,7 @@ class PendingGraph(_FrozenContract):
 
     @field_validator("dataset_ids")
     @classmethod
-    def dataset_ids_are_unique_and_valid(
-        cls, values: tuple[str, ...]
-    ) -> tuple[str, ...]:
+    def dataset_ids_are_unique_and_valid(cls, values: tuple[str, ...]) -> tuple[str, ...]:
         if len(values) != len(set(values)):
             raise ValueError("pending dataset IDs must be unique")
         for value in values:
@@ -302,9 +333,7 @@ class StagingManifestStore:
         actual = None if current is None else current.manifest.manifest_id
         revision = 0 if current is None else current.manifest.compatibility_revision
         if actual != expected_current:
-            raise ValueError(
-                f"dataset {manifest.dataset_id} changed while staging its graph"
-            )
+            raise ValueError(f"dataset {manifest.dataset_id} changed while staging its graph")
         position = self._manifest_count
         self._manifest_count += 1
         if actual == manifest.manifest_id:
@@ -360,6 +389,7 @@ class CollectionCoordinator:
     def __init__(self, store: ManifestStore) -> None:
         self.store = store
         self.checkpoints = CheckpointStore(store.root)
+        self.quality = QualityEvidenceStore(store.root)
 
     def has_state(self, job: CollectionJob) -> bool:
         """Return whether this job can resume without contacting its provider."""
@@ -368,7 +398,10 @@ class CollectionCoordinator:
             self.checkpoints.repair_graph_owners()
             self.checkpoints.repair_commit_journals()
             return (
-                self.checkpoints.get(job.job_id) is not None
+                self.checkpoints.get(
+                    job.job_id, _verify_quality_evidence=False
+                )
+                is not None
                 or self.checkpoints.pending(job.job_id) is not None
             )
 
@@ -418,13 +451,16 @@ class CollectionCoordinator:
         last_complete_source_event: str,
         updated_at: datetime,
         crash_after: PublicationStage | None = None,
+        quality_builder: Callable[[QualityPublicationContext], QualityReport] | None = None,
     ) -> CollectionPublication:
         """Stage through an existing publisher, preflight, then commit once."""
         with self.checkpoints.writer():
             self.checkpoints.repair_source_snapshots()
             self.checkpoints.repair_graph_owners()
             self.checkpoints.repair_commit_journals()
-            completed = self.checkpoints.get(job.job_id)
+            completed = self.checkpoints.get(
+                job.job_id, _verify_quality_evidence=False
+            )
             if completed is not None:
                 return self._verified_publication(completed, job=job)
             pending_json = self.checkpoints.pending(job.job_id)
@@ -445,15 +481,10 @@ class CollectionCoordinator:
                 )
                 manifest_ids = producer(staging)
                 manifests = tuple(
-                    self.store.open(manifest_id).manifest
-                    for manifest_id in manifest_ids
+                    self.store.open(manifest_id).manifest for manifest_id in manifest_ids
                 )
-                if len({manifest.dataset_id for manifest in manifests}) != len(
-                    manifests
-                ):
-                    raise ValueError(
-                        "collection graph may contain each dataset only once"
-                    )
+                if len({manifest.dataset_id for manifest in manifests}) != len(manifests):
+                    raise ValueError("collection graph may contain each dataset only once")
                 members = tuple(
                     GraphMember(
                         dataset_id=manifest.dataset_id,
@@ -461,9 +492,7 @@ class CollectionCoordinator:
                         revision=manifest.compatibility_revision,
                         knowledge_end=manifest.knowledge_end,
                     )
-                    for manifest in sorted(
-                        manifests, key=lambda item: item.dataset_id
-                    )
+                    for manifest in sorted(manifests, key=lambda item: item.dataset_id)
                 )
                 pending = PendingGraph(
                     job_id=job.job_id,
@@ -481,17 +510,13 @@ class CollectionCoordinator:
                 )
                 self._verify_graph(pending.manifest_ids)
                 self._validate_job_graph(job, pending.manifest_ids)
-                pending_json = _canonical_bytes(
-                    pending.model_dump(mode="json")
-                ).decode()
+                pending_json = _canonical_bytes(pending.model_dump(mode="json")).decode()
                 self.checkpoints.save_pending(job.job_id, pending_json)
                 self._crash(crash_after, PublicationStage.MANIFEST)
             pending = PendingGraph.model_validate_json(pending_json)
             if pending.job_body != job.identity_body() or pending.job_id != job.job_id:
                 raise ValueError("pending graph is not bound to the requested collection job")
-            if pending.dataset_ids != tuple(
-                member.dataset_id for member in pending.members
-            ):
+            if pending.dataset_ids != tuple(member.dataset_id for member in pending.members):
                 raise ValueError("pending dataset membership disagrees with its manifests")
             observed_members = tuple(
                 GraphMember(
@@ -501,10 +526,7 @@ class CollectionCoordinator:
                     knowledge_end=manifest.knowledge_end,
                 )
                 for manifest in sorted(
-                    (
-                        self.store.open(manifest_id).manifest
-                        for manifest_id in pending.manifest_ids
-                    ),
+                    (self.store.open(manifest_id).manifest for manifest_id in pending.manifest_ids),
                     key=lambda item: item.dataset_id,
                 )
             )
@@ -516,9 +538,7 @@ class CollectionCoordinator:
             self._require_commit_targets(pending)
 
             preflight = self._preflight(pending)
-            payload = _canonical_bytes(
-                preflight.model_dump(mode="json", exclude={"preflight_id"})
-            )
+            payload = _canonical_bytes(preflight.model_dump(mode="json", exclude={"preflight_id"}))
             reference = self.store.objects.put_bytes(
                 "application/vnd.quantmesh.integrity-preflight+json", payload
             )
@@ -527,7 +547,7 @@ class CollectionCoordinator:
             self._crash(crash_after, PublicationStage.PREFLIGHT)
 
             raw_digests = self._raw_object_digests(pending.manifest_ids)
-            checkpoint = CollectionCheckpoint(
+            checkpoint_projection = CollectionCheckpoint(
                 job_id=pending.job_id,
                 generation=1,
                 provider_cursor=pending.provider_cursor,
@@ -540,17 +560,69 @@ class CollectionCoordinator:
                 attempt=pending.attempt,
                 updated_at=pending.updated_at,
             )
+            checkpoint_body_digest = _checkpoint_body_digest(checkpoint_projection)
+            quality_report_id = None
+            quality_admitted = self._quality_admitted_manifest_ids(
+                pending.manifest_ids
+            )
+            selected_quality_builder = quality_builder
+            if selected_quality_builder is None and not job.provider_id.startswith("fixture-"):
+                selected_quality_builder = self._default_quality_builder(job)
+            if selected_quality_builder is not None:
+                report = selected_quality_builder(
+                    QualityPublicationContext(
+                        job_id=pending.job_id,
+                        run_id=pending.run_id,
+                        attempt=pending.attempt,
+                        manifest_ids=pending.manifest_ids,
+                        preflight_id=preflight.preflight_id,
+                        checkpoint_body_digest=checkpoint_body_digest,
+                        window_start=job.window_start,
+                        window_end=job.window_end,
+                        updated_at=pending.updated_at,
+                    )
+                )
+                self.quality.record_report(
+                    report,
+                    admitted_manifest_ids=quality_admitted,
+                )
+                for binding in report.bindings:
+                    evaluation = self.quality.load(binding.evaluation_id)
+                    manifest = self.store.open(binding.manifest_id).manifest
+                    expected_policy = self._quality_policy_for_manifest(manifest)
+                    if evaluation.policy_id != expected_policy.policy_id:
+                        raise ValueError(
+                            "real quality report does not use the authoritative policy"
+                        )
+                    if (
+                        evaluation.window_start != job.window_start
+                        or evaluation.window_end
+                        != _quality_window_end(manifest, job.window_end)
+                        or evaluation.evaluated_at != pending.updated_at
+                    ):
+                        raise ValueError(
+                            "real quality report does not use the authoritative window"
+                        )
+                if (
+                    report.job_id != pending.job_id
+                    or report.run_id != pending.run_id
+                    or report.checkpoint_body_digest != checkpoint_body_digest
+                    or tuple(binding.manifest_id for binding in report.bindings)
+                    != tuple(sorted(pending.manifest_ids))
+                ):
+                    raise ValueError("quality report disagrees with its candidate checkpoint")
+                quality_report_id = report.report_id
+            self._crash(crash_after, PublicationStage.QUALITY)
+            checkpoint = CollectionCheckpoint(
+                **checkpoint_projection.model_dump(exclude={"quality_report_id"}),
+                quality_report_id=quality_report_id,
+            )
             commit_id = _digest(
                 {
                     "checkpoint": checkpoint.model_dump(mode="json"),
-                    "advances": [
-                        advance.model_dump(mode="json")
-                        for advance in pending.advances
-                    ],
+                    "advances": [advance.model_dump(mode="json") for advance in pending.advances],
                     "owned_dataset_ids": list(pending.dataset_ids),
-                    "members": [
-                        member.model_dump(mode="json") for member in pending.members
-                    ],
+                    "members": [member.model_dump(mode="json") for member in pending.members],
                     "source_snapshot": pending.source_snapshot,
                 }
             )
@@ -620,6 +692,31 @@ class CollectionCoordinator:
         expected_raw = self._raw_object_digests(checkpoint.manifest_ids)
         if checkpoint.raw_object_digests != expected_raw:
             raise ValueError("checkpoint raw object identities disagree with its graph")
+        fixture = job.provider_id.startswith("fixture-")
+        if fixture and checkpoint.quality_report_id is not None:
+            raise ValueError("fixture checkpoints must not carry real-data quality evidence")
+        if not fixture and checkpoint.quality_report_id is None:
+            raise ValueError("real checkpoint is unqualified without quality evidence")
+        if checkpoint.quality_report_id is not None:
+            try:
+                report = self.quality.verify_report(
+                    checkpoint.quality_report_id,
+                    admitted_manifest_ids=self._quality_admitted_manifest_ids(
+                        checkpoint.manifest_ids
+                    ),
+                )
+            except QualityIntegrityError as error:
+                raise CheckpointIntegrityError(
+                    "checkpoint quality evidence is invalid"
+                ) from error
+            if (
+                report.job_id != checkpoint.job_id
+                or report.run_id != checkpoint.run_id
+                or report.checkpoint_body_digest != _checkpoint_body_digest(checkpoint)
+                or tuple(binding.manifest_id for binding in report.bindings)
+                != tuple(sorted(checkpoint.manifest_ids))
+            ):
+                raise ValueError("checkpoint and quality report evidence disagree")
         return CollectionPublication(
             job_id=checkpoint.job_id,
             run_id=checkpoint.run_id,
@@ -627,6 +724,106 @@ class CollectionCoordinator:
             manifest_ids=checkpoint.manifest_ids,
             preflight_id=checkpoint.preflight_id,
             quality_report_id=checkpoint.quality_report_id,
+        )
+
+    def _default_quality_builder(
+        self, job: CollectionJob
+    ) -> Callable[[QualityPublicationContext], QualityReport]:
+        """Create deterministic evidence for every real candidate graph member."""
+
+        def build(context: QualityPublicationContext) -> QualityReport:
+            if context.job_id != job.job_id:
+                raise ValueError("quality context is not bound to the collection job")
+            admitted = self._quality_admitted_manifest_ids(context.manifest_ids)
+            bindings: list[QualityBinding] = []
+            evaluator = QualityEvaluator(self.store)
+            for manifest_id in context.manifest_ids:
+                manifest = self.store.open(manifest_id).manifest
+                policy = self._quality_policy_for_manifest(manifest)
+                self.quality.record_policy(policy)
+                window_end = _quality_window_end(manifest, context.window_end)
+                observation = evaluator.measure(
+                    policy,
+                    manifest_id,
+                    window_start=context.window_start,
+                    window_end=window_end,
+                    evaluated_at=context.updated_at,
+                    admitted_manifest_ids=admitted,
+                )
+                evaluation = evaluator.evaluate(
+                    policy,
+                    manifest_id,
+                    window_start=context.window_start,
+                    window_end=window_end,
+                    observation=observation,
+                    admitted_manifest_ids=admitted,
+                )
+                self.quality.record(
+                    evaluation,
+                    admitted_manifest_ids=admitted,
+                )
+                bindings.append(
+                    QualityBinding(
+                        manifest_id=manifest_id,
+                        evaluation_id=evaluation.evaluation_id,
+                    )
+                )
+            return QualityReport.build(
+                job_id=context.job_id,
+                run_id=context.run_id,
+                checkpoint_body_digest=context.checkpoint_body_digest,
+                bindings=tuple(
+                    sorted(
+                        bindings,
+                        key=lambda item: (item.manifest_id, item.evaluation_id),
+                    )
+                ),
+            )
+
+        return build
+
+    def _quality_admitted_manifest_ids(
+        self, candidate_manifest_ids: tuple[str, ...]
+    ) -> frozenset[str]:
+        admitted = set(candidate_manifest_ids)
+        for manifest_id in candidate_manifest_ids:
+            manifest = self.store.open(manifest_id).manifest
+            admitted.update(
+                item.manifest_id
+                for item in self.store.manifests(manifest.dataset_id)
+            )
+        return frozenset(admitted)
+
+    @staticmethod
+    def _quality_policy_for_manifest(
+        manifest: ArtifactManifest,
+    ) -> QualityPolicy:
+        venue = (
+            Venue.MOOMOO
+            if manifest.canonical_instrument.value.startswith("moomoo:")
+            else Venue.HYPERLIQUID
+        )
+        step_seconds = (
+            int(interval_to_timedelta(manifest.interval).total_seconds())
+            if manifest.interval is not None
+            else 86_400
+        )
+        return QualityPolicy(
+            venue=venue,
+            layer=manifest.layer,
+            data_kind=manifest.data_kind,
+            interval=manifest.interval,
+            calendar_version=manifest.calendar_version,
+            session_policy=manifest.session_policy,
+            grace_period_seconds=3_600 if venue is Venue.MOOMOO else 300,
+            minimum_coverage_ratio=1.0,
+            max_freshness_seconds=max(600, step_seconds * 2),
+            max_latency_seconds=3_600 if venue is Venue.MOOMOO else 300,
+            require_terminal_pagination=(
+                venue is Venue.MOOMOO
+                and manifest.layer is ArtifactLayer.RAW
+                and manifest.data_kind in {DataKind.BARS, DataKind.SPLITS}
+            ),
         )
 
     def _source_snapshot_body(self, job: CollectionJob) -> dict[str, Any] | None:
@@ -662,21 +859,16 @@ class CollectionCoordinator:
                 if parent_id not in admitted:
                     parent = self.store.open(parent_id).manifest
                     committed = {
-                        item.manifest_id
-                        for item in self.store.manifests(parent.dataset_id)
+                        item.manifest_id for item in self.store.manifests(parent.dataset_id)
                     }
                     if parent_id not in committed:
-                        raise ValueError(
-                            "external parent is not in validated committed history"
-                        )
+                        raise ValueError("external parent is not in validated committed history")
             for reference in manifest.objects:
                 self.store.objects.get_bytes(reference)
                 object_digests.append(reference.digest)
         return tuple(dict.fromkeys(object_digests))
 
-    def _validate_job_graph(
-        self, job: CollectionJob, manifest_ids: tuple[str, ...]
-    ) -> None:
+    def _validate_job_graph(self, job: CollectionJob, manifest_ids: tuple[str, ...]) -> None:
         manifests = tuple(self.store.open(item).manifest for item in manifest_ids)
         raw = tuple(item for item in manifests if item.layer is ArtifactLayer.RAW)
         envelopes: list[RawEnvelope] = []
@@ -689,9 +881,7 @@ class CollectionCoordinator:
             if len(references) != 1:
                 raise ValueError("raw graph role must contain exactly one source envelope")
             envelopes.append(
-                RawEnvelope.model_validate_json(
-                    self.store.objects.get_bytes(references[0])
-                )
+                RawEnvelope.model_validate_json(self.store.objects.get_bytes(references[0]))
             )
         if not envelopes:
             raise ValueError("collection graph has no raw source envelopes")
@@ -700,13 +890,9 @@ class CollectionCoordinator:
             raise ValueError("real collection graph has no durable source snapshot")
         if snapshot is not None:
             expected_raw_digests = snapshot[3]
-            observed_raw_digests = tuple(
-                item.raw_object.digest for item in envelopes
-            )
+            observed_raw_digests = tuple(item.raw_object.digest for item in envelopes)
             if observed_raw_digests != expected_raw_digests:
-                raise ValueError(
-                    "source snapshot raw payloads disagree with raw envelope objects"
-                )
+                raise ValueError("source snapshot raw payloads disagree with raw envelope objects")
         if {item.provider_id for item in envelopes} != {job.provider_id}:
             raise ValueError("collection provider disagrees with raw graph evidence")
         observed_endpoints = {item.endpoint for item in envelopes}
@@ -714,19 +900,15 @@ class CollectionCoordinator:
             raise ValueError("collection endpoints disagree with raw graph evidence")
         if {item.request_id for item in envelopes} != set(job.source_request_ids):
             raise ValueError("collection request IDs disagree with raw graph evidence")
-        if {item.canonical_instrument for item in envelopes} != set(
-            job.canonical_instruments
-        ):
+        if {item.canonical_instrument for item in envelopes} != set(job.canonical_instruments):
             raise ValueError("collection instruments disagree with raw graph evidence")
         if {item.data_kind for item in envelopes} != set(job.data_kinds):
             raise ValueError("collection data kinds disagree with raw graph evidence")
         if {item.schema_version for item in envelopes} != set(job.schema_versions):
             raise ValueError("collection schemas disagree with raw graph evidence")
         if any(
-            (item.collection_window_start or item.request_window_start)
-            != job.window_start
-            or (item.collection_window_end or item.request_window_end)
-            != job.window_end
+            (item.collection_window_start or item.request_window_start) != job.window_start
+            or (item.collection_window_end or item.request_window_end) != job.window_end
             for item in envelopes
         ):
             raise ValueError("collection window disagrees with raw graph evidence")
@@ -787,8 +969,43 @@ class CollectionCoordinator:
                 )
 
     @staticmethod
-    def _crash(
-        requested: PublicationStage | None, completed: PublicationStage
-    ) -> None:
+    def _crash(requested: PublicationStage | None, completed: PublicationStage) -> None:
         if requested is completed:
             raise InjectedCrash(f"injected crash after {completed.value}")
+
+
+def _checkpoint_body_digest(checkpoint: CollectionCheckpoint) -> str:
+    """Hash the final checkpoint projection without its report back-reference."""
+    return _digest(checkpoint.model_dump(mode="json", exclude={"quality_report_id"}))
+
+
+def _quality_window_end(
+    manifest: ArtifactManifest, requested_end: datetime
+) -> datetime:
+    """Convert an inclusive provider terminal bar open to an exclusive SLA bound."""
+    if manifest.data_kind is not DataKind.BARS or manifest.interval is None:
+        return requested_end
+    step = interval_to_timedelta(manifest.interval)
+    if manifest.canonical_instrument.value.startswith("hyperliquid:"):
+        return requested_end + step
+    if step >= timedelta(days=1):
+        zone = ZoneInfo("America/New_York")
+        local = requested_end.astimezone(zone)
+        if local.time() == time.min:
+            return datetime.combine(
+                local.date() + timedelta(days=1), time.min, tzinfo=zone
+            ).astimezone(UTC)
+        return requested_end
+    sessions = CalendarService().sessions(
+        "XNYS",
+        requested_end.date(),
+        requested_end.date(),
+        policy=manifest.session_policy,
+    )
+    if any(
+        session.open_at <= requested_end < session.close_at
+        and not (requested_end - session.open_at) % step
+        for session in sessions
+    ):
+        return requested_end + step
+    return requested_end

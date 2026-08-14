@@ -75,7 +75,7 @@ the tracked TDD plan is committed.
 
 ### Reviewer and Verifier
 
-Both roles remain read-only. Tasks 1–9 received independent Standards and
+Both roles remain read-only. Tasks 1–10 received independent Standards and
 implementation reviews; every finding was reproduced before correction and
 each final task verdict was clean. Verification evidence is recorded at each
 durable checkpoint.
@@ -89,7 +89,7 @@ durable checkpoint.
 | 3. Hyperliquid BTC candles | complete | Slice 1 | Checkpoint 7 |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | complete | Slice 3 | Checkpoint 8 |
 | 5. Idempotent collection and recovery | complete | Slices 2 and 4 | Checkpoint 9 |
-| 6. SLA catalog and downstream lineage | active | Slice 5 | Task 10 next |
+| 6. SLA catalog and downstream lineage | active | Slice 5 | Task 10 complete; Task 11 next |
 | 7. Seven-day real-data evidence | planned | Slice 6 | pending |
 
 ## Acceptance ledger
@@ -557,12 +557,45 @@ durable checkpoint.
 - Task 9 and Slice 5 are complete. No credential, execution authority, quality
   qualification, release tag or synthetic repair path changed.
 
+## Checkpoint 10 — Immutable quality SLA evidence, 2026-08-14
+
+- Task 10 adds content-addressed quality policies, evaluations and graph-level
+  reports with `pass`, `fail`, `not-due` and `unavailable` states. The report
+  hashes the checkpoint projection before the checkpoint records its report ID,
+  avoiding a manifest hash cycle while preserving an exact job/run/preflight
+  and graph-member binding.
+- Measurements are derived from immutable objects, typed artifacts and raw
+  envelopes. Raw event identities are reconciled with row-level payload
+  fingerprints; normalized split actions and features are decoded through their
+  bounded contracts; historical overlaps carry exact conflict fingerprints.
+  An amendment can reconcile only the identical prior conflict set.
+- Exact calendar behavior covers continuous UTC grids, XNYS regular and early
+  closes, venue-local daily identities, DST-aware inclusive terminal bounds and
+  session-close availability. Premature daily bars, out-of-session rows,
+  missing terminal bars and hard integrity failures all fail rather than being
+  hidden by grace or provider unavailability.
+- Real graphs must use the authoritative policy, job window and checkpoint
+  evaluation time. Fixture graphs cannot carry qualifying reports. Public
+  checkpoint and manifest reads verify only the owning job/dataset quality
+  closure, so one corrupt independent report fails closed without blocking
+  unrelated datasets; completed retries additionally remeasure semantics.
+- ADR-0018 records the authority and rollback boundary. Reviewer-driven RED
+  probes closed false passes, policy/window bypass, broad corruption blast
+  radius, batch-level overlap false positives, amendment overreach and
+  checkpoint/report tampering.
+- Final verification is `93 passed` for quality, calendar and graph-recovery
+  integration and `58 passed` for complete Hyperliquid/Moomoo provider
+  regressions. Ruff, `git diff --check`, `pip check` and the deterministic
+  72-package license closure passed. The final fresh adversarial review verdict
+  is CLEAN.
+- Task 11 is now active: expose catalog and downstream immutable lineage without
+  changing release, execution, credential or synthetic-data authority.
+
 ## Current frontier
 
-Task 10 is the current implementation frontier: versioned quality policies and
-immutable daily SLA evidence bound to committed graph manifests. Start the
-seven-day evidence window only after Slices 1–6 are merged into a frozen
-candidate configuration.
+Task 11 is the current implementation frontier: catalog API and fail-closed
+downstream manifest/quality lineage. Start the seven-day evidence window only
+after Slices 1–6 are merged into a frozen candidate configuration.
 
 ## Resume instructions
 

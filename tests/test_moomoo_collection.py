@@ -35,6 +35,7 @@ from quantmesh.data.moomoo_collection import (
     run_moomoo_worker,
 )
 from quantmesh.data.moomoo_collection_worker import collect as collect_moomoo_bundle
+from quantmesh.data.quality import QualityEvaluator, QualityPolicy
 from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.moomoo.opend import OpenDUnavailableError
@@ -641,6 +642,28 @@ def test_raw_surfaces_preserve_endpoint_specific_pagination_evidence(tmp_path: P
             ],
         },
     }
+    bars_manifest = store.open(publication.bars_raw_id).manifest
+    policy = QualityPolicy(
+        venue=Venue.MOOMOO,
+        layer=ArtifactLayer.RAW,
+        data_kind=DataKind.BARS,
+        interval=bars_manifest.interval,
+        calendar_version=bars_manifest.calendar_version,
+        session_policy=bars_manifest.session_policy,
+        grace_period_seconds=3_600,
+        minimum_coverage_ratio=1.0,
+        max_freshness_seconds=172_800,
+        max_latency_seconds=3_600,
+        require_terminal_pagination=True,
+    )
+    observation = QualityEvaluator(store).measure(
+        policy,
+        bars_manifest.manifest_id,
+        window_start=request.window.start,
+        window_end=request.window.end,
+        evaluated_at=payload.received_at,
+    )
+    assert observation.pagination_terminal is True
 
 
 def test_real_bundle_publishes_separate_raw_and_adjusted_lineage(tmp_path: Path) -> None:

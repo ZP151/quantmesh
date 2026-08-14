@@ -47,7 +47,7 @@ DATASETS = (
 )
 
 
-_SUBPROCESS_COORDINATOR = r'''
+_SUBPROCESS_COORDINATOR = r"""
 import json
 import sys
 import time
@@ -149,7 +149,7 @@ except ConcurrentWriterError:
     print('BUSY')
 else:
     print('OK:' + ','.join(result.manifest_ids))
-'''
+"""
 
 
 def _bars() -> list[Bar]:
@@ -194,9 +194,7 @@ def _envelope(
         canonical_instrument=CanonicalInstrumentId(value="moomoo:US:AAPL:XNAS"),
         provider_symbol="US.AAPL",
         data_kind=DataKind.BARS,
-        source_event_ids=tuple(
-            f"US.AAPL:{bar.timestamp.date().isoformat()}" for bar in bars
-        ),
+        source_event_ids=tuple(f"US.AAPL:{bar.timestamp.date().isoformat()}" for bar in bars),
         event_start=bars[0].timestamp,
         event_end=bars[-1].timestamp,
         session_date=date(2026, 8, 12),
@@ -217,9 +215,7 @@ def _job(*, request_id: str = "request-2026-08-14") -> CollectionJob:
         provider_id="fixture-moomoo",
         endpoints=("fixture://aapl-daily",),
         source_request_ids=(request_id,),
-        canonical_instruments=(
-            CanonicalInstrumentId(value="moomoo:US:AAPL:XNAS"),
-        ),
+        canonical_instruments=(CanonicalInstrumentId(value="moomoo:US:AAPL:XNAS"),),
         data_kinds=(DataKind.BARS,),
         intervals=("1d",),
         calendar_version=XNYS_REGULAR_VERSION,
@@ -281,7 +277,12 @@ def test_retry_after_every_graph_boundary_is_idempotent(
         ArtifactLayer
     )
     assert all(store.current(dataset) is not None for dataset in DATASETS)
-    if stage in {PublicationStage.MANIFEST, PublicationStage.PREFLIGHT, PublicationStage.COMMIT}:
+    if stage in {
+        PublicationStage.MANIFEST,
+        PublicationStage.PREFLIGHT,
+        PublicationStage.QUALITY,
+        PublicationStage.COMMIT,
+    }:
         assert len(calls) == 1
     else:
         assert len(calls) == 2
@@ -469,16 +470,9 @@ def test_deleted_source_snapshot_row_recovers_without_provider_recontact(
         payload=payload,
         raw_payloads=(b"raw provider response",),
     )
-    database = (
-        tmp_path
-        / FABRIC_NAMESPACE
-        / "control"
-        / "collection-checkpoints.duckdb"
-    )
+    database = tmp_path / FABRIC_NAMESPACE / "control" / "collection-checkpoints.duckdb"
     with duckdb.connect(str(database)) as connection:
-        connection.execute(
-            "DELETE FROM source_snapshots WHERE job_id = ?", [_job().job_id]
-        )
+        connection.execute("DELETE FROM source_snapshots WHERE job_id = ?", [_job().job_id])
 
     assert coordinator.has_state(_job()) is False
     assert coordinator.source(_job()) == payload
@@ -495,15 +489,8 @@ def test_self_consistent_source_snapshot_row_tampering_fails_closed(
         payload=b"original aggregate",
         raw_payloads=(b"raw provider response",),
     )
-    replacement = store.objects.put_bytes(
-        "application/test-source", b"forged aggregate"
-    )
-    database = (
-        tmp_path
-        / FABRIC_NAMESPACE
-        / "control"
-        / "collection-checkpoints.duckdb"
-    )
+    replacement = store.objects.put_bytes("application/test-source", b"forged aggregate")
+    database = tmp_path / FABRIC_NAMESPACE / "control" / "collection-checkpoints.duckdb"
     with duckdb.connect(str(database)) as connection:
         connection.execute(
             """
@@ -518,9 +505,7 @@ def test_self_consistent_source_snapshot_row_tampering_fails_closed(
 
 
 @pytest.mark.parametrize("damage", ["delete", "corrupt"])
-def test_completed_retry_revalidates_aggregate_source_object(
-    tmp_path: Path, damage: str
-) -> None:
+def test_completed_retry_revalidates_aggregate_source_object(tmp_path: Path, damage: str) -> None:
     store = ManifestStore(tmp_path)
     envelope = _envelope(store)
     coordinator = CollectionCoordinator(store)
@@ -539,14 +524,7 @@ def test_completed_retry_revalidates_aggregate_source_object(
     )
     snapshot = coordinator.checkpoints.source_snapshot(_job().job_id)
     assert snapshot is not None
-    path = (
-        tmp_path
-        / FABRIC_NAMESPACE
-        / "objects"
-        / "sha256"
-        / snapshot[1][:2]
-        / snapshot[1]
-    )
+    path = tmp_path / FABRIC_NAMESPACE / "objects" / "sha256" / snapshot[1][:2] / snapshot[1]
     if damage == "delete":
         path.unlink()
     else:
@@ -605,9 +583,7 @@ def test_changed_manifest_after_raw_crash_is_quarantined(tmp_path: Path) -> None
 def test_job_window_cannot_commit_a_different_source_graph(tmp_path: Path) -> None:
     store = ManifestStore(tmp_path)
     envelope = _envelope(store)
-    changed_job = _job().model_copy(
-        update={"window_end": T0 + timedelta(days=3)}
-    )
+    changed_job = _job().model_copy(update={"window_end": T0 + timedelta(days=3)})
 
     with pytest.raises(ValueError, match="window disagrees"):
         CollectionCoordinator(store).run(
@@ -629,13 +605,17 @@ def test_eight_concurrent_attempts_create_one_logical_graph(tmp_path: Path) -> N
             return _producer(store, envelope, [])(staging)
 
         try:
-            return CollectionCoordinator(store).run(
-                _job(),
-                producer=delayed,
-                provider_cursor="US.AAPL:2026-08-14",
-                last_complete_source_event="US.AAPL:2026-08-14",
-                updated_at=T0 + timedelta(days=3),
-            ).manifest_ids
+            return (
+                CollectionCoordinator(store)
+                .run(
+                    _job(),
+                    producer=delayed,
+                    provider_cursor="US.AAPL:2026-08-14",
+                    last_complete_source_event="US.AAPL:2026-08-14",
+                    updated_at=T0 + timedelta(days=3),
+                )
+                .manifest_ids
+            )
         except ConcurrentWriterError:
             return None
 
@@ -734,9 +714,7 @@ def test_eight_process_coordinators_commit_one_complete_graph(tmp_path: Path) ->
     assert any(item.startswith("OK:") for item in outcomes)
     assert all(item == "BUSY" or item.startswith("OK:") for item in outcomes)
     assert [process.returncode for process in processes] == [0] * 8
-    successful_ids = {
-        item.removeprefix("OK:") for item in outcomes if item.startswith("OK:")
-    }
+    successful_ids = {item.removeprefix("OK:") for item in outcomes if item.startswith("OK:")}
     assert len(successful_ids) == 1
     checkpoint_store = CollectionCoordinator(ManifestStore(tmp_path)).checkpoints
     with checkpoint_store._connect(read_only=True) as connection:

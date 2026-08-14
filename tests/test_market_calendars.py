@@ -216,3 +216,86 @@ def test_session_window_is_immutable() -> None:
 
     with pytest.raises(ValidationError, match="frozen"):
         session.close_at = datetime(2026, 8, 16, tzinfo=UTC)
+
+
+def test_due_session_distinguishes_holiday_from_continuous_day() -> None:
+    service = CalendarService()
+
+    assert not service.is_due("XNYS", date(2026, 12, 25), policy=SessionPolicy.REGULAR)
+    assert service.is_due("24/7", date(2026, 12, 25), policy=SessionPolicy.CONTINUOUS)
+
+
+def test_expected_bar_count_honors_regular_and_early_close_sessions() -> None:
+    service = CalendarService()
+
+    regular = service.expected_bar_count(
+        "XNYS",
+        datetime(2026, 8, 14, tzinfo=UTC),
+        datetime(2026, 8, 15, tzinfo=UTC),
+        interval="1m",
+        policy=SessionPolicy.REGULAR,
+    )
+    early_close = service.expected_bar_count(
+        "XNYS",
+        datetime(2025, 11, 28, tzinfo=UTC),
+        datetime(2025, 11, 29, tzinfo=UTC),
+        interval="1m",
+        policy=SessionPolicy.REGULAR,
+    )
+    continuous = service.expected_bar_count(
+        "24/7",
+        datetime(2026, 8, 15, tzinfo=UTC),
+        datetime(2026, 8, 16, tzinfo=UTC),
+        interval="1m",
+        policy=SessionPolicy.CONTINUOUS,
+    )
+
+    assert regular == 390
+    assert early_close == 210
+    assert continuous == 1440
+
+
+def test_expected_bar_count_intersects_exact_xnys_window() -> None:
+    count = CalendarService().expected_bar_count(
+        "XNYS",
+        datetime(2026, 8, 14, 13, 30, tzinfo=UTC),
+        datetime(2026, 8, 14, 14, 30, tzinfo=UTC),
+        interval="1m",
+        policy=SessionPolicy.REGULAR,
+    )
+
+    assert count == 60
+
+
+def test_continuous_bar_window_must_match_utc_candle_grid() -> None:
+    with pytest.raises(ValueError, match="candle grid"):
+        CalendarService().expected_bar_count(
+            "24/7",
+            datetime(2026, 8, 15, 0, 0, 30, tzinfo=UTC),
+            datetime(2026, 8, 15, 0, 10, 30, tzinfo=UTC),
+            interval="1m",
+            policy=SessionPolicy.CONTINUOUS,
+        )
+
+
+def test_xnys_daily_identity_uses_venue_local_session_date() -> None:
+    opens = CalendarService().expected_bar_opens(
+        "XNYS",
+        datetime(2026, 8, 14, tzinfo=UTC),
+        datetime(2026, 8, 15, tzinfo=UTC),
+        interval="1d",
+        policy=SessionPolicy.REGULAR,
+    )
+
+    assert opens == (datetime(2026, 8, 14, 4, tzinfo=UTC),)
+
+
+def test_partial_xnys_window_must_end_on_candle_grid() -> None:
+    with pytest.raises(ValueError, match="session candle grid"):
+        CalendarService().expected_bar_count(
+            "XNYS",
+            datetime(2026, 8, 14, 13, 30, tzinfo=UTC),
+            datetime(2026, 8, 14, 14, 30, 30, tzinfo=UTC),
+            interval="1m",
+            policy=SessionPolicy.REGULAR,
+        )

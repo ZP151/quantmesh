@@ -4,9 +4,12 @@ from datetime import UTC, date, datetime, time, timedelta
 from enum import StrEnum
 from functools import lru_cache
 from importlib.metadata import version
+from zoneinfo import ZoneInfo
 
 import exchange_calendars
 from pydantic import BaseModel, ConfigDict, model_validator
+
+from quantmesh.domain.market_data import interval_to_timedelta
 
 _EXCHANGE_CALENDARS_VERSION = "4.13.2"
 _XNYS_VERSION = f"exchange-calendars:{_EXCHANGE_CALENDARS_VERSION}:XNYS"
@@ -83,9 +86,7 @@ class SessionWindow(BaseModel):
             if not (_CONTINUOUS_START <= self.session_date <= _SUPPORTED_END):
                 raise ValueError("continuous session date is outside supported range")
             expected_open = datetime.combine(self.session_date, time.min, tzinfo=UTC)
-            if self.open_at != expected_open or self.close_at != expected_open + timedelta(
-                days=1
-            ):
+            if self.open_at != expected_open or self.close_at != expected_open + timedelta(days=1):
                 raise ValueError("continuous session must cover one exact UTC day")
         else:
             if not (_XNYS_START <= self.session_date <= _SUPPORTED_END):
@@ -152,6 +153,105 @@ class CalendarService:
                 )
             )
         return tuple(result)
+
+    def is_due(
+        self,
+        calendar_id: str,
+        session_date: date,
+        *,
+        policy: SessionPolicy,
+    ) -> bool:
+        """Return whether one date has a session under the pinned calendar."""
+        return bool(
+            self.sessions(
+                calendar_id,
+                session_date,
+                session_date,
+                policy=policy,
+            )
+        )
+
+    def expected_bar_count(
+        self,
+        calendar_id: str,
+        start: datetime,
+        end: datetime,
+        *,
+        interval: str,
+        policy: SessionPolicy,
+    ) -> int:
+        """Count exact completed interval slots in a UTC evaluation window."""
+        return len(
+            self.expected_bar_opens(
+                calendar_id,
+                start,
+                end,
+                interval=interval,
+                policy=policy,
+            )
+        )
+
+    def expected_bar_opens(
+        self,
+        calendar_id: str,
+        start: datetime,
+        end: datetime,
+        *,
+        interval: str,
+        policy: SessionPolicy,
+    ) -> tuple[datetime, ...]:
+        """Return every completed candle-open timestamp in ``[start, end)``."""
+        if (
+            start.tzinfo is None
+            or start.utcoffset() != timedelta(0)
+            or end.tzinfo is None
+            or end.utcoffset() != timedelta(0)
+            or end <= start
+        ):
+            raise ValueError("bar-count window must be a positive UTC range")
+        step = interval_to_timedelta(interval)
+        if calendar_id == "24/7":
+            anchor = datetime.combine(_CONTINUOUS_START, time.min, tzinfo=UTC)
+            if (start - anchor) % step or (end - anchor) % step:
+                raise ValueError("continuous quality window does not match the UTC candle grid")
+            return tuple(start + offset * step for offset in range(int((end - start) / step)))
+        sessions = self.sessions(
+            calendar_id,
+            start.date(),
+            (end - timedelta(microseconds=1)).date(),
+            policy=policy,
+        )
+        if step >= timedelta(days=1):
+            return tuple(
+                datetime.combine(
+                    session.session_date,
+                    time.min,
+                    tzinfo=ZoneInfo("America/New_York"),
+                ).astimezone(UTC)
+                for session in sessions
+                if start
+                <= datetime.combine(
+                    session.session_date,
+                    time.min,
+                    tzinfo=ZoneInfo("America/New_York"),
+                ).astimezone(UTC)
+                < end
+            )
+        opens: list[datetime] = []
+        for session in sessions:
+            overlap_start = max(start, session.open_at)
+            overlap_end = min(end, session.close_at)
+            if overlap_end <= overlap_start:
+                continue
+            if (overlap_start - session.open_at) % step:
+                raise ValueError("XNYS quality window does not match the session candle grid")
+            if overlap_end < session.close_at and (overlap_end - session.open_at) % step:
+                raise ValueError("XNYS quality window does not match the session candle grid")
+            opens.extend(
+                overlap_start + offset * step
+                for offset in range(int((overlap_end - overlap_start) / step))
+            )
+        return tuple(opens)
 
     @staticmethod
     def _continuous_sessions(start: date, end: date) -> tuple[SessionWindow, ...]:

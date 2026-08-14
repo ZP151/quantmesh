@@ -313,8 +313,12 @@ def test_explicit_collection_cycle_can_capture_a_later_provider_correction(
     second = collector.collect_candles(
         ["BTC"], "1m", _window(), collection_cycle="2026-08-14T00:11Z"
     )[0]
+    retry = collector.collect_candles(
+        ["BTC"], "1m", _window(), collection_cycle="2026-08-14T00:11Z"
+    )[0]
 
     assert second != first
+    assert retry == second
     assert transport.calls == 2
     for first_id, second_id in zip(first.manifest_ids, second.manifest_ids, strict=True):
         first_manifest = store.open(first_id).manifest

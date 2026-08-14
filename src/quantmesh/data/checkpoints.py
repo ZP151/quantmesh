@@ -301,11 +301,16 @@ class CheckpointStore:
                 self._writer_owner = None
                 self._writer_active = False
 
-    def get(self, job_id: str) -> CollectionCheckpoint | None:
+    def get(
+        self,
+        job_id: str,
+        *,
+        _verify_quality_evidence: bool = True,
+    ) -> CollectionCheckpoint | None:
         if not _is_digest(job_id):
             raise ValueError("job_id must be a lowercase SHA-256 digest")
         with self._read_guard(), self._connect(read_only=True) as connection:
-            _journal_advances(self.root, connection)
+            evidence = _journal_advances(self.root, connection)
             row = connection.execute(
                 """
                 SELECT generation, attempt, body_json
@@ -315,6 +320,10 @@ class CheckpointStore:
             ).fetchone()
         if row is None:
             return None
+        if _verify_quality_evidence:
+            _verify_committed_quality_evidence(
+                self.root, evidence, job_ids=frozenset({job_id})
+            )
         checkpoint = CollectionCheckpoint.model_validate_json(row[2])
         if (int(row[0]), int(row[1])) != (
             checkpoint.generation,
@@ -1350,6 +1359,13 @@ def committed_current(root: Path, dataset_id: str) -> str | None:
             "SELECT job_id FROM graph_reservations WHERE dataset_id = ?",
             [dataset_id],
         ).fetchone()
+    _verify_committed_quality_evidence(
+        Path(root),
+        evidence,
+        job_ids=frozenset(
+            {evidence.commit_jobs[str(item[2])] for item in history}
+        ),
+    )
     owned = _graph_owner(Path(root), dataset_id)
     latest = None if not history else history[-1]
     journal_rows = evidence.history.get(dataset_id, ())
@@ -1417,6 +1433,13 @@ def committed_history(root: Path, dataset_id: str) -> tuple[str, ...]:
             "SELECT job_id FROM graph_reservations WHERE dataset_id = ?",
             [dataset_id],
         ).fetchone()
+    _verify_committed_quality_evidence(
+        Path(root),
+        evidence,
+        job_ids=frozenset(
+            {evidence.commit_jobs[str(item[2])] for item in rows}
+        ),
+    )
     owned = _graph_owner(Path(root), dataset_id)
     journal_rows = evidence.history.get(dataset_id, ())
     if journal_rows and tuple(tuple(row) for row in rows) != journal_rows:
@@ -1455,6 +1478,86 @@ class _VerifiedGraph(NamedTuple):
     history: dict[str, tuple[_GraphHistoryRow, ...]]
     owned_dataset_ids: frozenset[str]
     members: dict[str, GraphMember]
+    checkpoints: dict[str, CollectionCheckpoint]
+    source_snapshots: dict[str, dict[str, Any] | None]
+    commit_jobs: dict[str, str]
+
+
+def _verify_committed_quality_evidence(
+    root: Path,
+    evidence: _VerifiedGraph,
+    *,
+    job_ids: frozenset[str],
+) -> None:
+    for job_id in sorted(job_ids):
+        checkpoint = evidence.checkpoints[job_id]
+        real_graph = _checkpoint_has_real_provenance(root, checkpoint)
+        if not real_graph:
+            if checkpoint.quality_report_id is not None:
+                raise CheckpointIntegrityError(
+                    "fixture graph must not carry real-data quality evidence"
+                )
+            continue
+        if checkpoint.quality_report_id is None:
+            raise CheckpointIntegrityError(
+                "real graph is unqualified because quality evidence is missing"
+            )
+        try:
+            from quantmesh.data.quality import QualityEvidenceStore
+
+            report = QualityEvidenceStore(root).verify_report_integrity(
+                checkpoint.quality_report_id
+            )
+            checkpoint_body = checkpoint.model_dump(
+                mode="json", exclude={"quality_report_id"}
+            )
+            checkpoint_body_digest = hashlib.sha256(
+                _canonical(checkpoint_body).encode()
+            ).hexdigest()
+            if (
+                report.job_id != checkpoint.job_id
+                or report.run_id != checkpoint.run_id
+                or report.checkpoint_body_digest != checkpoint_body_digest
+                or tuple(binding.manifest_id for binding in report.bindings)
+                != tuple(sorted(checkpoint.manifest_ids))
+            ):
+                raise ValueError("checkpoint and quality report disagree")
+        except Exception as error:
+            if isinstance(error, CheckpointIntegrityError):
+                raise
+            raise CheckpointIntegrityError(
+                f"committed quality evidence is invalid for job {job_id}"
+            ) from error
+
+
+def _checkpoint_has_real_provenance(
+    root: Path, checkpoint: CollectionCheckpoint
+) -> bool:
+    from quantmesh.data.artifacts import ArtifactLayer, ManifestStore
+    from quantmesh.data.envelopes import ProvenanceClass, RawEnvelope
+
+    store = ManifestStore(root)
+    provenance: set[ProvenanceClass] = set()
+    for manifest_id in checkpoint.manifest_ids:
+        manifest = store.open(manifest_id).manifest
+        if manifest.layer is not ArtifactLayer.RAW:
+            continue
+        for reference in manifest.objects:
+            if reference.media_type != "application/vnd.quantmesh.raw-envelope+json":
+                continue
+            envelope = RawEnvelope.model_validate_json(
+                store.objects.get_bytes(reference)
+            )
+            provenance.add(envelope.provenance)
+    if not provenance:
+        raise CheckpointIntegrityError(
+            "committed graph has no raw provenance evidence"
+        )
+    if len(provenance) != 1:
+        raise CheckpointIntegrityError(
+            "committed graph mixes real and fixture provenance"
+        )
+    return provenance == {ProvenanceClass.REAL}
 
 
 def _journal_advances(
@@ -1489,6 +1592,7 @@ def _journal_advances(
     previous_digest: str | None = None
     expected_checkpoints: dict[str, CollectionCheckpoint] = {}
     committed_snapshots: dict[str, dict[str, Any] | None] = {}
+    commit_jobs: dict[str, str] = {}
     for expected_sequence, (commit_id, record) in enumerate(database.items(), start=1):
         job_id, run_id, sequence, body_json = record
         path = files[commit_id]
@@ -1509,6 +1613,7 @@ def _journal_advances(
             if checkpoint.job_id != job_id or checkpoint.run_id != run_id:
                 raise ValueError("checkpoint identity mismatch")
             expected_checkpoints[checkpoint.job_id] = checkpoint
+            commit_jobs[commit_id] = checkpoint.job_id
             source_snapshot = body["source_snapshot"]
             if source_snapshot is not None and not isinstance(source_snapshot, dict):
                 raise ValueError("source snapshot evidence is invalid")
@@ -1630,7 +1735,12 @@ def _journal_advances(
             raise CheckpointIntegrityError("commit journal repeats a graph revision")
         result[dataset_id] = ordered
     verified = _VerifiedGraph(
-        result, frozenset(owned_dataset_ids), latest_members
+        result,
+        frozenset(owned_dataset_ids),
+        latest_members,
+        expected_checkpoints,
+        committed_snapshots,
+        commit_jobs,
     )
     _verify_complete_graph_state(root, connection, verified)
     return verified

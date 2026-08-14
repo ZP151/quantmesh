@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–9 green; Slice 5 complete
+- Status: iteration 0021 active — Tasks 1–10 green; Slice 5 complete
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -12,9 +12,8 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: Task 10 versioned quality policies and immutable daily SLA
-  evidence. Keep wallet, signing, account and order surfaces structurally
-  absent.
+- Current frontier: Task 11 catalog API and fail-closed downstream immutable
+  lineage. Keep wallet, signing, account and order surfaces structurally absent.
 - Blockers: none for implementation. Real Moomoo acceptance later requires a
   locally available OpenD and entitlements; credentials or paid services need
   explicit operator authorization.
@@ -276,6 +275,26 @@ readiness decision**.
   passed; fresh Standards and adversarial reviews returned CLEAN.
 - Task 10 is now active: add versioned quality policies and immutable daily SLA
   evidence without changing release or execution authority.
+
+## Checkpoint 10 — 2026-08-14
+
+- Task 10 is GREEN. ADR-0018 defines versioned content-addressed policies,
+  evaluations and checkpoint-bound reports without introducing a hash cycle.
+- Immutable measurements now cover exact raw payload identities, typed bars,
+  features and split actions, XNYS/continuous calendars, pagination, rights,
+  entitlement, freshness, close-based latency and exact historical-overlap
+  fingerprints. Explicit amendments can reconcile only the identical recorded
+  conflict set.
+- Real graphs are bound to the authoritative policy, job window and checkpoint
+  time; fixture qualification, custom-policy relaxation, premature daily bars,
+  hard-failure masking and cross-job corruption blast radius fail closed.
+- Final evidence is `93 passed` for quality/calendar/recovery and `58 passed`
+  for complete provider regressions. Ruff, `git diff --check`, `pip check`, the
+  deterministic 72-package license closure and final fresh adversarial review
+  are green/CLEAN.
+- Task 11 is active: implement the catalog API and downstream manifest/quality
+  lineage. No release, credential, execution or synthetic-repair authority
+  changed.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 
