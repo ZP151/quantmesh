@@ -64,5 +64,6 @@ Characterization tests and ADR are written (checkpoint 1).
   bps→fraction conversion, exact-default tolerance, `math.isclose` semantics and
   the tick-size-is-metadata boundary.
 - Wrote `docs/adr/0018-execution-numeric-policy.md` recording the policy.
-- No production code changed. Evidence: focused tests + Ruff green; full suite
-  recorded next checkpoint.
+- No production code changed. Evidence: `tests/test_numeric_policy.py` 9
+  passed; Ruff clean; full suite `2655 passed, 0 failed` (exit 0);
+  `git diff --check` clean.
