@@ -96,5 +96,5 @@ batches 2–4 remain, then cross-venue reconciliation deepening.
   `secondary_keys=[("idempotency key", ...)]` and
   `extra_validate=validate_order_replay`; `_write`/`_read` deleted.
 - Evidence: `test_execution_journal.py`, `test_recovery.py` (idempotency
-  identity) and `test_persistence_jsonl.py` → 70 passed; Ruff clean. Full-suite
-  result recorded in the next checkpoint.
+  identity) and `test_persistence_jsonl.py` → 70 passed; Ruff clean; full suite
+  `2631 passed, 0 failed` (exit 0); `git diff --check` clean.
