@@ -22,6 +22,8 @@ from quantmesh.execution.reconciliation import (
     FindingKind,
     ReconcileTolerance,
     Severity,
+    compare_fees,
+    compare_fill_ids,
     compare_positions,
     compare_prices,
     compare_quantities,
@@ -54,11 +56,23 @@ def make_order(**overrides: object) -> Order:
     return Order(**values)
 
 
-def filled_order(qty: float, price: float, fee: float = 0.0) -> Order:
+def filled_order(
+    qty: float,
+    price: float,
+    fee: float = 0.0,
+    *,
+    broker_fill_id: str | None = None,
+) -> Order:
     return OrderStateMachine.apply(
         make_order(),
         OrderEventType.FILL,
-        fill=Fill(timestamp=T1, quantity=qty, price=price, fee=fee),
+        fill=Fill(
+            timestamp=T1,
+            quantity=qty,
+            price=price,
+            fee=fee,
+            broker_fill_id=broker_fill_id,
+        ),
         timestamp=T1,
     )
 
@@ -180,3 +194,43 @@ def test_compare_positions_drift_respects_tolerance() -> None:
     )
     assert [f.kind for f in strict] == [FindingKind.POSITION]
     assert lenient == []
+
+
+# --- compare_fees / compare_fill_ids -----------------------------------------
+
+
+def test_compare_fees_drift() -> None:
+    order = filled_order(100.0, 210.0, fee=0.5)
+    findings = compare_fees(
+        broker_fees=[9.0],
+        row_count=1,
+        row_noun="deals",
+        noun="broker",
+        order=order,
+        tolerance=ReconcileTolerance(),
+    )
+    assert [f.kind for f in findings] == [FindingKind.FEE]
+
+
+def test_compare_fees_missing_fee_data() -> None:
+    order = filled_order(100.0, 210.0, fee=0.5)
+    findings = compare_fees(
+        broker_fees=[],
+        row_count=1,
+        row_noun="fills",
+        noun="venue",
+        order=order,
+        tolerance=ReconcileTolerance(),
+    )
+    assert [f.kind for f in findings] == [FindingKind.MISSING_DATA]
+
+
+def test_compare_fill_ids_revoked() -> None:
+    order = filled_order(100.0, 210.0, fee=0.0, broker_fill_id="D-1")
+    findings = compare_fill_ids(
+        broker_fill_ids=set(),
+        row_noun="deal",
+        noun="broker",
+        order=order,
+    )
+    assert [f.kind for f in findings] == [FindingKind.REVOKED_FILL]

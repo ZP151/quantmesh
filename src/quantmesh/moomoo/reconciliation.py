@@ -47,6 +47,8 @@ from quantmesh.execution.reconciliation import (
     ReconciliationFinding,
     ReconciliationReport,
     Severity,
+    compare_fees,
+    compare_fill_ids,
     compare_positions,
     compare_prices,
     compare_quantities,
@@ -308,9 +310,39 @@ def _compare(
             noun="broker",
         )
     )
-    _compare_fees(broker, deals, order, tolerance, findings)
+    order_deals = [deal for deal in deals if deal.order_id == broker.order_id]
+    findings.extend(
+        compare_fees(
+            broker_fees=[deal.fee for deal in order_deals if deal.fee is not None],
+            row_count=len(order_deals),
+            row_noun="deals",
+            noun="broker",
+            order=order,
+            tolerance=tolerance,
+        )
+    )
     _compare_timestamps(broker, order, tolerance, findings)
-    _compare_fill_ids(broker, deals, order, findings)
+    deal_ids = {deal.deal_id for deal in order_deals}
+    findings.extend(
+        compare_fill_ids(
+            broker_fill_ids=deal_ids,
+            row_noun="deal",
+            noun="broker",
+            order=order,
+        )
+    )
+    # Venue-specific: an unhealthy deal status is never adoptable.
+    for deal in order_deals:
+        if deal.status not in _HEALTHY_DEAL_STATUSES:
+            findings.append(
+                finding(
+                    FindingKind.REVOKED_FILL,
+                    Severity.ERROR,
+                    f"deal {deal.deal_id} has status {deal.status!r} and is not adoptable",
+                    order_id=order.order_id,
+                    observed=deal.status,
+                )
+            )
 
     # The recovered-mapping note is non-blocking by contract (the apply
     # path whitelists MAPPING/WARNING); only genuinely blocking findings
@@ -363,65 +395,6 @@ def _compare_status(
     )
 
 
-def _compare_fees(
-    broker: BrokerOrder,
-    deals: list[BrokerDeal],
-    order: Order,
-    tolerance: ReconcileTolerance,
-    findings: list[ReconciliationFinding],
-) -> None:
-    order_deals = [deal for deal in deals if deal.order_id == broker.order_id]
-    broker_fees = [deal.fee for deal in order_deals if deal.fee is not None]
-    journal_fees = [fill.fee for fill in order.fills if fill.fee is not None]
-    if not order_deals and not journal_fees:
-        return  # no execution on either side: no fee to compare
-    if not order_deals:
-        findings.append(
-            finding(
-                FindingKind.FEE,
-                Severity.ERROR,
-                "journal holds fills but the broker reports no deals for this order",
-                order_id=order.order_id,
-            )
-        )
-        return
-    if len(broker_fees) != len(order_deals):
-        findings.append(
-            finding(
-                FindingKind.MISSING_DATA,
-                Severity.ERROR,
-                f"broker reports {len(order_deals)} deals but fee data for "
-                f"{len(order_deals) - len(broker_fees)} of them; fees cannot be verified",
-                order_id=order.order_id,
-            )
-        )
-        return
-    if journal_fees:
-        if not broker_fees:
-            findings.append(
-                finding(
-                    FindingKind.MISSING_DATA,
-                    Severity.ERROR,
-                    "journal holds fees but the broker reports none; cannot compare",
-                    order_id=order.order_id,
-                )
-            )
-            return
-        broker_total = sum(broker_fees)
-        journal_total = sum(journal_fees)
-        if abs(broker_total - journal_total) > tolerance.fee_abs:
-            findings.append(
-                finding(
-                    FindingKind.FEE,
-                    Severity.ERROR,
-                    f"fee drift: broker {broker_total} vs journal {journal_total}",
-                    order_id=order.order_id,
-                    observed=f"{broker_total}",
-                    expected=f"{journal_total}",
-                )
-            )
-
-
 def _compare_timestamps(
     broker: BrokerOrder,
     order: Order,
@@ -455,42 +428,6 @@ def _compare_timestamps(
                     order_id=order.order_id,
                     observed=broker.updated_time.isoformat(),
                     expected=last_event.isoformat(),
-                )
-            )
-
-
-def _compare_fill_ids(
-    broker: BrokerOrder,
-    deals: list[BrokerDeal],
-    order: Order,
-    findings: list[ReconciliationFinding],
-) -> None:
-    """Deal↔fill identity: a stamped fill whose deal vanished, or a
-    revoked deal, is a finding (ADR-0006 decision 4)."""
-    deal_ids = {deal.deal_id for deal in deals if deal.order_id == broker.order_id}
-    for fill in order.fills:
-        if fill.broker_fill_id is not None and fill.broker_fill_id not in deal_ids:
-            findings.append(
-                finding(
-                    FindingKind.REVOKED_FILL,
-                    Severity.ERROR,
-                    f"fill {fill.broker_fill_id} is stamped on the journal but the "
-                    "broker no longer reports that deal",
-                    order_id=order.order_id,
-                    observed=fill.broker_fill_id,
-                )
-            )
-    for deal in deals:
-        if deal.order_id != broker.order_id:
-            continue
-        if deal.status not in _HEALTHY_DEAL_STATUSES:
-            findings.append(
-                finding(
-                    FindingKind.REVOKED_FILL,
-                    Severity.ERROR,
-                    f"deal {deal.deal_id} has status {deal.status!r} and is not adoptable",
-                    order_id=order.order_id,
-                    observed=deal.status,
                 )
             )
 

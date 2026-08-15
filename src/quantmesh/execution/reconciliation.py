@@ -300,3 +300,100 @@ def compare_prices(
                 )
             )
     return findings
+
+
+def compare_fees(
+    *,
+    broker_fees: list[float],
+    row_count: int,
+    row_noun: str,
+    noun: str,
+    order: Order,
+    tolerance: ReconcileTolerance,
+) -> list[ReconciliationFinding]:
+    """Fee drift and missing-fee-data findings (ADR-0006 d. 3).
+
+    The venue passes the fee-bearing values of the rows it already filtered for
+    this order plus the row count and its row noun ("deals" / "fills").
+    """
+    findings: list[ReconciliationFinding] = []
+    journal_fees = [fill.fee for fill in order.fills if fill.fee is not None]
+    if row_count == 0 and not journal_fees:
+        return findings
+    if row_count == 0:
+        findings.append(
+            finding(
+                FindingKind.FEE,
+                Severity.ERROR,
+                f"journal holds fills but the {noun} reports no {row_noun} for "
+                "this order",
+                order_id=order.order_id,
+            )
+        )
+        return findings
+    if len(broker_fees) != row_count:
+        findings.append(
+            finding(
+                FindingKind.MISSING_DATA,
+                Severity.ERROR,
+                f"the {noun} reports {row_count} {row_noun} but fee data for "
+                f"{row_count - len(broker_fees)} of them; fees cannot be verified",
+                order_id=order.order_id,
+            )
+        )
+        return findings
+    if journal_fees:
+        if not broker_fees:
+            findings.append(
+                finding(
+                    FindingKind.MISSING_DATA,
+                    Severity.ERROR,
+                    f"journal holds fees but the {noun} reports none; cannot compare",
+                    order_id=order.order_id,
+                )
+            )
+            return findings
+        broker_total = sum(broker_fees)
+        journal_total = sum(journal_fees)
+        if abs(broker_total - journal_total) > tolerance.fee_abs:
+            findings.append(
+                finding(
+                    FindingKind.FEE,
+                    Severity.ERROR,
+                    f"fee drift: {noun} {broker_total} vs journal {journal_total}",
+                    order_id=order.order_id,
+                    observed=f"{broker_total}",
+                    expected=f"{journal_total}",
+                )
+            )
+    return findings
+
+
+def compare_fill_ids(
+    *,
+    broker_fill_ids: set[str],
+    row_noun: str,
+    noun: str,
+    order: Order,
+) -> list[ReconciliationFinding]:
+    """Stamped-fill-vanished findings (ADR-0006 d. 4).
+
+    A journal fill stamped with a venue fill id the venue no longer reports is
+    revoked. The venue supplies the set of fill ids it currently reports and its
+    row noun ("deal" / "fill"); any venue-specific unhealthy-row check stays in
+    the adapter.
+    """
+    findings: list[ReconciliationFinding] = []
+    for fill in order.fills:
+        if fill.broker_fill_id is not None and fill.broker_fill_id not in broker_fill_ids:
+            findings.append(
+                finding(
+                    FindingKind.REVOKED_FILL,
+                    Severity.ERROR,
+                    f"fill {fill.broker_fill_id} is stamped on the journal but the "
+                    f"{noun} no longer reports that {row_noun}",
+                    order_id=order.order_id,
+                    observed=fill.broker_fill_id,
+                )
+            )
+    return findings

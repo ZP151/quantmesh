@@ -67,6 +67,8 @@ from quantmesh.execution.reconciliation import (
     ReconciliationFinding,
     ReconciliationReport,
     Severity,
+    compare_fees,
+    compare_fill_ids,
     compare_positions,
     compare_prices,
     compare_quantities,
@@ -361,8 +363,26 @@ def _compare(
             noun="venue",
         )
     )
-    _compare_fees(broker, fills, order, tolerance, findings)
-    _compare_fill_ids(broker, fills, order, findings)
+    order_fills = [fill for fill in fills if fill.oid == broker.oid]
+    findings.extend(
+        compare_fees(
+            broker_fees=[fill.fee for fill in order_fills if fill.fee is not None],
+            row_count=len(order_fills),
+            row_noun="fills",
+            noun="venue",
+            order=order,
+            tolerance=tolerance,
+        )
+    )
+    venue_ids = {fill.fill_id for fill in order_fills}
+    findings.extend(
+        compare_fill_ids(
+            broker_fill_ids=venue_ids,
+            row_noun="fill",
+            noun="venue",
+            order=order,
+        )
+    )
 
     # The recovered-mapping note is non-blocking by contract (the apply
     # path whitelists MAPPING/WARNING); only genuinely blocking findings
@@ -434,90 +454,6 @@ def _compare_status(
             expected=order.status.value,
         )
     )
-
-
-def _compare_fees(
-    broker: BrokerOrder,
-    fills: list[BrokerFill],
-    order: Order,
-    tolerance: ReconcileTolerance,
-    findings: list[ReconciliationFinding],
-) -> None:
-    order_fills = [fill for fill in fills if fill.oid == broker.oid]
-    broker_fees = [fill.fee for fill in order_fills if fill.fee is not None]
-    journal_fees = [fill.fee for fill in order.fills if fill.fee is not None]
-    if not order_fills and not journal_fees:
-        return  # no execution on either side: no fee to compare
-    if not order_fills:
-        findings.append(
-            finding(
-                FindingKind.FEE,
-                Severity.ERROR,
-                "journal holds fills but the venue reports no fills for this order",
-                order_id=order.order_id,
-            )
-        )
-        return
-    if len(broker_fees) != len(order_fills):
-        findings.append(
-            finding(
-                FindingKind.MISSING_DATA,
-                Severity.ERROR,
-                f"the venue reports {len(order_fills)} fills but fee data for "
-                f"{len(order_fills) - len(broker_fees)} of them; fees cannot be "
-                "verified",
-                order_id=order.order_id,
-            )
-        )
-        return
-    if journal_fees:
-        if not broker_fees:
-            findings.append(
-                finding(
-                    FindingKind.MISSING_DATA,
-                    Severity.ERROR,
-                    "journal holds fees but the venue reports none; cannot compare",
-                    order_id=order.order_id,
-                )
-            )
-            return
-        broker_total = sum(broker_fees)
-        journal_total = sum(journal_fees)
-        if abs(broker_total - journal_total) > tolerance.fee_abs:
-            findings.append(
-                finding(
-                    FindingKind.FEE,
-                    Severity.ERROR,
-                    f"fee drift: venue {broker_total} vs journal {journal_total}",
-                    order_id=order.order_id,
-                    observed=f"{broker_total}",
-                    expected=f"{journal_total}",
-                )
-            )
-
-
-def _compare_fill_ids(
-    broker: BrokerOrder,
-    fills: list[BrokerFill],
-    order: Order,
-    findings: list[ReconciliationFinding],
-) -> None:
-    """Fill↔fill identity: a stamped fill whose venue row vanished is a
-    finding (ADR-0006 decision 4). The venue only reports executed
-    fills, so there is no unhealthy-fill status to check."""
-    venue_ids = {fill.fill_id for fill in fills if fill.oid == broker.oid}
-    for fill in order.fills:
-        if fill.broker_fill_id is not None and fill.broker_fill_id not in venue_ids:
-            findings.append(
-                finding(
-                    FindingKind.REVOKED_FILL,
-                    Severity.ERROR,
-                    f"fill {fill.broker_fill_id} is stamped on the journal but the "
-                    "venue no longer reports that fill",
-                    order_id=order.order_id,
-                    observed=fill.broker_fill_id,
-                )
-            )
 
 
 # --- adoption internals -------------------------------------------------------
