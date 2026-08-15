@@ -708,13 +708,38 @@ durable checkpoint.
   OpenD plus entitlement. Task 14 is not started, and no release, milestone PR,
   credential, execution or synthetic-repair authority changed.
 
+## Checkpoint 14 — Real OpenD unblock, 2026-08-15
+
+- Local OpenD is running with US Stocks LV3 entitlement; `quantmesh-moomoo
+  probe` reports `quote=True history_kline=True order=True order_query=True
+  auth_required=False`.
+- Real Moomoo collection exposed three latent defects in the daily critical
+  path, fixed and committed: `b49e7b4` (canonical bar identity drops `market`
+  metadata per ADR-0003, and revalidation filters history bars to the UTC window
+  so venue-date widening cannot fail the canonical-derivation check) and
+  `2b59ca8` (the split-rate parser accepts the Unicode arrow `1→4` alongside
+  `1->4`).
+- A clean-checkout `quantmesh-data collect` of Moomoo AAPL/NVDA daily bars for
+  UTC `2026-08-10T00:00:00Z/2026-08-15T00:00:00Z` published 16 manifests (five
+  bars per symbol), passed the full `validate_publication` recomputation, and
+  re-collecting the same window returned the identical manifest set (idempotent);
+  `replay` returned `verified=true` with five rows.
+- Follow-up (not in the soak matrix): the Moomoo 1-minute path fails
+  `validate_publication` with `raw declarations are not source-derived` because
+  the raw history surface stores the complete SDK pages (including out-of-window
+  bars) while its envelope declares the window-filtered range. The fixed
+  five-target soak matrix uses Moomoo AAPL/NVDA at the daily interval only, so
+  this does not block Step 5 or Task 14; fix before any intraday Moomoo
+  collection.
+
 ## Current frontier
 
-Task 13 implementation and clean-install verification are complete. Candidate
-freeze remains the current frontier because the fixed Moomoo AAPL/NVDA targets
-cannot yet produce qualifying real evidence without a locally available OpenD
-and entitlement. Task 14 has not started; do not create daily soak reports or
-claim a 168-hour window until the exact five-target candidate is frozen.
+Task 13 Step 4 is complete and the real OpenD gate is cleared: the fixed Moomoo
+AAPL/NVDA daily targets now produce qualifying real read-only evidence. Freeze
+the exact five-target candidate (Hyperliquid BTC/ETH/SOL 1-minute adjusted bars
+plus Moomoo AAPL/NVDA daily adjusted bars) next, then start Task 14. Do not
+create daily soak reports or claim a 168-hour window until the exact
+five-target candidate is frozen.
 
 ## Resume instructions
 

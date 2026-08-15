@@ -1,7 +1,7 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–12 green; Task 13 implementation and
-  clean-install verification green; soak candidate not frozen
+- Status: iteration 0021 active — Tasks 1–12 green; Task 13 Step 4 complete;
+  real OpenD unblocked the Moomoo AAPL/NVDA daily target; candidate freeze next
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -13,14 +13,15 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: complete Task 13 candidate freeze only after the fixed
-  Moomoo AAPL/NVDA target can produce qualifying real read-only evidence from a
-  locally available OpenD. Task 14 has not started. Keep wallet, signing,
-  account and order surfaces structurally absent.
-- External gate: the tooling and clean-install gate are complete, but the fixed
-  five-target soak matrix cannot freeze without local OpenD and AAPL/NVDA market
-  data entitlement. No credential, paid-service or target-matrix substitution
-  is authorized.
+- Current frontier: freeze the five-target soak candidate. Local OpenD is
+  available with US LV3 entitlement and the Moomoo AAPL/NVDA daily target now
+  produces qualifying real read-only evidence, so Task 13 Step 5 is unblocked.
+  Task 14 has not started. Keep wallet, signing, account and order surfaces
+  structurally absent.
+- External gate: resolved. Local OpenD is running with US Stocks LV3
+  entitlement and `quantmesh-moomoo probe` reports
+  `quote=True history_kline=True`. No credential, paid-service or target-matrix
+  substitution was used.
 
 ## Product-readiness decision
 
@@ -390,6 +391,34 @@ readiness decision**.
   complete, Step 5 remains open, no soak candidate/configuration is frozen and
   Task 14's 168-hour evidence window has not started. No milestone PR, release,
   credential, execution or synthetic-repair authority changed.
+
+## Checkpoint 14 — 2026-08-15
+
+- Real OpenD came online (US Stocks LV3; `quote=True history_kline=True`). The
+  first real Moomoo collection exposed three latent defects that the earlier
+  `daemon-unavailable` path could never exercise, fixed and committed on
+  `0021-trusted-data-fabric`:
+  - `b49e7b4` — canonical bar identity no longer carries `market` metadata
+    (ADR-0003 keeps it request-side), and revalidation filters history bars to
+    the UTC window so the SDK's venue-date widening cannot fail the
+    canonical-derivation check.
+  - `2b59ca8` — the split-rate parser accepts the official Unicode arrow (`1→4`)
+    alongside the fixture ASCII form (`1->4`).
+- A clean-checkout `quantmesh-data collect` of Moomoo AAPL/NVDA daily bars for
+  UTC `2026-08-10T00:00:00Z/2026-08-15T00:00:00Z` published 16 manifests (eight
+  per symbol, five bars each) with `status=published` and passed the full
+  `validate_publication` recomputation. Re-collecting the same window returned
+  the identical manifest set (idempotent), and `replay` returned
+  `verified=true`.
+- Follow-up (not blocking the soak): the Moomoo 1-minute intraday path fails
+  validation with `raw declarations are not source-derived` because the raw
+  history surface preserves the complete SDK pages (including out-of-window
+  bars) while its envelope is declared from the window-filtered bars. The fixed
+  five-target soak matrix uses Moomoo AAPL/NVDA only at the daily interval, so
+  this does not block Task 13 Step 5 or Task 14.
+- Task 13 Step 5 (freeze the exact five-target candidate) is now unblocked.
+  Task 14's 168-hour soak has not started. No release, milestone PR, credential,
+  execution or synthetic-repair authority changed.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 
