@@ -1,6 +1,6 @@
 # Iteration 0023 — Complete durable JSONL consolidation
 
-- Status: in progress
+- Status: in progress (consolidation complete; final PR pending)
 - Started: 2026-08-15
 - Tracking issue: [#111](https://github.com/ZP151/quantmesh/issues/111) (continuation; #112 merged)
 - Branch: `0023-complete-jsonl-consolidation` (from `origin/main` at `e5a321f`)
@@ -72,14 +72,23 @@ after this consolidation is stable.
 2. **research** — experiments, features, models, ensemble, drift (alerts +
    promotions).
 3. **events + portfolio** — forecast registry, mapping ledger, scenario reports.
-4. **ai + ops + api + hyperliquid + instruments** — decisions, retrieval
-   documents, enablement, metrics, watchlist, funding ledger, proposals,
-   forecast artifacts.
+4. **ai + ops + hyperliquid** — decisions, retrieval documents, enablement,
+   metrics, funding ledger.
+
+Explicitly out of scope for the simple `JsonlStore` interface (distinct
+semantics, not reimplementations of the same ADR-0006 discipline):
+- `api/watchlist.py` — venue-aware identity with a None-wildcard conflict rule
+  plus a `remove` rewrite; needs a conflict predicate, not a key function.
+- `instruments/proposals.py` — an event log under a transaction + interprocess
+  lock with reparse-component rejection, not a keyed append-only registry.
+- `instruments/forecast.py` — directory-based crash-safe artifact trees, not a
+  single JSONL file.
 
 ## Current frontier
 
-Seam extension and OrderJournal migration are implemented (checkpoint 1);
-batches 2–4 remain, then cross-venue reconciliation deepening.
+All fifteen simple ADR-0006 JSONL registries are migrated onto `JsonlStore`;
+the three specialized surfaces above are documented as out of scope. Next:
+open the final PR, then cross-venue reconciliation deepening.
 
 ## Checkpoint 1 — 2026-08-15: seam extension + OrderJournal migration
 
@@ -98,3 +107,24 @@ batches 2–4 remain, then cross-venue reconciliation deepening.
 - Evidence: `test_execution_journal.py`, `test_recovery.py` (idempotency
   identity) and `test_persistence_jsonl.py` → 70 passed; Ruff clean; full suite
   `2631 passed, 0 failed` (exit 0); `git diff --check` clean.
+
+## Checkpoint 2 — 2026-08-15: research, events, portfolio, ai, ops, hyperliquid
+
+- Added `check_absent` (duplicate refusal against a caller-supplied read) and
+  `record_label` to `JsonlStore`, so registries with a lake-pin gate keep the
+  exact duplicate-before-pin ordering and message noun. Added `key=None`
+  support so a store can read/write without identity deduplication (mapping
+  ledger and funding ledger legitimately repeat an identity with different
+  evidence/deltas).
+- Migrated, deleting each `_append`/`_read` (or the duplicated module-level
+  `_append_records`/`_read_records`): `ExperimentRegistry`, `FeatureRegistry`,
+  `ModelRegistry`, `EnsembleReportRegistry`, the drift `_JsonlLedger`
+  (alerts + promotions), `ForecastReportRegistry`, `MappingLedger`,
+  `ScenarioReportRegistry`, `DecisionLog`, `DocumentIndex`, `ApprovalLedger`,
+  `MetricsStore` and `FundingLedger`.
+- Evidence: focused suites per batch (research `242`, events/portfolio/seam
+  `113`, ai/ops/hyperliquid `194`) all green; Ruff clean on every touched file;
+  final full suite `2633 passed, 0 failed` (exit 0); `git diff --check` clean.
+- Out of scope (documented above): watchlist (venue-aware identity + remove),
+  proposal event ledger (transactions/locking/reparse), forecast artifact
+  directories (directory-based).
