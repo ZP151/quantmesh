@@ -32,9 +32,11 @@ def _target_id(
     instrument: str,
     layer: ArtifactLayer,
     data_kind: DataKind,
-    interval: str,
+    interval: str | None,
 ) -> str:
-    return "|".join((provider_id, instrument, layer.value, data_kind.value, interval))
+    # Non-bar layers (adjustment factors, splits, dividends) carry no interval;
+    # they never match a required bar target but still need a stable identity.
+    return "|".join((provider_id, instrument, layer.value, data_kind.value, interval or ""))
 
 
 _REQUIRED_TARGETS = tuple(

@@ -74,6 +74,15 @@ def _set_mtime(path: Path, instant: datetime) -> None:
     os.utime(path, (stamp, stamp))
 
 
+def test_entry_target_id_handles_non_bar_layers_with_none_interval() -> None:
+    entry = _catalog_entry(quality=_catalog_quality()).model_copy(update={"interval": None})
+
+    target_id = soak_module._entry_target_id(entry)
+
+    assert isinstance(target_id, str)
+    assert target_id.endswith("|")
+
+
 def test_soak_rejects_seven_reports_generated_after_the_fact(tmp_path: Path) -> None:
     candidate = _candidate()
     store = SoakStore(tmp_path)
