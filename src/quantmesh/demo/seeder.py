@@ -109,6 +109,7 @@ from quantmesh.research.reports import (
     WindowResult,
     report_id,
 )
+from quantmesh.runtime import build_workstation_stores
 
 # The seeded commit every demo record pins: a fixed, deterministic
 # identity instead of the working tree's git HEAD (which would make
@@ -1737,27 +1738,24 @@ def load_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         history_bindings,
         scenario=scenario,
     )
+    stores = build_workstation_stores(root=root, lake_root=lake_root)
     return DemoSeeded(
         root=root,
         scenario=scenario,
         account=account,
         marks=marks,
         markets=markets,
-        watchlist=WatchlistStore(root=root / "watchlists"),
-        experiments=ExperimentRegistry(
-            root=root / "research" / "experiments", lake_root=root / "market" / "lake"
-        ),
-        promotions=PromotionLedger(root=root / "research" / "promotions"),
-        reports=ReportRegistry(
-            root=root / "research" / "reports", lake_root=root / "market" / "lake"
-        ),
-        forecasts=ForecastReportRegistry(root=root / "research" / "reports"),
-        alerts=AlertLedger(root=root / "alerts"),
-        journal=OrderJournal(root=root / "orders"),
-        mappings=MappingLedger(root=root / "mappings"),
-        decisions=DecisionLog(root=root / "decisions"),
-        documents=DocumentIndex(root=root / "documents"),
-        enablement=ApprovalLedger(root=root / "enablement"),
+        watchlist=stores.watchlist,
+        experiments=stores.experiments,
+        promotions=stores.promotions,
+        reports=stores.reports,
+        forecasts=stores.forecasts,
+        alerts=stores.alerts,
+        journal=stores.journal,
+        mappings=stores.mappings,
+        decisions=stores.decisions,
+        documents=stores.documents,
+        enablement=stores.enablement,
         providers=providers,
         history=history,
         price_forecasts=PriceForecastRegistry(
