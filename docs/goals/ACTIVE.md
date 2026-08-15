@@ -18,18 +18,21 @@
 - Blockers: final promotion is intentionally withheld pending an explicit
   operator command; no engineering blocker remains for iteration 0020.
 
-## Iteration 0022 — Durable JSONL persistence (active)
+## Iteration 0022 / 0023 — Durable JSONL persistence (0022 merged; 0023 active)
 
-Iteration 0022 is now the active product slice: consolidate the repeated
-ADR-0006 append-only JSONL discipline into one shared `JsonlStore` seam and
-migrate registries one at a time with byte-identical equivalence. Tracking
-issue #111; ledger `docs/iterations/0022-durable-jsonl-persistence.md`; branch
-`0022-durable-jsonl-persistence` from `origin/main` at `d4aeed3`. It is
-independent of iteration 0021 (do not depend on or modify
-`0021-trusted-data-fabric`; its soak HEAD stays `77141b9`), keeps external
-venues read-only and execution paper-only, and touches no credential handling.
-First checkpoint (shared module + `ReportRegistry` migration) is recorded in
-the iteration ledger and ADR-0016.
+Iteration 0022 shipped the shared `JsonlStore` seam and migrated
+`ReportRegistry` (PR #112, merged at `e5a321f`). Iteration 0023 now finishes the
+consolidation: extend the seam (secondary identity, in-place update,
+`check_absent`, `record_label`, keyless reads) and migrate the remaining simple
+ADR-0006 registries — order journal, research, events, portfolio, ai, ops and
+hyperliquid — byte-identically, deleting every reimplemented
+append/read/duplicate/hostile-path/schema block. Ledger
+`docs/iterations/0023-complete-jsonl-consolidation.md`; branch
+`0023-complete-jsonl-consolidation` from `origin/main` at `e5a321f`; contract
+amended in ADR-0016. The watchlist, proposal event ledger and forecast artifact
+directories are documented as out of scope (distinct semantics). Independent of
+iteration 0021 (its soak HEAD stays `77141b9`), external venues read-only,
+execution paper-only, no credential handling.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 

@@ -44,7 +44,6 @@ import pandas as pd
 from pydantic import (
     BaseModel,
     Field,
-    ValidationError,
     field_validator,
     model_validator,
 )
@@ -52,6 +51,7 @@ from pydantic import (
 from quantmesh._fs import atomic_replace
 from quantmesh.data.lake import Dataset, Lake
 from quantmesh.data.layout import validate_dataset_name
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.settings import settings
 
 MODELS_FILE = "models.jsonl"
@@ -347,6 +347,16 @@ class ModelRegistry:
     def __init__(self, root: Path | None = None, lake_root: Path | None = None) -> None:
         self.root = root if root is not None else settings.models_dir
         self.lake_root = lake_root if lake_root is not None else settings.lake_root
+        self._store = JsonlStore(
+            self.root,
+            filename=MODELS_FILE,
+            model=ModelRecord,
+            label="registry",
+            id_label="id",
+            article="an",
+            record_label="model",
+            key=lambda record: record.id,
+        )
 
     def record(
         self,
@@ -363,10 +373,7 @@ class ModelRegistry:
         record whose bytes are missing. Duplicate IDs are refused — the
         same setup is the same model.
         """
-        existing = self.all()
-        if any(record.id == spec.id for record in existing):
-            raise ValueError(f"model {spec.id!r} already recorded")
-        self._require_pin(spec)
+        existing = self._store.read()
         digest = hashlib.sha256(artifact_bytes).hexdigest()
         record = ModelRecord(
             id=spec.id,
@@ -375,8 +382,10 @@ class ModelRegistry:
             artifact_sha256=digest,
             created_at=datetime.now(UTC),
         )
+        self._store.check_absent(record, existing)
+        self._require_pin(spec)
         self._write_artifact(spec.id, artifact_bytes)
-        _append_records(self.root, MODELS_FILE, existing + [record])
+        self._store.write([*existing, record])
         return record
 
     def load(self, model_id_value: str) -> tuple[ModelRecord, bytes]:
@@ -400,13 +409,13 @@ class ModelRegistry:
         return record, data
 
     def get(self, model_id_value: str) -> ModelRecord:
-        for record in self.all():
+        for record in self._store.read():
             if record.id == model_id_value:
                 return record
         raise ValueError(f"no model recorded with id {model_id_value!r}")
 
     def all(self) -> list[ModelRecord]:
-        return _read_records(self.root, MODELS_FILE, ModelRecord)
+        return self._store.read()
 
     def resolve(self, model_id_value: str) -> Dataset:
         """Re-open the model's dataset, pinned to its revision (lake gate)."""
@@ -437,54 +446,6 @@ class ModelRegistry:
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)
-
-
-def _append_records(root: Path, filename: str, records: list[BaseModel]) -> None:
-    root.mkdir(parents=True, exist_ok=True)
-    path = root / filename
-    descriptor, temp_name = tempfile.mkstemp(
-        dir=root, prefix=f".{filename}.", suffix=".tmp"
-    )
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            for record in records:
-                handle.write(record.model_dump_json())
-                handle.write("\n")
-        atomic_replace(temp_name, path)
-    finally:
-        if os.path.exists(temp_name):
-            os.unlink(temp_name)
-
-
-def _read_records(root: Path, filename: str, model: type[BaseModel]) -> list[BaseModel]:
-    if not root.exists():
-        return []
-    if not root.is_dir():
-        raise ValueError(f"registry root {root} is not a directory")
-    path = root / filename
-    if not path.exists():
-        return []
-    try:
-        text = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as error:
-        raise ValueError(f"registry {path} is unreadable") from error
-    records: list[BaseModel] = []
-    seen: dict[str, int] = {}
-    for line_number, line in enumerate(text.splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            record = model.model_validate_json(line)
-        except ValidationError as error:
-            raise ValueError(f"registry {path} line {line_number} is invalid") from error
-        if record.id in seen:
-            raise ValueError(
-                f"registry {path} lines {seen[record.id]} and {line_number} "
-                f"share an id"
-            )
-        seen[record.id] = line_number
-        records.append(record)
-    return records
 
 
 def current_commit() -> str:

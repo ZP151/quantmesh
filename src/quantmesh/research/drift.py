@@ -23,7 +23,6 @@ import hashlib
 import json
 import math
 import re
-import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Generic, Literal, TypeVar
@@ -32,7 +31,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
-from quantmesh._fs import atomic_replace
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.research.features import frame_digest
 from quantmesh.research.reports import ID_PATTERN, Parameter, StrategyReport
 from quantmesh.settings import settings
@@ -861,10 +860,8 @@ def promote_signal(
 
 class _JsonlLedger(Generic[_T]):
     """The ADR-0006 JSONL discipline, shared by the alert and promotion
-    ledgers: atomic temp+replace appends, fail-closed reads with line
-    attribution, duplicate-id refusal, and a root guard before any
-    write. Subclasses pin the record type, file name, message kind, and
-    default root."""
+    ledgers, now delegated to ``JsonlStore`` (ADR-0016). Subclasses pin
+    the record type, file name, message kind, and default root."""
 
     _record_type: type[_T]
     _file_name: str
@@ -873,73 +870,31 @@ class _JsonlLedger(Generic[_T]):
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = Path(root) if root is not None else self._default_dir
+        self._store = JsonlStore(
+            self.root,
+            filename=self._file_name,
+            model=self._record_type,
+            label=f"{self._kind} ledger",
+            id_label="record",
+            record_label=f"{self._kind} record",
+            key=lambda record: record.id,
+        )
 
     @property
     def path(self) -> Path:
         return self.root / self._file_name
 
     def record(self, record: _T) -> _T:
-        existing = self._read() if self.path.exists() else []
-        if any(item.id == record.id for item in existing):
-            raise ValueError(f"{self._kind} record {record.id!r} already recorded")
-        self._append(record, existing)
-        return record
+        return self._store.append(record)
 
     def get(self, record_id_value: str) -> _T:
-        matches = [item for item in self._read() if item.id == record_id_value]
+        matches = [item for item in self._store.read() if item.id == record_id_value]
         if not matches:
             raise ValueError(f"no {self._kind} recorded with id {record_id_value!r}")
         return matches[0]
 
     def all(self) -> list[_T]:
-        return self._read()
-
-    def _append(self, record: _T, existing: list[_T]) -> None:
-        if not self.root.exists():
-            self.root.mkdir(parents=True, exist_ok=True)
-        if not self.root.is_dir():
-            raise ValueError(f"{self._kind} ledger root {self.root} is not a directory")
-        line = record.model_dump_json() + "\n"
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            newline="",
-            dir=self.root,
-            delete=False,
-        ) as handle:
-            temporary = Path(handle.name)
-            try:
-                for item in existing:
-                    handle.write(item.model_dump_json() + "\n")
-                handle.write(line)
-            except BaseException:
-                temporary.unlink(missing_ok=True)
-                raise
-        atomic_replace(temporary, self.path)
-
-    def _read(self) -> list[_T]:
-        if not self.path.exists():
-            return []
-        if not self.path.is_file():
-            raise ValueError(f"{self._kind} ledger path {self.path} is not a file")
-        records: list[_T] = []
-        with self.path.open(encoding="utf-8") as handle:
-            for index, line in enumerate(handle, start=1):
-                if not line.strip():
-                    continue
-                try:
-                    record = self._record_type.model_validate_json(line)
-                except Exception as error:  # noqa: BLE001 — attribution below
-                    raise ValueError(
-                        f"{self._kind} ledger {self.path} line {index} is invalid: {error}"
-                    ) from error
-                if any(item.id == record.id for item in records):
-                    raise ValueError(
-                        f"{self._kind} ledger {self.path} lines share a record id "
-                        f"{record.id!r}"
-                    )
-                records.append(record)
-        return records
+        return self._store.read()
 
 
 class AlertLedger(_JsonlLedger[AlertRecord]):

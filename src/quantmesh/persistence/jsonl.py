@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from typing import Generic, TypeVar
 
@@ -41,9 +41,12 @@ class JsonlStore(Generic[Model]):
         model: type[Model],
         label: str,
         id_label: str,
-        key: Callable[[Model], str],
+        key: Callable[[Model], str] | None = None,
         error_type: type[Exception] = ValueError,
         extra_validate: Callable[[Model], None] | None = None,
+        article: str = "a",
+        secondary_keys: Sequence[tuple[str, Callable[[Model], str | None]]] = (),
+        record_label: str | None = None,
     ) -> None:
         self.root = root
         self.filename = filename
@@ -53,6 +56,9 @@ class JsonlStore(Generic[Model]):
         self._key = key
         self.error_type = error_type
         self.extra_validate = extra_validate
+        self.article = article
+        self.secondary_keys = secondary_keys
+        self.record_label = record_label if record_label is not None else id_label
 
     @property
     def path(self) -> Path:
@@ -95,6 +101,7 @@ class JsonlStore(Generic[Model]):
             raise self._error(f"{self.label} {self.path} is unreadable") from error
         records: list[Model] = []
         seen: dict[str, int] = {}
+        seen_secondary: dict[int, dict[str, int]] = {}
         for line_number, line in enumerate(text.splitlines(), start=1):
             if not line.strip():
                 continue
@@ -104,12 +111,27 @@ class JsonlStore(Generic[Model]):
                 raise self._error(
                     f"{self.label} {self.path} line {line_number} is invalid"
                 ) from error
-            key = self._key(record)
-            if key in seen:
-                raise self._error(
-                    f"{self.label} {self.path} lines {seen[key]} and {line_number} "
-                    f"share a {self.id_label} id"
-                )
+            if self._key is not None:
+                key = self._key(record)
+                if key in seen:
+                    raise self._error(
+                        f"{self.label} {self.path} lines {seen[key]} and {line_number} "
+                        f"share {self.article} {self.id_label} id"
+                    )
+                for index, (secondary_label, secondary_key) in enumerate(
+                    self.secondary_keys
+                ):
+                    secondary_value = secondary_key(record)
+                    if secondary_value is None:
+                        continue
+                    bucket = seen_secondary.setdefault(index, {})
+                    if secondary_value in bucket:
+                        raise self._error(
+                            f"{self.label} {self.path} lines {bucket[secondary_value]} and "
+                            f"{line_number} share {self.article} {secondary_label}"
+                        )
+                    bucket[secondary_value] = line_number
+                seen[key] = line_number
             if self.extra_validate is not None:
                 try:
                     self.extra_validate(record)
@@ -118,7 +140,6 @@ class JsonlStore(Generic[Model]):
                         f"{self.label} {self.path} line {line_number} has invalid "
                         f"derived state: {error}"
                     ) from error
-            seen[key] = line_number
             records.append(record)
         return records
 
@@ -147,13 +168,40 @@ class JsonlStore(Generic[Model]):
             if os.path.exists(temp_name):
                 os.unlink(temp_name)
 
+    def check_absent(self, record: Model, existing: Sequence[Model] | None = None) -> None:
+        """Refuse a duplicate identity against ``existing`` (a fresh read if omitted).
+
+        ``append`` uses this internally; a caller that must sequence its own
+        domain precondition (e.g. a lake pin gate) after the duplicate refusal
+        but before the write can call ``read`` + ``check_absent`` + ``write``
+        in that exact order without reimplementing the duplicate check.
+        """
+        if existing is None:
+            existing = self.read()
+        key = self._key(record)
+        if any(self._key(item) == key for item in existing):
+            raise self._error(f"{self.record_label} {key!r} already recorded")
+
     def append(self, record: Model) -> Model:
         """Refuse a duplicate identity, then append atomically."""
         existing = self.read()
-        key = self._key(record)
-        if any(self._key(item) == key for item in existing):
-            raise self._error(f"{self.id_label} {key!r} already recorded")
+        self.check_absent(record, existing)
         self.write([*existing, record])
+        return record
+
+    def update(self, record: Model) -> Model:
+        """Replace the snapshot of an existing record sharing ``record``'s key.
+
+        An unknown key is refused before anything is written; the replacement
+        is one atomic full rewrite, so an order's growing event history still
+        lands as a single temp+replace.
+        """
+        existing = self.read()
+        key = self._key(record)
+        if not any(self._key(item) == key for item in existing):
+            raise self._error(f"{self.id_label} {key!r} is not recorded")
+        updated = [record if self._key(item) == key else item for item in existing]
+        self.write(updated)
         return record
 
     def scan(self) -> list[Path]:

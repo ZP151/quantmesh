@@ -23,10 +23,8 @@ consumers; ``compute_feature`` fails closed on them.
 import hashlib
 import json
 import math
-import os
 import re
 import subprocess
-import tempfile
 from collections.abc import Callable
 from datetime import UTC
 from enum import StrEnum
@@ -36,16 +34,15 @@ import pandas as pd
 from pydantic import (
     BaseModel,
     Field,
-    ValidationError,
     field_validator,
     model_validator,
 )
 
-from quantmesh._fs import atomic_replace
 from quantmesh.data.lake import Dataset, Lake
 from quantmesh.data.layout import validate_dataset_name, validate_symbol
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Venue
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.settings import settings
 
 FEATURES_FILE = "features.jsonl"
@@ -357,6 +354,26 @@ class FeatureRegistry:
     def __init__(self, root: Path | None = None, lake_root: Path | None = None) -> None:
         self.root = root if root is not None else settings.features_dir
         self.lake_root = lake_root if lake_root is not None else settings.lake_root
+        self._specs_store = JsonlStore(
+            self.root,
+            filename=FEATURES_FILE,
+            model=FeatureSpec,
+            label="registry",
+            id_label="id",
+            article="an",
+            record_label="feature",
+            key=lambda spec: spec.id,
+        )
+        self._sets_store = JsonlStore(
+            self.root,
+            filename=FEATURE_SETS_FILE,
+            model=FeatureSet,
+            label="registry",
+            id_label="id",
+            article="an",
+            record_label="feature set",
+            key=lambda feature_set: feature_set.id,
+        )
 
     def record_spec(
         self,
@@ -401,11 +418,10 @@ class FeatureRegistry:
             commit=commit,
             parameters=parameters or {},
         )
-        existing = self.all_specs()
-        if any(record.id == spec.id for record in existing):
-            raise ValueError(f"feature {spec.id!r} already recorded")
+        existing = self._specs_store.read()
+        self._specs_store.check_absent(spec, existing)
         self._require_pin(spec)
-        _append_records(self.root, FEATURES_FILE, existing + [spec])
+        self._specs_store.write([*existing, spec])
         return spec
 
     def record_set(self, *, name: str, feature_ids: list[str]) -> FeatureSet:
@@ -425,26 +441,25 @@ class FeatureRegistry:
             feature_ids=sorted(feature_ids),
             id=featureset_id(name, sorted(feature_ids)),
         )
-        existing = self.all_sets()
-        if any(record.id == feature_set.id for record in existing):
-            raise ValueError(f"feature set {feature_set.id!r} already recorded")
-        _append_records(self.root, FEATURE_SETS_FILE, existing + [feature_set])
+        existing = self._sets_store.read()
+        self._sets_store.check_absent(feature_set, existing)
+        self._sets_store.write([*existing, feature_set])
         return feature_set
 
     def all_specs(self) -> list[FeatureSpec]:
-        return _read_records(self.root, FEATURES_FILE, FeatureSpec)
+        return self._specs_store.read()
 
     def all_sets(self) -> list[FeatureSet]:
-        return _read_records(self.root, FEATURE_SETS_FILE, FeatureSet)
+        return self._sets_store.read()
 
     def get_spec(self, feature_id_value: str) -> FeatureSpec:
-        for spec in self.all_specs():
+        for spec in self._specs_store.read():
             if spec.id == feature_id_value:
                 return spec
         raise ValueError(f"no feature recorded with id {feature_id_value!r}")
 
     def get_set(self, featureset_id_value: str) -> FeatureSet:
-        for feature_set in self.all_sets():
+        for feature_set in self._sets_store.read():
             if feature_set.id == featureset_id_value:
                 return feature_set
         raise ValueError(f"no feature set recorded with id {featureset_id_value!r}")
@@ -462,54 +477,6 @@ class FeatureRegistry:
                 f"feature {spec.id!r} pins manifest revision {spec.revision}, "
                 f"but dataset {spec.dataset!r} is now revision {dataset.manifest.revision}"
             )
-
-
-def _append_records(root: Path, filename: str, records: list[BaseModel]) -> None:
-    root.mkdir(parents=True, exist_ok=True)
-    path = root / filename
-    descriptor, temp_name = tempfile.mkstemp(
-        dir=root, prefix=f".{filename}.", suffix=".tmp"
-    )
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            for record in records:
-                handle.write(record.model_dump_json())
-                handle.write("\n")
-        atomic_replace(temp_name, path)
-    finally:
-        if os.path.exists(temp_name):
-            os.unlink(temp_name)
-
-
-def _read_records(root: Path, filename: str, model: type[BaseModel]) -> list[BaseModel]:
-    if not root.exists():
-        return []
-    if not root.is_dir():
-        raise ValueError(f"registry root {root} is not a directory")
-    path = root / filename
-    if not path.exists():
-        return []
-    try:
-        text = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as error:
-        raise ValueError(f"registry {path} is unreadable") from error
-    records: list[BaseModel] = []
-    seen: dict[str, int] = {}
-    for line_number, line in enumerate(text.splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            record = model.model_validate_json(line)
-        except ValidationError as error:
-            raise ValueError(f"registry {path} line {line_number} is invalid") from error
-        if record.id in seen:
-            raise ValueError(
-                f"registry {path} lines {seen[record.id]} and {line_number} "
-                f"share an id"
-            )
-        seen[record.id] = line_number
-        records.append(record)
-    return records
 
 
 def current_commit() -> str:
