@@ -14,16 +14,14 @@ from what was actually sent and produced.
 
 import hashlib
 import json
-import os
-import tempfile
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from quantmesh._fs import atomic_replace
 from quantmesh.ai.retrieval import Citation
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.settings import settings
 
 __all__ = [
@@ -196,69 +194,25 @@ class DecisionLog:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.decisions_dir
+        self._store = JsonlStore(
+            self.root,
+            filename=DECISIONS_FILE,
+            model=DecisionRecord,
+            label="decision log",
+            id_label="decision",
+            key=lambda record: record.decision_id,
+        )
 
     def record(self, record: DecisionRecord) -> DecisionRecord:
         """Append a record; a duplicate decision_id is refused."""
-        existing = self.all()
-        if any(entry.decision_id == record.decision_id for entry in existing):
-            raise ValueError(f"decision {record.decision_id!r} already recorded")
-        self._append(existing + [record])
-        return record
+        return self._store.append(record)
 
     def get(self, decision_id: str) -> DecisionRecord:
         """The record with this id; raises when absent or unreadable."""
-        for entry in self.all():
+        for entry in self._store.read():
             if entry.decision_id == decision_id:
                 return entry
         raise ValueError(f"no decision recorded with id {decision_id!r}")
 
     def all(self) -> list[DecisionRecord]:
-        return self._read()
-
-    def _append(self, records: list[DecisionRecord]) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        path = self.root / DECISIONS_FILE
-        descriptor, temp_name = tempfile.mkstemp(
-            dir=self.root, prefix=f".{DECISIONS_FILE}.", suffix=".tmp"
-        )
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                for record in records:
-                    handle.write(record.model_dump_json())
-                    handle.write("\n")
-            atomic_replace(temp_name, path)
-        finally:
-            if os.path.exists(temp_name):
-                os.unlink(temp_name)
-
-    def _read(self) -> list[DecisionRecord]:
-        if not self.root.exists():
-            return []
-        if not self.root.is_dir():
-            raise ValueError(f"decision log root {self.root} is not a directory")
-        path = self.root / DECISIONS_FILE
-        if not path.exists():
-            return []
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as error:
-            raise ValueError(f"decision log {path} is unreadable") from error
-        records: list[DecisionRecord] = []
-        seen: dict[str, int] = {}
-        for line_number, line in enumerate(text.splitlines(), start=1):
-            if not line.strip():
-                continue
-            try:
-                record = DecisionRecord.model_validate_json(line)
-            except Exception as error:
-                raise ValueError(
-                    f"decision log {path} line {line_number} is invalid"
-                ) from error
-            if record.decision_id in seen:
-                raise ValueError(
-                    f"decision log {path} lines {seen[record.decision_id]} and "
-                    f"{line_number} share a decision id"
-                )
-            seen[record.decision_id] = line_number
-            records.append(record)
-        return records
+        return self._store.read()

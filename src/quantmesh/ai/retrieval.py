@@ -11,9 +11,7 @@ closed on unknown kinds, missing records, and out-of-range spans.
 
 import json
 import math
-import os
 import re
-import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -22,9 +20,9 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from quantmesh._fs import atomic_replace
 from quantmesh.ai.errors import CitationResolutionError, RetrievalError
 from quantmesh.execution.journal import OrderJournal
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.research.experiments import ExperimentRegistry
 from quantmesh.settings import settings
 
@@ -183,6 +181,15 @@ class DocumentIndex:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.documents_dir
+        self._store = JsonlStore(
+            self.root,
+            filename=DOCUMENTS_FILE,
+            model=Document,
+            label="document index",
+            id_label="document",
+            key=lambda document: document.id,
+            error_type=RetrievalError,
+        )
 
     def ingest_file(
         self, path: Path, *, kind: str, doc_id: str, ingested_at: datetime | None = None
@@ -199,7 +206,7 @@ class DocumentIndex:
             raise RetrievalError(f"unknown document kind {kind!r} (filing|news|note)")
         if not doc_id.strip():
             raise RetrievalError("document id must not be empty")
-        existing = self.all()
+        existing = self._store.read()
         if any(record.id == doc_id for record in existing):
             raise RetrievalError(f"document {doc_id!r} already indexed")
         path = Path(path)
@@ -217,67 +224,19 @@ class DocumentIndex:
             ingested_at=ingested_at or datetime.now(UTC),
             content=text,
         )
-        self._append(document, existing)
+        self._store.write([*existing, document])
         return document
 
     def get(self, doc_id: str) -> Document:
         """The record with this id; raises when absent or unreadable."""
-        for record in self.all():
+        for record in self._store.read():
             if record.id == doc_id:
                 return record
         raise ValueError(f"no document recorded with id {doc_id!r}")
 
     def all(self) -> list[Document]:
         """Every record, in ingest order."""
-        return self._read()
-
-    def _append(self, document: Document, existing: list[Document]) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        path = self.root / DOCUMENTS_FILE
-        descriptor, temp_name = tempfile.mkstemp(
-            dir=self.root, prefix=f".{DOCUMENTS_FILE}.", suffix=".tmp"
-        )
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                for record in existing + [document]:
-                    handle.write(record.model_dump_json())
-                    handle.write("\n")
-            atomic_replace(temp_name, path)
-        finally:
-            if os.path.exists(temp_name):
-                os.unlink(temp_name)
-
-    def _read(self) -> list[Document]:
-        if not self.root.exists():
-            return []
-        if not self.root.is_dir():
-            raise RetrievalError(f"document index root {self.root} is not a directory")
-        path = self.root / DOCUMENTS_FILE
-        if not path.exists():
-            return []
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as error:
-            raise RetrievalError(f"document index {path} is unreadable") from error
-        records: list[Document] = []
-        seen: dict[str, int] = {}
-        for line_number, line in enumerate(text.splitlines(), start=1):
-            if not line.strip():
-                continue
-            try:
-                record = Document.model_validate_json(line)
-            except Exception as error:
-                raise RetrievalError(
-                    f"document index {path} line {line_number} is invalid"
-                ) from error
-            if record.id in seen:
-                raise RetrievalError(
-                    f"document index {path} lines {seen[record.id]} and "
-                    f"{line_number} share a document id"
-                )
-            seen[record.id] = line_number
-            records.append(record)
-        return records
+        return self._store.read()
 
 
 # ---------------------------------------------------------------------------

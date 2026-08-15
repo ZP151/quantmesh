@@ -20,8 +20,6 @@ the code path can fabricate a real approval.
 
 import hashlib
 import json
-import os
-import tempfile
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -29,8 +27,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from quantmesh._fs import atomic_replace
 from quantmesh.domain.models import Venue
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.research.reports import ID_PATTERN
 from quantmesh.settings import settings
 
@@ -153,9 +151,18 @@ class ApprovalLedger:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.enablement_dir
+        self._store = JsonlStore(
+            self.root,
+            filename=ENABLEMENT_FILE,
+            model=ApprovalRecord,
+            label="enablement store",
+            id_label="record",
+            record_label="enablement record",
+            key=lambda record: record.id,
+        )
 
     def all(self) -> list[ApprovalRecord]:
-        return self._read()
+        return self._store.read()
 
     def states(self) -> dict[Venue, EnablementState]:
         """Per-venue state derived from the ledger: the target state of
@@ -229,53 +236,7 @@ class ApprovalLedger:
             acted_at=acted_at,
             gate_text=gate_text,
         )
-        existing = self.all()
-        if any(item.id == record.id for item in existing):
-            raise ValueError(f"enablement record {record.id!r} already recorded")
-        self._write(existing + [record])
+        existing = self._store.read()
+        self._store.check_absent(record, existing)
+        self._store.write([*existing, record])
         return record
-
-    def _write(self, records: list[ApprovalRecord]) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        path = self.root / ENABLEMENT_FILE
-        descriptor, temp_name = tempfile.mkstemp(
-            dir=self.root, prefix=f".{ENABLEMENT_FILE}.", suffix=".tmp"
-        )
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                for record in records:
-                    handle.write(record.model_dump_json())
-                    handle.write("\n")
-            atomic_replace(temp_name, path)
-        finally:
-            if os.path.exists(temp_name):
-                os.unlink(temp_name)
-
-    def _read(self) -> list[ApprovalRecord]:
-        if not self.root.exists():
-            return []
-        if not self.root.is_dir():
-            raise ValueError(f"enablement store root {self.root} is not a directory")
-        path = self.root / ENABLEMENT_FILE
-        if not path.exists():
-            return []
-        if not path.is_file():
-            raise ValueError(f"enablement path {path} is not a file")
-        records: list[ApprovalRecord] = []
-        with path.open(encoding="utf-8") as handle:
-            for index, line in enumerate(handle, start=1):
-                if not line.strip():
-                    continue
-                try:
-                    record = ApprovalRecord.model_validate_json(line)
-                except Exception as error:  # noqa: BLE001 — attribution below
-                    raise ValueError(
-                        f"enablement store {path} line {index} is invalid: {error}"
-                    ) from error
-                if any(item.id == record.id for item in records):
-                    raise ValueError(
-                        f"enablement store {path} lines share a record id "
-                        f"{record.id!r}"
-                    )
-                records.append(record)
-        return records
