@@ -839,6 +839,13 @@ class QualityEvaluator:
         entitlements = {item.entitlement for item in envelopes}
         if rights != {manifest.source_rights_id} or entitlements != {manifest.entitlement}:
             raise QualityFailure("manifest rights or entitlement disagree with raw evidence")
+        # Latency is measured against the source surface of the manifest's own
+        # data kind; a derived bar manifest's lineage also includes corporate
+        # action envelopes whose event may be years old, which must not inflate
+        # the bar latency.
+        latency_envelopes = tuple(
+            envelope for envelope in envelopes if envelope.data_kind is manifest.data_kind
+        )
         latency_seconds = max(
             max(
                 0,
@@ -848,7 +855,7 @@ class QualityEvaluator:
                     ).total_seconds()
                 ),
             )
-            for envelope in envelopes
+            for envelope in (latency_envelopes or envelopes)
         )
         freshness_seconds = (
             None
