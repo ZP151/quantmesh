@@ -14,7 +14,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from quantmesh.data.instruments import CanonicalInstrumentId
 from quantmesh.domain.market_data import Bar
 
-_RATE = re.compile(r"^(\d+(?:\.\d+)?)\s*->\s*(\d+(?:\.\d+)?)$")
+# The official wire ``rate`` uses the Unicode arrow (``1→4``); keep the ASCII
+# form (``1->4``) accepted for fixtures and hand-authored evidence.
+_RATE = re.compile(r"^(\d+(?:\.\d+)?)\s*(?:->|→)\s*(\d+(?:\.\d+)?)$")
 _NEW_YORK = ZoneInfo("America/New_York")
 
 

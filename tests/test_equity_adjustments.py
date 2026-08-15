@@ -163,6 +163,34 @@ def test_official_factor_and_action_surfaces_cross_check_forward_split() -> None
     assert actions[0].effective_at == datetime(2020, 8, 31, 4, tzinfo=UTC)
 
 
+def test_split_rate_accepts_unicode_arrow_from_real_opend_payload() -> None:
+    announced = datetime(2020, 8, 17, tzinfo=UTC)
+    actions = normalize_moomoo_split_actions(
+        canonical_instrument=AAPL_ID,
+        factor_rows=[
+            {
+                "ex_div_date": "2020-08-31",
+                "split_base": 1.0,
+                "split_ert": 4.0,
+                "join_base": None,
+                "join_ert": None,
+                "split_ratio": 0.25,
+            }
+        ],
+        split_rows=[
+            {
+                "dir_deci_pub_date": int(announced.timestamp()),
+                "dir_deci_pub_date_str": "2020-08-17",
+                "reform_type": "Split",
+                "rate": "1→4",
+            }
+        ],
+    )
+
+    assert len(actions) == 1
+    assert actions[0].ratio == 4.0
+
+
 def test_same_ratio_actions_match_nearest_effective_factor_independent_of_order() -> None:
     first_announcement = datetime(2019, 8, 17, tzinfo=UTC)
     second_announcement = datetime(2021, 8, 17, tzinfo=UTC)
