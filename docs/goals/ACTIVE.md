@@ -18,6 +18,19 @@
 - Blockers: final promotion is intentionally withheld pending an explicit
   operator command; no engineering blocker remains for iteration 0020.
 
+## Iteration 0022 — Durable JSONL persistence (active)
+
+Iteration 0022 is now the active product slice: consolidate the repeated
+ADR-0006 append-only JSONL discipline into one shared `JsonlStore` seam and
+migrate registries one at a time with byte-identical equivalence. Tracking
+issue #111; ledger `docs/iterations/0022-durable-jsonl-persistence.md`; branch
+`0022-durable-jsonl-persistence` from `origin/main` at `d4aeed3`. It is
+independent of iteration 0021 (do not depend on or modify
+`0021-trusted-data-fabric`; its soak HEAD stays `77141b9`), keeps external
+venues read-only and execution paper-only, and touches no credential handling.
+First checkpoint (shared module + `ReportRegistry` migration) is recorded in
+the iteration ledger and ADR-0016.
+
 ## Iteration 0020 planning checkpoint — 2026-08-11
 
 The operator asked to prefer coherent upstream frameworks over assembling
