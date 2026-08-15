@@ -25,6 +25,7 @@ from quantmesh.data.quality import (
     QualityObservation,
     QualityPolicy,
     QualityStatus,
+    _post_grace_sla_issues,
 )
 from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
@@ -355,6 +356,15 @@ def test_hard_sla_counts_and_thresholds_fail(tmp_path) -> None:
         "unexplained-gap",
         "freshness-sla",
     }
+
+
+def test_post_grace_sla_skips_freshness_and_latency_for_corporate_actions() -> None:
+    policy = _policy(data_kind=DataKind.SPLITS)
+    observation = _observation(freshness_seconds=10_000_000, latency_seconds=10_000_000)
+
+    issues = _post_grace_sla_issues(policy, observation, expected_count=0)
+
+    assert issues == []
 
 
 def test_changed_historical_overlap_is_measured_from_row_content(tmp_path) -> None:

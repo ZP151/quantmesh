@@ -962,7 +962,10 @@ class QualityEvaluator:
                 payload = json.loads(self.manifests.objects.get_bytes(manifest.objects[0]))
                 if not isinstance(payload, list):
                     return {}
-                actions = tuple(EquitySplitAction.model_validate(row) for row in payload)
+                actions = tuple(
+                    EquitySplitAction.model_validate_json(canonical_json_bytes(row))
+                    for row in payload
+                )
                 return {
                     action.action_id: hashlib.sha256(
                         canonical_json_bytes(action.model_dump(mode="json"))
@@ -1297,14 +1300,18 @@ def _post_grace_sla_issues(
         issues.append("coverage-below-threshold")
     if policy.require_terminal_pagination and observation.pagination_terminal is not True:
         issues.append("pagination-incomplete")
-    if observation.freshness_seconds is None:
-        issues.append("freshness-unavailable")
-    elif observation.freshness_seconds > policy.max_freshness_seconds:
-        issues.append("freshness-sla")
-    if observation.latency_seconds is None:
-        issues.append("latency-unavailable")
-    elif observation.latency_seconds > policy.max_latency_seconds:
-        issues.append("latency-sla")
+    # Corporate-action surfaces (adjustment factors, splits, dividends) are
+    # historical snapshots whose latest event may be years old; freshness and
+    # latency SLAs are meaningful only for bar time-series.
+    if policy.data_kind is DataKind.BARS:
+        if observation.freshness_seconds is None:
+            issues.append("freshness-unavailable")
+        elif observation.freshness_seconds > policy.max_freshness_seconds:
+            issues.append("freshness-sla")
+        if observation.latency_seconds is None:
+            issues.append("latency-unavailable")
+        elif observation.latency_seconds > policy.max_latency_seconds:
+            issues.append("latency-sla")
     return issues
 
 
@@ -1421,7 +1428,10 @@ def _nonbar_schema_mismatch(
         payload = json.loads(manifests.objects.get_bytes(manifest.objects[0]))
         if not isinstance(payload, list):
             raise TypeError("split payload must be a list")
-        actions = tuple(EquitySplitAction.model_validate(item) for item in payload)
+        actions = tuple(
+            EquitySplitAction.model_validate_json(canonical_json_bytes(item))
+            for item in payload
+        )
         identities = tuple(action.action_id for action in actions)
         if actions:
             if (

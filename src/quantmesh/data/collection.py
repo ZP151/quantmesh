@@ -818,10 +818,12 @@ class CollectionCoordinator:
             grace_period_seconds=3_600 if venue is Venue.MOOMOO else 300,
             minimum_coverage_ratio=1.0,
             max_freshness_seconds=max(600, step_seconds * 2),
-            # Leave a real observation window after grace expires. Equal grace
-            # and latency thresholds make a passing post-grace evaluation
-            # possible only at one exact instant.
-            max_latency_seconds=7_200 if venue is Venue.MOOMOO else 600,
+            # Leave a real observation window after grace expires and scale with
+            # the interval: a next-day daily collection is far older than a
+            # same-minute intraday collection. Equal grace and latency
+            # thresholds make a passing post-grace evaluation possible only at
+            # one exact instant.
+            max_latency_seconds=max(7_200 if venue is Venue.MOOMOO else 600, step_seconds * 2),
             require_terminal_pagination=(
                 venue is Venue.MOOMOO
                 and manifest.layer is ArtifactLayer.RAW
