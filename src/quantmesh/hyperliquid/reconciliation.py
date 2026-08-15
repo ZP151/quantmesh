@@ -67,6 +67,9 @@ from quantmesh.execution.reconciliation import (
     ReconciliationFinding,
     ReconciliationReport,
     Severity,
+    dedupe_by_id,
+    finding,
+    is_terminal,
 )
 from quantmesh.hyperliquid.exchange import (
     BrokerFill,
@@ -124,7 +127,7 @@ def run_reconciliation(
         if order.client_order_id is not None:
             by_cloid[order.client_order_id] = order
 
-    for broker_order in _dedupe_by_id(snapshot.orders, lambda o: o.oid):
+    for broker_order in dedupe_by_id(snapshot.orders, lambda o: o.oid):
         by_id = by_broker_id.get(str(broker_order.oid))
         by_note = _by_cloid(broker_order, by_cloid)
 
@@ -135,7 +138,7 @@ def run_reconciliation(
                     internal_order_id=by_id.order_id,
                     status="divergent",
                     findings=[
-                        _finding(
+                        finding(
                             FindingKind.MAPPING,
                             Severity.ERROR,
                             f"venue order {broker_order.oid} maps to "
@@ -155,7 +158,7 @@ def run_reconciliation(
                     broker_order_id=str(broker_order.oid),
                     status="missing",
                     findings=[
-                        _finding(
+                        finding(
                             FindingKind.MAPPING,
                             Severity.ERROR,
                             f"venue order {broker_order.oid} has no journal "
@@ -182,7 +185,7 @@ def run_reconciliation(
     for order in internal:
         if order.order_id in claimed:
             continue
-        if _is_terminal(order.status):
+        if is_terminal(order.status):
             # Ack-terminal unclaimed: the venue surface is silent after a
             # confirmed terminal ack — canceled orders leave the surface,
             # rejected orders never entered it, and old fills age out of
@@ -193,7 +196,7 @@ def run_reconciliation(
             findings = []
             if order.broker_order_id is None:
                 findings.append(
-                    _finding(
+                    finding(
                         FindingKind.MAPPING,
                         Severity.WARNING,
                         f"order {order.order_id} is {order.status.value} by venue "
@@ -273,7 +276,7 @@ def apply_reconciliation(
             # longer lists (or never listed) has nothing to import; its
             # ack is the record. A live order the venue lost sight of was
             # classified missing/divergent and was refused above.
-            if _is_terminal(order.status):
+            if is_terminal(order.status):
                 continue
             result.refused.append(outcome.internal_order_id)
             continue
@@ -300,7 +303,7 @@ def _compare(
     findings: list[ReconciliationFinding] = []
     if recovered:
         findings.append(
-            _finding(
+            finding(
                 FindingKind.MAPPING,
                 Severity.WARNING,
                 f"mapping for venue order {broker.oid} recovered via the cloid "
@@ -313,7 +316,7 @@ def _compare(
     broker_status = _surface_status(broker, order)
     if broker_status is None:
         findings.append(
-            _finding(
+            finding(
                 FindingKind.STATUS,
                 Severity.ERROR,
                 f"venue status {broker.status!r} has no honest domain meaning",
@@ -345,8 +348,8 @@ def _compare(
         status = "divergent"
     elif (
         broker_status is not None
-        and _is_terminal(order.status)
-        and _is_terminal(broker_status)
+        and is_terminal(order.status)
+        and is_terminal(broker_status)
         and broker_status == order.status
     ):
         status = "matched"
@@ -391,7 +394,7 @@ def _compare_status(
     if _is_progress(broker_status, order.status):
         return  # the broker is ahead; adoption imports the progress
     findings.append(
-        _finding(
+        finding(
             FindingKind.STATUS,
             Severity.ERROR,
             f"status drift: venue {broker.status} vs journal {order.status.value}",
@@ -413,7 +416,7 @@ def _compare_quantities(
         diff = broker.quantity - order.quantity
         if abs(diff) / order.quantity > qty_tol:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.QUANTITY,
                     Severity.ERROR,
                     f"order quantity drift: venue {broker.quantity:g} vs journal "
@@ -428,7 +431,7 @@ def _compare_quantities(
     fill_diff = broker.filled_quantity - order.filled_quantity
     if fill_diff < -qty_tol * order.quantity:
         findings.append(
-            _finding(
+            finding(
                 FindingKind.QUANTITY,
                 Severity.ERROR,
                 f"journal shows more fills than the venue: venue "
@@ -450,7 +453,7 @@ def _compare_prices(
     if order.limit_price is not None and broker.limit_price is not None:
         if abs(broker.limit_price - order.limit_price) / order.limit_price > price_tol:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.PRICE,
                     Severity.ERROR,
                     f"limit price drift: venue {broker.limit_price} vs journal "
@@ -465,7 +468,7 @@ def _compare_prices(
     if broker_avg is not None and journal_avg is not None:
         if abs(broker_avg - journal_avg) / journal_avg > price_tol:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.PRICE,
                     Severity.ERROR,
                     f"execution price drift: venue avg {broker_avg} vs journal avg "
@@ -491,7 +494,7 @@ def _compare_fees(
         return  # no execution on either side: no fee to compare
     if not order_fills:
         findings.append(
-            _finding(
+            finding(
                 FindingKind.FEE,
                 Severity.ERROR,
                 "journal holds fills but the venue reports no fills for this order",
@@ -501,7 +504,7 @@ def _compare_fees(
         return
     if len(broker_fees) != len(order_fills):
         findings.append(
-            _finding(
+            finding(
                 FindingKind.MISSING_DATA,
                 Severity.ERROR,
                 f"the venue reports {len(order_fills)} fills but fee data for "
@@ -514,7 +517,7 @@ def _compare_fees(
     if journal_fees:
         if not broker_fees:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.MISSING_DATA,
                     Severity.ERROR,
                     "journal holds fees but the venue reports none; cannot compare",
@@ -526,7 +529,7 @@ def _compare_fees(
         journal_total = sum(journal_fees)
         if abs(broker_total - journal_total) > tolerance.fee_abs:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.FEE,
                     Severity.ERROR,
                     f"fee drift: venue {broker_total} vs journal {journal_total}",
@@ -550,7 +553,7 @@ def _compare_fill_ids(
     for fill in order.fills:
         if fill.broker_fill_id is not None and fill.broker_fill_id not in venue_ids:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.REVOKED_FILL,
                     Severity.ERROR,
                     f"fill {fill.broker_fill_id} is stamped on the journal but the "
@@ -595,7 +598,7 @@ def _compare_positions(
             continue
         if broker_qty == 0.0:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.POSITION,
                     Severity.ERROR,
                     f"journal net position {internal_qty:g} for {symbol} has no "
@@ -607,7 +610,7 @@ def _compare_positions(
             continue
         if internal_qty == 0.0:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.POSITION,
                     Severity.ERROR,
                     f"venue position {broker_qty:g} for {symbol} is unexplained by "
@@ -620,7 +623,7 @@ def _compare_positions(
         delta = abs(broker_qty - internal_qty) / max(1.0, abs(internal_qty))
         if delta > pos_tol:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.POSITION,
                     Severity.ERROR,
                     f"position drift for {symbol}: venue {broker_qty:g} vs journal "
@@ -683,7 +686,7 @@ def _adopt_progress(
     # FILLED is only ever reached through fills; a derived FILLED that
     # the adopted fills do not complete is refused by the post-check
     # below. CANCELED/REJECTED are genuine terminal events.
-    if broker_status in (OrderStatus.CANCELED, OrderStatus.REJECTED) and not _is_terminal(
+    if broker_status in (OrderStatus.CANCELED, OrderStatus.REJECTED) and not is_terminal(
         order.status
     ):
         event = {
@@ -752,40 +755,10 @@ def _adopt_progress(
 
 # --- small helpers -------------------------------------------------------------
 
-def _finding(
-    kind: FindingKind,
-    severity: Severity,
-    message: str,
-    *,
-    order_id: str | None = None,
-    observed: str | None = None,
-    expected: str | None = None,
-) -> ReconciliationFinding:
-    return ReconciliationFinding(
-        kind=kind,
-        severity=severity,
-        message=message,
-        order_id=order_id,
-        observed=observed,
-        expected=expected,
-    )
-
-
-def _dedupe_by_id(items: list, key) -> list:
-    seen: dict = {}
-    for item in items:
-        seen[key(item)] = item
-    return list(seen.values())
-
-
 def _by_cloid(broker: BrokerOrder, by_cloid: dict[str, Order]) -> Order | None:
     if broker.cloid is None:
         return None
     return by_cloid.get(broker.cloid.removeprefix("0x"))
-
-
-def _is_terminal(status: OrderStatus) -> bool:
-    return status in OrderStateMachine.TERMINAL_STATES
 
 
 def _is_progress(broker: OrderStatus, internal: OrderStatus) -> bool:
@@ -798,8 +771,8 @@ def _is_progress(broker: OrderStatus, internal: OrderStatus) -> bool:
     """
     if broker == internal:
         return True
-    if _is_terminal(broker):
-        return not _is_terminal(internal)
+    if is_terminal(broker):
+        return not is_terminal(internal)
     if broker is OrderStatus.PARTIALLY_FILLED:
         return internal in (OrderStatus.PENDING, OrderStatus.ACCEPTED)
     if broker is OrderStatus.ACCEPTED:

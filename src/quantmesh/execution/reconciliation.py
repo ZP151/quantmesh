@@ -15,7 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from quantmesh.domain.orders import Order
+from quantmesh.domain.orders import Order, OrderStateMachine, OrderStatus
 
 
 class FindingKind(StrEnum):
@@ -106,3 +106,39 @@ class AdoptionResult(BaseModel):
     updated: dict[str, Order] = Field(default_factory=dict)
     refused: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
+
+
+# --- shared engine helpers ----------------------------------------------------
+
+
+def finding(
+    kind: FindingKind,
+    severity: Severity,
+    message: str,
+    *,
+    order_id: str | None = None,
+    observed: str | None = None,
+    expected: str | None = None,
+) -> ReconciliationFinding:
+    """Build one typed violation or refusal-relevant note (ADR-0006 d. 3)."""
+    return ReconciliationFinding(
+        kind=kind,
+        severity=severity,
+        message=message,
+        order_id=order_id,
+        observed=observed,
+        expected=expected,
+    )
+
+
+def dedupe_by_id(items: list, key) -> list:
+    """De-duplicate a list by ``key``, keeping the last occurrence."""
+    seen: dict = {}
+    for item in items:
+        seen[key(item)] = item
+    return list(seen.values())
+
+
+def is_terminal(status: OrderStatus) -> bool:
+    """True when the journal status is terminal (ADR-0006 progress rule)."""
+    return status in OrderStateMachine.TERMINAL_STATES
