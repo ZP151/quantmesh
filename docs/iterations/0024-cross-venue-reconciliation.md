@@ -68,15 +68,37 @@ names and message nouns differing.
 
 ## Current frontier
 
-Slice 1 (shared pure helpers) is the first concrete step; slices 2–3 extract the
-numeric comparison engine and migrate both venues.
+The venue-neutral numeric comparison engine is extracted and both bindings
+migrated (checkpoints 1–2); the contract is recorded in ADR-0017. Remaining:
+full-suite verification and the final PR. `is_progress`, status mapping,
+timestamps (Moomoo only) and adoption stay venue-local by design.
 
 ## Checkpoint 1 — 2026-08-15: scaffolding + shared pure helpers
 
 - Recorded the iteration ledger, issue #114 and this branch from `origin/main`
   at `733ff97` (after #112 and #113 merged the persistence consolidation).
-- Extracted `finding`, `dedupe_by_id`, `is_terminal` and `is_progress` from the
-  Moomoo and Hyperliquid bindings into `execution/reconciliation.py`; both
-  bindings now import them and their duplicated private copies are deleted.
+- Extracted `finding`, `dedupe_by_id` and `is_terminal` from the Moomoo and
+  Hyperliquid bindings into `execution/reconciliation.py`; both bindings now
+  import them and their duplicated private copies are deleted. `is_progress`
+  stays venue-local: Hyperliquid's "open" row treats `ACCEPTED` as progress
+  against a journal already `PARTIALLY_FILLED`, unlike Moomoo.
 - Evidence: `tests/test_moomoo_reconciliation.py`,
   `tests/test_hyperliquid_reconciliation.py` pass unchanged; Ruff clean.
+
+## Checkpoint 2 — 2026-08-15: shared numeric comparison engine
+
+- Extracted `compare_positions`, `compare_quantities`, `compare_prices`,
+  `compare_fees` and `compare_fill_ids` into `execution/reconciliation.py`,
+  parameterized by the venue noun and (for quantities) a number formatter and
+  (for fees/fill-ids) a row noun; both Moomoo and Hyperliquid bindings now call
+  them and their duplicated `_compare_*` blocks are deleted.
+- Venue-specific behavior stays in the adapters: Moomoo's timestamp compare and
+  unhealthy-deal check, Hyperliquid's derived surface status.
+- Added `tests/test_reconciliation_engine.py` (13 seam tests) covering the
+  engine directly: drift, missing-data, revoked-fill and position cases.
+- Reviewed equivalent: Moomoo's fee missing-data message now reads "the broker
+  reports N deals" (a definite article added to match the shared wording); the
+  tests assert finding kinds, not message text.
+- Evidence: 85 focused tests pass (reconciliation + engine); Ruff clean;
+  full suite `2646 passed, 0 failed` (exit 0); `git diff --check` clean.
+- ADR-0017 records the engine contract.
