@@ -368,6 +368,92 @@ def test_isolated_moomoo_result_is_revalidated_before_publication(
         )
 
 
+def test_raw_payload_revalidation_filters_history_bars_outside_utc_window() -> None:
+    target = next(
+        item
+        for item in MoomooCollectionPlan.bounded_default().targets
+        if item.provider_symbol == "US.AAPL" and item.interval == "1d"
+    )
+    request = MoomooWorkerRequest(
+        target=target,
+        window=CollectionWindow(
+            start=datetime(2026, 8, 14, tzinfo=UTC),
+            end=datetime(2026, 8, 15, tzinfo=UTC),
+        ),
+        host="127.0.0.1",
+        port=11111,
+        connect_timeout_seconds=1.0,
+        request_timeout_seconds=2.0,
+    )
+    instrument = Instrument(
+        symbol="AAPL",
+        venue=Venue.MOOMOO,
+        instrument_type=InstrumentType.EQUITY,
+        currency="USD",
+    )
+    # The SDK widens a UTC window to whole venue dates, so the raw pages carry
+    # a bar before the window start; the provider filters it out of `bars` and
+    # revalidation must apply the same window filter.
+    bar = Bar(
+        instrument=instrument,
+        timestamp=datetime(2026, 8, 14, 4, 0, tzinfo=UTC),
+        interval="1d",
+        open=306.0,
+        high=307.49,
+        low=304.3,
+        close=305.93,
+        volume=28_229_375.0,
+    )
+    payload = MoomooRawPayload(
+        provider_version="10.10.7008",
+        received_at=datetime(2026, 8, 15, tzinfo=UTC),
+        bars=(bar,),
+        history_pages=(
+            {
+                "code": "US.AAPL",
+                "interval": "1d",
+                "autype": "None",
+                "request_page_req_key": None,
+                "next_page_req_key": None,
+                "rows": [
+                    {
+                        "code": "US.AAPL",
+                        "time_key": "2026-08-13",
+                        "open": 305.0,
+                        "high": 306.0,
+                        "low": 304.0,
+                        "close": 305.26,
+                        "volume": 30_000_000.0,
+                    },
+                    {
+                        "code": "US.AAPL",
+                        "time_key": "2026-08-14",
+                        "open": 306.0,
+                        "high": 307.49,
+                        "low": 304.3,
+                        "close": 305.93,
+                        "volume": 28_229_375.0,
+                    },
+                ],
+            },
+        ),
+        adjustment_factors={"code": "US.AAPL", "rows": []},
+        stock_split_pages=(
+            {
+                "code": "US.AAPL",
+                "request_next_key": None,
+                "next_key": "-1",
+                "rows": [],
+            },
+        ),
+        dividends={"code": "US.AAPL", "rows": []},
+    )
+
+    validated = payload.validate_for(request)
+
+    assert validated.bars == (bar,)
+
+
 def _split_payload(request: MoomooWorkerRequest) -> MoomooRawPayload:
     instrument = Instrument(
         symbol="AAPL",

@@ -59,7 +59,9 @@ class MoomooOpenDProvider(Provider):
         pages = self._history_pages(instrument, interval=interval, start=start, end=end)
         return [
             bar
-            for bar in self._adapter.history_pages_to_bars(instrument, pages)
+            for bar in self._adapter.history_pages_to_bars(
+                _canonical_instrument(instrument), pages
+            )
             if _within(bar.timestamp, start, end)
         ]
 
@@ -82,7 +84,9 @@ class MoomooOpenDProvider(Provider):
             )
         bars = tuple(
             bar
-            for bar in self._adapter.history_pages_to_bars(instrument, pages)
+            for bar in self._adapter.history_pages_to_bars(
+                _canonical_instrument(instrument), pages
+            )
             if _within(bar.timestamp, start, end)
         )
         return MoomooRawBundle(
@@ -151,6 +155,22 @@ class MoomooOpenDProvider(Provider):
 def _require_aware(timestamp: datetime | None, name: str) -> None:
     if timestamp is not None and timestamp.tzinfo is None:
         raise ValueError(f"{name} must be timezone-aware")
+
+
+def _canonical_instrument(instrument: Instrument) -> Instrument:
+    """ADR-0003: market metadata is request-side identity, not bar identity.
+
+    The canonical bar's instrument carries symbol/venue/type/currency only;
+    the market prefix used to build the SDK code is transport metadata and
+    must not leak into persisted bars (the fabric re-derives with a clean
+    instrument and the lake drops ``metadata`` on write).
+    """
+    return Instrument(
+        symbol=instrument.symbol,
+        venue=instrument.venue,
+        instrument_type=instrument.instrument_type,
+        currency=instrument.currency,
+    )
 
 
 def _within(timestamp: datetime, start: datetime | None, end: datetime | None) -> bool:

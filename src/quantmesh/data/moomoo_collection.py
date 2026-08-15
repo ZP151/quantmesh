@@ -238,7 +238,11 @@ class MoomooRawPayload(_FrozenContract):
             currency="USD",
         )
         derived = tuple(
-            MoomooDataAdapter().history_pages_to_bars(instrument, list(self.history_pages))
+            bar
+            for bar in MoomooDataAdapter().history_pages_to_bars(
+                instrument, list(self.history_pages)
+            )
+            if request.window.start <= bar.timestamp <= request.window.end
         )
         if derived != self.bars:
             raise ValueError("worker bars are not the canonical derivation of history pages")

@@ -44,6 +44,12 @@ def test_fetch_bars_returns_canonical_utc_bars() -> None:
     assert bars[0].timestamp == datetime(2026, 8, 3, 4, 0, tzinfo=UTC)
 
 
+def test_fetch_bars_do_not_leak_request_side_market_metadata() -> None:
+    bars = make_provider().fetch_bars(AAPL, interval="1d")
+    assert bars
+    assert all(not bar.instrument.metadata for bar in bars)
+
+
 def test_fetch_bars_converts_utc_bounds_to_venue_local_dates() -> None:
     transport = WireTransport()
     provider = MoomooOpenDProvider(MoomooOpenDClient(transport))
@@ -145,6 +151,7 @@ def test_fetch_raw_bundle_keeps_unadjusted_pages_and_source_actions() -> None:
     bundle = provider.fetch_raw_bundle(AAPL, interval="1d")
 
     assert [bar.close for bar in bundle.bars] == [204.0, 207.0, 209.5]
+    assert all(not bar.instrument.metadata for bar in bundle.bars)
     assert bundle.history_pages[0]["autype"] == "None"
     assert bundle.adjustment_factors["rows"]
     assert bundle.stock_split_pages[0]["rows"]
