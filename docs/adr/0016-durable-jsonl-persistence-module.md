@@ -52,8 +52,10 @@ and its on-disk files are unchanged.
 Reads and writes refuse a root that is a file, a store path that is not a
 regular file, and a symlinked root or store file (which could redirect reads or
 writes outside the root). A missing root or store file remains an empty read,
-never an error. `scan` surfaces the same hostile entries plus leftover temp
-files from a crash, without deleting anything.
+never an error. `scan` reports a symlinked root or store file and leftover temp
+files from a crash, without deleting anything; the root-not-dir and
+path-not-file refusals fire on read/write, not on scan. Ancestors of the root
+are a trusted operator boundary, matching the lake's model.
 
 ### 5. Migrate one registry at a time
 

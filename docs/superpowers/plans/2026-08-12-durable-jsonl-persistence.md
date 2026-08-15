@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Follow TDD (red → green → refactor) for every behavior
 > change; record the failing and passing command in the iteration ledger. Steps use
-> checkbox (`- [ ]`) syntax.
+> checkbox (`- [x]`) syntax.
 
 **Goal:** Consolidate the repeated ADR-0006 append-only JSONL discipline into one
 shared `JsonlStore` seam, then migrate one registry (`ReportRegistry`) with
@@ -79,7 +79,7 @@ class JsonlStore(Generic[Model]):
     def scan(self) -> list[Path]: ...          # report orphans + hostile entries; never delete
 ```
 
-- [ ] **Step 1: Write the failing seam tests**
+- [x] **Step 1: Write the failing seam tests**
 
 ```python
 class FixtureRecord(BaseModel):
@@ -94,14 +94,14 @@ def test_round_trip_is_byte_identical(tmp_path):
     assert store.read() == [FixtureRecord(id="a", value=1)]
 ```
 
-- [ ] **Step 2: Run and capture red**
+- [x] **Step 2: Run and capture red**
 
 Run: `python -m pytest -q tests/test_persistence_jsonl.py`
 Expected: collection error — `quantmesh.persistence.jsonl` does not exist.
 
-- [ ] **Step 3: Implement `JsonlStore`**
+- [x] **Step 3: Implement `JsonlStore`**
 
-- [ ] **Step 4: Green + refactor**
+- [x] **Step 4: Green + refactor**
 
 ---
 
@@ -117,14 +117,14 @@ private `JsonlStore` bound to `StrategyReport` with `label="report registry"`,
 (`_require_pin`) as a domain precondition and delegates the duplicate check + atomic
 append to `store.append`.
 
-- [ ] **Step 1: Run existing tests unchanged as the equivalence oracle**
+- [x] **Step 1: Run existing tests unchanged as the equivalence oracle**
   `python -m pytest -q tests/test_research_reports.py`
-- [ ] **Step 2: Migrate and re-run; require identical result**
+- [x] **Step 2: Migrate and re-run; require identical result**
 
 ---
 
 ### Task 3: ADR and iteration checkpoint
 
-- [ ] Write `docs/adr/0016-durable-jsonl-persistence-module.md`.
-- [ ] Append a dated checkpoint to `docs/iterations/0022-durable-jsonl-persistence.md`.
-- [ ] Run full checks: `python -m pytest -q`, `ruff check src tests tools`, `git diff --check`.
+- [x] Write `docs/adr/0016-durable-jsonl-persistence-module.md`.
+- [x] Append a dated checkpoint to `docs/iterations/0022-durable-jsonl-persistence.md`.
+- [x] Run full checks: `python -m pytest -q`, `ruff check src tests tools`, `git diff --check`.

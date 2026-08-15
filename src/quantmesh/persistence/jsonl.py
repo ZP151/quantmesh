@@ -132,6 +132,8 @@ class JsonlStore(Generic[Model]):
         self._refuse_hostile_root()
         self.root.mkdir(parents=True, exist_ok=True)
         self._refuse_symlink(self.path)
+        if self.path.exists() and not self.path.is_file():
+            raise self._error(f"{self.label} path {self.path} is not a file")
         descriptor, temp_name = tempfile.mkstemp(
             dir=self.root, prefix=f".{self.filename}.", suffix=".tmp"
         )

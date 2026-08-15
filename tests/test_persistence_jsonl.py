@@ -167,6 +167,14 @@ def test_store_path_that_is_a_directory_is_refused(tmp_path: Path) -> None:
         store.read()
 
 
+def test_write_refuses_a_directory_path(tmp_path: Path) -> None:
+    store = make_store(tmp_path)
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    (tmp_path / FILENAME).mkdir()
+    with pytest.raises(ValueError, match="not a file"):
+        store.write([record("a")])
+
+
 def test_symlinked_store_file_is_refused(tmp_path: Path) -> None:
     outside = tmp_path / "outside.jsonl"
     outside.write_text('{"id":"a"}\n', encoding="utf-8")

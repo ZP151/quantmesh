@@ -89,9 +89,15 @@ journal's second identity key, then open the final PR.
   unchanged; `_append` and `_read` are deleted. The lake pin gate
   (`_require_pin`) stays a domain precondition before `store.append`.
 - Evidence: `tests/test_research_reports.py` 29 passed unchanged and
-  `tests/test_persistence_jsonl.py` 23 passed; Ruff clean on the changed files.
-  The migrated registry round-trips byte-identically because serialization is
-  the same `model_dump_json() + "\n"` contract.
+  `tests/test_persistence_jsonl.py` 23 passed; Ruff clean on the changed files
+  and on the whole tree; full suite `2622 passed, 0 failed` (exit 0);
+  `git diff --check` clean. The migrated registry round-trips byte-identically
+  because serialization is the same `model_dump_json() + "\n"` contract.
+- Independent review: GO — no Critical or Important findings. Two Minor items
+  fixed inline (write-side path-not-file refusal; ADR scan wording). Deferred
+  Minors for later slices: ancestor-of-root symlink checks (the root is a
+  trusted operator boundary, matching the lake model), and `extra_validate`
+  only wrapping `ValueError` (matches the journal precedent).
 - ADR: `docs/adr/0016-durable-jsonl-persistence-module.md` records the shared
   contract (interface, parameterization, byte-identical serialization,
   hostile-path refusal, one-registry-at-a-time migration).
