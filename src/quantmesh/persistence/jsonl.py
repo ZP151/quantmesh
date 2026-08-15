@@ -41,7 +41,7 @@ class JsonlStore(Generic[Model]):
         model: type[Model],
         label: str,
         id_label: str,
-        key: Callable[[Model], str],
+        key: Callable[[Model], str] | None = None,
         error_type: type[Exception] = ValueError,
         extra_validate: Callable[[Model], None] | None = None,
         article: str = "a",
@@ -111,23 +111,27 @@ class JsonlStore(Generic[Model]):
                 raise self._error(
                     f"{self.label} {self.path} line {line_number} is invalid"
                 ) from error
-            key = self._key(record)
-            if key in seen:
-                raise self._error(
-                    f"{self.label} {self.path} lines {seen[key]} and {line_number} "
-                    f"share {self.article} {self.id_label} id"
-                )
-            for index, (secondary_label, secondary_key) in enumerate(self.secondary_keys):
-                secondary_value = secondary_key(record)
-                if secondary_value is None:
-                    continue
-                bucket = seen_secondary.setdefault(index, {})
-                if secondary_value in bucket:
+            if self._key is not None:
+                key = self._key(record)
+                if key in seen:
                     raise self._error(
-                        f"{self.label} {self.path} lines {bucket[secondary_value]} and "
-                        f"{line_number} share {self.article} {secondary_label}"
+                        f"{self.label} {self.path} lines {seen[key]} and {line_number} "
+                        f"share {self.article} {self.id_label} id"
                     )
-                bucket[secondary_value] = line_number
+                for index, (secondary_label, secondary_key) in enumerate(
+                    self.secondary_keys
+                ):
+                    secondary_value = secondary_key(record)
+                    if secondary_value is None:
+                        continue
+                    bucket = seen_secondary.setdefault(index, {})
+                    if secondary_value in bucket:
+                        raise self._error(
+                            f"{self.label} {self.path} lines {bucket[secondary_value]} and "
+                            f"{line_number} share {self.article} {secondary_label}"
+                        )
+                    bucket[secondary_value] = line_number
+                seen[key] = line_number
             if self.extra_validate is not None:
                 try:
                     self.extra_validate(record)
@@ -136,7 +140,6 @@ class JsonlStore(Generic[Model]):
                         f"{self.label} {self.path} line {line_number} has invalid "
                         f"derived state: {error}"
                     ) from error
-            seen[key] = line_number
             records.append(record)
         return records
 

@@ -383,3 +383,9 @@ def test_check_absent_refuses_duplicate_against_existing(tmp_path: Path) -> None
     existing = store.read()
     with pytest.raises(ValueError, match="already recorded"):
         store.check_absent(record("a", 2), existing)
+
+
+def test_read_without_key_does_not_deduplicate(tmp_path: Path) -> None:
+    store = make_store(tmp_path, key=None)
+    write_lines(tmp_path / FILENAME, '{"id":"a"}\n', '{"id":"a"}\n')
+    assert [r.id for r in store.read()] == ["a", "a"]

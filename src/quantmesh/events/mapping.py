@@ -30,18 +30,16 @@ on the resolution upgrades to MATCHED with the evidence to prove it.
 
 import hashlib
 import json
-import os
 import subprocess
-import tempfile
 import unicodedata
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, Field, ValidationError, model_validator
+from pydantic import BaseModel, Field, model_validator
 
-from quantmesh._fs import atomic_replace
 from quantmesh.events.models import EventMarket
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.settings import settings
 
 __all__ = [
@@ -370,6 +368,13 @@ class MappingLedger:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.mappings_dir
+        self._store = JsonlStore(
+            self.root,
+            filename=MAPPINGS_FILE,
+            model=MappingRecord,
+            label="mapping ledger",
+            id_label="record",
+        )
 
     def record(
         self,
@@ -395,7 +400,7 @@ class MappingLedger:
             )
             for pair in report.pairs
         ]
-        existing = self.all()
+        existing = self._store.read()
         existing_keys = {
             (record.pair_key, record.status.value, _evidence_signature(record.evidence))
             for record in existing
@@ -407,55 +412,14 @@ class MappingLedger:
                     f"mapping record {record.pair_key!r} ({record.status.value}) "
                     "already recorded with identical evidence"
                 )
-        self._append(existing + records)
+        self._store.write([*existing, *records])
         return records
 
     def all(self) -> list[MappingRecord]:
-        return self._read()
+        return self._store.read()
 
     def by_pair(self, pair_key_value: str) -> list[MappingRecord]:
-        return [record for record in self.all() if record.pair_key == pair_key_value]
-
-    def _append(self, records: list[MappingRecord]) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        path = self.root / MAPPINGS_FILE
-        descriptor, temp_name = tempfile.mkstemp(
-            dir=self.root, prefix=f".{MAPPINGS_FILE}.", suffix=".tmp"
-        )
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                for record in records:
-                    handle.write(record.model_dump_json())
-                    handle.write("\n")
-            atomic_replace(temp_name, path)
-        finally:
-            if os.path.exists(temp_name):
-                os.unlink(temp_name)
-
-    def _read(self) -> list[MappingRecord]:
-        if not self.root.exists():
-            return []
-        if not self.root.is_dir():
-            raise ValueError(f"mapping ledger root {self.root} is not a directory")
-        path = self.root / MAPPINGS_FILE
-        if not path.exists():
-            return []
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as error:
-            raise ValueError(f"mapping ledger {path} is unreadable") from error
-        records = []
-        for line_number, line in enumerate(text.splitlines(), start=1):
-            if not line.strip():
-                continue
-            try:
-                record = MappingRecord.model_validate_json(line)
-            except ValidationError as error:
-                raise ValueError(
-                    f"mapping ledger {path} line {line_number} is invalid"
-                ) from error
-            records.append(record)
-        return records
+        return [record for record in self._store.read() if record.pair_key == pair_key_value]
 
 
 def _evidence_signature(evidence: list[MappingEvidence]) -> str:
