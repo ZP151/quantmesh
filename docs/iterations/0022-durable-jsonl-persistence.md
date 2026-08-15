@@ -1,7 +1,7 @@
 # Iteration 0022 — Durable JSONL persistence module
 
-- Status: ready (not started)
-- Started: —
+- Status: in progress (first slice: shared module + one migrated registry)
+- Started: 2026-08-12
 - Tracking issue: [#111](https://github.com/ZP151/quantmesh/issues/111)
 - Branch: `0022-durable-jsonl-persistence` (from `origin/main` at `d4aeed3`)
 - Ledger: this file
@@ -63,5 +63,40 @@ stable").
 
 ## Current frontier
 
-Nothing implemented yet. First task: choose the highest-leverage registry to
-migrate, write the shared module's failing tests, then implement.
+First slice delivered: the shared `JsonlStore` seam exists and one registry
+(`ReportRegistry`) is migrated onto it. Remaining work: migrate the other
+registries one at a time (order journal, experiments, features, models,
+ensembles, drift ledgers, forecasts, mappings, enablement, metrics, watchlist,
+decisions, documents, funding ledger, proposals), extend the constructor for the
+journal's second identity key, then open the final PR.
+
+## Checkpoint 1 — 2026-08-12: shared module + ReportRegistry migration
+
+- Built `src/quantmesh/persistence/jsonl.py` (`JsonlStore`): a generic
+  `read` / `write` / `append` / `scan` seam over the ADR-0006 discipline. The
+  caller supplies the record model, identity key, human labels and error type;
+  an optional `extra_validate` hook covers read-time invariants beyond the
+  schema.
+- Centralized behavior is covered at the single seam by
+  `tests/test_persistence_jsonl.py` (23 tests): byte-identical round-trip,
+  crash (temp-file cleanup and failed-replace leaves the target unchanged and
+  no orphan), corruption (line-attributed fail-closed read, unreadable bytes),
+  duplicate (read and append refusal), hostile-path (root-not-dir, path-not-file,
+  symlinked root/file refusal, `scan` reporting orphans and symlinks) and schema
+  (invalid and schema-violating lines) plus configurable error type.
+- Migrated `ReportRegistry` (`src/quantmesh/research/reports.py`) onto the
+  store. Public surface (`record`, `get`, `all`, `resolve`, `resolve_pin`) is
+  unchanged; `_append` and `_read` are deleted. The lake pin gate
+  (`_require_pin`) stays a domain precondition before `store.append`.
+- Evidence: `tests/test_research_reports.py` 29 passed unchanged and
+  `tests/test_persistence_jsonl.py` 23 passed; Ruff clean on the changed files.
+  The migrated registry round-trips byte-identically because serialization is
+  the same `model_dump_json() + "\n"` contract.
+- ADR: `docs/adr/0016-durable-jsonl-persistence-module.md` records the shared
+  contract (interface, parameterization, byte-identical serialization,
+  hostile-path refusal, one-registry-at-a-time migration).
+- Reviewed equivalent (documented in the ADR): `record` now validates the lake
+  pin before refusing a duplicate; both fail closed and no test covered the
+  combined case.
+- Constraints honored: nothing in iteration 0021 was touched; execution stays
+  paper-only with no credential handling.
