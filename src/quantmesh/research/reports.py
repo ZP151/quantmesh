@@ -312,11 +312,14 @@ class ReportRegistry:
 
         Refuses duplicate IDs — the same setup is the same report, and a
         rerun regenerates identical artifacts instead of recording again.
-        The duplicate check and atomic append live in the shared
-        ``JsonlStore``; the lake pin gate stays here as a domain concern.
+        The duplicate check and atomic write live in the shared
+        ``JsonlStore``; the lake pin gate stays here as a domain concern,
+        sequenced after the duplicate refusal exactly as before.
         """
+        existing = self._store.read()
+        self._store.check_absent(report, existing)
         self._require_pin(report)
-        self._store.append(report)
+        self._store.write([*existing, report])
         return report
 
     def get(self, report_id_value: str) -> StrategyReport:

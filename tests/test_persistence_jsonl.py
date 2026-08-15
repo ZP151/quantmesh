@@ -375,3 +375,11 @@ def test_update_of_missing_record_does_not_touch_the_store(tmp_path: Path) -> No
     with pytest.raises(ValueError):
         store.update(record("b", 2))
     assert store.read() == [record("a", 1)]
+
+
+def test_check_absent_refuses_duplicate_against_existing(tmp_path: Path) -> None:
+    store = make_store(tmp_path)
+    store.append(record("a", 1))
+    existing = store.read()
+    with pytest.raises(ValueError, match="already recorded"):
+        store.check_absent(record("a", 2), existing)

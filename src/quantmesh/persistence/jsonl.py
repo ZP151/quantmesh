@@ -46,6 +46,7 @@ class JsonlStore(Generic[Model]):
         extra_validate: Callable[[Model], None] | None = None,
         article: str = "a",
         secondary_keys: Sequence[tuple[str, Callable[[Model], str | None]]] = (),
+        record_label: str | None = None,
     ) -> None:
         self.root = root
         self.filename = filename
@@ -57,6 +58,7 @@ class JsonlStore(Generic[Model]):
         self.extra_validate = extra_validate
         self.article = article
         self.secondary_keys = secondary_keys
+        self.record_label = record_label if record_label is not None else id_label
 
     @property
     def path(self) -> Path:
@@ -163,12 +165,24 @@ class JsonlStore(Generic[Model]):
             if os.path.exists(temp_name):
                 os.unlink(temp_name)
 
+    def check_absent(self, record: Model, existing: Sequence[Model] | None = None) -> None:
+        """Refuse a duplicate identity against ``existing`` (a fresh read if omitted).
+
+        ``append`` uses this internally; a caller that must sequence its own
+        domain precondition (e.g. a lake pin gate) after the duplicate refusal
+        but before the write can call ``read`` + ``check_absent`` + ``write``
+        in that exact order without reimplementing the duplicate check.
+        """
+        if existing is None:
+            existing = self.read()
+        key = self._key(record)
+        if any(self._key(item) == key for item in existing):
+            raise self._error(f"{self.record_label} {key!r} already recorded")
+
     def append(self, record: Model) -> Model:
         """Refuse a duplicate identity, then append atomically."""
         existing = self.read()
-        key = self._key(record)
-        if any(self._key(item) == key for item in existing):
-            raise self._error(f"{self.id_label} {key!r} already recorded")
+        self.check_absent(record, existing)
         self.write([*existing, record])
         return record
 

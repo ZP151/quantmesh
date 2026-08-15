@@ -26,23 +26,20 @@ workstation this registry serves.
 import hashlib
 import json
 import math
-import os
 import subprocess
-import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import (
     BaseModel,
     Field,
-    ValidationError,
     field_validator,
     model_validator,
 )
 
-from quantmesh._fs import atomic_replace
 from quantmesh.data.lake import Dataset, Lake
 from quantmesh.data.layout import validate_dataset_name
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.settings import settings
 
 EXPERIMENTS_FILE = "experiments.jsonl"
@@ -102,6 +99,15 @@ class ExperimentRegistry:
     def __init__(self, root: Path | None = None, lake_root: Path | None = None) -> None:
         self.root = root if root is not None else settings.experiments_dir
         self.lake_root = lake_root if lake_root is not None else settings.lake_root
+        self._store = JsonlStore(
+            self.root,
+            filename=EXPERIMENTS_FILE,
+            model=Experiment,
+            label="experiment registry",
+            id_label="experiment",
+            article="an",
+            key=lambda experiment: experiment.id,
+        )
 
     def record(
         self,
@@ -133,23 +139,21 @@ class ExperimentRegistry:
             metrics=metrics or {},
             created_at=created_at or datetime.now(UTC),
         )
-        existing = self.all()
-        if any(record.id == experiment.id for record in existing):
-            raise ValueError(f"experiment {experiment.id!r} already recorded")
+        existing = self._store.read()
+        self._store.check_absent(experiment, existing)
         self._require_pin(experiment)
-        self._append(experiment, existing)
+        self._store.write([*existing, experiment])
         return experiment
-
     def get(self, experiment_id: str) -> Experiment:
         """The record with this ID; raises when absent or unreadable."""
-        for experiment in self.all():
+        for experiment in self._store.read():
             if experiment.id == experiment_id:
                 return experiment
         raise ValueError(f"no experiment recorded with id {experiment_id!r}")
 
     def all(self) -> list[Experiment]:
         """Every record, in recording order."""
-        return self._read()
+        return self._store.read()
 
     def resolve(self, experiment_id: str) -> Dataset:
         """Re-open the experiment's dataset, pinned to its revision.
@@ -171,54 +175,6 @@ class ExperimentRegistry:
                 f"{experiment.revision}, but dataset {experiment.dataset!r} is now "
                 f"revision {dataset.manifest.revision}"
             )
-
-    def _append(self, experiment: Experiment, existing: list[Experiment]) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        path = self.root / EXPERIMENTS_FILE
-        descriptor, temp_name = tempfile.mkstemp(
-            dir=self.root, prefix=f".{EXPERIMENTS_FILE}.", suffix=".tmp"
-        )
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                for record in existing + [experiment]:
-                    handle.write(record.model_dump_json())
-                    handle.write("\n")
-            atomic_replace(temp_name, path)
-        finally:
-            if os.path.exists(temp_name):
-                os.unlink(temp_name)
-
-    def _read(self) -> list[Experiment]:
-        if not self.root.exists():
-            return []
-        if not self.root.is_dir():
-            raise ValueError(f"experiment registry root {self.root} is not a directory")
-        path = self.root / EXPERIMENTS_FILE
-        if not path.exists():
-            return []
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as error:
-            raise ValueError(f"experiment registry {path} is unreadable") from error
-        records = []
-        seen: dict[str, int] = {}
-        for line_number, line in enumerate(text.splitlines(), start=1):
-            if not line.strip():
-                continue
-            try:
-                record = Experiment.model_validate_json(line)
-            except ValidationError as error:
-                raise ValueError(
-                    f"experiment registry {path} line {line_number} is invalid"
-                ) from error
-            if record.id in seen:
-                raise ValueError(
-                    f"experiment registry {path} lines {seen[record.id]} and "
-                    f"{line_number} share an experiment id"
-                )
-            seen[record.id] = line_number
-            records.append(record)
-        return records
 
     def _current_commit(self) -> str:
         """HEAD of the git repository the registry runs in; else fail closed."""
