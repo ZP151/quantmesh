@@ -49,6 +49,28 @@ def write_lines(path: Path, *lines: str) -> None:
     path.write_text("".join(lines), encoding="utf-8")
 
 
+class KeyedRecord(BaseModel):
+    """Record with an optional secondary identity (an idempotency key)."""
+
+    id: str
+    idempotency_key: str | None = None
+
+
+def make_keyed_store(root: Path, **overrides) -> JsonlStore[KeyedRecord]:
+    kwargs = dict(
+        root=root,
+        filename="keyed.jsonl",
+        model=KeyedRecord,
+        label="keyed store",
+        id_label="order",
+        article="an",
+        key=lambda record: record.id,
+        secondary_keys=[("idempotency key", lambda record: record.idempotency_key)],
+    )
+    kwargs.update(overrides)
+    return JsonlStore(**kwargs)
+
+
 # --- read / write / append round-trip ---------------------------------------
 
 
@@ -278,3 +300,78 @@ def test_error_type_is_configurable(tmp_path: Path) -> None:
     write_lines(tmp_path / FILENAME, "not json\n")
     with pytest.raises(StoreError, match="line 1"):
         store.read()
+
+
+# --- secondary identity keys -------------------------------------------------
+
+
+def test_read_fails_closed_on_duplicate_secondary_key(tmp_path: Path) -> None:
+    store = make_keyed_store(tmp_path)
+    write_lines(
+        tmp_path / "keyed.jsonl",
+        '{"id":"a","idempotency_key":"k"}\n',
+        '{"id":"b","idempotency_key":"k"}\n',
+    )
+    with pytest.raises(ValueError, match="share an idempotency key"):
+        store.read()
+
+
+def test_read_allows_none_secondary_keys(tmp_path: Path) -> None:
+    store = make_keyed_store(tmp_path)
+    write_lines(tmp_path / "keyed.jsonl", '{"id":"a"}\n', '{"id":"b"}\n')
+    assert store.read() == [KeyedRecord(id="a"), KeyedRecord(id="b")]
+
+
+def test_primary_duplicate_uses_configured_article(tmp_path: Path) -> None:
+    store = make_keyed_store(tmp_path)
+    write_lines(tmp_path / "keyed.jsonl", '{"id":"a"}\n', '{"id":"a"}\n')
+    with pytest.raises(ValueError, match="share an order id"):
+        store.read()
+
+
+def test_append_refuses_only_primary_key_collision(tmp_path: Path) -> None:
+    # A differing primary id with a None secondary key is appendable even
+    # when the store carries a keyed record (secondary is a read-time gate).
+    store = make_keyed_store(tmp_path)
+    store.append(KeyedRecord(id="a", idempotency_key="k"))
+    store.append(KeyedRecord(id="b", idempotency_key=None))
+    assert [r.id for r in store.read()] == ["a", "b"]
+
+
+# --- in-place update ---------------------------------------------------------
+
+
+def test_update_replaces_the_matching_record(tmp_path: Path) -> None:
+    store = make_store(tmp_path)
+    store.append(record("a", 1))
+    store.append(record("b", 2))
+
+    store.update(record("b", 3))
+
+    assert store.read() == [record("a", 1), record("b", 3)]
+
+
+def test_update_is_byte_identical(tmp_path: Path) -> None:
+    store = make_store(tmp_path)
+    store.append(record("a", 1))
+    store.append(record("b", 2))
+
+    store.update(record("a", 9))
+
+    assert (tmp_path / FILENAME).read_text(encoding="utf-8") == (
+        '{"id":"a","value":9}\n{"id":"b","value":2}\n'
+    )
+
+
+def test_update_of_missing_record_is_refused(tmp_path: Path) -> None:
+    store = make_store(tmp_path)
+    with pytest.raises(ValueError, match="not recorded"):
+        store.update(record("a"))
+
+
+def test_update_of_missing_record_does_not_touch_the_store(tmp_path: Path) -> None:
+    store = make_store(tmp_path)
+    store.append(record("a", 1))
+    with pytest.raises(ValueError):
+        store.update(record("b", 2))
+    assert store.read() == [record("a", 1)]
