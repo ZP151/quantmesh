@@ -18,21 +18,22 @@
 - Blockers: final promotion is intentionally withheld pending an explicit
   operator command; no engineering blocker remains for iteration 0020.
 
-## Iteration 0022 / 0023 — Durable JSONL persistence (0022 merged; 0023 active)
+## Iterations 0022–0025 — Post-RC hardening chain (0022–0024 merged; 0025 active)
 
-Iteration 0022 shipped the shared `JsonlStore` seam and migrated
-`ReportRegistry` (PR #112, merged at `e5a321f`). Iteration 0023 now finishes the
-consolidation: extend the seam (secondary identity, in-place update,
-`check_absent`, `record_label`, keyless reads) and migrate the remaining simple
-ADR-0006 registries — order journal, research, events, portfolio, ai, ops and
-hyperliquid — byte-identically, deleting every reimplemented
-append/read/duplicate/hostile-path/schema block. Ledger
-`docs/iterations/0023-complete-jsonl-consolidation.md`; branch
-`0023-complete-jsonl-consolidation` from `origin/main` at `e5a321f`; contract
-amended in ADR-0016. The watchlist, proposal event ledger and forecast artifact
-directories are documented as out of scope (distinct semantics). Independent of
-iteration 0021 (its soak HEAD stays `77141b9`), external venues read-only,
-execution paper-only, no credential handling.
+The iteration 0013 Phase E "Strong" hardening items are delivered one slice at
+a time on the now-stable persistence layer:
+
+- 0022/0023 (merged at `4f41f95` via #112/#113): shared `JsonlStore` seam and
+  full ADR-0006 registry consolidation (ADR-0016).
+- 0024 (merged via #115): venue-neutral cross-venue reconciliation engine
+  (ADR-0017).
+- 0025 (active, PR #117): characterize and pin the execution numeric policy
+  (six-decimal quantization, bps convention, exact-default tolerance, tick-size
+  status) with tests and ADR-0018; no representation change.
+
+Ledgers under `docs/iterations/0023…`–`0025…`. Independent of iteration 0021
+(its soak HEAD stays `77141b9`); external venues read-only; execution
+paper-only; no credential handling.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 
