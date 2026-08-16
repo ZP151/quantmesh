@@ -9,6 +9,7 @@ surface — journal JSONL, the drill script, captured logs, or the whole
 scratch tree — and none in refusal messages.
 """
 
+import ast
 import logging
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -33,6 +34,7 @@ from quantmesh.hyperliquid.exchange import (
     signer_from_env,
 )
 from quantmesh.hyperliquid.market_data import FIXTURE_DIR
+from quantmesh.hyperliquid.public_info import PublicInfoTransport
 from quantmesh.hyperliquid.reconciliation import (
     apply_reconciliation,
     run_reconciliation,
@@ -58,6 +60,40 @@ BTC = Instrument(
     venue=Venue.HYPERLIQUID,
     instrument_type=InstrumentType.PERPETUAL,
 )
+
+
+def test_public_info_surface_cannot_reach_execution_or_wallet_modules() -> None:
+    """The mainnet public reader remains structurally data-only."""
+    public_methods = {
+        name
+        for name, value in PublicInfoTransport.__dict__.items()
+        if not name.startswith("_") and callable(value)
+    }
+    assert public_methods == {"candles", "l2_book"}
+
+    public_sources = (
+        Path("src/quantmesh/hyperliquid/public_info.py"),
+        Path("src/quantmesh/data/hyperliquid_collection.py"),
+    )
+    forbidden = {
+        "quantmesh.hyperliquid.exchange",
+        "quantmesh.hyperliquid.reconciliation",
+        "quantmesh.hyperliquid.risk",
+    }
+    for source in public_sources:
+        tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+        imports = {
+            node.module
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ImportFrom) and node.module is not None
+        }
+        imports.update(
+            alias.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Import)
+            for alias in node.names
+        )
+        assert imports.isdisjoint(forbidden)
 
 
 def drill(tmp_path: Path) -> tuple[HyperliquidExecutionAdapter, OrderJournal]:

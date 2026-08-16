@@ -72,6 +72,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/data/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Catalog */
+        get: operations["api_list_catalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data/catalog/{manifest_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Catalog Lineage */
+        get: operations["api_get_catalog_lineage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/enablement": {
         parameters: {
             query?: never;
@@ -1102,6 +1136,12 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ArtifactLayer
+         * @description Stages in the raw-to-feature trusted-data lineage.
+         * @enum {string}
+         */
+        ArtifactLayer: "raw" | "normalized" | "adjusted" | "feature";
         /** Body_kill_switch_post_kill_switch_post */
         Body_kill_switch_post_kill_switch_post: {
             /** Action */
@@ -1124,6 +1164,151 @@ export interface components {
             symbol: string;
             /** Venue */
             venue?: string | null;
+        };
+        /**
+         * CatalogCheckpoint
+         * @description Latest collection checkpoint owning a cataloged manifest.
+         */
+        CatalogCheckpoint: {
+            /** Attempt */
+            attempt: number;
+            /** Generation */
+            generation: number;
+            /** Job Id */
+            job_id: string;
+            /** Last Complete Source Event */
+            last_complete_source_event: string;
+            /** Provider Cursor */
+            provider_cursor: string;
+            /** Quality Report Id */
+            quality_report_id?: string | null;
+            /** Run Id */
+            run_id: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * CatalogEntry
+         * @description One committed dataset head and its exact qualification state.
+         */
+        CatalogEntry: {
+            /** Adjustment Policy */
+            adjustment_policy?: string | null;
+            /** Calendar Version */
+            calendar_version: string;
+            /** Canonical Instrument */
+            canonical_instrument: string;
+            /** Compatibility Revision */
+            compatibility_revision: number;
+            /** Current Manifest Id */
+            current_manifest_id: string;
+            data_kind: components["schemas"]["DataKind"];
+            /** Dataset Id */
+            dataset_id: string;
+            entitlement: components["schemas"]["EntitlementState"];
+            /**
+             * Event End
+             * Format: date-time
+             */
+            event_end: string;
+            /**
+             * Event Start
+             * Format: date-time
+             */
+            event_start: string;
+            /** Interval */
+            interval?: string | null;
+            /** Is Current */
+            readonly is_current: boolean;
+            /**
+             * Knowledge End
+             * Format: date-time
+             */
+            knowledge_end: string;
+            /**
+             * Knowledge Start
+             * Format: date-time
+             */
+            knowledge_start: string;
+            latest_checkpoint?: components["schemas"]["CatalogCheckpoint"] | null;
+            layer: components["schemas"]["ArtifactLayer"];
+            /** Manifest Id */
+            manifest_id: string;
+            /** Object Digests */
+            object_digests: string[];
+            /** Parent Manifest Ids */
+            parent_manifest_ids: string[];
+            provider_access: components["schemas"]["ProviderAccess"];
+            /** Provider Id */
+            provider_id: string;
+            quality?: components["schemas"]["CatalogQuality"] | null;
+            /** Row Count */
+            row_count: number;
+            session_policy: components["schemas"]["SessionPolicy"];
+            /** Source Rights Id */
+            source_rights_id: string;
+            /** Trusted For Research */
+            readonly trusted_for_research: boolean;
+        };
+        /**
+         * CatalogLineage
+         * @description One exact manifest and its recursively ordered immutable parents.
+         */
+        CatalogLineage: {
+            /** Ancestors */
+            ancestors: components["schemas"]["CatalogEntry"][];
+            entry: components["schemas"]["CatalogEntry"];
+        };
+        /**
+         * CatalogQuality
+         * @description Exact immutable evaluation qualifying one manifest.
+         */
+        CatalogQuality: {
+            /** Duplicate Count */
+            duplicate_count: number;
+            /**
+             * Evaluated At
+             * Format: date-time
+             */
+            evaluated_at: string;
+            /** Evaluation Id */
+            evaluation_id: string;
+            /** Expected Count */
+            expected_count: number;
+            /** Freshness Seconds */
+            freshness_seconds?: number | null;
+            /** Gap Count */
+            gap_count: number;
+            /** Hash Mismatch Count */
+            hash_mismatch_count: number;
+            /** Issue Codes */
+            issue_codes: string[];
+            /** Latency Seconds */
+            latency_seconds?: number | null;
+            /** Observed Count */
+            observed_count: number;
+            /** Order Violation Count */
+            order_violation_count: number;
+            /** Overlap Conflict Count */
+            overlap_conflict_count: number;
+            /** Pagination Terminal */
+            pagination_terminal: boolean | null;
+            /** Policy Id */
+            policy_id: string;
+            /** Report Id */
+            report_id: string;
+            /** Schema Mismatch Count */
+            schema_mismatch_count: number;
+            /** Source Rights Known */
+            source_rights_known: boolean;
+            status: components["schemas"]["QualityStatus"];
+            /** Synthetic Row Count */
+            synthetic_row_count: number;
+            /** Unavailable Reason */
+            unavailable_reason?: string | null;
         };
         /**
          * ComparisonPoint
@@ -1181,6 +1366,18 @@ export interface components {
             symbol: string;
             venue: components["schemas"]["Venue"];
         };
+        /**
+         * DataKind
+         * @description Provider data surfaces admitted to the trusted-data registry.
+         * @enum {string}
+         */
+        DataKind: "bars" | "quotes" | "books" | "trades" | "adjustment-factors" | "splits" | "dividends";
+        /**
+         * EntitlementState
+         * @description Whether the local operator can currently use a capability.
+         * @enum {string}
+         */
+        EntitlementState: "not-required" | "available" | "degraded" | "unavailable" | "unknown";
         /**
          * ForecastMetrics
          * @description Promotion evidence for one horizon.
@@ -1347,6 +1544,10 @@ export interface components {
             license: string;
             /** Limitations */
             limitations?: string[];
+            /** Manifest Id */
+            manifest_id?: string | null;
+            /** Quality Evaluation Id */
+            quality_evaluation_id?: string | null;
             range: components["schemas"]["HistoryRange"];
             /** Resolution Fallback */
             resolution_fallback?: string | null;
@@ -1621,6 +1822,23 @@ export interface components {
          */
         ProposalStatus: "pending" | "blocked" | "confirmed" | "rejected";
         /**
+         * ProviderAccess
+         * @description The strongest operation a capability may perform.
+         * @enum {string}
+         */
+        ProviderAccess: "fixture" | "public-live" | "authenticated-read-only" | "paper-broker";
+        /**
+         * QualityStatus
+         * @enum {string}
+         */
+        QualityStatus: "pass" | "fail" | "not-due" | "unavailable";
+        /**
+         * SessionPolicy
+         * @description Trading-session boundaries admitted by a calendar request.
+         * @enum {string}
+         */
+        SessionPolicy: "regular" | "extended" | "continuous";
+        /**
          * Side
          * @enum {string}
          */
@@ -1671,6 +1889,8 @@ export interface components {
             history_digest: string;
             /** Limitations */
             limitations: string[];
+            /** Manifest Id */
+            manifest_id?: string | null;
             /** Metrics */
             metrics: components["schemas"]["ForecastMetrics"][];
             /** Model Name */
@@ -1679,6 +1899,8 @@ export interface components {
             model_version: string;
             /** Paths */
             paths: components["schemas"]["ForecastPath"][];
+            /** Quality Evaluation Id */
+            quality_evaluation_id?: string | null;
             /** Synthetic */
             synthetic: boolean;
             /** Target */
@@ -1895,6 +2117,57 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    api_list_catalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogEntry"][];
+                };
+            };
+        };
+    };
+    api_get_catalog_lineage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                manifest_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogLineage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

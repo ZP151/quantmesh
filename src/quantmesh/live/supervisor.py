@@ -34,6 +34,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
 from quantmesh.live.contract import (
+    ContinuityState,
     MarketUpdate,
     Provenance,
     SourceState,
@@ -130,8 +131,11 @@ class BackpressureGate:
         if maxsize < 1:
             raise ValueError("maxsize must be >= 1")
         self.maxsize = maxsize
-        self._pending: list[MarketUpdate] = []
+        # Pending rows are grouped only where the provider event is atomic.
+        # A Hyperliquid L2 epoch is one bid+ask unit and is never split.
+        self._pending: list[list[MarketUpdate]] = []
         self._gap_pending: set[tuple[str, str, str]] = set()
+        self._last_dropped_keys: set[tuple[str, str, str]] = set()
 
     @staticmethod
     def _key(update: MarketUpdate) -> tuple[str, str, str]:
@@ -145,34 +149,99 @@ class BackpressureGate:
         the first pending survivor of that stream is, else the key is
         remembered until the stream pushes again.
         """
-        key = self._key(update)
-        if key in self._gap_pending:
-            update = update.model_copy(update={"sequence_gap": True})
-            self._gap_pending.discard(key)
+        return self.push_many([update])
+
+    def push_many(self, updates: list[MarketUpdate]) -> int:
+        """Enqueue updates under a row bound while preserving atomic L2 epochs."""
+        if not updates:
+            return 0
+        self._last_dropped_keys = set()
         dropped = 0
-        if len(self._pending) >= self.maxsize:
-            victim = self._pending.pop(0)
-            victim_key = self._key(victim)
-            dropped = 1
-            if victim_key == key:
-                update = update.model_copy(update={"sequence_gap": True})
-            else:
-                for index, survivor in enumerate(self._pending):
-                    if self._key(survivor) == victim_key:
-                        self._pending[index] = survivor.model_copy(
-                            update={"sequence_gap": True}
-                        )
-                        break
-                else:
-                    self._gap_pending.add(victim_key)
-        self._pending.append(update)
+        for batch in self._atomic_groups(updates):
+            for index, update in enumerate(batch):
+                key = self._key(update)
+                if key in self._gap_pending:
+                    batch[index] = _known_gap(update)
+                    self._gap_pending.discard(key)
+            # An indivisible two-row L2 epoch may exceed maxsize=1 while it is
+            # the sole resident; every other case remains within maxsize rows.
+            while self._pending and self._pending_rows() + len(batch) > self.maxsize:
+                victim = self._pending.pop(0)
+                dropped += len(victim)
+                victim_keys = {self._key(update) for update in victim}
+                self._last_dropped_keys.update(victim_keys)
+                current_keys = {self._key(update) for update in batch}
+                for victim_key in victim_keys:
+                    if victim_key in current_keys:
+                        batch = [
+                            _known_gap(update)
+                            if self._key(update) == victim_key
+                            else update
+                            for update in batch
+                        ]
+                    elif not self._mark_pending(victim_key):
+                        self._gap_pending.add(victim_key)
+            self._pending.append(batch)
         return dropped
+
+    @property
+    def last_dropped_keys(self) -> frozenset[tuple[str, str, str]]:
+        return frozenset(self._last_dropped_keys)
+
+    def _pending_rows(self) -> int:
+        return sum(len(batch) for batch in self._pending)
+
+    def _mark_pending(self, key: tuple[str, str, str]) -> bool:
+        for index, batch in enumerate(self._pending):
+            if any(self._key(update) == key for update in batch):
+                self._pending[index] = [
+                    _known_gap(update) if self._key(update) == key else update
+                    for update in batch
+                ]
+                return True
+        return False
+
+    @staticmethod
+    def _atomic_groups(updates: list[MarketUpdate]) -> list[list[MarketUpdate]]:
+        groups: list[list[MarketUpdate]] = []
+        index = 0
+        while index < len(updates):
+            update = updates[index]
+            if update.kind is not UpdateKind.L2_SNAPSHOT or not update.snapshot_epoch:
+                groups.append([update])
+                index += 1
+                continue
+            epoch_key = (update.venue, update.instrument, update.snapshot_epoch)
+            group = [update]
+            index += 1
+            while index < len(updates):
+                candidate = updates[index]
+                candidate_key = (
+                    candidate.venue,
+                    candidate.instrument,
+                    candidate.snapshot_epoch,
+                )
+                if candidate.kind is not UpdateKind.L2_SNAPSHOT or candidate_key != epoch_key:
+                    break
+                group.append(candidate)
+                index += 1
+            groups.append(group)
+        return groups
 
     def flush(self) -> list[MarketUpdate]:
         """Everything still buffered, in order."""
-        emitted = self._pending
+        emitted = [update for batch in self._pending for update in batch]
         self._pending = []
         return emitted
+
+
+def _known_gap(update: MarketUpdate) -> MarketUpdate:
+    return update.model_copy(
+        update={
+            "sequence_gap": True,
+            "continuity": ContinuityState.KNOWN_GAP,
+        }
+    )
 
 
 class VenueTransport(Protocol):
@@ -279,9 +348,22 @@ class VenueSupervisor(ABC):
 
     def _push(self, update: MarketUpdate) -> None:
         if self._gate.push(update):
-            self._gap_pending.append(
-                GapFinding(update.instrument, "backpressure dropped an update")
-            )
+            self._record_backpressure_findings()
+
+    def _push_many(self, updates: list[MarketUpdate]) -> None:
+        if not updates:
+            return
+        if self._gate.push_many(updates):
+            self._record_backpressure_findings()
+
+    def _record_backpressure_findings(self) -> None:
+        self._gap_pending.extend(
+            GapFinding(instrument, f"backpressure dropped a {kind} update")
+            for _venue, instrument, kind in sorted(self._gate.last_dropped_keys)
+        )
+
+    def on_persisted(self, updates: list[MarketUpdate]) -> None:
+        """Acknowledge rows after the replay authority commits them."""
 
     def _status(
         self, key: str, state: SourceState, note: str | None, now: datetime
@@ -295,6 +377,11 @@ class VenueSupervisor(ABC):
             data_time=now,
             state=state,
             state_note=note,
+            continuity=(
+                ContinuityState.UNKNOWN_AFTER_DISCONNECT
+                if state is SourceState.DISCONNECTED
+                else ContinuityState.COMPLETE
+            ),
         )
 
     def _surface_findings(self, findings: list[GapFinding], now: datetime) -> None:
@@ -338,16 +425,16 @@ class VenueSupervisor(ABC):
             self._transport.send(self._subscribe_message(spec))
         findings: list[GapFinding] = []
         if reconnected:
-            for update in self.resync(now):
-                self._push(update)
+            self._push_many(self.resync(now))
             findings, self._gap_pending = self._gap_pending, []
         for key in self._source_keys():
             self._freshness.note_activity(key, now)
         return findings
 
     def on_frame(self, frame: object, now: datetime) -> None:
-        for update in self.dispatch(frame, now):
-            self._push(update)
+        updates = self.dispatch(frame, now)
+        self._push_many(updates)
+        for update in updates:
             self._freshness.note_activity(update.instrument, now)
 
     def on_disconnect(self, now: datetime) -> list[GapFinding]:
@@ -399,6 +486,13 @@ class VenueSupervisor(ABC):
             except asyncio.CancelledError:
                 raise
             except Exception:
-                self.on_disconnect(datetime.now(UTC))
+                try:
+                    self._transport.close()
+                except Exception:
+                    pass
+                findings = self.on_disconnect(datetime.now(UTC))
+                # Deterministic drills consume the return directly; the live
+                # pump carries it into the next on_open surfacing step.
+                self._gap_pending.extend(findings)
                 attempt += 1
                 await asyncio.sleep(next_backoff(attempt - 1))

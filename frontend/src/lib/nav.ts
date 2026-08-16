@@ -49,6 +49,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Orders', labelKey: 'nav.orders', path: '/trading/orders', icon: ClipboardList, group: 'Trading', groupKey: 'group.trading' },
   { label: 'P&L', labelKey: 'nav.pnl', path: '/trading/pnl', icon: TrendingUp, group: 'Trading', groupKey: 'group.trading' },
   { label: 'Risk', labelKey: 'nav.risk', path: '/risk', icon: ShieldAlert, group: 'Risk & ops', groupKey: 'group.ops' },
+  { label: 'Data catalog', labelKey: 'nav.dataCatalog', path: '/ops/data', icon: Database, group: 'Risk & ops', groupKey: 'group.ops' },
   { label: 'Connectors', labelKey: 'nav.connectors', path: '/ops/connectors', icon: Plug, group: 'Risk & ops', groupKey: 'group.ops' },
   { label: 'Data imports', labelKey: 'nav.imports', path: '/ops/imports', icon: Database, group: 'Risk & ops', groupKey: 'group.ops' },
   { label: 'Audit', labelKey: 'nav.audit', path: '/ops/audit', icon: ScrollText, group: 'Risk & ops', groupKey: 'group.ops' },

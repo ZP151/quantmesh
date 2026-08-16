@@ -36,11 +36,18 @@ def make_provider(kline: dict | None = None, ticker: dict | None = None) -> Moom
 
 # --- provider surface --------------------------------------------------------
 
+
 def test_fetch_bars_returns_canonical_utc_bars() -> None:
     bars = make_provider().fetch_bars(AAPL, interval="1d")
     assert len(bars) == 3
     assert all(bar.timestamp.tzinfo is UTC for bar in bars)
     assert bars[0].timestamp == datetime(2026, 8, 3, 4, 0, tzinfo=UTC)
+
+
+def test_fetch_bars_do_not_leak_request_side_market_metadata() -> None:
+    bars = make_provider().fetch_bars(AAPL, interval="1d")
+    assert bars
+    assert all(not bar.instrument.metadata for bar in bars)
 
 
 def test_fetch_bars_converts_utc_bounds_to_venue_local_dates() -> None:
@@ -69,6 +76,16 @@ def test_fetch_bars_rejects_naive_bounds() -> None:
         make_provider().fetch_bars(AAPL, interval="1d", start=datetime(2026, 8, 4))
 
 
+def test_fetch_bars_rejects_reversed_utc_instants_before_date_conversion() -> None:
+    with pytest.raises(ValueError, match="start must not be after end"):
+        make_provider().fetch_bars(
+            AAPL,
+            interval="1d",
+            start=datetime(2026, 8, 3, 20, tzinfo=UTC),
+            end=datetime(2026, 8, 3, 19, tzinfo=UTC),
+        )
+
+
 def test_fetch_bars_rejects_non_mapping_payload() -> None:
     class NotAMappingTransport(WireTransport):
         def history_kline(self, code, *, interval, start, end, autype):
@@ -90,6 +107,78 @@ def test_fetch_bars_cross_checks_autype_echo() -> None:
     provider = make_provider(kline=adjusted)
     with pytest.raises(OpenDProtocolError, match="autype"):
         provider.fetch_bars(AAPL, interval="1d")
+
+
+def test_fetch_raw_bundle_keeps_unadjusted_pages_and_source_actions() -> None:
+    class BundleTransport(WireTransport):
+        def history_kline(self, *args, **kwargs):
+            raise AssertionError("trusted raw collection must use the paginated surface")
+
+        def history_kline_page(
+            self,
+            code: str,
+            *,
+            interval: str,
+            start: str | None,
+            end: str | None,
+            autype: str,
+            max_count: int,
+            page_req_key: bytes | None,
+        ) -> dict:
+            assert page_req_key is None
+            return {
+                **US_AAPL_1D,
+                "request_page_req_key": None,
+                "next_page_req_key": None,
+            }
+
+        def adjustment_factors(self, code: str) -> dict:
+            return {"code": code, "rows": [{"ex_div_date": "2026-08-01"}]}
+
+        def stock_splits_page(self, code: str, *, next_key: str | None, num: int) -> dict:
+            return {
+                "code": code,
+                "request_next_key": next_key,
+                "next_key": "-1",
+                "rows": [{"rate": "1->4"}],
+            }
+
+        def dividends(self, code: str) -> dict:
+            return {"code": code, "rows": [{"pub_date": "2026/03/18"}]}
+
+    provider = MoomooOpenDProvider(MoomooOpenDClient(BundleTransport()))
+
+    bundle = provider.fetch_raw_bundle(AAPL, interval="1d")
+
+    assert [bar.close for bar in bundle.bars] == [204.0, 207.0, 209.5]
+    assert all(not bar.instrument.metadata for bar in bundle.bars)
+    assert bundle.history_pages[0]["autype"] == "None"
+    assert bundle.adjustment_factors["rows"]
+    assert bundle.stock_split_pages[0]["rows"]
+    assert bundle.dividends["rows"]
+    assert all(bar.close == raw["close"] for bar, raw in zip(bundle.bars, US_AAPL_1D["rows"]))
+
+
+def test_fetch_raw_bundle_rejects_legacy_single_page_history() -> None:
+    class LegacyBundleTransport(WireTransport):
+        def adjustment_factors(self, code: str) -> dict:
+            return {"code": code, "rows": []}
+
+        def stock_splits_page(self, code: str, *, next_key: str | None, num: int) -> dict:
+            return {
+                "code": code,
+                "request_next_key": next_key,
+                "next_key": "-1",
+                "rows": [],
+            }
+
+        def dividends(self, code: str) -> dict:
+            return {"code": code, "rows": []}
+
+    provider = MoomooOpenDProvider(MoomooOpenDClient(LegacyBundleTransport()))
+
+    with pytest.raises(OpenDProtocolError, match="legacy single-page"):
+        provider.fetch_raw_bundle(AAPL, interval="1d")
 
 
 def test_fetch_trades_returns_canonical_trades() -> None:
@@ -124,6 +213,7 @@ def test_provider_close_closes_client() -> None:
 
 # --- fixture data through the lake -------------------------------------------
 
+
 def _bar_fields(bars) -> list[tuple]:
     """Canonical data fields of a bar — the lake round-trip surface.
 
@@ -133,9 +223,7 @@ def _bar_fields(bars) -> list[tuple]:
     fields — plus the identity assertions below — pins that boundary
     instead of hiding it.
     """
-    return [
-        (b.timestamp, b.interval, b.open, b.high, b.low, b.close, b.volume) for b in bars
-    ]
+    return [(b.timestamp, b.interval, b.open, b.high, b.low, b.close, b.volume) for b in bars]
 
 
 def _assert_same_series(written, read_back, symbol: str) -> None:

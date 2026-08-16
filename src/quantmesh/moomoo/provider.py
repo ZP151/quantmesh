@@ -11,6 +11,7 @@ fixture data through Lake, manifests and quality gates before any live
 OpenD read.
 """
 
+from dataclasses import dataclass
 from datetime import datetime
 
 from quantmesh.data.providers.base import Provider, ProviderMode
@@ -24,15 +25,24 @@ from quantmesh.moomoo.opend import MoomooOpenDClient, OpenDProtocolError
 _DEFAULT_AUTYPE = "None"
 
 
+@dataclass(frozen=True)
+class MoomooRawBundle:
+    """Unadjusted bars plus strict-JSON read-only source payloads."""
+
+    bars: tuple[Bar, ...]
+    history_pages: tuple[dict, ...]
+    adjustment_factors: dict
+    stock_split_pages: tuple[dict, ...]
+    dividends: dict
+
+
 class MoomooOpenDProvider(Provider):
     """Canonical Provider surface over a MoomooOpenDClient (Phase B)."""
 
     venue = Venue.MOOMOO
     mode = ProviderMode.LIVE  # never registered; explicit construction only
 
-    def __init__(
-        self, client: MoomooOpenDClient, adapter: MoomooDataAdapter | None = None
-    ) -> None:
+    def __init__(self, client: MoomooOpenDClient, adapter: MoomooDataAdapter | None = None) -> None:
         self._client = client
         self._adapter = adapter if adapter is not None else MoomooDataAdapter()
 
@@ -46,34 +56,68 @@ class MoomooOpenDProvider(Provider):
     ) -> list[Bar]:
         _require_aware(start, "start")
         _require_aware(end, "end")
+        pages = self._history_pages(instrument, interval=interval, start=start, end=end)
+        return [
+            bar
+            for bar in self._adapter.history_pages_to_bars(
+                _canonical_instrument(instrument), pages
+            )
+            if _within(bar.timestamp, start, end)
+        ]
+
+    def fetch_raw_bundle(
+        self,
+        instrument: Instrument,
+        *,
+        interval: str,
+        start: datetime | None = None,
+        end: datetime | None = None,
+    ) -> MoomooRawBundle:
+        """Fetch unadjusted pages and source actions without deriving adjustments."""
+        _require_aware(start, "start")
+        _require_aware(end, "end")
+        code = sdk_code(instrument)
+        pages = self._history_pages(instrument, interval=interval, start=start, end=end)
+        if any(page.get("_legacy_single_page") is True for page in pages):
+            raise OpenDProtocolError(
+                "legacy single-page history cannot qualify as a complete raw bundle"
+            )
+        bars = tuple(
+            bar
+            for bar in self._adapter.history_pages_to_bars(
+                _canonical_instrument(instrument), pages
+            )
+            if _within(bar.timestamp, start, end)
+        )
+        return MoomooRawBundle(
+            bars=bars,
+            history_pages=tuple(pages),
+            adjustment_factors=self._client.adjustment_factors(code),
+            stock_split_pages=tuple(self._client.stock_splits(code)),
+            dividends=self._client.dividends(code),
+        )
+
+    def _history_pages(
+        self,
+        instrument: Instrument,
+        *,
+        interval: str,
+        start: datetime | None,
+        end: datetime | None,
+    ) -> list[dict]:
+        _require_aware(start, "start")
+        _require_aware(end, "end")
+        if start is not None and end is not None and start > end:
+            raise ValueError("start must not be after end")
         code = sdk_code(instrument)
         tz = market_tz(code)
-        payload = self._client.history_kline(
+        return self._client.history_pages(
             code,
             interval=interval,
             start=_iso_date(start, tz),
             end=_iso_date(end, tz),
             autype=_DEFAULT_AUTYPE,
         )
-        if not isinstance(payload, dict):
-            raise OpenDProtocolError(
-                f"transport answered a non-mapping payload ({type(payload).__name__})"
-            )
-        if payload.get("interval") != interval:
-            raise OpenDProtocolError(
-                f"transport answered interval {payload.get('interval')!r}, "
-                f"requested {interval!r}"
-            )
-        if payload.get("autype") != _DEFAULT_AUTYPE:
-            raise OpenDProtocolError(
-                f"transport answered autype {payload.get('autype')!r}, "
-                f"expected {_DEFAULT_AUTYPE!r}"
-            )
-        return [
-            bar
-            for bar in self._adapter.history_kline_to_bars(instrument, payload)
-            if _within(bar.timestamp, start, end)
-        ]
 
     def fetch_trades(
         self,
@@ -111,6 +155,22 @@ class MoomooOpenDProvider(Provider):
 def _require_aware(timestamp: datetime | None, name: str) -> None:
     if timestamp is not None and timestamp.tzinfo is None:
         raise ValueError(f"{name} must be timezone-aware")
+
+
+def _canonical_instrument(instrument: Instrument) -> Instrument:
+    """ADR-0003: market metadata is request-side identity, not bar identity.
+
+    The canonical bar's instrument carries symbol/venue/type/currency only;
+    the market prefix used to build the SDK code is transport metadata and
+    must not leak into persisted bars (the fabric re-derives with a clean
+    instrument and the lake drops ``metadata`` on write).
+    """
+    return Instrument(
+        symbol=instrument.symbol,
+        venue=instrument.venue,
+        instrument_type=instrument.instrument_type,
+        currency=instrument.currency,
+    )
 
 
 def _within(timestamp: datetime, start: datetime | None, end: datetime | None) -> bool:

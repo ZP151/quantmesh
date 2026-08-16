@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "duckdb>=1.1,<2",
+  "exchange-calendars==4.13.2",
   "fastapi>=0.115,<1",
   "httpx>=0.27,<1",
   "jinja2>=3.1,<4",  # M9 (ADR-0011): server-rendered workstation pages
@@ -55,12 +56,19 @@ e2e = [
   # the suite skips cleanly when the package or the browser is missing.
   "playwright>=1.44,<2",
 ]
+moomoo = [
+  # Iteration 0021 Task 6: first official SDK release inspected with all
+  # required read-only history/factor/split/dividend methods. OpenD remains
+  # local and collection-only; no credential or execution surface is used.
+  "moomoo-api==10.10.7008",
+]
 
 [project.scripts]
 quantmesh-iteration = "quantmesh.dev.iterations:main"
 quantmesh-moomoo = "quantmesh.moomoo.cli:main"
 quantmesh-workstation = "quantmesh.api.workstation:main"
 quantmesh-ops = "quantmesh.ops.cli:main"
+quantmesh-data = "quantmesh.data.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

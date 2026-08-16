@@ -5,9 +5,13 @@ import os
 import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
+from pydantic import ValidationError
 
+from quantmesh.data.artifacts import ArtifactLayer
+from quantmesh.data.capabilities import DataKind
 from quantmesh.data.lake import Lake
 from quantmesh.data.manifest import ManifestWriter
 from quantmesh.domain.market_data import Bar
@@ -59,6 +63,8 @@ def _series(
     generated_at: datetime | None = None,
     gaps: tuple[datetime, ...] = (),
     duplicates: tuple[datetime, ...] = (),
+    manifest_id: str | None = None,
+    quality_evaluation_id: str | None = None,
 ) -> HistoricalSeries:
     crypto = instrument.venue is Venue.HYPERLIQUID
     dates = _dates(count, crypto=crypto)
@@ -104,6 +110,8 @@ def _series(
         ),
         gaps=gaps,
         duplicates=duplicates,
+        manifest_id=manifest_id,
+        quality_evaluation_id=quality_evaluation_id,
     )
 
 
@@ -150,6 +158,32 @@ def test_forecast_has_three_horizons_quantiles_and_lineage() -> None:
     assert artifact.eligible == (artifact.blockers == ())
     assert set(artifact.artifact_hashes) == {"report.json", "paths.csv", "oos.csv"}
     assert all(len(value) == 64 for value in artifact.artifact_hashes.values())
+
+
+def test_forecast_preserves_exact_trusted_manifest_and_quality_identity() -> None:
+    series = _series(
+        manifest_id="1" * 64,
+        quality_evaluation_id="2" * 64,
+    )
+
+    artifact = run_price_forecast(
+        series,
+        generated_at=series.as_of,
+        model_version=MODEL_VERSION,
+    )
+
+    assert artifact.manifest_id == series.manifest_id
+    assert artifact.quality_evaluation_id == series.quality_evaluation_id
+    assert artifact.id != run_price_forecast(
+        _series(),
+        generated_at=series.as_of,
+        model_version=MODEL_VERSION,
+    ).id
+
+
+def test_history_and_forecast_reject_partial_trusted_lineage() -> None:
+    with pytest.raises(ValidationError, match="manifest_id and quality_evaluation_id"):
+        _series(manifest_id="1" * 64)
 
 
 def test_artifact_is_deeply_frozen_and_self_consistent() -> None:
@@ -332,6 +366,81 @@ def test_registry_writes_byte_stable_artifacts_and_re_resolves_dataset_pin(
     assert first.resolve_pin(artifact).manifest.revision == 7
     with pytest.raises(ValueError, match="already recorded"):
         first.record(artifact)
+
+
+def test_registry_refuses_unverified_trusted_forecast_lineage(tmp_path: Path) -> None:
+    series = _series(
+        manifest_id="1" * 64,
+        quality_evaluation_id="2" * 64,
+    )
+    artifact = run_price_forecast(
+        series,
+        generated_at=series.as_of,
+        model_version=MODEL_VERSION,
+    )
+    registry = PriceForecastRegistry(
+        tmp_path / "registry",
+        lake_root=tmp_path / "lake",
+        bindings=(_binding(series),),
+    )
+
+    with pytest.raises(ValueError, match="requires a data catalog"):
+        registry.record(artifact)
+
+
+def test_registry_resolves_trusted_forecast_through_exact_catalog(
+    tmp_path: Path,
+) -> None:
+    series = _series(
+        manifest_id="1" * 64,
+        quality_evaluation_id="2" * 64,
+    )
+    artifact = run_price_forecast(
+        series,
+        generated_at=series.as_of,
+        model_version=MODEL_VERSION,
+    )
+    dataset = SimpleNamespace(
+        manifest=SimpleNamespace(
+            layer=ArtifactLayer.ADJUSTED,
+            data_kind=DataKind.BARS,
+            compatibility_revision=series.dataset_revision,
+            source_rights_id=series.license,
+            created_at=series.generated_at,
+            interval="1d",
+            event_start=series.coverage.start,
+            event_end=series.coverage.end,
+            row_identities=tuple(str(index) for index in range(series.coverage.rows)),
+        ),
+        read_bars=lambda: list(series.bars),
+    )
+
+    class Catalog:
+        def require_research(self, manifest_id):
+            assert manifest_id == series.manifest_id
+            return SimpleNamespace(
+                provider_id=series.source,
+                source_rights_id=series.license,
+            )
+
+        def open_research_dataset(self, *args, **kwargs):
+            assert args == (series.manifest_id,)
+            assert kwargs == {
+                "evaluation_id": series.quality_evaluation_id,
+                "dataset_id": series.dataset_id,
+                "compatibility_revision": series.dataset_revision,
+            }
+            return dataset
+
+    registry = PriceForecastRegistry(
+        tmp_path / "registry",
+        lake_root=tmp_path / "lake",
+        bindings=(_binding(series),),
+        trusted_catalog=Catalog(),
+    )
+
+    registry.record(artifact)
+    assert registry.get(artifact.id) == artifact
 
 
 @pytest.mark.parametrize("name", ["report.json", "paths.csv", "oos.csv"])

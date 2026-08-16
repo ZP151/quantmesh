@@ -41,6 +41,104 @@ const DATA_KINDS: readonly LiveKind[] = [
   'metrics',
 ]
 
+function updateIdentity(update: MarketUpdate): string {
+  const providerIdentity = update.source_event_id
+    ?? `${update.received_at}:${update.sequence ?? ''}`
+  return `${update.venue}:${update.instrument}:${update.kind}:${providerIdentity}`
+}
+
+function updateInstant(update: MarketUpdate): number {
+  const received = Date.parse(update.received_at)
+  if (Number.isFinite(received)) return received
+  const event = Date.parse(update.data_time)
+  return Number.isFinite(event) ? event : 0
+}
+
+export function reconcileUpdates(
+  previous: readonly MarketUpdate[],
+  incoming: readonly MarketUpdate[],
+): MarketUpdate[] {
+  const byIdentity = new Map(previous.map((update) => [updateIdentity(update), update]))
+  for (const update of incoming) {
+    if (!byIdentity.has(updateIdentity(update))) {
+      byIdentity.set(updateIdentity(update), update)
+    }
+  }
+  return [...byIdentity.values()].sort((left, right) => {
+    const timeOrder = updateInstant(left) - updateInstant(right)
+    return timeOrder || updateIdentity(left).localeCompare(updateIdentity(right))
+  })
+}
+
+export function latestCompleteBookSides(updates: readonly MarketUpdate[]): {
+  bid?: MarketUpdate
+  ask?: MarketUpdate
+} {
+  const epochs = new Map<string, { bid?: MarketUpdate; ask?: MarketUpdate }>()
+  for (const update of updates) {
+    if (update.kind !== 'l2_snapshot' || !update.snapshot_epoch) continue
+    const sides = epochs.get(update.snapshot_epoch) ?? {}
+    if (update.payload.side === 'bid') sides.bid = update
+    else if (update.payload.side === 'ask') sides.ask = update
+    epochs.set(update.snapshot_epoch, sides)
+  }
+  let selected: { bid?: MarketUpdate; ask?: MarketUpdate } = {}
+  let selectedAt = Number.NEGATIVE_INFINITY
+  for (const sides of epochs.values()) {
+    if (!sides.bid || !sides.ask) continue
+    const epochAt = Math.max(updateInstant(sides.bid), updateInstant(sides.ask))
+    if (epochAt > selectedAt) {
+      selected = sides
+      selectedAt = epochAt
+    }
+  }
+  return selected
+}
+
+function liveViewInstant(view: LiveView): number {
+  const received = Date.parse(view.received_at)
+  if (Number.isFinite(received)) return received
+  const event = Date.parse(view.data_time)
+  return Number.isFinite(event) ? event : 0
+}
+
+function newestView(current: LiveView | undefined, candidate: LiveView): LiveView {
+  if (!current) return candidate
+  if (candidate.source_event_id
+    && current.source_event_id === candidate.source_event_id) return candidate
+  return liveViewInstant(candidate) >= liveViewInstant(current) ? candidate : current
+}
+
+export function reconcileInstrumentState(
+  previous: LiveInstrumentState | undefined,
+  incoming: LiveInstrumentState,
+): LiveInstrumentState {
+  if (!previous
+    || previous.venue !== incoming.venue
+    || previous.instrument !== incoming.instrument) {
+    return incoming
+  }
+  const kinds = { ...previous.kinds }
+  for (const [kind, candidate] of Object.entries(incoming.kinds)) {
+    kinds[kind] = newestView(kinds[kind], candidate)
+  }
+  const book_sides = { ...(previous.book_sides ?? {}) }
+  for (const [side, candidate] of Object.entries(incoming.book_sides ?? {})) {
+    if (side === 'bid' || side === 'ask') {
+      book_sides[side] = newestView(book_sides[side], candidate)
+    }
+  }
+  const reconciled: LiveInstrumentState = {
+    venue: incoming.venue,
+    instrument: incoming.instrument,
+    label: incoming.label,
+    kinds,
+    book_sides,
+  }
+  reconciled.label = instrumentLabel(reconciled)
+  return reconciled
+}
+
 export function dataViews(instrument: LiveInstrumentState): LiveView[] {
   return DATA_KINDS.filter((kind) => kind in instrument.kinds)
     .map((kind) => instrument.kinds[kind])
@@ -135,13 +233,7 @@ export function mergeUpdate(
 ): Record<string, LiveInstrumentState> {
   const key = liveInstrumentKey(update.venue, update.instrument)
   const previous = instruments[key]
-  const instrument: LiveInstrumentState = {
-    venue: update.venue,
-    instrument: update.instrument,
-    label: previous?.label ?? 'unavailable',
-    kinds: { ...(previous?.kinds ?? {}) },
-  }
-  instrument.kinds[update.kind] = {
+  const view: LiveView = {
     kind: update.kind,
     provenance: update.provenance,
     data_time: update.data_time,
@@ -149,11 +241,28 @@ export function mergeUpdate(
     age_ms: 0,
     sequence: update.sequence,
     sequence_gap: update.sequence_gap,
+    continuity: update.continuity ?? (update.sequence_gap ? 'known-gap' : 'complete'),
+    source_event_id: update.source_event_id,
+    content_digest: update.content_digest,
+    snapshot_epoch: update.snapshot_epoch,
+    continuity_evidence: update.continuity_evidence,
     label: update.provenance === 'real' ? 'real' : (update.provenance as LiveLabel),
     payload: update.payload,
   }
-  instrument.label = instrumentLabel(instrument)
-  return { ...instruments, [key]: instrument }
+  const instrument: LiveInstrumentState = {
+    venue: update.venue,
+    instrument: update.instrument,
+    label: view.label,
+    kinds: { [update.kind]: view },
+    book_sides: {},
+  }
+  if (update.kind === 'l2_snapshot') {
+    const side = update.payload.side
+    if (side === 'bid' || side === 'ask') {
+      instrument.book_sides![side] = view
+    }
+  }
+  return { ...instruments, [key]: reconcileInstrumentState(previous, instrument) }
 }
 
 // --- Quote math -----------------------------------------------------------

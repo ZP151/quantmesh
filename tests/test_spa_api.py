@@ -116,7 +116,13 @@ def test_read_surface_serves_the_demo_screens(demo_client) -> None:
 def test_plain_app_has_no_json_surface() -> None:
     app = create_app(account=None)  # type: ignore[arg-type]
     with TestClient(app) as client:
-        for route in ("/api/markets", "/api/risk", "/api/audit", "/api/enablement"):
+        for route in (
+            "/api/markets",
+            "/api/risk",
+            "/api/audit",
+            "/api/enablement",
+            "/api/data/catalog",
+        ):
             assert client.get(route).status_code == 404, route
 
 

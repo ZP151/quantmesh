@@ -37,12 +37,41 @@ vi.mock('@/lib/live', async (importOriginal) => {
 })
 
 import { api } from '@/lib/api'
-import { useLiveConnection } from '@/lib/live'
+import {
+  latestCompleteBookSides,
+  reconcileInstrumentState,
+  reconcileUpdates,
+  useLiveConnection,
+} from '@/lib/live'
 
 const mocked = vi.mocked(api)
 const mockedStream = vi.mocked(useLiveConnection)
 
 const T0 = '2026-08-09T10:00:00+00:00'
+
+function marketUpdate(
+  kind: MarketUpdate['kind'],
+  source_event_id: string,
+  received_at: string,
+  payload: Record<string, unknown>,
+  snapshot_epoch?: string,
+): MarketUpdate {
+  return {
+    venue: 'hyperliquid',
+    instrument: 'BTC',
+    kind,
+    provenance: 'real',
+    data_time: received_at,
+    received_at,
+    sequence: null,
+    sequence_gap: false,
+    source_event_id,
+    snapshot_epoch,
+    payload,
+    state: null,
+    state_note: null,
+  }
+}
 
 function view(payload: Record<string, unknown>, overrides: Partial<LiveView> = {}): LiveView {
   return {
@@ -399,6 +428,75 @@ describe('CockpitScreen', () => {
   })
 })
 
+describe('live timeline reconciliation', () => {
+  it('keeps a delayed HTTP row before the newer streamed row', () => {
+    const older = marketUpdate('quote', 'quote-old', T0, { bid: 99, ask: 100 })
+    const newer = marketUpdate(
+      'quote',
+      'quote-new',
+      '2026-08-09T10:00:02+00:00',
+      { bid: 101, ask: 102 },
+    )
+
+    const reconciled = reconcileUpdates([newer], [older])
+
+    expect(reconciled.map((update) => update.source_event_id)).toEqual([
+      'quote-old',
+      'quote-new',
+    ])
+  })
+
+  it('scopes provider identity by venue, instrument and kind', () => {
+    const quote = marketUpdate('quote', 'provider-id', T0, { bid: 99, ask: 100 })
+    const trade = marketUpdate('trade', 'provider-id', T0, { price: 100, size: 1 })
+
+    expect(reconcileUpdates([quote], [trade])).toHaveLength(2)
+  })
+
+  it('does not let a delayed snapshot regress streamed instrument state', () => {
+    const newer = view(
+      { bid: 101, ask: 102 },
+      {
+        received_at: '2026-08-09T10:00:02+00:00',
+        source_event_id: 'quote-new',
+        label: 'real',
+      },
+    )
+    const older = view(
+      { bid: 99, ask: 100 },
+      { received_at: T0, source_event_id: 'quote-old', label: 'stale' },
+    )
+    const reconciled = reconcileInstrumentState(
+      { venue: 'hyperliquid', instrument: 'BTC', label: 'real', kinds: { quote: newer } },
+      { venue: 'hyperliquid', instrument: 'BTC', label: 'stale', kinds: { quote: older } },
+    )
+
+    expect(reconciled.kinds.quote.source_event_id).toBe('quote-new')
+    expect(reconciled.label).toBe('real')
+  })
+
+  it('selects the newest complete book epoch independent of arrival order', () => {
+    const oldBid = marketUpdate(
+      'l2_snapshot', 'old:bid', T0, { side: 'bid', levels: [[99, 1]] }, 'old',
+    )
+    const oldAsk = marketUpdate(
+      'l2_snapshot', 'old:ask', T0, { side: 'ask', levels: [[100, 1]] }, 'old',
+    )
+    const newerAt = '2026-08-09T10:00:02+00:00'
+    const newBid = marketUpdate(
+      'l2_snapshot', 'new:bid', newerAt, { side: 'bid', levels: [[101, 1]] }, 'new',
+    )
+    const newAsk = marketUpdate(
+      'l2_snapshot', 'new:ask', newerAt, { side: 'ask', levels: [[102, 1]] }, 'new',
+    )
+
+    const selected = latestCompleteBookSides([newBid, newAsk, oldBid, oldAsk])
+
+    expect(selected.bid?.snapshot_epoch).toBe('new')
+    expect(selected.ask?.snapshot_epoch).toBe('new')
+  })
+})
+
 describe('CockpitDetailScreen', () => {
   it('ignores same-symbol updates from another venue', async () => {
     let push: (update: MarketUpdate) => void = () => {}
@@ -481,7 +579,12 @@ describe('CockpitDetailScreen', () => {
     const trade = view({ price: 30.1, size: 2, side: 'buy' }, { kind: 'trade', sequence: 4 })
     const l2Bid = view(
       { side: 'bid', levels: [[30.0, 1.0], [29.5, 2.0]] },
-      { kind: 'l2_snapshot', sequence: 6 },
+      {
+        kind: 'l2_snapshot',
+        sequence: 6,
+        source_event_id: 'epoch-1:bid',
+        snapshot_epoch: 'epoch-1',
+      },
     )
     mocked.liveState.mockResolvedValue({
       generated_at: T0,
@@ -494,12 +597,12 @@ describe('CockpitDetailScreen', () => {
             quote: view({ bid: 30, ask: 30.2 }),
             candle,
             trade,
-            l2_snapshot: l2Bid,
             metrics: view(
               { funding_rate: 0.0001, mark_price: 100.2, index_price: 100, open_interest: 4567 },
               { kind: 'metrics', sequence: 2 },
             ),
           },
+          book_sides: { bid: l2Bid },
         },
       },
     })
@@ -535,8 +638,24 @@ describe('CockpitDetailScreen', () => {
     // The trade-size value sits in the dd of the "Last trade size" row.
     const tradeSizeRow = screen.getByText('Last trade size').closest('div')
     expect(tradeSizeRow?.querySelector('dd')).toHaveTextContent('2')
-    // The book depth chart needs both sides: the bid side seeded, the
-    // ask side streamed — until then it stays absent (never a guess).
+    // The book depth chart needs both sides from one epoch. A newer ask
+    // invalidates the seeded bid until its matching bid arrives.
+    expect(screen.queryByRole('img', { name: /Book depth chart/ })).not.toBeInTheDocument()
+    act(() => push({
+      venue: 'hyperliquid',
+      instrument: 'SOL',
+      kind: 'l2_snapshot',
+      provenance: 'real',
+      data_time: T0,
+      received_at: T0,
+      sequence: 7,
+      sequence_gap: false,
+      source_event_id: 'epoch-2:ask',
+      snapshot_epoch: 'epoch-2',
+      payload: { side: 'ask', levels: [[30.2, 0.5]] },
+      state: null,
+      state_note: null,
+    }))
     expect(screen.queryByRole('img', { name: /Book depth chart/ })).not.toBeInTheDocument()
     act(() => push({
       venue: 'hyperliquid',
@@ -547,7 +666,9 @@ describe('CockpitDetailScreen', () => {
       received_at: T0,
       sequence: 8,
       sequence_gap: false,
-      payload: { side: 'ask', levels: [[30.2, 0.5], [30.7, 1.5]] },
+      source_event_id: 'epoch-2:bid',
+      snapshot_epoch: 'epoch-2',
+      payload: { side: 'bid', levels: [[30.0, 1.0], [29.5, 2.0]] },
       state: null,
       state_note: null,
     }))

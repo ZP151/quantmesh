@@ -2,7 +2,7 @@
 
 Deterministic inventory check (M10 Phase D, issue #61; iteration 0013
 Phase B): every distribution in the **pinned release closure** —
-`requirements-audit.txt`, the frozen install of `.[dev,research,e2e]`
+`requirements-audit.txt`, the frozen install of `.[dev,research,e2e,moomoo]`
 — is classified from its PEP 639 / PEP 345 metadata by
 `tools/license_review.py` (stdlib only, no network) and must land on
 the documented allowlist. The CI `security` job runs it over a fresh
@@ -51,6 +51,7 @@ creates one).
 | Package | License | Justification |
 | --- | --- | --- |
 | certifi | MPL-2.0 | MPL-2.0 is on the allowlist; metadata omits it |
+| simplejson | MIT | metadata declares `MIT OR AFL-2.1`; QuantMesh selects the allowed MIT alternative |
 | tzdata | Apache-2.0 | the IANA timezone database under Apache-2.0 |
 
 ## Security toolchain (outside the release closure)
@@ -143,6 +144,11 @@ fails loudly otherwise.
   release extras install, so the audit lock, the license gate and the
   CI security job cover the full release closure, not just
   `.[dev,research]`.
+- **The closure includes the `moomoo` extra (iteration 0021 Task 6)** —
+  `moomoo_api==10.10.7008` is Apache-2.0 and supplies the inspected official
+  read-only history, adjustment-factor, split and dividend methods. Its
+  `protobuf`, `pycryptodome` and `simplejson` dependencies are pinned and
+  audited in the same release environment; this does not enable trading.
 
 ## Project-scoped development skills
 
@@ -219,8 +225,8 @@ source-available restriction, no untracked package.
   change beyond patch level requires a re-check of this section and the
   explicit SPDX allowlist.
 
-## Inventory (generated 2026-08-08; 64 packages in the release
-closure `.[dev,research,e2e]`)
+## Inventory (generated 2026-08-14; 72 packages in the release
+closure `.[dev,research,e2e,moomoo]`)
 
 Regenerate with `python tools/license_review.py` in an environment
 that is exactly the release closure (the release gate creates one).
@@ -238,8 +244,9 @@ Version numbers drift with the lock; the license key is the contract.
 | colorama | 0.4.6 (Windows-only) | BSD-3-Clause |
 | cryptography | 50.0.0 (Linux-only) | Apache-2.0 | BSD-3-Clause |
 | duckdb | 1.5.5 | MIT |
+| exchange_calendars | 4.13.2 | Apache-2.0 |
 | fastapi | 0.141.1 | MIT |
-| greenlet | 3.5.4 | MIT | PSF-2.0 |
+| greenlet | 3.5.5 | MIT | PSF-2.0 |
 | h11 | 0.16.0 | MIT |
 | httpcore | 1.0.9 | BSD-3-Clause |
 | httptools | 0.8.0 | MIT |
@@ -253,17 +260,21 @@ Version numbers drift with the lock; the license key is the contract.
 | Jinja2 | 3.1.6 | BSD-3-Clause |
 | joblib | 1.5.3 | BSD-3-Clause |
 | keyring | 25.7.0 | MIT |
+| korean_lunar_calendar | 0.4.0 | MIT |
 | lightgbm | 4.7.0 | MIT |
 | MarkupSafe | 3.0.3 | BSD-3-Clause |
+| moomoo_api | 10.10.7008 | Apache-2.0 |
 | more-itertools | 11.1.0 | MIT |
 | narwhals | 2.24.0 | MIT |
-| numpy | 2.5.1 | 0BSD | BSD-3-Clause | CC0-1.0 | MIT | Zlib |
+| numpy | 2.5.2 | 0BSD | BSD-3-Clause | CC0-1.0 | MIT | Zlib |
 | packaging | 26.3 | Apache-2.0 | BSD-2-Clause |
 | pandas | 2.3.3 | BSD-3-Clause |
 | patsy | 1.0.2 | BSD-3-Clause |
 | playwright | 1.62.0 | Apache-2.0 |
 | pluggy | 1.6.0 | MIT |
+| protobuf | 7.35.1 | BSD-3-Clause |
 | pycparser | 3.0 (Linux-only) | BSD-3-Clause |
+| pycryptodome | 3.23.0 | BSD-3-Clause |
 | pydantic | 2.13.4 | MIT |
 | pydantic-settings | 2.15.0 | MIT |
 | pydantic_core | 2.46.4 | MIT |
@@ -271,24 +282,27 @@ Version numbers drift with the lock; the license key is the contract.
 | Pygments | 2.20.0 | BSD-2-Clause |
 | pytest | 9.1.1 | MIT |
 | pytest-asyncio | 1.4.0 | Apache-2.0 |
+| pyluach | 2.3.0 | MIT |
 | python-dateutil | 2.9.0.post0 | BSD-3-Clause |
 | python-dotenv | 1.2.2 | BSD-3-Clause |
 | python-multipart | 0.0.32 | Apache-2.0 |
 | pytz | 2026.3.post1 | MIT |
 | pywin32-ctypes | 0.2.3 (Windows-only) | BSD-3-Clause |
 | PyYAML | 6.0.3 | MIT |
-| ruff | 0.16.2 | MIT |
+| ruff | 0.16.3 | MIT |
 | scikit-learn | 1.9.0 | BSD-3-Clause |
 | scipy | 1.18.0 | BSD-3-Clause |
 | SecretStorage | 3.5.0 (Linux-only) | BSD-3-Clause |
+| simplejson | 4.1.1 | MIT (documented exception) |
 | six | 1.17.0 | MIT |
-| starlette | 1.5.0 | BSD-3-Clause |
+| starlette | 1.6.0 | BSD-3-Clause |
 | statsmodels | 0.14.6 | BSD-3-Clause |
 | threadpoolctl | 3.6.0 | BSD-3-Clause |
-| typing-inspection | 0.4.2 | MIT |
+| toolz | 1.1.0 | BSD-3-Clause |
+| typing-inspection | 0.4.4 | MIT |
 | typing_extensions | 4.16.0 | PSF-2.0 |
 | tzdata | 2026.3 | Apache-2.0 (documented exception) |
-| uvicorn | 0.52.1 | BSD-3-Clause |
+| uvicorn | 0.52.3 | BSD-3-Clause |
 | uvloop | 0.22.1 (Linux-only) | MIT |
 | watchfiles | 1.2.0 | MIT |
 | websockets | 17.0.1 | BSD-3-Clause |

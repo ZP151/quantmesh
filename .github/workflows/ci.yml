@@ -22,11 +22,11 @@ jobs:
         # The full release closure since iteration 0013 Phase B: the
         # license/audit contract tests (tests/test_security.py) run on
         # every PR and assert the environment IS the closure
-        # (.[dev,research,e2e], same as the Security job and the release
+        # (.[dev,research,e2e,moomoo], same as the Security job and the release
         # gate). A narrower install would leave e2e-chain members
         # (playwright/pyee/greenlet) absent on Linux and fail the
         # closure contract.
-        run: python -m pip install -e ".[dev,research,e2e]"
+        run: python -m pip install -e ".[dev,research,e2e,moomoo]"
       - uses: actions/setup-node@v4
         with:
           node-version: "22.12.0"

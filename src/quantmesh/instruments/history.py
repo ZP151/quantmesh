@@ -3,8 +3,13 @@
 import math
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime, timedelta
-from typing import Protocol
+from typing import Any, Protocol
+from zoneinfo import ZoneInfo
 
+from quantmesh.data.artifacts import ArtifactLayer, ArtifactManifest
+from quantmesh.data.calendars import CalendarService, SessionPolicy
+from quantmesh.data.capabilities import DataKind
+from quantmesh.data.catalog import CatalogNotFoundError, CatalogQualificationError
 from quantmesh.data.manifest import DatasetManifest
 from quantmesh.domain.market_data import Bar, find_gaps, interval_to_timedelta
 from quantmesh.domain.models import Venue
@@ -35,6 +40,14 @@ _WINDOW = {
     HistoryRange.ONE_YEAR: timedelta(days=366),
 }
 _CONTINUOUS_CALENDAR = "24/7"
+_NEW_YORK = ZoneInfo("America/New_York")
+_TRUSTED_ADJUSTMENT_POLICIES = {
+    "unadjusted": frozenset(
+        {"unadjusted-identity-v1", "identity-no-corporate-actions-v1"}
+    ),
+    "split-adjusted": frozenset({"split-adjusted-v1"}),
+    "total-return": frozenset(),
+}
 
 
 class ReadableDataset(Protocol):
@@ -52,6 +65,12 @@ class ReadableDataset(Protocol):
         start: datetime | None = None,
         end: datetime | None = None,
     ) -> list[Bar]: ...
+
+
+class TrustedCatalogReader(Protocol):
+    """Narrow exact-manifest qualification boundary used by history."""
+
+    def require_research(self, manifest_id: str) -> Any: ...
 
 
 # Expected absence must be reported as ``HistoryUnavailableError`` by the
@@ -83,10 +102,12 @@ class HistoryService:
         bindings: Iterable[DatasetBinding],
         *,
         dataset_loader: DatasetLoader,
+        trusted_catalog: TrustedCatalogReader | None = None,
         now: Clock | None = None,
     ) -> None:
         self._bindings = tuple(bindings)
         self._dataset_loader = dataset_loader
+        self._trusted_catalog = trusted_catalog
         self._now = now or (lambda: datetime.now(UTC))
         seen: set[tuple[Venue, str, timedelta]] = set()
         for current in self._bindings:
@@ -115,50 +136,110 @@ class HistoryService:
         selected_as_of = _aware_utc(as_of if as_of is not None else self._now(), "as_of")
         selected, fallback = self._select_binding(venue, symbol, range)
         dataset = self._dataset_loader(selected.dataset_id)
-        dataset_name = getattr(dataset, "name", None)
+        dataset_manifest = getattr(dataset, "manifest", None)
+        dataset_name = (
+            dataset_manifest.dataset_id
+            if isinstance(dataset_manifest, ArtifactManifest)
+            else getattr(dataset, "name", None)
+        )
         if dataset_name != selected.dataset_id:
             raise HistoryUnavailableError(
                 f"dataset identity {dataset_name!r} does not match binding {selected.dataset_id!r}"
             )
-        dataset_manifest = getattr(dataset, "manifest", None)
-        if not isinstance(dataset_manifest, DatasetManifest):
+        trusted_entry = None
+        if isinstance(dataset_manifest, ArtifactManifest):
+            if self._trusted_catalog is None:
+                raise HistoryUnavailableError(
+                    "v2 artifact history requires a trusted data catalog"
+                )
+            if (
+                dataset_manifest.layer is not ArtifactLayer.ADJUSTED
+                or dataset_manifest.data_kind is not DataKind.BARS
+                or dataset_manifest.interval != selected.interval
+            ):
+                raise HistoryUnavailableError(
+                    "trusted history requires an adjusted bar manifest at the bound interval"
+                )
+            if (
+                dataset_manifest.adjustment_policy
+                not in _TRUSTED_ADJUSTMENT_POLICIES[selected.adjustment]
+            ):
+                raise HistoryUnavailableError(
+                    "trusted manifest adjustment policy does not match the binding"
+                )
+            try:
+                trusted_entry = self._trusted_catalog.require_research(
+                    dataset_manifest.manifest_id
+                )
+            except (CatalogNotFoundError, CatalogQualificationError) as error:
+                raise HistoryUnavailableError(str(error)) from error
+            if (
+                trusted_entry.manifest_id != dataset_manifest.manifest_id
+                or trusted_entry.dataset_id != dataset_manifest.dataset_id
+                or trusted_entry.compatibility_revision
+                != dataset_manifest.compatibility_revision
+            ):
+                raise HistoryUnavailableError(
+                    "trusted catalog entry does not match the opened manifest"
+                )
+            manifest_dataset_id = dataset_manifest.dataset_id
+        elif isinstance(dataset_manifest, DatasetManifest):
+            manifest_dataset_id = dataset_manifest.dataset
+        else:
             raise HistoryUnavailableError(
                 "dataset loader did not return a manifest-gated Dataset"
             )
-        if dataset_manifest.dataset != selected.dataset_id:
+        if manifest_dataset_id != selected.dataset_id:
             raise HistoryUnavailableError(
-                f"manifest identity {dataset_manifest.dataset!r} does not match binding "
+                f"manifest identity {manifest_dataset_id!r} does not match binding "
                 f"{selected.dataset_id!r}"
             )
-        matching_coverage = [
-            item
-            for item in dataset_manifest.coverage
-            if item.interval == selected.interval
-            and item.venue is venue
-            and item.symbol == symbol
-        ]
-        if len(matching_coverage) != 1:
-            raise HistoryUnavailableError(
-                "manifest coverage must contain exactly one bound "
-                f"{selected.interval}/{venue.value}/{symbol} series"
+        if isinstance(dataset_manifest, ArtifactManifest):
+            normalized_coverage = CoverageSnapshot(
+                interval=selected.interval,
+                venue=venue,
+                symbol=symbol,
+                start=dataset_manifest.event_start,
+                end=dataset_manifest.event_end,
+                rows=len(dataset_manifest.row_identities),
             )
-        manifest_coverage = matching_coverage[0]
-        normalized_coverage = CoverageSnapshot(
-            interval=manifest_coverage.interval,
-            venue=manifest_coverage.venue,
-            symbol=manifest_coverage.symbol,
-            start=_aware_utc(manifest_coverage.start, "coverage start"),
-            end=_aware_utc(manifest_coverage.end, "coverage end"),
-            rows=manifest_coverage.rows,
-        )
+        else:
+            matching_coverage = [
+                item
+                for item in dataset_manifest.coverage
+                if item.interval == selected.interval
+                and item.venue is venue
+                and item.symbol == symbol
+            ]
+            if len(matching_coverage) != 1:
+                raise HistoryUnavailableError(
+                    "manifest coverage must contain exactly one bound "
+                    f"{selected.interval}/{venue.value}/{symbol} series"
+                )
+            manifest_coverage = matching_coverage[0]
+            normalized_coverage = CoverageSnapshot(
+                interval=manifest_coverage.interval,
+                venue=manifest_coverage.venue,
+                symbol=manifest_coverage.symbol,
+                start=_aware_utc(manifest_coverage.start, "coverage start"),
+                end=_aware_utc(manifest_coverage.end, "coverage end"),
+                rows=manifest_coverage.rows,
+            )
         start = selected_as_of - _WINDOW[range]
-        rows = dataset.read_bars(
-            interval=selected.interval,
-            venue=venue,
-            symbol=symbol,
-            start=start,
-            end=selected_as_of,
-        )
+        if isinstance(dataset_manifest, ArtifactManifest):
+            rows = [
+                row
+                for row in dataset.read_bars()
+                if start <= row.timestamp <= selected_as_of
+            ]
+        else:
+            rows = dataset.read_bars(
+                interval=selected.interval,
+                venue=venue,
+                symbol=symbol,
+                start=start,
+                end=selected_as_of,
+            )
         if not rows:
             raise HistoryUnavailableError(
                 f"empty requested window for {venue.value}:{symbol} {range.value}"
@@ -174,11 +255,36 @@ class HistoryService:
         if selected.calendar == _CONTINUOUS_CALENDAR:
             gaps = tuple(find_gaps(timestamps, interval=selected.interval))
             limitations: tuple[str, ...] = ()
+        elif selected.calendar == "XNYS" and selected.interval == "1d":
+            sessions = CalendarService().sessions(
+                "XNYS",
+                historical[0].timestamp.astimezone(_NEW_YORK).date(),
+                historical[-1].timestamp.astimezone(_NEW_YORK).date(),
+                policy=SessionPolicy.REGULAR,
+            )
+            observed_dates = {
+                item.timestamp.astimezone(_NEW_YORK).date() for item in historical
+            }
+            gaps = tuple(
+                session.open_at
+                for session in sessions
+                if session.session_date not in observed_dates
+            )
+            limitations = ()
         else:
             gaps = ()
             limitations = (
                 "Gap detection requires a session calendar and was not run for "
                 f"{selected.calendar}.",
+            )
+        if selected.adjustment != "unadjusted":
+            limitations += (
+                (
+                    "OHLC values already apply the manifest adjustment policy; "
+                    "adjusted_close is intentionally not duplicated."
+                    if isinstance(dataset_manifest, ArtifactManifest)
+                    else "adjusted_close is unavailable without immutable adjustment lineage."
+                ),
             )
         return HistoricalSeries(
             instrument=historical[0].instrument,
@@ -186,10 +292,39 @@ class HistoryService:
             as_of=selected_as_of,
             bars=tuple(historical),
             dataset_id=selected.dataset_id,
-            dataset_revision=dataset_manifest.revision,
-            source=dataset_manifest.source,
-            license=dataset_manifest.license,
-            generated_at=_aware_utc(dataset_manifest.generated_at, "generated_at"),
+            dataset_revision=(
+                dataset_manifest.compatibility_revision
+                if isinstance(dataset_manifest, ArtifactManifest)
+                else dataset_manifest.revision
+            ),
+            manifest_id=(
+                dataset_manifest.manifest_id
+                if isinstance(dataset_manifest, ArtifactManifest)
+                else None
+            ),
+            quality_evaluation_id=(
+                trusted_entry.quality.evaluation_id
+                if trusted_entry is not None and trusted_entry.quality is not None
+                else None
+            ),
+            source=(
+                trusted_entry.provider_id
+                if trusted_entry is not None
+                else dataset_manifest.source
+            ),
+            license=(
+                dataset_manifest.source_rights_id
+                if isinstance(dataset_manifest, ArtifactManifest)
+                else dataset_manifest.license
+            ),
+            generated_at=_aware_utc(
+                (
+                    dataset_manifest.created_at
+                    if isinstance(dataset_manifest, ArtifactManifest)
+                    else dataset_manifest.generated_at
+                ),
+                "generated_at",
+            ),
             interval=selected.interval,
             calendar=selected.calendar,
             adjustment=selected.adjustment,
@@ -222,6 +357,7 @@ class HistoryService:
         comparison_reader = HistoryService(
             comparison_bindings,
             dataset_loader=self._dataset_loader,
+            trusted_catalog=self._trusted_catalog,
             now=lambda: selected_as_of,
         )
         series = [
@@ -411,7 +547,7 @@ class HistoryService:
                     low=row.low,
                     close=row.close,
                     volume=row.volume,
-                    adjusted_close=(row.close if selected.adjustment != "unadjusted" else None),
+                    adjusted_close=None,
                     is_live_tail=False,
                 )
             )

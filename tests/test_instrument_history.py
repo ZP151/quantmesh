@@ -8,8 +8,14 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from quantmesh.data.artifacts import ArtifactLayer, ArtifactManifest
+from quantmesh.data.calendars import XNYS_REGULAR_VERSION, SessionPolicy
+from quantmesh.data.capabilities import DataKind, EntitlementState
+from quantmesh.data.catalog import CatalogQualificationError
+from quantmesh.data.instruments import CanonicalInstrumentId, InstrumentCatalog
 from quantmesh.data.lake import Lake
 from quantmesh.data.manifest import DatasetManifest, ManifestWriter, SeriesCoverage
+from quantmesh.data.objects import ObjectRef
 from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.instruments.contracts import (
@@ -74,6 +80,7 @@ def binding(
     interval: str = "1d",
     venue: Venue = Venue.MOOMOO,
     calendar: str | None = None,
+    adjustment: str = "unadjusted",
 ) -> DatasetBinding:
     return DatasetBinding(
         dataset_id=dataset_id,
@@ -81,7 +88,7 @@ def binding(
         venue=venue,
         symbol=symbol,
         calendar=calendar or ("XNYS" if venue is Venue.MOOMOO else "24/7"),
-        adjustment="unadjusted",
+        adjustment=adjustment,
     )
 
 
@@ -169,6 +176,102 @@ def fake_service(
     return HistoryService(bindings, dataset_loader=datasets.__getitem__, now=lambda: NOW)
 
 
+class TrustedDataset:
+    def __init__(self, dataset_manifest: ArtifactManifest, rows: list[Bar]) -> None:
+        self.manifest = dataset_manifest
+        self._rows = rows
+
+    def read_bars(self) -> list[Bar]:
+        return list(self._rows)
+
+
+class TrustedCatalog:
+    def __init__(self, *, accepted: bool) -> None:
+        self.accepted = accepted
+
+    def require_research(self, manifest_id: str):
+        if not self.accepted:
+            raise CatalogQualificationError(
+                f"manifest {manifest_id} quality status is fail"
+            )
+        return SimpleNamespace(
+            provider_id="moomoo-opend",
+            manifest_id=manifest_id,
+            current_manifest_id=manifest_id,
+            dataset_id="trusted-equities",
+            compatibility_revision=1,
+            quality=SimpleNamespace(evaluation_id="2" * 64),
+        )
+
+
+def trusted_manifest() -> ArtifactManifest:
+    return ArtifactManifest.build(
+        dataset_id="trusted-equities",
+        compatibility_revision=1,
+        layer=ArtifactLayer.ADJUSTED,
+        canonical_instrument=CanonicalInstrumentId(value="moomoo:US:NVDA:XNAS"),
+        instrument_catalog_id=InstrumentCatalog.bounded_default().catalog_id,
+        data_kind=DataKind.BARS,
+        interval="1d",
+        calendar_version=XNYS_REGULAR_VERSION,
+        session_policy=SessionPolicy.REGULAR,
+        objects=(
+            ObjectRef(
+                digest="3" * 64,
+                media_type="application/vnd.quantmesh.bars+json",
+                byte_length=1,
+            ),
+        ),
+        row_identities=(f"NVDA:{NOW.isoformat()}",),
+        schema_digest="4" * 64,
+        adapter_version="trusted-history-test-v1",
+        parent_manifest_ids=("5" * 64,),
+        transformation_policy_digest="6" * 64,
+        source_rights_id="moomoo-us-market-data",
+        entitlement=EntitlementState.AVAILABLE,
+        event_start=NOW,
+        event_end=NOW,
+        knowledge_start=NOW,
+        knowledge_end=NOW,
+        adjustment_policy="unadjusted-identity-v1",
+        quality_report_id=None,
+        created_at=NOW,
+        code_commit="7" * 40,
+        collection_run_id="8" * 64,
+    )
+
+
+def trusted_history_service(*, accepted: bool) -> HistoryService:
+    dataset = TrustedDataset(trusted_manifest(), [bar()])
+    return HistoryService(
+        [binding(dataset_id="trusted-equities")],
+        dataset_loader=lambda _dataset_id: dataset,
+        trusted_catalog=TrustedCatalog(accepted=accepted),
+        now=lambda: NOW,
+    )
+
+
+def test_history_rejects_failed_quality_manifest() -> None:
+    with pytest.raises(HistoryUnavailableError, match="quality status is fail"):
+        trusted_history_service(accepted=False).history(
+            Venue.MOOMOO,
+            "NVDA",
+            HistoryRange.ONE_YEAR,
+        )
+
+
+def test_history_returns_exact_passing_manifest_and_quality_ids() -> None:
+    series = trusted_history_service(accepted=True).history(
+        Venue.MOOMOO,
+        "NVDA",
+        HistoryRange.ONE_YEAR,
+    )
+
+    assert series.manifest_id == trusted_manifest().manifest_id
+    assert series.quality_evaluation_id == "2" * 64
+    assert series.dataset_revision == 1
+
+
 def test_history_ranges_are_the_public_wire_values() -> None:
     assert [item.value for item in HistoryRange] == ["1d", "5d", "1m", "3m", "6m", "1y"]
     assert HistoryRange.SIX_MONTHS.value == "6m"
@@ -202,9 +305,7 @@ def test_history_is_manifest_gated_venue_aware_chronological_and_provenanced() -
     assert series.coverage.model_dump() == coverage("NVDA").model_dump()
     assert series.gaps == ()
     assert series.duplicates == ()
-    assert series.limitations == (
-        "Gap detection requires a session calendar and was not run for XNYS.",
-    )
+    assert series.limitations == ()
     assert series.resolution_fallback is None
     assert [item.timestamp for item in series.bars] == [row.timestamp for row in rows]
     assert all(item.is_live_tail is False for item in series.bars)
@@ -218,6 +319,58 @@ def test_history_is_manifest_gated_venue_aware_chronological_and_provenanced() -
             "end": NOW,
         }
     ]
+
+
+def test_xnys_daily_history_does_not_treat_closed_sessions_as_gaps() -> None:
+    observed = [
+        bar(timestamp=datetime(2025, 11, 26, 14, 30, tzinfo=UTC), close=100),
+        bar(timestamp=datetime(2025, 11, 28, 14, 30, tzinfo=UTC), close=101),
+    ]
+    covered = coverage(
+        "NVDA",
+        start=observed[0].timestamp,
+        end=observed[-1].timestamp,
+        rows=2,
+    )
+    dataset = FakeDataset(
+        "equities",
+        manifest(covered),
+        {("1d", Venue.MOOMOO, "NVDA"): observed},
+    )
+    service = fake_service([binding()], {"equities": dataset})
+
+    series = service.history(
+        Venue.MOOMOO,
+        "NVDA",
+        HistoryRange.ONE_YEAR,
+        as_of=observed[-1].timestamp,
+    )
+
+    assert series.gaps == ()
+    assert series.limitations == ()
+
+
+def test_legacy_binding_label_never_fabricates_adjusted_close() -> None:
+    rows = [
+        bar(timestamp=NOW - timedelta(days=2), close=100),
+        bar(timestamp=NOW - timedelta(days=1), close=101),
+        bar(timestamp=NOW, close=102),
+    ]
+    dataset = FakeDataset(
+        "equities",
+        manifest(coverage("NVDA", start=rows[0].timestamp, rows=3)),
+        {("1d", Venue.MOOMOO, "NVDA"): rows},
+    )
+    service = fake_service(
+        [binding(adjustment="split-adjusted")],
+        {"equities": dataset},
+    )
+
+    series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
+
+    assert series.adjustment == "split-adjusted"
+    assert all(item.adjusted_close is None for item in series.bars)
+    assert "immutable adjustment lineage" in series.limitations[-1]
 
 
 def test_history_uses_explicit_as_of_inclusively_and_normalizes_to_utc() -> None:
@@ -650,9 +803,7 @@ def test_history_does_not_report_market_closures_as_data_gaps() -> None:
     series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS)
 
     assert series.gaps == ()
-    assert series.limitations == (
-        "Gap detection requires a session calendar and was not run for XNYS.",
-    )
+    assert series.limitations == ()
 
 
 def test_history_does_not_report_equity_overnight_as_intraday_gaps() -> None:
@@ -721,9 +872,7 @@ def test_comparison_rebases_only_the_shared_observed_window_without_forward_fill
     assert comparison.points[0].values == {"moomoo:NVDA": 100.0, "moomoo:AAPL": 100.0}
     assert comparison.points[1].values == {"moomoo:NVDA": 120.0, "moomoo:AAPL": 120.0}
     assert t2 not in [point.timestamp for point in comparison.points]
-    assert comparison.limitations == (
-        "Gap detection requires a session calendar and was not run for XNYS.",
-    )
+    assert comparison.limitations == ()
 
 
 def test_comparison_selects_the_coarsest_shared_resolution_without_resampling() -> None:

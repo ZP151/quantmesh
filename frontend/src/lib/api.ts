@@ -387,6 +387,21 @@ export type LiveSourceState =
   | 'stale'
   | 'disconnected'
   | 'unavailable'
+export type LiveContinuityState =
+  | 'complete'
+  | 'known-gap'
+  | 'unknown-after-disconnect'
+  | 'recovered'
+  | 'unrecoverable'
+
+export interface LiveContinuityEvidence {
+  channel: string
+  disconnected_at: string
+  last_durable_source_event_id: string | null
+  first_recovered_source_event_id: string
+  recovered_at: string
+  recovery_source: string
+}
 
 export interface LiveView {
   kind: LiveKind
@@ -396,6 +411,11 @@ export interface LiveView {
   age_ms: number
   sequence: number | null
   sequence_gap: boolean
+  continuity?: LiveContinuityState
+  source_event_id?: string
+  content_digest?: string
+  snapshot_epoch?: string | null
+  continuity_evidence?: LiveContinuityEvidence | null
   label: LiveLabel
   payload: Record<string, unknown>
 }
@@ -405,6 +425,7 @@ export interface LiveInstrumentState {
   instrument: string
   label: LiveLabel
   kinds: Record<string, LiveView>
+  book_sides?: Partial<Record<'bid' | 'ask', LiveView>>
 }
 
 export type LiveInstrumentKey = `${string}:${string}`
@@ -473,6 +494,11 @@ export interface MarketUpdate {
   received_at: string
   sequence: number | null
   sequence_gap: boolean
+  continuity?: LiveContinuityState
+  source_event_id?: string
+  content_digest?: string
+  snapshot_epoch?: string | null
+  continuity_evidence?: LiveContinuityEvidence | null
   payload: Record<string, unknown>
   state: LiveSourceState | null
   state_note: string | null
@@ -538,6 +564,11 @@ export type InstrumentWorkspace = DeepReadonly<
 export type PaperProposal = DeepReadonly<components['schemas']['PaperProposal']>
 export type ProposalConfirmation = DeepReadonly<components['schemas']['ProposalConfirmation']>
 export type ProposalCreateInput = components['schemas']['ProposalCreateBody']
+
+// --- Trusted data catalog (iteration 0021 Slice 6) -----------------------
+
+export type CatalogEntry = DeepReadonly<components['schemas']['CatalogEntry']>
+export type CatalogLineage = DeepReadonly<components['schemas']['CatalogLineage']>
 
 // --- Client --------------------------------------------------------------
 
@@ -619,6 +650,20 @@ export const api = {
   enablement: () => request<Enablement>('/api/enablement'),
   killSwitch: () => request<KillSwitch>('/api/kill-switch'),
   demoStatus: () => request<DemoStatus>('/api/demo/status'),
+
+  async dataCatalog(): Promise<readonly CatalogEntry[]> {
+    const { data, error, response } = await generatedApi.GET('/api/data/catalog')
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async dataCatalogLineage(manifestId: string): Promise<CatalogLineage> {
+    const { data, error, response } = await generatedApi.GET('/api/data/catalog/{manifest_id}', {
+      params: { path: { manifest_id: manifestId } },
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
 
   // Writes — every one is gated by the kernel (origin guard, kill
   // switch, risk limits); the browser only calls what the UI shows.

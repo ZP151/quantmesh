@@ -39,6 +39,7 @@ from __future__ import annotations
 import json
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -318,6 +319,7 @@ class DatalinkService:
 
     root: Path
     rest: RestTransport = field(default_factory=SdkRestTransport)
+    moomoo_probe: Callable[[], ConnectorState] | None = None
     _probes: dict[str, ConnectorState] = field(default_factory=dict)
     _last_fetch: dict[str, object] | None = None
     _sessions: dict[str, dict[str, object]] = field(default_factory=dict)
@@ -517,7 +519,10 @@ class DatalinkService:
 
     def probe_all(self) -> list[ConnectorState]:
         self.probe_hyperliquid()
-        self.probe_moomoo()
+        if self.moomoo_probe is None:
+            self.probe_moomoo()
+        else:
+            self._probes["moomoo"] = self.moomoo_probe()
         return self.panel()
 
     # -- credential-free public data path -----------------------------------

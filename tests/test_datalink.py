@@ -22,7 +22,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-from quantmesh.demo.datalink import DatalinkService
+from quantmesh.demo.datalink import ConnectorState, DatalinkService
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.hyperliquid.errors import (
@@ -75,6 +75,19 @@ def _demo_client(tmp_path, **overrides):
         seed=SCENARIO.seed,
         workspace_history=False,
         host="127.0.0.1",
+    )
+    overrides.setdefault(
+        "moomoo_probe",
+        lambda: ConnectorState(
+            venue="moomoo",
+            kind="execution-sim",
+            mode="sandbox",
+            credentials_required=True,
+            read_only=False,
+            wired=False,
+            state="unavailable",
+            detail="Offline deterministic test probe; no OpenD contact.",
+        ),
     )
     service = DatalinkService(root=app.state.demo.root, **overrides)
     app.state.datalink = service

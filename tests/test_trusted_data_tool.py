@@ -1,0 +1,95 @@
+import json
+import tomllib
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from quantmesh.data import cli as data_cli
+from quantmesh.data.artifacts import ManifestStore
+from quantmesh.data.cli import cli
+from tests.test_artifact_manifests import _manifest
+
+
+def _publish(root: Path):
+    store = ManifestStore(root)
+    manifest = _manifest(store, close=100.0, revision=1)
+    store.publish(manifest, expected_current=None)
+    return manifest
+
+
+def test_replay_refuses_tampered_object(tmp_path: Path, capsys) -> None:
+    manifest = _publish(tmp_path)
+    store = ManifestStore(tmp_path)
+    reference = manifest.objects[0]
+    store.objects.path_for(reference).write_bytes(b"tampered")
+
+    assert cli(["replay", "--root", str(tmp_path), "--manifest", manifest.manifest_id]) == 1
+    assert "hash mismatch" in capsys.readouterr().err
+
+
+def test_replay_outputs_only_after_hash_and_typed_contract_verification(
+    tmp_path: Path, capsys
+) -> None:
+    manifest = _publish(tmp_path)
+
+    assert cli(["replay", "--root", str(tmp_path), "--manifest", manifest.manifest_id]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["verified"] is True
+    assert payload["manifest_id"] == manifest.manifest_id
+    assert payload["object_digests"] == [item.digest for item in manifest.objects]
+    assert payload["row_count"] == len(manifest.row_identities)
+
+
+def test_inspect_empty_catalog_is_explicit_and_non_mutating(tmp_path: Path, capsys) -> None:
+    assert cli(["inspect", "--root", str(tmp_path)]) == 0
+    assert json.loads(capsys.readouterr().out) == {"datasets": []}
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_collect_rejects_unbounded_hyperliquid_window_before_network(
+    tmp_path: Path, capsys
+) -> None:
+    result = cli(
+        [
+            "collect",
+            "--root",
+            str(tmp_path),
+            "--provider",
+            "hyperliquid",
+            "--symbols",
+            "BTC",
+            "--interval",
+            "1m",
+            "--window",
+            "2026-08-01T00:00:00Z/2026-08-05T00:00:00Z",
+        ]
+    )
+
+    assert result == 2
+    assert "5,000-candle limit" in capsys.readouterr().err
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_clean_install_entrypoint_and_release_gate_probe_are_declared() -> None:
+    root = Path(__file__).resolve().parents[1]
+    pyproject = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
+    release_gate = (root / "tools" / "release_gate.py").read_text(encoding="utf-8")
+
+    assert pyproject["project"]["scripts"]["quantmesh-data"] == "quantmesh.data.cli:main"
+    assert '"trusted data tooling installed"' in release_gate
+    assert '"quantmesh-data"' in release_gate
+    assert '"--help"' in release_gate
+
+
+def test_collection_commit_refuses_a_dirty_checkout(monkeypatch) -> None:
+    responses = iter(
+        (
+            SimpleNamespace(stdout="a" * 40 + "\n"),
+            SimpleNamespace(stdout=" M src/quantmesh/data/cli.py\n"),
+        )
+    )
+    monkeypatch.setattr(data_cli.subprocess, "run", lambda *args, **kwargs: next(responses))
+
+    with pytest.raises(ValueError, match="clean Git checkout"):
+        data_cli._repository_commit()

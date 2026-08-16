@@ -10,6 +10,8 @@ silently tolerated.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
@@ -49,6 +51,35 @@ class SourceState(StrEnum):
     STALE = "stale"
     DISCONNECTED = "disconnected"
     UNAVAILABLE = "unavailable"
+
+
+class ContinuityState(StrEnum):
+    """What is provable about the event stream around this update."""
+
+    COMPLETE = "complete"
+    KNOWN_GAP = "known-gap"
+    UNKNOWN_AFTER_DISCONNECT = "unknown-after-disconnect"
+    RECOVERED = "recovered"
+    UNRECOVERABLE = "unrecoverable"
+
+
+class ContinuityEvidence(BaseModel):
+    """Structured boundary evidence for one disrupted provider channel."""
+
+    channel: str = Field(min_length=1)
+    disconnected_at: datetime
+    last_durable_source_event_id: str | None = None
+    first_recovered_source_event_id: str = Field(min_length=1)
+    recovered_at: datetime
+    recovery_source: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def timestamps_are_ordered_and_aware(self) -> ContinuityEvidence:
+        _require_aware(self.disconnected_at, "disconnected_at")
+        _require_aware(self.recovered_at, "recovered_at")
+        if self.recovered_at < self.disconnected_at:
+            raise ValueError("recovered_at precedes disconnected_at")
+        return self
 
 
 def _require_aware(value: datetime, name: str) -> datetime:
@@ -158,9 +189,39 @@ class MarketUpdate(BaseModel):
     received_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     sequence: int | None = Field(default=None, ge=0)
     sequence_gap: bool = False
+    continuity: ContinuityState = ContinuityState.COMPLETE
+    source_event_id: str | None = Field(default=None, min_length=1)
+    content_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    snapshot_epoch: str | None = Field(default=None, min_length=1)
+    continuity_evidence: ContinuityEvidence | None = None
     payload: dict[str, Any] = Field(default_factory=dict)
     state: SourceState | None = None
     state_note: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def legacy_gap_and_continuity_agree(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        data = dict(value)
+        has_gap = "sequence_gap" in data
+        has_continuity = "continuity" in data
+        if has_gap and has_continuity:
+            continuity = ContinuityState(data["continuity"])
+            expected_gap = continuity is not ContinuityState.COMPLETE
+            if bool(data["sequence_gap"]) is not expected_gap:
+                raise ValueError("sequence_gap contradicts continuity")
+        elif has_gap:
+            data["continuity"] = (
+                ContinuityState.KNOWN_GAP
+                if bool(data["sequence_gap"])
+                else ContinuityState.COMPLETE
+            )
+        elif has_continuity:
+            data["sequence_gap"] = (
+                ContinuityState(data["continuity"]) is not ContinuityState.COMPLETE
+            )
+        return data
 
     @model_validator(mode="after")
     def timestamps_are_aware(self) -> MarketUpdate:
@@ -200,3 +261,54 @@ class MarketUpdate(BaseModel):
         ):
             raise ValueError("state fields are only valid on status updates")
         return self
+
+    @model_validator(mode="after")
+    def continuity_and_identity_are_canonical(self) -> MarketUpdate:
+        if self.sequence_gap != (self.continuity is not ContinuityState.COMPLETE):
+            raise ValueError("sequence_gap contradicts continuity")
+        if self.continuity is ContinuityState.COMPLETE and self.continuity_evidence:
+            raise ValueError("complete continuity cannot carry disruption evidence")
+
+        if self.kind is UpdateKind.L2_SNAPSHOT:
+            if self.snapshot_epoch is None:
+                self.snapshot_epoch = _digest(
+                    [
+                        self.venue.value,
+                        self.instrument,
+                        self.data_time.astimezone(UTC).isoformat(),
+                    ]
+                )
+        elif self.snapshot_epoch is not None:
+            raise ValueError("snapshot_epoch is only valid on L2 snapshots")
+
+        expected_digest = _digest(
+            {
+                "venue": self.venue.value,
+                "instrument": self.instrument,
+                "kind": self.kind.value,
+                "provenance": self.provenance.value,
+                "data_time": self.data_time.astimezone(UTC).isoformat(),
+                "sequence": self.sequence,
+                "snapshot_epoch": self.snapshot_epoch,
+                "state": self.state.value if self.state is not None else None,
+                "state_note": self.state_note,
+                "payload": self.payload,
+            }
+        )
+        if self.content_digest is not None and self.content_digest != expected_digest:
+            raise ValueError("content_digest disagrees with normalized event content")
+        self.content_digest = expected_digest
+        if self.source_event_id is None:
+            self.source_event_id = f"derived:{expected_digest}"
+        return self
+
+
+def _digest(value: object) -> str:
+    canonical = json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()

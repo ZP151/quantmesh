@@ -8,6 +8,16 @@
   (journal-first execution identity — the Phase B extension builds on it),
   `docs/iterations/0007-m5-hyperliquid-testnet-workflow.md`
 
+## Iteration 0021 amendment
+
+The original `HyperliquidLiveProvider` remains explicit-construction-only and
+is still refused because it has no capability descriptor. Iteration 0021 adds
+a separate path for bounded, descriptor-bearing, read-only data providers.
+Registry admission now requires exact provider, access, data-kind, instrument,
+interval, entitlement, history, pagination and rate-limit metadata. This
+amendment grants no mainnet execution authority and does not change the
+testnet-only order boundary established by this ADR.
+
 ## Context
 
 M5 brings Hyperliquid **testnet** market data and (later phases) execution
@@ -35,9 +45,10 @@ exception other than QuantMesh's own typed errors becomes
 
 `SdkRestTransport` accepts only the SDK's own testnet base URL
 (`https://api.hyperliquid-testnet.xyz`); any other URL raises a protocol
-error at construction. The live provider is explicit-construction-only and
-the M3 provider registry refuses LIVE venues, so no code path reaches
-mainnet — the product surface cannot trade or quote a real market.
+error at construction. The original live provider is
+explicit-construction-only and has no trusted capability descriptor, so the
+registry refuses that provider and no code path reaches mainnet — the product
+surface cannot trade or quote a real market.
 
 ### 3. QuantMesh owns the WebSocket lifecycle: heartbeat → resubscribe → REST re-sync
 

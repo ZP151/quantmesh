@@ -29,6 +29,7 @@ import math
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any, Protocol
 
 from pydantic import (
     BaseModel,
@@ -37,7 +38,7 @@ from pydantic import (
     model_validator,
 )
 
-from quantmesh.data.lake import Dataset, Lake
+from quantmesh.data.lake import Lake
 from quantmesh.data.layout import validate_dataset_name
 from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.settings import settings
@@ -50,12 +51,35 @@ COMMIT_PATTERN = "^[0-9a-f]{7,64}$"
 Parameter = str | int | float | bool | None
 
 
+class TrustedResearchCatalog(Protocol):
+    def open_research_dataset(
+        self,
+        manifest_id: str,
+        *,
+        evaluation_id: str,
+        dataset_id: str,
+        compatibility_revision: int,
+    ) -> Any: ...
+
+
 def experiment_id(
-    dataset: str, revision: int, commit: str, parameters: dict[str, Parameter]
+    dataset: str,
+    revision: int,
+    commit: str,
+    parameters: dict[str, Parameter],
+    *,
+    manifest_id: str | None = None,
+    quality_evaluation_id: str | None = None,
 ) -> str:
     """Deterministic identity of a run: setup only, never results."""
+    if (manifest_id is None) != (quality_evaluation_id is None):
+        raise ValueError(
+            "manifest_id and quality_evaluation_id must be present together"
+        )
     canonical = json.dumps(parameters, sort_keys=True, separators=(",", ":"))
     payload = f"{dataset}\0{revision}\0{commit}\0{canonical}"
+    if manifest_id is not None:
+        payload += f"\0{manifest_id}\0{quality_evaluation_id}"
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
@@ -65,6 +89,11 @@ class Experiment(BaseModel):
     id: str = Field(pattern=ID_PATTERN)
     dataset: str
     revision: int = Field(ge=1)
+    manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    quality_evaluation_id: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
     commit: str = Field(pattern=COMMIT_PATTERN)
     parameters: dict[str, Parameter] = Field(default_factory=dict)
     metrics: dict[str, Parameter] = Field(default_factory=dict)
@@ -81,11 +110,22 @@ class Experiment(BaseModel):
 
     @model_validator(mode="after")
     def experiment_is_consistent(self) -> "Experiment":
+        if (self.manifest_id is None) != (self.quality_evaluation_id is None):
+            raise ValueError(
+                "manifest_id and quality_evaluation_id must be present together"
+            )
         validate_dataset_name(self.dataset)
         if self.created_at.tzinfo is None:
             raise ValueError("created_at must be timezone-aware")
         self.created_at = self.created_at.astimezone(UTC)
-        if self.id != experiment_id(self.dataset, self.revision, self.commit, self.parameters):
+        if self.id != experiment_id(
+            self.dataset,
+            self.revision,
+            self.commit,
+            self.parameters,
+            manifest_id=self.manifest_id,
+            quality_evaluation_id=self.quality_evaluation_id,
+        ):
             raise ValueError(
                 f"experiment id {self.id!r} does not match its pinned inputs "
                 "(dataset, revision, commit, parameters)"
@@ -96,9 +136,16 @@ class Experiment(BaseModel):
 class ExperimentRegistry:
     """Append-only store of experiments under one registry root."""
 
-    def __init__(self, root: Path | None = None, lake_root: Path | None = None) -> None:
+    def __init__(
+        self,
+        root: Path | None = None,
+        lake_root: Path | None = None,
+        *,
+        trusted_catalog: TrustedResearchCatalog | None = None,
+    ) -> None:
         self.root = root if root is not None else settings.experiments_dir
         self.lake_root = lake_root if lake_root is not None else settings.lake_root
+        self.trusted_catalog = trusted_catalog
         self._store = JsonlStore(
             self.root,
             filename=EXPERIMENTS_FILE,
@@ -114,6 +161,8 @@ class ExperimentRegistry:
         *,
         dataset: str,
         revision: int,
+        manifest_id: str | None = None,
+        quality_evaluation_id: str | None = None,
         commit: str | None = None,
         parameters: dict[str, Parameter] | None = None,
         metrics: dict[str, Parameter] | None = None,
@@ -131,9 +180,18 @@ class ExperimentRegistry:
         if commit is None:
             commit = self._current_commit()
         experiment = Experiment(
-            id=experiment_id(dataset, revision, commit, parameters or {}),
+            id=experiment_id(
+                dataset,
+                revision,
+                commit,
+                parameters or {},
+                manifest_id=manifest_id,
+                quality_evaluation_id=quality_evaluation_id,
+            ),
             dataset=dataset,
             revision=revision,
+            manifest_id=manifest_id,
+            quality_evaluation_id=quality_evaluation_id,
             commit=commit,
             parameters=parameters or {},
             metrics=metrics or {},
@@ -155,7 +213,7 @@ class ExperimentRegistry:
         """Every record, in recording order."""
         return self._store.read()
 
-    def resolve(self, experiment_id: str) -> Dataset:
+    def resolve(self, experiment_id: str) -> Any:
         """Re-open the experiment's dataset, pinned to its revision.
 
         The lake's manifest gate checks the bytes match the declaration
@@ -164,10 +222,18 @@ class ExperimentRegistry:
         experiment no longer describes the data on disk.
         """
         experiment = self.get(experiment_id)
-        self._require_pin(experiment)
-        return Lake(self.lake_root).dataset(experiment.dataset)
+        return self._require_pin(experiment)
 
-    def _require_pin(self, experiment: Experiment) -> None:
+    def _require_pin(self, experiment: Experiment) -> Any:
+        if experiment.manifest_id is not None:
+            if self.trusted_catalog is None or experiment.quality_evaluation_id is None:
+                raise ValueError("trusted experiment lineage requires a data catalog")
+            return self.trusted_catalog.open_research_dataset(
+                experiment.manifest_id,
+                evaluation_id=experiment.quality_evaluation_id,
+                dataset_id=experiment.dataset,
+                compatibility_revision=experiment.revision,
+            )
         dataset = Lake(self.lake_root).dataset(experiment.dataset)
         if dataset.manifest.revision != experiment.revision:
             raise ValueError(
@@ -175,6 +241,7 @@ class ExperimentRegistry:
                 f"{experiment.revision}, but dataset {experiment.dataset!r} is now "
                 f"revision {dataset.manifest.revision}"
             )
+        return dataset
 
     def _current_commit(self) -> str:
         """HEAD of the git repository the registry runs in; else fail closed."""

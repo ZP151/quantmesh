@@ -12,6 +12,7 @@ import {
   candleReturn,
   LABEL_TEXT,
   instrumentLabel,
+  latestCompleteBookSides,
   labelTone,
   liveInstrumentKey,
   markIndexDivergence,
@@ -19,6 +20,8 @@ import {
   midOf,
   normalizeLiveInstruments,
   quoteNumbers,
+  reconcileInstrumentState,
+  reconcileUpdates,
   realizedVol,
   spreadBps,
   useLiveConnection,
@@ -118,6 +121,11 @@ function snapshotUpdate(
     received_at: view.received_at,
     sequence: view.sequence,
     sequence_gap: view.sequence_gap,
+    continuity: view.continuity,
+    source_event_id: view.source_event_id,
+    content_digest: view.content_digest,
+    snapshot_epoch: view.snapshot_epoch,
+    continuity_evidence: view.continuity_evidence,
     payload: view.payload,
     state: null,
     state_note: null,
@@ -256,18 +264,17 @@ export function CockpitDetailScreen({
       : undefined
     if (!instrument) return
     const key = liveInstrumentKey(venue, symbol)
-    setInstruments((previous) => ({ ...previous, [key]: instrument }))
-    const seeded = Object.values(instrument.kinds).map((view) =>
-      snapshotUpdate(symbol, instrument.venue, view),
-    )
+    setInstruments((previous) => ({
+      ...previous,
+      [key]: reconcileInstrumentState(previous[key], instrument),
+    }))
+    const seededViews = [
+      ...Object.values(instrument.kinds).filter((view) => view.kind !== 'l2_snapshot'),
+      ...Object.values(instrument.book_sides ?? {}),
+    ]
+    const seeded = seededViews.map((view) => snapshotUpdate(symbol, instrument.venue, view))
     setUpdates((previous) => {
-      const known = new Set(
-        previous.map((update) => `${update.kind}:${update.received_at}:${update.sequence ?? ''}`),
-      )
-      const missing = seeded.filter(
-        (update) => !known.has(`${update.kind}:${update.received_at}:${update.sequence ?? ''}`),
-      )
-      const next = [...previous, ...missing]
+      const next = reconcileUpdates(previous, seeded)
       return next.slice(-(TAPE_LIMIT + CHART_LIMIT))
     })
   }, [snapshot.data, symbol, venue])
@@ -275,7 +282,7 @@ export function CockpitDetailScreen({
   const streamStatus = useLiveConnection((update) => {
     if (update.instrument !== symbol || update.venue !== venue) return
     setUpdates((previous) => {
-      const next = [...previous, update]
+      const next = reconcileUpdates(previous, [update])
       return next.length > TAPE_LIMIT + CHART_LIMIT ? next.slice(-(TAPE_LIMIT + CHART_LIMIT)) : next
     })
     // The same reconciliation the watchlist uses, so the badge agrees.
@@ -297,14 +304,7 @@ export function CockpitDetailScreen({
   }, [updates])
 
   const l2Sides = useMemo(() => {
-    let bid: MarketUpdate | undefined
-    let ask: MarketUpdate | undefined
-    for (const update of updates) {
-      if (update.kind !== 'l2_snapshot') continue
-      if (update.payload.side === 'bid') bid = update
-      else if (update.payload.side === 'ask') ask = update
-    }
-    return { bid, ask }
+    return latestCompleteBookSides(updates)
   }, [updates])
 
   const quote = quoteNumbers(byKind.quote)

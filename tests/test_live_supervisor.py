@@ -7,6 +7,8 @@ drill is its gate).
 """
 
 import asyncio
+import hashlib
+import json
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -14,7 +16,13 @@ import pytest
 from quantmesh.domain.models import Venue
 from quantmesh.hyperliquid.errors import HyperliquidProtocolError
 from quantmesh.live.buffer import LiveBuffer
-from quantmesh.live.contract import MarketUpdate, Provenance, SourceState, UpdateKind
+from quantmesh.live.contract import (
+    ContinuityState,
+    MarketUpdate,
+    Provenance,
+    SourceState,
+    UpdateKind,
+)
 from quantmesh.live.hyperliquid import (
     HyperliquidVenueSupervisor,
     ScriptedHyperliquidTransport,
@@ -65,11 +73,17 @@ def _candle(coin: str, open_: float, close: float, t: int) -> dict:
     }
 
 
-def _trade(coin: str, tid: int, px: float = 100.25, side: str = "A") -> dict:
+def _trade(
+    coin: str,
+    tid: int,
+    px: float = 100.25,
+    side: str = "A",
+    time_ms: int = 1_750_000_000_000,
+) -> dict:
     return {
         "channel": "trades",
         "data": [
-            {"coin": coin, "tid": tid, "px": px, "sz": 0.5, "side": side, "time": 1_750_000_000_000}
+            {"coin": coin, "tid": tid, "px": px, "sz": 0.5, "side": side, "time": time_ms}
         ],
     }
 
@@ -212,6 +226,13 @@ class TestBackpressureGate:
         assert [u.sequence for u in gate.flush()] == [1, 2]
         assert gate.flush() == []
 
+    def test_large_batch_is_bounded_by_rows(self) -> None:
+        gate = BackpressureGate(maxsize=3)
+        dropped = gate.push_many([self._quote(sequence) for sequence in range(10)])
+
+        assert dropped == 7
+        assert [update.sequence for update in gate.flush()] == [7, 8, 9]
+
     def test_bad_maxsize_rejected(self) -> None:
         with pytest.raises(ValueError):
             BackpressureGate(maxsize=0)
@@ -253,16 +274,65 @@ class TestHyperliquidSupervisor:
         assert update.payload["interval"] == "1m"
         assert update.sequence == 1_750_000_000_000
 
-    def test_trade_sequence_gap_detected(self) -> None:
+    def test_provisional_candle_revisions_do_not_conflict_with_final_identity(
+        self, tmp_path
+    ) -> None:
         supervisor, _ = _setup()
         supervisor.on_open(T0)
-        supervisor.on_frame(_trade("BTC", tid=100), T0 + timedelta(seconds=1))
+        opened = int(T0.timestamp() * 1000)
         supervisor.on_frame(
-            _trade("BTC", tid=103), T0 + timedelta(seconds=2)  # tids 101-102 missing
+            _candle("BTC", 99.0, 100.0, opened),
+            T0 + timedelta(seconds=10),
+        )
+        supervisor.on_frame(
+            _candle("BTC", 99.0, 101.0, opened),
+            T0 + timedelta(seconds=20),
+        )
+        supervisor.on_frame(
+            _candle("BTC", 99.0, 102.0, opened),
+            T0 + timedelta(seconds=61),
+        )
+        provisional_a, provisional_b, final = supervisor.drain()
+
+        assert provisional_a.payload["final"] is False
+        assert provisional_b.payload["final"] is False
+        assert final.payload["final"] is True
+        assert len(
+            {
+                provisional_a.source_event_id,
+                provisional_b.source_event_id,
+                final.source_event_id,
+            }
+        ) == 3
+        with LiveBuffer(tmp_path) as lake:
+            assert [
+                receipt.inserted
+                for receipt in lake.append_many(
+                    [provisional_a, provisional_b, final]
+                )
+            ] == [True, True, True]
+            assert lake.quarantined() == []
+
+    def test_nonconsecutive_trade_tids_are_identity_not_sequence(self) -> None:
+        supervisor, _ = _setup()
+        supervisor.on_open(T0)
+        supervisor.on_frame(_trade("BTC", tid=11), T0 + timedelta(seconds=1))
+        supervisor.on_frame(
+            _trade("BTC", tid=998_877_665_544), T0 + timedelta(seconds=2)
         )
         first, second = supervisor.drain()
-        assert first.sequence_gap is False
-        assert second.sequence_gap is True
+        assert [first.sequence_gap, second.sequence_gap] == [False, False]
+        assert [first.continuity, second.continuity] == [
+            ContinuityState.COMPLETE,
+            ContinuityState.COMPLETE,
+        ]
+        assert len({first.source_event_id, second.source_event_id}) == 2
+        expected = hashlib.sha256(
+            json.dumps(
+                [1_750_000_000_000, "BTC", 11], separators=(",", ":")
+            ).encode("utf-8")
+        ).hexdigest()
+        assert first.source_event_id == expected
 
     def test_trade_sequence_advances_without_gap(self) -> None:
         supervisor, _ = _setup()
@@ -280,6 +350,40 @@ class TestHyperliquidSupervisor:
         assert bid_side.kind is UpdateKind.L2_SNAPSHOT and bid_side.payload["side"] == "bid"
         assert ask_side.kind is UpdateKind.L2_SNAPSHOT and ask_side.payload["side"] == "ask"
         assert bid_side.payload["levels"][0] == [100.0, 1.0]  # best bid first
+        assert bid_side.snapshot_epoch == ask_side.snapshot_epoch
+        assert bid_side.snapshot_epoch
+        assert bid_side.source_event_id != ask_side.source_event_id
+
+        changed = _l2("BTC")
+        changed["data"]["levels"][0][0]["sz"] = "9.0"
+        supervisor.on_frame(changed, T0 + timedelta(seconds=2))
+        changed_bid, changed_ask = supervisor.drain()
+        assert changed_bid.snapshot_epoch == changed_ask.snapshot_epoch
+        assert changed_bid.snapshot_epoch != bid_side.snapshot_epoch
+
+    def test_l2_snapshot_remains_atomic_at_one_batch_capacity(self) -> None:
+        supervisor, _ = _setup(max_buffered=1)
+        supervisor.on_open(T0)
+        supervisor.on_frame(_l2("BTC"), T0 + timedelta(seconds=1))
+
+        bid, ask = supervisor.drain()
+        assert {bid.payload["side"], ask.payload["side"]} == {"bid", "ask"}
+        assert bid.snapshot_epoch == ask.snapshot_epoch
+
+    def test_backpressure_finding_names_the_evicted_instrument(self) -> None:
+        transport = ScriptedHyperliquidTransport([])
+        supervisor = HyperliquidVenueSupervisor(transport, max_buffered=1)
+        supervisor.subscribe(["BTC", "ETH"])
+        supervisor.on_open(T0)
+        supervisor.on_frame(_bbo("BTC"), T0 + timedelta(seconds=1))
+        supervisor.on_frame(_bbo("ETH"), T0 + timedelta(seconds=2))
+        transport.connected = False
+
+        findings = supervisor.on_disconnect(T0 + timedelta(seconds=3))
+
+        assert [(finding.key, finding.message) for finding in findings] == [
+            ("BTC", "backpressure dropped a quote update")
+        ]
 
     def test_mids_and_asset_ctx_normalize_to_metrics(self) -> None:
         supervisor, _ = _setup()
@@ -316,7 +420,8 @@ class TestDisconnectDrill:
         supervisor, transport = _setup()
         supervisor.on_open(T0)
         supervisor.on_frame(_bbo("BTC"), T0 + timedelta(seconds=1))
-        supervisor.drain()
+        initial = supervisor.drain()
+        supervisor.on_persisted(initial)
         transport.connected = False
         findings = supervisor.on_disconnect(T0 + timedelta(seconds=5))
         assert supervisor.connected is False
@@ -336,8 +441,9 @@ class TestDisconnectDrill:
 
             def candles(self, coin: str, interval: str, *, start, end) -> list[dict]:
                 self.calls.append(f"candles:{coin}")
+                open_ms = int(T0.timestamp() * 1000)
                 return [
-                    {"t": 1_750_000_000_000, "T": 1_750_000_060_000, "s": "BTC", "i": "1m",
+                    {"t": open_ms, "T": open_ms + 60_000, "s": "BTC", "i": "1m",
                      "o": 98.0, "c": 99.0, "h": 99.0, "l": 98.0, "v": 1.0, "n": 1}
                 ]
 
@@ -355,12 +461,18 @@ class TestDisconnectDrill:
 
         supervisor, transport = _setup(rest=ScriptedRest())
         supervisor.on_open(T0)
+        prior_open_ms = int((T0 - timedelta(minutes=1)).timestamp() * 1000)
+        supervisor.on_frame(
+            _candle("BTC", 97.0, 98.0, prior_open_ms),
+            T0 + timedelta(seconds=1),
+        )
         supervisor.on_frame(_trade("BTC", tid=50), T0 + timedelta(seconds=1))
-        supervisor.drain()
+        initial = supervisor.drain()
+        supervisor.on_persisted(initial)
         transport.connected = False
         supervisor.on_disconnect(T0 + timedelta(seconds=5))
         supervisor.drain()
-        findings = supervisor.on_open(T0 + timedelta(seconds=10), reconnected=True)
+        findings = supervisor.on_open(T0 + timedelta(seconds=70), reconnected=True)
         updates = supervisor.drain()
         kinds = {u.kind for u in updates}
         assert UpdateKind.CANDLE in kinds  # REST backfill emitted
@@ -369,8 +481,223 @@ class TestDisconnectDrill:
         assert all(u.sequence_gap for u in gapped)
         candle = next(update for update in updates if update.kind is UpdateKind.CANDLE)
         assert candle.payload["interval"] == "1m"
+        assert candle.continuity is ContinuityState.RECOVERED
+        books = [update for update in updates if update.kind is UpdateKind.L2_SNAPSHOT]
+        assert {update.continuity for update in books} == {ContinuityState.RECOVERED}
         messages = " ".join(f.message for f in findings)
         assert "cannot be REST re-synced" in messages  # trades gap reported
+
+        supervisor.on_persisted(updates)
+        supervisor.on_frame(_trade("BTC", tid=999_999), T0 + timedelta(seconds=71))
+        [resumed_trade] = supervisor.drain()
+        assert resumed_trade.continuity is ContinuityState.UNRECOVERABLE
+        evidence = resumed_trade.continuity_evidence
+        assert evidence is not None
+        assert evidence.channel == "trades"
+        assert evidence.disconnected_at == T0 + timedelta(seconds=5)
+        assert evidence.last_durable_source_event_id is not None
+        assert evidence.first_recovered_source_event_id == resumed_trade.source_event_id
+        assert evidence.recovery_source == "unavailable-no-public-trade-history"
+
+        supervisor.on_persisted([resumed_trade])
+        supervisor.on_frame(_trade("BTC", tid=1), T0 + timedelta(seconds=72))
+        [next_trade] = supervisor.drain()
+        assert next_trade.continuity is ContinuityState.COMPLETE
+        assert next_trade.continuity_evidence is None
+
+    def test_long_outage_backfills_from_last_candle_not_a_fixed_five_minutes(self) -> None:
+        class RecordingRest:
+            def __init__(self) -> None:
+                self.start: datetime | None = None
+
+            def candles(self, coin: str, interval: str, *, start, end) -> list[dict]:
+                self.start = start
+                return []
+
+            def l2_book(self, coin: str, *, at=None) -> dict:
+                raise RuntimeError("book unavailable in outage drill")
+
+        rest = RecordingRest()
+        supervisor, transport = _setup(rest=rest)
+        supervisor.on_open(T0)
+        candle_open = int((T0 - timedelta(minutes=1)).timestamp() * 1000)
+        supervisor.on_frame(
+            _candle("BTC", 99.0, 101.0, candle_open),
+            T0 + timedelta(seconds=1),
+        )
+        initial = supervisor.drain()
+        supervisor.on_persisted(initial)
+        transport.connected = False
+        supervisor.on_disconnect(T0 + timedelta(minutes=1))
+        initial = supervisor.drain()
+        supervisor.on_persisted(initial)
+
+        findings = supervisor.on_open(T0 + timedelta(minutes=12), reconnected=True)
+
+        assert rest.start == datetime.fromtimestamp(
+            (candle_open + 60_000) / 1000, tz=UTC
+        )
+        assert "did not prove the complete outage window" in " ".join(
+            finding.message for finding in findings
+        )
+        supervisor.on_frame(
+            _candle(
+                "BTC",
+                101.0,
+                102.0,
+                int((T0 + timedelta(minutes=12)).timestamp() * 1000),
+            ),
+            T0 + timedelta(minutes=12, seconds=1),
+        )
+        [resumed] = supervisor.drain()
+        assert resumed.continuity is ContinuityState.KNOWN_GAP
+
+    def test_outage_beyond_public_horizon_is_unrecoverable_without_rest_fetch(
+        self,
+    ) -> None:
+        class HorizonRest:
+            def __init__(self) -> None:
+                self.candle_calls = 0
+
+            def candles(self, coin: str, interval: str, *, start, end) -> list[dict]:
+                self.candle_calls += 1
+                raise AssertionError("unattainable horizon must fail before network")
+
+            def l2_book(self, coin: str, *, at=None) -> dict:
+                raise RuntimeError("book unavailable in horizon drill")
+
+        rest = HorizonRest()
+        supervisor, transport = _setup(rest=rest)
+        supervisor.on_open(T0)
+        prior_open = int((T0 - timedelta(minutes=1)).timestamp() * 1000)
+        supervisor.on_frame(
+            _candle("BTC", 99.0, 100.0, prior_open),
+            T0 + timedelta(seconds=1),
+        )
+        initial = supervisor.drain()
+        supervisor.on_persisted(initial)
+        transport.connected = False
+        supervisor.on_disconnect(T0 + timedelta(minutes=1))
+        supervisor.drain()
+
+        resumed_at = T0 + timedelta(minutes=5_002)
+        findings = supervisor.on_open(resumed_at, reconnected=True)
+
+        assert rest.candle_calls == 0
+        assert "exceeds the 5,000-row" in " ".join(
+            finding.message for finding in findings
+        )
+        supervisor.on_frame(
+            _candle("BTC", 100.0, 101.0, int(resumed_at.timestamp() * 1000)),
+            resumed_at + timedelta(seconds=1),
+        )
+        [resumed] = supervisor.drain()
+        assert resumed.continuity is ContinuityState.UNRECOVERABLE
+
+    def test_unpersisted_trade_is_not_claimed_as_last_durable(self) -> None:
+        supervisor, transport = _setup()
+        supervisor.on_open(T0)
+        supervisor.on_frame(_trade("BTC", tid=50), T0 + timedelta(seconds=1))
+        supervisor.drain()  # simulated persistence failure: no acknowledgement
+        transport.connected = False
+        supervisor.on_disconnect(T0 + timedelta(seconds=2))
+        supervisor.drain()
+        supervisor.on_open(T0 + timedelta(seconds=3), reconnected=True)
+        supervisor.on_frame(_trade("BTC", tid=51), T0 + timedelta(seconds=4))
+        [resumed] = supervisor.drain()
+
+        assert resumed.continuity is ContinuityState.UNRECOVERABLE
+        assert resumed.continuity_evidence is not None
+        assert resumed.continuity_evidence.last_durable_source_event_id is None
+
+    def test_recovery_ignores_provider_provisional_candle_after_final_bound(self) -> None:
+        class Rest:
+            def candles(self, coin: str, interval: str, *, start, end) -> list[dict]:
+                del coin, interval, start, end
+                return [
+                    _candle("BTC", 100.0, 101.0, int(T0.timestamp() * 1000))["data"],
+                    _candle(
+                        "BTC", 101.0, 102.0, int((T0 + timedelta(minutes=1)).timestamp() * 1000)
+                    )["data"],
+                    _candle(
+                        "BTC", 102.0, 103.0, int((T0 + timedelta(minutes=2)).timestamp() * 1000)
+                    )["data"],
+                ]
+
+            def l2_book(self, coin: str, *, at=None) -> dict:
+                raise RuntimeError("book irrelevant")
+
+        supervisor, transport = _setup(rest=Rest())
+        supervisor.on_open(T0)
+        supervisor.on_frame(
+            _candle(
+                "BTC", 99.0, 100.0, int((T0 - timedelta(minutes=1)).timestamp() * 1000)
+            ),
+            T0,
+        )
+        supervisor.on_persisted(supervisor.drain())
+        transport.connected = False
+        supervisor.on_disconnect(T0 + timedelta(seconds=1))
+        supervisor.drain()
+
+        supervisor.on_open(T0 + timedelta(minutes=2, seconds=30), reconnected=True)
+        recovered = [
+            row for row in supervisor.drain() if row.kind is UpdateKind.CANDLE
+        ]
+        assert len(recovered) == 2
+        assert {row.continuity for row in recovered} == {ContinuityState.RECOVERED}
+
+    def test_partial_recovery_marks_every_row_and_keeps_original_cursor(self) -> None:
+        class Rest:
+            def __init__(self) -> None:
+                self.starts: list[datetime] = []
+
+            def candles(self, coin: str, interval: str, *, start, end) -> list[dict]:
+                del coin, interval, end
+                self.starts.append(start)
+                if len(self.starts) > 1:
+                    return []
+                return [
+                    _candle("BTC", 100.0, 101.0, int(T0.timestamp() * 1000))["data"],
+                    _candle(
+                        "BTC", 102.0, 103.0, int((T0 + timedelta(minutes=2)).timestamp() * 1000)
+                    )["data"],
+                ]
+
+            def l2_book(self, coin: str, *, at=None) -> dict:
+                raise RuntimeError("book irrelevant")
+
+        rest = Rest()
+        supervisor, transport = _setup(rest=rest)
+        supervisor.on_open(T0)
+        prior = T0 - timedelta(minutes=1)
+        supervisor.on_frame(
+            _candle("BTC", 99.0, 100.0, int(prior.timestamp() * 1000)), T0
+        )
+        supervisor.on_persisted(supervisor.drain())
+        transport.connected = False
+        supervisor.on_disconnect(T0 + timedelta(seconds=1))
+        supervisor.drain()
+        supervisor.on_open(T0 + timedelta(minutes=3), reconnected=True)
+        partial = [row for row in supervisor.drain() if row.kind is UpdateKind.CANDLE]
+
+        assert len(partial) == 2
+        assert {row.continuity for row in partial} == {ContinuityState.KNOWN_GAP}
+        supervisor.on_persisted(partial)
+        supervisor.on_frame(
+            _candle(
+                "BTC", 103.0, 104.0, int((T0 + timedelta(minutes=3)).timestamp() * 1000)
+            ),
+            T0 + timedelta(minutes=4),
+        )
+        [still_gapped] = supervisor.drain()
+        assert still_gapped.continuity is ContinuityState.KNOWN_GAP
+        supervisor.on_persisted([still_gapped])
+        transport.connected = False
+        supervisor.on_disconnect(T0 + timedelta(minutes=4))
+        supervisor.drain()
+        supervisor.on_open(T0 + timedelta(minutes=5), reconnected=True)
+        assert rest.starts == [T0, T0]
 
     def test_venue_level_findings_never_become_phantom_rows(self) -> None:
         """``_surface_findings`` is the live pump's surfacing step (the
@@ -420,6 +747,93 @@ class TestScriptedTransport:
         transport = ScriptedHyperliquidTransport([])
         with pytest.raises(HyperliquidProtocolError):
             transport.send({"method": "subscribe", "subscription": {"type": "bbo", "coin": "BTC"}})
+
+    def test_pump_closes_dead_socket_before_reconnect(self, monkeypatch) -> None:
+        class FailThenCancelTransport:
+            def __init__(self) -> None:
+                self.connects = 0
+                self.closes = 0
+                self.receives = 0
+
+            def connect(self) -> None:
+                self.connects += 1
+
+            def close(self) -> None:
+                self.closes += 1
+
+            def send(self, message: dict) -> None:
+                del message
+
+            async def recv(self) -> object:
+                self.receives += 1
+                if self.receives == 1:
+                    raise RuntimeError("dead socket")
+                raise asyncio.CancelledError
+
+        async def no_sleep(delay: float) -> None:
+            del delay
+
+        monkeypatch.setattr("quantmesh.live.supervisor.asyncio.sleep", no_sleep)
+        transport = FailThenCancelTransport()
+        supervisor = HyperliquidVenueSupervisor(transport)
+        supervisor.subscribe(["BTC"])
+
+        with pytest.raises(asyncio.CancelledError):
+            asyncio.run(supervisor.run())
+
+        assert transport.connects == 2
+        assert transport.closes == 1
+
+    def test_pump_surfaces_backpressure_finding_after_reconnect(self, monkeypatch) -> None:
+        class BurstThenFailTransport:
+            def __init__(self) -> None:
+                self.frames: list[object] = [
+                    _bbo("BTC"),
+                    _bbo("ETH"),
+                    RuntimeError("dead socket"),
+                    asyncio.CancelledError(),
+                ]
+
+            def connect(self) -> None:
+                pass
+
+            def close(self) -> None:
+                pass
+
+            def send(self, message: dict) -> None:
+                del message
+
+            async def recv(self) -> object:
+                event = self.frames.pop(0)
+                if isinstance(event, BaseException):
+                    raise event
+                return event
+
+        class CapturingSupervisor(HyperliquidVenueSupervisor):
+            def __init__(self, transport) -> None:
+                super().__init__(transport, max_buffered=1)
+                self.surfaced: list[GapFinding] = []
+
+            def _surface_findings(
+                self, findings: list[GapFinding], now: datetime
+            ) -> None:
+                del now
+                self.surfaced.extend(findings)
+
+        async def no_sleep(delay: float) -> None:
+            del delay
+
+        monkeypatch.setattr("quantmesh.live.supervisor.asyncio.sleep", no_sleep)
+        supervisor = CapturingSupervisor(BurstThenFailTransport())
+        supervisor.subscribe(["BTC", "ETH"])
+
+        with pytest.raises(asyncio.CancelledError):
+            asyncio.run(supervisor.run())
+
+        assert any(
+            finding.key == "BTC" and "backpressure dropped" in finding.message
+            for finding in supervisor.surfaced
+        )
 
 
 class TestFixtureWebSocketDrill:

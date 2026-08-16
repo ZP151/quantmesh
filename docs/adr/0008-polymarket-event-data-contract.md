@@ -10,6 +10,15 @@
   carried over), ADR-0006 (reconciliation discipline — Phase D
   extension builds on it), `docs/iterations/0008-m6-prediction-market-intelligence.md`
 
+## Iteration 0021 amendment
+
+The original Polymarket and Kalshi live providers remain
+explicit-construction-only and registry-refused because they have no trusted
+capability descriptor. Iteration 0021 permits a different, descriptor-bearing
+read-only provider to register only when its exact access, data, instrument,
+entitlement, history, pagination and rate-limit bounds are declared. No signer,
+credential or order method is introduced by that registry change.
+
 ## Context
 
 M6 normalizes prediction-market data into calibrated probability
@@ -82,7 +91,8 @@ rule, with the fixtures themselves as the versioned authority.
 ### 3. Live providers are explicit-construction-only and keyless; no order path exists
 
 `PolyLiveProvider` is `ProviderMode.LIVE` with an injected
-`PolyRestTransport`; the M3 registry refuses it. The SDK's `ClobClient`
+`PolyRestTransport`; it has no trusted capability descriptor, so the registry
+refuses this provider. The SDK's `ClobClient`
 is constructed with `key=None` (the pinned constructor's `signer` is
 None then — proven by test with a faked import), reached only lazily
 and import-guarded; missing SDK and SDK failures are typed errors.

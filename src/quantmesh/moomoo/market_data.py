@@ -15,6 +15,7 @@ unparseable time, or a payload code that does not match the requested
 instrument is an ``OpenDProtocolError`` — a timestamp is never guessed.
 """
 
+import math
 from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
@@ -35,14 +36,14 @@ _MARKET_TZ = {
 
 # The SDK's wall-clock formats, longest first: intraday carries seconds
 # (the server sends minute precision for minute bars), daily is date-only.
-_TIME_FORMATS = (
+_WALL_CLOCK_FORMATS = (
     "%Y-%m-%d %H:%M:%S.%f",
     "%Y-%m-%d %H:%M:%S",
     "%Y-%m-%d %H:%M",
-    "%Y-%m-%d",
 )
+_DATE_FORMAT = "%Y-%m-%d"
 
-_REQUIRED_KLINE_ROW_KEYS = ("time_key", "open", "high", "low", "close", "volume")
+_REQUIRED_KLINE_ROW_KEYS = ("code", "time_key", "open", "high", "low", "close", "volume")
 _REQUIRED_TICKER_ROW_KEYS = ("time", "price", "volume")
 _REQUIRED_QUOTE_ROW_KEYS = ("data_date", "last_price")
 
@@ -50,9 +51,7 @@ _REQUIRED_QUOTE_ROW_KEYS = ("data_date", "last_price")
 def market_zone(market: object) -> ZoneInfo:
     """IANA zone for a bare market prefix (``US``, ``HK``, ``CN``)."""
     if not isinstance(market, str) or market not in _MARKET_TZ:
-        raise ValueError(
-            f"market {market!r} (supported: {', '.join(sorted(_MARKET_TZ))})"
-        )
+        raise ValueError(f"market {market!r} (supported: {', '.join(sorted(_MARKET_TZ))})")
     return _MARKET_TZ[market]
 
 
@@ -103,11 +102,12 @@ def _check_symbol(code: str, symbol: str) -> None:
         )
 
 
-def _venue_time(value: object, tz: ZoneInfo) -> datetime:
+def _venue_time(value: object, tz: ZoneInfo, *, allow_date_only: bool = False) -> datetime:
     """Venue-local wall-clock string → aware UTC instant; never guess."""
     if not isinstance(value, str):
         raise OpenDProtocolError(f"time must be a string, got {type(value).__name__}")
-    for fmt in _TIME_FORMATS:
+    formats = (*_WALL_CLOCK_FORMATS, _DATE_FORMAT) if allow_date_only else _WALL_CLOCK_FORMATS
+    for fmt in formats:
         try:
             parsed = datetime.strptime(value, fmt)
         except ValueError:
@@ -137,24 +137,61 @@ class MoomooDataAdapter:
             missing = [key for key in _REQUIRED_KLINE_ROW_KEYS if key not in row]
             if missing:
                 raise OpenDProtocolError(f"history-kline row {index} is missing {missing}")
-            timestamp = _venue_time(row["time_key"], tz)
+            if row["code"] != code:
+                raise OpenDProtocolError(
+                    f"history-kline row {index} code {row['code']!r} disagrees with {code!r}"
+                )
+            timestamp = _venue_time(row["time_key"], tz, allow_date_only=interval in {"1d", "1w"})
+            values = {
+                key: _finite_source_number(row[key], key=key, row_index=index)
+                for key in ("open", "high", "low", "close", "volume")
+            }
             try:
                 bars.append(
                     Bar(
                         instrument=instrument,
                         timestamp=timestamp,
                         interval=interval,
-                        open=row["open"],
-                        high=row["high"],
-                        low=row["low"],
-                        close=row["close"],
-                        volume=row["volume"],
+                        open=values["open"],
+                        high=values["high"],
+                        low=values["low"],
+                        close=values["close"],
+                        volume=values["volume"],
                     )
                 )
             except ValueError as error:
                 raise OpenDProtocolError(
                     f"history-kline row {index} is invalid: {error}"
                 ) from error
+        return bars
+
+    def history_pages_to_bars(self, instrument: Instrument, pages: object) -> list[Bar]:
+        """Map ordered raw pages and reject metadata drift or duplicate rows."""
+        if not isinstance(pages, list) or not pages:
+            raise OpenDProtocolError("history pages must be a non-empty list")
+        expected: tuple[object, object, object] | None = None
+        bars: list[Bar] = []
+        identities: set[tuple[datetime, str]] = set()
+        previous: datetime | None = None
+        for page_index, page in enumerate(pages):
+            if not isinstance(page, dict):
+                raise OpenDProtocolError(f"history page {page_index} is not a mapping")
+            metadata = (page.get("code"), page.get("interval"), page.get("autype"))
+            if expected is None:
+                expected = metadata
+            elif metadata != expected:
+                raise OpenDProtocolError("history page metadata changes between pages")
+            for bar in self.history_kline_to_bars(instrument, page):
+                identity = (bar.timestamp, bar.interval)
+                if identity in identities:
+                    raise OpenDProtocolError(
+                        f"duplicate history row at {bar.timestamp.isoformat()}"
+                    )
+                if previous is not None and bar.timestamp <= previous:
+                    raise OpenDProtocolError("history rows are not strictly ordered")
+                identities.add(identity)
+                previous = bar.timestamp
+                bars.append(bar)
         return bars
 
     def ticker_to_trades(self, instrument: Instrument, payload: object) -> list[TradeEvent]:
@@ -263,7 +300,16 @@ def _sequence(value: object) -> int | None:
     if value is None:
         return None
     if isinstance(value, bool) or not isinstance(value, int):
+        raise OpenDProtocolError(f"ticker sequence must be an integer, got {type(value).__name__}")
+    return value
+
+
+def _finite_source_number(value: object, *, key: str, row_index: int) -> int | float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise OpenDProtocolError(
-            f"ticker sequence must be an integer, got {type(value).__name__}"
+            f"history-kline row {row_index} {key} must be a finite number, "
+            f"got {type(value).__name__}"
         )
+    if not math.isfinite(float(value)):
+        raise OpenDProtocolError(f"history-kline row {row_index} {key} must be a finite number")
     return value

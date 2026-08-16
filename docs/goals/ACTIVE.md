@@ -1,22 +1,425 @@
 # Active Goal
 
-- Status: iteration 0020 completed; `v0.1.1-rc1` verified and accepted for
-  prototype use; final `v0.1.1` promotion remains an explicit operator gate
-- Objective: first decide, with reproducible evidence, whether FinRL-X and/or a
-  process-isolated NautilusTrader boundary can replace substantial engine work;
-  then deliver the integrated instrument decision workspace without changing
-  paper-only execution authority.
-- Started: 2026-08-11
-- Completed candidate: `v0.1.1-rc1` at `b6b05b9` (PR #108)
-- Completed iteration: `docs/iterations/0020-research-to-paper-loop.md`
-- Tracking issue: [#107](https://github.com/ZP151/quantmesh/issues/107), closed
-- Integration branch: squash-merged and deleted remotely
-- Baseline: `main` at `b6b05b9`; all release candidates remain immutable tags.
-- Next decision: explicitly promote `v0.1.1-rc1` to `v0.1.1`, reject it with a
-  numbered acceptance defect, or start planning iteration 0021 without changing
-  the candidate.
-- Blockers: final promotion is intentionally withheld pending an explicit
-  operator command; no engineering blocker remains for iteration 0020.
+- Status: iteration 0021 active — Tasks 1–13 green; five-target candidate
+  frozen; historical-replay functional acceptance passed; final review and
+  merge next
+- Objective: deliver the Trusted Data Fabric defined by issue #110 without
+  changing release or execution authority.
+- Started: 2026-08-14
+- Tracking issue: [#110](https://github.com/ZP151/quantmesh/issues/110)
+- Active iteration: `docs/iterations/0021-trusted-data-fabric.md`
+- Design: `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`
+- Executable plan: `docs/superpowers/plans/2026-08-14-trusted-data-fabric.md`
+- Integration branch: `0021-trusted-data-fabric`
+- Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
+- Delivery mode: one integration branch and one final milestone PR; the main
+  thread is the only source writer and all subagents are read-only.
+- Current frontier: open and merge the milestone PR for issue #110 after the
+  full release gate and final Reviewer/Verifier pass. The historical-replay
+  functional acceptance passed (seven crypto windows, five XNYS sessions); the
+  real 168-hour run is a post-merge stability gate. Keep wallet, signing,
+  account and order surfaces structurally absent.
+- External gate: resolved. Local OpenD is running with US Stocks LV3
+  entitlement and `quantmesh-moomoo probe` reports
+  `quote=True history_kline=True`. No credential, paid-service or target-matrix
+  substitution was used.
+
+## Product-readiness decision
+
+QuantMesh is currently an accepted local research-workstation prototype, not a
+trusted-data alpha or autonomous trading product. The shortest product path is
+to finish iteration 0021's immutable real-data lineage, recovery, catalog and
+seven-day evidence gate before adding strategies, AI orchestration or new venue
+breadth. Passing that gate establishes the real-data acceptance alpha; local
+research beta and guarded paper automation remain later vertical slices, while
+live-money authority remains a separately approved program. The durable detail
+and advancement criteria are recorded in
+`docs/iterations/0021-trusted-data-fabric.md` under **Product direction and
+readiness decision**.
+
+## Non-negotiable constraints
+
+- Do not modify or promote `v0.1.1-rc1` or create final `v0.1.1`.
+- Keep external venues read-only and execution paper-only.
+- Add no algorithm, model, AI workflow or real-order authority.
+- Never use synthetic data to repair or qualify a real dataset.
+- Stop for credentials, paid services or a major architecture change.
+
+## Checkpoint 0 — 2026-08-14
+
+- Created issue #110 and the isolated integration branch.
+- Recorded the product-readiness assessment, approved design and iteration
+  ledger in English-primary project format.
+- Planner and Quant Researcher completed independent read-only audits; their
+  findings are incorporated into the design and iteration role evidence.
+- Created a clean Python environment from `origin/main`; dependency setup
+  succeeded. Baseline verification remains in progress before behavior changes.
+
+## Checkpoint 1 — 2026-08-14
+
+- Task 1 capability-aware provider resolution is GREEN after three corrective
+  read-only review rounds and one final implementation-clean verdict.
+- Exact evidence is recorded in
+  `docs/iterations/0021-trusted-data-fabric.md`; the final focused gate is 160
+  passed, with Ruff and `git diff --check` green.
+- Legacy fixture access remains compatible but cannot be relabeled or resolved
+  as real data. No execution authority, credential, release tag or synthetic
+  repair path changed.
+
+## Checkpoint 2 — 2026-08-14
+
+- Task 2 canonical instruments and versioned market calendars is GREEN after
+  two corrective read-only review rounds and a final CLEAN verdict.
+- Exact evidence is recorded in
+  `docs/iterations/0021-trusted-data-fabric.md`: 56 focused checks, 82 Task 1–2
+  integration checks, Ruff, dependency integrity, release-lock ordering and
+  the 68-package license closure are green.
+- Alias history is bitemporal and content-addressed; XNYS regular sessions are
+  schedule-validated, extended sessions fail explicitly, and 24/7 sessions are
+  exact UTC days. No execution or release authority changed.
+
+## Checkpoint 3 — 2026-08-14
+
+- Task 3 content-addressed objects and immutable manifests is GREEN. The final
+  Task 1–3 integration, v1 compatibility and security selection passed 195
+  tests with 3 expected skips; Ruff and `git diff --check` passed.
+- V2 state is isolated under `.trusted-data-v2`. Objects, manifests and
+  revision reservations are write-once; canonical hashes and typed bar
+  declarations are verified on exact-manifest reads.
+- Genesis activates one complete staged directory atomically. Later
+  publication uses a reparse- and hard-link-safe cross-process lock, immutable
+  revisions, hash-chained history and compare-and-swap pointer. Strict recovery
+  accepts only exact uncommitted evidence; committed or ambiguous damage fails
+  closed.
+- A real Windows junction probe was rejected before any external write. Review
+  reproduced and closed the path, semantic, concurrency, crash, truncation and
+  torn-tail attacks; the final read-only Reviewer verdict was CLEAN.
+- ADR-0016 records the local filesystem trust root and does not claim defense
+  against an administrator rolling back every local v2 evidence file together.
+  No credential, order authority, release tag or synthetic repair path changed.
+
+## Checkpoint 4 — 2026-08-14
+
+- Task 4 completes Slice 1: one nonqualifying fixture AAPL response now traces
+  through exact raw evidence, normalized daily bars, explicit
+  `unadjusted-identity-v1` output and the existing `log_return(window=2)`
+  feature implementation.
+- Knowledge-time selection is committed-pointer bounded and idempotent across
+  historical retries. Future-event, retroactive-correction and crash-pending
+  leakage fail closed.
+- Lineage validates canonical bytes, raw-envelope-rooted provenance, pinned
+  XNYS sessions, declared policies and actual derivation rather than trusting
+  parent IDs alone. Sixteen Important review findings were reproduced and
+  corrected; both final read-only verdicts are CLEAN.
+- Verification is `25 passed` focused and `277 passed, 3 skipped` for the
+  Task 1–4 integration/security selection, with Ruff and `git diff --check`
+  green. Exact evidence is in the active iteration ledger.
+
+## Checkpoint 5 — 2026-08-14
+
+- Task 5 completes bounded, quote-only Moomoo history and corporate-action
+  transport. Opaque history cursors are followed in one context and encoded as
+  strict-JSON evidence; factors, splits and dividends remain raw source data.
+- Silent truncation, repeated cursors, malformed SDK tuples/status, row-symbol
+  drift, invalid/missing scalars, non-finite or coercive OHLCV, timestamp shape,
+  date bounds and reversed UTC windows all fail closed. Legacy one-page reads
+  remain compatible but cannot qualify as complete trusted bundles.
+- Verification is `106 passed` focused and `310 passed` for the Task 1–5,
+  security and release/audit selection, with Ruff and `git diff --check` green.
+  Repeated corrective review rounds closed every Critical/Important finding;
+  final Standards and adversarial implementation/security verdicts were CLEAN.
+- At this checkpoint the 10.10 compatible SDK candidate was not yet a release
+  dependency; Checkpoint 6A records its later audited admission.
+
+## Checkpoint 6A — 2026-08-14
+
+- Task 6 foundation admits `moomoo-api==10.10.7008` into the same audited
+  `.[dev,research,e2e,moomoo]` closure used by CI, Security and the release
+  gate. The 72-pin inventory and local 66-package Windows license review pass.
+- Split adjustment is knowledge-bounded and independently pins factor/action
+  manifests. Ambiguous, future-known or wrong-instrument actions fail closed;
+  OHLC and inverse-volume behavior is regression-tested.
+- The SDK worker is process-isolated, deadline-bounded and credential-free.
+  Staged output is bounded and removed after strict parent-side validation;
+  timeout or unavailable results cannot claim manifests.
+- Verification: 41 dependency/security/release tests and 81 focused
+  adjustment/collection/OpenD/provider tests passed; focused Ruff passed.
+  Publication and real OpenD evidence remain pending and are not claimed.
+
+## Checkpoint 6B — 2026-08-14
+
+- The Task 6 implementation candidate publishes separate real raw history,
+  factor, split and dividend evidence, then canonical bars/actions,
+  split-adjusted bars and deterministic log-return features. Publication
+  validation recomputes the chain from immutable source bytes and rejects
+  forged adjusted objects; idempotent input retains all eight manifest IDs.
+- Forward and reverse splits require a unique agreement between official factor
+  and action surfaces under a UTC knowledge cutoff. Dividends are recorded but
+  total return remains explicitly unavailable. Historical and live-tail paths
+  no longer fabricate `adjusted_close` from labels or raw closes.
+- The process-isolated worker now carries the minimum non-secret Windows runtime
+  paths required by Python/Moomoo, maps `US.*` market metadata explicitly and
+  classifies a refused OpenD socket before the SDK retry loop. API keys and
+  credential-bearing environment variables remain excluded.
+- The real read-only probe used audited SDK `10.10.7008`; local OpenD was not
+  listening and correctly returned `unavailable/daemon-unavailable` with zero
+  manifest IDs and no dataset directory. This is honest negative evidence, not
+  a positive real-data acceptance claim.
+- Verification is `172 passed, 1 skipped`, focused Ruff clean and
+  `git diff --check` clean. Two fresh read-only reviews are running; Task 6 is
+  not complete and its final commit remains pending their verdicts.
+
+## Checkpoint 6C — 2026-08-14
+
+- Both fresh reviews rejected the 6B candidate. Reviewer-driven RED tests then
+  reproduced official factor-orientation drift, order-dependent equal-ratio
+  action pairing, worker-controlled knowledge time, raw-role substitution,
+  forged feature declarations and unbounded stdout/stderr buffering.
+- The corrected contract uses the inverse of Moomoo's documented old/new
+  `split_ratio`, pairs actions chronologically, replaces worker receipt time with
+  parent-observed UTC time, authenticates every raw and derived role/declaration,
+  and accepts worker output only through the bounded staged JSON file.
+- Six correction regressions and the full Task 6 selection are GREEN:
+  `176 passed, 1 skipped`, Ruff clean and `git diff --check` clean. Task 9 owns
+  bundle-level crash recovery; a fresh scoped reviewer is deciding whether that
+  explicit phase boundary leaves any Task 6 blocker.
+
+## Checkpoint 6D — 2026-08-14
+
+- Final review corrections recompute every raw role's identities and event
+  coverage from immutable source bytes, bind bar interval to decoded source,
+  bind factor/split/dividend source codes to the canonical provider symbol and
+  derive empty action coverage from empty source evidence.
+- Final Task 6 verification is `181 passed, 1 skipped`, Ruff clean and
+  `git diff --check` clean. The real negative OpenD probe remained honestly
+  unavailable with zero manifests; `pip check` and the 72-package license review
+  passed.
+- Final fresh read-only scoped review: PASS, no Critical/Important issue. Task 6
+  and Slice 2 are complete. Task 9 retains bundle crash atomicity ownership.
+
+## Checkpoint 7 — 2026-08-14
+
+- Commit `97fee3087345` completes public-mainnet Hyperliquid candle lineage for
+  BTC, ETH and SOL through an immutable data-only `/info` transport pinned to
+  `https://api.hyperliquid.xyz/info`. Wallet, signing, account, exchange and
+  order surfaces remain structurally absent.
+- Publication is bounded by the provider's 5,000-row contract, requires exact
+  interval-aligned UTC windows and complete continuity, and fails closed unless
+  each direct request and final publication occur on the exact clean producing
+  commit. Scripted or injected clients remain fixture evidence and cannot
+  qualify as real data.
+- The collector publishes and rederives the complete immutable raw,
+  normalized, identity-adjusted and log-return feature graph before activating
+  any catalog pointer. Cross-pointer crash recovery remains explicitly owned by
+  Task 9.
+- Final independent Standards and specification reviews both returned PASS with
+  no Critical or Important finding. Verification passed 348 scoped regressions,
+  Ruff, `pip check`, the 72-package license review and `git diff --check`.
+- A post-commit public-mainnet smoke collected the closed UTC window
+  `2026-08-13T21:54:00Z` through `2026-08-13T21:56:00Z` for BTC, ETH and SOL.
+  All three publications qualified as real, produced 12 immutable manifests
+  and replayed without synthetic repair. Exact dataset IDs are recorded in
+  iteration 0021 Checkpoint 7.
+- Task 7 and Slice 3 are complete. Task 8 is the active frontier.
+
+## Checkpoint 8 — 2026-08-14
+
+- Commit `11f99cc` completes Task 8 and Slice 4. Hyperliquid trade identity is
+  SHA-256 over canonical `(block_time_ms, uppercase coin, tid)`; `tid` remains
+  a provider identity and is never treated as a consecutive sequence.
+- Candle, trade and L2 continuity now uses explicit `complete`, `known-gap`,
+  `unknown-after-disconnect`, `recovered` and `unrecoverable` states with
+  disconnect time, last durable identity, first recovered identity and recovery
+  source. Durable cursors advance only after LiveBuffer commits and restore
+  from the replay lake after process restart.
+- L2 data is admitted as atomic bid/ask snapshot epochs. Backpressure remains
+  row-bounded without splitting an epoch, retention never prunes one side, and
+  dropped-stream findings survive the reconnect pump. The production live
+  workstation now has the read-only public `/info` candle/book recovery source;
+  wallet, signing, account, exchange and order surfaces remain absent.
+- LiveBuffer schema v2 migrates old lakes idempotently, rejects future schema
+  versions before mutation, deduplicates scoped provider identities, quarantines
+  content conflicts and restores both L2 sides and both Hyperliquid metrics
+  channels. The frontend preserves identity/continuity evidence, reconciles
+  snapshot polling monotonically and renders depth only from one complete epoch.
+- Reviewer-driven regressions closed durable-cursor restart loss, partial-gap
+  clearing, dead-socket reuse, unbounded reconnect batches, split pruning,
+  wrong dropped-instrument evidence and delayed snapshot rollback. Final fresh
+  Standards and implementation reviews both returned CLEAN with no Critical or
+  Important finding.
+- Verification is `711 passed` across the broad live/Hyperliquid/workstation
+  selection, followed by `122 passed` for the final corrected backend focus and
+  `147 passed` frontend tests. Ruff, TypeScript, production build, OpenAPI client,
+  committed-bundle freshness and `git diff --check` passed. Four pre-existing
+  Fast Refresh lint warnings remain unchanged.
+- Task 8 and Slice 4 are complete. Task 9 is the active frontier and retains
+  immutable collection-run publication, compare-and-swap checkpoints and
+  crash-boundary recovery ownership.
+
+## Checkpoint 9 — 2026-08-14
+
+- Task 9 and Slice 5 are complete. Collection-job schema v2 binds the complete
+  provider request, producing commit and explicit collection cycle; exact
+  retries preserve a deterministic run while later cycles may capture provider
+  corrections as new knowledge-time revisions.
+- Provider batches are immutable source snapshots with ordered raw-payload
+  digests and an independent per-job marker repeated in pending/commit evidence.
+  Complete raw/derived/manifest/preflight graphs become visible only through
+  one compare-and-swap DuckDB transaction; Task 9 makes no quality claim.
+- ADR-0017 records the durable authority: hash-chained immutable commit
+  journals, permanent dataset owner markers, canonical manifests, retained
+  legacy predecessor evidence and full-graph fail-closed reads.
+- Recovery under the one-writer lease repairs exact committed intents, owner
+  markers, source rows and both pre-link and post-link hard-link interruptions.
+  All graph members have exact immutable high-water anchors and are permanently
+  owned, including unchanged manifests. Completed retries revalidate the
+  aggregate source object and reject uncommitted external parents.
+  Subprocess tests cover every public crash stage, and eight independent
+  processes converge on one logical publication.
+- Final evidence is `220 passed` for the Task 9 integration selection and `120
+  passed` for the corrected control-plane/recovery/Moomoo focus. Ruff and `git diff --check`
+  passed; fresh Standards and adversarial reviews returned CLEAN.
+- Task 10 is now active: add versioned quality policies and immutable daily SLA
+  evidence without changing release or execution authority.
+
+## Checkpoint 10 — 2026-08-14
+
+- Task 10 is GREEN. ADR-0018 defines versioned content-addressed policies,
+  evaluations and checkpoint-bound reports without introducing a hash cycle.
+- Immutable measurements now cover exact raw payload identities, typed bars,
+  features and split actions, XNYS/continuous calendars, pagination, rights,
+  entitlement, freshness, close-based latency and exact historical-overlap
+  fingerprints. Explicit amendments can reconcile only the identical recorded
+  conflict set.
+- Real graphs are bound to the authoritative policy, job window and checkpoint
+  time; fixture qualification, custom-policy relaxation, premature daily bars,
+  hard-failure masking and cross-job corruption blast radius fail closed.
+- Final evidence is `93 passed` for quality/calendar/recovery and `58 passed`
+  for complete provider regressions. Ruff, `git diff --check`, `pip check`, the
+  deterministic 72-package license closure and final fresh adversarial review
+  are green/CLEAN.
+- Task 11 is active: implement the catalog API and downstream manifest/quality
+  lineage. No release, credential, execution or synthetic-repair authority
+  changed.
+
+## Checkpoint 11 — 2026-08-14
+
+- Task 11 is GREEN. The read-only catalog exposes exact manifest identity,
+  dataset-current identity, immutable parents, provider/access, coverage,
+  rights, entitlement, checkpoint and complete immutable quality evidence.
+- The live production composition root binds the same catalog to the catalog
+  API, history service and forecast registry. History, features, experiments
+  and forecasts preserve exact manifest/evaluation pins while legacy v1 records
+  retain their historical bytes and identities.
+- Fail-closed regressions cover failed quality, mismatched pins, wrong artifact
+  semantics, cross-instrument feature substitution, target corruption,
+  historical-vs-current labeling, non-mutating legacy-v2 reads and unrelated
+  quality-corruption isolation.
+- Final evidence is `185 passed` for the complete Task 11 data/research selection
+  and `193 passed` for API/workstation regression. OpenAPI freshness,
+  TypeScript, Oxlint, Ruff and `git diff --check` pass; four pre-existing Fast
+  Refresh warnings remain. The final fresh read-only re-review is CLEAN/PASS.
+- Task 12 is active: implement and verify the English/Simplified-Chinese operator
+  data-catalog screen. No release, credential, execution or synthetic-repair
+  authority changed.
+
+## Checkpoint 12 — 2026-08-14
+
+- Task 12 and Slice 6 are GREEN. The package-served `/app/ops/data` route now
+  presents the exact provider, artifact, coverage, rights, entitlement,
+  qualification, checkpoint and immutable parent-lineage evidence in English
+  and Simplified Chinese.
+- All trust states remain textual and fail closed. Freshness-stale evidence is
+  amber and cannot hide a failed evaluation; loading, empty and unavailable
+  states make no qualification promise. The complete quality and checkpoint
+  contracts are inspectable through one keyboard-operable disclosure.
+- Reviewer-driven regressions closed incomplete exact evidence, raw-control
+  drift, status-insensitive issue styling, optimistic empty copy and long-ID
+  mobile overflow. A package-served populated and expanded catalog with
+  production-length identities passed the 390 px browser check with zero
+  horizontal overflow; final fresh read-only review returned CLEAN/PASS.
+- Final evidence is frontend Vitest `152 passed`, focused backend/API `132
+  passed`, explicit API-boundary and Playwright checks green, TypeScript,
+  OpenAPI freshness, package-bundle freshness, Ruff and `git diff --check`
+  green, with only four unchanged Fast Refresh warnings from Oxlint.
+- Task 13 is active: add bounded clean-install collect/replay/inspect commands
+  and immutable daily soak evidence without changing release or execution
+  authority.
+
+## Checkpoint 13 — 2026-08-14
+
+- Task 13 tooling is implemented and reviewed. The installed `quantmesh-data`
+  entry point provides bounded clean-checkout `collect`, exact hash-verifying
+  `replay` and catalog `inspect`; `tools/trusted_data_soak.py` binds immutable
+  daily reports to the exact code/configuration and fixed BTC/ETH/SOL plus
+  AAPL/NVDA target matrix. Its verifier reopens the complete catalog,
+  checkpoint, quality, manifest and object closure. Detectable local rollback,
+  late backfill, stale targets, noncanonical reports, links and incomplete
+  evidence fail closed. A local administrator able to rewrite every file and
+  timestamp remains outside ADR-0016's filesystem threat model; Task 14's daily
+  issue/CI record is the independent witness.
+- Review-driven corrections closed incomplete closure verification,
+  stale-target reuse, link/reparse handling, candidate-controlled target and
+  policy identities, and invalid first-observation freezing. Final focused
+  review returned CLEAN/PASS. The acceptance run then found and fixed one real
+  quality-policy defect: grace and maximum latency had been equal, leaving no
+  practical post-grace PASS interval. Authoritative latency is now 600 seconds
+  for Hyperliquid after a 300-second grace and 7,200 seconds for Moomoo after a
+  3,600-second grace.
+- Four clean-checkout release-gate attempts exposed two additional
+  environment-dependent test defects and one fixed-port race. API and SPA
+  connector probes now inject deterministic offline Moomoo behavior under
+  test without changing the production OpenD path; live-prediction E2E reserves
+  an OS-assigned socket and shuts down scripted venue loops normally. The final
+  gate passed all 18 steps on exact candidate
+  `0a9796769c1ca98f0fc5f4dab187950167f4d0ab`: `3039 passed, 6 skipped`, Ruff,
+  dependency/license audits, frontend reproducibility and Vitest, golden path
+  `60` checks, and clean-clone proof before and after.
+- A fresh isolated collection from that candidate covered
+  `2026-08-14T08:12:00Z/2026-08-14T08:14:00Z`. All 12 Hyperliquid
+  raw/normalized/adjusted/feature layers for BTC, ETH and SOL passed immutable
+  quality with three bars, no issue codes, no synthetic rows and 379–380 second
+  latency. Adjusted manifests are BTC
+  `12562839ec2cd8b1af697e55911e2bc86b25d18c78d5029e06c88c82eacfdedf`, ETH
+  `b77395c4198615dca0ef80535d9848fd1f0e6fd05e454b6d47648992ef4b79f2`
+  and SOL
+  `68966758e583b6645cd9b22fe026ab253b7c41551e808cea3cc0583267710aa1`.
+  Each replayed twice in separate CLI processes with `verified=true` and three
+  rows.
+- The final-candidate Moomoo probe returned
+  `unavailable/daemon-unavailable`, detail `local OpenD is unavailable`, zero
+  manifest IDs and no synthetic substitution. Consequently Task 13 Step 4 is
+  complete, Step 5 remains open, no soak candidate/configuration is frozen and
+  Task 14's 168-hour evidence window has not started. No milestone PR, release,
+  credential, execution or synthetic-repair authority changed.
+
+## Checkpoint 14 — 2026-08-15
+
+- Real OpenD came online (US Stocks LV3; `quote=True history_kline=True`). The
+  first real Moomoo collection exposed three latent defects that the earlier
+  `daemon-unavailable` path could never exercise, fixed and committed on
+  `0021-trusted-data-fabric`:
+  - `b49e7b4` — canonical bar identity no longer carries `market` metadata
+    (ADR-0003 keeps it request-side), and revalidation filters history bars to
+    the UTC window so the SDK's venue-date widening cannot fail the
+    canonical-derivation check.
+  - `2b59ca8` — the split-rate parser accepts the official Unicode arrow (`1→4`)
+    alongside the fixture ASCII form (`1->4`).
+- A clean-checkout `quantmesh-data collect` of Moomoo AAPL/NVDA daily bars for
+  UTC `2026-08-10T00:00:00Z/2026-08-15T00:00:00Z` published 16 manifests (eight
+  per symbol, five bars each) with `status=published` and passed the full
+  `validate_publication` recomputation. Re-collecting the same window returned
+  the identical manifest set (idempotent), and `replay` returned
+  `verified=true`.
+- Follow-up (not blocking the soak): the Moomoo 1-minute intraday path fails
+  validation with `raw declarations are not source-derived` because the raw
+  history surface preserves the complete SDK pages (including out-of-window
+  bars) while its envelope is declared from the window-filtered bars. The fixed
+  five-target soak matrix uses Moomoo AAPL/NVDA only at the daily interval, so
+  this does not block Task 13 Step 5 or Task 14.
+- Task 13 Step 5 (freeze the exact five-target candidate) is now unblocked.
+  Task 14's 168-hour soak has not started. No release, milestone PR, credential,
+  execution or synthetic-repair authority changed.
 
 ## Iterations 0022–0025 — Post-RC hardening chain (0022–0024 merged; 0025 active)
 
