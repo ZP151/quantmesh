@@ -30,7 +30,7 @@ divergent, missing, and ambiguous pairs are refused, never adopted
 (decision 5).
 """
 
-from quantmesh.domain.models import Side, Venue
+from quantmesh.domain.models import Venue
 from quantmesh.domain.orders import (
     Fill,
     Order,
@@ -47,6 +47,14 @@ from quantmesh.execution.reconciliation import (
     ReconciliationFinding,
     ReconciliationReport,
     Severity,
+    compare_fees,
+    compare_fill_ids,
+    compare_positions,
+    compare_prices,
+    compare_quantities,
+    dedupe_by_id,
+    finding,
+    is_terminal,
 )
 from quantmesh.moomoo.execution import (
     BrokerDeal,
@@ -109,9 +117,9 @@ def run_reconciliation(
             if key is not None:
                 by_remark[key] = order
 
-    deals = _dedupe_by_id(snapshot.deals, lambda d: d.deal_id)
+    deals = dedupe_by_id(snapshot.deals, lambda d: d.deal_id)
 
-    for broker_order in _dedupe_by_id(snapshot.orders, lambda o: o.order_id):
+    for broker_order in dedupe_by_id(snapshot.orders, lambda o: o.order_id):
         by_id = by_broker_id.get(broker_order.order_id)
         by_note = _by_remark(broker_order, by_remark)
 
@@ -122,7 +130,7 @@ def run_reconciliation(
                     internal_order_id=by_id.order_id,
                     status="divergent",
                     findings=[
-                        _finding(
+                        finding(
                             FindingKind.MAPPING,
                             Severity.ERROR,
                             f"broker order {broker_order.order_id} maps to "
@@ -142,7 +150,7 @@ def run_reconciliation(
                     broker_order_id=broker_order.order_id,
                     status="missing",
                     findings=[
-                        _finding(
+                        finding(
                             FindingKind.MAPPING,
                             Severity.ERROR,
                             f"broker order {broker_order.order_id} has no journal "
@@ -170,7 +178,18 @@ def run_reconciliation(
         order.order_id for order in internal if order.order_id not in claimed
     ]
 
-    position_findings = _compare_positions(snapshot.positions, internal, tolerance)
+    broker_by_symbol: dict[str, float] = {}
+    for position in snapshot.positions:
+        broker_by_symbol[position.symbol] = (
+            broker_by_symbol.get(position.symbol, 0.0) + position.qty
+        )
+    position_findings = compare_positions(
+        broker_by_symbol=broker_by_symbol,
+        internal=internal,
+        venue=Venue.MOOMOO,
+        noun="broker",
+        tolerance=tolerance,
+    )
 
     return ReconciliationReport(
         tolerance=tolerance,
@@ -248,7 +267,7 @@ def _compare(
     findings: list[ReconciliationFinding] = []
     if recovered:
         findings.append(
-            _finding(
+            finding(
                 FindingKind.MAPPING,
                 Severity.WARNING,
                 f"mapping for broker order {broker.order_id} recovered via remark "
@@ -261,7 +280,7 @@ def _compare(
     broker_status = BROKER_STATUS_TO_DOMAIN.get(broker.order_status)
     if broker_status is None:
         findings.append(
-            _finding(
+            finding(
                 FindingKind.STATUS,
                 Severity.ERROR,
                 f"broker status {broker.order_status!r} has no honest domain meaning",
@@ -273,11 +292,57 @@ def _compare(
     else:
         _compare_status(broker_status, order, findings, broker)
 
-    _compare_quantities(broker, order, tolerance, findings)
-    _compare_prices(broker, order, tolerance, findings)
-    _compare_fees(broker, deals, order, tolerance, findings)
+    findings.extend(
+        compare_quantities(
+            broker_qty=broker.qty,
+            broker_filled_qty=broker.dealt_qty,
+            order=order,
+            tolerance=tolerance,
+            noun="broker",
+        )
+    )
+    findings.extend(
+        compare_prices(
+            broker_limit_price=broker.price,
+            broker_average_price=broker.dealt_avg_price,
+            order=order,
+            tolerance=tolerance,
+            noun="broker",
+        )
+    )
+    order_deals = [deal for deal in deals if deal.order_id == broker.order_id]
+    findings.extend(
+        compare_fees(
+            broker_fees=[deal.fee for deal in order_deals if deal.fee is not None],
+            row_count=len(order_deals),
+            row_noun="deals",
+            noun="broker",
+            order=order,
+            tolerance=tolerance,
+        )
+    )
     _compare_timestamps(broker, order, tolerance, findings)
-    _compare_fill_ids(broker, deals, order, findings)
+    deal_ids = {deal.deal_id for deal in order_deals}
+    findings.extend(
+        compare_fill_ids(
+            broker_fill_ids=deal_ids,
+            row_noun="deal",
+            noun="broker",
+            order=order,
+        )
+    )
+    # Venue-specific: an unhealthy deal status is never adoptable.
+    for deal in order_deals:
+        if deal.status not in _HEALTHY_DEAL_STATUSES:
+            findings.append(
+                finding(
+                    FindingKind.REVOKED_FILL,
+                    Severity.ERROR,
+                    f"deal {deal.deal_id} has status {deal.status!r} and is not adoptable",
+                    order_id=order.order_id,
+                    observed=deal.status,
+                )
+            )
 
     # The recovered-mapping note is non-blocking by contract (the apply
     # path whitelists MAPPING/WARNING); only genuinely blocking findings
@@ -292,8 +357,8 @@ def _compare(
         status = "divergent"
     elif (
         broker_status is not None
-        and _is_terminal(order.status)
-        and _is_terminal(broker_status)
+        and is_terminal(order.status)
+        and is_terminal(broker_status)
         and broker_status == order.status
     ):
         status = "matched"
@@ -319,7 +384,7 @@ def _compare_status(
     if _is_progress(broker_status, order.status):
         return  # the broker is ahead; adoption imports the progress
     findings.append(
-        _finding(
+        finding(
             FindingKind.STATUS,
             Severity.ERROR,
             f"status drift: broker {broker.order_status} vs journal {order.status.value}",
@@ -328,138 +393,6 @@ def _compare_status(
             expected=order.status.value,
         )
     )
-
-
-def _compare_quantities(
-    broker: BrokerOrder,
-    order: Order,
-    tolerance: ReconcileTolerance,
-    findings: list[ReconciliationFinding],
-) -> None:
-    qty_tol = tolerance.qty_bps / 10_000.0
-    diff = broker.qty - order.quantity
-    if abs(diff) / order.quantity > qty_tol:
-        findings.append(
-            _finding(
-                FindingKind.QUANTITY,
-                Severity.ERROR,
-                f"order quantity drift: broker {broker.qty} vs journal {order.quantity}",
-                order_id=order.order_id,
-                observed=f"{broker.qty}",
-                expected=f"{order.quantity}",
-            )
-        )
-    # The fill side: the broker may be ahead (unadopted fills) but never
-    # behind (the journal cannot hold fills the broker does not know).
-    fill_diff = broker.dealt_qty - order.filled_quantity
-    if fill_diff < -qty_tol * order.quantity:
-        findings.append(
-            _finding(
-                FindingKind.QUANTITY,
-                Severity.ERROR,
-                f"journal shows more fills than the broker: broker {broker.dealt_qty} "
-                f"vs journal {order.filled_quantity}",
-                order_id=order.order_id,
-                observed=f"{broker.dealt_qty}",
-                expected=f"{order.filled_quantity}",
-            )
-        )
-
-
-def _compare_prices(
-    broker: BrokerOrder,
-    order: Order,
-    tolerance: ReconcileTolerance,
-    findings: list[ReconciliationFinding],
-) -> None:
-    price_tol = tolerance.price_bps / 10_000.0
-    if order.limit_price is not None and broker.price is not None:
-        if abs(broker.price - order.limit_price) / order.limit_price > price_tol:
-            findings.append(
-                _finding(
-                    FindingKind.PRICE,
-                    Severity.ERROR,
-                    f"limit price drift: broker {broker.price} vs journal "
-                    f"{order.limit_price}",
-                    order_id=order.order_id,
-                    observed=f"{broker.price}",
-                    expected=f"{order.limit_price}",
-                )
-            )
-    broker_avg = broker.dealt_avg_price
-    journal_avg = order.average_fill_price
-    if broker_avg is not None and journal_avg is not None:
-        if abs(broker_avg - journal_avg) / journal_avg > price_tol:
-            findings.append(
-                _finding(
-                    FindingKind.PRICE,
-                    Severity.ERROR,
-                    f"execution price drift: broker avg {broker_avg} vs journal avg "
-                    f"{journal_avg}",
-                    order_id=order.order_id,
-                    observed=f"{broker_avg}",
-                    expected=f"{journal_avg}",
-                )
-            )
-
-
-def _compare_fees(
-    broker: BrokerOrder,
-    deals: list[BrokerDeal],
-    order: Order,
-    tolerance: ReconcileTolerance,
-    findings: list[ReconciliationFinding],
-) -> None:
-    order_deals = [deal for deal in deals if deal.order_id == broker.order_id]
-    broker_fees = [deal.fee for deal in order_deals if deal.fee is not None]
-    journal_fees = [fill.fee for fill in order.fills if fill.fee is not None]
-    if not order_deals and not journal_fees:
-        return  # no execution on either side: no fee to compare
-    if not order_deals:
-        findings.append(
-            _finding(
-                FindingKind.FEE,
-                Severity.ERROR,
-                "journal holds fills but the broker reports no deals for this order",
-                order_id=order.order_id,
-            )
-        )
-        return
-    if len(broker_fees) != len(order_deals):
-        findings.append(
-            _finding(
-                FindingKind.MISSING_DATA,
-                Severity.ERROR,
-                f"broker reports {len(order_deals)} deals but fee data for "
-                f"{len(order_deals) - len(broker_fees)} of them; fees cannot be verified",
-                order_id=order.order_id,
-            )
-        )
-        return
-    if journal_fees:
-        if not broker_fees:
-            findings.append(
-                _finding(
-                    FindingKind.MISSING_DATA,
-                    Severity.ERROR,
-                    "journal holds fees but the broker reports none; cannot compare",
-                    order_id=order.order_id,
-                )
-            )
-            return
-        broker_total = sum(broker_fees)
-        journal_total = sum(journal_fees)
-        if abs(broker_total - journal_total) > tolerance.fee_abs:
-            findings.append(
-                _finding(
-                    FindingKind.FEE,
-                    Severity.ERROR,
-                    f"fee drift: broker {broker_total} vs journal {journal_total}",
-                    order_id=order.order_id,
-                    observed=f"{broker_total}",
-                    expected=f"{journal_total}",
-                )
-            )
 
 
 def _compare_timestamps(
@@ -472,7 +405,7 @@ def _compare_timestamps(
     create_delta = abs((broker.create_time - order.created_at).total_seconds())
     if create_delta > skew:
         findings.append(
-            _finding(
+            finding(
                 FindingKind.TIMESTAMP,
                 Severity.ERROR,
                 f"creation time drift: broker {broker.create_time} vs journal "
@@ -487,7 +420,7 @@ def _compare_timestamps(
         update_delta = abs((broker.updated_time - last_event).total_seconds())
         if update_delta > skew:
             findings.append(
-                _finding(
+                finding(
                     FindingKind.TIMESTAMP,
                     Severity.ERROR,
                     f"update time drift: broker {broker.updated_time} vs journal "
@@ -497,108 +430,6 @@ def _compare_timestamps(
                     expected=last_event.isoformat(),
                 )
             )
-
-
-def _compare_fill_ids(
-    broker: BrokerOrder,
-    deals: list[BrokerDeal],
-    order: Order,
-    findings: list[ReconciliationFinding],
-) -> None:
-    """Deal↔fill identity: a stamped fill whose deal vanished, or a
-    revoked deal, is a finding (ADR-0006 decision 4)."""
-    deal_ids = {deal.deal_id for deal in deals if deal.order_id == broker.order_id}
-    for fill in order.fills:
-        if fill.broker_fill_id is not None and fill.broker_fill_id not in deal_ids:
-            findings.append(
-                _finding(
-                    FindingKind.REVOKED_FILL,
-                    Severity.ERROR,
-                    f"fill {fill.broker_fill_id} is stamped on the journal but the "
-                    "broker no longer reports that deal",
-                    order_id=order.order_id,
-                    observed=fill.broker_fill_id,
-                )
-            )
-    for deal in deals:
-        if deal.order_id != broker.order_id:
-            continue
-        if deal.status not in _HEALTHY_DEAL_STATUSES:
-            findings.append(
-                _finding(
-                    FindingKind.REVOKED_FILL,
-                    Severity.ERROR,
-                    f"deal {deal.deal_id} has status {deal.status!r} and is not adoptable",
-                    order_id=order.order_id,
-                    observed=deal.status,
-                )
-            )
-
-
-def _compare_positions(
-    positions,
-    internal: list[Order],
-    tolerance: ReconcileTolerance,
-) -> list[ReconciliationFinding]:
-    """Account-level position deltas per symbol (ADR-0006 d. 3)."""
-    pos_tol = tolerance.position_qty_bps / 10_000.0
-    findings: list[ReconciliationFinding] = []
-    broker_by_symbol: dict[str, float] = {}
-    for position in positions:
-        broker_by_symbol[position.symbol] = (
-            broker_by_symbol.get(position.symbol, 0.0) + position.qty
-        )
-    internal_by_symbol: dict[str, float] = {}
-    for order in internal:
-        if order.instrument.venue is not Venue.MOOMOO:
-            continue
-        sign = 1.0 if order.side is Side.BUY else -1.0
-        total = sum(fill.quantity for fill in order.fills)
-        internal_by_symbol[order.instrument.symbol] = (
-            internal_by_symbol.get(order.instrument.symbol, 0.0) + sign * total
-        )
-    for symbol in sorted(set(broker_by_symbol) | set(internal_by_symbol)):
-        broker_qty = broker_by_symbol.get(symbol, 0.0)
-        internal_qty = internal_by_symbol.get(symbol, 0.0)
-        if broker_qty == 0.0 and internal_qty == 0.0:
-            continue
-        if broker_qty == 0.0:
-            findings.append(
-                _finding(
-                    FindingKind.POSITION,
-                    Severity.ERROR,
-                    f"journal net position {internal_qty:g} for {symbol} has no "
-                    "broker position",
-                    observed=f"{internal_qty:g}",
-                    expected="0",
-                )
-            )
-            continue
-        if internal_qty == 0.0:
-            findings.append(
-                _finding(
-                    FindingKind.POSITION,
-                    Severity.ERROR,
-                    f"broker position {broker_qty:g} for {symbol} is unexplained by "
-                    "the journal",
-                    observed=f"{broker_qty:g}",
-                    expected="0",
-                )
-            )
-            continue
-        delta = abs(broker_qty - internal_qty) / max(1.0, abs(internal_qty))
-        if delta > pos_tol:
-            findings.append(
-                _finding(
-                    FindingKind.POSITION,
-                    Severity.ERROR,
-                    f"position drift for {symbol}: broker {broker_qty:g} vs journal "
-                    f"{internal_qty:g}",
-                    observed=f"{broker_qty:g}",
-                    expected=f"{internal_qty:g}",
-                )
-            )
-    return findings
 
 
 # --- adoption internals -------------------------------------------------------
@@ -645,7 +476,7 @@ def _adopt_progress(
     # FILLED is only ever reached through fills; a broker FILLED that
     # the adopted fills do not complete is refused by the post-check
     # below. CANCELED/REJECTED are genuine terminal events.
-    if broker_status in (OrderStatus.CANCELED, OrderStatus.REJECTED) and not _is_terminal(
+    if broker_status in (OrderStatus.CANCELED, OrderStatus.REJECTED) and not is_terminal(
         order.status
     ):
         event = {
@@ -711,48 +542,18 @@ def _adopt_progress(
 
 # --- small helpers -------------------------------------------------------------
 
-def _finding(
-    kind: FindingKind,
-    severity: Severity,
-    message: str,
-    *,
-    order_id: str | None = None,
-    observed: str | None = None,
-    expected: str | None = None,
-) -> ReconciliationFinding:
-    return ReconciliationFinding(
-        kind=kind,
-        severity=severity,
-        message=message,
-        order_id=order_id,
-        observed=observed,
-        expected=expected,
-    )
-
-
-def _dedupe_by_id(items: list, key) -> list:
-    seen: dict = {}
-    for item in items:
-        seen[key(item)] = item
-    return list(seen.values())
-
-
 def _by_remark(broker: BrokerOrder, by_remark: dict[str, Order]) -> Order | None:
     if broker.remark is None:
         return None
     return by_remark.get(broker.remark)
 
 
-def _is_terminal(status: OrderStatus) -> bool:
-    return status in OrderStateMachine.TERMINAL_STATES
-
-
 def _is_progress(broker: OrderStatus, internal: OrderStatus) -> bool:
     """Broker-ahead is progress (adoptable); broker-behind is drift."""
     if broker == internal:
         return True
-    if _is_terminal(broker):
-        return not _is_terminal(internal)
+    if is_terminal(broker):
+        return not is_terminal(internal)
     if broker is OrderStatus.PARTIALLY_FILLED:
         return internal in (OrderStatus.PENDING, OrderStatus.ACCEPTED)
     if broker is OrderStatus.ACCEPTED:

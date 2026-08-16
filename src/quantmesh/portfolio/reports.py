@@ -16,15 +16,14 @@ byte-identically across independent roots.
 import csv
 import hashlib
 import json
-import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from quantmesh._fs import atomic_replace
 from quantmesh.execution.accounting import PaperAccount
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.portfolio.exposure import PortfolioHolding
 from quantmesh.portfolio.scenarios import (
     Scenario,
@@ -182,73 +181,31 @@ class ScenarioReportRegistry:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = Path(root) if root is not None else Path.home() / ".quantmesh" / "reports"
+        self._store = JsonlStore(
+            self.root,
+            filename=SCENARIOS_FILE,
+            model=ScenarioReport,
+            label="scenario registry",
+            id_label="report",
+            record_label="scenario report",
+            key=lambda report: report.id,
+        )
 
     @property
     def path(self) -> Path:
         return self.root / SCENARIOS_FILE
 
     def record(self, report: ScenarioReport) -> ScenarioReport:
-        existing = self._read() if self.path.exists() else []
-        if any(item.id == report.id for item in existing):
-            raise ValueError(f"scenario report {report.id!r} already recorded")
-        self._append(report, existing)
-        return report
+        return self._store.append(report)
 
     def get(self, report_id_value: str) -> ScenarioReport:
-        matches = [item for item in self._read() if item.id == report_id_value]
+        matches = [item for item in self._store.read() if item.id == report_id_value]
         if not matches:
             raise ValueError(f"no scenario report recorded with id {report_id_value!r}")
         return matches[0]
 
     def all(self) -> list[ScenarioReport]:
-        return self._read()
-
-    def _append(self, report: ScenarioReport, existing: list[ScenarioReport]) -> None:
-        if not self.root.exists():
-            self.root.mkdir(parents=True, exist_ok=True)
-        if not self.root.is_dir():
-            raise ValueError(f"scenario registry root {self.root} is not a directory")
-        line = report.model_dump_json() + "\n"
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            newline="",
-            dir=self.root,
-            delete=False,
-        ) as handle:
-            temporary = Path(handle.name)
-            try:
-                for item in existing:
-                    handle.write(item.model_dump_json() + "\n")
-                handle.write(line)
-            except BaseException:
-                temporary.unlink(missing_ok=True)
-                raise
-        atomic_replace(temporary, self.path)
-
-    def _read(self) -> list[ScenarioReport]:
-        if not self.path.exists():
-            return []
-        if not self.path.is_file():
-            raise ValueError(f"scenario registry path {self.path} is not a file")
-        reports: list[ScenarioReport] = []
-        with self.path.open(encoding="utf-8") as handle:
-            for index, line in enumerate(handle, start=1):
-                if not line.strip():
-                    continue
-                try:
-                    report = ScenarioReport.model_validate_json(line)
-                except Exception as error:  # noqa: BLE001 — attribution below
-                    raise ValueError(
-                        f"scenario registry {self.path} line {index} is invalid: {error}"
-                    ) from error
-                if any(item.id == report.id for item in reports):
-                    raise ValueError(
-                        f"scenario registry {self.path} lines share a report id "
-                        f"{report.id!r}"
-                    )
-                reports.append(report)
-        return reports
+        return self._store.read()
 
 
 def run_scenario_report(

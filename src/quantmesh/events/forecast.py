@@ -29,27 +29,24 @@ import csv
 import hashlib
 import json
 import math
-import os
 import subprocess
-import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import (
     BaseModel,
     Field,
-    ValidationError,
     field_validator,
     model_validator,
 )
 
-from quantmesh._fs import atomic_replace
 from quantmesh.events.calibration import (
     CalibrationBin,
     brier_by_bin,
     liquidity_weighted_brier,
 )
 from quantmesh.events.models import EventMarket
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.settings import settings
 
 __all__ = [
@@ -538,70 +535,27 @@ class ForecastReportRegistry:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.reports_dir
+        self._store = JsonlStore(
+            self.root,
+            filename=FORECASTS_FILE,
+            model=ForecastReport,
+            label="forecast registry",
+            id_label="report",
+            record_label="forecast report",
+            key=lambda report: report.id,
+        )
 
     def record(self, report: ForecastReport) -> ForecastReport:
-        existing = self.all()
-        if any(record.id == report.id for record in existing):
-            raise ValueError(f"forecast report {report.id!r} already recorded")
-        self._append(report, existing)
-        return report
+        return self._store.append(report)
 
     def get(self, report_id_value: str) -> ForecastReport:
-        for report in self.all():
+        for report in self._store.read():
             if report.id == report_id_value:
                 return report
         raise ValueError(f"no forecast report recorded with id {report_id_value!r}")
 
     def all(self) -> list[ForecastReport]:
-        return self._read()
-
-    def _append(self, report: ForecastReport, existing: list[ForecastReport]) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        path = self.root / FORECASTS_FILE
-        descriptor, temp_name = tempfile.mkstemp(
-            dir=self.root, prefix=f".{FORECASTS_FILE}.", suffix=".tmp"
-        )
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                for record in existing + [report]:
-                    handle.write(record.model_dump_json())
-                    handle.write("\n")
-            atomic_replace(temp_name, path)
-        finally:
-            if os.path.exists(temp_name):
-                os.unlink(temp_name)
-
-    def _read(self) -> list[ForecastReport]:
-        if not self.root.exists():
-            return []
-        if not self.root.is_dir():
-            raise ValueError(f"forecast registry root {self.root} is not a directory")
-        path = self.root / FORECASTS_FILE
-        if not path.exists():
-            return []
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as error:
-            raise ValueError(f"forecast registry {path} is unreadable") from error
-        records = []
-        seen: dict[str, int] = {}
-        for line_number, line in enumerate(text.splitlines(), start=1):
-            if not line.strip():
-                continue
-            try:
-                record = ForecastReport.model_validate_json(line)
-            except ValidationError as error:
-                raise ValueError(
-                    f"forecast registry {path} line {line_number} is invalid"
-                ) from error
-            if record.id in seen:
-                raise ValueError(
-                    f"forecast registry {path} lines {seen[record.id]} and "
-                    f"{line_number} share a report id"
-                )
-            seen[record.id] = line_number
-            records.append(record)
-        return records
+        return self._store.read()
 
 
 def current_commit() -> str:

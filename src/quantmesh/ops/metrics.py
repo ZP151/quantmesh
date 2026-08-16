@@ -13,14 +13,12 @@ missing store reading as an empty list — never an error.
 import hashlib
 import json
 import math
-import os
-import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from quantmesh._fs import atomic_replace
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.research.reports import ID_PATTERN
 from quantmesh.settings import settings
 
@@ -83,59 +81,20 @@ class MetricsStore:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.metrics_dir
+        self._store = JsonlStore(
+            self.root,
+            filename=METRICS_FILE,
+            model=Metric,
+            label="metrics store",
+            id_label="record",
+            record_label="metric",
+            key=lambda metric: metric.id,
+        )
 
     def record(self, metric: Metric) -> Metric:
         """Record a sample; a duplicate id is refused before anything
         is written."""
-        existing = self.all()
-        if any(item.id == metric.id for item in existing):
-            raise ValueError(f"metric {metric.id!r} already recorded")
-        self._write(existing + [metric])
-        return metric
+        return self._store.append(metric)
 
     def all(self) -> list[Metric]:
-        return self._read()
-
-    def _write(self, metrics: list[Metric]) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        path = self.root / METRICS_FILE
-        descriptor, temp_name = tempfile.mkstemp(
-            dir=self.root, prefix=f".{METRICS_FILE}.", suffix=".tmp"
-        )
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                for metric in metrics:
-                    handle.write(metric.model_dump_json())
-                    handle.write("\n")
-            atomic_replace(temp_name, path)
-        finally:
-            if os.path.exists(temp_name):
-                os.unlink(temp_name)
-
-    def _read(self) -> list[Metric]:
-        if not self.root.exists():
-            return []
-        if not self.root.is_dir():
-            raise ValueError(f"metrics store root {self.root} is not a directory")
-        path = self.root / METRICS_FILE
-        if not path.exists():
-            return []
-        if not path.is_file():
-            raise ValueError(f"metrics path {path} is not a file")
-        records: list[Metric] = []
-        with path.open(encoding="utf-8") as handle:
-            for index, line in enumerate(handle, start=1):
-                if not line.strip():
-                    continue
-                try:
-                    record = Metric.model_validate_json(line)
-                except Exception as error:  # noqa: BLE001 — attribution below
-                    raise ValueError(
-                        f"metrics store {path} line {index} is invalid: {error}"
-                    ) from error
-                if any(item.id == record.id for item in records):
-                    raise ValueError(
-                        f"metrics store {path} lines share a record id {record.id!r}"
-                    )
-                records.append(record)
-        return records
+        return self._store.read()

@@ -25,5 +25,10 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0019 | completed | 2026-08-10 | 2026-08-10 | Live research surface | [PR #101](https://github.com/ZP151/quantmesh/pull/101) |
 | 0020 | completed | 2026-08-11 | 2026-08-12 | Framework-first integrated instrument decision workspace | [Issue #107](https://github.com/ZP151/quantmesh/issues/107) / [PR #108](https://github.com/ZP151/quantmesh/pull/108) / [Plan](0020-research-to-paper-loop.md) |
 | 0021 | active | 2026-08-14 | — | Trusted Data Fabric | [Issue #110](https://github.com/ZP151/quantmesh/issues/110) / [Ledger](0021-trusted-data-fabric.md) |
+| 0022 | completed | 2026-08-12 | 2026-08-15 | Durable JSONL persistence module | [Issue #111](https://github.com/ZP151/quantmesh/issues/111) / [PR #112](https://github.com/ZP151/quantmesh/pull/112) / [Ledger](0022-durable-jsonl-persistence.md) |
+| 0023 | completed | 2026-08-15 | 2026-08-15 | Complete durable JSONL consolidation | [Issue #111](https://github.com/ZP151/quantmesh/issues/111) / [PR #113](https://github.com/ZP151/quantmesh/pull/113) / [Ledger](0023-complete-jsonl-consolidation.md) |
+| 0024 | completed | 2026-08-15 | 2026-08-15 | Cross-venue reconciliation module | [Issue #114](https://github.com/ZP151/quantmesh/issues/114) / [PR #115](https://github.com/ZP151/quantmesh/pull/115) / [Ledger](0024-cross-venue-reconciliation.md) |
+| 0025 | completed | 2026-08-15 | 2026-08-15 | Execution numeric policy | [Issue #116](https://github.com/ZP151/quantmesh/issues/116) / [PR #117](https://github.com/ZP151/quantmesh/pull/117) / [Ledger](0025-execution-numeric-policy.md) |
+| 0026 | in progress | 2026-08-15 | — | Local runtime assembly | [Issue #118](https://github.com/ZP151/quantmesh/issues/118) / [Ledger](0026-local-runtime-assembly.md) |
 
 <!-- quantmesh-iterations:append-above -->

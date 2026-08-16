@@ -33,18 +33,16 @@ and fail-closed-read discipline as ``OrderJournal``.
 """
 
 import math
-import os
-import tempfile
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 
-from quantmesh._fs import atomic_replace
 from quantmesh.domain.models import OrderRequest, Side, Venue
 from quantmesh.hyperliquid.exchange import BrokerPosition
+from quantmesh.persistence.jsonl import JsonlStore
 from quantmesh.settings import settings
 
 __all__ = [
@@ -364,6 +362,13 @@ class FundingLedger:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = root if root is not None else settings.orders_dir
+        self._store = JsonlStore(
+            self.root,
+            filename=FUNDING_LEDGER_FILE,
+            model=FundingEntry,
+            label="funding ledger",
+            id_label="record",
+        )
 
     def record(
         self,
@@ -393,41 +398,8 @@ class FundingLedger:
             size=position.size,
             amount=delta,
         )
-        self._write(entries + [entry])
+        self._store.write([*entries, entry])
         return entry
 
     def read(self) -> list[FundingEntry]:
-        path = self.root / FUNDING_LEDGER_FILE
-        if not path.exists():
-            return []
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as error:
-            raise ValueError(f"funding ledger {path} is unreadable") from error
-        entries = []
-        for line_number, line in enumerate(text.splitlines(), start=1):
-            if not line.strip():
-                continue
-            try:
-                entries.append(FundingEntry.model_validate_json(line))
-            except ValidationError as error:
-                raise ValueError(
-                    f"funding ledger {path} line {line_number} is invalid"
-                ) from error
-        return entries
-
-    def _write(self, entries: list[FundingEntry]) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        path = self.root / FUNDING_LEDGER_FILE
-        descriptor, temp_name = tempfile.mkstemp(
-            dir=self.root, prefix=f".{FUNDING_LEDGER_FILE}.", suffix=".tmp"
-        )
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                for entry in entries:
-                    handle.write(entry.model_dump_json())
-                    handle.write("\n")
-            atomic_replace(temp_name, path)
-        finally:
-            if os.path.exists(temp_name):
-                os.unlink(temp_name)
+        return self._store.read()
