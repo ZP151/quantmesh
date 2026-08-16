@@ -335,15 +335,16 @@ stable adapters instead of increasing product complexity per provider.
 
 Sequence for operator review:
 
-1. **Active as iteration 0021:** trusted data fabric: provider registry,
-   symbol/calendar/corporate-action normalization, raw/normalized/feature
-   layers, manifests, source rights and
-   quality SLAs. See [issue #110](https://github.com/ZP151/quantmesh/issues/110),
+1. **Done as iteration 0021 (merged PR #120):** trusted data fabric: provider
+   registry, symbol/calendar/corporate-action normalization, raw/normalized/
+   feature layers, manifests, source rights and quality SLAs. See
+   [issue #110](https://github.com/ZP151/quantmesh/issues/110),
    `docs/iterations/0021-trusted-data-fabric.md` and
    `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`.
-2. Algorithm evaluation lab: extend the iteration-0020 FinRL-X/Nautilus
-   decision with Qlib and Darts comparisons, then selected LEAN or other
-   candidates under common walk-forward, cost, leakage and calibration gates.
+2. **Next as iteration 0027:** algorithm evaluation lab: extend the
+   iteration-0020 FinRL-X/Nautilus decision with Qlib and Darts comparisons,
+   then selected LEAN or other candidates under common walk-forward, cost,
+   leakage and calibration gates.
 3. Grounded research copilot with citations and no order authority.
 4. Paper shadow portfolio with scheduled proposals and outcome monitoring.
 5. Guarded broker/testnet execution only after a separate authorization.

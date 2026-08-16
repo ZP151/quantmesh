@@ -421,22 +421,22 @@ readiness decision**.
   Task 14's 168-hour soak has not started. No release, milestone PR, credential,
   execution or synthetic-repair authority changed.
 
-## Iterations 0022–0025 — Post-RC hardening chain (0022–0024 merged; 0025 active)
+## Iterations 0022–0026 — Post-RC hardening chain (all merged)
 
 The iteration 0013 Phase E "Strong" hardening items are delivered one slice at
 a time on the now-stable persistence layer:
 
-- 0022/0023 (merged at `4f41f95` via #112/#113): shared `JsonlStore` seam and
-  full ADR-0006 registry consolidation (ADR-0016).
+- 0022/0023 (merged via #112/#113): shared `JsonlStore` seam and full ADR-0006
+  registry consolidation (ADR-0016).
 - 0024 (merged via #115): venue-neutral cross-venue reconciliation engine
   (ADR-0017).
-- 0025 (active, PR #117): characterize and pin the execution numeric policy
+- 0025 (merged via #117): characterize and pin the execution numeric policy
   (six-decimal quantization, bps convention, exact-default tolerance, tick-size
   status) with tests and ADR-0018; no representation change.
+- 0026 (merged via #119): local runtime assembly seam.
 
-Ledgers under `docs/iterations/0023…`–`0025…`. Independent of iteration 0021
-(its soak HEAD stays `77141b9`); external venues read-only; execution
-paper-only; no credential handling.
+Ledgers under `docs/iterations/0022…`–`0026…`. External venues read-only;
+execution paper-only; no credential handling.
 
 ## Iteration 0020 planning checkpoint — 2026-08-11
 
