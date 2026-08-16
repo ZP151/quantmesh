@@ -27,6 +27,7 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0022 | completed | 2026-08-12 | 2026-08-15 | Durable JSONL persistence module | [Issue #111](https://github.com/ZP151/quantmesh/issues/111) / [PR #112](https://github.com/ZP151/quantmesh/pull/112) / [Ledger](0022-durable-jsonl-persistence.md) |
 | 0023 | completed | 2026-08-15 | 2026-08-15 | Complete durable JSONL consolidation | [Issue #111](https://github.com/ZP151/quantmesh/issues/111) / [PR #113](https://github.com/ZP151/quantmesh/pull/113) / [Ledger](0023-complete-jsonl-consolidation.md) |
 | 0024 | completed | 2026-08-15 | 2026-08-15 | Cross-venue reconciliation module | [Issue #114](https://github.com/ZP151/quantmesh/issues/114) / [PR #115](https://github.com/ZP151/quantmesh/pull/115) / [Ledger](0024-cross-venue-reconciliation.md) |
-| 0025 | in progress | 2026-08-15 | — | Execution numeric policy | [Issue #116](https://github.com/ZP151/quantmesh/issues/116) / [Ledger](0025-execution-numeric-policy.md) |
+| 0025 | completed | 2026-08-15 | 2026-08-15 | Execution numeric policy | [Issue #116](https://github.com/ZP151/quantmesh/issues/116) / [PR #117](https://github.com/ZP151/quantmesh/pull/117) / [Ledger](0025-execution-numeric-policy.md) |
+| 0026 | in progress | 2026-08-15 | — | Local runtime assembly | [Issue #118](https://github.com/ZP151/quantmesh/issues/118) / [Ledger](0026-local-runtime-assembly.md) |
 
 <!-- quantmesh-iterations:append-above -->
