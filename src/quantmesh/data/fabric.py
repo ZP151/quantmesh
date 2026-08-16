@@ -623,6 +623,15 @@ class MoomooFabricPublisher:
         split_times = self._split_times(split_rows)
         dividend_times = self._dividend_times(dividend_rows)
         prefix = self._dataset_prefix(request)
+        raw_instrument = Instrument(
+            symbol=canonical.value.split(":")[2],
+            venue=Venue.MOOMOO,
+            instrument_type=InstrumentType.EQUITY,
+            currency="USD",
+        )
+        raw_bars = MoomooDataAdapter().history_pages_to_bars(
+            raw_instrument, list(payload.history_pages)
+        )
         bars_raw = self._publish_raw_surface(
             request,
             payload,
@@ -630,8 +639,8 @@ class MoomooFabricPublisher:
             endpoint="request_history_kline",
             data_kind=DataKind.BARS,
             source=payload.history_pages,
-            event_times=[bar.timestamp for bar in bars],
-            row_ids=bar_ids,
+            event_times=[bar.timestamp for bar in raw_bars],
+            row_ids=self._bar_identities(raw_bars),
         )
         factors_raw = self._publish_raw_surface(
             request,
@@ -857,13 +866,25 @@ class MoomooFabricPublisher:
             source_bars = MoomooDataAdapter().history_pages_to_bars(instrument, bar_source)
         except ValueError as error:
             raise ManifestIntegrityError("Moomoo raw history cannot be normalized") from error
+        if (
+            bar_envelope.collection_window_start is None
+            or bar_envelope.collection_window_end is None
+        ):
+            raise ManifestIntegrityError("Moomoo raw history is missing its collection window")
+        windowed_bars = [
+            bar
+            for bar in source_bars
+            if bar_envelope.collection_window_start
+            <= bar.timestamp
+            <= bar_envelope.collection_window_end
+        ]
         normalized_bars = self.store.open(publication.normalized_id).read_bars()
         if (
             normalized.layer is not ArtifactLayer.NORMALIZED
             or normalized.data_kind is not DataKind.BARS
             or normalized.parent_manifest_ids != (bar_raw.manifest_id,)
-            or normalized_bars != source_bars
-            or normalized.row_identities != self._bar_identities(source_bars)
+            or normalized_bars != windowed_bars
+            or normalized.row_identities != self._bar_identities(windowed_bars)
             or normalized.schema_digest != _digest({"model": "Bar", "schema": 1})
             or normalized.transformation_policy_digest
             != _digest({"operation": "moomoo-history-pages-to-canonical-bars-v1"})
@@ -939,7 +960,7 @@ class MoomooFabricPublisher:
             action_manifest_id=action_manifest.manifest_id,
             known_at=adjusted.knowledge_end,
         )
-        expected_adjusted = policy.apply(source_bars, expected_actions)
+        expected_adjusted = policy.apply(windowed_bars, expected_actions)
         observed_adjusted = self.store.open(adjusted.manifest_id).read_bars()
         if (
             adjusted.layer is not ArtifactLayer.ADJUSTED

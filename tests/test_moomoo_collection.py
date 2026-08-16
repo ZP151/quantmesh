@@ -800,6 +800,106 @@ def test_real_bundle_publishes_separate_raw_and_adjusted_lineage(tmp_path: Path)
     assert dividend_raw.layer is ArtifactLayer.RAW
 
 
+def test_minute_publish_preserves_full_raw_window_widened_bars(tmp_path: Path) -> None:
+    target = next(
+        item
+        for item in MoomooCollectionPlan.bounded_default().targets
+        if item.provider_symbol == "US.AAPL" and item.interval == "1m"
+    )
+    request = MoomooWorkerRequest(
+        target=target,
+        window=CollectionWindow(
+            start=datetime(2026, 8, 13, 0, 30, tzinfo=UTC),
+            end=datetime(2026, 8, 13, 13, 35, tzinfo=UTC),
+        ),
+        host="127.0.0.1",
+        port=11111,
+        connect_timeout_seconds=1.0,
+        request_timeout_seconds=2.0,
+    )
+    instrument = Instrument(
+        symbol="AAPL",
+        venue=Venue.MOOMOO,
+        instrument_type=InstrumentType.EQUITY,
+        currency="USD",
+    )
+
+    def row(wall_clock: str, close: float) -> dict[str, object]:
+        return {
+            "code": "US.AAPL",
+            "time_key": wall_clock,
+            "open": close,
+            "high": close,
+            "low": close,
+            "close": close,
+            "volume": 1_000.0,
+        }
+
+    in_window = (
+        ("2026-08-13 09:30:00", datetime(2026, 8, 13, 13, 30, tzinfo=UTC), 305.0),
+        ("2026-08-13 09:31:00", datetime(2026, 8, 13, 13, 31, tzinfo=UTC), 305.1),
+        ("2026-08-13 09:32:00", datetime(2026, 8, 13, 13, 32, tzinfo=UTC), 305.2),
+    )
+    out_of_window = ("2026-08-12 15:59:00", datetime(2026, 8, 12, 19, 59, tzinfo=UTC), 304.9)
+    history_rows = [row(out_of_window[0], out_of_window[2])] + [
+        row(wall_clock, close) for wall_clock, _, close in in_window
+    ]
+    bars = tuple(
+        Bar(
+            instrument=instrument,
+            timestamp=timestamp,
+            interval="1m",
+            open=close,
+            high=close,
+            low=close,
+            close=close,
+            volume=1_000.0,
+        )
+        for _, timestamp, close in in_window
+    )
+    payload = MoomooRawPayload(
+        provider_version="10.10.7008",
+        received_at=datetime(2026, 8, 13, 20, 0, tzinfo=UTC),
+        bars=bars,
+        history_pages=(
+            {
+                "code": "US.AAPL",
+                "interval": "1m",
+                "autype": "None",
+                "request_page_req_key": None,
+                "next_page_req_key": None,
+                "rows": history_rows,
+            },
+        ),
+        adjustment_factors={"code": "US.AAPL", "rows": []},
+        stock_split_pages=(
+            {
+                "code": "US.AAPL",
+                "request_next_key": None,
+                "next_key": "-1",
+                "rows": [],
+            },
+        ),
+        dividends={"code": "US.AAPL", "rows": []},
+    )
+    store = ManifestStore(tmp_path)
+
+    publication = MoomooFabricPublisher(store, code_commit="c" * 40).publish(
+        request, payload
+    )
+
+    assert len(set(publication.manifest_ids)) == 8
+    raw = store.open(publication.bars_raw_id).manifest
+    envelope_ref = next(
+        item
+        for item in raw.objects
+        if item.media_type == "application/vnd.quantmesh.raw-envelope+json"
+    )
+    envelope = RawEnvelope.model_validate_json(store.objects.get_bytes(envelope_ref))
+    assert len(envelope.source_event_ids) == 4
+    assert len(store.open(publication.normalized_id).manifest.row_identities) == 3
+
+
 def test_publication_validation_rejects_forged_adjusted_lineage(tmp_path: Path) -> None:
     target = next(
         item
