@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import stat
 import subprocess
@@ -25,6 +26,18 @@ _SCHEMA = "quantmesh-trusted-data-soak-v1"
 _MAX_CLOCK_SKEW = timedelta(minutes=5)
 _MAX_DAILY_GAP = timedelta(hours=26)
 _MAX_CRYPTO_AGE = timedelta(hours=26)
+# Real-time freshness/latency SLAs are not meaningful for a historical backfill;
+# the replay still enforces every functional invariant (coverage, gaps, order,
+# schema, pagination, synthetic rows).
+_REPLAY_IGNORED_ISSUES = frozenset(
+    {
+        "freshness-sla",
+        "latency-sla",
+        "within-grace-period",
+        "freshness-unavailable",
+        "latency-unavailable",
+    }
+)
 
 
 def _target_id(
@@ -874,6 +887,95 @@ def observe(evidence_root: Path, data_root: Path) -> SoakReport:
     )
 
 
+def replay_historical(
+    data_root: Path,
+    *,
+    min_crypto_windows: int = 7,
+    min_xnys_sessions: int = 4,
+) -> dict[str, Any]:
+    """Historical-replay functional acceptance.
+
+    Replays the daily frontier, lineage and calendar invariants against real
+    per-day collections using each manifest's own event time. This mode is
+    explicitly labeled: it never rewrites timestamps and never claims to be a
+    real-time observation.
+    """
+    catalog = TrustedDataCatalog(data_root)
+    store = ManifestStore(data_root)
+    entries = catalog.entries()
+    if not entries:
+        raise ValueError("trusted-data catalog is empty")
+
+    reasons: list[str] = []
+    crypto_datasets = sorted(
+        {
+            entry.dataset_id
+            for entry in entries
+            if entry.provider_id == "hyperliquid-public"
+            and entry.layer is ArtifactLayer.ADJUSTED
+            and entry.data_kind is DataKind.BARS
+        }
+    )
+    crypto_windows: dict[str, int] = {}
+    for dataset_id in crypto_datasets:
+        ends = sorted(
+            manifest.event_end
+            for manifest in store.manifests(dataset_id)
+            if manifest.layer is ArtifactLayer.ADJUSTED
+        )
+        distinct = tuple(dict.fromkeys(ends))
+        crypto_windows[dataset_id] = len(distinct)
+        if len(distinct) < min_crypto_windows:
+            reasons.append(
+                f"{dataset_id}: {len(distinct)} distinct windows; "
+                f"{min_crypto_windows} required"
+            )
+        for previous, current in zip(distinct, distinct[1:]):
+            if current <= previous:
+                reasons.append(f"{dataset_id}: crypto frontier did not advance")
+        for manifest in store.manifests(dataset_id):
+            if manifest.layer is ArtifactLayer.ADJUSTED:
+                dataset = store.open(manifest.manifest_id)
+                for reference in dataset.manifest.objects:
+                    dataset.objects.get_bytes(reference)
+
+    xnys_sessions: set[str] = set()
+    for entry in entries:
+        quality = entry.quality
+        if quality is None:
+            reasons.append(f"{entry.dataset_id}:quality-unavailable")
+            continue
+        if quality.synthetic_row_count:
+            reasons.append(f"{entry.dataset_id}:synthetic-rows")
+        functional_issues = [
+            code for code in quality.issue_codes if code not in _REPLAY_IGNORED_ISSUES
+        ]
+        if entry.provider_id == "moomoo-opend" and not entry.trusted_for_research:
+            reasons.append(f"{entry.dataset_id}:not-trusted")
+        reasons.extend(f"{entry.dataset_id}:{code}" for code in functional_issues)
+        if (
+            entry.provider_id == "moomoo-opend"
+            and entry.layer is ArtifactLayer.ADJUSTED
+            and entry.data_kind is DataKind.BARS
+            and entry.session_policy.value == "regular"
+        ):
+            xnys_sessions.add(entry.event_end.date().isoformat())
+    if len(xnys_sessions) < min_xnys_sessions:
+        reasons.append(
+            f"XNYS coverage has {len(xnys_sessions)} sessions; "
+            f"{min_xnys_sessions} required"
+        )
+
+    return {
+        "mode": "historical-replay",
+        "accepted": not reasons,
+        "reasons": tuple(sorted(set(reasons))),
+        "crypto_windows": crypto_windows,
+        "xnys_sessions": tuple(sorted(xnys_sessions)),
+        "code_commit": _git_commit(),
+    }
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -893,6 +995,12 @@ def _parser() -> argparse.ArgumentParser:
     verify_command.add_argument("--data-root", type=Path, required=True)
     verify_command.add_argument("--minimum-hours", type=int, default=168)
     verify_command.add_argument("--minimum-xnys-sessions", type=int, default=4)
+    replay_command = commands.add_parser(
+        "replay", help="historical-replay functional acceptance"
+    )
+    replay_command.add_argument("--data-root", type=Path, required=True)
+    replay_command.add_argument("--min-crypto-windows", type=int, default=7)
+    replay_command.add_argument("--min-xnys-sessions", type=int, default=4)
     return parser
 
 
@@ -903,6 +1011,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             report = observe(args.evidence_root, args.data_root)
             print(report.model_dump_json())
             return 0
+        if args.command == "replay":
+            result = replay_historical(
+                args.data_root,
+                min_crypto_windows=args.min_crypto_windows,
+                min_xnys_sessions=args.min_xnys_sessions,
+            )
+            print(json.dumps(result, sort_keys=True))
+            return 0 if result["accepted"] else 1
         result = verify_soak(
             args.evidence_root,
             args.data_root,

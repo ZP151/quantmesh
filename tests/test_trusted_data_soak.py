@@ -74,6 +74,11 @@ def _set_mtime(path: Path, instant: datetime) -> None:
     os.utime(path, (stamp, stamp))
 
 
+def test_replay_historical_refuses_empty_catalog(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="empty"):
+        soak_module.replay_historical(tmp_path / "data")
+
+
 def test_entry_target_id_handles_non_bar_layers_with_none_interval() -> None:
     entry = _catalog_entry(quality=_catalog_quality()).model_copy(update={"interval": None})
 
