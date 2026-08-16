@@ -959,7 +959,8 @@ def replay_historical(
             and entry.data_kind is DataKind.BARS
             and entry.session_policy.value == "regular"
         ):
-            xnys_sessions.add(entry.event_end.date().isoformat())
+            for bar in store.open(entry.manifest_id).read_bars():
+                xnys_sessions.add(bar.timestamp.date().isoformat())
     if len(xnys_sessions) < min_xnys_sessions:
         reasons.append(
             f"XNYS coverage has {len(xnys_sessions)} sessions; "
