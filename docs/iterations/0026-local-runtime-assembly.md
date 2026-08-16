@@ -62,5 +62,5 @@ final PR.
 - Wired the factory into `demo/seeder.py:load_demo_root` so the demo read path
   builds its store assembly once (identical paths, behavior-equivalent).
 - `tests/test_runtime.py` (2 tests) pins the demo-root and settings-dir
-  layouts. Evidence: focused tests + Ruff green; full suite recorded next
-  checkpoint.
+  layouts. Evidence: focused tests + Ruff green; full suite `2657 passed,
+  0 failed` (exit 0); `git diff --check` clean.
