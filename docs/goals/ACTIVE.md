@@ -1,7 +1,8 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–12 green; Task 13 Step 4 complete;
-  real OpenD unblocked the Moomoo AAPL/NVDA daily target; candidate freeze next
+- Status: iteration 0021 active — Tasks 1–13 green; five-target candidate
+  frozen; historical-replay functional acceptance passed; final review and
+  merge next
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -13,11 +14,11 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: freeze the five-target soak candidate. Local OpenD is
-  available with US LV3 entitlement and the Moomoo AAPL/NVDA daily target now
-  produces qualifying real read-only evidence, so Task 13 Step 5 is unblocked.
-  Task 14 has not started. Keep wallet, signing, account and order surfaces
-  structurally absent.
+- Current frontier: open and merge the milestone PR for issue #110 after the
+  full release gate and final Reviewer/Verifier pass. The historical-replay
+  functional acceptance passed (seven crypto windows, five XNYS sessions); the
+  real 168-hour run is a post-merge stability gate. Keep wallet, signing,
+  account and order surfaces structurally absent.
 - External gate: resolved. Local OpenD is running with US Stocks LV3
   entitlement and `quantmesh-moomoo probe` reports
   `quote=True history_kline=True`. No credential, paid-service or target-matrix

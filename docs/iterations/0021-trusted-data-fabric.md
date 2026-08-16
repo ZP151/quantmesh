@@ -89,8 +89,8 @@ durable checkpoint.
 | 3. Hyperliquid BTC candles | complete | Slice 1 | Checkpoint 7 |
 | 4. Hyperliquid BTC/ETH/SOL microstructure | complete | Slice 3 | Checkpoint 8 |
 | 5. Idempotent collection and recovery | complete | Slices 2 and 4 | Checkpoint 9 |
-| 6. SLA catalog and downstream lineage | active | Slice 5 | Tasks 10–11 complete; Task 12 next |
-| 7. Seven-day real-data evidence | planned | Slice 6 | pending |
+| 6. SLA catalog and downstream lineage | complete | Slice 5 | Tasks 10–12; Checkpoint 12 |
+| 7. Seven-day real-data evidence | in progress | Slice 6 | Functional acceptance passed (Checkpoint 16); real 168h deferred post-merge |
 
 ## Acceptance ledger
 
@@ -732,14 +732,34 @@ durable checkpoint.
   this does not block Step 5 or Task 14; fix before any intraday Moomoo
   collection.
 
+## Checkpoint 16 — Historical-replay functional acceptance, 2026-08-15
+
+- Operator decision: split acceptance into two gates. Functional acceptance
+  (real historical data replayed with virtual time) blocks the merge; the real
+  168-hour run becomes a post-merge stability gate that blocks the release, not
+  the merge.
+- Added `trusted_data_soak.py replay` (`7ce9ac2`, `bd3e73d`): an explicitly
+  labeled historical-replay that validates the daily frontier, lineage and
+  calendar invariants against real per-day collections using each manifest's
+  own event time, ignoring real-time freshness/latency SLAs and never rewriting
+  timestamps.
+- The replay passed at `bd3e73d` on real data: seven distinct Hyperliquid
+  BTC/ETH/SOL 1-minute adjusted windows with a monotonic frontier, five
+  completed XNYS sessions (2026-08-10 through 2026-08-14), and no functional
+  issue codes or synthetic rows (`accepted=true`).
+- Constraint discovered: Hyperliquid 1-minute candle history is provider-pruned
+  to about three days, so a seven-day 1-minute frontier can only be observed in
+  real time; the replay uses seven windows within the available horizon to
+  exercise the frontier mechanism.
+- Task 13 Step 5 (freeze) and the functional half of Task 14 are complete. The
+  real 168-hour run is deferred to post-merge.
+
 ## Current frontier
 
-Task 13 Step 4 is complete and the real OpenD gate is cleared: the fixed Moomoo
-AAPL/NVDA daily targets now produce qualifying real read-only evidence. Freeze
-the exact five-target candidate (Hyperliquid BTC/ETH/SOL 1-minute adjusted bars
-plus Moomoo AAPL/NVDA daily adjusted bars) next, then start Task 14. Do not
-create daily soak reports or claim a 168-hour window until the exact
-five-target candidate is frozen.
+Functional acceptance is complete. Run the full release gate, dispatch the
+final Reviewer/Verifier, then open and merge the milestone PR for issue #110.
+The real 168-hour run remains a post-merge stability gate (blocks release, not
+merge). The Moomoo 1-minute path is a recorded follow-up.
 
 ## Resume instructions
 

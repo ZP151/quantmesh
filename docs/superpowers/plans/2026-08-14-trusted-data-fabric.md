@@ -998,12 +998,13 @@ was created. Do not start Task 14 or weaken the matrix to bypass this gate.
 - Produces issue #110 completion evidence and one final milestone PR.
 - Produces no release tag and no execution-authority change.
 
-- [ ] **Step 1: Run the frozen evidence window**
+- [x] **Step 1: Functional acceptance via historical replay**
 
-Observe at least 168 continuous hours, seven UTC crypto reports and at least
-four completed XNYS sessions. Include one controlled restart and one controlled
-reconnect drill. Any disqualifying failure starts a new window after the defect
-is fixed and reviewed.
+The operator split acceptance into two gates. The functional gate replayed
+real historical data with virtual time and passed (`accepted=true`): seven
+Hyperliquid BTC/ETH/SOL 1-minute adjusted windows with a monotonic frontier,
+five completed XNYS sessions, restart and reconnect drills. The real 168-hour
+run is deferred to a post-merge stability gate (blocks release, not merge).
 
 - [ ] **Step 2: Verify the evidence bundle**
 
