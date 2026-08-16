@@ -1,8 +1,8 @@
 # Active Goal
 
-- Status: iteration 0021 active — Tasks 1–13 green; five-target candidate
-  frozen; historical-replay functional acceptance passed; final review and
-  merge next
+- Status: iteration 0021 completed and merged (PR #120, squash `12cd258`);
+  trusted data fabric functional acceptance passed; the real 168-hour run
+  remains a post-merge stability gate
 - Objective: deliver the Trusted Data Fabric defined by issue #110 without
   changing release or execution authority.
 - Started: 2026-08-14
@@ -14,11 +14,11 @@
 - Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: open and merge the milestone PR for issue #110 after the
-  full release gate and final Reviewer/Verifier pass. The historical-replay
-  functional acceptance passed (seven crypto windows, five XNYS sessions); the
-  real 168-hour run is a post-merge stability gate. Keep wallet, signing,
-  account and order surfaces structurally absent.
+- Current frontier: iteration 0021 is merged and issue #110 is closed. The
+  real 168-hour run is a post-merge stability gate (blocks release, not
+  merge). M14 part 2 (algorithm evaluation lab) and the remaining roadmap
+  items await explicit operator direction. Keep wallet, signing, account and
+  order surfaces structurally absent.
 - External gate: resolved. Local OpenD is running with US Stocks LV3
   entitlement and `quantmesh-moomoo probe` reports
   `quote=True history_kline=True`. No credential, paid-service or target-matrix
