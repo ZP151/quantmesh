@@ -79,6 +79,49 @@ def test_replay_historical_refuses_empty_catalog(tmp_path: Path) -> None:
         soak_module.replay_historical(tmp_path / "data")
 
 
+def test_replay_historical_rejects_non_advancing_crypto_frontier(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    entry = _catalog_entry(quality=_catalog_quality())
+    opened = SimpleNamespace(
+        manifest=SimpleNamespace(objects=()),
+        objects=SimpleNamespace(get_bytes=lambda reference: b"{}"),
+    )
+    non_advancing = (
+        SimpleNamespace(
+            compatibility_revision=1,
+            event_end=datetime(2026, 8, 13, 12, 30, tzinfo=UTC),
+            manifest_id="a" * 64,
+            layer=soak_module.ArtifactLayer.ADJUSTED,
+        ),
+        SimpleNamespace(
+            compatibility_revision=2,
+            event_end=datetime(2026, 8, 13, 12, 0, tzinfo=UTC),
+            manifest_id="b" * 64,
+            layer=soak_module.ArtifactLayer.ADJUSTED,
+        ),
+    )
+    monkeypatch.setattr(
+        soak_module,
+        "TrustedDataCatalog",
+        lambda root: SimpleNamespace(entries=lambda: (entry,)),
+    )
+    monkeypatch.setattr(
+        soak_module,
+        "ManifestStore",
+        lambda root: SimpleNamespace(
+            manifests=lambda dataset_id: non_advancing,
+            open=lambda manifest_id: opened,
+        ),
+    )
+    monkeypatch.setattr(soak_module, "_git_commit", lambda: "3" * 40)
+
+    result = soak_module.replay_historical(tmp_path)
+
+    assert result["accepted"] is False
+    assert any("did not advance" in reason for reason in result["reasons"])
+
+
 def test_entry_target_id_handles_non_bar_layers_with_none_interval() -> None:
     entry = _catalog_entry(quality=_catalog_quality()).model_copy(update={"interval": None})
 

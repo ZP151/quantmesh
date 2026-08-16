@@ -918,26 +918,30 @@ def replay_historical(
     )
     crypto_windows: dict[str, int] = {}
     for dataset_id in crypto_datasets:
-        ends = sorted(
-            manifest.event_end
-            for manifest in store.manifests(dataset_id)
-            if manifest.layer is ArtifactLayer.ADJUSTED
+        revisions = sorted(
+            (
+                manifest
+                for manifest in store.manifests(dataset_id)
+                if manifest.layer is ArtifactLayer.ADJUSTED
+            ),
+            key=lambda manifest: manifest.compatibility_revision,
         )
-        distinct = tuple(dict.fromkeys(ends))
-        crypto_windows[dataset_id] = len(distinct)
-        if len(distinct) < min_crypto_windows:
+        ends = [manifest.event_end for manifest in revisions]
+        crypto_windows[dataset_id] = len(set(ends))
+        if len(set(ends)) < min_crypto_windows:
             reasons.append(
-                f"{dataset_id}: {len(distinct)} distinct windows; "
+                f"{dataset_id}: {len(set(ends))} distinct windows; "
                 f"{min_crypto_windows} required"
             )
-        for previous, current in zip(distinct, distinct[1:]):
+        # Compare in collection (revision) order, not event order, so a
+        # non-advancing frontier is actually detected.
+        for previous, current in zip(ends, ends[1:]):
             if current <= previous:
                 reasons.append(f"{dataset_id}: crypto frontier did not advance")
-        for manifest in store.manifests(dataset_id):
-            if manifest.layer is ArtifactLayer.ADJUSTED:
-                dataset = store.open(manifest.manifest_id)
-                for reference in dataset.manifest.objects:
-                    dataset.objects.get_bytes(reference)
+        for manifest in revisions:
+            dataset = store.open(manifest.manifest_id)
+            for reference in dataset.manifest.objects:
+                dataset.objects.get_bytes(reference)
 
     xnys_sessions: set[str] = set()
     for entry in entries:
