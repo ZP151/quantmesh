@@ -29,6 +29,7 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0023 | completed | 2026-08-15 | 2026-08-15 | Complete durable JSONL consolidation | [Issue #111](https://github.com/ZP151/quantmesh/issues/111) / [PR #113](https://github.com/ZP151/quantmesh/pull/113) / [Ledger](0023-complete-jsonl-consolidation.md) |
 | 0024 | completed | 2026-08-15 | 2026-08-15 | Cross-venue reconciliation module | [Issue #114](https://github.com/ZP151/quantmesh/issues/114) / [PR #115](https://github.com/ZP151/quantmesh/pull/115) / [Ledger](0024-cross-venue-reconciliation.md) |
 | 0025 | completed | 2026-08-15 | 2026-08-15 | Execution numeric policy | [Issue #116](https://github.com/ZP151/quantmesh/issues/116) / [PR #117](https://github.com/ZP151/quantmesh/pull/117) / [Ledger](0025-execution-numeric-policy.md) |
-| 0026 | in progress | 2026-08-15 | — | Local runtime assembly | [Issue #118](https://github.com/ZP151/quantmesh/issues/118) / [Ledger](0026-local-runtime-assembly.md) |
+| 0026 | completed | 2026-08-15 | 2026-08-15 | Local runtime assembly | [Issue #118](https://github.com/ZP151/quantmesh/issues/118) / [PR #119](https://github.com/ZP151/quantmesh/pull/119) / [Ledger](0026-local-runtime-assembly.md) |
+| 0027 | ready | — | — | Trusted Research Evaluation Lab | [Issue #122](https://github.com/ZP151/quantmesh/issues/122) / [Ledger](0027-trusted-research-evaluation-lab.md) |
 
 <!-- quantmesh-iterations:append-above -->
