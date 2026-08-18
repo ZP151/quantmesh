@@ -63,9 +63,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"crypto collect failed: {crypto.stderr.strip()}", file=sys.stderr)
         return crypto.returncode
 
-    moomoo_window = (
-        f"{(now - timedelta(days=7)).date()}T00:00:00Z/{now.date()}T00:00:00Z"
-    )
+    # End the window two hours in the past so the evaluation lands after the
+    # Moomoo 1-hour grace period (a window ending at the collection instant
+    # would be reported "within-grace-period").
+    moomoo_end = (now - timedelta(hours=2)).replace(second=0, microsecond=0)
+    moomoo_start = moomoo_end - timedelta(days=7)
+    moomoo_window = f"{moomoo_start:%Y-%m-%dT%H:%M:%S}Z/{moomoo_end:%Y-%m-%dT%H:%M:%S}Z"
     moomoo = _run(
         [
             python, "-m", "quantmesh.data.cli", "collect",
