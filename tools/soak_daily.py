@@ -21,7 +21,23 @@ import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from quantmesh.data.calendars import CalendarService, SessionPolicy
+
 _CRYPTO_AGE_MINUTES = 7  # collect a window this far in the past (past the 5m grace)
+
+
+def _latest_completed_xnys_close(now: datetime) -> datetime:
+    """Close of the most recent completed XNYS session, or a safe fallback."""
+    sessions = CalendarService().sessions(
+        "XNYS",
+        (now - timedelta(days=10)).date(),
+        now.date(),
+        policy=SessionPolicy.REGULAR,
+    )
+    completed = [session for session in sessions if session.close_at <= now]
+    if not completed:
+        return now - timedelta(hours=2)
+    return completed[-1].close_at
 
 
 def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess:
@@ -63,10 +79,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"crypto collect failed: {crypto.stderr.strip()}", file=sys.stderr)
         return crypto.returncode
 
-    # End the window two hours in the past so the evaluation lands after the
-    # Moomoo 1-hour grace period (a window ending at the collection instant
-    # would be reported "within-grace-period").
-    moomoo_end = (now - timedelta(hours=2)).replace(second=0, microsecond=0)
+    # End the window just after the latest completed session's close: this
+    # covers only completed sessions (no in-progress bar) and lands after the
+    # Moomoo 1-hour grace period.
+    moomoo_end = _latest_completed_xnys_close(now) + timedelta(hours=1)
     moomoo_start = moomoo_end - timedelta(days=7)
     moomoo_window = f"{moomoo_start:%Y-%m-%dT%H:%M:%S}Z/{moomoo_end:%Y-%m-%dT%H:%M:%S}Z"
     moomoo = _run(
