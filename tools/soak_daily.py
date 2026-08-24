@@ -16,12 +16,14 @@ Usage (Windows Task Scheduler — one run per UTC day):
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from quantmesh.data.calendars import CalendarService, SessionPolicy
+from quantmesh.data.moomoo_collection import CollectionStatus, MoomooCollectionResult
 
 _CRYPTO_AGE_MINUTES = 7  # collect a window this far in the past (past the 5m grace)
 
@@ -53,6 +55,23 @@ def _crypto_window(now: datetime, *, minutes: int = 30) -> str:
     end = (now - timedelta(minutes=_CRYPTO_AGE_MINUTES)).replace(second=0, microsecond=0)
     start = end - timedelta(minutes=minutes)
     return f"{start:%Y-%m-%dT%H:%M:%S}Z/{end:%Y-%m-%dT%H:%M:%S}Z"
+
+
+def _moomoo_result(output: str) -> MoomooCollectionResult | None:
+    """Validate the collection CLI envelope before trusting its status."""
+    try:
+        payload = json.loads(output)
+        if not isinstance(payload, dict):
+            return None
+        if payload.get("provider") != "moomoo-opend" or payload.get("read_only") is not True:
+            return None
+        result_payload = {
+            field: payload[field]
+            for field in ("status", "reason_code", "detail", "manifest_ids")
+        }
+        return MoomooCollectionResult.model_validate_json(json.dumps(result_payload))
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -97,6 +116,16 @@ def main(argv: list[str] | None = None) -> int:
     if moomoo.returncode != 0:
         print(f"moomoo collect failed: {moomoo.stderr.strip()}", file=sys.stderr)
         return moomoo.returncode
+    moomoo_result = _moomoo_result(moomoo.stdout)
+    if moomoo_result is None:
+        print("moomoo collect failed: invalid result contract", file=sys.stderr)
+        return 1
+    if moomoo_result.status is not CollectionStatus.PUBLISHED:
+        print(
+            f"moomoo collect {moomoo_result.status.value}: {moomoo_result.reason_code}",
+            file=sys.stderr,
+        )
+        return 1
 
     observe = _run(
         [
