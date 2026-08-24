@@ -641,6 +641,30 @@ bundle and Vitest, full pytest (373.7 s), golden path and clean-checkout proof.
 The final `v0.1.0` tag must point only at the green merged promotion commit;
 all market access remains read-only or paper-only.
 
+## Iteration 0021 soak continuation checkpoint — 2026-08-24
+
+- Issue #124 was resumed from `0021-soak-finalize` at `dfff3df`. The other
+  workstation's reported `d78f489` candidate is not present in local/remote
+  Git objects or GitHub, so its exact changes remain unavailable.
+- Commit `d6e9b23` fixes the proven local daily-driver defect: a typed Moomoo
+  unavailable/failed or invalid result can no longer reach observation merely
+  because the collector exited zero. Strict envelope and manifest-evidence
+  validation is covered by four driver tests; the related regression is
+  `96 passed, 1 skipped`, with Ruff and diff checks green and independent
+  rereview reporting no actionable finding.
+- The task environment is CPython 3.14.7 with the soak dependency closure
+  installed and consistent. The optional research closure is still blocked by
+  pinned `arch 7.2.0` lacking a CPython 3.14 Windows wheel. `arch 8.0.0` has a
+  compatible wheel, but moving the dependency contract to its new major line
+  remains a separately reviewed follow-up.
+- A clean-tree real run now returns the controlled
+  `daemon-unavailable` failure before observation. `QuantMesh Daily Soak` is
+  registered for 08:00 Asia/Singapore (00:00 UTC), next run 2026-08-25. Local
+  task policy wakes/starts when available, permits battery execution, ignores
+  overlap and retries three times at 15-minute intervals. Local OpenD plus
+  AAPL/NVDA entitlement is the remaining external qualification gate; no
+  synthetic witness, credential or execution authority was added.
+
 ## Current frontier
 
 1. Preserve the immutable accepted candidate and its acceptance evidence.

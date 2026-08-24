@@ -19,4 +19,14 @@ if (-not (Test-Path $driver)) { throw "driver not found: $driver" }
 
 $action = "`"$python`" `"$driver`" --repo `"$Repo`" --data-root `"$DataRoot`" --evidence-root `"$EvidenceRoot`""
 schtasks /Create /TN $TaskName /TR $action /SC DAILY /ST $At /F
+$settings = New-ScheduledTaskSettingsSet `
+    -StartWhenAvailable `
+    -AllowStartIfOnBatteries `
+    -DontStopIfGoingOnBatteries `
+    -WakeToRun `
+    -RestartCount 3 `
+    -RestartInterval (New-TimeSpan -Minutes 15) `
+    -ExecutionTimeLimit (New-TimeSpan -Hours 1) `
+    -MultipleInstances IgnoreNew
+Set-ScheduledTask -TaskName $TaskName -Settings $settings | Out-Null
 schtasks /Query /TN $TaskName /FO LIST

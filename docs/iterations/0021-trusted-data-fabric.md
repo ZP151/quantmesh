@@ -754,12 +754,53 @@ durable checkpoint.
 - Task 13 Step 5 (freeze) and the functional half of Task 14 are complete. The
   real 168-hour run is deferred to post-merge.
 
+## Checkpoint 17 — Daily witness fail-closed repair, 2026-08-24
+
+- Resumed issue #124 from remote branch `0021-soak-finalize` at `dfff3df`.
+  The issue's latest workstation reports name candidate `d78f489`, but that
+  object is absent from the repository, remote refs and GitHub commit API, so
+  its exact code cannot be reconstructed on this host.
+- A clean local run reproduced an actionable daily-driver defect: the Moomoo
+  CLI honestly returned `status=unavailable`, `reason_code=daemon-unavailable`
+  and exit zero, but `tools/soak_daily.py` trusted only the process exit code,
+  discarded the typed result and entered observation. The resulting message
+  was the generic missing-target qualification failure rather than the actual
+  unavailable-input boundary.
+- Commit `d6e9b23` validates the read-only Moomoo CLI envelope and the strict
+  `MoomooCollectionResult` contract before observation. Unavailable, failed,
+  malformed and evidence-free `published` results now exit non-zero before an
+  observe call; only a published result with manifest evidence can advance.
+  Diagnostics expose only typed status/reason fields, not untrusted detail.
+- The test-first proof covers typed unavailable, malformed JSON, published
+  without manifests and a valid published path. Focused driver checks passed
+  `4`; the collection/CLI/soak regression passed `96`, with `1` expected skip;
+  Ruff and `git diff --check` passed. Fresh independent standards/spec review
+  returned no actionable finding.
+- The task environment uses CPython `3.14.7`. The active soak closure
+  (`.[dev,e2e,moomoo]`) installs and `pip check` passes. The complete
+  `research` extra remains incompatible on this host because pinned `arch
+  7.2.0` has no CPython 3.14 Windows wheel and a source build requires MSVC;
+  `arch 8.0.0` does provide that wheel, but adopting its new major line requires
+  a separate dependency-contract/audit-lock update. This does not affect the
+  daily collection path and was not hidden by a Python downgrade.
+- A real clean-tree run on `d6e9b23` now stops with
+  `moomoo collect unavailable: daemon-unavailable`, exit `1`, before creating
+  an observation. Windows task `QuantMesh Daily Soak` is registered for 08:00
+  Asia/Singapore (00:00 UTC); the next scheduled run is 2026-08-25. It runs in
+  the interactive operator session so it can use local OpenD. The host task is
+  configured to wake/start when available, run on battery, ignore overlapping
+  starts and retry three times at 15-minute intervals; it remains fail-closed
+  while OpenD is absent.
+
 ## Current frontier
 
-Functional acceptance is complete. Run the full release gate, dispatch the
-final Reviewer/Verifier, then open and merge the milestone PR for issue #110.
-The real 168-hour run remains a post-merge stability gate (blocks release, not
-merge). The Moomoo 1-minute path is a recorded follow-up.
+The local driver defect is repaired and the daily timer is ready, but this host
+cannot produce a qualifying five-target witness until local OpenD is running
+with AAPL/NVDA daily-history entitlement. After that external prerequisite is
+restored, run the scheduled collection, verify the immutable daily report and
+mirror each report identity into issue #124. The missing `d78f489` object and
+the CPython 3.14 `research`-extra dependency upgrade remain explicit follow-ups;
+neither authorizes synthetic evidence, credential handling or live execution.
 
 ## Resume instructions
 
