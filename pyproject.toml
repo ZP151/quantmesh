@@ -32,7 +32,9 @@ research = [
   # vectorbt was removed (M10 Phase D, ADR-0012 decision 4): it ships
   # as Apache-2.0 WITH Commons Clause (source-available, not OSI) and
   # no code path imports it.
-  "arch>=7,<8",
+  # arch 8 is the first line with a CPython 3.14 Windows wheel. Keep the
+  # research closure binary-installable on the supported Python range.
+  "arch>=8,<9",
   "lightgbm>=4.5,<5",
   "scikit-learn>=1.5,<2",
   "scipy>=1.13,<2",

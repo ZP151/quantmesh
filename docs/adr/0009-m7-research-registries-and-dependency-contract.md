@@ -89,7 +89,7 @@ a spec that cannot compute.
 ### 6. The research extra is part of the dependency contract; CI installs `.[dev,research]`
 
 Phase B extends `pyproject.toml`'s `research` extra with
-`scipy>=1.13,<2` and `arch>=7,<8` beside the pinned
+`scipy>=1.13,<2` and `arch>=8,<9` beside the pinned
 roadmap libraries (lightgbm 4.5+, scikit-learn 1.5+; vectorbt was
 listed at the time and removed in M10 Phase D — see below), and
 CI's install step becomes `.[dev,research]` so the
@@ -101,6 +101,13 @@ duckdb promotion which was an infra necessity. Phase B code paths
 use lazy import-guarded accessors (the M5 SDK idiom): importing
 `quantmesh.research` never requires the research stack, so the core
 test suite stays runnable without it.
+
+The `arch` constraint was advanced from 7.x to 8.x on 2026-08-24 when
+CPython 3.14 became the workstation baseline. Version 7.2.0 has no CPython
+3.14 Windows wheel and falls back to an unavailable local C++ build, while
+8.0.0 publishes the required wheel. The owned GARCH codec, canonical bytes,
+fit parameters and lazy-unavailable behavior remain unchanged and are covered
+by the existing research-pipeline compatibility tests.
 
 ### 7. Baseline pipelines are lazy import-guarded codecs with per-window train-only fits and an evidence bundle (Phase B extension, issue #40)
 

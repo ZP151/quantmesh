@@ -776,13 +776,15 @@ durable checkpoint.
   `4`; the collection/CLI/soak regression passed `96`, with `1` expected skip;
   Ruff and `git diff --check` passed. Fresh independent standards/spec review
   returned no actionable finding.
-- The task environment uses CPython `3.14.7`. The active soak closure
-  (`.[dev,e2e,moomoo]`) installs and `pip check` passes. The complete
-  `research` extra remains incompatible on this host because pinned `arch
-  7.2.0` has no CPython 3.14 Windows wheel and a source build requires MSVC;
-  `arch 8.0.0` does provide that wheel, but adopting its new major line requires
-  a separate dependency-contract/audit-lock update. This does not affect the
-  daily collection path and was not hidden by a Python downgrade.
+- The task environment uses CPython `3.14.7`. The research dependency contract
+  now admits `arch>=8,<9`, the first line with a CPython 3.14 Windows wheel;
+  the resolver-generated 72-package audit lock, ADR-0009, NCSA license policy
+  and inventory were updated together. The complete
+  `.[dev,research,e2e,moomoo]` closure installs without MSVC, `pip check` and
+  the deterministic license review pass, and focused research/portfolio/
+  security compatibility is `79 passed`. The full CPython 3.14 suite then
+  passed `3106`, with `9` expected platform skips and no failures in
+  `1119.85s`; all GARCH compatibility tests exercised `arch 8.0.0`.
 - A real clean-tree run on `d6e9b23` now stops with
   `moomoo collect unavailable: daemon-unavailable`, exit `1`, before creating
   an observation. Windows task `QuantMesh Daily Soak` is registered for 08:00
@@ -791,6 +793,13 @@ durable checkpoint.
   configured to wake/start when available, run on battery, ignore overlapping
   starts and retry three times at 15-minute intervals; it remains fail-closed
   while OpenD is absent.
+- This host initially had only Python SDK `moomoo_api 10.10.7008`; there was no
+  OpenD installation, uninstall entry or listener on `127.0.0.1:11111`. The
+  matching official signed Windows OpenD package was downloaded, hash-checked
+  and extracted outside the repository under `C:\QuantMesh`. GUI installation
+  and account authentication remain operator-interactive. Three stale probe
+  processes that had retried refused connections indefinitely were stopped;
+  bounding that standalone probe is a follow-up outside the daily collector.
 
 ## Current frontier
 
@@ -799,8 +808,8 @@ cannot produce a qualifying five-target witness until local OpenD is running
 with AAPL/NVDA daily-history entitlement. After that external prerequisite is
 restored, run the scheduled collection, verify the immutable daily report and
 mirror each report identity into issue #124. The missing `d78f489` object and
-the CPython 3.14 `research`-extra dependency upgrade remain explicit follow-ups;
-neither authorizes synthetic evidence, credential handling or live execution.
+the unbounded standalone OpenD probe remain explicit follow-ups; neither
+authorizes synthetic evidence, credential handling or live execution.
 
 ## Resume instructions
 

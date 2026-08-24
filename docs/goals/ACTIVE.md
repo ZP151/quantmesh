@@ -652,11 +652,11 @@ all market access remains read-only or paper-only.
   validation is covered by four driver tests; the related regression is
   `96 passed, 1 skipped`, with Ruff and diff checks green and independent
   rereview reporting no actionable finding.
-- The task environment is CPython 3.14.7 with the soak dependency closure
-  installed and consistent. The optional research closure is still blocked by
-  pinned `arch 7.2.0` lacking a CPython 3.14 Windows wheel. `arch 8.0.0` has a
-  compatible wheel, but moving the dependency contract to its new major line
-  remains a separately reviewed follow-up.
+- The task environment is CPython 3.14.7. The dependency contract now admits
+  `arch>=8,<9`; the complete `.[dev,research,e2e,moomoo]` closure installs from
+  wheels, its regenerated 72-package audit lock and NCSA license policy pass,
+  focused research/portfolio/security compatibility is `79 passed`, and the
+  full CPython 3.14 suite is `3106 passed, 9 skipped` with no failures.
 - A clean-tree real run now returns the controlled
   `daemon-unavailable` failure before observation. `QuantMesh Daily Soak` is
   registered for 08:00 Asia/Singapore (00:00 UTC), next run 2026-08-25. Local
@@ -664,6 +664,11 @@ all market access remains read-only or paper-only.
   overlap and retries three times at 15-minute intervals. Local OpenD plus
   AAPL/NVDA entitlement is the remaining external qualification gate; no
   synthetic witness, credential or execution authority was added.
+- Only the Python Moomoo SDK was initially installed. The matching official
+  signed OpenD 10.10.7008 Windows package is downloaded and extracted outside
+  the repository; GUI installation/login remains operator-interactive. Stale
+  connection-refused probe processes were stopped, with bounded probe behavior
+  retained as a separate follow-up.
 
 ## Current frontier
 

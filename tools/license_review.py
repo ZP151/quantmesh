@@ -94,6 +94,7 @@ ALLOWED = {
     "CNRI-Python",  # the historical CNRI Python license (permissive)
     "MIT-CMU",  # MIT variant with the CMU notice (Pillow)
     "MIT-0",  # MIT No Attribution (OSI-approved; cffi declares it)
+    "NCSA",  # University of Illinois/NCSA license (permissive; arch 8)
 }
 
 # Hand-verified overrides for closure members whose metadata carries

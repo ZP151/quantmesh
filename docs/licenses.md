@@ -25,7 +25,8 @@ creates one).
   copyleft — permissive for redistribution; certifi, tqdm), 0BSD,
   Zlib, CC0-1.0, CNRI-Python (the historical CNRI Python license),
   MIT-CMU (Pillow's MIT variant), MIT-0 (MIT No Attribution,
-  OSI-approved; cffi declares it).
+  OSI-approved; cffi declares it), NCSA (University of Illinois/NCSA
+  license; `arch` 8).
 - **Refused**: GPL/AGPL, LGPL, proprietary licenses, source-available
   restrictions such as the Commons Clause, and anything unclassified.
 - **Untracked installed packages are refused**: the installed
@@ -225,7 +226,7 @@ source-available restriction, no untracked package.
   change beyond patch level requires a re-check of this section and the
   explicit SPDX allowlist.
 
-## Inventory (generated 2026-08-14; 72 packages in the release
+## Inventory (generated 2026-08-24; 72 packages in the release
 closure `.[dev,research,e2e,moomoo]`)
 
 Regenerate with `python tools/license_review.py` in an environment
@@ -237,7 +238,7 @@ Version numbers drift with the lock; the license key is the contract.
 | annotated-doc | 0.0.5 | MIT |
 | annotated-types | 0.8.0 | MIT |
 | anyio | 4.14.2 | MIT |
-| arch | 7.2.0 | BSD-2-Clause |
+| arch | 8.0.0 | NCSA |
 | certifi | 2026.7.22 | MPL-2.0 (documented exception) |
 | cffi | 2.1.1 (Linux-only) | MIT-0 |
 | click | 8.4.2 | BSD-3-Clause |
@@ -251,7 +252,7 @@ Version numbers drift with the lock; the license key is the contract.
 | httpcore | 1.0.9 | BSD-3-Clause |
 | httptools | 0.8.0 | MIT |
 | httpx | 0.28.1 | BSD-3-Clause |
-| idna | 3.18 | BSD-3-Clause |
+| idna | 3.19 | BSD-3-Clause |
 | iniconfig | 2.3.0 | MIT |
 | jaraco.classes | 3.4.0 | MIT |
 | jaraco.context | 6.1.2 | MIT |
@@ -265,33 +266,33 @@ Version numbers drift with the lock; the license key is the contract.
 | MarkupSafe | 3.0.3 | BSD-3-Clause |
 | moomoo_api | 10.10.7008 | Apache-2.0 |
 | more-itertools | 11.1.0 | MIT |
-| narwhals | 2.24.0 | MIT |
+| narwhals | 2.25.0 | MIT |
 | numpy | 2.5.2 | 0BSD | BSD-3-Clause | CC0-1.0 | MIT | Zlib |
 | packaging | 26.3 | Apache-2.0 | BSD-2-Clause |
 | pandas | 2.3.3 | BSD-3-Clause |
 | patsy | 1.0.2 | BSD-3-Clause |
 | playwright | 1.62.0 | Apache-2.0 |
 | pluggy | 1.6.0 | MIT |
-| protobuf | 7.35.1 | BSD-3-Clause |
+| protobuf | 7.36.0 | BSD-3-Clause |
 | pycparser | 3.0 (Linux-only) | BSD-3-Clause |
 | pycryptodome | 3.23.0 | BSD-3-Clause |
 | pydantic | 2.13.4 | MIT |
 | pydantic-settings | 2.15.0 | MIT |
 | pydantic_core | 2.46.4 | MIT |
 | pyee | 13.0.1 | MIT |
-| Pygments | 2.20.0 | BSD-2-Clause |
+| Pygments | 2.21.0 | BSD-2-Clause |
 | pytest | 9.1.1 | MIT |
 | pytest-asyncio | 1.4.0 | Apache-2.0 |
 | pyluach | 2.3.0 | MIT |
 | python-dateutil | 2.9.0.post0 | BSD-3-Clause |
-| python-dotenv | 1.2.2 | BSD-3-Clause |
+| python-dotenv | 1.2.3 | BSD-3-Clause |
 | python-multipart | 0.0.32 | Apache-2.0 |
 | pytz | 2026.3.post1 | MIT |
 | pywin32-ctypes | 0.2.3 (Windows-only) | BSD-3-Clause |
 | PyYAML | 6.0.3 | MIT |
-| ruff | 0.16.3 | MIT |
+| ruff | 0.16.4 | MIT |
 | scikit-learn | 1.9.0 | BSD-3-Clause |
-| scipy | 1.18.0 | BSD-3-Clause |
+| scipy | 1.18.1 | BSD-3-Clause |
 | SecretStorage | 3.5.0 (Linux-only) | BSD-3-Clause |
 | simplejson | 4.1.1 | MIT (documented exception) |
 | six | 1.17.0 | MIT |
@@ -302,7 +303,7 @@ Version numbers drift with the lock; the license key is the contract.
 | typing-inspection | 0.4.4 | MIT |
 | typing_extensions | 4.16.0 | PSF-2.0 |
 | tzdata | 2026.3 | Apache-2.0 (documented exception) |
-| uvicorn | 0.52.3 | BSD-3-Clause |
+| uvicorn | 0.52.4 | BSD-3-Clause |
 | uvloop | 0.22.1 (Linux-only) | MIT |
 | watchfiles | 1.2.0 | MIT |
 | websockets | 17.0.1 | BSD-3-Clause |

@@ -140,6 +140,7 @@ class TestLicenseReview:
         assert review._from_expression("Apache-2.0 AND CNRI-Python") == (
             "Apache-2.0 | CNRI-Python"
         )
+        assert review._from_expression("NCSA") == "NCSA"
 
     def test_copyleft_expression_is_refused(self) -> None:
         review = _load_license_review()
