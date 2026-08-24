@@ -823,6 +823,33 @@ durable checkpoint.
   unchanged; the scheduler, rather than a weakened SLA or synthetic timestamp,
   is the authorized next attempt.
 
+## Checkpoint 19 — Isolated multi-day soak simulation, 2026-08-25
+
+- Three independent temporary-root runs of the existing soak and daily-driver
+  suites each passed `21` tests with one expected Windows symlink skip. The
+  retained simulations exercised a valid seven-report chain plus rejection of
+  after-the-fact generation, forged modification times, duplicate UTC days,
+  candidate drift, incomplete market evidence and invalid Moomoo publication
+  envelopes.
+- A focused audit repeated the accepted chain, after-the-fact rejection,
+  forged-time rejection and one-report-per-UTC-day boundary (`4 passed`). A
+  fresh read-only OpenD probe confirmed quote and historical K-line
+  capabilities, and the four daily-driver fail-closed paths passed again.
+- Independent Standards and Spec review rejected a proposed broader metadata
+  simulation before commit: it replaced repository-owned Catalog/ManifestStore
+  components and manually assembled reports, so it could not honestly claim
+  end-to-end observation or artifact reopening. That test was removed. The
+  production CLI intentionally exposes no virtual-clock option because such an
+  option could fabricate Task 14 evidence; complete five-target persistence
+  therefore remains a real-time daily gate, not a simulation claim.
+- Every simulation used `C:\QuantMesh\pytest-soak-*` temporary roots. The real
+  `C:\QuantMesh\trusted-data-evidence` root remained absent, so no virtual time
+  or synthetic report can be mistaken for Task 14 evidence. Historical replay
+  against the earlier pre-close real data remained honestly rejected for the
+  already-recorded Moomoo `not-trusted` quality state; no SLA or evidence was
+  rewritten. The registered real task remains ready for `08:00`
+  Asia/Singapore on 2026-08-25.
+
 ## Current frontier
 
 The local driver defect is repaired, correct Moomoo OpenD is authenticated and
