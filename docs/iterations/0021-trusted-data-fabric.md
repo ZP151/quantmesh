@@ -794,22 +794,43 @@ durable checkpoint.
   starts and retry three times at 15-minute intervals; it remains fail-closed
   while OpenD is absent.
 - This host initially had only Python SDK `moomoo_api 10.10.7008`; there was no
-  OpenD installation, uninstall entry or listener on `127.0.0.1:11111`. The
-  matching official signed Windows OpenD package was downloaded, hash-checked
-  and extracted outside the repository under `C:\QuantMesh`. GUI installation
-  and account authentication remain operator-interactive. Three stale probe
-  processes that had retried refused connections indefinitely were stopped;
-  bounding that standalone probe is a follow-up outside the daily collector.
+  OpenD installation, uninstall entry or listener on `127.0.0.1:11111`. Three
+  stale probe processes that had retried refused connections indefinitely were
+  stopped; bounding that standalone probe is a follow-up outside the daily
+  collector.
+
+## Checkpoint 18 — Correct Moomoo OpenD activation, 2026-08-25
+
+- The first downloaded gateway was the wrong account-family package: its UI
+  identified itself as `Futu OpenD` and rejected the operator's Moomoo
+  Singapore credentials. No credential was captured or written by QuantMesh.
+- The official Moomoo download surface supplied
+  `moomoo_OpenD_10.10.7008_Windows`. Its archive SHA-256 is
+  `9326cfd13e6d6226a44f2693be388b10d252106064e6c7de80f4d2d2961c8890`;
+  the GUI installer has a valid `Moomoo Technologies Inc.` Authenticode
+  signature. The correct gateway is installed under the operator's roaming
+  profile, authenticated interactively and listening only on
+  `127.0.0.1:11111`.
+- The read-only capability probe completed in `2.61s` with quote and historical
+  K-line access available. A first real daily run at `2026-08-24T17:01:22Z`
+  published complete AAPL/NVDA manifests through the latest completed XNYS
+  session (Friday `2026-08-21T20:00:00Z`) but correctly failed qualification:
+  freshness/latency were `248482s`, beyond the `172800s` policy while Monday's
+  session was still open. No daily observation was accepted.
+- Fixed-clock verification shows the registered `00:00 UTC` (`08:00`
+  Asia/Singapore) run occurs after Monday close: the latest completed close is
+  then `2026-08-24T20:00:00Z` and its age is `14400s`. The policy remains
+  unchanged; the scheduler, rather than a weakened SLA or synthetic timestamp,
+  is the authorized next attempt.
 
 ## Current frontier
 
-The local driver defect is repaired and the daily timer is ready, but this host
-cannot produce a qualifying five-target witness until local OpenD is running
-with AAPL/NVDA daily-history entitlement. After that external prerequisite is
-restored, run the scheduled collection, verify the immutable daily report and
-mirror each report identity into issue #124. The missing `d78f489` object and
-the unbounded standalone OpenD probe remain explicit follow-ups; neither
-authorizes synthetic evidence, credential handling or live execution.
+The local driver defect is repaired, correct Moomoo OpenD is authenticated and
+the daily timer is ready. Allow the next post-XNYS-close scheduled collection
+to run, verify the immutable daily report and mirror each accepted report
+identity into issue #124. The missing `d78f489` object and the unbounded
+standalone OpenD probe remain explicit follow-ups; neither authorizes synthetic
+evidence, credential handling or live execution.
 
 ## Resume instructions
 

@@ -661,14 +661,19 @@ all market access remains read-only or paper-only.
   `daemon-unavailable` failure before observation. `QuantMesh Daily Soak` is
   registered for 08:00 Asia/Singapore (00:00 UTC), next run 2026-08-25. Local
   task policy wakes/starts when available, permits battery execution, ignores
-  overlap and retries three times at 15-minute intervals. Local OpenD plus
-  AAPL/NVDA entitlement is the remaining external qualification gate; no
-  synthetic witness, credential or execution authority was added.
-- Only the Python Moomoo SDK was initially installed. The matching official
-  signed OpenD 10.10.7008 Windows package is downloaded and extracted outside
-  the repository; GUI installation/login remains operator-interactive. Stale
-  connection-refused probe processes were stopped, with bounded probe behavior
-  retained as a separate follow-up.
+  overlap and retries three times at 15-minute intervals. At that checkpoint,
+  local OpenD plus AAPL/NVDA entitlement was the remaining external gate; it is
+  satisfied by the activation evidence below. No synthetic witness, credential
+  or execution authority was added.
+- The first gateway package was incorrectly from the Futu account family and
+  rejected Moomoo Singapore credentials. Official Moomoo OpenD 10.10.7008 is
+  now installed, interactively authenticated and listening on loopback port
+  `11111`; the read-only quote/history capability probe succeeds.
+- A real pre-close run published complete AAPL/NVDA inputs but correctly failed
+  the `172800s` freshness/latency policy because Friday close was `248482s` old
+  while Monday's XNYS session was still open. The registered 08:00 Singapore
+  run is post-close (fixed-clock age `14400s`); no SLA was relaxed and no
+  synthetic evidence was accepted.
 
 ## Current frontier
 
