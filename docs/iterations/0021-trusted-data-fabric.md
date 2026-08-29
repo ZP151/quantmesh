@@ -850,14 +850,56 @@ durable checkpoint.
   rewritten. The registered real task remains ready for `08:00`
   Asia/Singapore on 2026-08-25.
 
+## Checkpoint 20 — Repeated-soak incident diagnosis and repair design, 2026-08-29
+
+- Issue #124's complete witness history shows multiple candidate restarts for
+  distinct control-plane failures: an unavailable Moomoo result accepted by
+  the old driver, a 39.5-hour host sleep/hibernate cadence gap and the current
+  NVDA historical/live overlap rejection. Issue #127 independently records
+  long-running probes, `0x41306` termination and an 08:00 false failure while
+  the formal daily task was legitimately `Running/0x41301`.
+- The NVDA rejection is a real provider correction, not floating-point noise.
+  Raw revision 5 and 6 differ on only
+  `NVDA:2026-08-27T04:00:00+00:00`: turnover changed from
+  `67,700,954,784.651` to `67,628,318,193`, fingerprint
+  `6e30bad00d3e0df50794a426c09c6ca01701b2bcda98a39f1cd684bfde1eb0a9`.
+  OHLCV-derived normalized, adjusted and feature rows are unchanged. The raw
+  failure remains valid and must not be deleted, tolerated or relabeled PASS.
+- Production does not currently expose ADR-0018's exact amendment semantics,
+  and immediate-predecessor overlap comparison allows an identical later
+  revision to heal without acknowledgement. The formal daily script also
+  omits the complete verifier, so a report with critical issues can still
+  leave the Windows task at exit zero. Existing `21 passed, 1 skipped` focused
+  tests demonstrate a coverage gap rather than a passing operational contract.
+- The formal task and connection probe start at the same minute. The external
+  probe has no child deadline or guaranteed terminal receipt, and its latest
+  pointer can remain stale after termination. Both tasks execute a mutable
+  checkout whose candidate commit is not remotely reachable. The GitHub
+  publisher's check-then-post sequence is not a single-writer protocol; the
+  issue history contains duplicate publication evidence.
+- Planner output defines six bounded gates: immutable overlap resolution,
+  fail-closed daily runner, scheduler round-trip, deadline-bounded connection
+  witness, single-authority GitHub publication and a new real 168-hour root.
+  Quant-research output requires `operator-acknowledged` semantics when no
+  external source proves which turnover is correct, preserves knowledge-time
+  boundaries, permits only unchanged OHLCV descendants and fences turnover,
+  liquidity, cost and slippage use. Implementer work has not started.
+- The proposed architecture is recorded in
+  `docs/superpowers/specs/2026-08-29-trusted-data-soak-reliability-repair-design.md`.
+  It preserves the failed evidence, adds content-addressed exact resolutions
+  and a stable accepted-overlap baseline, makes the complete verifier determine
+  daily exit status, requires immutable operational receipts and deadlines,
+  staggers the tasks, and moves remote publication behind a durable outbox.
+  The design is awaiting operator review before an executable plan or code
+  change. Reviewer and Verifier gates remain pending.
+
 ## Current frontier
 
-The local driver defect is repaired, correct Moomoo OpenD is authenticated and
-the daily timer is ready. Allow the next post-XNYS-close scheduled collection
-to run, verify the immutable daily report and mirror each accepted report
-identity into issue #124. The missing `d78f489` object and the unbounded
-standalone OpenD probe remain explicit follow-ups; neither authorizes synthetic
-evidence, credential handling or live execution.
+Review and approve the Checkpoint 20 reliability-repair design. Then write the
+executable plan and implement each control-plane slice test-first, with an
+independent read-only review and recorded verification at every phase boundary.
+Do not count time from the rejected evidence root toward the replacement
+168-hour candidate.
 
 ## Resume instructions
 
