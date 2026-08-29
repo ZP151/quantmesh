@@ -890,16 +890,16 @@ durable checkpoint.
   and a stable accepted-overlap baseline, makes the complete verifier determine
   daily exit status, requires immutable operational receipts and deadlines,
   staggers the tasks, and moves remote publication behind a durable outbox.
-  The design is awaiting operator review before an executable plan or code
-  change. Reviewer and Verifier gates remain pending.
+  The operator approved the design on 2026-08-29. The executable TDD plan is
+  `docs/superpowers/plans/2026-08-29-trusted-data-soak-reliability-repair.md`;
+  Implementer, Reviewer and Verifier gates remain pending.
 
 ## Current frontier
 
-Review and approve the Checkpoint 20 reliability-repair design. Then write the
-executable plan and implement each control-plane slice test-first, with an
-independent read-only review and recorded verification at every phase boundary.
-Do not count time from the rejected evidence root toward the replacement
-168-hour candidate.
+Execute the approved Checkpoint 20 reliability-repair plan one bounded TDD
+slice at a time, with an independent read-only review and recorded verification
+at every phase boundary. Do not count time from the rejected evidence root
+toward the replacement 168-hour candidate.
 
 ## Resume instructions
 

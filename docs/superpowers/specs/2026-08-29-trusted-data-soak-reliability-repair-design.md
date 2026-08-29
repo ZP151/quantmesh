@@ -1,6 +1,6 @@
 # Trusted-Data Soak Reliability Repair Design
 
-Status: draft for operator review
+Status: approved by the operator on 2026-08-29
 
 Date: 2026-08-29
 
