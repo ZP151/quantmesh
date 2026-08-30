@@ -922,6 +922,37 @@ durable checkpoint.
   starting a replacement 168-hour clock. Recreating the old scheduler is not
   an accepted migration.
 
+## Checkpoint 22 — Reliability repair Task 1 packaged authority, 2026-08-31
+
+- Resumed the approved repair plan on the receiving Windows host from remote
+  handoff head `3d21835` in isolated branch
+  `codex/0021-soak-reliability`. The divergent local `0021-soak-finalize`
+  branch and its rejected turnover-ignoring experiment remain unchanged; no
+  old evidence root or scheduled task was reused.
+- RED added exact v1 candidate/report identity and canonical-byte fixtures plus
+  accepted/rejected wrapper parity. The focused command failed during
+  collection with `ModuleNotFoundError: quantmesh.ops.trusted_data_soak`, as
+  required before the package authority existed.
+- Implementer moved the existing authority intact to
+  `src/quantmesh/ops/trusted_data_soak.py`; the tracked tool is now a thin
+  compatibility wrapper. The only compensating behavior is checkout discovery:
+  direct tool execution anchors Git state to `sys.argv[0]`, then resolves the
+  exact top level, so a non-editable package install does not inspect
+  `site-packages` as though it were the checkout.
+- GREEN used an external basetemp so tests cannot dirty the clean-source
+  contract: `26 passed, 1 skipped`; focused Ruff and `git diff --check` passed.
+  The skipped Windows symlink test remains expected. The original source and
+  packaged source are byte-identical outside the reviewed checkout-discovery
+  block; v1 IDs, canonical bytes, CLI JSON and exit codes remain fixed.
+- Independent read-only Codex CLI review first found two P2 issues: package-file
+  repository discovery and repository-local pytest debris. Both were repaired
+  and regression-tested. The reviewer reran the focused tests, Ruff and diff
+  check with status-before/status-after equality, then returned `CLEAN` with no
+  remaining actionable finding.
+- No turnover policy, quality result, provider evidence, credential, network
+  authority, release state or execution authority changed. Task 2 is now the
+  first incomplete plan slice.
+
 ## Current frontier
 
 On the receiving host, execute the approved Checkpoint 20 reliability-repair

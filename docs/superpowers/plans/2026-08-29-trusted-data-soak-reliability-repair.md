@@ -65,17 +65,17 @@
 - Produces: importable `SoakStore`, `SoakCandidate`, `SoakReport`, `SoakVerification`, `observe()`, `verify_soak()`, `replay_historical()` and `main()` under `quantmesh.ops.trusted_data_soak`.
 - Preserves: current v1 canonical bytes, IDs, CLI JSON and exit codes exactly.
 
-- [ ] **Step 1: Write RED wrapper-parity tests**
+- [x] **Step 1: Write RED wrapper-parity tests**
 
 Characterize one v1 candidate/report's exact `candidate_id`, `report_id` and canonical bytes. Import both the packaged module and the tool wrapper and assert their `main(["verify", ...])` stdout/exit code match for accepted and rejected fixtures.
 
-- [ ] **Step 2: Run RED tests**
+- [x] **Step 2: Run RED tests**
 
 Run: `.venv\Scripts\python.exe -m pytest tests/test_trusted_data_soak.py tests/test_trusted_data_tool.py -q`
 
 Expected: import failure for `quantmesh.ops.trusted_data_soak`.
 
-- [ ] **Step 3: Move the authority without behavior changes**
+- [x] **Step 3: Move the authority without behavior changes**
 
 Move the implementation intact into the package. Replace the tool body with:
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
 Keep every v1 model contract and canonical serialization unchanged. Fix imports in tests; do not add v2 behavior in this task.
 
-- [ ] **Step 4: Run GREEN parity tests**
+- [x] **Step 4: Run GREEN parity tests**
 
 Run:
 
@@ -98,7 +98,7 @@ Run:
 git diff --check
 ```
 
-- [ ] **Step 5: Commit and record role evidence**
+- [x] **Step 5: Commit and record role evidence**
 
 Commit: `refactor(ops): package trusted-data soak authority`
 

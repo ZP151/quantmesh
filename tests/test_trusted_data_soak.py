@@ -1,17 +1,16 @@
 import os
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-import tools.trusted_data_soak as soak_module
+import quantmesh.ops.trusted_data_soak as soak_module
+import tools.trusted_data_soak as wrapper_module
 from quantmesh.data.artifacts import ManifestStore
 from quantmesh.data.collection import CollectionCoordinator
-from tests.test_data_catalog import _entry as _catalog_entry
-from tests.test_data_catalog import _quality as _catalog_quality
-from tests.test_quality_publication import _envelope, _job, _producer
-from tools.trusted_data_soak import (
+from quantmesh.ops.trusted_data_soak import (
     SoakCandidate,
     SoakReport,
     SoakStore,
@@ -19,6 +18,9 @@ from tools.trusted_data_soak import (
     _observe,
     verify_soak,
 )
+from tests.test_data_catalog import _entry as _catalog_entry
+from tests.test_data_catalog import _quality as _catalog_quality
+from tests.test_quality_publication import _envelope, _job, _producer
 
 NOW = datetime(2026, 8, 14, 12, tzinfo=UTC)
 COMMIT = "a" * 40
@@ -72,6 +74,117 @@ def _report(
 def _set_mtime(path: Path, instant: datetime) -> None:
     stamp = instant.timestamp()
     os.utime(path, (stamp, stamp))
+
+
+def test_v1_candidate_and_report_canonical_bytes_are_stable() -> None:
+    candidate = _candidate()
+    report = _report(candidate, recorded_at=NOW, predecessor=None)
+
+    assert candidate.candidate_id == (
+        "f2db5bfd3836caa303df0cc59a9226e89799ada43aae0241743f6c6a229b0275"
+    )
+    assert candidate.canonical_bytes() == (
+        b'{"calendar_versions":["XNYS-2026a","continuous-utc-v1"],'
+        b'"candidate_id":"f2db5bfd3836caa303df0cc59a9226e89799ada43aae0241743f6c6a229b0275",'
+        b'"code_commit":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",'
+        b'"config_digest":"f066158ec15cf48c73be75cf8c803e9b30f0e8339991a062106c56c8cb5a591e",'
+        b'"policy_ids":["eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"],'
+        b'"required_targets":["test-target"],'
+        b'"schema_version":"quantmesh-trusted-data-soak-v1",'
+        b'"schema_versions":["artifact-v2:bars-v1"],'
+        b'"started_at":"2026-08-07T12:00:00Z"}'
+    )
+    assert report.report_id == (
+        "c027a1073bc38443421442a1c62442781c57a29c69adf707698396d5a39e225b"
+    )
+    assert report.canonical_bytes() == (
+        b'{"candidate_id":"f2db5bfd3836caa303df0cc59a9226e89799ada43aae0241743f6c6a229b0275",'
+        b'"checkpoint_digests":["dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"],'
+        b'"code_commit":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",'
+        b'"completed_xnys_sessions":[],"config_digest":'
+        b'"f066158ec15cf48c73be75cf8c803e9b30f0e8339991a062106c56c8cb5a591e",'
+        b'"critical_issues":[],"crypto_observed":true,'
+        b'"manifest_ids":["bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"],'
+        b'"predecessor_report_id":null,'
+        b'"quality_evaluation_ids":["cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"],'
+        b'"recorded_at":"2026-08-14T12:00:00Z","report_date":"2026-08-14",'
+        b'"report_id":"c027a1073bc38443421442a1c62442781c57a29c69adf707698396d5a39e225b",'
+        b'"schema_version":"quantmesh-trusted-data-soak-v1","target_evidence":[{'
+        b'"checkpoint_digest":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",'
+        b'"event_end":"2026-08-14T12:00:00Z",'
+        b'"manifest_id":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",'
+        b'"quality_evaluation_id":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",'
+        b'"target_id":"test-target"}]}'
+    )
+
+
+def test_tool_wrapper_and_packaged_verify_cli_are_identical(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(soak_module, "_change_time", soak_module._mtime)
+    monkeypatch.setattr(soak_module, "_verify_data_closure", lambda *args: ())
+    evidence_root = tmp_path / "accepted"
+    data_root = tmp_path / "data"
+    candidate = _candidate(started_at=NOW)
+    store = SoakStore(evidence_root)
+    store.write_candidate(candidate, now=NOW)
+    store.append(_report(candidate, recorded_at=NOW, predecessor=None), now=NOW)
+
+    def invoke(main, root: Path) -> tuple[int, str, str]:
+        result = main(
+            [
+                "verify",
+                "--evidence-root",
+                str(root),
+                "--data-root",
+                str(data_root),
+                "--minimum-hours",
+                "0",
+                "--minimum-xnys-sessions",
+                "0",
+            ]
+        )
+        captured = capsys.readouterr()
+        return result, captured.out, captured.err
+
+    assert invoke(wrapper_module.main, evidence_root) == invoke(
+        soak_module.main, evidence_root
+    )
+    rejected_root = tmp_path / "rejected"
+    assert invoke(wrapper_module.main, rejected_root) == invoke(
+        soak_module.main, rejected_root
+    )
+
+
+def test_git_commit_uses_the_tool_wrapper_checkout_anchor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = tmp_path / "checkout"
+    wrapper = checkout / "tools" / "trusted_data_soak.py"
+    wrapper.parent.mkdir(parents=True)
+    wrapper.touch()
+    monkeypatch.setattr(sys, "argv", [str(wrapper), "observe"])
+    calls: list[list[str]] = []
+
+    def run(command: list[str], **kwargs):
+        calls.append(command)
+        if "--show-toplevel" in command:
+            return SimpleNamespace(stdout=str(checkout) + "\n")
+        if "rev-parse" in command:
+            return SimpleNamespace(stdout=COMMIT + "\n")
+        return SimpleNamespace(stdout="")
+
+    monkeypatch.setattr(soak_module.subprocess, "run", run)
+
+    assert soak_module._git_commit() == COMMIT
+    assert calls[0] == [
+        "git",
+        "-C",
+        str(checkout),
+        "rev-parse",
+        "--show-toplevel",
+    ]
+    assert all(str(checkout) in command for command in calls)
 
 
 def test_replay_historical_refuses_empty_catalog(tmp_path: Path) -> None:
