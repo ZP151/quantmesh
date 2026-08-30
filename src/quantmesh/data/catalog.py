@@ -20,7 +20,12 @@ from quantmesh.data.capabilities import DataKind, EntitlementState, ProviderAcce
 from quantmesh.data.checkpoints import CheckpointStore, CollectionCheckpoint
 from quantmesh.data.layout import validate_dataset_name
 from quantmesh.data.objects import FABRIC_NAMESPACE, is_reparse_point
-from quantmesh.data.quality import QualityEvidenceStore, QualityStatus
+from quantmesh.data.overlap_resolutions import (
+    OverlapResolutionIntegrityError,
+    OverlapResolutionStore,
+    ResolutionUsePolicy,
+)
+from quantmesh.data.quality import QualityEvaluationV2, QualityEvidenceStore, QualityStatus
 
 
 class CatalogIntegrityError(RuntimeError):
@@ -46,10 +51,12 @@ def _is_utc(value: datetime) -> bool:
 class CatalogQuality(_FrozenContract):
     """Exact immutable evaluation qualifying one manifest."""
 
+    contract: str = Field(default="catalog-quality-v2", pattern=r"^catalog-quality-v2$")
     report_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     evaluation_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     policy_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     status: QualityStatus
+    original_status: QualityStatus = QualityStatus.PASS
     issue_codes: tuple[str, ...]
     evaluated_at: datetime
     expected_count: int = Field(ge=0)
@@ -66,6 +73,12 @@ class CatalogQuality(_FrozenContract):
     pagination_terminal: bool | None
     source_rights_known: bool
     unavailable_reason: str | None = None
+    resolution_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    qualification: str = Field(
+        default="clean",
+        pattern=r"^(clean|qualified-with-resolution|failed)$",
+    )
+    use_policy: ResolutionUsePolicy | None = None
 
     @field_validator("evaluated_at")
     @classmethod
@@ -78,6 +91,26 @@ class CatalogQuality(_FrozenContract):
     def status_matches_issues(self) -> Self:
         if (self.status is QualityStatus.PASS) != (not self.issue_codes):
             raise ValueError("catalog quality status and issues disagree")
+        if self.status is not self.original_status:
+            raise ValueError("catalog quality must preserve the original evaluation status")
+        if self.qualification == "clean":
+            if self.status is not QualityStatus.PASS or self.resolution_id or self.use_policy:
+                raise ValueError("clean catalog quality requires an ordinary pass")
+        elif self.qualification == "qualified-with-resolution":
+            if (
+                self.resolution_id is None
+                or self.use_policy is None
+                or not (
+                    self.status is QualityStatus.PASS
+                    or (
+                        self.status is QualityStatus.FAIL
+                        and self.issue_codes == ("historical-live-overlap",)
+                    )
+                )
+            ):
+                raise ValueError("resolved catalog quality requires one exact overlap resolution")
+        elif self.status is QualityStatus.PASS or self.resolution_id or self.use_policy:
+            raise ValueError("failed catalog quality cannot carry a resolution policy")
         return self
 
 
@@ -163,8 +196,7 @@ class CatalogEntry(_FrozenContract):
         info,
     ) -> tuple[str, ...]:
         if len(values) != len(set(values)) or any(
-            len(value) != 64
-            or any(character not in "0123456789abcdef" for character in value)
+            len(value) != 64 or any(character not in "0123456789abcdef" for character in value)
             for value in values
         ):
             raise ValueError(f"{info.field_name} must contain unique SHA-256 digests")
@@ -200,7 +232,7 @@ class CatalogEntry(_FrozenContract):
         return (
             self.provider_access is not ProviderAccess.FIXTURE
             and self.quality is not None
-            and self.quality.status is QualityStatus.PASS
+            and self.quality.qualification in {"clean", "qualified-with-resolution"}
             and self.latest_checkpoint is not None
             and self.latest_checkpoint.quality_report_id == self.quality.report_id
         )
@@ -215,6 +247,8 @@ class CatalogLineage(_FrozenContract):
 
 class TrustedDataCatalog:
     """Project committed v2 graph state into a stable read-only catalog."""
+
+    _RESEARCH_USES = frozenset({"ohlcv", "turnover", "liquidity", "cost", "capacity", "slippage"})
 
     def __init__(self, root: Path) -> None:
         self.root = Path(root)
@@ -246,13 +280,9 @@ class TrustedDataCatalog:
             target = self.manifests.open(manifest_id).manifest
         except ManifestIntegrityError as error:
             if str(error) == f"manifest {manifest_id} is missing":
-                raise CatalogNotFoundError(
-                    f"manifest {manifest_id} is not cataloged"
-                ) from error
+                raise CatalogNotFoundError(f"manifest {manifest_id} is not cataloged") from error
             raise
-        committed_ids = {
-            item.manifest_id for item in self.manifests.manifests(target.dataset_id)
-        }
+        committed_ids = {item.manifest_id for item in self.manifests.manifests(target.dataset_id)}
         if manifest_id not in committed_ids:
             raise CatalogNotFoundError(f"manifest {manifest_id} is not cataloged")
         ancestor_manifests: list[ArtifactManifest] = []
@@ -289,18 +319,26 @@ class TrustedDataCatalog:
         return CatalogLineage(
             entry=self._entry(target, by_manifest.get(manifest_id)),
             ancestors=tuple(
-                self._entry(item, by_manifest.get(item.manifest_id))
-                for item in ancestor_manifests
+                self._entry(item, by_manifest.get(item.manifest_id)) for item in ancestor_manifests
             ),
         )
 
-    def require_research(self, manifest_id: str) -> CatalogEntry:
+    def require_research(self, manifest_id: str, *, use: str = "ohlcv") -> CatalogEntry:
         """Return exact passing current evidence or refuse downstream use."""
-        entry = self.lineage(manifest_id).entry
+        if use not in self._RESEARCH_USES:
+            raise CatalogQualificationError(f"unknown research use {use!r}")
+        lineage = self.lineage(manifest_id)
+        entry = lineage.entry
         if not entry.trusted_for_research:
             status = "missing" if entry.quality is None else entry.quality.status.value
+            raise CatalogQualificationError(f"manifest {manifest_id} quality status is {status}")
+        restricted = any(
+            item.quality is not None and item.quality.qualification == "qualified-with-resolution"
+            for item in (entry, *lineage.ancestors)
+        )
+        if restricted and use != "ohlcv":
             raise CatalogQualificationError(
-                f"manifest {manifest_id} quality status is {status}"
+                f"manifest {manifest_id} is not qualified for {use} use"
             )
         return entry
 
@@ -333,19 +371,61 @@ class TrustedDataCatalog:
         quality = None
         if checkpoint is not None and checkpoint.quality_report_id is not None:
             report = self.quality.verify_report_integrity(checkpoint.quality_report_id)
-            matches = [
-                item for item in report.bindings if item.manifest_id == manifest.manifest_id
-            ]
+            admitted: set[str] = set()
+            for binding in report.bindings:
+                bound = self.manifests.open(binding.manifest_id).manifest
+                admitted.update(
+                    item.manifest_id for item in self.manifests.manifests(bound.dataset_id)
+                )
+            admitted_manifest_ids = frozenset(admitted)
+            report = self.quality.verify_report(
+                checkpoint.quality_report_id,
+                admitted_manifest_ids=admitted_manifest_ids,
+            )
+            matches = [item for item in report.bindings if item.manifest_id == manifest.manifest_id]
             if len(matches) != 1:
                 raise CatalogIntegrityError(
                     "quality report must contain exactly one catalog manifest binding"
                 )
             evaluation = self.quality.load(matches[0].evaluation_id)
+            resolution = None
+            qualification = "clean" if evaluation.status is QualityStatus.PASS else "failed"
+            resolution_store = OverlapResolutionStore(self.root)
+            if evaluation.issue_codes == ("historical-live-overlap",):
+                try:
+                    resolution = resolution_store.for_evaluation(
+                        evaluation.evaluation_id,
+                        admitted_manifest_ids=admitted_manifest_ids,
+                    )
+                    qualification = "qualified-with-resolution"
+                except OverlapResolutionIntegrityError:
+                    resolution = None
+            elif (
+                isinstance(evaluation, QualityEvaluationV2)
+                and evaluation.status is QualityStatus.PASS
+                and evaluation.overlap_resolution_id is not None
+            ):
+                try:
+                    inherited = resolution_store.load(evaluation.overlap_resolution_id)
+                    resolution = resolution_store.for_evaluation(
+                        inherited.failed_evaluation_id,
+                        admitted_manifest_ids=admitted_manifest_ids,
+                    )
+                except OverlapResolutionIntegrityError as error:
+                    raise CatalogIntegrityError(
+                        "passing catalog quality has an invalid inherited resolution"
+                    ) from error
+                if resolution.resolution_id != evaluation.overlap_resolution_id:
+                    raise CatalogIntegrityError(
+                        "passing catalog quality resolution proof disagrees"
+                    )
+                qualification = "qualified-with-resolution"
             quality = CatalogQuality(
                 report_id=report.report_id,
                 evaluation_id=evaluation.evaluation_id,
                 policy_id=evaluation.policy_id,
                 status=evaluation.status,
+                original_status=evaluation.status,
                 issue_codes=evaluation.issue_codes,
                 evaluated_at=evaluation.evaluated_at,
                 expected_count=evaluation.expected_count,
@@ -362,6 +442,9 @@ class TrustedDataCatalog:
                 pagination_terminal=evaluation.pagination_terminal,
                 source_rights_known=evaluation.source_rights_known,
                 unavailable_reason=evaluation.unavailable_reason,
+                resolution_id=None if resolution is None else resolution.resolution_id,
+                qualification=qualification,
+                use_policy=None if resolution is None else resolution.use_policy,
             )
         provider_id, provider_access = self._provider_identity(manifest)
         current = self.manifests.current(manifest.dataset_id)
@@ -443,12 +526,7 @@ class TrustedDataCatalog:
         return () if store is None else store.list_checkpoints()
 
     def _checkpoint_store(self) -> CheckpointStore | None:
-        path = (
-            self.root
-            / FABRIC_NAMESPACE
-            / "control"
-            / "collection-checkpoints.duckdb"
-        )
+        path = self.root / FABRIC_NAMESPACE / "control" / "collection-checkpoints.duckdb"
         if not path.exists():
             return None
         if not path.is_file() or is_reparse_point(path):

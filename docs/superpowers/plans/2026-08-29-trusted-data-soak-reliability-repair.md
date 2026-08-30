@@ -191,6 +191,7 @@ Append Task 2 RED/GREEN commands, Implementer summary and Reviewer verdict to th
 - Modify: `src/quantmesh/data/quality.py`
 - Modify: `src/quantmesh/data/collection.py`
 - Modify: `src/quantmesh/data/catalog.py`
+- Modify: `src/quantmesh/data/overlap_resolutions.py`
 - Modify: `tests/test_quality_evidence.py`
 - Modify: `tests/test_quality_policies.py`
 - Modify: `tests/test_quality_publication.py`
@@ -202,7 +203,7 @@ Append Task 2 RED/GREEN commands, Implementer summary and Reviewer verdict to th
 - Produces: `QualityBaseline(manifest_id, evaluation_id, resolution_id)` and `CollectionCoordinator._quality_baseline()`.
 - Produces catalog fields: `contract`, `original_status`, `resolution_id`, `qualification`, `use_policy`.
 
-- [ ] **Step 1: Write RED natural-healing and catalog tests**
+- [x] **Step 1: Write RED natural-healing and catalog tests**
 
 Create revision 5 PASS, revision 6 turnover-only FAIL and revision 7 byte-equal to revision 6. Assert revision 7 still compares with revision 5 and fails without a resolution. Record the exact Task 2 resolution for revision 6, publish revision 8 equal to revision 6, and assert its v2 evaluation records revision 6/evaluation/resolution IDs and passes.
 
@@ -219,13 +220,13 @@ assert catalog.require_research(entry.manifest_id, use="turnover") raises Catalo
 assert catalog.require_research(entry.manifest_id, use="ohlcv") == entry
 ```
 
-- [ ] **Step 2: Run RED tests**
+- [x] **Step 2: Run RED tests**
 
 Run: `.venv\Scripts\python.exe -m pytest tests/test_quality_evidence.py tests/test_quality_policies.py tests/test_quality_publication.py tests/test_data_catalog.py -q`
 
 Expected: failures for missing v2 contract, stable baseline and bounded use.
 
-- [ ] **Step 3: Implement v1/v2 evidence loading**
+- [x] **Step 3: Implement v1/v2 evidence loading**
 
 Keep `QualityEvaluation` unchanged. Add `QualityEvaluationV2` with contract `quality-evaluation-v2` and fields:
 
@@ -237,15 +238,15 @@ overlap_resolution_id: str | None
 
 Dispatch `load()` from stored `contract`; verify v1 by the old path. For v2, re-measure using the recorded baseline manifest, verify the resolution when present, and reject a PASS that lacks a valid resolution for a non-empty conflict set.
 
-- [ ] **Step 4: Implement production baseline selection**
+- [x] **Step 4: Implement production baseline selection**
 
 For each new real candidate manifest, inspect earlier committed manifests for the dataset and their checkpoint-bound quality evaluations. Select the latest ordinary PASS or exact resolved overlap-only FAIL. Never accept another hard issue. Pass the selected manifest explicitly to `QualityEvaluator.measure()` and record the three baseline proof IDs in v2.
 
-- [ ] **Step 5: Implement bounded catalog projection**
+- [x] **Step 5: Implement bounded catalog projection**
 
 Expose original evaluation status separately from qualification. Default `require_research()` to `use="ohlcv"` for existing bar/feature callers. Only `ohlcv` may use `OHLCV_DERIVATIVES_ONLY`; `turnover`, `liquidity`, `cost`, `capacity` and `slippage` must reject it. Fixture and missing resolution states remain untrusted.
 
-- [ ] **Step 6: Run GREEN tests and broad data regression**
+- [x] **Step 6: Run GREEN tests and broad data regression**
 
 Run:
 
@@ -255,7 +256,7 @@ Run:
 git diff --check
 ```
 
-- [ ] **Step 7: Commit and record role evidence**
+- [x] **Step 7: Commit and record role evidence**
 
 Commit: `feat(data): enforce stable resolved overlap baselines`
 

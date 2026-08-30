@@ -38,6 +38,7 @@ from quantmesh.data.instruments import CanonicalInstrumentId
 from quantmesh.data.layout import validate_dataset_name
 from quantmesh.data.objects import FABRIC_NAMESPACE, ObjectRef
 from quantmesh.data.quality import (
+    QualityBaseline,
     QualityBinding,
     QualityEvaluator,
     QualityEvidenceStore,
@@ -398,10 +399,7 @@ class CollectionCoordinator:
             self.checkpoints.repair_graph_owners()
             self.checkpoints.repair_commit_journals()
             return (
-                self.checkpoints.get(
-                    job.job_id, _verify_quality_evidence=False
-                )
-                is not None
+                self.checkpoints.get(job.job_id, _verify_quality_evidence=False) is not None
                 or self.checkpoints.pending(job.job_id) is not None
             )
 
@@ -458,9 +456,7 @@ class CollectionCoordinator:
             self.checkpoints.repair_source_snapshots()
             self.checkpoints.repair_graph_owners()
             self.checkpoints.repair_commit_journals()
-            completed = self.checkpoints.get(
-                job.job_id, _verify_quality_evidence=False
-            )
+            completed = self.checkpoints.get(job.job_id, _verify_quality_evidence=False)
             if completed is not None:
                 return self._verified_publication(completed, job=job)
             pending_json = self.checkpoints.pending(job.job_id)
@@ -562,9 +558,7 @@ class CollectionCoordinator:
             )
             checkpoint_body_digest = _checkpoint_body_digest(checkpoint_projection)
             quality_report_id = None
-            quality_admitted = self._quality_admitted_manifest_ids(
-                pending.manifest_ids
-            )
+            quality_admitted = self._quality_admitted_manifest_ids(pending.manifest_ids)
             selected_quality_builder = quality_builder
             if selected_quality_builder is None and not job.provider_id.startswith("fixture-"):
                 selected_quality_builder = self._default_quality_builder(job)
@@ -596,8 +590,7 @@ class CollectionCoordinator:
                         )
                     if (
                         evaluation.window_start != job.window_start
-                        or evaluation.window_end
-                        != _quality_window_end(manifest, job.window_end)
+                        or evaluation.window_end != _quality_window_end(manifest, job.window_end)
                         or evaluation.evaluated_at != pending.updated_at
                     ):
                         raise ValueError(
@@ -706,9 +699,7 @@ class CollectionCoordinator:
                     ),
                 )
             except QualityIntegrityError as error:
-                raise CheckpointIntegrityError(
-                    "checkpoint quality evidence is invalid"
-                ) from error
+                raise CheckpointIntegrityError("checkpoint quality evidence is invalid") from error
             if (
                 report.job_id != checkpoint.job_id
                 or report.run_id != checkpoint.run_id
@@ -749,13 +740,19 @@ class CollectionCoordinator:
                     window_end=window_end,
                     evaluated_at=context.updated_at,
                     admitted_manifest_ids=admitted,
+                    overlap_baseline_manifest_id=(
+                        None
+                        if (baseline := self._quality_baseline(manifest, admitted)) is None
+                        else baseline.manifest_id
+                    ),
                 )
-                evaluation = evaluator.evaluate(
+                evaluation = evaluator.evaluate_v2(
                     policy,
                     manifest_id,
                     window_start=context.window_start,
                     window_end=window_end,
                     observation=observation,
+                    baseline=baseline,
                     admitted_manifest_ids=admitted,
                 )
                 self.quality.record(
@@ -782,16 +779,25 @@ class CollectionCoordinator:
 
         return build
 
+    def _quality_baseline(
+        self,
+        candidate: ArtifactManifest,
+        admitted_manifest_ids: frozenset[str],
+    ) -> QualityBaseline | None:
+        """Select the latest checkpoint-bound PASS or exactly resolved overlap failure."""
+        return self.quality.accepted_baseline(
+            candidate,
+            policy_id=self._quality_policy_for_manifest(candidate).policy_id,
+            admitted_manifest_ids=admitted_manifest_ids,
+        )
+
     def _quality_admitted_manifest_ids(
         self, candidate_manifest_ids: tuple[str, ...]
     ) -> frozenset[str]:
         admitted = set(candidate_manifest_ids)
         for manifest_id in candidate_manifest_ids:
             manifest = self.store.open(manifest_id).manifest
-            admitted.update(
-                item.manifest_id
-                for item in self.store.manifests(manifest.dataset_id)
-            )
+            admitted.update(item.manifest_id for item in self.store.manifests(manifest.dataset_id))
         return frozenset(admitted)
 
     @staticmethod
@@ -984,9 +990,7 @@ def _checkpoint_body_digest(checkpoint: CollectionCheckpoint) -> str:
     return _digest(checkpoint.model_dump(mode="json", exclude={"quality_report_id"}))
 
 
-def _quality_window_end(
-    manifest: ArtifactManifest, requested_end: datetime
-) -> datetime:
+def _quality_window_end(manifest: ArtifactManifest, requested_end: datetime) -> datetime:
     """Convert an inclusive provider terminal bar open to an exclusive SLA bound."""
     if manifest.data_kind is not DataKind.BARS or manifest.interval is None:
         return requested_end

@@ -29,6 +29,7 @@ from quantmesh.data.collection import (
 from quantmesh.data.envelopes import ProvenanceClass, RawEnvelope
 from quantmesh.data.instruments import CanonicalInstrumentId, InstrumentCatalog
 from quantmesh.data.quality import (
+    QualityBaseline,
     QualityBinding,
     QualityEvaluator,
     QualityPolicy,
@@ -37,6 +38,15 @@ from quantmesh.data.quality import (
 )
 from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
+from tests.test_overlap_resolutions import (
+    T_CANDIDATE as OVERLAP_T_CANDIDATE,
+)
+from tests.test_overlap_resolutions import (
+    _evidence as _overlap_evidence,
+)
+from tests.test_overlap_resolutions import (
+    _raw_manifest as _overlap_raw_manifest,
+)
 
 T0 = datetime(2026, 8, 14, tzinfo=UTC)
 
@@ -320,6 +330,45 @@ def test_authoritative_policies_have_a_post_grace_observation_window(
     assert moomoo.max_latency_seconds > moomoo.grace_period_seconds
 
 
+def test_quality_baseline_prefers_latest_exactly_accepted_checkpoint(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _, revision_6, admitted, failed_6, _, _ = _overlap_evidence(tmp_path)
+    revision_7 = _overlap_raw_manifest(
+        tmp_path,
+        revision=7,
+        known_at=OVERLAP_T_CANDIDATE + timedelta(days=1),
+        turnover=180_500_001.0,
+    )
+    coordinator = CollectionCoordinator(ManifestStore(tmp_path))
+    expected = QualityBaseline(
+        manifest_id=revision_6.manifest_id,
+        evaluation_id=failed_6.evaluation_id,
+        resolution_id="c" * 64,
+    )
+    call = {}
+
+    def accepted_baseline(candidate, *, policy_id, admitted_manifest_ids):
+        call.update(
+            candidate=candidate,
+            policy_id=policy_id,
+            admitted_manifest_ids=admitted_manifest_ids,
+        )
+        return expected
+
+    monkeypatch.setattr(coordinator.quality, "accepted_baseline", accepted_baseline)
+
+    assert (
+        coordinator._quality_baseline(revision_7, admitted | {revision_7.manifest_id}) == expected
+    )
+    assert call == {
+        "candidate": revision_7,
+        "policy_id": coordinator._quality_policy_for_manifest(revision_7).policy_id,
+        "admitted_manifest_ids": admitted | {revision_7.manifest_id},
+    }
+
+
 def test_quality_report_is_checkpoint_bound_and_retry_stable(tmp_path: Path) -> None:
     store = ManifestStore(tmp_path)
     envelope = _envelope(store)
@@ -424,9 +473,7 @@ def test_catalog_projects_exact_committed_quality_and_lineage(tmp_path: Path) ->
 
     entries = TrustedDataCatalog(tmp_path).entries()
 
-    assert {entry.current_manifest_id for entry in entries} == set(
-        publication.manifest_ids
-    )
+    assert {entry.current_manifest_id for entry in entries} == set(publication.manifest_ids)
     assert all(entry.quality is not None for entry in entries)
     assert all(
         entry.latest_checkpoint is not None

@@ -19,6 +19,7 @@ from quantmesh.data.capabilities import DataKind, EntitlementState
 from quantmesh.data.envelopes import ProvenanceClass, RawEnvelope
 from quantmesh.data.instruments import CanonicalInstrumentId, InstrumentCatalog
 from quantmesh.data.quality import (
+    QualityBaseline,
     QualityEvaluator,
     QualityEvidenceStore,
     QualityFailure,
@@ -29,6 +30,18 @@ from quantmesh.data.quality import (
 )
 from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
+from tests.test_overlap_resolutions import (
+    T_CANDIDATE as OVERLAP_T_CANDIDATE,
+)
+from tests.test_overlap_resolutions import (
+    T_EVENT as OVERLAP_T_EVENT,
+)
+from tests.test_overlap_resolutions import (
+    _policy as _overlap_policy,
+)
+from tests.test_overlap_resolutions import (
+    _raw_manifest as _overlap_raw_manifest,
+)
 
 T0 = datetime(2026, 8, 14, 20, tzinfo=UTC)
 
@@ -615,6 +628,119 @@ def test_normalized_split_overlap_uses_typed_row_fingerprints(tmp_path) -> None:
         )
         == ()
     )
+
+
+def test_v2_explicit_baseline_prevents_natural_overlap_healing(tmp_path) -> None:
+    store = ManifestStore(tmp_path)
+    revision_5 = _overlap_raw_manifest(
+        tmp_path,
+        revision=5,
+        known_at=OVERLAP_T_CANDIDATE - timedelta(days=1),
+        turnover=180_500_000.0,
+    )
+    revision_6 = _overlap_raw_manifest(
+        tmp_path,
+        revision=6,
+        known_at=OVERLAP_T_CANDIDATE,
+        turnover=180_500_001.0,
+    )
+    revision_7 = _overlap_raw_manifest(
+        tmp_path,
+        revision=7,
+        known_at=OVERLAP_T_CANDIDATE + timedelta(days=1),
+        turnover=180_500_001.0,
+    )
+    revision_8 = _overlap_raw_manifest(
+        tmp_path,
+        revision=8,
+        known_at=OVERLAP_T_CANDIDATE + timedelta(days=2),
+        turnover=180_500_001.0,
+    )
+    revision_9 = _overlap_raw_manifest(
+        tmp_path,
+        revision=9,
+        known_at=OVERLAP_T_CANDIDATE + timedelta(days=3),
+        turnover=180_500_002.0,
+    )
+    admitted = frozenset(
+        manifest.manifest_id
+        for manifest in (revision_5, revision_6, revision_7, revision_8, revision_9)
+    )
+    evaluator = QualityEvaluator(store)
+    policy = _overlap_policy()
+    stable_5 = QualityBaseline(
+        manifest_id=revision_5.manifest_id,
+        evaluation_id="5" * 64,
+        resolution_id=None,
+    )
+
+    observation_7 = evaluator.measure(
+        policy,
+        revision_7.manifest_id,
+        window_start=OVERLAP_T_EVENT - timedelta(minutes=1),
+        window_end=OVERLAP_T_EVENT + timedelta(days=1),
+        evaluated_at=revision_7.knowledge_end + timedelta(hours=1),
+        admitted_manifest_ids=admitted,
+        overlap_baseline_manifest_id=stable_5.manifest_id,
+    )
+    failed_7 = evaluator.evaluate_v2(
+        policy,
+        revision_7.manifest_id,
+        window_start=OVERLAP_T_EVENT - timedelta(minutes=1),
+        window_end=OVERLAP_T_EVENT + timedelta(days=1),
+        observation=observation_7,
+        baseline=stable_5,
+        admitted_manifest_ids=admitted,
+    )
+    assert failed_7.issue_codes == ("historical-live-overlap",)
+
+    resolved_6 = QualityBaseline(
+        manifest_id=revision_6.manifest_id,
+        evaluation_id="6" * 64,
+        resolution_id="a" * 64,
+    )
+    observation_8 = evaluator.measure(
+        policy,
+        revision_8.manifest_id,
+        window_start=OVERLAP_T_EVENT - timedelta(minutes=1),
+        window_end=OVERLAP_T_EVENT + timedelta(days=1),
+        evaluated_at=revision_8.knowledge_end + timedelta(hours=1),
+        admitted_manifest_ids=admitted,
+        overlap_baseline_manifest_id=resolved_6.manifest_id,
+    )
+    passed_8 = evaluator.evaluate_v2(
+        policy,
+        revision_8.manifest_id,
+        window_start=OVERLAP_T_EVENT - timedelta(minutes=1),
+        window_end=OVERLAP_T_EVENT + timedelta(days=1),
+        observation=observation_8,
+        baseline=resolved_6,
+        admitted_manifest_ids=admitted,
+    )
+    assert passed_8.status is QualityStatus.PASS
+    assert passed_8.overlap_baseline_manifest_id == revision_6.manifest_id
+    assert passed_8.overlap_resolution_id == resolved_6.resolution_id
+
+    observation_9 = evaluator.measure(
+        policy,
+        revision_9.manifest_id,
+        window_start=OVERLAP_T_EVENT - timedelta(minutes=1),
+        window_end=OVERLAP_T_EVENT + timedelta(days=1),
+        evaluated_at=revision_9.knowledge_end + timedelta(hours=1),
+        admitted_manifest_ids=admitted,
+        overlap_baseline_manifest_id=resolved_6.manifest_id,
+    )
+    failed_9 = evaluator.evaluate_v2(
+        policy,
+        revision_9.manifest_id,
+        window_start=OVERLAP_T_EVENT - timedelta(minutes=1),
+        window_end=OVERLAP_T_EVENT + timedelta(days=1),
+        observation=observation_9,
+        baseline=resolved_6,
+        admitted_manifest_ids=admitted,
+    )
+    assert failed_9.issue_codes == ("historical-live-overlap",)
+    assert failed_9.overlap_conflict_fingerprints != failed_7.overlap_conflict_fingerprints
 
 
 def test_raw_measurement_reconciles_manifest_rows_with_envelope_events(tmp_path) -> None:

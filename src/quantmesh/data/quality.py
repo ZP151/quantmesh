@@ -259,7 +259,78 @@ class _QualityEvaluationBody(QualityEvaluation):
         return self
 
 
-def _validate_evaluation_semantics(evaluation: QualityEvaluation) -> None:
+class QualityBaseline(_FrozenContract):
+    """Latest checkpoint-bound evaluation accepted as an overlap baseline."""
+
+    manifest_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    evaluation_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    resolution_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+
+class QualityEvaluationV2(QualityEvaluation):
+    """Quality result with an explicit stable accepted-overlap baseline proof."""
+
+    contract: str = Field(default="quality-evaluation-v2", pattern=r"^quality-evaluation-v2$")
+    overlap_baseline_manifest_id: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
+    overlap_baseline_evaluation_id: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
+    overlap_resolution_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+    @classmethod
+    def build(cls, **values: Any) -> Self:
+        body = _QualityEvaluationV2Body.model_validate(values)
+        payload = canonical_json_bytes(body.model_dump(mode="json"))
+        return cls(
+            **body.model_dump(),
+            evaluation_id=hashlib.sha256(payload).hexdigest(),
+        )
+
+    @model_validator(mode="after")
+    def identity_and_window_are_valid(self) -> Self:
+        _validate_evaluation_semantics(self)
+        _validate_v2_baseline_fields(self)
+        body = self.model_dump(mode="json", exclude={"evaluation_id"})
+        actual = hashlib.sha256(canonical_json_bytes(body)).hexdigest()
+        if actual != self.evaluation_id:
+            raise ValueError(
+                f"evaluation_id mismatch: expected {self.evaluation_id}, observed {actual}"
+            )
+        return self
+
+
+class _QualityEvaluationV2Body(QualityEvaluationV2):
+    evaluation_id: str = Field(default="0" * 64, exclude=True)
+
+    @model_validator(mode="after")
+    def identity_and_window_are_valid(self) -> Self:
+        _validate_evaluation_semantics(self)
+        _validate_v2_baseline_fields(self)
+        return self
+
+
+QualityEvidence = QualityEvaluation | QualityEvaluationV2
+
+
+def _validate_v2_baseline_fields(evaluation: QualityEvaluationV2) -> None:
+    if evaluation.amends is not None or evaluation.amendment_reason is not None:
+        raise ValueError("v2 quality evaluations do not use amendment semantics")
+    if (evaluation.overlap_baseline_manifest_id is None) != (
+        evaluation.overlap_baseline_evaluation_id is None
+    ):
+        raise ValueError("v2 overlap baseline requires both manifest and evaluation IDs")
+    if (
+        evaluation.overlap_resolution_id is not None
+        and evaluation.overlap_baseline_evaluation_id is None
+    ):
+        raise ValueError("v2 overlap resolution requires an accepted baseline")
+
+
+def _validate_evaluation_semantics(evaluation: QualityEvidence) -> None:
     """Reject self-addressed bodies whose exact fields disagree."""
     if evaluation.window_end <= evaluation.window_start:
         raise ValueError("quality window must have positive duration")
@@ -389,10 +460,10 @@ class QualityEvidenceStore:
 
     def record(
         self,
-        evaluation: QualityEvaluation,
+        evaluation: QualityEvidence,
         *,
         admitted_manifest_ids: frozenset[str] = frozenset(),
-    ) -> QualityEvaluation:
+    ) -> QualityEvidence:
         self._verify_evaluation(
             evaluation,
             admitted_manifest_ids=admitted_manifest_ids,
@@ -404,7 +475,7 @@ class QualityEvidenceStore:
 
     def _verify_evaluation(
         self,
-        evaluation: QualityEvaluation,
+        evaluation: QualityEvidence,
         *,
         admitted_manifest_ids: frozenset[str],
         seen: frozenset[str] = frozenset(),
@@ -423,6 +494,11 @@ class QualityEvidenceStore:
             admitted_manifest_ids=admitted_manifest_ids,
         )
         evaluator._validate_target(policy, manifest)
+        baseline = self._verify_v2_baseline(
+            evaluation,
+            manifest=manifest,
+            admitted_manifest_ids=admitted_manifest_ids,
+        )
         measured = evaluator.measure(
             policy,
             evaluation.manifest_id,
@@ -430,6 +506,7 @@ class QualityEvidenceStore:
             window_end=evaluation.window_end,
             evaluated_at=evaluation.evaluated_at,
             admitted_manifest_ids=admitted_manifest_ids,
+            overlap_baseline_manifest_id=(None if baseline is None else baseline.manifest_id),
         )
         if measured != _observation_from_evaluation(evaluation):
             raise QualityIntegrityError(
@@ -441,7 +518,10 @@ class QualityEvidenceStore:
             window_end=evaluation.window_end,
             observation=_observation_from_evaluation(evaluation),
             reconciles_overlap=(
-                evaluation.amends is not None and evaluation.amendment_reason is not None
+                isinstance(evaluation, QualityEvaluation)
+                and not isinstance(evaluation, QualityEvaluationV2)
+                and evaluation.amends is not None
+                and evaluation.amendment_reason is not None
             ),
         )
         if (
@@ -489,6 +569,114 @@ class QualityEvidenceStore:
                 seen=seen | {evaluation.evaluation_id},
             )
 
+    def _verify_v2_baseline(
+        self,
+        evaluation: QualityEvidence,
+        *,
+        manifest: ArtifactManifest,
+        admitted_manifest_ids: frozenset[str],
+    ) -> QualityBaseline | None:
+        if not isinstance(evaluation, QualityEvaluationV2):
+            return None
+        expected = self.accepted_baseline(
+            manifest,
+            policy_id=evaluation.policy_id,
+            admitted_manifest_ids=admitted_manifest_ids,
+        )
+        recorded = (
+            None
+            if evaluation.overlap_baseline_manifest_id is None
+            else QualityBaseline(
+                manifest_id=evaluation.overlap_baseline_manifest_id,
+                evaluation_id=evaluation.overlap_baseline_evaluation_id or "",
+                resolution_id=evaluation.overlap_resolution_id,
+            )
+        )
+        if recorded != expected:
+            raise QualityIntegrityError(
+                "v2 accepted baseline proof disagrees with committed history"
+            )
+        if expected is not None:
+            baseline_evaluation = self.load(expected.evaluation_id)
+            if baseline_evaluation.evaluated_at >= evaluation.evaluated_at:
+                raise QualityIntegrityError("v2 overlap baseline does not precede its candidate")
+        return expected
+
+    def accepted_baseline(
+        self,
+        candidate: ArtifactManifest,
+        *,
+        policy_id: str,
+        admitted_manifest_ids: frozenset[str],
+    ) -> QualityBaseline | None:
+        """Select the latest fully verified accepted revision before one candidate."""
+        from quantmesh.data.checkpoints import CheckpointIntegrityError, CheckpointStore
+        from quantmesh.data.overlap_resolutions import (
+            OverlapResolutionIntegrityError,
+            OverlapResolutionStore,
+        )
+
+        history = tuple(
+            item
+            for item in self.manifests.manifests(candidate.dataset_id)
+            if item.compatibility_revision < candidate.compatibility_revision
+            and item.knowledge_end <= candidate.knowledge_start
+        )
+        if not history:
+            return None
+        try:
+            checkpoints = CheckpointStore(self.root).checkpoints_for_manifests(
+                tuple(item.manifest_id for item in history)
+            )
+        except (CheckpointIntegrityError, OSError, ValueError) as error:
+            raise QualityIntegrityError("accepted baseline checkpoints are invalid") from error
+        for item in reversed(history):
+            checkpoint = checkpoints.get(item.manifest_id)
+            if checkpoint is None or checkpoint.quality_report_id is None:
+                continue
+            report = self.verify_report(
+                checkpoint.quality_report_id,
+                admitted_manifest_ids=admitted_manifest_ids,
+            )
+            bindings = tuple(
+                binding for binding in report.bindings if binding.manifest_id == item.manifest_id
+            )
+            if len(bindings) != 1:
+                raise QualityIntegrityError(
+                    "checkpoint-bound baseline report lacks one exact evaluation"
+                )
+            baseline = self.load(bindings[0].evaluation_id)
+            if baseline.policy_id != policy_id:
+                raise QualityIntegrityError("baseline evaluation uses a non-authoritative policy")
+            if baseline.status is QualityStatus.PASS and baseline.amends is None:
+                inherited_resolution_id = (
+                    baseline.overlap_resolution_id
+                    if isinstance(baseline, QualityEvaluationV2)
+                    else None
+                )
+                return QualityBaseline(
+                    manifest_id=item.manifest_id,
+                    evaluation_id=baseline.evaluation_id,
+                    resolution_id=inherited_resolution_id,
+                )
+            if baseline.issue_codes != ("historical-live-overlap",):
+                continue
+            try:
+                resolution = OverlapResolutionStore(self.root).for_evaluation(
+                    baseline.evaluation_id,
+                    admitted_manifest_ids=admitted_manifest_ids,
+                )
+            except OverlapResolutionIntegrityError:
+                continue
+            if resolution.candidate_manifest_id != item.manifest_id:
+                raise QualityIntegrityError("resolved baseline manifest disagrees")
+            return QualityBaseline(
+                manifest_id=item.manifest_id,
+                evaluation_id=baseline.evaluation_id,
+                resolution_id=resolution.resolution_id,
+            )
+        return None
+
     def path_for(self, evaluation_id: str) -> Path:
         if len(evaluation_id) != 64 or any(
             char not in "0123456789abcdef" for char in evaluation_id
@@ -498,7 +686,7 @@ class QualityEvidenceStore:
             self.root / FABRIC_NAMESPACE / "objects" / "sha256" / evaluation_id[:2] / evaluation_id
         )
 
-    def load(self, evaluation_id: str) -> QualityEvaluation:
+    def load(self, evaluation_id: str) -> QualityEvidence:
         path = self.path_for(evaluation_id)
         try:
             size = path.lstat().st_size
@@ -509,8 +697,20 @@ class QualityEvidenceStore:
                     byte_length=size,
                 )
             )
-            body = _QualityEvaluationBody.model_validate_json(payload)
-            evaluation = QualityEvaluation.build(**body.model_dump(exclude={"evaluation_id"}))
+            decoded = json.loads(payload)
+            if not isinstance(decoded, dict):
+                raise ValueError("quality evaluation body must be an object")
+            contract = decoded.get("contract")
+            if contract == "quality-evaluation-v1":
+                body = _QualityEvaluationBody.model_validate_json(payload)
+                evaluation: QualityEvidence = QualityEvaluation.build(
+                    **body.model_dump(exclude={"evaluation_id"})
+                )
+            elif contract == "quality-evaluation-v2":
+                body = _QualityEvaluationV2Body.model_validate_json(payload)
+                evaluation = QualityEvaluationV2.build(**body.model_dump(exclude={"evaluation_id"}))
+            else:
+                raise ValueError("quality evaluation contract is unknown")
         except (
             ObjectIntegrityError,
             OSError,
@@ -574,7 +774,7 @@ class QualityEvidenceStore:
 
     def _verify_stored_evaluation_closure(
         self,
-        evaluation: QualityEvaluation,
+        evaluation: QualityEvidence,
         *,
         seen: frozenset[str],
     ) -> None:
@@ -583,6 +783,48 @@ class QualityEvidenceStore:
         policy = self.load_policy(evaluation.policy_id)
         manifest = self.manifests.open(evaluation.manifest_id).manifest
         QualityEvaluator._validate_target(policy, manifest)
+        if isinstance(evaluation, QualityEvaluationV2):
+            if evaluation.overlap_baseline_evaluation_id is not None:
+                baseline = self.load(evaluation.overlap_baseline_evaluation_id)
+                baseline_manifest = self.manifests.open(baseline.manifest_id).manifest
+                if (
+                    baseline.manifest_id != evaluation.overlap_baseline_manifest_id
+                    or baseline.policy_id != evaluation.policy_id
+                    or baseline_manifest.dataset_id != manifest.dataset_id
+                    or baseline_manifest.compatibility_revision >= manifest.compatibility_revision
+                    or baseline_manifest.knowledge_end > manifest.knowledge_start
+                    or baseline.evaluated_at >= evaluation.evaluated_at
+                ):
+                    raise QualityIntegrityError("stored v2 baseline proof disagrees")
+                self._verify_stored_evaluation_closure(
+                    baseline,
+                    seen=seen | {evaluation.evaluation_id},
+                )
+                if baseline.status is QualityStatus.PASS:
+                    expected_resolution_id = (
+                        baseline.overlap_resolution_id
+                        if isinstance(baseline, QualityEvaluationV2)
+                        else None
+                    )
+                elif baseline.issue_codes == ("historical-live-overlap",):
+                    from quantmesh.data.overlap_resolutions import (
+                        OverlapResolutionIntegrityError,
+                        OverlapResolutionStore,
+                    )
+
+                    try:
+                        resolution = OverlapResolutionStore(self.root).load_bound(
+                            baseline.evaluation_id
+                        )
+                    except OverlapResolutionIntegrityError as error:
+                        raise QualityIntegrityError(
+                            "stored v2 baseline resolution is invalid"
+                        ) from error
+                    expected_resolution_id = resolution.resolution_id
+                else:
+                    raise QualityIntegrityError("stored v2 baseline is not accepted")
+                if evaluation.overlap_resolution_id != expected_resolution_id:
+                    raise QualityIntegrityError("stored v2 baseline resolution proof disagrees")
         if evaluation.amends is not None:
             previous = self.load(evaluation.amends)
             self._verify_stored_evaluation_closure(
@@ -695,6 +937,81 @@ class QualityEvaluator:
             amendment_reason=amendment_reason,
         )
 
+    def evaluate_v2(
+        self,
+        policy: QualityPolicy,
+        manifest_id: str,
+        *,
+        window_start: datetime,
+        window_end: datetime,
+        observation: QualityObservation,
+        baseline: QualityBaseline | None,
+        admitted_manifest_ids: frozenset[str] = frozenset(),
+    ) -> QualityEvaluationV2:
+        """Evaluate against one explicit accepted baseline and record its proof."""
+        manifest = self.require_admitted_manifest(
+            manifest_id,
+            admitted_manifest_ids=admitted_manifest_ids,
+        )
+        self._validate_target(policy, manifest)
+        self.validate_lineage(
+            manifest,
+            observation,
+            admitted_manifest_ids=admitted_manifest_ids,
+        )
+        measured = self.measure(
+            policy,
+            manifest_id,
+            window_start=window_start,
+            window_end=window_end,
+            evaluated_at=observation.evaluated_at,
+            admitted_manifest_ids=admitted_manifest_ids,
+            overlap_baseline_manifest_id=(None if baseline is None else baseline.manifest_id),
+        )
+        if observation != measured:
+            raise QualityFailure("quality observation disagrees with immutable manifest evidence")
+        decision = self.evaluate_status(
+            policy,
+            window_start=window_start,
+            window_end=window_end,
+            observation=measured,
+            reconciles_overlap=False,
+        )
+        return QualityEvaluationV2.build(
+            policy_id=policy.policy_id,
+            manifest_id=manifest_id,
+            window_start=window_start,
+            window_end=window_end,
+            evaluated_at=measured.evaluated_at,
+            status=decision.status,
+            expected_count=decision.expected_count,
+            reported_expected_count=measured.expected_count,
+            observed_count=measured.observed_count,
+            duplicate_count=measured.duplicate_count,
+            gap_count=measured.gap_count,
+            hash_mismatch_count=measured.hash_mismatch_count,
+            schema_mismatch_count=measured.schema_mismatch_count,
+            order_violation_count=measured.order_violation_count,
+            overlap_conflict_count=measured.overlap_conflict_count,
+            overlap_conflict_fingerprints=measured.overlap_conflict_fingerprints,
+            synthetic_row_count=measured.synthetic_row_count,
+            coverage_numerator=measured.observed_count,
+            coverage_denominator=decision.expected_count,
+            grace_period_seconds=policy.grace_period_seconds,
+            freshness_seconds=measured.freshness_seconds,
+            latency_seconds=measured.latency_seconds,
+            pagination_terminal=measured.pagination_terminal,
+            source_rights_known=measured.source_rights_known,
+            entitlement=measured.entitlement,
+            unavailable_reason=measured.unavailable_reason,
+            issue_codes=decision.issue_codes,
+            amends=None,
+            amendment_reason=None,
+            overlap_baseline_manifest_id=None if baseline is None else baseline.manifest_id,
+            overlap_baseline_evaluation_id=None if baseline is None else baseline.evaluation_id,
+            overlap_resolution_id=None if baseline is None else baseline.resolution_id,
+        )
+
     def measure(
         self,
         policy: QualityPolicy,
@@ -704,6 +1021,7 @@ class QualityEvaluator:
         window_end: datetime,
         evaluated_at: datetime,
         admitted_manifest_ids: frozenset[str] = frozenset(),
+        overlap_baseline_manifest_id: str | None = None,
     ) -> QualityObservation:
         """Derive quality facts from exact manifest/object/envelope evidence."""
         manifest = self.require_admitted_manifest(
@@ -868,6 +1186,7 @@ class QualityEvaluator:
         overlap_conflict_fingerprints = self._overlap_conflicts(
             manifest,
             admitted_manifest_ids=admitted_manifest_ids,
+            baseline_manifest_id=overlap_baseline_manifest_id,
         )
         return QualityObservation(
             evaluated_at=evaluated_at,
@@ -894,7 +1213,19 @@ class QualityEvaluator:
         manifest: ArtifactManifest,
         *,
         admitted_manifest_ids: frozenset[str],
+        baseline_manifest_id: str | None = None,
     ) -> tuple[str, ...]:
+        if baseline_manifest_id is not None:
+            return tuple(
+                sorted(
+                    conflict.legacy_evaluation_fingerprint
+                    for conflict in self.overlap_conflicts(
+                        manifest.manifest_id,
+                        baseline_manifest_id,
+                        admitted_manifest_ids=admitted_manifest_ids,
+                    )
+                )
+            )
         previous = [
             candidate
             for candidate in (

@@ -988,10 +988,44 @@ durable checkpoint.
   was started, and no credential, provider write, execution authority or
   release state changed.
 
+## Checkpoint 24 — Reliability repair Task 3 stable qualified baseline, 2026-08-31
+
+- RED first failed during collection because `QualityBaseline` and v2 evidence
+  did not exist. The initial implementation passed `93` focused tests, after
+  which independent adversarial review found three P1 paths: omitted accepted
+  baselines could heal naturally, later PASS evidence stopped revalidating its
+  inherited resolution, and the catalog lost the OHLCV-only restriction.
+- Reviewer-driven RED reproduced all three paths. The evidence store now
+  derives the one expected baseline from committed checkpoint-bound history,
+  rejects omitted or forged proof IDs, and propagates an exact resolution ID
+  through later PASS revisions. Immutable closure verification checks the
+  content-addressed resolution, unique evaluation binding and winner anchor;
+  full semantic verification remains at record, selection and catalog trust
+  boundaries so checkpoint reads do not recurse into themselves.
+- The natural-healing sequence is explicit: revision 7 equal to unresolved
+  revision 6 still compares with revision 5 and fails; resolved revision 6 can
+  seed revision 8 PASS; revision 9's distinct correction fails with a new
+  fingerprint. V1 contract dispatch and canonical bytes remain unchanged.
+- Catalog projection preserves each evaluation's original status. Directly
+  resolved FAIL and later PASS evidence inheriting that resolution are both
+  `qualified-with-resolution`; only OHLCV use is allowed for the target and its
+  descendants. Turnover, liquidity, cost, capacity and slippage remain fenced.
+  `NOT_DUE`, `UNAVAILABLE` and other hard states cannot inherit qualification.
+- Final specified Task 3 verification passed `98` tests with six known upstream
+  warnings. The broader Task 2+3 regression passed `126` tests; focused Ruff
+  and `git diff --check` passed. A full read-only re-review returned `CLEAN`,
+  and a final delta review of the nonterminal-state guard also returned
+  `CLEAN`.
+- Quant-research verdict: the stable baseline advances only through committed
+  knowledge time, exact operator-acknowledged resolution never rewrites the
+  failed source evaluation, and downstream permission remains no broader than
+  unchanged OHLCV derivatives. No real resolution, scheduler, clock, provider
+  write, credential or trading authority changed in this task.
+
 ## Current frontier
 
-Task 3, stable accepted-overlap baseline and bounded catalog projection, is the
-first incomplete slice in the approved Checkpoint 20 reliability-repair plan.
+Task 4, typed exact collection receipts, is the first incomplete slice in the
+approved Checkpoint 20 reliability-repair plan.
 Continue one bounded TDD slice at a time with independent read-only review and
 recorded verification at every phase boundary. Keep the retired scheduler
 disabled and do not count time from the rejected evidence root toward the

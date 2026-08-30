@@ -358,6 +358,11 @@ class OverlapResolutionStore:
         *,
         admitted_manifest_ids: frozenset[str] = frozenset(),
     ) -> OverlapResolution:
+        resolution = self.load_bound(failed_evaluation_id)
+        return self.verify(resolution, admitted_manifest_ids=admitted_manifest_ids)
+
+    def load_bound(self, failed_evaluation_id: str) -> OverlapResolution:
+        """Load the unique immutable winner without recursively re-verifying its graph."""
         binding = self._load_binding(failed_evaluation_id)
         winners = self._winner_bindings_for_evaluation(failed_evaluation_id)
         if len(winners) > 1:
@@ -371,7 +376,7 @@ class OverlapResolutionStore:
             raise OverlapResolutionIntegrityError(
                 "resolution binding disagrees with the failed evaluation"
             )
-        return self.verify(resolution, admitted_manifest_ids=admitted_manifest_ids)
+        return resolution
 
     def verify(
         self,
