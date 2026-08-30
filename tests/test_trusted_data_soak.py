@@ -1,3 +1,4 @@
+import hashlib
 import os
 import sys
 from datetime import UTC, datetime, timedelta
@@ -10,10 +11,17 @@ import quantmesh.ops.trusted_data_soak as soak_module
 import tools.trusted_data_soak as wrapper_module
 from quantmesh.data.artifacts import ManifestStore
 from quantmesh.data.collection import CollectionCoordinator
+from quantmesh.data.collection_receipts import (
+    CollectionCycleReceipt,
+    LayerManifestIds,
+    TargetCollectionEvidence,
+)
 from quantmesh.ops.trusted_data_soak import (
     SoakCandidate,
+    SoakCandidateV2,
     SoakReport,
     SoakStore,
+    SoakStoreV2,
     SoakTargetEvidence,
     _observe,
     verify_soak,
@@ -28,6 +36,41 @@ MANIFEST = "b" * 64
 EVALUATION = "c" * 64
 CHECKPOINT = "d" * 64
 POLICY = "e" * 64
+
+
+def _test_id(label: str) -> str:
+    return hashlib.sha256(label.encode()).hexdigest()
+
+
+def _cycle_receipt(provider: str, *, cycle: str) -> CollectionCycleReceipt:
+    targets = ("BTC", "ETH", "SOL") if provider == "hyperliquid-public" else ("AAPL", "NVDA")
+    return CollectionCycleReceipt(
+        provider=provider,
+        code_commit=COMMIT,
+        collection_cycle=cycle,
+        job_id=_test_id(f"{provider}:{cycle}:job"),
+        run_id=_test_id(f"{provider}:{cycle}:run"),
+        attempt=1,
+        quality_report_id=_test_id(f"{provider}:{cycle}:quality"),
+        targets=tuple(
+            TargetCollectionEvidence(
+                target=target,
+                canonical_instrument=(
+                    f"hyperliquid:perp:{target}"
+                    if provider == "hyperliquid-public"
+                    else f"moomoo:US:{target}:XNAS"
+                ),
+                interval="1m" if provider == "hyperliquid-public" else "1d",
+                manifest_ids=LayerManifestIds(
+                    raw=_test_id(f"{provider}:{cycle}:{target}:raw"),
+                    normalized=_test_id(f"{provider}:{cycle}:{target}:normalized"),
+                    adjusted=_test_id(f"{provider}:{cycle}:{target}:adjusted"),
+                    feature=_test_id(f"{provider}:{cycle}:{target}:feature"),
+                ),
+            )
+            for target in targets
+        ),
+    )
 
 
 def _candidate(started_at: datetime = NOW - timedelta(days=7), *, policy: str = POLICY):
@@ -116,6 +159,68 @@ def test_v1_candidate_and_report_canonical_bytes_are_stable() -> None:
         b'"quality_evaluation_id":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",'
         b'"target_id":"test-target"}]}'
     )
+
+
+def test_v2_cycle_receipt_filename_is_bound_to_its_content_digest(
+    tmp_path: Path,
+) -> None:
+    store = SoakStoreV2(tmp_path)
+    claimed = _cycle_receipt("hyperliquid-public", cycle="daily-2026-08-31")
+    substituted = _cycle_receipt("hyperliquid-public", cycle="daily-2026-09-01")
+    store.write_cycle_receipt(claimed)
+    path = store.receipt_path(claimed.receipt_id)
+    path.unlink()
+    path.write_bytes(substituted.canonical_bytes())
+
+    with pytest.raises(ValueError, match="filename disagrees"):
+        store.load_cycle_receipt(claimed.receipt_id)
+
+
+def test_v2_candidate_rejects_symlinked_parent_before_target_mutation(
+    tmp_path: Path,
+) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    linked = tmp_path / "linked"
+    try:
+        linked.symlink_to(outside, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"symlink creation unavailable: {error}")
+    candidate = SoakCandidateV2.build(
+        started_at=NOW,
+        source_contract_id="f" * 64,
+        code_commit=COMMIT,
+        policy_ids=(POLICY,),
+        calendar_versions=("XNYS-2026a",),
+        schema_versions=("artifact-v2:bars-v1",),
+        required_targets=soak_module._REQUIRED_TARGETS,
+    )
+    try:
+        with pytest.raises(ValueError, match="reparse"):
+            SoakStoreV2(linked / "new-evidence").write_candidate(candidate, now=NOW)
+        assert not (outside / "new-evidence").exists()
+    finally:
+        linked.unlink(missing_ok=True)
+
+
+def test_v2_cycle_receipt_input_rejects_symlinked_parent(
+    tmp_path: Path,
+) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    receipt = _cycle_receipt("hyperliquid-public", cycle="daily-2026-08-31")
+    path = outside / "receipt.json"
+    path.write_bytes(receipt.canonical_bytes())
+    linked = tmp_path / "linked"
+    try:
+        linked.symlink_to(outside, target_is_directory=True)
+    except OSError as error:
+        pytest.skip(f"symlink creation unavailable: {error}")
+    try:
+        with pytest.raises(ValueError, match="reparse"):
+            soak_module._read_cycle_receipt(linked / path.name)
+    finally:
+        linked.unlink(missing_ok=True)
 
 
 def test_tool_wrapper_and_packaged_verify_cli_are_identical(

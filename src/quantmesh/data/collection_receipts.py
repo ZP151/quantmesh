@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime
 from pathlib import Path
 from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from quantmesh.data.artifacts import ArtifactLayer, ArtifactManifest, ManifestStore
+from quantmesh.data.artifacts import (
+    ArtifactLayer,
+    ArtifactManifest,
+    ManifestStore,
+    canonical_json_bytes,
+)
 from quantmesh.data.capabilities import DataKind
 from quantmesh.data.checkpoints import CheckpointStore
 from quantmesh.data.collection import CollectionJob, CollectionRun
@@ -101,6 +107,13 @@ class CollectionCycleReceipt(_FrozenContract):
         if len(manifest_ids) != len(set(manifest_ids)):
             raise ValueError("collection receipt manifests must be unique across targets")
         return self
+
+    @property
+    def receipt_id(self) -> str:
+        return hashlib.sha256(self.canonical_bytes()).hexdigest()
+
+    def canonical_bytes(self) -> bytes:
+        return canonical_json_bytes(self.model_dump(mode="json"))
 
 
 def derive_collection_receipt(

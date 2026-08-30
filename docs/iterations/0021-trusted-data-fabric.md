@@ -1049,10 +1049,55 @@ durable checkpoint.
   No real provider call, OpenD authentication, scheduler registration, evidence
   clock, overlap resolution, credential or trading authority changed.
 
+## Checkpoint 26 — Reliability repair Task 5 crash-safe exact daily runner, 2026-08-31
+
+- Planner decomposed the Tier A control-plane slice into immutable run storage,
+  one argv-only process boundary, clean/reachable source proof, receipt-only v2
+  observation and a terminal daily state machine. The main thread remained the
+  only writer; a read-only reviewer performed five adversarial passes.
+- RED covered create-once terminal and stage receipts, latest-pointer chaining,
+  owner-token leases, stale-owner recovery, hard-link/reparse rejection,
+  finite child deadlines, complete Windows `taskkill /T /F`, dirty/unreachable
+  source, malformed collectors, timeout terminals, same-day retry, concurrent
+  convergence, receipt substitution and report-before-terminal crash recovery.
+- New collection cycles enter v2 observation only through the two canonical
+  Task 4 receipts. Every exact raw/normalized/adjusted/feature ID is reopened,
+  tied to one checkpoint, job, run, attempt, quality report, commit and target
+  lineage. Moomoo's bars are a controlled subset of its 16-node two-target
+  checkpoint, with factors, splits, dividends and normalized action parents
+  revalidated; v1 canonical bytes and verifier routing remain unchanged.
+- The packaged daily runner proves one clean HEAD reachable from the pinned
+  remote ref, enforces shared monotonic stage budgets, kills descendant process
+  trees on timeout, classifies OpenD authentication blocks, runs the complete
+  verifier after observation and returns success only with an embedded accepted
+  verifier proof. Same-day runs increment attempts and reverify exact evidence;
+  concurrent invocations converge on a durable terminal rather than collecting
+  twice.
+- Operational evidence uses content-derived IDs, create-once hard-link
+  publication, single-link/reparse-safe reads, process-instance leases and an
+  atomic chained latest pointer. Receipt objects are published before terminal
+  indexes, so an injected crash between the two writes leaves a retryable orphan
+  instead of an unreadable terminal. A report already durable before a runner
+  crash is recovered by reopening its exact two receipts and rerunning only the
+  verifier.
+- Reviewer rounds found and drove closure of short contention waits, unsafe
+  pre-check directory creation, parent-chain receipt redirects, PID reuse,
+  non-atomic terminal ordering, Moomoo checkpoint subset semantics, a two-target
+  checkpoint variable shadow and repeated exact-lineage scans. The fifth
+  read-only review returned `CLEAN` with no remaining P0–P2 finding.
+- Final Task 5 verification passed `50` tests with four environment-dependent
+  skips and five known upstream `exchange-calendars` warnings; focused Ruff and
+  `git diff --check` passed. The real two-target Moomoo graph fixture also passed
+  the complete v2 snapshot loop (`1 passed`) after exact-entry reuse reduced it
+  from `231.23s` to `130.51s`; observe and verify remain finite at 600 seconds.
+- No real provider call, OpenD session, scheduler registration, evidence root,
+  overlap resolution, clock start, credential, network publication, trading
+  authority or release state changed. The retired scheduler remains disabled.
+
 ## Current frontier
 
-Task 5, crash-safe exact daily runner, is the first incomplete slice in the
-approved Checkpoint 20 reliability-repair plan.
+Task 6, deadline-bounded connection witness, is the first incomplete slice in
+the approved Checkpoint 20 reliability-repair plan.
 Continue one bounded TDD slice at a time with independent read-only review and
 recorded verification at every phase boundary. Keep the retired scheduler
 disabled and do not count time from the rejected evidence root toward the

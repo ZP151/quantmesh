@@ -320,11 +320,11 @@ Commit: `feat(data): emit exact collection cycle receipts`
 - Produces: `trusted_data_soak.py observe --cycle-receipt FILE` and v2 `SoakTargetEvidence` with job/run/quality-report IDs.
 - CLI adds: `--run-root`, `--remote-ref` and per-stage deadline options.
 
-- [ ] **Step 1: Write RED immutable-run tests**
+- [x] **Step 1: Write RED immutable-run tests**
 
 Test create-once terminal receipts, exact retry, conflicting overwrite, atomic latest pointer, concurrent slot lease, stale lock recovery with owner proof, exception-finally receipt and reparse/hard-link rejection using the existing filesystem safety helpers.
 
-- [ ] **Step 2: Write RED daily state-machine tests**
+- [x] **Step 2: Write RED daily state-machine tests**
 
 Use controlled subprocess results and assert:
 
@@ -337,19 +337,19 @@ Use controlled subprocess results and assert:
 - two processes for one slot produce one report and compatible terminal receipts;
 - injected crash between report write and terminal receipt recovers only the exact report.
 
-- [ ] **Step 3: Run RED tests**
+- [x] **Step 3: Run RED tests**
 
 Run: `.venv\Scripts\python.exe -m pytest tests/test_immutable_runs.py tests/test_soak_daily.py tests/test_trusted_data_soak.py -q`
 
-- [ ] **Step 4: Implement immutable operational primitives**
+- [x] **Step 4: Implement immutable operational primitives**
 
 Use content-derived receipt IDs, create-new atomic publication and an owner-token lock. Latest is a replaceable pointer containing slot, receipt ID and prior pointer digest; readers verify the target before accepting it.
 
-- [ ] **Step 5: Implement exact v2 observation**
+- [x] **Step 5: Implement exact v2 observation**
 
 Pass two canonical collection receipts to observation. Build the report only from those exact manifest IDs and checkpoint proofs. Preserve v1 loading/verifying, while new evidence-v3 candidates use `quantmesh-trusted-data-soak-v2` and exact target job/run/quality-report fields. Make `SoakStore.append()` slot-locked and exact-retry idempotent.
 
-- [ ] **Step 6: Implement deadline-bounded runner**
+- [x] **Step 6: Implement deadline-bounded runner**
 
 Implement `verify_source_contract(repo, remote_ref, dependency_digest, script_digest, config_digest)` and require clean HEAD plus `git merge-base --is-ancestor HEAD REMOTE_REF`. Use one `run_process(command, timeout_seconds, cwd)` boundary that accepts argv only, starts a new process group, waits with a finite monotonic timeout and terminates the complete Windows tree on expiry. Always record the terminal receipt in `finally`. After observe, call:
 
@@ -359,7 +359,7 @@ trusted_data_soak.py verify --minimum-hours 0 --minimum-xnys-sessions 1
 
 Parse `SoakVerification`; return zero only when `accepted` is true and the verifier proof is embedded in the terminal receipt.
 
-- [ ] **Step 7: Run GREEN and concurrency tests**
+- [x] **Step 7: Run GREEN and concurrency tests**
 
 Run:
 
@@ -369,7 +369,7 @@ Run:
 git diff --check
 ```
 
-- [ ] **Step 8: Commit and record role evidence**
+- [x] **Step 8: Commit and record role evidence**
 
 Commit: `fix(ops): make formal daily soak fully fail closed`
 

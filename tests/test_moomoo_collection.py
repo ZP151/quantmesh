@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import quantmesh.data.moomoo_collection as collection_module
+import quantmesh.ops.trusted_data_soak as soak_module
 from quantmesh.data.artifacts import (
     ArtifactLayer,
     ArtifactManifest,
@@ -1431,6 +1432,38 @@ def test_real_two_target_collection_derives_one_exact_receipt(
         }
         assert item.manifest_ids.model_dump() == expected
     assert receipt.quality_report_id
+    checkpoint = soak_module._validate_receipt_checkpoint(store.root, receipt)
+    assert set(
+        manifest_id
+        for item in receipt.targets
+        for manifest_id in item.manifest_ids.ordered_values()
+    ) < set(checkpoint.manifest_ids)
+    required_targets = tuple(
+        sorted(
+            soak_module._target_id(
+                "moomoo-opend",
+                item.canonical_instrument,
+                ArtifactLayer.ADJUSTED,
+                DataKind.BARS,
+                item.interval,
+            )
+            for item in receipt.targets
+        )
+    )
+    monkeypatch.setattr(soak_module, "_REQUIRED_TARGETS", required_targets)
+    evidence, config, manifest_ids, entries = soak_module._v2_explicit_snapshot(
+        store.root, (receipt,)
+    )
+    assert tuple(item.target for item in evidence) == ("AAPL", "NVDA")
+    assert tuple(item.manifest_id for item in entries) == tuple(
+        item.manifest_ids.adjusted for item in receipt.targets
+    )
+    assert config["required_targets"] == required_targets
+    assert set(manifest_ids) == {
+        manifest_id
+        for item in receipt.targets
+        for manifest_id in item.manifest_ids.ordered_values()
+    }
 
     bars_only = tuple(
         manifest_id
