@@ -277,23 +277,23 @@ Record Quant Researcher verdict on knowledge time/downstream use, plus Implement
 - Produces: `TargetCollectionEvidence` and `CollectionCycleReceipt`.
 - Produces CLI field: `collection_receipt` containing provider, commit, cycle, job ID, run ID, attempt, quality report ID and exact target/layer manifest map.
 
-- [ ] **Step 1: Write RED receipt tests**
+- [x] **Step 1: Write RED receipt tests**
 
 Assert Hyperliquid receipt contains exactly BTC/ETH/SOL and Moomoo exactly AAPL/NVDA, with raw/normalized/adjusted/feature IDs for each required bars target. Assert every ID belongs to one checkpoint with matching job/run/quality report, producing commit and collection cycle. Reject empty `{}`, stale manifests, mixed checkpoints, wrong target/layer, fixture provenance and manifest IDs not returned by the current collection.
 
-- [ ] **Step 2: Run RED tests**
+- [x] **Step 2: Run RED tests**
 
 Run: `.venv\Scripts\python.exe -m pytest tests/test_trusted_data_tool.py tests/test_hyperliquid_collection.py tests/test_moomoo_collection.py -q`
 
-- [ ] **Step 3: Implement receipt derivation**
+- [x] **Step 3: Implement receipt derivation**
 
 After each collector returns, derive the receipt only from its returned manifest IDs. Open each manifest, obtain `CheckpointStore.checkpoints_for_manifests()`, require one exact owning checkpoint and build sorted target evidence. Do not consult catalog current pointers.
 
-- [ ] **Step 4: Run GREEN tests**
+- [x] **Step 4: Run GREEN tests**
 
 Run the Task 4 tests, focused Ruff on touched files and `git diff --check`.
 
-- [ ] **Step 5: Commit and record role evidence**
+- [x] **Step 5: Commit and record role evidence**
 
 Commit: `feat(data): emit exact collection cycle receipts`
 

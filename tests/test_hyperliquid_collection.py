@@ -2,9 +2,12 @@ import json
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
+from pydantic import ValidationError
 
+import quantmesh.data.collection_receipts as collection_receipts_module
 import quantmesh.data.hyperliquid_collection as collection_module
 from quantmesh.data.artifacts import (
     ArtifactLayer,
@@ -16,6 +19,11 @@ from quantmesh.data.collection import (
     CollectionCoordinator,
     InjectedCrash,
     PublicationStage,
+)
+from quantmesh.data.collection_receipts import (
+    CollectionCycleReceipt,
+    CollectionReceiptIntegrityError,
+    derive_collection_receipt,
 )
 from quantmesh.data.hyperliquid_collection import (
     HyperliquidCollectionWindow,
@@ -294,6 +302,217 @@ def test_public_candles_publish_four_layer_identity_lineage(tmp_path: Path) -> N
     assert adjusted.adjustment_policy == "identity-no-corporate-actions-v1"
     assert feature.parent_manifest_ids == (adjusted.manifest_id,)
     assert publication.qualifies is False
+
+    with pytest.raises(CollectionReceiptIntegrityError, match="fixture"):
+        derive_collection_receipt(
+            root=tmp_path,
+            provider="hyperliquid-public",
+            code_commit="b" * 40,
+            collection_cycle="initial",
+            manifest_ids=publication.manifest_ids,
+            targets=("BTC", "ETH", "SOL"),
+            interval="1m",
+        )
+
+
+def test_real_three_target_collection_derives_one_exact_receipt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(collection_module, "_clean_git_commit_matches", lambda commit: True)
+    request_count = 0
+
+    def candles(self, symbol: str, interval: str, *, start: datetime, end: datetime):
+        nonlocal request_count
+        rows = [{**_candle(index), "s": symbol} for index in range(3)]
+        cycle_offset = request_count // 3
+        request_count += 1
+        return PublicInfoResponse(
+            payload=rows,
+            raw_bytes=json.dumps(rows, separators=(",", ":")).encode(),
+            received_at=NOW + timedelta(minutes=10 + cycle_offset),
+        )
+
+    monkeypatch.setattr(PublicInfoTransport, "candles", candles)
+    store = ManifestStore(tmp_path)
+    publications = HyperliquidCollector(
+        store,
+        transport=PublicInfoTransport(),
+        code_commit="b" * 40,
+    ).collect_candles(
+        ["ETH", "BTC", "SOL"],
+        "1m",
+        _window(),
+        collection_cycle="2026-08-31",
+    )
+
+    receipt = derive_collection_receipt(
+        root=tmp_path,
+        provider="hyperliquid-public",
+        code_commit="b" * 40,
+        collection_cycle="2026-08-31",
+        manifest_ids=tuple(
+            manifest_id for publication in publications for manifest_id in publication.manifest_ids
+        ),
+        targets=("ETH", "BTC", "SOL"),
+        interval="1m",
+    )
+
+    assert tuple(item.target for item in receipt.targets) == ("BTC", "ETH", "SOL")
+    publication_by_target = dict(zip(("ETH", "BTC", "SOL"), publications, strict=True))
+    for item in receipt.targets:
+        assert item.manifest_ids.model_dump() == dict(
+            zip(
+                ("raw", "normalized", "adjusted", "feature"),
+                publication_by_target[item.target].manifest_ids,
+                strict=True,
+            )
+        )
+    assert receipt.quality_report_id
+    with pytest.raises(ValidationError, match="frozen"):
+        receipt.targets[0].manifest_ids.raw = "0" * 64
+    partial_payload = receipt.model_dump(mode="json")
+    partial_payload["targets"] = partial_payload["targets"][:1]
+    with pytest.raises(ValidationError, match="exact provider target"):
+        CollectionCycleReceipt.model_validate_json(json.dumps(partial_payload))
+
+    btc_manifests = tuple(
+        store.open(manifest_id).manifest
+        for manifest_id in publication_by_target["BTC"].manifest_ids
+    )
+    tampered_adjusted = btc_manifests[2].model_copy(
+        update={
+            "parent_manifest_ids": (
+                btc_manifests[1].manifest_id,
+                btc_manifests[0].manifest_id,
+            )
+        }
+    )
+    with pytest.raises(CollectionReceiptIntegrityError, match="exact returned lineage"):
+        collection_receipts_module._target_evidence(
+            store,
+            provider="hyperliquid-public",
+            target="BTC",
+            interval="1m",
+            manifests=(*btc_manifests[:2], tampered_adjusted, btc_manifests[3]),
+            returned_manifests=btc_manifests,
+        )
+
+    with monkeypatch.context() as run_guard:
+        run_guard.setattr(
+            collection_receipts_module.CollectionRun,
+            "for_job",
+            classmethod(
+                lambda cls, job, *, attempt: SimpleNamespace(run_id="0" * 64)
+            ),
+        )
+        with pytest.raises(CollectionReceiptIntegrityError, match="exact collection job"):
+            derive_collection_receipt(
+                root=tmp_path,
+                provider="hyperliquid-public",
+                code_commit="b" * 40,
+                collection_cycle="2026-08-31",
+                manifest_ids=tuple(
+                    manifest_id
+                    for publication in publications
+                    for manifest_id in publication.manifest_ids
+                ),
+                targets=("ETH", "BTC", "SOL"),
+                interval="1m",
+            )
+
+    with pytest.raises(CollectionReceiptIntegrityError, match="collection cycle"):
+        derive_collection_receipt(
+            root=tmp_path,
+            provider="hyperliquid-public",
+            code_commit="b" * 40,
+            collection_cycle="relabelled-cycle",
+            manifest_ids=tuple(
+                manifest_id
+                for publication in publications
+                for manifest_id in publication.manifest_ids
+            ),
+            targets=("ETH", "BTC", "SOL"),
+            interval="1m",
+        )
+    with pytest.raises(CollectionReceiptIntegrityError, match="stale producing commit"):
+        derive_collection_receipt(
+            root=tmp_path,
+            provider="hyperliquid-public",
+            code_commit="a" * 40,
+            collection_cycle="2026-08-31",
+            manifest_ids=tuple(
+                manifest_id
+                for publication in publications
+                for manifest_id in publication.manifest_ids
+            ),
+            targets=("ETH", "BTC", "SOL"),
+            interval="1m",
+        )
+    with pytest.raises(CollectionReceiptIntegrityError, match="lacks one exact"):
+        derive_collection_receipt(
+            root=tmp_path,
+            provider="hyperliquid-public",
+            code_commit="b" * 40,
+            collection_cycle="2026-08-31",
+            manifest_ids=tuple(
+                manifest_id
+                for publication in publications
+                for manifest_id in publication.manifest_ids
+            )[:-1],
+            targets=("ETH", "BTC", "SOL"),
+            interval="1m",
+        )
+    with pytest.raises(CollectionReceiptIntegrityError, match="exact provider target"):
+        derive_collection_receipt(
+            root=tmp_path,
+            provider="hyperliquid-public",
+            code_commit="b" * 40,
+            collection_cycle="2026-08-31",
+            manifest_ids=tuple(
+                manifest_id
+                for publication in publications
+                for manifest_id in publication.manifest_ids
+            ),
+            targets=("ETH", "BTC", "DOGE"),
+            interval="1m",
+        )
+
+    all_ids = tuple(
+        manifest_id
+        for publication in publications
+        for manifest_id in publication.manifest_ids
+    )
+    owners = collection_receipts_module.CheckpointStore(
+        tmp_path
+    ).checkpoints_for_manifests(all_ids)
+
+    class MixedCheckpointStore:
+        def __init__(self, _root: Path) -> None:
+            pass
+
+        def checkpoints_for_manifests(self, manifest_ids: tuple[str, ...]):
+            mixed = dict(owners)
+            mixed[manifest_ids[-1]] = mixed[manifest_ids[-1]].model_copy(
+                update={"job_id": "0" * 64}
+            )
+            return mixed
+
+    monkeypatch.setattr(
+        collection_receipts_module,
+        "CheckpointStore",
+        MixedCheckpointStore,
+    )
+    with pytest.raises(CollectionReceiptIntegrityError, match="mixes checkpoint"):
+        derive_collection_receipt(
+            root=tmp_path,
+            provider="hyperliquid-public",
+            code_commit="b" * 40,
+            collection_cycle="2026-08-31",
+            manifest_ids=all_ids,
+            targets=("ETH", "BTC", "SOL"),
+            interval="1m",
+        )
 
 
 def test_explicit_collection_cycle_can_capture_a_later_provider_correction(

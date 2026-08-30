@@ -17,6 +17,10 @@ from pydantic import ValidationError
 from quantmesh.data.artifacts import ManifestIntegrityError, ManifestStore
 from quantmesh.data.catalog import CatalogIntegrityError, TrustedDataCatalog
 from quantmesh.data.checkpoints import CheckpointIntegrityError, CheckpointStore
+from quantmesh.data.collection_receipts import (
+    derive_collection_receipt,
+    validate_receipt_targets,
+)
 from quantmesh.data.hyperliquid_collection import (
     HyperliquidCollectionWindow,
     HyperliquidCollector,
@@ -187,6 +191,7 @@ def _collect(args: argparse.Namespace) -> dict[str, Any]:
     symbols = _symbols(args.symbols)
     if args.provider == "hyperliquid":
         _validate_hyperliquid_scope(symbols, args.interval, start, end)
+        validate_receipt_targets("hyperliquid-public", tuple(symbols))
         commit = _repository_commit()
         store = ManifestStore(args.root)
         collector = HyperliquidCollector(
@@ -200,18 +205,31 @@ def _collect(args: argparse.Namespace) -> dict[str, Any]:
             HyperliquidCollectionWindow(start=start, end=end),
             collection_cycle=args.collection_cycle,
         )
+        receipt = derive_collection_receipt(
+            root=args.root,
+            provider="hyperliquid-public",
+            code_commit=commit,
+            collection_cycle=args.collection_cycle,
+            manifest_ids=tuple(
+                manifest_id for item in publications for manifest_id in item.manifest_ids
+            ),
+            targets=tuple(symbols),
+            interval=args.interval,
+        )
         return {
             "provider": "hyperliquid-public",
             "read_only": True,
             "code_commit": commit,
             "window": {"start": start.isoformat(), "end": end.isoformat()},
             "publications": [item.model_dump(mode="json") for item in publications],
+            "collection_receipt": receipt.model_dump(mode="json"),
         }
 
     if args.interval not in {"1m", "1d"}:
         raise ValueError("Moomoo interval must be 1m or 1d")
     if any(symbol not in {"AAPL", "NVDA"} for symbol in symbols):
         raise ValueError("Moomoo symbols are limited to AAPL and NVDA")
+    validate_receipt_targets("moomoo-opend", tuple(symbols))
     commit = _repository_commit()
     store = ManifestStore(args.root)
     targets = tuple(
@@ -232,10 +250,26 @@ def _collect(args: argparse.Namespace) -> dict[str, Any]:
             CollectionWindow(start=start, end=end),
             collection_cycle=args.collection_cycle,
         )
+    receipt = (
+        None
+        if not result.manifest_ids
+        else derive_collection_receipt(
+            root=args.root,
+            provider="moomoo-opend",
+            code_commit=commit,
+            collection_cycle=args.collection_cycle,
+            manifest_ids=result.manifest_ids,
+            targets=tuple(symbols),
+            interval=args.interval,
+        )
+    )
     return {
         "provider": "moomoo-opend",
         "read_only": True,
         "code_commit": commit,
+        "collection_receipt": (
+            None if receipt is None else receipt.model_dump(mode="json")
+        ),
         **result.model_dump(mode="json"),
     }
 

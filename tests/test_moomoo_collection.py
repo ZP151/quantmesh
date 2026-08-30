@@ -20,6 +20,10 @@ from quantmesh.data.collection_process import (
     CollectionProcessTimeout,
     run_bounded_json_process,
 )
+from quantmesh.data.collection_receipts import (
+    CollectionReceiptIntegrityError,
+    derive_collection_receipt,
+)
 from quantmesh.data.envelopes import RawEnvelope
 from quantmesh.data.fabric import MoomooFabricPublisher
 from quantmesh.data.moomoo_collection import (
@@ -1351,6 +1355,98 @@ def test_collector_publishes_complete_single_target_result(
     assert worker_calls == 1
     assert len(result.manifest_ids) == 8
     assert store.open(result.manifest_ids[0]).manifest.knowledge_end >= parent_observed_before
+
+
+def test_real_two_target_collection_derives_one_exact_receipt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    targets = tuple(
+        reversed(
+            tuple(
+                item
+                for item in MoomooCollectionPlan.bounded_default().targets
+                if item.interval == "1d"
+            )
+        )
+    )
+    window = CollectionWindow(
+        start=datetime(2020, 8, 28, tzinfo=UTC),
+        end=datetime(2020, 9, 1, 23, 59, tzinfo=UTC),
+    )
+
+    def successful(request: MoomooWorkerRequest, **kwargs) -> MoomooWorkerResult:
+        payload = _split_payload(request)
+        symbol = request.target.provider_symbol.split(".", maxsplit=1)[1]
+        code = request.target.provider_symbol
+        instrument = payload.bars[0].instrument.model_copy(update={"symbol": symbol})
+        payload = payload.model_copy(
+            update={
+                "bars": tuple(
+                    bar.model_copy(update={"instrument": instrument}) for bar in payload.bars
+                ),
+                "history_pages": tuple(
+                    {**page, "code": code, "rows": [{**row, "code": code} for row in page["rows"]]}
+                    for page in payload.history_pages
+                ),
+                "adjustment_factors": {**payload.adjustment_factors, "code": code},
+                "stock_split_pages": tuple(
+                    {**page, "code": code} for page in payload.stock_split_pages
+                ),
+                "dividends": {**payload.dividends, "code": code},
+            }
+        )
+        return MoomooWorkerResult(status=CollectionStatus.PUBLISHED, payload=payload)
+
+    monkeypatch.setattr(collection_module, "run_moomoo_worker", successful)
+    store = ManifestStore(tmp_path / "fabric")
+    result = MoomooCollector(
+        store,
+        code_commit="f" * 40,
+        scratch_root=tmp_path / "scratch",
+    ).collect(
+        MoomooCollectionPlan(targets=targets),
+        window,
+        collection_cycle="2026-08-31",
+    )
+
+    receipt = derive_collection_receipt(
+        root=store.root,
+        provider="moomoo-opend",
+        code_commit="f" * 40,
+        collection_cycle="2026-08-31",
+        manifest_ids=result.manifest_ids,
+        targets=("NVDA", "AAPL"),
+        interval="1d",
+    )
+
+    assert tuple(item.target for item in receipt.targets) == ("AAPL", "NVDA")
+    for item in receipt.targets:
+        expected = {
+            store.open(manifest_id).manifest.layer.value: manifest_id
+            for manifest_id in result.manifest_ids
+            if store.open(manifest_id).manifest.data_kind is DataKind.BARS
+            and store.open(manifest_id).manifest.canonical_instrument.value.split(":")[2]
+            == item.target
+        }
+        assert item.manifest_ids.model_dump() == expected
+    assert receipt.quality_report_id
+
+    bars_only = tuple(
+        manifest_id
+        for manifest_id in result.manifest_ids
+        if store.open(manifest_id).manifest.data_kind is DataKind.BARS
+    )
+    with pytest.raises(CollectionReceiptIntegrityError, match="normalized action parent"):
+        derive_collection_receipt(
+            root=store.root,
+            provider="moomoo-opend",
+            code_commit="f" * 40,
+            collection_cycle="2026-08-31",
+            manifest_ids=bars_only,
+            targets=("NVDA", "AAPL"),
+            interval="1d",
+        )
 
 
 def test_collector_commits_multi_page_source_snapshot_at_envelope_granularity(

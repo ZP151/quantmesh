@@ -9,6 +9,10 @@ import pytest
 from quantmesh.data import cli as data_cli
 from quantmesh.data.artifacts import ManifestStore
 from quantmesh.data.cli import cli
+from quantmesh.data.collection_receipts import (
+    CollectionReceiptIntegrityError,
+    derive_collection_receipt,
+)
 from tests.test_artifact_manifests import _manifest
 from tests.test_overlap_resolutions import T_BASELINE, _evidence, _raw_manifest
 
@@ -95,6 +99,88 @@ def test_collection_commit_refuses_a_dirty_checkout(monkeypatch) -> None:
 
     with pytest.raises(ValueError, match="clean Git checkout"):
         data_cli._repository_commit()
+
+
+def test_collection_receipt_rejects_empty_current_collection(tmp_path: Path) -> None:
+    with pytest.raises(CollectionReceiptIntegrityError, match="empty"):
+        derive_collection_receipt(
+            root=tmp_path,
+            provider="hyperliquid-public",
+            code_commit="a" * 40,
+            collection_cycle="2026-08-31",
+            manifest_ids=(),
+            targets=("BTC", "ETH", "SOL"),
+            interval="1m",
+        )
+
+
+def test_collect_cli_emits_receipt_derived_from_exact_returned_ids(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest_ids = tuple(character * 64 for character in "abcd")
+    publication = SimpleNamespace(
+        manifest_ids=manifest_ids,
+        model_dump=lambda **_kwargs: {"manifest_ids": list(manifest_ids)},
+    )
+    captured: dict[str, object] = {}
+
+    class FakeCollector:
+        def __init__(self, *_args, **_kwargs) -> None:
+            pass
+
+        def collect_candles(self, *_args, **_kwargs):
+            return (publication,)
+
+    def receipt(**kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(
+            model_dump=lambda **_kwargs: {"contract": "collection-cycle-receipt-v1"}
+        )
+
+    monkeypatch.setattr(data_cli, "HyperliquidCollector", FakeCollector)
+    monkeypatch.setattr(data_cli, "derive_collection_receipt", receipt)
+    monkeypatch.setattr(data_cli, "_repository_commit", lambda: "f" * 40)
+
+    payload = data_cli._collect(
+        SimpleNamespace(
+            root=tmp_path,
+            provider="hyperliquid",
+            symbols="BTC,ETH,SOL",
+            interval="1m",
+            window="2026-08-31T00:00:00Z/2026-08-31T00:02:00Z",
+            collection_cycle="2026-08-31",
+        )
+    )
+
+    assert captured["manifest_ids"] == manifest_ids
+    assert captured["targets"] == ("BTC", "ETH", "SOL")
+    assert payload["collection_receipt"] == {
+        "contract": "collection-cycle-receipt-v1"
+    }
+
+
+def test_collect_cli_rejects_partial_formal_target_set_before_collection(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        data_cli,
+        "_repository_commit",
+        lambda: pytest.fail("partial request reached collection setup"),
+    )
+
+    with pytest.raises(CollectionReceiptIntegrityError, match="exact provider target"):
+        data_cli._collect(
+            SimpleNamespace(
+                root=tmp_path,
+                provider="hyperliquid",
+                symbols="BTC",
+                interval="1m",
+                window="2026-08-31T00:00:00Z/2026-08-31T00:02:00Z",
+                collection_cycle="2026-08-31",
+            )
+        )
 
 
 def test_overlap_inspect_emits_exact_failed_evidence_without_mutation(

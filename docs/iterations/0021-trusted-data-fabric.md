@@ -1022,9 +1022,36 @@ durable checkpoint.
   unchanged OHLCV derivatives. No real resolution, scheduler, clock, provider
   write, credential or trading authority changed in this task.
 
+## Checkpoint 25 — Reliability repair Task 4 exact collection receipts, 2026-08-31
+
+- RED began with `ModuleNotFoundError: quantmesh.data.collection_receipts`.
+  Adversarial cases then covered empty and partial target sets, fixture
+  provenance, stale commits and relabelled cycles, wrong or missing layers,
+  mixed checkpoint identities, omitted current-return manifests, altered
+  parent lineage, nondeterministic run IDs and mutable typed evidence.
+- The CLI now emits one `collection-cycle-receipt-v1` derived only from the
+  collector's exact returned IDs. Hyperliquid requires exactly BTC/ETH/SOL and
+  Moomoo exactly AAPL/NVDA before collection, during derivation and again while
+  parsing the receipt model. Target output is sorted while the original request
+  order is retained when reconstructing the producing collection-job identity.
+- Each target exposes a deeply frozen raw/normalized/adjusted/feature ID map.
+  Every returned ID must belong to the one exact checkpoint and match its job,
+  run, attempt, quality report, commit and reconstructed collection cycle.
+  Hyperliquid and Moomoo parent relationships are provider-exact; Moomoo's
+  adjusted bars require the same-cycle normalized split/action dependency.
+  Catalog current pointers are never consulted.
+- Independent read-only review found and drove closure of partial-target model
+  parsing, shallow dictionary immutability, request-order mismatch, permissive
+  parent lineage and indirect run-guard coverage. The final incremental review
+  returned `CLEAN` with no P0-P3 findings.
+- Final Task 4 verification passed `74` tests with five known upstream
+  `exchange-calendars` warnings. Focused Ruff and `git diff --check` passed.
+  No real provider call, OpenD authentication, scheduler registration, evidence
+  clock, overlap resolution, credential or trading authority changed.
+
 ## Current frontier
 
-Task 4, typed exact collection receipts, is the first incomplete slice in the
+Task 5, crash-safe exact daily runner, is the first incomplete slice in the
 approved Checkpoint 20 reliability-repair plan.
 Continue one bounded TDD slice at a time with independent read-only review and
 recorded verification at every phase boundary. Keep the retired scheduler
