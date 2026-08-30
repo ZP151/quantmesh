@@ -894,18 +894,48 @@ durable checkpoint.
   `docs/superpowers/plans/2026-08-29-trusted-data-soak-reliability-repair.md`;
   Implementer, Reviewer and Verifier gates remain pending.
 
+## Checkpoint 21 — Cross-host handoff and local scheduler retirement, 2026-08-31
+
+- The operator selected a different host for continued work and directed this
+  laptop to push its complete branch state and then stop all local scheduling.
+  This is the remote-Windows-worker topology implied by the approved repair
+  design: Codex Cloud or another clean host may implement and review, while an
+  always-on Windows host retains the interactive Moomoo OpenD boundary.
+- The full operational state, two Windows task definitions, Codex heartbeat,
+  incident chronology, old-root status, safety boundaries and new-host resume
+  sequence are recorded in
+  `docs/runbooks/trusted-data-soak-host-handoff.md`. The old `evidence-v2` root
+  is rejected and contributes no time to a future 168-hour claim.
+- The final pre-retirement connection result started at
+  `2026-08-31T00:00:03+08:00`, run ID
+  `a69920e151191373bfe398f11cfeee5bcd46d986342a13b8f6280115a6bcd1b8`.
+  Scheduler, OpenD process/TCP, Moomoo, Hyperliquid and repository import were
+  healthy; the witness remained failed because the formal task's latest run
+  was `0x00000001`. This does not qualify #124 evidence.
+- Local retirement is deliberately reversible: the two Task Scheduler entries
+  are disabled rather than deleted and the Codex heartbeat is paused. The old
+  trusted-data, evidence, candidate and witness-result files are retained
+  without modification for audit.
+- The receiving host must resume the first incomplete task in the approved
+  reliability plan. It must push and verify the repaired runner before
+  creating a new empty evidence root, registering the staggered schedule or
+  starting a replacement 168-hour clock. Recreating the old scheduler is not
+  an accepted migration.
+
 ## Current frontier
 
-Execute the approved Checkpoint 20 reliability-repair plan one bounded TDD
-slice at a time, with an independent read-only review and recorded verification
-at every phase boundary. Do not count time from the rejected evidence root
+On the receiving host, execute the approved Checkpoint 20 reliability-repair
+plan one bounded TDD slice at a time, with an independent read-only review and
+recorded verification at every phase boundary. Keep the retired laptop's
+schedulers disabled and do not count time from the rejected evidence root
 toward the replacement 168-hour candidate.
 
 ## Resume instructions
 
 1. Read `AGENTS.md`, `CONTEXT.md`, `docs/goals/ACTIVE.md`, this file, the design
    and the executable plan.
-2. Inspect `git status`, branch history, issue #110 and open PRs.
+2. Read `docs/runbooks/trusted-data-soak-host-handoff.md`, then inspect
+   `git status`, branch history, issues #124/#127 and open PRs.
 3. Resume the first incomplete plan task; do not redispatch completed commits.
 4. Keep the main thread as the only source writer and use read-only reviewers.
 5. Mirror every green checkpoint and review verdict into this ledger.

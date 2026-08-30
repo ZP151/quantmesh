@@ -29,6 +29,22 @@ It also adds the explicit, immutable overlap-resolution path already required
 by ADR-0018. A resolution acknowledges one exact provider correction without
 rewriting the failed evaluation or teaching the system to ignore turnover.
 
+## Execution-host decision
+
+On 2026-08-31 the operator moved continued execution away from the original
+laptop. Development, review and GitHub publication may be coordinated from
+Codex Cloud or another clean host, but the real five-target runner remains a
+Windows-host responsibility because Moomoo OpenD requires an interactive login
+and exposes its authenticated service on loopback. The replacement Windows
+host is the single scheduler authority; the original laptop's Windows tasks
+and Codex heartbeat are retired after the handoff commit is remotely visible.
+
+This is a host transfer, not evidence continuity. The rejected `evidence-v2`
+root remains immutable on the old laptop. The receiving host implements and
+verifies this design before starting a new candidate in a new empty root. See
+`docs/runbooks/trusted-data-soak-host-handoff.md` for the captured old-host
+configuration, incident ledger and resume procedure.
+
 The repair does not complete the 168-hour gate immediately. It produces a
 remotely reproducible runner, starts a new evidence root, and then requires 168
 real elapsed hours of accepted evidence.
