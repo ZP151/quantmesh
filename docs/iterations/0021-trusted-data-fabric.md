@@ -953,13 +953,49 @@ durable checkpoint.
   authority, release state or execution authority changed. Task 2 is now the
   first incomplete plan slice.
 
+## Checkpoint 23 — Reliability repair Task 2 exact overlap resolution, 2026-08-31
+
+- RED began with `ModuleNotFoundError: quantmesh.data.overlap_resolutions`.
+  Reviewer-driven RED cycles then reproduced nine fail-open boundaries,
+  including orphan report/manifest discovery, non-predecessor baselines,
+  canonical and wire-format OHLCV changes, backdated or simultaneous review,
+  legacy/exact fingerprint conflation and competing winner forgery.
+- The implementation adds strict, frozen exact field-diff, conflict and
+  resolution contracts. Exact conflict identities hash the sorted canonical
+  field differences while the unchanged v1 evaluator retains its legacy row
+  fingerprint, so historical v1 evidence remains byte-compatible.
+- A resolution verifies the committed immediate predecessor, candidate
+  checkpoint, report/evaluation/policy closure, exact re-derived conflict set
+  and knowledge times. The `ohlcv-derivatives-only` policy accepts only raw bar
+  corrections whose canonical OHLCV/time fields and provider wire aliases are
+  unchanged; turnover remains visible and unavailable to liquidity, capacity,
+  cost or slippage consumers.
+- The evaluation binding is create-once and claimed before object publication,
+  so a concurrent loser leaves no resolution object through the normal API.
+  Canonical winner anchors are exhaustively checked for uniqueness; missing,
+  altered, duplicated or repointed bindings fail closed. Exact retry remains
+  idempotent.
+- `quantmesh-data overlap inspect` reads only checkpoint-bound reports and
+  committed manifest history without mutation. `overlap resolve` repeats every
+  immutable ID and exact conflict fingerprint before recording and read-back
+  verification; uncommitted same-revision objects cannot influence inspection.
+- Final focused verification passed `66` tests with five previously recorded
+  upstream `exchange-calendars` warnings. Ruff and `git diff --check` passed.
+  The final independent read-only Standards and Spec review reran all nine
+  adversarial invariants and returned `CLEAN`.
+- The original failed NVDA evaluation/report remains failed and unchanged. No
+  real resolution was appended yet, no old evidence was admitted, no scheduler
+  was started, and no credential, provider write, execution authority or
+  release state changed.
+
 ## Current frontier
 
-On the receiving host, execute the approved Checkpoint 20 reliability-repair
-plan one bounded TDD slice at a time, with an independent read-only review and
-recorded verification at every phase boundary. Keep the retired laptop's
-schedulers disabled and do not count time from the rejected evidence root
-toward the replacement 168-hour candidate.
+Task 3, stable accepted-overlap baseline and bounded catalog projection, is the
+first incomplete slice in the approved Checkpoint 20 reliability-repair plan.
+Continue one bounded TDD slice at a time with independent read-only review and
+recorded verification at every phase boundary. Keep the retired scheduler
+disabled and do not count time from the rejected evidence root toward the
+replacement 168-hour candidate.
 
 ## Resume instructions
 

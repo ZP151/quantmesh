@@ -7,7 +7,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
@@ -27,6 +27,9 @@ from quantmesh.data.envelopes import ProvenanceClass, RawEnvelope
 from quantmesh.data.objects import FABRIC_NAMESPACE, ObjectIntegrityError, ObjectRef, ObjectStore
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Venue
+
+if TYPE_CHECKING:
+    from quantmesh.data.overlap_resolutions import OverlapConflict
 
 
 class QualityFailure(ValueError):
@@ -913,50 +916,98 @@ class QualityEvaluator:
                 item.manifest_id,
             ),
         )
-        current_rows = self._row_fingerprints(manifest)
-        previous_rows = self._row_fingerprints(predecessor)
         return tuple(
             sorted(
-                hashlib.sha256(
-                    canonical_json_bytes(
-                        {
-                            "current": fingerprint,
-                            "identity": identity,
-                            "previous": previous_rows[identity],
-                        }
-                    )
-                ).hexdigest()
-                for identity, fingerprint in current_rows.items()
-                if identity in previous_rows and previous_rows[identity] != fingerprint
+                conflict.legacy_evaluation_fingerprint
+                for conflict in self.overlap_conflicts(
+                    manifest.manifest_id,
+                    predecessor.manifest_id,
+                    admitted_manifest_ids=admitted_manifest_ids,
+                )
             )
         )
 
-    def _row_fingerprints(self, manifest: ArtifactManifest) -> dict[str, str]:
+    def overlap_conflicts(
+        self,
+        manifest_id: str,
+        baseline_manifest_id: str,
+        admitted_manifest_ids: frozenset[str],
+    ) -> tuple[OverlapConflict, ...]:
+        """Return exact sorted shared-row conflicts against one explicit baseline."""
+        from quantmesh.data.overlap_resolutions import OverlapConflict, OverlapFieldDiff
+
+        current = self.require_admitted_manifest(
+            manifest_id,
+            admitted_manifest_ids=admitted_manifest_ids,
+        )
+        baseline = self.require_admitted_manifest(
+            baseline_manifest_id,
+            admitted_manifest_ids=admitted_manifest_ids,
+        )
+        if current.dataset_id != baseline.dataset_id:
+            raise QualityFailure("overlap baseline and candidate datasets disagree")
+        if baseline.compatibility_revision >= current.compatibility_revision:
+            raise QualityFailure("overlap baseline must precede the candidate revision")
+        if baseline.knowledge_end > current.knowledge_start:
+            raise QualityFailure("overlap baseline knowledge must precede the candidate")
+        current_rows = self._row_values(current)
+        baseline_rows = self._row_values(baseline)
+        conflicts = []
+        for identity in sorted(current_rows.keys() & baseline_rows.keys()):
+            prior = baseline_rows[identity]
+            candidate = current_rows[identity]
+            prior_fingerprint = hashlib.sha256(canonical_json_bytes(prior)).hexdigest()
+            current_fingerprint = hashlib.sha256(canonical_json_bytes(candidate)).hexdigest()
+            if prior_fingerprint == current_fingerprint:
+                continue
+            if not isinstance(prior, dict) or not isinstance(candidate, dict):
+                raise QualityFailure("overlap conflict rows must be JSON objects")
+            fields = sorted(prior.keys() | candidate.keys())
+            diffs = tuple(
+                OverlapFieldDiff(
+                    field=field,
+                    prior_present=field in prior,
+                    current_present=field in candidate,
+                    prior=prior.get(field),
+                    current=candidate.get(field),
+                )
+                for field in fields
+                if (field in prior) != (field in candidate)
+                or canonical_json_bytes(prior.get(field))
+                != canonical_json_bytes(candidate.get(field))
+            )
+            conflicts.append(
+                OverlapConflict.build(
+                    identity=identity,
+                    prior_row_fingerprint=prior_fingerprint,
+                    current_row_fingerprint=current_fingerprint,
+                    field_diffs=diffs,
+                )
+            )
+        return tuple(sorted(conflicts, key=lambda item: item.fingerprint))
+
+    def _row_values(self, manifest: ArtifactManifest) -> dict[str, Any]:
         dataset = ArtifactDataset(manifest, self.manifests.objects, self.manifests)
         if manifest.layer is ArtifactLayer.RAW:
-            result: dict[str, str] = {}
+            result: dict[str, Any] = {}
             for reference in manifest.objects:
                 if reference.media_type != "application/vnd.quantmesh.raw-envelope+json":
                     continue
                 envelope = RawEnvelope.model_validate_json(
                     self.manifests.objects.get_bytes(reference)
                 )
-                fingerprints = _raw_payload_fingerprints(envelope, self.manifests.objects)
-                if fingerprints is not None:
-                    result.update(fingerprints)
+                rows = _raw_payload_rows(envelope, self.manifests.objects)
+                if rows is not None:
+                    result.update(rows)
             return result
         if manifest.data_kind is DataKind.BARS:
             rows: tuple[Any, ...]
             if manifest.layer is ArtifactLayer.FEATURE:
-                rows = dataset.read_features()
+                rows = tuple(dataset.read_features())
             else:
-                rows = dataset.read_bars()
+                rows = tuple(dataset.read_bars())
             return {
-                identity: hashlib.sha256(
-                    canonical_json_bytes(
-                        row.model_dump(mode="json") if isinstance(row, BaseModel) else row
-                    )
-                ).hexdigest()
+                identity: row.model_dump(mode="json") if isinstance(row, BaseModel) else row
                 for identity, row in zip(manifest.row_identities, rows)
             }
         if (
@@ -973,15 +1024,16 @@ class QualityEvaluator:
                     EquitySplitAction.model_validate_json(canonical_json_bytes(row))
                     for row in payload
                 )
-                return {
-                    action.action_id: hashlib.sha256(
-                        canonical_json_bytes(action.model_dump(mode="json"))
-                    ).hexdigest()
-                    for action in actions
-                }
+                return {action.action_id: action.model_dump(mode="json") for action in actions}
             except (TypeError, ValueError, json.JSONDecodeError):
                 return {}
         return {}
+
+    def _row_fingerprints(self, manifest: ArtifactManifest) -> dict[str, str]:
+        return {
+            identity: hashlib.sha256(canonical_json_bytes(row)).hexdigest()
+            for identity, row in self._row_values(manifest).items()
+        }
 
     def evaluate_status(
         self,
@@ -1254,6 +1306,19 @@ def _raw_payload_fingerprints(
     envelope: RawEnvelope,
     objects: ObjectStore,
 ) -> dict[str, str] | None:
+    rows = _raw_payload_rows(envelope, objects)
+    if rows is None:
+        return None
+    return {
+        identity: hashlib.sha256(canonical_json_bytes(row)).hexdigest()
+        for identity, row in rows.items()
+    }
+
+
+def _raw_payload_rows(
+    envelope: RawEnvelope,
+    objects: ObjectStore,
+) -> dict[str, Any] | None:
     try:
         decoded = json.loads(objects.get_bytes(envelope.raw_object))
         if isinstance(decoded, dict) and isinstance(decoded.get("rows"), list):
@@ -1275,10 +1340,7 @@ def _raw_payload_fingerprints(
             return {}
         if len(identities) != len(rows):
             return None
-        return {
-            identity: hashlib.sha256(canonical_json_bytes(row)).hexdigest()
-            for identity, row in zip(identities, rows)
-        }
+        return dict(zip(identities, rows))
     except (ObjectIntegrityError, TypeError, ValueError, json.JSONDecodeError):
         return None
 
@@ -1436,8 +1498,7 @@ def _nonbar_schema_mismatch(
         if not isinstance(payload, list):
             raise TypeError("split payload must be a list")
         actions = tuple(
-            EquitySplitAction.model_validate_json(canonical_json_bytes(item))
-            for item in payload
+            EquitySplitAction.model_validate_json(canonical_json_bytes(item)) for item in payload
         )
         identities = tuple(action.action_id for action in actions)
         if actions:

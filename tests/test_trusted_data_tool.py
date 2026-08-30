@@ -1,5 +1,6 @@
 import json
 import tomllib
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -9,6 +10,7 @@ from quantmesh.data import cli as data_cli
 from quantmesh.data.artifacts import ManifestStore
 from quantmesh.data.cli import cli
 from tests.test_artifact_manifests import _manifest
+from tests.test_overlap_resolutions import T_BASELINE, _evidence, _raw_manifest
 
 
 def _publish(root: Path):
@@ -93,3 +95,89 @@ def test_collection_commit_refuses_a_dirty_checkout(monkeypatch) -> None:
 
     with pytest.raises(ValueError, match="clean Git checkout"):
         data_cli._repository_commit()
+
+
+def test_overlap_inspect_emits_exact_failed_evidence_without_mutation(
+    tmp_path: Path, capsys
+) -> None:
+    baseline, candidate, _, failed, report, conflicts = _evidence(tmp_path)
+
+    assert (
+        cli(["overlap", "inspect", "--root", str(tmp_path), "--evaluation", failed.evaluation_id])
+        == 0
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["failed_evaluation_id"] == failed.evaluation_id
+    assert payload["failed_report_id"] == report.report_id
+    assert payload["policy_id"] == failed.policy_id
+    assert payload["dataset_id"] == candidate.dataset_id
+    assert payload["baseline_manifest_id"] == baseline.manifest_id
+    assert payload["candidate_manifest_id"] == candidate.manifest_id
+    assert payload["conflicts"] == [item.model_dump(mode="json") for item in conflicts]
+    assert not (tmp_path / ".trusted-data-v2" / "quality" / "overlap-resolutions").exists()
+
+
+def test_overlap_resolve_requires_exact_repeated_ids_and_fingerprint(
+    tmp_path: Path, capsys
+) -> None:
+    baseline, candidate, _, failed, report, conflicts = _evidence(tmp_path)
+    command = [
+        "overlap",
+        "resolve",
+        "--root",
+        str(tmp_path),
+        "--evaluation",
+        failed.evaluation_id,
+        "--report",
+        report.report_id,
+        "--policy",
+        failed.policy_id,
+        "--dataset",
+        candidate.dataset_id,
+        "--baseline-manifest",
+        baseline.manifest_id,
+        "--candidate-manifest",
+        candidate.manifest_id,
+        "--fingerprint",
+        conflicts[0].fingerprint,
+        "--reviewed-at",
+        datetime(2026, 8, 24, tzinfo=UTC).isoformat(),
+        "--operator",
+        "local-operator",
+        "--reason",
+        "Moomoo revised one historical turnover value; canonical OHLCV is unchanged",
+        "--attestation",
+        "operator-acknowledged",
+        "--use-policy",
+        "ohlcv-derivatives-only",
+    ]
+
+    wrong = list(command)
+    wrong[wrong.index(conflicts[0].fingerprint)] = "f" * 64
+    assert cli(wrong) == 2
+    assert "fingerprints" in capsys.readouterr().err
+
+    assert cli(command) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["failed_evaluation_id"] == failed.evaluation_id
+    assert payload["conflicts"][0]["fingerprint"] == conflicts[0].fingerprint
+    assert payload["use_policy"] == "ohlcv-derivatives-only"
+
+
+def test_overlap_inspect_ignores_uncommitted_same_revision_orphan(tmp_path: Path, capsys) -> None:
+    baseline, _, _, failed, _, _ = _evidence(tmp_path)
+    orphan = _raw_manifest(
+        tmp_path,
+        revision=baseline.compatibility_revision,
+        known_at=T_BASELINE + timedelta(hours=1),
+        turnover=180_500_000.0,
+    )
+    assert orphan.manifest_id != baseline.manifest_id
+
+    assert (
+        cli(["overlap", "inspect", "--root", str(tmp_path), "--evaluation", failed.evaluation_id])
+        == 0
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["baseline_manifest_id"] == baseline.manifest_id

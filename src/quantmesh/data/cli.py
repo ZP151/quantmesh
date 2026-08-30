@@ -16,6 +16,7 @@ from pydantic import ValidationError
 
 from quantmesh.data.artifacts import ManifestIntegrityError, ManifestStore
 from quantmesh.data.catalog import CatalogIntegrityError, TrustedDataCatalog
+from quantmesh.data.checkpoints import CheckpointIntegrityError, CheckpointStore
 from quantmesh.data.hyperliquid_collection import (
     HyperliquidCollectionWindow,
     HyperliquidCollector,
@@ -27,7 +28,20 @@ from quantmesh.data.moomoo_collection import (
     MoomooCollectionTarget,
     MoomooCollector,
 )
-from quantmesh.data.objects import ObjectIntegrityError
+from quantmesh.data.objects import FABRIC_NAMESPACE, ObjectIntegrityError
+from quantmesh.data.overlap_resolutions import (
+    OverlapResolution,
+    OverlapResolutionIntegrityError,
+    OverlapResolutionStore,
+    ResolutionAttestation,
+    ResolutionUsePolicy,
+)
+from quantmesh.data.quality import (
+    QualityEvaluator,
+    QualityEvidenceStore,
+    QualityIntegrityError,
+    QualityStatus,
+)
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.hyperliquid.public_info import PublicInfoTransport
 
@@ -58,6 +72,41 @@ def _parser() -> argparse.ArgumentParser:
 
     inspect = commands.add_parser("inspect", help="print catalog and qualification state")
     inspect.add_argument("--root", type=Path, required=True)
+
+    overlap = commands.add_parser("overlap", help="inspect or resolve one exact overlap failure")
+    overlap_commands = overlap.add_subparsers(dest="overlap_command", required=True)
+    overlap_inspect = overlap_commands.add_parser(
+        "inspect",
+        help="print exact immutable conflict evidence",
+    )
+    overlap_inspect.add_argument("--root", type=Path, required=True)
+    overlap_inspect.add_argument("--evaluation", required=True)
+
+    resolve = overlap_commands.add_parser(
+        "resolve",
+        help="record one exact operator-attested resolution",
+    )
+    resolve.add_argument("--root", type=Path, required=True)
+    resolve.add_argument("--evaluation", "--failed-evaluation", dest="evaluation", required=True)
+    resolve.add_argument("--report", "--failed-report", dest="report", required=True)
+    resolve.add_argument("--policy", required=True)
+    resolve.add_argument("--dataset", required=True)
+    resolve.add_argument("--baseline-manifest", required=True)
+    resolve.add_argument("--candidate-manifest", required=True)
+    resolve.add_argument("--fingerprint", action="append", required=True)
+    resolve.add_argument("--reviewed-at", type=_utc, required=True)
+    resolve.add_argument("--operator", required=True)
+    resolve.add_argument("--reason", required=True)
+    resolve.add_argument(
+        "--attestation",
+        choices=tuple(item.value for item in ResolutionAttestation),
+        required=True,
+    )
+    resolve.add_argument(
+        "--use-policy",
+        choices=(ResolutionUsePolicy.OHLCV_DERIVATIVES_ONLY.value,),
+        required=True,
+    )
     return parser
 
 
@@ -218,6 +267,146 @@ def _inspect(root: Path) -> dict[str, Any]:
     return {"datasets": [entry.model_dump(mode="json") for entry in entries]}
 
 
+def _report_for_evaluation(root: Path, candidate_manifest_id: str, evaluation_id: str):
+    evidence = QualityEvidenceStore(root)
+    checkpoint_path = root / FABRIC_NAMESPACE / "control" / "collection-checkpoints.duckdb"
+    if not checkpoint_path.is_file():
+        raise QualityIntegrityError(
+            "failed evaluation candidate has no committed checkpoint database"
+        )
+    owners = CheckpointStore(root).checkpoints_for_manifests((candidate_manifest_id,))
+    checkpoint = owners.get(candidate_manifest_id)
+    if checkpoint is None or checkpoint.quality_report_id is None:
+        raise QualityIntegrityError(
+            "failed evaluation candidate has no checkpoint-bound quality report"
+        )
+    report = evidence.verify_report_integrity(checkpoint.quality_report_id)
+    if not any(
+        binding.manifest_id == candidate_manifest_id and binding.evaluation_id == evaluation_id
+        for binding in report.bindings
+    ):
+        raise QualityIntegrityError(
+            "checkpoint-bound report does not contain the failed evaluation"
+        )
+    return report
+
+
+def _overlap_context(root: Path, evaluation_id: str) -> dict[str, Any]:
+    evidence = QualityEvidenceStore(root)
+    failed = evidence.load(evaluation_id)
+    if failed.status is not QualityStatus.FAIL or failed.issue_codes != (
+        "historical-live-overlap",
+    ):
+        raise ValueError("overlap inspection requires an overlap-only failed evaluation")
+    candidate = evidence.manifests.open(failed.manifest_id).manifest
+    policy = evidence.load_policy(failed.policy_id)
+    report = _report_for_evaluation(root, candidate.manifest_id, failed.evaluation_id)
+    committed = evidence.manifests.manifests(candidate.dataset_id)
+    admitted = frozenset(manifest.manifest_id for manifest in committed)
+    evaluator = QualityEvaluator(evidence.manifests)
+    matches = []
+    for manifest_id in admitted:
+        if manifest_id == candidate.manifest_id:
+            continue
+        baseline = evidence.manifests.open(manifest_id).manifest
+        if (
+            baseline.dataset_id != candidate.dataset_id
+            or baseline.compatibility_revision >= candidate.compatibility_revision
+            or baseline.knowledge_end > candidate.knowledge_start
+        ):
+            continue
+        conflicts = evaluator.overlap_conflicts(
+            candidate.manifest_id,
+            baseline.manifest_id,
+            admitted_manifest_ids=admitted,
+        )
+        if (
+            tuple(sorted(item.legacy_evaluation_fingerprint for item in conflicts))
+            == failed.overlap_conflict_fingerprints
+        ):
+            matches.append((baseline, conflicts))
+    if not matches:
+        raise QualityIntegrityError("no exact baseline reproduces the failed overlap conflict set")
+    baseline, conflicts = max(
+        matches,
+        key=lambda item: (
+            item[0].compatibility_revision,
+            item[0].knowledge_end,
+            item[0].manifest_id,
+        ),
+    )
+    if not any(
+        binding.evaluation_id == failed.evaluation_id
+        and binding.manifest_id == candidate.manifest_id
+        for binding in report.bindings
+    ):
+        raise QualityIntegrityError("quality report does not bind the failed candidate")
+    return {
+        "failed_evaluation_id": failed.evaluation_id,
+        "failed_report_id": report.report_id,
+        "policy_id": policy.policy_id,
+        "dataset_id": candidate.dataset_id,
+        "baseline_manifest_id": baseline.manifest_id,
+        "candidate_manifest_id": candidate.manifest_id,
+        "predecessor_known_at": baseline.knowledge_end,
+        "candidate_known_at": candidate.knowledge_end,
+        "failed_overlap_fingerprints": failed.overlap_conflict_fingerprints,
+        "conflicts": conflicts,
+        "admitted_manifest_ids": admitted,
+    }
+
+
+def _overlap_inspect(root: Path, evaluation_id: str) -> dict[str, Any]:
+    context = _overlap_context(root, evaluation_id)
+    return {
+        key: (
+            [item.model_dump(mode="json") for item in value]
+            if key == "conflicts"
+            else value.isoformat()
+            if isinstance(value, datetime)
+            else value
+        )
+        for key, value in context.items()
+        if key != "admitted_manifest_ids"
+    }
+
+
+def _overlap_resolve(args: argparse.Namespace) -> dict[str, Any]:
+    context = _overlap_context(args.root, args.evaluation)
+    supplied = {
+        "failed_evaluation_id": args.evaluation,
+        "failed_report_id": args.report,
+        "policy_id": args.policy,
+        "dataset_id": args.dataset,
+        "baseline_manifest_id": args.baseline_manifest,
+        "candidate_manifest_id": args.candidate_manifest,
+    }
+    for field, value in supplied.items():
+        if context[field] != value:
+            raise ValueError(f"supplied {field} does not match immutable overlap evidence")
+    fingerprints = tuple(sorted(set(args.fingerprint)))
+    if len(fingerprints) != len(args.fingerprint) or fingerprints != tuple(
+        item.fingerprint for item in context["conflicts"]
+    ):
+        raise ValueError("supplied fingerprints do not match the exact conflict set")
+    resolution = OverlapResolution.build(
+        **supplied,
+        conflicts=context["conflicts"],
+        predecessor_known_at=context["predecessor_known_at"],
+        candidate_known_at=context["candidate_known_at"],
+        reviewed_at=args.reviewed_at,
+        operator=args.operator,
+        reason=args.reason,
+        attestation=ResolutionAttestation(args.attestation),
+        use_policy=ResolutionUsePolicy(args.use_policy),
+    )
+    recorded = OverlapResolutionStore(args.root).record(
+        resolution,
+        admitted_manifest_ids=context["admitted_manifest_ids"],
+    )
+    return recorded.model_dump(mode="json")
+
+
 def cli(argv: Sequence[str] | None = None) -> int:
     try:
         args = _parser().parse_args(list(argv) if argv is not None else None)
@@ -225,11 +414,22 @@ def cli(argv: Sequence[str] | None = None) -> int:
             payload = _collect(args)
         elif args.command == "replay":
             payload = _replay(args.root, args.manifest)
+        elif args.command == "overlap" and args.overlap_command == "inspect":
+            payload = _overlap_inspect(args.root, args.evaluation)
+        elif args.command == "overlap":
+            payload = _overlap_resolve(args)
         else:
             payload = _inspect(args.root)
         print(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
         return 0
-    except (ManifestIntegrityError, ObjectIntegrityError, CatalogIntegrityError) as error:
+    except (
+        ManifestIntegrityError,
+        ObjectIntegrityError,
+        CatalogIntegrityError,
+        QualityIntegrityError,
+        OverlapResolutionIntegrityError,
+        CheckpointIntegrityError,
+    ) as error:
         print(f"FAILED: {error}", file=sys.stderr)
         return 1
     except (ValueError, ValidationError) as error:

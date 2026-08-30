@@ -120,7 +120,7 @@ Append Task 1 RED/GREEN commands, Implementer summary and Reviewer verdict to th
 - Produces: `QualityEvaluator.overlap_conflicts(manifest_id, baseline_manifest_id, admitted_manifest_ids) -> tuple[OverlapConflict, ...]`.
 - Produces CLI: `quantmesh-data overlap inspect --root ROOT --evaluation ID` and `quantmesh-data overlap resolve ...`.
 
-- [ ] **Step 1: Write RED contract tests**
+- [x] **Step 1: Write RED contract tests**
 
 Add tests constructing two immutable raw manifests whose single shared NVDA row differs only in turnover. Assert exact conflict detail and fingerprint, then build:
 
@@ -145,13 +145,13 @@ resolution = OverlapResolution.build(
 
 Assert exact retry idempotence and rejection of changed fingerprint, partial set, wrong manifest, wrong dataset/policy, blank reason/operator, review before knowledge time, conflicting concurrent writer, deleted object and altered binding.
 
-- [ ] **Step 2: Run RED tests**
+- [x] **Step 2: Run RED tests**
 
 Run: `.venv\Scripts\python.exe -m pytest tests/test_overlap_resolutions.py -q`
 
 Expected: collection failure because `quantmesh.data.overlap_resolutions` and the public conflict API do not exist.
 
-- [ ] **Step 3: Implement conflict details and immutable store**
+- [x] **Step 3: Implement conflict details and immutable store**
 
 Define strict frozen Pydantic contracts. `OverlapConflict` must hash canonical JSON containing `identity`, prior/current row fingerprints and sorted `OverlapFieldDiff` items. Persist the resolution body through `ObjectStore`; persist the evaluation binding at:
 
@@ -161,11 +161,11 @@ root / FABRIC_NAMESPACE / "quality" / "overlap-resolutions" / f"{failed_evaluati
 
 Create the binding with a temporary file, `os.link(temp, target)` and exact-byte retry comparison. Verify both manifests, the failed evaluation/report binding, exact re-derived conflict set and every knowledge-time relation before accepting it.
 
-- [ ] **Step 4: Add exact inspect/resolve CLI**
+- [x] **Step 4: Add exact inspect/resolve CLI**
 
 Nest an `overlap` command with `inspect` and `resolve`. `resolve` requires all IDs, every repeated `--fingerprint`, UTC `--reviewed-at`, `--operator`, `--reason`, `--attestation` and fixed `--use-policy ohlcv-derivatives-only`. Print canonical resolution JSON only after a read-back verification.
 
-- [ ] **Step 5: Run GREEN tests and compatibility selection**
+- [x] **Step 5: Run GREEN tests and compatibility selection**
 
 Run:
 
@@ -177,7 +177,7 @@ git diff --check
 
 Expected: all pass; old amendment tests remain unchanged.
 
-- [ ] **Step 6: Commit and record role evidence**
+- [x] **Step 6: Commit and record role evidence**
 
 Commit: `feat(data): add exact overlap resolution evidence`
 
