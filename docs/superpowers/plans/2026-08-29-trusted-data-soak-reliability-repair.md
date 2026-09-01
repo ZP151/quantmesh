@@ -513,7 +513,7 @@ Commit: `fix(ops): make formal daily soak fully fail closed`
   `timed-out`, `blocked-user-auth` and `interrupted`; only `passed` and
   `in-progress` are zero-exit operational outcomes.
 
-- [ ] **Step 1: Write RED state-table tests**
+- [x] **Step 1: Write RED state-table tests**
 
 Cover the amended UTC/time-window/result-code table: recent
 `Running/0x41301 -> in-progress`, overdue running -> failure,
@@ -524,15 +524,15 @@ evidence -> failure. Assert no Moomoo SDK child is started while formal state is
 in-progress. Cover missing/logged-out OpenD as `blocked-user-auth` without a
 provider-evidence mutation.
 
-- [ ] **Step 2: Write RED deadline and persistence tests**
+- [x] **Step 2: Write RED deadline and persistence tests**
 
 Inject TCP, scheduler and subprocess exceptions/timeouts. Assert each attempt writes a fresh immutable terminal receipt in `finally`, kills descendants, preserves both a failed scheduled slot and later supplemental success, and never overwrites concurrent run files.
 
-- [ ] **Step 3: Run RED tests**
+- [x] **Step 3: Run RED tests**
 
 Run: `.venv\Scripts\python.exe -m pytest tests/test_connection_witness.py -q`
 
-- [ ] **Step 4: Implement probe and thin wrappers**
+- [x] **Step 4: Implement probe and thin wrappers**
 
 Probe Python/import, loopback TCP 11111, Scheduler state, matching daily receipt,
 read-only Moomoo capability and the public Hyperliquid API under independent
@@ -540,11 +540,11 @@ finite deadlines. Keep PowerShell limited to locating the pinned interpreter
 and invoking the Python command with explicit disjoint roots, task name and
 deadline/staleness inputs.
 
-- [ ] **Step 5: Run GREEN tests**
+- [x] **Step 5: Run GREEN tests**
 
 Run Task 6 pytest, focused Ruff and `git diff --check`.
 
-- [ ] **Step 6: Commit and record role evidence**
+- [x] **Step 6: Commit and record role evidence**
 
 Commit: `fix(ops): persist deadline-bounded connection witnesses`
 

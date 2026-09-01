@@ -1141,10 +1141,62 @@ durable checkpoint.
   Critical or Important contradiction. This is preflight evidence, not Task 6
   implementation acceptance, and it changes no 168-hour claim.
 
+## Checkpoint 28 — Reliability repair Task 6 deadline-bounded connection witness, 2026-09-01
+
+- Planner scope from Checkpoint 27 constrained this slice to a separate
+  connection evidence namespace and read-only diagnostics. Quant research
+  retained the rule that connection receipts are operational evidence only:
+  they cannot create soak time, repair provider data, authorize orders or
+  promote a candidate.
+- Implementer RED first failed at collection because
+  `quantmesh.ops.connection_witness` did not exist. The new packaged authority
+  interprets the formal daily Scheduler task from UTC timestamps and numeric
+  result codes, binds completed zero only to one exact latest accepted daily
+  terminal/report/source contract, and records typed `passed`, `in-progress`,
+  `failed`, `timed-out`, `blocked-user-auth` or `interrupted` terminals.
+- Every exact daily read-back runs in an argv-only Python child with a hard
+  monotonic deadline and descendant-tree termination. Zero outcomes require
+  the complete Python, loopback TCP, Scheduler, Moomoo and public Hyperliquid
+  probe set. Formal `Running/0x41301` suppresses only the competing Moomoo SDK
+  child; the other read-only probes still run and the receipt remains
+  `in-progress`, never completed PASS.
+- Scheduled evidence binds its canonical two-hour UTC slot to the connection
+  task's exact Scheduler `LastRunTime`. An unreadable or inconsistent self task
+  uses typed `fallback-failure` authority, performs no provider probes and is
+  structurally unable to return zero. Supplemental recovery requires the exact
+  scheduled slot explicitly and cannot claim Scheduler authority.
+- Attempt allocation requires an active Task 5 process-instance slot lease.
+  Live-owner conflicts fail closed, dead stale owners can be proven and
+  recovered, concurrent reservations never reuse an attempt, and immutable
+  receipt/terminal writes precede one cross-process-mutex atomic `latest.json`.
+  An injected pointer crash leaves the terminal durable and the exact retry
+  safely advances the pointer.
+- The thin PowerShell wrapper validates absolute roots, locates only the
+  checkout-pinned interpreter and forwards every slot/deadline argument to the
+  Python authority. A Windows behavioral test exercises its emitted argv; the
+  wrapper contains no Scheduler registration, provider write, order or release
+  operation.
+- Independent review initially found four Important gaps: late elapsed-time
+  checking instead of a killable deadline, incomplete zero-outcome probes,
+  ambiguous fallback slot authority and missing lease/atomic-pointer reuse.
+  Reviewer-driven corrections added adversarial tests for each gap. The second
+  read-only review returned `CLEAN` with no Critical or Important finding.
+- Fresh verification used the shared explicit interpreter. Task 6 passed `25`
+  tests; the Task 5 + Task 6 dependency selection passed `75` tests with four
+  environment-dependent skips. Focused Ruff, PowerShell parse, CLI help and
+  `git diff --check` passed. No real provider call, OpenD authentication,
+  Scheduler mutation, evidence-root creation, remote publication, overlap
+  resolution, trading authority or release state changed.
+- The Checkpoint 27 host hold remains in force. The enabled legacy task on
+  `ZHOULAPTOP` and its outputs are not accepted by this implementation and do
+  not start a replacement 168-hour clock.
+
 ## Current frontier
 
-Task 6, deadline-bounded connection witness, is the first incomplete slice in
-the approved Checkpoint 20 reliability-repair plan as amended by Checkpoint 27.
+Task 8, local immutable witness outbox and idempotent publication protocol, is
+the first incomplete slice in the approved Checkpoint 20 reliability-repair
+plan as amended by Checkpoint 27. Task 7 remains blocked until the Task 8 commit
+exists so registered command lines can include the final outbox contract.
 Continue one bounded TDD slice at a time with independent read-only review and
 recorded verification at every phase boundary. Treat the legacy scheduler as
 enabled until an administrator proves otherwise; local implementation must not

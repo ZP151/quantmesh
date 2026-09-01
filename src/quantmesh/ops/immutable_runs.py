@@ -418,7 +418,7 @@ class LeaseOwner(_FrozenContract):
 
 class _LeaseRecord(_FrozenContract):
     contract: str = Field(default="slot-lease-v1", pattern=r"^slot-lease-v1$")
-    slot: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    slot: str = Field(pattern=r"^(?:\d{4}-\d{2}-\d{2}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z)$")
     owner: LeaseOwner
     acquired_at: datetime
     expires_at: datetime
@@ -491,7 +491,7 @@ class SlotLease:
         _reject_reparse_chain(Path(root))
         lease_dir.mkdir(parents=True, exist_ok=True)
         _reject_reparse_chain(lease_dir)
-        path = lease_dir / f"{slot}.lock"
+        path = lease_dir / f"{slot.replace(':', '')}.lock"
         record = _LeaseRecord.build(
             slot=slot,
             owner=owner,
@@ -732,3 +732,15 @@ def read_safe_bytes(path: Path) -> bytes:
 def reject_reparse_chain(path: Path) -> None:
     """Reject any existing reparse component in an operational path."""
     _reject_reparse_chain(path)
+
+
+@contextmanager
+def operational_file_mutex(path: Path) -> Iterator[None]:
+    """Serialize one operational pointer update across threads and processes."""
+    with _file_mutex(path):
+        yield
+
+
+def atomic_replace(path: Path, payload: bytes) -> None:
+    """Atomically replace one validated operational pointer file."""
+    _atomic_replace(path, payload)
