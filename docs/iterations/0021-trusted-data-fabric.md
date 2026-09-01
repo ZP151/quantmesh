@@ -1348,15 +1348,53 @@ durable checkpoint.
   explicit administrator/host authority gate and must start a fresh candidate
   without backfill.
 
+## Checkpoint 32 — Task 9B authority release and Scheduler host repair, 2026-09-02
+
+- The operator designated `ZHOULAPTOP` as the sole Scheduler, collection and
+  publisher host. Administrator/read-back evidence proves the legacy root
+  `\QuantMesh Daily Soak` is `Disabled`, `Enabled=false` and not running. The
+  operator's explicit deletion attestation for the old
+  `quantmesh-daily-witness` publisher is accepted as its retirement evidence.
+  These facts release the Task 9B authority gate without admitting any legacy
+  output into the repaired candidate.
+- A dedicated clean runner detached at remote-reachable pre-host SHA
+  `5c7a8b9d2bc437d6e9e39110bedfc33b638cb8e3` passed the required four-file
+  pre-mutation gate (`81 passed`), Ruff, source/license/environment and clean
+  checkout checks. Read-only Step 9 could not reopen the exact Issue #124
+  rejected closure from the legacy action-bound roots, so the optional
+  separately authorized additive resolution was omitted; no missing evidence
+  was inferred, copied or fabricated.
+- Seven exact, absolute and pairwise-disjoint `C:\QuantMesh\*-v3` roots were
+  created empty and read back as non-reparse directories. The first
+  `InstallDisabled` then failed closed: this Windows host rejected the
+  connection trigger's `TimeSpan.MaxValue` XML duration
+  `P99999999DT23H59M59S`, and Scheduler elided the local-machine prefix from
+  the daily principal read-back. The new daily definition remained disabled,
+  the connection definition was absent, the legacy task remained disabled and
+  no task ran or started a candidate clock.
+- TDD changed the Scheduler boundary to reject the reproduced out-of-range
+  duration and model local-account prefix elision. The installer now omits
+  repetition Duration, which is Windows' indefinite-repetition representation,
+  normalizes empty read-back to `null`, and compares resolvable identities
+  through SID-to-canonical-NTAccount round-trip without weakening unresolved
+  identity comparison. The focused regressions passed `2`, the Scheduler suite
+  passed `11`, and the complete Task 9B four-file gate passed `82` with the one
+  known third-party calendar warning; PowerShell parse, Ruff and diff checks
+  passed.
+- Independent read-only review returned CLEAN with zero Critical, Important or
+  Minor findings. It separately reproduced the local identity equivalence and
+  omitted-Duration trigger shape. No provider, OpenD, automation, publication,
+  trading or release state changed during this repair.
+
 ## Current frontier
 
-Task 9A implementation, documentation, reproducible simulations and local
-verification are complete. Commit the pre-host checkpoint, rerun the focused
-gate from that committed checkout, complete the exact-candidate whole-branch
-review and push one clean SHA. Task 9B remains authority-blocked: treat the
-legacy scheduler as enabled until an administrator proves otherwise, do not
-touch it from local implementation and do not count time from the rejected
-evidence root toward the replacement 168-hour candidate.
+Commit and push the bounded Scheduler host repair, pin its exact remotely
+reachable SHA, and create a new clean detached runner at that replacement
+candidate. Repeat the complete Task 9B pre-mutation gate, then resume Step 10 by
+overwriting and round-trip-verifying both replacement definitions while they
+remain disabled. The original failed manifest is immutable negative evidence;
+the 168-hour clock has not started and no rejected or legacy evidence may be
+backfilled.
 
 ## Resume instructions
 

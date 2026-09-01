@@ -252,6 +252,8 @@ def test_install_disabled_registers_both_exact_staggered_tasks(tmp_path: Path) -
     assert payload["tasks"][0]["settings"]["restart_count"] == 3
     assert payload["tasks"][1]["trigger"]["minute"] == 10
     assert payload["tasks"][1]["trigger"]["interval"] == "PT2H"
+    assert payload["tasks"][1]["trigger"]["duration"] is None
+    assert payload["tasks"][1]["trigger"]["stop_at_duration_end"] is True
     assert payload["tasks"][1]["settings"]["restart_count"] == 0
     daily_argv = _windows_argv(payload["tasks"][0]["action"]["arguments"])
     assert daily_argv[:3] == [
@@ -274,6 +276,34 @@ def test_install_disabled_registers_both_exact_staggered_tasks(tmp_path: Path) -
     ]
     assert sum(item.startswith("Disable:") for item in operations) == 2
     assert not any(item.startswith("Enable:") for item in operations)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="PowerShell schedule contract is Windows-only")
+def test_install_accepts_scheduler_local_account_name_normalization(tmp_path: Path) -> None:
+    repo = _git_repo(tmp_path)
+    parameters = _parameters(tmp_path, repo, "InstallDisabled")
+    identity = subprocess.run(
+        (
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            "[System.Security.Principal.WindowsIdentity]::GetCurrent().Name",
+        ),
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    ).stdout.strip()
+    parameters["Principal"] = identity
+
+    result, payload, _ = _run_harness(tmp_path, parameters)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert payload["accepted"] is True, json.dumps(payload, indent=2)
+    assert {task["principal"]["user_id"] for task in payload["tasks"]} == {
+        identity.lower()
+    }
 
 
 def _installed_seed(tmp_path: Path) -> tuple[Path, dict, list[dict]]:

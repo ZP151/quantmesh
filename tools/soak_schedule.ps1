@@ -156,6 +156,19 @@ function Convert-MultipleInstances {
     return $(if ($names.ContainsKey($text)) { $names[$text] } else { $text })
 }
 
+function Convert-CanonicalPrincipalId {
+    param([string]$Value)
+    try {
+        $account = [System.Security.Principal.NTAccount]::new($Value)
+        $sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
+        $canonical = $sid.Translate([System.Security.Principal.NTAccount])
+        return ([string]$canonical.Value).ToLowerInvariant()
+    }
+    catch {
+        return $Value.ToLowerInvariant()
+    }
+}
+
 function New-RuntimeConfig {
     param([hashtable]$Paths)
     return [ordered]@{
@@ -175,7 +188,7 @@ function New-RuntimeConfig {
             timezone = $TimeZoneId; daily_at = $DailyAt
             connection_interval = "PT2H"; connection_minute = 10
             connection_start_boundary = "2026-01-01T00:10:00"
-            connection_repetition_duration = "P99999999DT23H59M59S"
+            connection_repetition_duration = $null
             daily_restart_count = 3; daily_restart_interval = "PT15M"
             daily_execution_limit = "PT1H"; connection_restart_count = 0
             connection_execution_limit = "PT15M"; multiple_instances = "IgnoreNew"
@@ -268,7 +281,7 @@ function New-ExpectedContracts {
         multiple_instances = "IgnoreNew"
     }
     $principalContract = [ordered]@{
-        user_id = $Principal.ToLowerInvariant()
+        user_id = Convert-CanonicalPrincipalId $Principal
         logon_type = "Interactive"; run_level = "Limited"
     }
     $dailySettings = [ordered]@{} + $commonSettings
@@ -300,7 +313,7 @@ function New-ExpectedContracts {
         trigger = [ordered]@{
             class = "MSFT_TaskTimeTrigger"; enabled = $true; kind = "repetition"
             at = $null; start_boundary = "2026-01-01T00:10:00"; days_interval = $null
-            interval = "PT2H"; duration = "P99999999DT23H59M59S"
+            interval = "PT2H"; duration = $null
             stop_at_duration_end = $true; minute = 10
             timezone = $TimeZoneId
         }
@@ -326,8 +339,7 @@ function New-TaskObjects {
             [System.DateTimeKind]::Unspecified
         )
         $trigger = New-ScheduledTaskTrigger -Once -At $anchor `
-            -RepetitionInterval ([timespan]::FromHours(2)) `
-            -RepetitionDuration ([timespan]::MaxValue)
+            -RepetitionInterval ([timespan]::FromHours(2))
     }
     $principalObject = New-ScheduledTaskPrincipal -UserId $Principal `
         -LogonType Interactive -RunLevel Limited
@@ -367,6 +379,10 @@ function Get-NormalizedTask {
     $triggerClass = [string]$trigger.CimClass.CimClassName
     $repetitionInterval = $null
     if ($null -ne $trigger.Repetition) { $repetitionInterval = [string]$trigger.Repetition.Interval }
+    $repetitionDuration = $null
+    if ($null -ne $trigger.Repetition -and $trigger.Repetition.Duration) {
+        $repetitionDuration = [string]$trigger.Repetition.Duration
+    }
     $kind = if ($repetitionInterval -and $repetitionInterval -ne "PT0S") { "repetition" } else { "daily" }
     $start = [datetimeoffset]::Parse([string]$trigger.StartBoundary)
     $localStart = [System.TimeZoneInfo]::ConvertTime($start, [System.TimeZoneInfo]::Local)
@@ -386,7 +402,7 @@ function Get-NormalizedTask {
             } else { $null }
             days_interval = if ($kind -eq "daily") { [int]$trigger.DaysInterval } else { $null }
             interval = if ($kind -eq "repetition") { $repetitionInterval } else { $null }
-            duration = if ($kind -eq "repetition") { [string]$trigger.Repetition.Duration } else { $null }
+            duration = if ($kind -eq "repetition") { $repetitionDuration } else { $null }
             stop_at_duration_end = if ($kind -eq "repetition") {
                 [bool]$trigger.Repetition.StopAtDurationEnd
             } else { $null }
@@ -394,7 +410,7 @@ function Get-NormalizedTask {
             timezone = $TimeZoneId
         }
         principal = [ordered]@{
-            user_id = ([string]$task.Principal.UserId).ToLowerInvariant()
+            user_id = Convert-CanonicalPrincipalId ([string]$task.Principal.UserId)
             logon_type = Convert-LogonType $task.Principal.LogonType
             run_level = Convert-RunLevel $task.Principal.RunLevel
         }

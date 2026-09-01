@@ -1,8 +1,8 @@
 # Active Goal
 
 - Status: Iteration 0021 functional work is merged; reliability-repair Tasks
-  1–8 are complete and Task 9A local pre-host closure is active. The real
-  replacement 168-hour run has not started.
+  1–9A are complete and Task 9B is active at the Step 10 Scheduler host-repair
+  checkpoint. The real replacement 168-hour run has not started.
 - Objective: close issues [#124](https://github.com/ZP151/quantmesh/issues/124)
   and [#127](https://github.com/ZP151/quantmesh/issues/127) with immutable,
   fail-closed soak evidence without changing release or execution authority.
@@ -19,14 +19,16 @@
   `27a6311d4b56b7cc832893ddd183d313c083816d`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: finish Task 9A operational acceptance, documentation,
-  simulations, whole-branch review and clean remote pin. Task 9B remains
-  authority-blocked; keep wallet, signing, account and order surfaces
-  structurally absent.
-- External gate: the observed legacy `ZHOULAPTOP\QuantMesh Daily Soak` task is
-  still enabled after two access-denied disable attempts. No replacement host
-  is designated. Treat its output as inadmissible and perform no real provider,
-  Scheduler, outbox publication or evidence-root mutation from this goal.
+- Current frontier: commit and push the bounded Scheduler compatibility repair,
+  pin a replacement remote-reachable pre-host SHA, repeat the detached-runner
+  gate, then finish disabled Step 10 installation and manual connection
+  preflight. Keep wallet, signing, account and order surfaces structurally
+  absent.
+- External gate: passed. The operator designated `ZHOULAPTOP` as the sole
+  Scheduler/collection/publisher host; the legacy root task is independently
+  read back `Disabled/Enabled=false`, and the old Publisher deletion attestation
+  is accepted. OpenD authentication and the fresh accepted daily cycle remain
+  operational gates; neither can be bypassed or backfilled.
 
 ## Product-readiness decision
 
@@ -681,15 +683,16 @@ all market access remains read-only or paper-only.
 
 ## Current frontier
 
-1. Task 9A code, ADR, simulations, deterministic dependency gate and independent
-   review are complete on the local pre-host candidate. Commit the recorded
-   checkpoint, rerun the focused committed-checkout gate, perform the final
-   whole-branch review, then push and pin one exact clean pre-host SHA.
-2. Keep Task 9B frozen until an administrator proves all legacy authorities
-   stopped and the operator designates the replacement Windows host.
-3. After authorization, start a fresh evidence-v3 candidate in seven new,
-   absolute and pairwise-disjoint roots. Never backfill rejected evidence or
-   infer promotion, release or real-money execution authority.
+1. Task 9B authority is released and seven fresh, absolute, pairwise-disjoint
+   roots exist. The first disabled install exposed an out-of-range Windows
+   repetition Duration and local-principal normalization drift; it failed
+   closed with no enabled task or candidate clock.
+2. Commit/push the reviewed TDD repair, pin a replacement exact SHA, recreate
+   the detached runner and repeat all pre-mutation gates before overwriting the
+   disabled definitions. Do not use the failed schedule manifest for enablement.
+3. Continue Steps 10–15 without backfill. OpenD/user-auth failure blocks clock
+   start; only a fresh accepted daily cycle may precede GuardedEnable, and final
+   completion still requires 168 real hours plus immutable operational PASS.
 
 ## Historical delivery frontier
 

@@ -100,9 +100,13 @@ function New-ScheduledTaskTrigger {
         [timespan]$RepetitionDuration
     )
     $repetition = if ($Once) {
-        $duration = if ($RepetitionDuration -eq [timespan]::MaxValue) {
-            "P99999999DT23H59M59S"
-        } else { [System.Xml.XmlConvert]::ToString($RepetitionDuration) }
+        if ($PSBoundParameters.ContainsKey("RepetitionDuration") -and
+            $RepetitionDuration -eq [timespan]::MaxValue) {
+            throw "mock Windows host rejects out-of-range repetition duration"
+        }
+        $duration = if ($PSBoundParameters.ContainsKey("RepetitionDuration")) {
+            [System.Xml.XmlConvert]::ToString($RepetitionDuration)
+        } else { $null }
         [pscustomobject]@{
             Interval = [System.Xml.XmlConvert]::ToString($RepetitionInterval)
             Duration = $duration
@@ -125,8 +129,13 @@ function New-ScheduledTaskTrigger {
 
 function New-ScheduledTaskPrincipal {
     param([string]$UserId, [string]$LogonType, [string]$RunLevel)
+    $storedUserId = $UserId
+    $parts = $UserId.Split('\', 2)
+    if ($parts.Count -eq 2 -and $parts[0] -ieq $env:COMPUTERNAME) {
+        $storedUserId = $parts[1]
+    }
     return [pscustomobject]@{
-        UserId = $UserId
+        UserId = $storedUserId
         LogonType = if ($LogonType -ceq "Interactive") { 3 } else { 1 }
         RunLevel = if ($RunLevel -ceq "Limited") { 0 } else { 1 }
     }
