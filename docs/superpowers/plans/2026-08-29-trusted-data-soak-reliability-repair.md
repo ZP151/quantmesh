@@ -23,6 +23,127 @@
 - Keep all venue access read-only, paper mode default, credentials absent and real-order authority structurally unchanged.
 - The main thread is the only source writer; each task receives an independent read-only review before the next begins.
 
+## Execution Amendment — 2026-09-01 Preflight
+
+This amendment is normative for the remaining work. It preserves the approved
+design while closing execution ambiguities found when the remote branch was
+reconstructed on the current host.
+
+- Execute the remaining slices in dependency order `Task 6 -> Task 8 -> Task 7
+  -> Task 9A -> Task 9B`. Task 8 precedes Task 7 so registered command lines can
+  include the final outbox roots and publisher contract instead of requiring a
+  second scheduler rewrite.
+- Keep the main thread as the sole source writer. Planner, quant-research,
+  reviewer and verifier agents are read-only and their verdicts are recorded in
+  the iteration ledger.
+- The current host has an enabled legacy `\QuantMesh Daily Soak` task. Two
+  reversible disable attempts on 2026-09-01 were denied by Windows access
+  control and left the task unchanged. Until an administrator disables that
+  task and a replacement Windows host is explicitly designated, Tasks 6-8 and
+  Task 9A are local-only: no provider call, scheduler mutation, evidence-root
+  creation, overlap resolution, automation update or remote publication is
+  authorized.
+- Use disjoint absolute roots for trusted data, soak reports, daily receipts,
+  connection receipts and publication outbox. Never infer one root from
+  another, and never use the rejected evidence-v2 root as a writable repair
+  target.
+- Task 9 is split at the authority boundary. Task 9A closes code, tests,
+  documentation, review, clean-push ancestry and simulations. Task 9B performs
+  real-host migration only after the scheduler/host gate above is satisfied.
+
+### Task 6 state and deadline contract
+
+- Normalize Scheduler timestamps to UTC before comparison. The formal daily
+  deadline is 3,600 seconds. Completed task evidence becomes stale after
+  93,600 seconds (26 hours), providing the daily cadence a two-hour grace.
+  These values are explicit validated inputs whose production defaults are
+  pinned by tests and scheduler command construction.
+- Treat Scheduler result codes numerically: `0x00041301` is `in-progress` only
+  while `now - LastRunTime <= 3,600 seconds`; a longer-running task is failed.
+  `0x00041306` is failed. Missing, disabled, never-run, unparsable, future-dated
+  or stale task evidence is failed.
+- For a completed zero result, enumerate every immutable terminal for the UTC
+  date of `LastRunTime` and filter on `started_at` within
+  `[-120 seconds, +900 seconds]` of that Scheduler start. Pass only if there is
+  exactly one match, it is the maximum attempt for that date and the target of
+  the daily latest pointer, its `code_commit` and `source_contract_id` equal the
+  explicit expected values, and its terminal state is `passed`. Reopen its
+  exact `soak_report_id` from the configured report root and prove report ID,
+  commit, source contract and accepted complete-verifier proof all agree.
+  Ambiguity, a non-passing newer attempt, mismatched roots/source or any
+  immutable-read failure fails closed. A connection attempt is keyed by an
+  explicit scheduled UTC slot plus positive attempt and is persisted in its own
+  connection-receipt namespace; supplemental execution must receive the slot
+  being supplemented and never infer it from wall-clock time.
+- `ConnectionWitnessStore(root)` owns `terminal_path(slot, attempt)`,
+  `terminals(slot)`, `load_terminal(slot, attempt)`, `latest()` and
+  `publish_terminal(receipt)`. Slots use canonical UTC `YYYY-MM-DDTHH:MMZ`
+  schedule boundaries and positive attempts allocated under a per-slot lease.
+  Publication writes the immutable terminal before atomically advancing a
+  validated latest pointer; conflicts, stale-owner recovery and concurrent
+  supplemental attempts are covered by tests.
+- `ConnectionWitnessConfig` and the Python CLI require absolute repo,
+  report-root, daily-run-root and connection-run-root paths; formal-task and
+  connection-task names; expected commit and source-contract ID; execution kind
+  (`scheduled` or `supplemental`); and all finite threshold/probe budgets. A
+  scheduled execution derives its canonical slot from the connection task's own
+  Scheduler `LastRunTime`. A supplemental execution instead requires
+  `--scheduled-slot YYYY-MM-DDTHH:MMZ`; supplying or omitting a slot in the
+  wrong mode is invalid. The store allocates the next positive attempt under
+  the slot lease and records execution kind in the receipt.
+- Give Python/import, loopback TCP 11111, Scheduler, exact daily-receipt,
+  read-only Moomoo capability and public Hyperliquid API probes independent
+  finite monotonic deadlines. Suppress only the Moomoo SDK capability child
+  while the formal task is `in-progress`; all other probes and receipt
+  persistence still run. Every attempt publishes one immutable terminal from a
+  `finally` boundary and terminates timed-out descendant process trees.
+- A missing/unreachable OpenD daemon or logged-out/read-capability denial is
+  `blocked-user-auth`, persists a typed connection terminal and exits non-zero;
+  it never synthesizes provider evidence. A legitimate formal `in-progress`
+  state suppresses the Moomoo child and persists `in-progress` as an operational
+  cadence result, not as a completed daily PASS or positive provider witness.
+
+### Task 8 recovery and authority contract
+
+- Keep the local CLI credential-free and network-free. Put remote list, POST and
+  read-back behind an injected publisher coordinator so ambiguous POST,
+  duplicate match and digest-mismatch behavior is executable under tests.
+- Use a cross-process publisher lease. After a crash or restart, terminal paths
+  call `ensure_intent(terminal)` idempotently before process success can be
+  returned. If the terminal is already durable but enqueue fails, persist a
+  separate immutable outbox-failure receipt and exit non-zero; never rewrite
+  the terminal. Startup recovery scans exact unpaired eligible terminals and
+  retries `ensure_intent`, rejecting ambiguity or conflict. Daily-success and
+  connection-state witness kinds remain distinct.
+- Publication timestamps and operational receipts never create or extend soak
+  duration. Final 168-hour acceptance must reopen accepted daily reports and
+  their exact immutable daily terminals, then validate connection-receipt
+  cadence against the same source contract.
+
+### Final operational-acceptance contract
+
+- Keep provider-soak verification unchanged. Task 9A adds a separate versioned
+  operational-acceptance verifier and immutable output. It consumes the
+  provider verifier result, report root, daily-run root, connection-run root and
+  expected source contract; it never writes provider objects or treats
+  operational timestamps as market-evidence time.
+- Final acceptance reopens every qualifying report and exactly matching daily
+  terminal, then verifies the required connection slots/cadence. Missing,
+  duplicate, stale, mismatched or non-terminal evidence rejects. A daily
+  `minimum-hours=0` witness cannot satisfy the final-completion witness kind.
+- Generate expected connection slots in `Asia/Singapore` every two hours at
+  minute 10, from the first boundary on/after candidate start through the last
+  boundary on/before verifier `as_of`, then normalize to UTC. Each scheduled
+  receipt must start from 120 seconds before through 900 seconds after its slot,
+  match the expected source and be `passed` or `in-progress`. Every expected
+  slot needs scheduled evidence. Multiple chronological scheduled attempts are
+  valid only when every attempt is immutable, non-overlapping and zero-outcome;
+  any `failed`, `timed-out`, `blocked-user-auth` or `interrupted` scheduled
+  attempt permanently rejects that candidate. Supplemental attempts are
+  retained recovery evidence but neither satisfy a missing slot nor repair a
+  failed scheduled attempt. Conflicting attempt identity, pointer or source
+  evidence rejects.
+
 ---
 
 ## File Structure
@@ -384,12 +505,24 @@ Commit: `fix(ops): make formal daily soak fully fail closed`
 - Create: `tests/test_connection_witness.py`
 
 **Interfaces:**
-- Consumes: Task 5 `ImmutableRunStore` and formal `DailyRunReceiptV1`.
-- Produces: `ConnectionWitnessReceiptV1`, `FormalTaskState` and `interpret_formal_task()`.
+- Consumes: Task 5 immutable publication/safe-read primitives, formal
+  `DailyRunReceiptV1` and its dedicated daily `ImmutableRunStore` namespace.
+- Produces: `ConnectionWitnessReceiptV1`, a separate connection receipt store,
+  `FormalTaskState` and `interpret_formal_task()`.
+- Connection terminal statuses include `passed`, `in-progress`, `failed`,
+  `timed-out`, `blocked-user-auth` and `interrupted`; only `passed` and
+  `in-progress` are zero-exit operational outcomes.
 
 - [ ] **Step 1: Write RED state-table tests**
 
-Cover recent `Running/0x41301 -> in-progress`, overdue running -> failure, `0x41306 -> failure`, completed zero with matching verified terminal receipt -> pass, completed zero without receipt -> failure, missing/stale task -> failure. Assert no Moomoo SDK child is started while formal state is in-progress.
+Cover the amended UTC/time-window/result-code table: recent
+`Running/0x41301 -> in-progress`, overdue running -> failure,
+`0x41306 -> failure`, completed zero with exactly matching verified terminal
+receipt -> pass, completed zero without receipt -> failure, ambiguous/newer
+non-passing attempts -> failure, and missing/disabled/never-run/future/stale task
+evidence -> failure. Assert no Moomoo SDK child is started while formal state is
+in-progress. Cover missing/logged-out OpenD as `blocked-user-auth` without a
+provider-evidence mutation.
 
 - [ ] **Step 2: Write RED deadline and persistence tests**
 
@@ -401,7 +534,11 @@ Run: `.venv\Scripts\python.exe -m pytest tests/test_connection_witness.py -q`
 
 - [ ] **Step 4: Implement probe and thin wrappers**
 
-Probe Python, loopback TCP 11111, Scheduler state and matching daily receipt under independent finite deadlines. Keep PowerShell limited to locating the pinned interpreter and invoking the Python command with explicit roots/task name.
+Probe Python/import, loopback TCP 11111, Scheduler state, matching daily receipt,
+read-only Moomoo capability and the public Hyperliquid API under independent
+finite deadlines. Keep PowerShell limited to locating the pinned interpreter
+and invoking the Python command with explicit disjoint roots, task name and
+deadline/staleness inputs.
 
 - [ ] **Step 5: Run GREEN tests**
 
@@ -415,33 +552,83 @@ Commit: `fix(ops): persist deadline-bounded connection witnesses`
 
 ### Task 7: Verified Staggered Windows Scheduling
 
+**Execution dependency:** Task 7 is historically numbered before Task 8 in
+this plan, but it is blocked until Task 8 is checked complete and commit
+`feat(ops): add single-authority witness outbox` is recorded. A first-incomplete
+scan must skip this section until that dependency is satisfied.
+
 **Files:**
 - Modify: `tools/soak_schedule.ps1`
+- Modify: `src/quantmesh/ops/source_contract.py`
+- Modify: `src/quantmesh/ops/soak_runner.py`
+- Modify: `tools/license_review.py`
 - Create: `tests/test_soak_schedule.py`
+- Modify: `tests/test_source_contract.py`
+- Modify: `tests/test_soak_daily.py`
+- Modify: `tests/test_security.py`
 - Create: `docs/runbooks/trusted-data-soak.md`
 
 **Interfaces:**
-- Consumes: Task 5 daily and Task 6 connection wrappers.
+- Consumes: Task 5 daily wrapper, Task 6 connection wrapper and Task 8 outbox
+  roots/contracts.
 - Produces: installer defaults daily 08:00, connection every two hours at minute 10; JSON verification output containing normalized actions/triggers/settings.
+- Scope boundary: this task installs and round-trip verifies the two Windows
+  tasks only. Task 9B separately reads back the Codex publisher heartbeat and
+  requires its two-hour minute-20 cadence before any candidate clock starts.
 
 - [ ] **Step 1: Write RED command-construction and drift tests**
 
-Mock Scheduler cmdlets and assert absolute pinned paths, explicit roots, wake/start-when-available, battery execution, IgnoreNew, three 15-minute daily retries, one-hour daily limit, 15-minute connection limit and minute-10 trigger. Feed altered settings back and assert installer verification exits non-zero with exact drift fields.
+Mock Scheduler cmdlets and assert the clean remotely reachable commit, absolute
+pinned paths, remote integration ref, frozen script/config/dependency digests,
+explicit trusted/report/daily-run/connection/outbox roots, timezone and
+principal, wake/start-when-available, battery execution, IgnoreNew, three
+15-minute daily retries, one-hour daily limit, 15-minute connection limit and
+minute-10 trigger. Feed every owned altered action, trigger or setting back and
+assert installer verification exits non-zero with exact drift fields.
+Assert the runtime recomputes rather than trusts the three supplied digests.
+The dependency digest covers the canonical relative-path/byte-digest manifest
+for `pyproject.toml` and `requirements-audit.txt` plus the normalized Python
+implementation/version, interpreter-file digest and sorted installed
+distribution name/version inventory from `importlib.metadata` (including
+editable QuantMesh identity). Retain the full lock-file byte digest, but derive
+the host-applicable expected inventory by excluding only absent members of the
+existing canonical `PLATFORM_TOLERATED` contract. Move that canonical set to the
+shared source-contract module and have `tools/license_review.py` reuse it so the
+runtime and release gate cannot drift. Require every other pinned
+`requirements-audit.txt` name/version in the installed inventory and reject
+missing/version drift. The script digest covers the tracked daily/connection
+Python and PowerShell entrypoints; the config digest covers canonical normalized
+runner/scheduler configuration with digest fields excluded. Changed/missing
+files, installed environment drift or configuration drift must fail before
+collection.
+
+Cover three explicit script modes: `InstallDisabled` creates/replaces both tasks
+disabled and verifies them; `Verify` performs read-only round-trip comparison;
+`GuardedEnable` first re-runs `Verify` and the configured preflight command, then
+enables both tasks and reads them back. Any drift, preflight nonzero, partial
+enable or post-enable mismatch must leave/return both tasks disabled and exit
+non-zero. Pin zero automatic retries for the connection task; supplemental
+recovery is explicit and cannot backfill cadence.
 
 - [ ] **Step 2: Run RED tests**
 
-Run: `.venv\Scripts\python.exe -m pytest tests/test_soak_schedule.py -q`
+Run: `.venv\Scripts\python.exe -m pytest tests/test_source_contract.py tests/test_soak_daily.py tests/test_soak_schedule.py tests/test_security.py -q`
 
 - [ ] **Step 3: Refactor registration and round-trip verification**
 
-Use `Register-ScheduledTask` objects for both tasks, immediately read them with `Get-ScheduledTask`/`Get-ScheduledTaskInfo`, normalize the owned fields and compare against the expected contract. Emit one JSON result and fail on any mismatch.
+Use `Register-ScheduledTask` objects for both tasks and implement
+`InstallDisabled`, read-only `Verify` and fail-closed `GuardedEnable`. Read with
+`Get-ScheduledTask`/`Get-ScheduledTaskInfo`, normalize the owned fields and
+compare against the expected contract. Emit one JSON result and fail on any
+mismatch. Recompute actual runtime/script/config digests in the Python source
+contract before collection rather than accepting caller assertions.
 
 - [ ] **Step 4: Run GREEN tests and PowerShell parse check**
 
 Run:
 
 ```powershell
-.venv\Scripts\python.exe -m pytest tests/test_soak_schedule.py -q
+.venv\Scripts\python.exe -m pytest tests/test_source_contract.py tests/test_soak_daily.py tests/test_soak_schedule.py tests/test_security.py -q
 $null = [scriptblock]::Create((Get-Content tools/soak_schedule.ps1 -Raw))
 $null = [scriptblock]::Create((Get-Content tools/connection_witness.ps1 -Raw))
 git diff --check
@@ -466,10 +653,24 @@ Commit: `fix(ops): install and verify staggered soak tasks`
 - Produces: `WitnessIntentV1`, `WitnessPublicationReceiptV1`, `WitnessOutbox.enqueue()`, `.pending()`, `.record_publication()`.
 - Idempotency key: SHA-256 over issue number, witness kind and exact local run/report ID.
 - Publisher protocol: list pending -> remote exact-key read -> POST if absent -> remote read-back -> record receipt.
+- Runtime boundary: a pure coordinator receives an injected remote client;
+  `tools/soak_witness_outbox.py` remains local-only and performs no network I/O.
+- Integration boundary: daily and connection runners invoke
+  `ensure_intent(terminal)` after terminal durability but before a zero process
+  exit; outbox failures are recorded separately and cannot mutate terminal
+  receipts.
+- Produces: `WitnessPublisher` with an injected remote client,
+  `WitnessReconciler.reconcile_daily()`/`.reconcile_connection()`,
+  `OutboxReconciliationFailureV1`, and a local `reconcile` CLI accepting exact
+  daily/connection/report/outbox roots plus expected source identity.
 
 - [ ] **Step 1: Write RED outbox tests**
 
-Assert exact enqueue retry, conflicting intent rejection, single publisher lease, deterministic pending order, ambiguous POST recovery by remote re-query, duplicate remote-match failure, receipt URL/read-back digest validation, restart idempotence and inability to enqueue #124 success without a passing full-verifier proof.
+Assert exact enqueue retry, conflicting intent rejection, a cross-process single
+publisher lease, deterministic pending order, ambiguous POST recovery by remote
+re-query, duplicate remote-match failure, receipt URL/read-back digest
+validation, restart idempotence, terminal-before-enqueue crash recovery and
+inability to enqueue #124 success without a passing full-verifier proof.
 
 - [ ] **Step 2: Run RED tests**
 
@@ -477,7 +678,15 @@ Run: `.venv\Scripts\python.exe -m pytest tests/test_witness_outbox.py -q`
 
 - [ ] **Step 3: Implement local outbox authority**
 
-Use Task 5 immutable primitives. The local CLI exposes canonical `list`, `show` and `record-publication`; it never contains GitHub credentials or performs network I/O. Daily and connection terminal paths enqueue exact intents only after their local state is durable.
+Use Task 5 immutable primitives. The local CLI exposes canonical `list`, `show`,
+`reconcile` and `record-publication`; it never contains GitHub credentials or
+performs network I/O. Daily and connection runners call deterministic
+`ensure_intent` after terminal durability and return non-zero until the exact
+intent exists. Reconciliation scans explicitly configured stores for eligible
+unpaired terminals, reopens their report/source proof, persists a typed
+create-once failure receipt on conflict/error and remains non-zero until all
+eligible terminals are paired. `WitnessPublisher` alone owns the injected
+remote list/POST/read-back protocol under the publisher lease.
 
 - [ ] **Step 4: Run GREEN tests**
 
@@ -489,30 +698,54 @@ Commit: `feat(ops): add single-authority witness outbox`
 
 ---
 
-### Task 9: ADR, Full Verification and Real-Host Migration
+### Task 9A: Operational Acceptance, ADR and Reproducible Pre-Host Closure
 
 **Files:**
+- Create: `src/quantmesh/ops/soak_acceptance.py`
+- Create: `tools/trusted_data_soak_acceptance.py`
+- Create: `tests/test_trusted_data_soak_acceptance.py`
 - Create: `docs/adr/0019-overlap-resolution-and-operational-evidence.md`
 - Modify: `docs/iterations/0021-trusted-data-fabric.md`
 - Modify: `docs/goals/ACTIVE.md`
 - Modify: `docs/runbooks/trusted-data-soak.md`
-- Modify host task definitions through `tools/soak_schedule.ps1` only after all local gates pass.
-- Update heartbeat automation through the Codex automation API only after the local outbox is green.
 
 **Interfaces:**
-- Consumes: all prior tasks.
-- Produces: remotely reachable integration commit, exact NVDA resolution, fresh evidence-v3 candidate, verified scheduled tasks and updated single-authority heartbeat.
+- Consumes: the provider-only verifier plus immutable daily, connection and
+  outbox contracts from all prior tasks.
+- Produces: `OperationalSoakAcceptanceV1`, its create-once store, a local
+  verifier CLI, independently reviewed simulation evidence and one exact clean
+  integration SHA. It does not mutate a real host or provider evidence.
 
-- [ ] **Step 1: Write ADR and close documentation tests**
+- [ ] **Step 1: Write RED operational-acceptance tests**
 
-Record why resolution is additive, why v2 baseline IDs are required, why operational receipts are outside provider evidence, and why remote publication uses a local outbox. Update the runbook with `blocked-user-auth`, no-backfill and candidate-reset rules.
+Assert rejection of a manual/unpaired report, daily terminal/report/source
+mismatch, missing/duplicate/non-terminal connection slot, cadence gap,
+publication time used as clock evidence and `minimum-hours=0` used for final
+completion. Assert acceptance reopens every exact report/daily terminal,
+requires 168 market-evidence hours plus configured sessions, validates the
+connection cadence separately and publishes a content-derived immutable result.
 
-- [ ] **Step 2: Run complete automated verification**
+- [ ] **Step 2: Implement the separate verifier and thin CLI**
+
+Do not modify provider-soak evidence semantics. The operational verifier reads
+configured roots with safe immutable APIs, composes the accepted provider result
+and emits one versioned acceptance object. It has no provider, Scheduler,
+GitHub, credential or trading authority.
+
+- [ ] **Step 3: Write ADR and close documentation**
+
+Record why resolution is additive, why v2 baseline IDs are required, why
+operational receipts remain outside provider evidence, why final acceptance is
+a separate composition and why remote publication uses a local outbox. Update
+the runbook with `blocked-user-auth`, no-backfill, authority inventory and
+candidate-reset rules.
+
+- [ ] **Step 4: Run complete automated verification**
 
 Run:
 
 ```powershell
-.venv\Scripts\python.exe -m pytest tests/test_overlap_resolutions.py tests/test_quality_evidence.py tests/test_quality_policies.py tests/test_quality_publication.py tests/test_data_catalog.py tests/test_data_catalog_api.py tests/test_trusted_data_tool.py tests/test_hyperliquid_collection.py tests/test_moomoo_collection.py tests/test_immutable_runs.py tests/test_operational_processes.py tests/test_source_contract.py tests/test_soak_daily.py tests/test_trusted_data_soak.py tests/test_connection_witness.py tests/test_soak_schedule.py tests/test_witness_outbox.py -q
+.venv\Scripts\python.exe -m pytest tests/test_overlap_resolutions.py tests/test_quality_evidence.py tests/test_quality_policies.py tests/test_quality_publication.py tests/test_data_catalog.py tests/test_data_catalog_api.py tests/test_trusted_data_tool.py tests/test_hyperliquid_collection.py tests/test_moomoo_collection.py tests/test_immutable_runs.py tests/test_operational_processes.py tests/test_source_contract.py tests/test_soak_daily.py tests/test_trusted_data_soak.py tests/test_connection_witness.py tests/test_witness_outbox.py tests/test_soak_schedule.py tests/test_trusted_data_soak_acceptance.py -q
 .venv\Scripts\python.exe -m ruff check src tests tools
 .venv\Scripts\python.exe -m pytest -q
 .venv\Scripts\python.exe -m pip check
@@ -520,49 +753,176 @@ Run:
 git diff --check
 ```
 
-Record exact counts, durations and expected skips. Run the `verification-before-completion` skill before any passing claim.
+Record exact commands, exit codes, counts, durations and expected skips. Run the
+`verification-before-completion` skill before any passing claim.
 
-- [ ] **Step 3: Final whole-branch review**
+- [ ] **Step 5: Run and record clean-host simulations and failure drills**
 
-Generate a review package from the `origin/main` merge base through HEAD. Obtain one independent Standards/Spec/Safety verdict. Fix every Critical/Important finding through the bounded review loop and record deferred Minor findings explicitly.
+From the pinned branch environment and temporary disjoint roots, inject provider
+outage, verifier rejection, new overlap, child timeout, scheduler
+running/terminated states, concurrent daily invocations, orphan-terminal outbox
+reconciliation and ambiguous publisher result. Each must produce the expected
+non-zero/typed receipt without altering real provider evidence. Record the
+results in the iteration ledger, then rerun affected automated gates.
 
-- [ ] **Step 4: Make the runner remotely reproducible**
+- [ ] **Step 6: Commit the complete pre-host checkpoint**
 
-Push the green integration branch without force. Verify:
+Commit code, documentation and recorded simulation evidence together:
 
-```powershell
-git status --porcelain --untracked-files=all
-git merge-base --is-ancestor HEAD origin/HEAD-OF-INTEGRATION-BRANCH
+```text
+docs(iteration): close reliability repair pre-host gates
 ```
 
-Both must succeed before host mutation.
+Require the committed checkout to remain clean and rerun the focused acceptance
+selection. Any later source/documentation correction returns to Steps 4-6 and
+creates a new reviewed candidate SHA.
 
-- [ ] **Step 5: Record the exact NVDA resolution**
+- [ ] **Step 7: Final whole-branch review**
 
-Run `quantmesh-data overlap inspect` against the rejected trusted-data root. Compare the emitted evaluation/report/policy/dataset/manifests/fingerprint/diff with issue #124. Run `overlap resolve` using `operator-acknowledged`, `ohlcv-derivatives-only`, current UTC review time and the approved reason. Read back and verify; do not edit the failed report.
+Generate a review package from the `origin/main` merge base through the exact
+candidate HEAD. Obtain one independent Standards/Spec/Safety verdict. Fix every
+Critical/Important finding through the bounded review loop; commit fixes, rerun
+verification and regenerate the review package until the verdict is clean.
+Record deferred Minor findings explicitly.
 
-- [ ] **Step 6: Run clean-host simulations and failure drills**
+- [ ] **Step 8: Push and pin the pre-host SHA**
 
-From the pinned branch environment, inject provider outage, verifier rejection, new overlap, child timeout, scheduler running/terminated states, concurrent daily invocations and ambiguous publisher result. Each must produce the expected non-zero/typed receipt without altering real provider evidence.
+Push `codex/0021-soak-reliability-goal` to the concrete integration ref
+`origin/codex/0021-soak-reliability-goal` without force, record
+`git rev-parse HEAD` as `PRE_HOST_SHA`, and verify:
 
-- [ ] **Step 7: Start the new real candidate**
+```powershell
+$PreHostSha = (git rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $PreHostSha -notmatch '^[0-9a-f]{40}$') { throw "invalid pre-host SHA" }
+$RemoteIntegrationRef = "origin/codex/0021-soak-reliability-goal"
+$Dirty = @(git status --porcelain --untracked-files=all)
+if ($LASTEXITCODE -ne 0 -or $Dirty.Count -ne 0) { throw "pre-host checkout is dirty" }
+git merge-base --is-ancestor $PreHostSha $RemoteIntegrationRef
+if ($LASTEXITCODE -ne 0) { throw "pre-host SHA is not reachable from the integration ref" }
+```
 
-Create empty `C:\QuantMesh\evidence-v3` and its separate run/outbox roots only after resolving and printing their exact absolute paths. Run one fresh five-target daily cycle, reopen every recorded manifest/evaluation/checkpoint/receipt and require `minimum-hours=0`, `minimum-xnys-sessions=1` PASS.
+Both must succeed. Task 9B uses a dedicated clean execution checkout detached at
+this exact SHA; iteration evidence is written from a separate documentation
+worktree so the runner HEAD cannot drift.
 
-- [ ] **Step 8: Register and verify the host schedule**
+### Task 9B: Authorized Real-Host Migration
 
-Install the daily 08:00 and two-hour minute-10 connection tasks from the pinned branch. Round-trip verify settings, run each once, and record their immutable local receipts. Treat absent/logged-out OpenD as `blocked-user-auth`; do not fabricate evidence.
+**Files/state:**
+- Modify host task definitions through `tools/soak_schedule.ps1` only.
+- Update the `quantmesh-daily-witness` heartbeat through the Codex automation
+  API only after local outbox verification.
+- Modify the iteration ledger only from the separate documentation worktree;
+  push its operational checkpoint without force after review.
 
-- [ ] **Step 9: Update the heartbeat publisher**
+**Interfaces:**
+- Consumes: exact `PRE_HOST_SHA`, designated Windows host identity, complete
+  legacy-authority inventory and five resolved sibling roots.
+- Produces: disabled-then-enabled round-trip-verified Windows tasks, verified
+  minute-20 publisher heartbeat, one fresh accepted daily cycle and immutable
+  outbox/publication receipts. It does not close the 168-hour gate.
 
-Update the existing `quantmesh-daily-witness` heartbeat to minute 20. Its prompt must consume only pending outbox intents, acquire the publisher lease, query the exact idempotency key before posting, re-query after ambiguity, read back the comment and record the local publication receipt. Preserve notification settings.
+**Authority gate:** The operator designates the replacement Windows host and an
+administrator proves every prior authority is stopped. At minimum, inventory
+the observed `ZHOULAPTOP` `\QuantMesh Daily Soak` task and its
+`C:\Users\15492\Develop\qm-soak-168h\run-soak.ps1` action plus every other
+QuantMesh Scheduler task and publisher automation; record host, TaskPath/name,
+action digest, enabled/running state and last result. All legacy schedulers must
+be disabled and not running, and all prior publisher automations paused or
+superseded by the one named authority. The dedicated execution checkout must be
+clean, detached at `PRE_HOST_SHA` and reachable from the configured remote ref.
 
-- [ ] **Step 10: Publish repair/restart witnesses**
+**Pre-mutation verification:** From the dedicated execution checkout, set
+`$PreHostSha` to the recorded 40-hex `PRE_HOST_SHA` and `$RemoteRef` to the
+configured integration ref, then require:
 
-After local read-back succeeds, publish one repair/restart witness to #124 and one scheduler/probe repair witness to #127 through the outbox. Record the exact comment URLs and receipts in the iteration ledger.
+```powershell
+$Dirty = @(git status --porcelain --untracked-files=all)
+if ($LASTEXITCODE -ne 0 -or $Dirty.Count -ne 0) { throw "runner checkout is dirty" }
+$ActualSha = (git rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $ActualSha -ne $PreHostSha) { throw "runner SHA drift" }
+git merge-base --is-ancestor $PreHostSha $RemoteRef
+if ($LASTEXITCODE -ne 0) { throw "runner SHA is not reachable from the configured ref" }
+.venv\Scripts\python.exe -m pytest tests/test_connection_witness.py tests/test_witness_outbox.py tests/test_soak_schedule.py tests/test_trusted_data_soak_acceptance.py -q
+if ($LASTEXITCODE -ne 0) { throw "focused pre-mutation pytest failed" }
+.venv\Scripts\python.exe -m ruff check src/quantmesh/ops tools tests/test_connection_witness.py tests/test_witness_outbox.py tests/test_soak_schedule.py tests/test_trusted_data_soak_acceptance.py
+if ($LASTEXITCODE -ne 0) { throw "focused pre-mutation Ruff failed" }
+git diff --check
+if ($LASTEXITCODE -ne 0) { throw "pre-mutation diff check failed" }
+```
 
-- [ ] **Step 11: Commit the operational checkpoint**
+Any non-zero command stops Task 9B before host mutation.
 
-Commit: `docs(iteration): start repaired trusted-data soak candidate`
+- [ ] **Step 9: Perform read-only preflight and optional separately authorized resolution**
 
-Do not claim the 168-hour gate complete. The heartbeat monitors real elapsed evidence; completion requires 168 hours and a final full verifier PASS.
+Run `quantmesh-data overlap inspect` read-only against the rejected trusted-data
+root and compare the exact evaluation/report/policy/dataset/manifests/fingerprint/diff
+with issue #124. Do not write into evidence-v2 or the old trusted-data root.
+The real resolution is omitted from migration unless the operator separately
+authorizes an additive write to that original trusted-data root; if authorized,
+record the decision and exact backup/read-back procedure before acting. An
+overlay or copied resolution store is not part of this plan.
+
+- [ ] **Step 10: Prepare roots and install the Windows tasks disabled**
+
+Create the empty sibling roots `C:\QuantMesh\trusted-data-v3`,
+`C:\QuantMesh\evidence-v3`, `C:\QuantMesh\daily-runs-v3`,
+`C:\QuantMesh\connection-runs-v3` and `C:\QuantMesh\witness-outbox-v3` only
+after resolving and printing their exact absolute paths and proving no two are
+equal or have a parent/child relationship. Install the daily 08:00 and two-hour
+minute-10 tasks from the dedicated checkout in disabled state, round-trip every
+owned action/trigger/principal/setting/root/ref/digest field, and keep them
+disabled. Run the connection command manually as preflight; absent/logged-out
+OpenD is `blocked-user-auth` and cannot start a clock.
+
+- [ ] **Step 11: Update and read back the heartbeat publisher**
+
+Update the existing `quantmesh-daily-witness` heartbeat to minute 20. Its prompt
+consumes only pending outbox intents, acquires the publisher lease, queries the
+exact idempotency key before posting, re-queries after ambiguity, reads back the
+comment and records the local publication receipt. Preserve notification
+settings. Read the automation back and require the exact two-hour minute-20
+cadence and single-authority identity.
+
+- [ ] **Step 12: Start the fresh candidate and enable verified cadence**
+
+Run one fresh five-target daily cycle from `PRE_HOST_SHA`, reopen every recorded
+manifest/evaluation/checkpoint/daily terminal and require `minimum-hours=0`,
+`minimum-xnys-sessions=1` PASS. This proves one daily cycle, not final
+completion. Enable the already verified Windows tasks only after this local
+read-back succeeds, immediately read their enabled/not-running state back and
+record their immutable local receipts. Any pre-enable failure leaves them
+disabled and invalidates the candidate.
+
+- [ ] **Step 13: Publish repair/restart witnesses through the outbox**
+
+After local read-back succeeds, publish one repair/restart witness to #124 and
+one scheduler/probe repair witness to #127 through the outbox. Record the exact
+comment URLs, read-back digests and local publication receipts in the iteration
+ledger.
+
+- [ ] **Step 14: Review, commit and push the operational checkpoint**
+
+From the documentation worktree, record exact host/root/SHA/schedule/automation
+and publication evidence. Obtain a read-only review, commit
+`docs(iteration): start repaired trusted-data soak candidate`, rerun documentation
+checks and push without force. The dedicated runner checkout remains detached at
+`PRE_HOST_SHA`.
+
+Post-mutation verification must re-read both Windows tasks, the automation, all
+five roots, the accepted daily terminal/report/source proof, pending/publication
+outbox state and the pinned runner SHA. Record every command/API result and exit
+code in the iteration ledger; any mismatch disables the new Windows tasks,
+leaves immutable failure evidence and invalidates the candidate without
+backfill.
+
+Do not claim the 168-hour gate complete. The heartbeat monitors real elapsed
+evidence; completion requires 168 hours and a final operational-acceptance PASS.
+
+- [ ] **Step 15: Verify final 168-hour evidence without extending its clock**
+
+After 168 real hours, run the separate Task 9A operational verifier. It reopens
+every accepted daily report and its exact immutable daily terminal, requires the
+same source contract/report identity and accepted provider-verifier proof, and
+validates connection-receipt cadence. Operational or publication timestamps
+cannot create or extend elapsed evidence. Only this immutable acceptance result
+may authorize a final-completion witness; it grants no trading authority.

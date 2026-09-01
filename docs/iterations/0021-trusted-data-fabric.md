@@ -1094,13 +1094,61 @@ durable checkpoint.
   overlap resolution, clock start, credential, network publication, trading
   authority or release state changed. The retired scheduler remains disabled.
 
+## Checkpoint 27 — Reliability-repair execution preflight and host hold, 2026-09-01
+
+- Planner reconstructed the approved remote branch in the isolated
+  `codex/0021-soak-reliability-goal` worktree and amended the remaining order to
+  `Task 6 -> Task 8 -> Task 7 -> Task 9A -> Task 9B`. Outbox authority now
+  precedes final scheduler command construction, while real-host migration is
+  separated from code/documentation closure.
+- Quant research review fixed the proof boundary: daily acceptance must bind an
+  accepted report to its exact immutable daily terminal and source contract;
+  the final 168-hour verifier must additionally validate connection cadence.
+  Operational and publication timestamps never create or extend soak time.
+- Task 6's UTC thresholds, numeric Scheduler result handling, exact receipt
+  match, separate connection namespace and read-only Moomoo/Hyperliquid probes
+  are now explicit. Task 8 owns cross-process publication leasing, injected
+  remote coordination and terminal-before-enqueue recovery. Task 7 must pin all
+  absolute roots, source ref and frozen digests.
+- Host inspection contradicted the prior retirement assumption: on `ZHOULAPTOP`
+  the legacy `\QuantMesh Daily Soak` task was enabled/Ready, last ran at
+  2026-09-01 08:00:02 Asia/Singapore with result zero and was scheduled again
+  for 2026-09-02 08:00. Its action still targets
+  `C:\Users\15492\Develop\qm-soak-168h\run-soak.ps1`; issue #124 records that
+  the August 31 and September 1 executions omitted required script/config
+  digests despite Scheduler zero.
+- Two reversible disable attempts (`Disable-ScheduledTask` and `schtasks
+  /Change /Disable`) were denied by Windows access control. The task remained
+  unchanged. No repeated privileged attempt was made, and no provider,
+  evidence, automation, publication or trading state was touched.
+- Ruling: local Tasks 6-8 and Task 9A may proceed. Task 9B is blocked at its
+  authority gate until an administrator disables the legacy task and the
+  operator designates the replacement Windows host. Any NVDA forensic
+  resolution is a separate operator-authorized additive action and must not
+  write into the rejected evidence-v2 root.
+- Verifier baseline used the explicit shared interpreter and command
+  `C:\Users\15492\Develop\QuantMesh\.venv\Scripts\python.exe -m pytest
+  tests/test_immutable_runs.py tests/test_operational_processes.py
+  tests/test_source_contract.py tests/test_soak_daily.py
+  tests/test_trusted_data_soak.py -q --basetemp external-temp`; exit zero was
+  `50 passed, 4 skipped in 37.43s`. The Task 5 focused Ruff command returned
+  `All checks passed!`, and `git diff --check` exited zero.
+- Independent read-only plan review ran four bounded correction rounds. It
+  initially found non-executable pre-host commit sequencing, orphan-terminal
+  outbox recovery, connection-cadence ownership, receipt matching, runtime
+  digest and host-authority gaps. Each Critical/Important finding was resolved
+  in the executable plan. The final reviewer verdict was `CLEAN`: no remaining
+  Critical or Important contradiction. This is preflight evidence, not Task 6
+  implementation acceptance, and it changes no 168-hour claim.
+
 ## Current frontier
 
 Task 6, deadline-bounded connection witness, is the first incomplete slice in
-the approved Checkpoint 20 reliability-repair plan.
+the approved Checkpoint 20 reliability-repair plan as amended by Checkpoint 27.
 Continue one bounded TDD slice at a time with independent read-only review and
-recorded verification at every phase boundary. Keep the retired scheduler
-disabled and do not count time from the rejected evidence root toward the
+recorded verification at every phase boundary. Treat the legacy scheduler as
+enabled until an administrator proves otherwise; local implementation must not
+touch it. Do not count time from the rejected evidence root toward the
 replacement 168-hour candidate.
 
 ## Resume instructions
