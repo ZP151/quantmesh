@@ -19,11 +19,11 @@
   `27a6311d4b56b7cc832893ddd183d313c083816d`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: commit and push the bounded Scheduler compatibility repair,
-  pin a replacement remote-reachable pre-host SHA, repeat the detached-runner
-  gate, then finish disabled Step 10 installation and manual connection
-  preflight. Keep wallet, signing, account and order surfaces structurally
-  absent.
+- Current frontier: review/commit/push the second Scheduler/preflight repair,
+  pin a new SHA and repeat detached-runner gates. Preserve failed v3/v4 roots;
+  create seven new empty/disjoint v5 roots, then finish disabled Step 10 install
+  and manual connection preflight. Keep wallet, signing, account and order
+  surfaces structurally absent.
 - External gate: passed. The operator designated `ZHOULAPTOP` as the sole
   Scheduler/collection/publisher host; the legacy root task is independently
   read back `Disabled/Enabled=false`, and the old Publisher deletion attestation
@@ -683,13 +683,14 @@ all market access remains read-only or paper-only.
 
 ## Current frontier
 
-1. Task 9B authority is released and seven fresh, absolute, pairwise-disjoint
-   roots exist. The first disabled install exposed an out-of-range Windows
-   repetition Duration and local-principal normalization drift; it failed
-   closed with no enabled task or candidate clock.
-2. Commit/push the reviewed TDD repair, pin a replacement exact SHA, recreate
-   the detached runner and repeat all pre-mutation gates before overwriting the
-   disabled definitions. Do not use the failed schedule manifest for enablement.
+1. Task 9B authority is released. v3 failed closed during disabled install; v4
+   installed disabled but its supplemental preflight exposed invalid
+   path-qualified task names and OpenD-absent timeout precedence. No task ran
+   and no candidate clock started.
+2. Review/commit/push the second TDD repair and repeat all candidate gates.
+   Preserve all v3/v4 roots; create seven new empty v5 roots before overwriting
+   the disabled definitions. Do not copy or use earlier manifests/receipts for
+   enablement.
 3. Continue Steps 10–15 without backfill. OpenD/user-auth failure blocks clock
    start; only a fresh accepted daily cycle may precede GuardedEnable, and final
    completion still requires 168 real hours plus immutable operational PASS.

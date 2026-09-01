@@ -928,6 +928,15 @@ action/trigger/principal/setting/root/ref/digest field, and keep them disabled.
 Run the connection command manually as preflight; absent/logged-out OpenD is
 `blocked-user-auth` and cannot start a clock.
 
+Incident override, 2026-09-02: the first disabled v3 installation failed closed
+after publishing its immutable schedule manifest. The v4 retry installed and
+verified both tasks disabled, but its supplemental preflight exposed an invalid
+path-qualified Scheduler task identity and an OpenD-absent timeout-precedence
+bug; no task ran and no candidate clock started. Preserve all v3 and v4 roots
+as negative evidence. The reviewed retry uses the same seven exact basenames
+with suffix `-v5`, after the same absolute/disjoint/empty/non-reparse checks;
+no earlier artifact is copied, linked or admitted into v5.
+
 - [ ] **Step 11: Update and read back the heartbeat publisher**
 
 Update the existing `quantmesh-daily-witness` heartbeat to minute 20. Its prompt

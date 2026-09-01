@@ -1385,16 +1385,34 @@ durable checkpoint.
   Minor findings. It separately reproduced the local identity equivalence and
   omitted-Duration trigger shape. No provider, OpenD, automation, publication,
   trading or release state changed during this repair.
+- The reviewed `026ca04` retry used seven new empty v4 roots and successfully
+  installed/read-back-verified both definitions disabled with zero drift. Its
+  explicit supplemental preflight at real slot `2026-09-01T16:10Z` correctly
+  stayed nonzero and created immutable receipt
+  `afbf56922868992a2f9aa151f6ef008c7c61949d4a731922109454a5f006ad1b`,
+  but exposed two further fail-closed defects: path-qualified task names made
+  the Scheduler query fail, and the absent OpenD TCP `blocked-user-auth` probe
+  still launched Moomoo until its deadline, making the terminal `timed-out`.
+- A second TDD RED reproduced both exact defects. An absent OpenD TCP result now
+  emits an explicit skipped Moomoo probe without starting its child process;
+  Python, Scheduler and Hyperliquid probes still execute. Review then found one
+  Important same-leaf collision: leaf-only Scheduler queries could select both
+  the legacy root task and the replacement task. A third RED added explicit
+  formal/connection TaskPath arguments, path+leaf queries and wrong-path
+  read-back rejection. Focused GREEN passed `3`; the final complete Task 9B
+  gate passed `85` with the one known third-party warning; both PowerShell
+  parses, Ruff and diff checks passed. Both definitions remain disabled and the
+  v4 receipt is negative evidence, never a qualifying slot.
 
 ## Current frontier
 
-Commit and push the bounded Scheduler host repair, pin its exact remotely
-reachable SHA, and create a new clean detached runner at that replacement
-candidate. Repeat the complete Task 9B pre-mutation gate, then resume Step 10 by
-overwriting and round-trip-verifying both replacement definitions while they
-remain disabled. The original failed manifest is immutable negative evidence;
-the 168-hour clock has not started and no rejected or legacy evidence may be
-backfilled.
+Review, commit and push the second bounded Scheduler/preflight repair, pin a new
+remote-reachable SHA and repeat the clean detached-runner gates. Retain all v3
+and v4 roots unchanged because their manifests/receipt are immutable negative
+evidence. Resume Step 10 only after creating and proving a new empty, disjoint,
+non-reparse seven-root v5 set, then overwrite and round-trip-verify both
+replacement definitions while they remain disabled. The 168-hour clock has not
+started and no rejected, v3, v4 or legacy evidence may be backfilled.
 
 ## Resume instructions
 

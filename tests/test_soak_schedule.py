@@ -269,6 +269,16 @@ def test_install_disabled_registers_both_exact_staggered_tasks(tmp_path: Path) -
         "-File",
     ]
     assert connection_argv[3] == str(repo / "tools" / "connection_witness.ps1")
+    assert connection_argv[connection_argv.index("-FormalTaskName") + 1] == (
+        "QuantMesh Daily Soak"
+    )
+    assert connection_argv[connection_argv.index("-FormalTaskPath") + 1] == "\\QuantMesh\\"
+    assert connection_argv[connection_argv.index("-ConnectionTaskName") + 1] == (
+        "QuantMesh Connection Witness"
+    )
+    assert connection_argv[connection_argv.index("-ConnectionTaskPath") + 1] == (
+        "\\QuantMesh\\"
+    )
     assert sum(item.startswith("Register:") for item in operations) == 2
     assert [item for item in operations if item.startswith("RegisterEnabled:")] == [
         "RegisterEnabled:QuantMesh Daily Soak:False",

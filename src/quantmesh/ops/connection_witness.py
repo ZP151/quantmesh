@@ -553,7 +553,9 @@ class ConnectionWitnessConfig(_FrozenContract):
     daily_run_root: Path
     connection_run_root: Path
     outbox_root: Path
+    formal_task_path: str = Field(min_length=1)
     formal_task_name: str = Field(min_length=1)
+    connection_task_path: str = Field(min_length=1)
     connection_task_name: str = Field(min_length=1)
     expected_commit: str = Field(pattern=r"^[0-9a-f]{40}$")
     expected_source_contract_id: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -584,6 +586,13 @@ class ConnectionWitnessConfig(_FrozenContract):
     def task_names_are_not_blank(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("Scheduler task names must not be blank")
+        return value
+
+    @field_validator("formal_task_path", "connection_task_path")
+    @classmethod
+    def task_paths_are_absolute_and_terminated(cls, value: str) -> str:
+        if not value.startswith("\\") or not value.endswith("\\"):
+            raise ValueError("Scheduler task paths must start and end with a backslash")
         return value
 
     @field_validator(
@@ -1001,15 +1010,23 @@ def _probe_hyperliquid(config: ConnectionWitnessConfig) -> ConnectionProbeResult
 
 
 def _read_scheduler_task(config: ConnectionWitnessConfig, task_name: str) -> FormalTaskSnapshot:
+    if task_name == config.formal_task_name:
+        task_path = config.formal_task_path
+    elif task_name == config.connection_task_name:
+        task_path = config.connection_task_path
+    else:
+        raise ValueError("Scheduler query requested an unconfigured task identity")
     escaped = task_name.replace("'", "''")
+    escaped_path = task_path.replace("'", "''")
     script = (
         "$ErrorActionPreference='Stop';"
-        f"$task=Get-ScheduledTask -TaskName '{escaped}';"
-        f"$info=Get-ScheduledTaskInfo -TaskName '{escaped}';"
+        f"$task=Get-ScheduledTask -TaskPath '{escaped_path}' -TaskName '{escaped}';"
+        f"$info=Get-ScheduledTaskInfo -TaskPath '{escaped_path}' -TaskName '{escaped}';"
         "$last=$null;"
         "if($info.LastRunTime -and $info.LastRunTime.Year -gt 1900){"
         "$last=$info.LastRunTime.ToUniversalTime().ToString('o')};"
-        "[ordered]@{task_name=$task.TaskName;enabled=($task.State -ne 'Disabled');"
+        "[ordered]@{task_path=$task.TaskPath;task_name=$task.TaskName;"
+        "enabled=($task.State -ne 'Disabled');"
         "state=[string]$task.State;last_task_result=[int64]$info.LastTaskResult;"
         "last_run_time=$last}|ConvertTo-Json -Compress"
     )
@@ -1024,16 +1041,19 @@ def _read_scheduler_task(config: ConnectionWitnessConfig, task_name: str) -> For
         raise RuntimeError("Scheduler query returned nonzero")
     try:
         payload = json.loads(result.stdout)
+        observed_path = payload.pop("task_path", None)
         if payload.get("last_run_time") is not None:
             payload["last_run_time"] = datetime.fromisoformat(
                 payload["last_run_time"].replace("Z", "+00:00")
             )
         snapshot = FormalTaskSnapshot.model_validate(payload)
-        if snapshot.task_name != task_name:
-            raise ValueError("Scheduler query returned a different task identity")
-        return snapshot
     except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as error:
         raise ValueError("Scheduler query returned invalid JSON") from error
+    if observed_path != task_path:
+        raise ValueError("Scheduler query returned a different task path")
+    if snapshot.task_name != task_name:
+        raise ValueError("Scheduler query returned a different task identity")
+    return snapshot
 
 
 def _safe_probe(
@@ -1259,7 +1279,8 @@ def run_connection_witness(
             ConnectionProbeOutcome.TIMED_OUT,
         }:
             probes.append(_safe_probe("python", _probe_python, config))
-            probes.append(_safe_probe("tcp", _probe_tcp, config))
+            tcp_probe = _safe_probe("tcp", _probe_tcp, config)
+            probes.append(tcp_probe)
             scheduler_started = time.monotonic()
             try:
                 formal_snapshot = _read_scheduler_task(config, config.formal_task_name)
@@ -1295,6 +1316,17 @@ def run_connection_witness(
                         outcome=ConnectionProbeOutcome.SKIPPED,
                         code="moomoo-suppressed-formal-in-progress",
                         detail="Moomoo probe suppressed to avoid competing with the formal task",
+                        elapsed_seconds=0,
+                        tree_terminated=False,
+                    )
+                )
+            elif tcp_probe.code == "blocked-user-auth":
+                probes.append(
+                    ConnectionProbeResult(
+                        name="moomoo",
+                        outcome=ConnectionProbeOutcome.SKIPPED,
+                        code="moomoo-suppressed-opend-unavailable",
+                        detail="Moomoo probe suppressed because OpenD TCP is unavailable",
                         elapsed_seconds=0,
                         tree_terminated=False,
                     )
@@ -1362,7 +1394,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--daily-run-root", type=Path, required=True)
     parser.add_argument("--connection-run-root", type=Path, required=True)
     parser.add_argument("--outbox-root", type=Path, required=True)
+    parser.add_argument("--formal-task-path", required=True)
     parser.add_argument("--formal-task-name", required=True)
+    parser.add_argument("--connection-task-path", required=True)
     parser.add_argument("--connection-task-name", required=True)
     parser.add_argument("--expected-commit", required=True)
     parser.add_argument("--expected-source-contract-id", required=True)

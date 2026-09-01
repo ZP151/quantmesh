@@ -340,7 +340,9 @@ def _config(
         daily_run_root=tmp_path / "daily-runs",
         connection_run_root=tmp_path / "connection-runs",
         outbox_root=tmp_path / "outbox",
+        formal_task_path="\\QuantMesh\\",
         formal_task_name="QuantMesh Daily Soak",
+        connection_task_path="\\QuantMesh\\",
         connection_task_name="QuantMesh Connection Witness",
         expected_commit=COMMIT,
         expected_source_contract_id=SOURCE_ID,
@@ -478,6 +480,35 @@ def test_logged_out_moomoo_is_blocked_user_auth_and_mutates_no_report_root(
         sorted(path.relative_to(tmp_path / "reports") for path in (tmp_path / "reports").rglob("*"))
     )
     assert after == before
+
+
+def test_absent_opend_suppresses_moomoo_and_is_blocked_user_auth(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    blocked_tcp = ConnectionProbeResult(
+        name="tcp",
+        outcome=ConnectionProbeOutcome.FAILED,
+        code="blocked-user-auth",
+        detail="loopback OpenD TCP 11111 is unavailable",
+        elapsed_seconds=0.1,
+        tree_terminated=False,
+    )
+    calls = _install_probes(monkeypatch, formal=_snapshot(), tcp=blocked_tcp)
+    monkeypatch.setattr(
+        witness,
+        "_probe_moomoo",
+        lambda _config: pytest.fail("Moomoo must be suppressed when OpenD TCP is absent"),
+    )
+
+    receipt = run_connection_witness(_config(tmp_path))
+
+    assert receipt.status is ConnectionWitnessStatus.BLOCKED_USER_AUTH
+    assert receipt.failure_code == "blocked-user-auth"
+    assert "moomoo" not in calls
+    moomoo = next(item for item in receipt.probes if item.name == "moomoo")
+    assert moomoo.outcome is ConnectionProbeOutcome.SKIPPED
+    assert moomoo.code == "moomoo-suppressed-opend-unavailable"
 
 
 def test_scheduler_exception_and_probe_timeout_still_publish_terminal_receipts(
@@ -719,6 +750,74 @@ def test_child_probe_commands_are_read_only_and_propagate_tree_timeout(
     assert "PublicInfoTransport" in commands[1][-1]
     assert ".l2_book('BTC')" in commands[1][-1]
     assert hyperliquid.outcome is ConnectionProbeOutcome.PASSED
+
+
+def test_scheduler_readback_scopes_duplicate_leaf_name_to_owned_task_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    commands: list[str] = []
+
+    def run(argv, *, timeout_seconds: float, cwd: Path):
+        commands.append(argv[-1])
+        payload = {
+            "task_path": "\\QuantMesh\\",
+            "task_name": "QuantMesh Daily Soak",
+            "enabled": False,
+            "state": "Disabled",
+            "last_task_result": 0,
+            "last_run_time": None,
+        }
+        return ProcessResult(
+            argv=tuple(argv),
+            returncode=0,
+            stdout=json.dumps(payload),
+            stderr="",
+            elapsed_seconds=0.1,
+            timed_out=False,
+            tree_terminated=False,
+        )
+
+    monkeypatch.setattr(witness, "run_process", run)
+    config = _config(tmp_path)
+
+    snapshot = witness._read_scheduler_task(config, config.formal_task_name)
+
+    assert snapshot.task_name == "QuantMesh Daily Soak"
+    assert "Get-ScheduledTask -TaskPath '\\QuantMesh\\' -TaskName 'QuantMesh Daily Soak'" in (
+        commands[0]
+    )
+    assert "Get-ScheduledTaskInfo -TaskPath '\\QuantMesh\\' -TaskName " in commands[0]
+
+
+def test_scheduler_readback_rejects_different_task_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def run(argv, *, timeout_seconds: float, cwd: Path):
+        payload = {
+            "task_path": "\\",
+            "task_name": "QuantMesh Daily Soak",
+            "enabled": False,
+            "state": "Disabled",
+            "last_task_result": 0,
+            "last_run_time": None,
+        }
+        return ProcessResult(
+            argv=tuple(argv),
+            returncode=0,
+            stdout=json.dumps(payload),
+            stderr="",
+            elapsed_seconds=0.1,
+            timed_out=False,
+            tree_terminated=False,
+        )
+
+    monkeypatch.setattr(witness, "run_process", run)
+    config = _config(tmp_path)
+
+    with pytest.raises(ValueError, match="different task path"):
+        witness._read_scheduler_task(config, config.formal_task_name)
 
 
 def test_supplemental_slot_is_explicit_and_scheduled_mode_cannot_spoof_it(
