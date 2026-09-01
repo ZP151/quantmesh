@@ -21,6 +21,8 @@ from pathlib import Path
 
 import pytest
 
+from quantmesh.ops.source_contract import PLATFORM_TOLERATED
+
 REPO = Path(__file__).resolve().parents[1]
 THREAT_MODEL = REPO / "docs" / "threat-model.md"
 LICENSES = REPO / "docs" / "licenses.md"
@@ -325,6 +327,7 @@ class TestClosureContract:
 
     def test_platform_tolerated_matches_the_documented_set(self) -> None:
         review = _load_license_review()
+        assert review.PLATFORM_TOLERATED is PLATFORM_TOLERATED
         doc = LICENSES.read_text(encoding="utf-8")
         for name in sorted(review.PLATFORM_TOLERATED):
             assert name in doc, (

@@ -576,7 +576,7 @@ scan must skip this section until that dependency is satisfied.
   tasks only. Task 9B separately reads back the Codex publisher heartbeat and
   requires its two-hour minute-20 cadence before any candidate clock starts.
 
-- [ ] **Step 1: Write RED command-construction and drift tests**
+- [x] **Step 1: Write RED command-construction and drift tests**
 
 Mock Scheduler cmdlets and assert the clean remotely reachable commit, absolute
 pinned paths, remote integration ref, frozen script/config/dependency digests,
@@ -602,19 +602,29 @@ runner/scheduler configuration with digest fields excluded. Changed/missing
 files, installed environment drift or configuration drift must fail before
 collection.
 
+The installer writes one canonical `ScheduleContractV1` manifest under an
+explicit absolute manifest root using `<config-digest>.json`. The daily action
+pins that exact manifest path. Runtime source verification reopens the manifest,
+recomputes its normalized config digest and rejects filename/content drift;
+Scheduler object read-back remains an independent comparison boundary.
+
 Cover three explicit script modes: `InstallDisabled` creates/replaces both tasks
 disabled and verifies them; `Verify` performs read-only round-trip comparison;
 `GuardedEnable` first re-runs `Verify` and the configured preflight command, then
 enables both tasks and reads them back. Any drift, preflight nonzero, partial
-enable or post-enable mismatch must leave/return both tasks disabled and exit
-non-zero. Pin zero automatic retries for the connection task; supplemental
+enable or post-enable mismatch triggers best-effort disable of both tasks and a
+mandatory read-back. If either remains enabled, return `unsafe-partial-enable`
+with the exact enabled task names and keep candidate-clock admission denied.
+`Verify` itself is strictly read-only: drift returns non-zero plus
+`unsafe_enabled_tasks` but performs no Register/Enable/Disable call. Pin zero
+automatic retries for the connection task; supplemental
 recovery is explicit and cannot backfill cadence.
 
-- [ ] **Step 2: Run RED tests**
+- [x] **Step 2: Run RED tests**
 
 Run: `.venv\Scripts\python.exe -m pytest tests/test_source_contract.py tests/test_soak_daily.py tests/test_soak_schedule.py tests/test_security.py -q`
 
-- [ ] **Step 3: Refactor registration and round-trip verification**
+- [x] **Step 3: Refactor registration and round-trip verification**
 
 Use `Register-ScheduledTask` objects for both tasks and implement
 `InstallDisabled`, read-only `Verify` and fail-closed `GuardedEnable`. Read with
@@ -623,7 +633,7 @@ compare against the expected contract. Emit one JSON result and fail on any
 mismatch. Recompute actual runtime/script/config digests in the Python source
 contract before collection rather than accepting caller assertions.
 
-- [ ] **Step 4: Run GREEN tests and PowerShell parse check**
+- [x] **Step 4: Run GREEN tests and PowerShell parse check**
 
 Run:
 
@@ -693,7 +703,7 @@ the remote URL must identify the expected `ZP151/quantmesh` issue comment.
 
 Run Task 8 pytest, focused Ruff and `git diff --check`.
 
-- [ ] **Step 5: Commit and record role evidence**
+- [x] **Step 5: Commit and record role evidence**
 
 Commit: `feat(ops): add single-authority witness outbox`
 

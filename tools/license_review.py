@@ -39,6 +39,8 @@ import re
 import sys
 from pathlib import Path
 
+from quantmesh.ops.source_contract import PLATFORM_TOLERATED
+
 # The distribution names of the project itself — the review covers
 # third-party dependencies, not the package under review.
 PROJECT_NAMES = {"quantmesh"}
@@ -47,29 +49,6 @@ PROJECT_NAMES = {"quantmesh"}
 # closure (pip's own resolution depends on them, not the project's) and
 # are allowed to be installed without being pinned.
 BUILD_TOOLING = {"pip", "setuptools", "wheel"}
-
-# Closure members pinned for every platform but part of the frozen
-# resolution on one platform family only: uvloop
-# (`uvicorn[standard]` is CPython/Linux-only) and the keyring backend
-# chain that resolves on Linux (jeepney -> SecretStorage ->
-# cryptography -> cffi -> pycparser), plus colorama (pytest's
-# win32-marker dependency) and pywin32-ctypes (keyring's win32
-# backend), which resolve on Windows only. A member absent from this
-# platform is tolerated as *absent* (and still classified when it IS
-# installed); docs/licenses.md records the set as the
-# platform-restricted closure. If a real dependency change adds a new
-# platform-restricted member, the lock regeneration (release process)
-# and this set must grow together — the gate fails loudly otherwise.
-PLATFORM_TOLERATED = {
-    "uvloop",
-    "jeepney",
-    "SecretStorage",
-    "cryptography",
-    "cffi",
-    "pycparser",
-    "colorama",
-    "pywin32-ctypes",
-}
 
 # The frozen install closure the review evaluates. The default is the
 # repo's requirements-audit.txt; tests may point elsewhere.
@@ -213,6 +192,7 @@ _CLASSIFIER_MAP = {
     "License :: OSI Approved :: ISC License (ISCL)": "ISC",
     "License :: OSI Approved :: Python Software Foundation License": "PSF-2.0",
     "License :: Python Software Foundation License": "PSF-2.0",
+    "License :: OSI Approved :: University of Illinois/NCSA Open Source License": "NCSA",
 }
 
 
@@ -229,6 +209,9 @@ def classify(dist: md.Distribution) -> str:
         if resolved is not None:
             return resolved
         return f"UNKNOWN (expression {expr!r})"
+    classifiers = dist.metadata.get_all("Classifier", [])
+    if "License :: OSI Approved :: University of Illinois/NCSA Open Source License" in classifiers:
+        return "NCSA"
     text = dist.metadata.get("License", "")
     if text:
         selected = LICENSE_TEXT_EXCEPTIONS.get((name, dist.version, text))
@@ -237,7 +220,7 @@ def classify(dist: md.Distribution) -> str:
         resolved = _from_text(text)
         if resolved is not None:
             return resolved
-    for classifier in dist.metadata.get_all("Classifier", []):
+    for classifier in classifiers:
         if classifier in _CLASSIFIER_MAP:
             return _CLASSIFIER_MAP[classifier]
     if name in LICENSE_EXCEPTIONS:

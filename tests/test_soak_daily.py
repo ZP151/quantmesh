@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 import quantmesh.ops.soak_runner as runner
+import quantmesh.ops.source_contract as source_contract_module
 from quantmesh.data.collection_receipts import (
     CollectionCycleReceipt,
     LayerManifestIds,
@@ -21,7 +22,11 @@ from quantmesh.ops.immutable_runs import (
     SoakVerificationProof,
 )
 from quantmesh.ops.processes import ProcessResult
-from quantmesh.ops.source_contract import SourceContractV1
+from quantmesh.ops.source_contract import (
+    RuntimeDigestsV1,
+    SourceContractV1,
+    publish_schedule_manifest,
+)
 from quantmesh.ops.trusted_data_soak import SoakVerification
 
 NOW = datetime(2026, 8, 31, 1, tzinfo=UTC)
@@ -88,6 +93,24 @@ def _source() -> SourceContractV1:
 
 
 def _args(tmp_path: Path) -> list[str]:
+    runner_config = {
+        "repo": str(tmp_path.resolve()),
+        "data_root": str((tmp_path / "data").resolve()),
+        "evidence_root": str((tmp_path / "evidence").resolve()),
+        "run_root": str((tmp_path / "runs").resolve()),
+        "outbox_root": str((tmp_path / "outbox").resolve()),
+        "remote_ref": "origin/0021-soak-finalize",
+        "source_timeout": 30,
+        "hyperliquid_timeout": 300,
+        "moomoo_timeout": 600,
+        "observe_timeout": 600,
+        "verify_timeout": 600,
+        "lease_wait_timeout": 30,
+    }
+    manifest = publish_schedule_manifest(
+        tmp_path / "manifests",
+        {"runner": runner_config, "scheduler": {"timezone": "Asia/Singapore"}},
+    )
     return [
         "--repo",
         str(tmp_path),
@@ -99,6 +122,8 @@ def _args(tmp_path: Path) -> list[str]:
         str(tmp_path / "runs"),
         "--outbox-root",
         str(tmp_path / "outbox"),
+        "--source-config-manifest",
+        str(manifest),
         "--remote-ref",
         "origin/0021-soak-finalize",
         "--dependency-digest",
@@ -106,7 +131,7 @@ def _args(tmp_path: Path) -> list[str]:
         "--script-digest",
         "c" * 64,
         "--config-digest",
-        "d" * 64,
+        manifest.stem,
     ]
 
 
@@ -134,6 +159,35 @@ def test_source_failure_stops_before_collection_and_writes_terminal(
     assert receipt.failure_stage == "source-contract"
 
 
+def test_runtime_digest_drift_stops_before_git_or_provider(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(runner, "_now", lambda: NOW)
+    monkeypatch.setattr(
+        source_contract_module,
+        "compute_runtime_digests",
+        lambda *args, **kwargs: RuntimeDigestsV1(
+            dependency_digest="e" * 64,
+            script_digest="c" * 64,
+            config_digest="d" * 64,
+        ),
+    )
+    monkeypatch.setattr(
+        source_contract_module,
+        "run_process",
+        lambda *args, **kwargs: pytest.fail("Git started after digest drift"),
+    )
+    monkeypatch.setattr(
+        runner,
+        "run_process",
+        lambda *args, **kwargs: pytest.fail("provider collection started after digest drift"),
+    )
+
+    assert runner.main(_args(tmp_path)) == 1
+    assert ImmutableRunStore(tmp_path / "runs").latest().failure_stage == "source-contract"
+
+
 def test_default_lease_wait_covers_every_bounded_owner_stage(tmp_path: Path) -> None:
     parsed = runner._parser().parse_args(_args(tmp_path))
     config = runner.DailyRunConfig(**vars(parsed))
@@ -147,6 +201,20 @@ def test_default_lease_wait_covers_every_bounded_owner_stage(tmp_path: Path) -> 
             config.verify_timeout,
         )
     )
+
+
+def test_daily_runtime_digest_config_is_canonical_and_excludes_claimed_digests(
+    tmp_path: Path,
+) -> None:
+    parsed = runner._parser().parse_args(_args(tmp_path))
+    config = runner.DailyRunConfig(**vars(parsed))
+
+    payload = config.runtime_digest_config()
+
+    assert payload["runner"]["repo"] == str(tmp_path.resolve())
+    assert payload["runner"]["outbox_root"] == str((tmp_path / "outbox").resolve())
+    assert payload["runner"]["remote_ref"] == "origin/0021-soak-finalize"
+    assert not {"dependency_digest", "script_digest", "config_digest"} & payload.keys()
 
 
 def test_malformed_collection_stops_before_observe_and_writes_terminal(

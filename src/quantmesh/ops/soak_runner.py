@@ -32,7 +32,11 @@ from quantmesh.ops.immutable_runs import (
     reject_reparse_chain,
 )
 from quantmesh.ops.processes import ProcessResult, run_process
-from quantmesh.ops.source_contract import SourceContractV1, verify_source_contract
+from quantmesh.ops.source_contract import (
+    SourceContractV1,
+    load_schedule_manifest,
+    verify_source_contract,
+)
 from quantmesh.ops.trusted_data_soak import SoakReportV2, SoakStoreV2, SoakVerification
 from quantmesh.ops.witness_outbox import (
     OutboxIntentError,
@@ -48,6 +52,7 @@ class DailyRunConfig:
     evidence_root: Path
     run_root: Path
     outbox_root: Path
+    source_config_manifest: Path
     remote_ref: str
     dependency_digest: str
     script_digest: str
@@ -61,7 +66,11 @@ class DailyRunConfig:
 
     def __post_init__(self) -> None:
         roots = (self.data_root, self.evidence_root, self.run_root, self.outbox_root)
-        if not self.repo.is_absolute() or any(not path.is_absolute() for path in roots):
+        if (
+            not self.repo.is_absolute()
+            or not self.source_config_manifest.is_absolute()
+            or any(not path.is_absolute() for path in roots)
+        ):
             raise ValueError("daily runner repository and roots must be absolute")
         resolved = tuple(path.resolve() for path in roots)
         if any(
@@ -70,6 +79,31 @@ class DailyRunConfig:
             for right in resolved[index + 1 :]
         ):
             raise ValueError("daily data, evidence, run and outbox roots must be disjoint")
+
+    def _runner_digest_config(self) -> dict[str, Any]:
+        return {
+            "repo": str(self.repo.resolve()),
+            "data_root": str(self.data_root.resolve()),
+            "evidence_root": str(self.evidence_root.resolve()),
+            "run_root": str(self.run_root.resolve()),
+            "outbox_root": str(self.outbox_root.resolve()),
+            "remote_ref": self.remote_ref,
+            "source_timeout": self.source_timeout,
+            "hyperliquid_timeout": self.hyperliquid_timeout,
+            "moomoo_timeout": self.moomoo_timeout,
+            "observe_timeout": self.observe_timeout,
+            "verify_timeout": self.verify_timeout,
+            "lease_wait_timeout": self.lease_wait_timeout,
+        }
+
+    def runtime_digest_config(self) -> dict[str, Any]:
+        manifest = load_schedule_manifest(self.source_config_manifest)
+        runner = manifest.config.get("runner")
+        if runner != self._runner_digest_config():
+            raise ValueError("schedule manifest runner configuration drift")
+        if manifest.config_digest != self.config_digest:
+            raise ValueError("schedule manifest digest differs from the frozen action")
+        return manifest.config
 
 
 class _StageFailure(RuntimeError):
@@ -286,6 +320,8 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
                 config.dependency_digest,
                 config.script_digest,
                 config.config_digest,
+                runtime_config=config.runtime_digest_config(),
+                python_executable=config.repo / ".venv" / "Scripts" / "python.exe",
                 timeout_seconds=config.source_timeout,
             )
             _ensure_daily_witness(
@@ -313,6 +349,8 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
                 config.dependency_digest,
                 config.script_digest,
                 config.config_digest,
+                runtime_config=config.runtime_digest_config(),
+                python_executable=config.repo / ".venv" / "Scripts" / "python.exe",
                 timeout_seconds=config.source_timeout,
             )
             python = str(config.repo / ".venv" / "Scripts" / "python.exe")
@@ -748,7 +786,14 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("repo", "data-root", "evidence-root", "run-root", "outbox-root"):
+    for name in (
+        "repo",
+        "data-root",
+        "evidence-root",
+        "run-root",
+        "outbox-root",
+        "source-config-manifest",
+    ):
         parser.add_argument(f"--{name}", type=Path, required=True)
     for name in ("remote-ref", "dependency-digest", "script-digest", "config-digest"):
         parser.add_argument(f"--{name}", required=True)

@@ -1229,17 +1229,64 @@ durable checkpoint.
 - The Checkpoint 27 host hold remains in force. No outbox publication occurred,
   and evidence from the enabled legacy task remains inadmissible.
 
+## Checkpoint 30 — Reliability repair Task 7 verified staggered scheduling, 2026-09-01
+
+- Implementer RED first failed at collection because the shared source-contract
+  module did not yet expose `PLATFORM_TOLERATED`. Task 7 now derives the
+  dependency contract from the pinned files, interpreter identity/file digest
+  and complete installed distribution inventory; derives a fixed operational
+  script digest; and derives normalized runner/Scheduler configuration. The
+  license gate consumes the same platform-tolerated authority.
+- The installer publishes a create-once `ScheduleContractV1` named by its
+  configuration digest. The daily action pins that exact manifest, and runtime
+  verification reopens it and recomputes dependency, script and configuration
+  identities before Git or provider work. Missing/version-drifted required
+  packages, changed files, interpreter/environment drift, manifest drift,
+  dirty source or an unreachable commit fail closed.
+- `tools/soak_schedule.ps1` exposes only `InstallDisabled`, read-only `Verify`
+  and fail-closed `GuardedEnable`. It constructs daily 08:00 and two-hour
+  minute-10 tasks with absolute actions, disjoint roots, exact source/outbox
+  arguments, approved retry/deadline settings and no connection auto-retry.
+  `InstallDisabled` sets the CIM definition disabled before registration,
+  defensively disables both again and reads back the complete contract.
+- Scheduler normalization compares the exact action count/argv/working
+  directory, trigger count/class/enabled state/daily interval/full start
+  boundary/repetition interval and duration/stop behavior, principal and every
+  owned setting. Windows numeric enum values and UTC start boundaries are
+  normalized to the canonical contract. Action quoting is independently
+  decoded with `CommandLineToArgvW`, including a root containing spaces.
+- `GuardedEnable` requires the exact disabled read-back and a bounded argv-only
+  read-only preflight before enabling. Any preflight, partial enable or
+  post-enable failure performs best-effort disable of both and mandatory
+  read-back; a surviving task returns `unsafe-partial-enable` and denies
+  candidate admission. `Verify` performs no Register/Enable/Disable operation.
+- Independent review initially found one Important gap: trigger cadence was
+  checked without its class, daily `DaysInterval`, repetition duration and full
+  connection `StartBoundary`. Adversarial tests and real read-only
+  `ScheduledTasks` object construction closed the gap. The second review
+  returned `CLEAN` with no Critical or Important finding, including the
+  numeric-enum, registration-disabled, rollback, argv and runbook boundaries.
+- Fresh Task 5–8 integration verification passed `133` tests with four
+  environment-dependent skips in `144.88s`. The focused full Windows schedule
+  suite passed `10` tests in `114.47s`; the corrected owned-field drift matrix
+  passed in `66.24s`; focused Ruff, both PowerShell parse checks, source CLI
+  help and staged/unstaged diff checks passed.
+- The new scheduling runbook keeps host admission, publisher installation and
+  the candidate clock outside Task 7. No real provider, OpenD session,
+  Scheduler registration/enablement, evidence root, GitHub publication,
+  automation, trading or release state changed. The Checkpoint 27 host hold
+  remains in force and legacy task output remains inadmissible.
+
 ## Current frontier
 
-Task 7, fail-closed Scheduler installation, verification and guarded-enable
-control, is the first incomplete slice in the approved Checkpoint 20
-reliability-repair plan as amended by Checkpoint 27. The completed Task 8
-contract supplies the final outbox arguments required by registered command lines.
-Continue one bounded TDD slice at a time with independent read-only review and
-recorded verification at every phase boundary. Treat the legacy scheduler as
-enabled until an administrator proves otherwise; local implementation must not
-touch it. Do not count time from the rejected evidence root toward the
-replacement 168-hour candidate.
+Task 9A, local operational acceptance, ADR, reproducible simulations and
+pre-host closure, is the first incomplete slice in the approved Checkpoint 20
+reliability-repair plan as amended by Checkpoint 27. Continue one bounded TDD
+slice at a time with independent read-only review and recorded verification at
+every phase boundary. Task 9B remains authority-blocked: treat the legacy
+scheduler as enabled until an administrator proves otherwise, do not touch it
+from local implementation and do not count time from the rejected evidence root
+toward the replacement 168-hour candidate.
 
 ## Resume instructions
 
