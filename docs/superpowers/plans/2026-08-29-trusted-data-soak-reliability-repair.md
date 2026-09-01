@@ -634,7 +634,7 @@ $null = [scriptblock]::Create((Get-Content tools/connection_witness.ps1 -Raw))
 git diff --check
 ```
 
-- [ ] **Step 5: Commit and record role evidence**
+- [x] **Step 5: Commit and record role evidence**
 
 Commit: `fix(ops): install and verify staggered soak tasks`
 
@@ -664,7 +664,7 @@ Commit: `fix(ops): install and verify staggered soak tasks`
   `OutboxReconciliationFailureV1`, and a local `reconcile` CLI accepting exact
   daily/connection/report/outbox roots plus expected source identity.
 
-- [ ] **Step 1: Write RED outbox tests**
+- [x] **Step 1: Write RED outbox tests**
 
 Assert exact enqueue retry, conflicting intent rejection, a cross-process single
 publisher lease, deterministic pending order, ambiguous POST recovery by remote
@@ -672,23 +672,24 @@ re-query, duplicate remote-match failure, receipt URL/read-back digest
 validation, restart idempotence, terminal-before-enqueue crash recovery and
 inability to enqueue #124 success without a passing full-verifier proof.
 
-- [ ] **Step 2: Run RED tests**
+- [x] **Step 2: Run RED tests**
 
 Run: `.venv\Scripts\python.exe -m pytest tests/test_witness_outbox.py -q`
 
-- [ ] **Step 3: Implement local outbox authority**
+- [x] **Step 3: Implement local outbox authority**
 
-Use Task 5 immutable primitives. The local CLI exposes canonical `list`, `show`,
-`reconcile` and `record-publication`; it never contains GitHub credentials or
-performs network I/O. Daily and connection runners call deterministic
-`ensure_intent` after terminal durability and return non-zero until the exact
-intent exists. Reconciliation scans explicitly configured stores for eligible
-unpaired terminals, reopens their report/source proof, persists a typed
+Use Task 5 immutable primitives. The local CLI exposes canonical `list`, `show`
+and `reconcile`; it never contains GitHub credentials, performs network I/O or
+offers a publication-receipt write path. Daily and connection runners call
+deterministic `ensure_intent` after terminal durability and return non-zero
+until the exact intent exists. Reconciliation scans explicitly configured
+stores for eligible unpaired terminals, reopens their report/source proof, persists a typed
 create-once failure receipt on conflict/error and remains non-zero until all
 eligible terminals are paired. `WitnessPublisher` alone owns the injected
-remote list/POST/read-back protocol under the publisher lease.
+remote list/POST/read-back protocol and receipt write under the publisher lease;
+the remote URL must identify the expected `ZP151/quantmesh` issue comment.
 
-- [ ] **Step 4: Run GREEN tests**
+- [x] **Step 4: Run GREEN tests**
 
 Run Task 8 pytest, focused Ruff and `git diff --check`.
 

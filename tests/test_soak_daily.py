@@ -97,6 +97,8 @@ def _args(tmp_path: Path) -> list[str]:
         str(tmp_path / "evidence"),
         "--run-root",
         str(tmp_path / "runs"),
+        "--outbox-root",
+        str(tmp_path / "outbox"),
         "--remote-ref",
         "origin/0021-soak-finalize",
         "--dependency-digest",
@@ -257,6 +259,7 @@ def test_same_day_retry_reuses_exact_evidence_and_reruns_only_verifier(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _install_source(monkeypatch)
+    monkeypatch.setattr(runner, "_ensure_daily_witness", lambda *_args, **_kwargs: None)
     store = ImmutableRunStore(tmp_path / "runs")
     prior = _passed_terminal()
     store.publish_terminal(prior)
@@ -290,6 +293,7 @@ def test_concurrent_invocation_returns_existing_compatible_terminal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _install_source(monkeypatch)
+    monkeypatch.setattr(runner, "_ensure_daily_witness", lambda *_args, **_kwargs: None)
     store = ImmutableRunStore(tmp_path / "runs")
     prior = _passed_terminal()
     store.publish_terminal(prior)
@@ -312,6 +316,7 @@ def test_crash_recovery_reverifies_only_the_exact_durable_report(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _install_source(monkeypatch)
+    monkeypatch.setattr(runner, "_ensure_daily_witness", lambda *_args, **_kwargs: None)
     hyper = _receipt("hyperliquid-public")
     moomoo = _receipt("moomoo-opend")
     report = SimpleNamespace(

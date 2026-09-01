@@ -1191,12 +1191,50 @@ durable checkpoint.
   `ZHOULAPTOP` and its outputs are not accepted by this implementation and do
   not start a replacement 168-hour clock.
 
+## Checkpoint 29 — Reliability repair Task 8 single-authority witness outbox, 2026-09-01
+
+- Planner kept this slice local and credential-free: immutable daily and
+  connection terminals produce distinct deterministic intents only after
+  terminal durability; reconciliation repairs eligible orphan terminals from
+  explicitly configured stores. Quant review retained the proof boundary that
+  issue #124 requires the exact passing full-verifier report/candidate/source
+  chain, while connection evidence can never create soak time or promote a
+  strategy.
+- Implementer RED first failed at collection because
+  `quantmesh.ops.witness_outbox` did not exist. The new outbox uses create-once
+  canonical intents, deterministic SHA-256 idempotency, a global process lease,
+  deterministic pending order and typed immutable reconciliation failures.
+  Daily and connection runners enqueue only after immutable terminal writes;
+  enqueue failure is separately recorded and forces a non-zero process exit
+  without mutating the terminal.
+- `WitnessPublisher` receives an injected remote client and owns the exact
+  list-by-key, POST-if-absent, re-query and read-back protocol. Ambiguous POST,
+  duplicate remote matches, digest disagreement, restart recovery and lease
+  conflict/recovery all fail closed or converge idempotently. Publication URLs
+  are restricted to the exact expected `ZP151/quantmesh` issue comment.
+- The first independent review found one Important authority bypass: the local
+  CLI could directly record an arbitrary claimed publication. A correction RED
+  reproduced the bypass. The write command was removed; the local CLI now only
+  lists, shows and reconciles local intents, and only the leased Publisher can
+  record a read-back-validated publication receipt. Publication storage is
+  reopened for integrity and pending is re-read after lease acquisition. The
+  second independent review returned `CLEAN` with no Critical or Important
+  finding.
+- Fresh verification used the shared explicit interpreter. The Task 8 file
+  passed `22` tests; the Task 5/6/8 integration selection passed `97` tests with
+  four environment-dependent skips in `34.29s`; iteration-contract tests passed
+  `2`. Focused Ruff, staged and unstaged diff checks, PowerShell parse and both
+  CLI help paths passed. No real provider, GitHub, Scheduler, evidence,
+  automation, trading or release state changed.
+- The Checkpoint 27 host hold remains in force. No outbox publication occurred,
+  and evidence from the enabled legacy task remains inadmissible.
+
 ## Current frontier
 
-Task 8, local immutable witness outbox and idempotent publication protocol, is
-the first incomplete slice in the approved Checkpoint 20 reliability-repair
-plan as amended by Checkpoint 27. Task 7 remains blocked until the Task 8 commit
-exists so registered command lines can include the final outbox contract.
+Task 7, fail-closed Scheduler installation, verification and guarded-enable
+control, is the first incomplete slice in the approved Checkpoint 20
+reliability-repair plan as amended by Checkpoint 27. The completed Task 8
+contract supplies the final outbox arguments required by registered command lines.
 Continue one bounded TDD slice at a time with independent read-only review and
 recorded verification at every phase boundary. Treat the legacy scheduler as
 enabled until an administrator proves otherwise; local implementation must not

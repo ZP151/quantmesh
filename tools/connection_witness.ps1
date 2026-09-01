@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory = $true)][string]$ReportRoot,
     [Parameter(Mandatory = $true)][string]$DailyRunRoot,
     [Parameter(Mandatory = $true)][string]$ConnectionRunRoot,
+    [Parameter(Mandatory = $true)][string]$OutboxRoot,
     [Parameter(Mandatory = $true)][string]$ExpectedCommit,
     [Parameter(Mandatory = $true)][string]$ExpectedSourceContractId,
     [string]$FormalTaskName = 'QuantMesh Daily Soak',
@@ -25,7 +26,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$RootInputs = @($Repo, $ReportRoot, $DailyRunRoot, $ConnectionRunRoot)
+$RootInputs = @($Repo, $ReportRoot, $DailyRunRoot, $ConnectionRunRoot, $OutboxRoot)
 if ($RootInputs.Where({ -not [IO.Path]::IsPathRooted($_) }).Count -ne 0) {
     throw 'Repository and evidence roots must be absolute paths'
 }
@@ -49,6 +50,7 @@ $Arguments = @(
     '--report-root', [IO.Path]::GetFullPath($ReportRoot),
     '--daily-run-root', [IO.Path]::GetFullPath($DailyRunRoot),
     '--connection-run-root', [IO.Path]::GetFullPath($ConnectionRunRoot),
+    '--outbox-root', [IO.Path]::GetFullPath($OutboxRoot),
     '--formal-task-name', $FormalTaskName,
     '--connection-task-name', $ConnectionTaskName,
     '--expected-commit', $ExpectedCommit,

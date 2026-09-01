@@ -552,6 +552,7 @@ class ConnectionWitnessConfig(_FrozenContract):
     report_root: Path
     daily_run_root: Path
     connection_run_root: Path
+    outbox_root: Path
     formal_task_name: str = Field(min_length=1)
     connection_task_name: str = Field(min_length=1)
     expected_commit: str = Field(pattern=r"^[0-9a-f]{40}$")
@@ -571,7 +572,7 @@ class ConnectionWitnessConfig(_FrozenContract):
     moomoo_timeout_seconds: float = Field(default=30, gt=0)
     hyperliquid_timeout_seconds: float = Field(default=15, gt=0)
 
-    @field_validator("repo", "report_root", "daily_run_root", "connection_run_root")
+    @field_validator("repo", "report_root", "daily_run_root", "connection_run_root", "outbox_root")
     @classmethod
     def roots_are_absolute(cls, value: Path) -> Path:
         if not value.is_absolute():
@@ -619,6 +620,7 @@ class ConnectionWitnessConfig(_FrozenContract):
                 self.report_root,
                 self.daily_run_root,
                 self.connection_run_root,
+                self.outbox_root,
             )
         )
         if any(
@@ -626,7 +628,7 @@ class ConnectionWitnessConfig(_FrozenContract):
             for index, left in enumerate(roots)
             for right in roots[index + 1 :]
         ):
-            raise ValueError("report, daily-run and connection-run roots must be disjoint")
+            raise ValueError("report, daily-run, connection-run and outbox roots must be disjoint")
         return self
 
 
@@ -1134,6 +1136,42 @@ def _failure_from(
     return ConnectionWitnessStatus.PASSED, None, None
 
 
+def _ensure_connection_witness(
+    config: ConnectionWitnessConfig, terminal: ConnectionWitnessReceiptV1
+):
+    from quantmesh.ops.witness_outbox import (
+        IneligibleWitnessError,
+        OutboxIntentError,
+        WitnessKind,
+        WitnessOutbox,
+    )
+
+    outbox = WitnessOutbox(config.outbox_root)
+    try:
+        if (
+            terminal.expected_commit != config.expected_commit
+            or terminal.expected_source_contract_id != config.expected_source_contract_id
+        ):
+            raise IneligibleWitnessError("connection terminal source identity is not expected")
+        return outbox.ensure_connection_intent(terminal)
+    except Exception as error:
+        conflict = isinstance(error, ImmutableRunConflictError)
+        outbox.record_reconciliation_failure(
+            source_kind=WitnessKind.CONNECTION_STATE,
+            terminal_receipt_id=terminal.receipt_id,
+            error_code="intent-conflict" if conflict else "intent-error",
+            detail=(
+                "exact connection intent conflicts with durable outbox evidence"
+                if conflict
+                else f"connection intent enqueue raised {type(error).__name__}"
+            ),
+            observed_at=terminal.finished_at,
+        )
+        raise OutboxIntentError(
+            "connection terminal is durable but its exact witness intent is missing"
+        ) from error
+
+
 def run_connection_witness(
     config: ConnectionWitnessConfig,
 ) -> ConnectionWitnessReceiptV1:
@@ -1304,9 +1342,16 @@ def run_connection_witness(
             store.publish_terminal(receipt)
         finally:
             lease.release()
-    if interrupted is not None:
-        raise interrupted
     assert receipt is not None
+    outbox_error: Exception | None = None
+    try:
+        _ensure_connection_witness(config, receipt)
+    except Exception as error:
+        outbox_error = error
+    if interrupted is not None:
+        raise interrupted from outbox_error
+    if outbox_error is not None:
+        raise outbox_error
     return receipt
 
 
@@ -1316,6 +1361,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--report-root", type=Path, required=True)
     parser.add_argument("--daily-run-root", type=Path, required=True)
     parser.add_argument("--connection-run-root", type=Path, required=True)
+    parser.add_argument("--outbox-root", type=Path, required=True)
     parser.add_argument("--formal-task-name", required=True)
     parser.add_argument("--connection-task-name", required=True)
     parser.add_argument("--expected-commit", required=True)
@@ -1344,7 +1390,11 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     values = vars(_parser().parse_args(argv))
     values["execution_kind"] = ExecutionKind(values["execution_kind"])
-    receipt = run_connection_witness(ConnectionWitnessConfig(**values))
+    try:
+        receipt = run_connection_witness(ConnectionWitnessConfig(**values))
+    except Exception as error:
+        print(f"FAILED: {type(error).__name__}: {error}", file=sys.stderr)
+        return 1
     print(receipt.canonical_bytes().decode("utf-8"))
     return (
         0

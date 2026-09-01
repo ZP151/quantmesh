@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import math
+import sys
 import time
 import uuid
 from dataclasses import dataclass
@@ -20,6 +21,7 @@ from quantmesh.ops.immutable_runs import (
     DailyRunReceiptV1,
     DailyRunStatus,
     DailyStageReceiptV1,
+    ImmutableRunConflictError,
     ImmutableRunStore,
     LeaseHeldError,
     LeaseOwner,
@@ -32,6 +34,11 @@ from quantmesh.ops.immutable_runs import (
 from quantmesh.ops.processes import ProcessResult, run_process
 from quantmesh.ops.source_contract import SourceContractV1, verify_source_contract
 from quantmesh.ops.trusted_data_soak import SoakReportV2, SoakStoreV2, SoakVerification
+from quantmesh.ops.witness_outbox import (
+    OutboxIntentError,
+    WitnessKind,
+    WitnessOutbox,
+)
 
 
 @dataclass(frozen=True)
@@ -40,6 +47,7 @@ class DailyRunConfig:
     data_root: Path
     evidence_root: Path
     run_root: Path
+    outbox_root: Path
     remote_ref: str
     dependency_digest: str
     script_digest: str
@@ -50,6 +58,18 @@ class DailyRunConfig:
     observe_timeout: float = 600
     verify_timeout: float = 600
     lease_wait_timeout: float = 30
+
+    def __post_init__(self) -> None:
+        roots = (self.data_root, self.evidence_root, self.run_root, self.outbox_root)
+        if not self.repo.is_absolute() or any(not path.is_absolute() for path in roots):
+            raise ValueError("daily runner repository and roots must be absolute")
+        resolved = tuple(path.resolve() for path in roots)
+        if any(
+            left == right or left.is_relative_to(right) or right.is_relative_to(left)
+            for index, left in enumerate(resolved)
+            for right in resolved[index + 1 :]
+        ):
+            raise ValueError("daily data, evidence, run and outbox roots must be disjoint")
 
 
 class _StageFailure(RuntimeError):
@@ -75,6 +95,41 @@ def _run_id(slot: str, commit: str, attempt: int = 1) -> str:
             "code_commit": commit,
         }
     )
+
+
+def _ensure_daily_witness(
+    config: DailyRunConfig,
+    terminal: DailyRunReceiptV1,
+    *,
+    expected_commit: str,
+    expected_source_contract_id: str,
+):
+    if terminal.status is not DailyRunStatus.PASSED:
+        return None
+    outbox = WitnessOutbox(config.outbox_root)
+    try:
+        return outbox.ensure_daily_intent(
+            terminal,
+            report_root=config.evidence_root,
+            expected_commit=expected_commit,
+            expected_source_contract_id=expected_source_contract_id,
+        )
+    except Exception as error:
+        conflict = isinstance(error, ImmutableRunConflictError)
+        outbox.record_reconciliation_failure(
+            source_kind=WitnessKind.DAILY_ACCEPTED,
+            terminal_receipt_id=terminal.receipt_id,
+            error_code="intent-conflict" if conflict else "intent-error",
+            detail=(
+                "exact daily intent conflicts with durable outbox evidence"
+                if conflict
+                else f"daily intent enqueue raised {type(error).__name__}"
+            ),
+            observed_at=terminal.finished_at,
+        )
+        raise OutboxIntentError(
+            "passing daily terminal is durable but its exact witness intent is missing"
+        ) from error
 
 
 def _crypto_window(now: datetime) -> str:
@@ -125,9 +180,7 @@ def _write_cycle(root: Path, receipt: CollectionCycleReceipt) -> Path:
     try:
         publish_create_once(path, payload, label="runner cycle receipt")
     except Exception as error:
-        raise _StageFailure(
-            "persist-receipts", "receipt-conflict", str(error)
-        ) from error
+        raise _StageFailure("persist-receipts", "receipt-conflict", str(error)) from error
     return path
 
 
@@ -226,6 +279,21 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
     owner = LeaseOwner.current(token=uuid.uuid4().hex)
     acquired = _acquire_daily_slot(config, store, slot, owner)
     if isinstance(acquired, DailyRunReceiptV1):
+        if acquired.status is DailyRunStatus.PASSED:
+            source = verify_source_contract(
+                config.repo,
+                config.remote_ref,
+                config.dependency_digest,
+                config.script_digest,
+                config.config_digest,
+                timeout_seconds=config.source_timeout,
+            )
+            _ensure_daily_witness(
+                config,
+                acquired,
+                expected_commit=source.head_commit,
+                expected_source_contract_id=source.source_contract_id,
+            )
         return acquired
     lease = acquired
     source: SourceContractV1 | None = None
@@ -339,6 +407,12 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
                     recovery_of_run_id=prior.run_id,
                 )
                 store.publish_terminal(terminal)
+                _ensure_daily_witness(
+                    config,
+                    terminal,
+                    expected_commit=source.head_commit,
+                    expected_source_contract_id=source.source_contract_id,
+                )
                 return terminal
             durable_reports = tuple(
                 item
@@ -429,9 +503,7 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
                     if recovered_passed
                     else (
                         "verify",
-                        "deadline-exceeded"
-                        if verify.timed_out
-                        else "verification-rejected",
+                        "deadline-exceeded" if verify.timed_out else "verification-rejected",
                         "fresh verifier rejected the recovered exact report",
                     )
                 )
@@ -458,6 +530,12 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
                     detail=failure[2],
                 )
                 store.publish_terminal(terminal)
+                _ensure_daily_witness(
+                    config,
+                    terminal,
+                    expected_commit=source.head_commit,
+                    expected_source_contract_id=source.source_contract_id,
+                )
                 return terminal
             cycle = f"daily-{slot}"
             first = _stage(
@@ -623,6 +701,8 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
                 DailyRunStatus.INTERRUPTED,
                 ("runner", "interrupted", "daily runner was interrupted"),
             )
+        except OutboxIntentError:
+            raise
         except Exception as error:
             status, failure = (
                 DailyRunStatus.FAILED,
@@ -634,9 +714,7 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
             )
         proof = None if verification is None else SoakVerificationProof(**verification.model_dump())
         terminal = DailyRunReceiptV1.build(
-            run_id=_run_id(
-                slot, "0" * 40 if source is None else source.head_commit, attempt
-            ),
+            run_id=_run_id(slot, "0" * 40 if source is None else source.head_commit, attempt),
             slot=slot,
             attempt=attempt,
             started_at=started,
@@ -656,6 +734,13 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
             detail=failure[2],
         )
         store.publish_terminal(terminal)
+        if source is not None:
+            _ensure_daily_witness(
+                config,
+                terminal,
+                expected_commit=source.head_commit,
+                expected_source_contract_id=source.source_contract_id,
+            )
         return terminal
     finally:
         lease.release()
@@ -663,7 +748,7 @@ def run_daily(config: DailyRunConfig) -> DailyRunReceiptV1:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("repo", "data-root", "evidence-root", "run-root"):
+    for name in ("repo", "data-root", "evidence-root", "run-root", "outbox-root"):
         parser.add_argument(f"--{name}", type=Path, required=True)
     for name in ("remote-ref", "dependency-digest", "script-digest", "config-digest"):
         parser.add_argument(f"--{name}", required=True)
@@ -677,6 +762,10 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    receipt = run_daily(DailyRunConfig(**vars(_parser().parse_args(argv))))
+    try:
+        receipt = run_daily(DailyRunConfig(**vars(_parser().parse_args(argv))))
+    except Exception as error:
+        print(f"FAILED: {type(error).__name__}: {error}", file=sys.stderr)
+        return 1
     print(receipt.model_dump_json())
     return 0 if receipt.status is DailyRunStatus.PASSED else 1

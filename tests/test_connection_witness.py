@@ -39,6 +39,7 @@ from quantmesh.ops.trusted_data_soak import (
     SoakStoreV2,
     SoakTargetEvidenceV2,
 )
+from quantmesh.ops.witness_outbox import WitnessKind, WitnessOutbox
 
 NOW = datetime(2026, 9, 1, 2, 10, tzinfo=UTC)
 DAILY_START = datetime(2026, 9, 1, 0, 0, 2, tzinfo=UTC)
@@ -338,6 +339,7 @@ def _config(
         report_root=tmp_path / "reports",
         daily_run_root=tmp_path / "daily-runs",
         connection_run_root=tmp_path / "connection-runs",
+        outbox_root=tmp_path / "outbox",
         formal_task_name="QuantMesh Daily Soak",
         connection_task_name="QuantMesh Connection Witness",
         expected_commit=COMMIT,
@@ -443,6 +445,10 @@ def test_in_progress_persists_zero_outcome_without_starting_moomoo(
     moomoo = next(item for item in receipt.probes if item.name == "moomoo")
     assert moomoo.outcome is ConnectionProbeOutcome.SKIPPED
     assert ConnectionWitnessStore(tmp_path / "connection-runs").latest() == receipt
+    pending = WitnessOutbox(tmp_path / "outbox").pending()
+    assert len(pending) == 1
+    assert pending[0].witness_kind is WitnessKind.CONNECTION_STATE
+    assert pending[0].terminal_receipt_id == receipt.receipt_id
 
 
 def test_logged_out_moomoo_is_blocked_user_auth_and_mutates_no_report_root(
@@ -849,7 +855,7 @@ def test_powershell_wrapper_forwards_every_authority_and_deadline_argument(
     driver.parent.mkdir(parents=True)
     python.write_bytes(b"placeholder")
     driver.write_text("# placeholder", encoding="utf-8")
-    roots = tuple(tmp_path / name for name in ("reports", "daily", "connection"))
+    roots = tuple(tmp_path / name for name in ("reports", "daily", "connection", "outbox"))
     script = Path(__file__).parents[1] / "tools" / "connection_witness.ps1"
 
     result = subprocess.run(
@@ -867,6 +873,8 @@ def test_powershell_wrapper_forwards_every_authority_and_deadline_argument(
             str(roots[1]),
             "-ConnectionRunRoot",
             str(roots[2]),
+            "-OutboxRoot",
+            str(roots[3]),
             "-ExpectedCommit",
             COMMIT,
             "-ExpectedSourceContractId",
@@ -896,6 +904,7 @@ def test_powershell_wrapper_forwards_every_authority_and_deadline_argument(
         "--report-root": str(roots[0]),
         "--daily-run-root": str(roots[1]),
         "--connection-run-root": str(roots[2]),
+        "--outbox-root": str(roots[3]),
         "--expected-commit": COMMIT,
         "--expected-source-contract-id": SOURCE_ID,
         "--execution-kind": "supplemental",
