@@ -1277,16 +1277,86 @@ durable checkpoint.
   automation, trading or release state changed. The Checkpoint 27 host hold
   remains in force and legacy task output remains inadmissible.
 
+## Checkpoint 31 — Reliability repair Task 9A pre-host closure, 2026-09-01
+
+- Planner preflight required a separate operational composition because the
+  provider verifier alone did not bound candidate-to-first-report cadence.
+  Quant review fixed the evidence end to the last accepted provider report,
+  required a fresh final verifier run at at least 168 hours/four XNYS sessions,
+  and kept connection cadence independent from market-evidence time. Daily
+  recovery chains may contain multiple terminals only when every member is
+  linked, source-identical and passing; supplemental connection attempts remain
+  auditable but cannot fill or heal a scheduled slot.
+- Implementer RED first failed with `ModuleNotFoundError` for
+  `quantmesh.ops.soak_acceptance`. The new local-only verifier reopens the exact
+  provider candidate/report chain, every matching daily terminal, every
+  Asia/Singapore two-hour minute-10 scheduled reservation/terminal and every
+  exact daily/connection outbox intent. It requires six absolute pairwise-
+  disjoint input roots and writes one create-once result to a seventh
+  operational-acceptance root. The CLI has no caller `as_of` and no provider,
+  Scheduler, credential, GitHub, release or trading mutation surface.
+- Final-completion publication now has a distinct issue-#124
+  `operational-accepted` kind. Public `enqueue` rejects that kind; only
+  `ensure_operational_intent` can create it after reopening an immutable
+  `accepted=true` result and binding its last report, canonical daily terminal,
+  source contract, commit and provider-derived evidence end. The existing
+  leased Publisher remains the sole remote writer, and no publication was
+  attempted in Task 9A.
+- ADR-0019 records additive exact overlap resolution, mandatory v2 baseline
+  IDs, operational receipts outside provider evidence, separate final
+  composition and local-outbox/remote-publisher authority. The runbook and
+  active-goal ledger now inventory seven roots, the observed legacy task,
+  `blocked-user-auth`, no-backfill and fresh-candidate reset rules.
+- The initial deterministic-license attempt correctly refused the ambient
+  development venv, then exposed resolver drift in an otherwise fresh install.
+  Two TDD cycles closed it: runtime installed versions must equal the 72 frozen
+  pins, and the release gate now installs exact pip/setuptools/wheel from
+  `requirements-build.txt`, disables PEP 517 build isolation and resolves
+  runtime extras under `requirements-audit.txt` constraints. The build file is
+  part of the source-contract digest. A fresh external venv read back pip
+  `26.2.1`, setuptools `84.0.0`, wheel `0.48.0`, all 66 present platform
+  runtime packages, zero untracked packages, passing `pip check` and passing
+  license review.
+- Failure drills used only fakes and temporary disjoint roots. Provider/OpenD
+  outage, final-verifier rejection, a new overlap that cannot naturally heal,
+  process-tree timeout, Scheduler in-progress/terminated states, concurrent
+  daily invocation, orphan-terminal reconciliation and ambiguous remote POST
+  all produced the expected fail-closed or idempotent result: `16 passed in
+  3.34s`. The expanded operational/outbox suite passed `46` tests in `264.35s`;
+  the complete Task 1–9A integration selection passed `303` with four expected
+  skips and one known warning in `979.02s`; the full schedule suite passed `10`
+  in `112.84s`.
+- Final current-tree verification passed `3266` tests with `12` expected skips
+  and one existing Starlette TestClient/httpx2 deprecation warning in
+  `1882.25s`. Focused release/security/source checks passed `41`; the preceding
+  release gate focus passed `30`; full Ruff, dependency integrity, deterministic
+  license review and diff checks passed. An invalid earlier full-suite attempt
+  placed pytest's base temp below the Git worktree and caused one environment-
+  induced commit-resolution failure; systematic diagnosis proved the external
+  temp root returned Git exit 128 and the isolated regression passed before the
+  valid complete rerun above.
+- Independent review first returned Standards/Spec/Safety `CLEAN` for the Task
+  9A composition. Its release-gate delta review found one Important PEP 517
+  build-isolation gap; RED tests reproduced it, the pinned-build correction and
+  fresh-venv integration proof closed it, and rereview returned `CLEAN` with no
+  remaining Critical, Important or Minor finding.
+- The Checkpoint 27 host hold remains in force. The enabled legacy
+  `ZHOULAPTOP\QuantMesh Daily Soak` could not be disabled with current access,
+  no replacement host is designated and its output remains inadmissible. No
+  real provider, OpenD, Scheduler, evidence root, overlap resolution, GitHub,
+  automation, trading or release state changed. Task 9B remains blocked on the
+  explicit administrator/host authority gate and must start a fresh candidate
+  without backfill.
+
 ## Current frontier
 
-Task 9A, local operational acceptance, ADR, reproducible simulations and
-pre-host closure, is the first incomplete slice in the approved Checkpoint 20
-reliability-repair plan as amended by Checkpoint 27. Continue one bounded TDD
-slice at a time with independent read-only review and recorded verification at
-every phase boundary. Task 9B remains authority-blocked: treat the legacy
-scheduler as enabled until an administrator proves otherwise, do not touch it
-from local implementation and do not count time from the rejected evidence root
-toward the replacement 168-hour candidate.
+Task 9A implementation, documentation, reproducible simulations and local
+verification are complete. Commit the pre-host checkpoint, rerun the focused
+gate from that committed checkout, complete the exact-candidate whole-branch
+review and push one clean SHA. Task 9B remains authority-blocked: treat the
+legacy scheduler as enabled until an administrator proves otherwise, do not
+touch it from local implementation and do not count time from the rejected
+evidence root toward the replacement 168-hour candidate.
 
 ## Resume instructions
 

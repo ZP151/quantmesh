@@ -5,8 +5,9 @@ The review evaluates the *release closure* — the packages pinned in
 ``requirements-audit.txt`` — not whatever an ambient development
 environment happens to contain:
 
-1. Every pinned package must be installed in this environment, or it is
-   refused ("pinned but not installed"); the documented
+1. Every pinned package and exact version must be installed in this
+   environment, or it is refused ("pinned but not installed" or version
+   drift); the documented
    platform-restricted closure members — uvloop from
    ``uvicorn[standard]`` and the keyring backend chain
    jeepney/SecretStorage/cryptography/cffi/pycparser (Linux only),
@@ -14,9 +15,10 @@ environment happens to contain:
    (keyring's win32 backend) (Windows only) — are tolerated as
    absent on platforms where they do not resolve.
 2. Every installed third-party distribution outside the closure is
-   refused ("installed but not pinned") — except the build tooling pip/
-   setuptools/wheel that a venv itself provides. This is what makes the
-   gate deterministic: pip-audit's own CLI dependencies
+   refused ("installed but not pinned"). The separately pinned build tooling
+   in ``requirements-build.txt`` is version-verified before it is exempted
+   from the runtime inventory. This is what makes the gate deterministic:
+   pip-audit's own CLI dependencies
    (license-expression, boolean.py, ...) or an old environment's
    leftovers can no longer drift into the inventory; the gate must run
    in the deterministic release environment (``tools/release_gate.py``
@@ -45,14 +47,14 @@ from quantmesh.ops.source_contract import PLATFORM_TOLERATED
 # third-party dependencies, not the package under review.
 PROJECT_NAMES = {"quantmesh"}
 
-# Packages a venv itself provides. They are never part of the release
-# closure (pip's own resolution depends on them, not the project's) and
-# are allowed to be installed without being pinned.
+# Build frontend/backend packages are not runtime dependencies, but their exact
+# versions are separately pinned and verified before this runtime exemption.
 BUILD_TOOLING = {"pip", "setuptools", "wheel"}
 
 # The frozen install closure the review evaluates. The default is the
 # repo's requirements-audit.txt; tests may point elsewhere.
 CLOSURE_FILE = Path(__file__).resolve().parents[1] / "requirements-audit.txt"
+BUILD_CLOSURE_FILE = Path(__file__).resolve().parents[1] / "requirements-build.txt"
 
 # Documented allowlist (docs/licenses.md mirrors it). A license outside
 # this set — GPL/AGPL, LGPL, proprietary, source-available
@@ -269,6 +271,10 @@ def review(closure: dict[str, str]) -> tuple[list[str], list[str], list[str], li
                     "installed — incomplete release environment"
                 )
             continue
+        if dist.version != version:
+            failures.append(
+                f"{name} version drift: installed {dist.version}, pinned {version}"
+            )
         key = classify(dist)
         rows.append(f"{name}=={version}  {key}")
         if key == "UNKNOWN" or key.startswith("UNKNOWN ("):
@@ -285,6 +291,26 @@ def review(closure: dict[str, str]) -> tuple[list[str], list[str], list[str], li
     return rows, failures, untracked, missing
 
 
+def review_build_tools(build_closure: dict[str, str]) -> tuple[list[str], list[str]]:
+    """Verify the exact frontend/backend used with build isolation disabled."""
+    installed = {d.metadata["Name"]: d for d in md.distributions()}
+    rows: list[str] = []
+    failures: list[str] = []
+    for name in sorted(build_closure):
+        expected = build_closure[name]
+        dist = installed.get(name)
+        if dist is None:
+            failures.append(f"{name}=={expected} pinned build tool is not installed")
+            continue
+        rows.append(f"{name}=={dist.version}")
+        if dist.version != expected:
+            failures.append(
+                f"{name} build-tool version drift: installed {dist.version}, "
+                f"pinned {expected}"
+            )
+    return rows, failures
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     closure_path = CLOSURE_FILE
@@ -296,12 +322,15 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     closure = read_closure(closure_path)
     rows, failures, untracked, missing = review(closure)
+    build_rows, build_failures = review_build_tools(read_closure(BUILD_CLOSURE_FILE))
+    failures.extend(build_failures)
 
     print(f"release closure: {len(closure)} packages from {closure_path.name}")
     for line in rows:
         print(line)
     for line in missing:
         print(line)
+    print("\nbuild tooling: " + ", ".join(build_rows))
     print(f"\n{len(rows)} closure packages reviewed on this platform")
     if untracked:
         print(f"\nREFUSED — {len(untracked)} installed package(s) outside the closure:")

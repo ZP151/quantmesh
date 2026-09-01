@@ -28,3 +28,29 @@ def test_venv_script_resolves_platform_console_entrypoint() -> None:
         assert path == Path("acceptance-venv/Scripts/quantmesh-data.exe")
     else:
         assert path == Path("acceptance-venv/bin/quantmesh-data")
+
+
+def test_release_install_is_constrained_by_the_frozen_audit_closure() -> None:
+    python = Path("release-venv/python")
+
+    assert release_gate._build_tool_install_command(python) == [
+        str(python),
+        "-m",
+        "pip",
+        "install",
+        "-q",
+        "-r",
+        "requirements-build.txt",
+    ]
+    assert release_gate._release_install_command(python) == [
+        str(python),
+        "-m",
+        "pip",
+        "install",
+        "-q",
+        "-c",
+        "requirements-audit.txt",
+        "--no-build-isolation",
+        "-e",
+        ".[dev,research,e2e,moomoo]",
+    ]

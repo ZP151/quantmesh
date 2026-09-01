@@ -299,6 +299,57 @@ class TestClosureContract:
         assert len(failures) == 1
         assert "never-installed" in failures[0]
 
+    def test_installed_version_must_equal_the_frozen_pin(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        review = _load_license_review()
+        monkeypatch.setattr(
+            review,
+            "md",
+            _FakeMetaModule(
+                [_FakeDist("pinnedpkg", "2.0", **{"License-Expression": "MIT"})]
+            ),
+        )
+
+        _, failures, untracked, missing = review.review({"pinnedpkg": "1.0"})
+
+        assert not untracked
+        assert not missing
+        assert len(failures) == 1
+        assert "installed 2.0" in failures[0]
+        assert "pinned 1.0" in failures[0]
+
+    def test_build_tool_versions_are_a_separate_exact_contract(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        review = _load_license_review()
+        monkeypatch.setattr(
+            review,
+            "md",
+            _FakeMetaModule(
+                [
+                    _FakeDist("pip", "25.2", **{"License-Expression": "MIT"}),
+                    _FakeDist(
+                        "setuptools", "84.0.0", **{"License-Expression": "MIT"}
+                    ),
+                    _FakeDist("wheel", "0.47.0", **{"License-Expression": "MIT"}),
+                ]
+            ),
+        )
+
+        rows, failures = review.review_build_tools(
+            {"pip": "25.2", "setuptools": "84.0.0", "wheel": "0.48.0"}
+        )
+
+        assert rows == [
+            "pip==25.2",
+            "setuptools==84.0.0",
+            "wheel==0.47.0",
+        ]
+        assert failures == [
+            "wheel build-tool version drift: installed 0.47.0, pinned 0.48.0"
+        ]
+
     def test_platform_tolerated_members_may_be_absent(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

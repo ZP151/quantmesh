@@ -108,6 +108,7 @@ def _git_repo(tmp_path: Path) -> Path:
         "connection_witness.ps1",
         "connection_witness.py",
         "soak_daily.py",
+        "trusted_data_soak_acceptance.py",
         "soak_witness_outbox.py",
     ):
         shutil.copy2(ROOT / "tools" / relative, repo / "tools" / relative)
@@ -117,6 +118,10 @@ def _git_repo(tmp_path: Path) -> Path:
 
     (repo / "requirements-audit.txt").write_text(
         f"quantmesh=={version('quantmesh')}\n", encoding="utf-8"
+    )
+    (repo / "requirements-build.txt").write_text(
+        "pip==26.2.1\nsetuptools==84.0.0\nwheel==0.48.0\n",
+        encoding="utf-8",
     )
     subprocess.run(("git", "init", "-b", "integration"), cwd=repo, check=True, capture_output=True)
     subprocess.run(

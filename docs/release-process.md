@@ -112,8 +112,10 @@ records counts, dates and any debugging detours.
   re-resolution). The license review evaluates the same closure:
   every pinned package must be installed and classify to an allowed
   license, and no third-party package outside the closure may be
-  installed (pip/setuptools/wheel are the venv's own tooling and are
-  exempt). Run it in the deterministic release environment
+  installed. pip/setuptools/wheel are separately pinned by
+  `requirements-build.txt`, installed before runtime resolution with build
+  isolation disabled, and exact-version verified before their runtime-inventory
+  exemption. Run it in the deterministic release environment
   (`tools/release_gate.py` creates one) — an ambient development venv
   fails with a precise message by design.
 - A license outside the allowlist (docs/licenses.md) or a

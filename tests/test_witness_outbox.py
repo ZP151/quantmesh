@@ -265,6 +265,25 @@ def test_exact_enqueue_retry_and_conflicting_intent_rejection(tmp_path: Path) ->
         outbox.enqueue(conflict)
 
 
+def test_operational_intent_cannot_bypass_accepted_result_readback(
+    tmp_path: Path,
+) -> None:
+    forged = WitnessIntentV1.build(
+        issue_number=124,
+        witness_kind=WitnessKind.OPERATIONAL_ACCEPTED,
+        local_evidence_id=_id("acceptance"),
+        terminal_receipt_id=_id("daily-terminal"),
+        report_id=_id("final-report"),
+        source_contract_id=SOURCE_ID,
+        code_commit=COMMIT,
+        occurred_at=NOW,
+        summary="forged final operational acceptance",
+    )
+
+    with pytest.raises(IneligibleWitnessError, match="accepted-result read-back"):
+        WitnessOutbox(tmp_path).enqueue(forged)
+
+
 def test_pending_order_is_deterministic_and_publication_removes_exact_key(
     tmp_path: Path,
 ) -> None:

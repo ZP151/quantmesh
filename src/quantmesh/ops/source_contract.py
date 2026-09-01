@@ -50,16 +50,19 @@ PLATFORM_TOLERATED = frozenset(
 DEPENDENCY_FILES = (
     PurePosixPath("pyproject.toml"),
     PurePosixPath("requirements-audit.txt"),
+    PurePosixPath("requirements-build.txt"),
 )
 
 PINNED_OPERATIONAL_SCRIPTS = (
     PurePosixPath("src/quantmesh/ops/connection_witness.py"),
+    PurePosixPath("src/quantmesh/ops/soak_acceptance.py"),
     PurePosixPath("src/quantmesh/ops/soak_runner.py"),
     PurePosixPath("src/quantmesh/ops/source_contract.py"),
     PurePosixPath("src/quantmesh/ops/witness_outbox.py"),
     PurePosixPath("tools/connection_witness.ps1"),
     PurePosixPath("tools/connection_witness.py"),
     PurePosixPath("tools/soak_daily.py"),
+    PurePosixPath("tools/trusted_data_soak_acceptance.py"),
     PurePosixPath("tools/soak_witness_outbox.py"),
 )
 

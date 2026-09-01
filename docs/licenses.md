@@ -18,6 +18,12 @@ dependencies) cannot silently drift into the inventory. Run the gate
 in the deterministic release environment (`tools/release_gate.py`
 creates one).
 
+The release gate separately installs the exact pip/setuptools/wheel versions in
+`requirements-build.txt`, disables PEP 517 build isolation, then resolves the
+runtime extras under `requirements-audit.txt` as a constraints file. The
+license review verifies both exact build-tool versions and every runtime pin;
+an isolated backend download or installed-version drift fails closed.
+
 ## Policy
 
 - **Allowed** (permissive, redistributable): MIT, BSD-2-Clause,
@@ -30,8 +36,8 @@ creates one).
 - **Refused**: GPL/AGPL, LGPL, proprietary licenses, source-available
   restrictions such as the Commons Clause, and anything unclassified.
 - **Untracked installed packages are refused**: the installed
-  third-party set must equal the pinned closure (plus the venv's own
-  pip/setuptools/wheel build tooling). This is the iteration-0013
+  third-party set must equal the pinned runtime closure plus the separately
+  version-verified pip/setuptools/wheel build tooling. This is the iteration-0013
   resolution of the ambient `license-expression`/`boolean.py` drift.
 - **`WITH <exception>` SPDX qualifiers relax** the license
   (e.g. `BSD-2-Clause AND Apache-2.0 WITH LLVM-exception` for

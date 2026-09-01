@@ -19,8 +19,9 @@ Keep both owned tasks disabled unless all of these conditions hold:
   remote integration ref, and its pinned interpreter/environment is final;
 - Moomoo OpenD is authenticated interactively and only read-only market-data
   capabilities are used;
-- the trusted-data, evidence, daily-run, connection-run, outbox and schedule
-  manifest roots are new, absolute and pairwise disjoint; and
+- the trusted-data, evidence, daily-run, connection-run, outbox, schedule
+  manifest and operational-acceptance roots are new, absolute and pairwise
+  disjoint; and
 - Task 9B host admission and the reviewed read-only preflight have passed.
 
 Old evidence remains audit-only. Never copy its passing duration into a new
@@ -68,6 +69,23 @@ $schedule = @{
 
 Do not put credentials, tokens, passwords, private keys or account unlock data
 in these arguments, manifests, task actions or preflight output.
+
+Resolve and validate the separate final-result root before host admission; it
+is not an argument to the Scheduler installer:
+
+```powershell
+$operationalAcceptanceRoot = "D:\QuantMesh\operational-acceptance-v3"
+```
+
+Inventory every scheduling and publication authority before installation. For
+each Windows task record host, `TaskPath`/name, executable, arguments, working
+directory, action digest, enabled/running state, last-run time and last result.
+For each publisher automation record its exact identity, cadence and
+active/paused state. The observed legacy authority includes
+`ZHOULAPTOP\QuantMesh Daily Soak` and
+`C:\Users\15492\Develop\qm-soak-168h\run-soak.ps1`; it remains authoritative
+and its evidence inadmissible until an administrator proves it disabled and not
+running. Do not retry a denied disable from an unprivileged development shell.
 
 ## Install disabled and verify read-only
 
@@ -136,6 +154,32 @@ Neither local intent creation nor the local outbox CLI can write publication
 receipts; only the injected single-authority publisher may record a receipt
 after remote exact-key read-back.
 
+## Final local operational acceptance
+
+Do not run this gate until 168 real provider-evidence hours have elapsed. The
+command has no `--as-of`: its evidence end is the timestamp of the final
+accepted provider report. It reopens provider, daily, connection and outbox
+evidence and writes only the separate acceptance root.
+
+```powershell
+& $schedule.PythonPath .\tools\trusted_data_soak_acceptance.py verify `
+  --data-root $schedule.DataRoot `
+  --evidence-root $schedule.EvidenceRoot `
+  --daily-run-root $schedule.DailyRunRoot `
+  --connection-run-root $schedule.ConnectionRunRoot `
+  --outbox-root $schedule.OutboxRoot `
+  --acceptance-root $operationalAcceptanceRoot `
+  --expected-commit $PreHostSha `
+  --expected-source-contract-id $SourceContractId `
+  --minimum-hours 168 `
+  --minimum-xnys-sessions 4
+```
+
+A PASS is local evidence only. The distinct `operational-accepted` intent may
+be created only through `WitnessOutbox.ensure_operational_intent(...)`, which
+reopens that accepted result. The existing leased publisher remains the sole
+remote writer. Neither intent nor publication time extends the soak clock.
+
 ## Stop, incident and restart rules
 
 On source, dependency, configuration, schedule, provider, cadence, immutable
@@ -151,3 +195,9 @@ evidence or publication ambiguity:
 Re-enabling an old host requires a new explicit single-authority decision. A
 failed or unavailable provider is honest negative evidence, never permission
 to synthesize data, loosen quality policy, publish success or place an order.
+An absent, logged-out or read-capability-denied OpenD is recorded as
+`blocked-user-auth`; it is not a passing connection witness and cannot be
+backfilled. After any missed/failed required slot, source or schedule drift, or
+rejected final acceptance, preserve all roots read-only and start a new
+candidate in seven new empty sibling roots after the repaired SHA and authority
+inventory pass review.

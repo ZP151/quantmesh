@@ -91,6 +91,35 @@ def _venv_script(venv: Path, name: str) -> Path:
     return venv / "bin" / name
 
 
+def _release_install_command(python: Path) -> list[str]:
+    """Install the declared release surface under the frozen audit closure."""
+    return [
+        str(python),
+        "-m",
+        "pip",
+        "install",
+        "-q",
+        "-c",
+        "requirements-audit.txt",
+        "--no-build-isolation",
+        "-e",
+        ".[dev,research,e2e,moomoo]",
+    ]
+
+
+def _build_tool_install_command(python: Path) -> list[str]:
+    """Provision exact build tooling before disabling build isolation."""
+    return [
+        str(python),
+        "-m",
+        "pip",
+        "install",
+        "-q",
+        "-r",
+        "requirements-build.txt",
+    ]
+
+
 def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8")
 
@@ -198,16 +227,14 @@ def main() -> int:
             600,
         ),
         step(
+            "install pinned build tooling",
+            _build_tool_install_command(_venv_python(temp / "release-venv")),
+            checkout,
+            600,
+        ),
+        step(
             "install release extras .[dev,research,e2e,moomoo]",
-            [
-                _venv_python(temp / "release-venv"),
-                "-m",
-                "pip",
-                "install",
-                "-q",
-                "-e",
-                ".[dev,research,e2e,moomoo]",
-            ],
+            _release_install_command(_venv_python(temp / "release-venv")),
             checkout,
             1800,
         ),

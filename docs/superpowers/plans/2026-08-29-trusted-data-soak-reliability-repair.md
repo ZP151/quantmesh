@@ -566,6 +566,9 @@ scan must skip this section until that dependency is satisfied.
 - Modify: `tests/test_source_contract.py`
 - Modify: `tests/test_soak_daily.py`
 - Modify: `tests/test_security.py`
+- Create: `requirements-build.txt`
+- Modify: `docs/licenses.md`
+- Modify: `docs/release-process.md`
 - Create: `docs/runbooks/trusted-data-soak.md`
 
 **Interfaces:**
@@ -715,6 +718,15 @@ Commit: `feat(ops): add single-authority witness outbox`
 - Create: `src/quantmesh/ops/soak_acceptance.py`
 - Create: `tools/trusted_data_soak_acceptance.py`
 - Create: `tests/test_trusted_data_soak_acceptance.py`
+- Modify: `src/quantmesh/ops/witness_outbox.py`
+- Modify: `src/quantmesh/ops/source_contract.py`
+- Modify: `tests/test_witness_outbox.py`
+- Modify: `tests/test_source_contract.py`
+- Modify: `tests/test_soak_schedule.py`
+- Modify: `tools/release_gate.py`
+- Modify: `tools/license_review.py`
+- Modify: `tests/test_release_gate.py`
+- Modify: `tests/test_security.py`
 - Create: `docs/adr/0019-overlap-resolution-and-operational-evidence.md`
 - Modify: `docs/iterations/0021-trusted-data-fabric.md`
 - Modify: `docs/goals/ACTIVE.md`
@@ -724,26 +736,55 @@ Commit: `feat(ops): add single-authority witness outbox`
 - Consumes: the provider-only verifier plus immutable daily, connection and
   outbox contracts from all prior tasks.
 - Produces: `OperationalSoakAcceptanceV1`, its create-once store, a local
-  verifier CLI, independently reviewed simulation evidence and one exact clean
-  integration SHA. It does not mutate a real host or provider evidence.
+  verifier CLI, an `operational-accepted` local outbox intent authority,
+  independently reviewed simulation evidence and one exact clean integration
+  SHA. It does not mutate a real host or provider evidence.
 
-- [ ] **Step 1: Write RED operational-acceptance tests**
+- [x] **Step 1: Write RED operational-acceptance tests**
 
 Assert rejection of a manual/unpaired report, daily terminal/report/source
-mismatch, missing/duplicate/non-terminal connection slot, cadence gap,
+mismatch, missing/non-terminal/conflicting or overlapping connection slot, cadence gap,
 publication time used as clock evidence and `minimum-hours=0` used for final
 completion. Assert acceptance reopens every exact report/daily terminal,
 requires 168 market-evidence hours plus configured sessions, validates the
 connection cadence separately and publishes a content-derived immutable result.
 
-- [ ] **Step 2: Implement the separate verifier and thin CLI**
+Add the operational composition gate missing from the provider-only v2
+verifier: candidate-to-first-report and every report-to-report interval must be
+non-negative/positive as applicable and at most 26 hours, so one late report
+cannot manufacture 168 hours. The evidence end is always the final accepted
+provider report timestamp; no caller-provided `as_of`, terminal, intent,
+publication or current-wall-clock timestamp may move it.
+
+Accept an ordered same-day daily recovery chain only when every terminal is
+passing, source-identical and linked by `recovery_of_run_id`; the last exact
+terminal is canonical. For each required connection slot, every scheduled
+reservation must have an immutable terminal. Multiple attempts are permitted
+only when attempts increase, all are `passed` or typed `in-progress`, and their
+execution intervals do not overlap. A failed/timed-out/auth-blocked/interrupted
+scheduled attempt permanently fails the slot; supplemental evidence remains
+auditable but never fills or heals it. Require the exact local outbox intent for
+every admitted daily/connection terminal, but do not require remote publication
+or use its timestamp as evidence.
+
+- [x] **Step 2: Implement the separate verifier and thin CLI**
 
 Do not modify provider-soak evidence semantics. The operational verifier reads
 configured roots with safe immutable APIs, composes the accepted provider result
-and emits one versioned acceptance object. It has no provider, Scheduler,
+and emits one versioned acceptance object. Require explicit absolute, pairwise
+disjoint data, report, daily-run, connection-run, outbox and operational-
+acceptance roots. The final thresholds are at least 168 hours and four XNYS
+sessions; the CLI exposes no free `as_of`. It has no provider, Scheduler,
 GitHub, credential or trading authority.
 
-- [ ] **Step 3: Write ADR and close documentation**
+Extend the local outbox contract with a distinct `operational-accepted` kind
+fixed to issue #124. Its local evidence ID is the acceptance ID and it binds the
+last report, canonical daily terminal, source contract and commit. It can be
+created only by reopening an `accepted=true` object from the operational store;
+the existing leased Publisher remains the sole remote writer, and Task 9A
+performs no network call.
+
+- [x] **Step 3: Write ADR and close documentation**
 
 Record why resolution is additive, why v2 baseline IDs are required, why
 operational receipts remain outside provider evidence, why final acceptance is
@@ -751,7 +792,7 @@ a separate composition and why remote publication uses a local outbox. Update
 the runbook with `blocked-user-auth`, no-backfill, authority inventory and
 candidate-reset rules.
 
-- [ ] **Step 4: Run complete automated verification**
+- [x] **Step 4: Run complete automated verification**
 
 Run:
 
@@ -767,7 +808,7 @@ git diff --check
 Record exact commands, exit codes, counts, durations and expected skips. Run the
 `verification-before-completion` skill before any passing claim.
 
-- [ ] **Step 5: Run and record clean-host simulations and failure drills**
+- [x] **Step 5: Run and record clean-host simulations and failure drills**
 
 From the pinned branch environment and temporary disjoint roots, inject provider
 outage, verifier rejection, new overlap, child timeout, scheduler
@@ -776,7 +817,7 @@ reconciliation and ambiguous publisher result. Each must produce the expected
 non-zero/typed receipt without altering real provider evidence. Record the
 results in the iteration ledger, then rerun affected automated gates.
 
-- [ ] **Step 6: Commit the complete pre-host checkpoint**
+- [x] **Step 6: Commit the complete pre-host checkpoint**
 
 Commit code, documentation and recorded simulation evidence together:
 
@@ -827,7 +868,7 @@ worktree so the runner HEAD cannot drift.
 
 **Interfaces:**
 - Consumes: exact `PRE_HOST_SHA`, designated Windows host identity, complete
-  legacy-authority inventory and five resolved sibling roots.
+  legacy-authority inventory and seven resolved sibling roots.
 - Produces: disabled-then-enabled round-trip-verified Windows tasks, verified
   minute-20 publisher heartbeat, one fresh accepted daily cycle and immutable
   outbox/publication receipts. It does not close the 168-hour gate.
@@ -877,13 +918,15 @@ overlay or copied resolution store is not part of this plan.
 
 Create the empty sibling roots `C:\QuantMesh\trusted-data-v3`,
 `C:\QuantMesh\evidence-v3`, `C:\QuantMesh\daily-runs-v3`,
-`C:\QuantMesh\connection-runs-v3` and `C:\QuantMesh\witness-outbox-v3` only
-after resolving and printing their exact absolute paths and proving no two are
-equal or have a parent/child relationship. Install the daily 08:00 and two-hour
-minute-10 tasks from the dedicated checkout in disabled state, round-trip every
-owned action/trigger/principal/setting/root/ref/digest field, and keep them
-disabled. Run the connection command manually as preflight; absent/logged-out
-OpenD is `blocked-user-auth` and cannot start a clock.
+`C:\QuantMesh\connection-runs-v3`, `C:\QuantMesh\witness-outbox-v3`,
+`C:\QuantMesh\schedule-contracts-v3` and
+`C:\QuantMesh\operational-acceptance-v3` only after resolving and printing
+their exact absolute paths and proving no two are equal or have a parent/child
+relationship. Install the daily 08:00 and two-hour minute-10 tasks from the
+dedicated checkout in disabled state, round-trip every owned
+action/trigger/principal/setting/root/ref/digest field, and keep them disabled.
+Run the connection command manually as preflight; absent/logged-out OpenD is
+`blocked-user-auth` and cannot start a clock.
 
 - [ ] **Step 11: Update and read back the heartbeat publisher**
 
@@ -920,7 +963,7 @@ checks and push without force. The dedicated runner checkout remains detached at
 `PRE_HOST_SHA`.
 
 Post-mutation verification must re-read both Windows tasks, the automation, all
-five roots, the accepted daily terminal/report/source proof, pending/publication
+seven roots, the accepted daily terminal/report/source proof, pending/publication
 outbox state and the pinned runner SHA. Record every command/API result and exit
 code in the iteration ledger; any mismatch disables the new Windows tasks,
 leaves immutable failure evidence and invalidates the candidate without
@@ -936,4 +979,6 @@ every accepted daily report and its exact immutable daily terminal, requires the
 same source contract/report identity and accepted provider-verifier proof, and
 validates connection-receipt cadence. Operational or publication timestamps
 cannot create or extend elapsed evidence. Only this immutable acceptance result
-may authorize a final-completion witness; it grants no trading authority.
+may create the local `operational-accepted` intent; the leased Publisher still
+must perform exact-key remote query/post/read-back before recording a final-
+completion publication receipt. It grants no trading authority.

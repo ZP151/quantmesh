@@ -66,6 +66,7 @@ def _roots_overlap(left: Path, right: Path) -> bool:
 class WitnessKind(StrEnum):
     DAILY_ACCEPTED = "daily-accepted"
     CONNECTION_STATE = "connection-state"
+    OPERATIONAL_ACCEPTED = "operational-accepted"
 
 
 def _idempotency_key(
@@ -130,9 +131,12 @@ class WitnessIntentV1(_FrozenContract):
 
     @model_validator(mode="after")
     def authority_and_identity_match(self) -> Self:
-        if self.witness_kind is WitnessKind.DAILY_ACCEPTED:
+        if self.witness_kind in {
+            WitnessKind.DAILY_ACCEPTED,
+            WitnessKind.OPERATIONAL_ACCEPTED,
+        }:
             if self.issue_number != 124 or self.report_id is None:
-                raise ValueError("daily accepted witness requires issue 124 and a report")
+                raise ValueError("issue 124 accepted witness requires an exact report")
         elif self.issue_number != 127:
             raise ValueError("connection state witness requires issue 127")
         expected_key = _idempotency_key(
@@ -403,6 +407,13 @@ class WitnessOutbox:
         )
 
     def enqueue(self, intent: WitnessIntentV1) -> WitnessIntentV1:
+        if intent.witness_kind is WitnessKind.OPERATIONAL_ACCEPTED:
+            raise IneligibleWitnessError(
+                "operational intent requires accepted-result read-back"
+            )
+        return self._enqueue_validated(intent)
+
+    def _enqueue_validated(self, intent: WitnessIntentV1) -> WitnessIntentV1:
         self._prepare()
         intent = WitnessIntentV1.model_validate(intent.model_dump(mode="python"))
         publish_create_once(
@@ -498,6 +509,53 @@ class WitnessOutbox:
 
     def ensure_connection_intent(self, terminal: ConnectionWitnessReceiptV1) -> WitnessIntentV1:
         return self.enqueue(_connection_intent(terminal))
+
+    def ensure_operational_intent(
+        self,
+        acceptance_id: str,
+        *,
+        acceptance_root: Path,
+    ) -> WitnessIntentV1:
+        from quantmesh.ops.soak_acceptance import OperationalAcceptanceStore
+
+        root = Path(acceptance_root)
+        if not root.is_absolute() or _roots_overlap(self.root, root):
+            raise ValueError("acceptance and outbox roots must be absolute and disjoint")
+        try:
+            result = OperationalAcceptanceStore(root).load(acceptance_id)
+        except (OSError, ValueError) as error:
+            raise IneligibleWitnessError(
+                "operational acceptance read-back is invalid"
+            ) from error
+        if (
+            not result.accepted
+            or result.reasons
+            or result.acceptance_id != acceptance_id
+            or result.evidence_as_of is None
+            or not result.daily_bindings
+            or result.candidate_id is None
+            or result.provider_verification.candidate_id != result.candidate_id
+        ):
+            raise IneligibleWitnessError(
+                "issue 124 completion requires an accepted operational result"
+            )
+        last = result.daily_bindings[-1]
+        return self._enqueue_validated(
+            WitnessIntentV1.build(
+                issue_number=124,
+                witness_kind=WitnessKind.OPERATIONAL_ACCEPTED,
+                local_evidence_id=result.acceptance_id,
+                terminal_receipt_id=last.canonical_pass_receipt_id,
+                report_id=last.report_id,
+                source_contract_id=result.expected_source_contract_id,
+                code_commit=result.expected_commit,
+                occurred_at=result.evidence_as_of,
+                summary=(
+                    f"operational soak {result.minimum_hours}h accepted "
+                    f"with {len(result.required_connection_slots)} connection slots"
+                ),
+            )
+        )
 
     def record_reconciliation_failure(
         self,

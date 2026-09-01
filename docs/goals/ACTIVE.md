@@ -1,28 +1,32 @@
 # Active Goal
 
-- Status: iteration 0021 completed and merged (PR #120, squash `12cd258`);
-  trusted data fabric functional acceptance passed; the real 168-hour run
-  remains a post-merge stability gate
-- Objective: deliver the Trusted Data Fabric defined by issue #110 without
-  changing release or execution authority.
-- Started: 2026-08-14
-- Tracking issue: [#110](https://github.com/ZP151/quantmesh/issues/110)
+- Status: Iteration 0021 functional work is merged; reliability-repair Tasks
+  1–8 are complete and Task 9A local pre-host closure is active. The real
+  replacement 168-hour run has not started.
+- Objective: close issues [#124](https://github.com/ZP151/quantmesh/issues/124)
+  and [#127](https://github.com/ZP151/quantmesh/issues/127) with immutable,
+  fail-closed soak evidence without changing release or execution authority.
+- Started: 2026-08-14; reliability repair resumed 2026-08-29
+- Tracking issue: [#124](https://github.com/ZP151/quantmesh/issues/124), with
+  operational scheduling evidence in
+  [#127](https://github.com/ZP151/quantmesh/issues/127)
 - Active iteration: `docs/iterations/0021-trusted-data-fabric.md`
 - Design: `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`
-- Executable plan: `docs/superpowers/plans/2026-08-14-trusted-data-fabric.md`
-- Integration branch: `0021-trusted-data-fabric`
-- Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
+- Executable plan:
+  `docs/superpowers/plans/2026-08-29-trusted-data-soak-reliability-repair.md`
+- Integration branch: `codex/0021-soak-reliability-goal`
+- Baseline: `origin/0021-soak-finalize` at
+  `27a6311d4b56b7cc832893ddd183d313c083816d`
 - Delivery mode: one integration branch and one final milestone PR; the main
   thread is the only source writer and all subagents are read-only.
-- Current frontier: iteration 0021 is merged and issue #110 is closed. The
-  real 168-hour run is a post-merge stability gate (blocks release, not
-  merge). M14 part 2 (algorithm evaluation lab) and the remaining roadmap
-  items await explicit operator direction. Keep wallet, signing, account and
-  order surfaces structurally absent.
-- External gate: resolved. Local OpenD is running with US Stocks LV3
-  entitlement and `quantmesh-moomoo probe` reports
-  `quote=True history_kline=True`. No credential, paid-service or target-matrix
-  substitution was used.
+- Current frontier: finish Task 9A operational acceptance, documentation,
+  simulations, whole-branch review and clean remote pin. Task 9B remains
+  authority-blocked; keep wallet, signing, account and order surfaces
+  structurally absent.
+- External gate: the observed legacy `ZHOULAPTOP\QuantMesh Daily Soak` task is
+  still enabled after two access-denied disable attempts. No replacement host
+  is designated. Treat its output as inadmissible and perform no real provider,
+  Scheduler, outbox publication or evidence-root mutation from this goal.
 
 ## Product-readiness decision
 
@@ -677,12 +681,15 @@ all market access remains read-only or paper-only.
 
 ## Current frontier
 
-1. Preserve the immutable accepted candidate and its acceptance evidence.
-2. Await an explicit `promote v0.1.1-rc1 to v0.1.1` command before creating the
-   final tag. A defect report keeps the candidate unchanged and starts a repair
-   candidate instead.
-3. The next product-planning frontier is iteration 0021, trusted data fabric;
-   it does not implicitly authorize promotion or real-money execution.
+1. Task 9A code, ADR, simulations, deterministic dependency gate and independent
+   review are complete on the local pre-host candidate. Commit the recorded
+   checkpoint, rerun the focused committed-checkout gate, perform the final
+   whole-branch review, then push and pin one exact clean pre-host SHA.
+2. Keep Task 9B frozen until an administrator proves all legacy authorities
+   stopped and the operator designates the replacement Windows host.
+3. After authorization, start a fresh evidence-v3 candidate in seven new,
+   absolute and pairwise-disjoint roots. Never backfill rejected evidence or
+   infer promotion, release or real-money execution authority.
 
 ## Historical delivery frontier
 
