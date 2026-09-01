@@ -1,49 +1,85 @@
 # Active Goal
 
-- Status: iteration 0021 completed and merged (PR #120, squash `12cd258`);
-  trusted data fabric functional acceptance passed; the real 168-hour run
-  remains a post-merge stability gate
-- Objective: deliver the Trusted Data Fabric defined by issue #110 without
-  changing release or execution authority.
-- Started: 2026-08-14
-- Tracking issue: [#110](https://github.com/ZP151/quantmesh/issues/110)
-- Active iteration: `docs/iterations/0021-trusted-data-fabric.md`
-- Design: `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`
-- Executable plan: `docs/superpowers/plans/2026-08-14-trusted-data-fabric.md`
-- Integration branch: `0021-trusted-data-fabric`
-- Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
-- Delivery mode: one integration branch and one final milestone PR; the main
-  thread is the only source writer and all subagents are read-only.
-- Current frontier: iteration 0021 is merged and issue #110 is closed. The
-  real 168-hour run is a post-merge stability gate (blocks release, not
-  merge). M14 part 2 (algorithm evaluation lab) and the remaining roadmap
-  items await explicit operator direction. Keep wallet, signing, account and
-  order surfaces structurally absent.
-- External gate: resolved. Local OpenD is running with US Stocks LV3
-  entitlement and `quantmesh-moomoo probe` reports
-  `quote=True history_kline=True`. No credential, paid-service or target-matrix
-  substitution was used.
+- Status: active — iteration 0027 product direction approved; design and
+  executable slice planning in progress
+- Objective: enable a research-minded individual active trader to turn a
+  ticker into a verifiable, risk-first decision package in no more than two
+  minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
+  risk outcome and review after a clean restart.
+- Started: 2026-09-02
+- Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
+- Active iteration:
+  `docs/iterations/0027-evidence-backed-decision-copilot.md`
+- Design:
+  `docs/superpowers/specs/2026-09-02-evidence-backed-decision-copilot-design.md`
+- Executable plan: pending operator review of the tracked design
+- Integration branch: `codex/0027-evidence-backed-decision-copilot`
+- Baseline: `origin/main` at `f77b565`; immutable `v0.1.1-rc1` remains
+  `b6b05b9`
+- Delivery mode: one 0027 product track and one independent 0021 soak
+  maintenance track at most. Each track uses one integration branch and one
+  final PR; neither may opportunistically modify the other's files or state.
+- Current frontier: Slice 1, the NVDA DecisionPacket foundation. Reuse the
+  existing Instrument Workspace, historical/forecast evidence, risk kernel,
+  paper proposal service and audit lineage. Do not add another model framework
+  before the deterministic ticker-to-saved-decision loop is demonstrable.
+- External gate: none for the deterministic product slice. Model services,
+  OpenD and real providers are optional degraded-state inputs and never merge
+  gates.
 
 ## Product-readiness decision
 
-QuantMesh is currently an accepted local research-workstation prototype, not a
-trusted-data alpha or autonomous trading product. The shortest product path is
-to finish iteration 0021's immutable real-data lineage, recovery, catalog and
-seven-day evidence gate before adding strategies, AI orchestration or new venue
-breadth. Passing that gate establishes the real-data acceptance alpha; local
-research beta and guarded paper automation remain later vertical slices, while
-live-money authority remains a separately approved program. The durable detail
-and advancement criteria are recorded in
-`docs/iterations/0021-trusted-data-fabric.md` under **Product direction and
-readiness decision**.
+The product wedge is an evidence-backed decision copilot, not an AI signal
+generator or a framework laboratory. The shortest path begins with a ticker or
+watchlist row and stays inside Instrument Workspace while QuantMesh composes
+market state, key levels, Bull/Base/Bear scenarios, risk parameters, evidence
+and one explicit action. The durable product artifact is a versioned
+`DecisionPacket`; AI may explain or challenge its deterministic analysis but
+cannot create evidence, waive a blocker or gain order authority.
+
+Iteration 0021's 168-hour soak continues as a maintenance/release-confidence
+track. It does not block 0027 product work, and 0027 must not repair, migrate,
+backfill or otherwise modify soak Scheduler, provider or evidence state.
 
 ## Non-negotiable constraints
 
-- Do not modify or promote `v0.1.1-rc1` or create final `v0.1.1`.
-- Keep external venues read-only and execution paper-only.
-- Add no algorithm, model, AI workflow or real-order authority.
-- Never use synthetic data to repair or qualify a real dataset.
-- Stop for credentials, paid services or a major architecture change.
+- Keep external venues read-only and execution paper-only. Live trading,
+  signing, credentials and mainnet authority remain outside iteration 0027.
+- AI is advisory and schema-validated. Missing or failed AI must leave the
+  deterministic DecisionPacket usable.
+- Stale, low-quality, leakage-affected or missing evidence must block a paper
+  proposal with an actionable reason; it may not be hidden by AI confidence.
+- Every paper proposal passes the existing deterministic risk kernel and a
+  second operator confirmation.
+- Decision, evidence, paper result and review state must survive a clean
+  restart and remain replayable.
+- Qlib, Darts and model ranking are internal support or later work, not 0027
+  completion criteria. TradingView extensions, mobile clients, real trading,
+  social features and broad pattern-recognition catalogs are out of scope.
+- Each slice must expose user-visible value within 24–48 hours. Side defects
+  are recorded and left out of scope unless they block the slice.
+
+## Active delivery protocol
+
+- Planner/Product defines one user action, one success measure and explicit
+  expansion prohibitions per slice.
+- Quant Researcher reviews metrics, leakage, costs and confidence semantics at
+  slice start; the role does not independently expand the algorithm platform.
+- Implementer delivers the API, page state and targeted tests for one small
+  end-to-end loop.
+- Reviewer works at demonstrable slice boundaries and gets at most two rounds.
+  A third structural failure stops patching and shrinks the design.
+- Verifier runs targeted checks during development; broad suites run at slice
+  commit and final PR boundaries.
+- Every agent prompt has one deliverable, one stop condition and explicit
+  forbidden actions. Daily progress records completed user loops rather than
+  test count, code volume or ledger length.
+
+## Historical delivery record
+
+The checkpoints below preserve prior goals and evidence. Their embedded
+"current frontier" headings are historical; the metadata above is the
+canonical current state.
 
 ## Checkpoint 0 — 2026-08-14
 
@@ -870,11 +906,10 @@ labeled and isolated from non-demo operator state.
 
 ## Resume instruction
 
-Run `/goal`, then read this file, `PRODUCT.md`, `docs/product-strategy.md`,
-iteration 0020, the framework adoption ADR, the roadmap and current Git/tag/CI
-state. Do not repeat iteration 0020: PR #108 is merged and the immutable
-`v0.1.1-rc1` candidate has passed isolated acceptance. If the operator gives
-the exact promotion authority, run a separate final-release goal; if the
-operator reports a defect, preserve RC1 and cut a new repair candidate; if the
-operator requests continued product work, plan iteration 0021 from the trusted
-data-fabric frontier. Never infer real-money, mainnet or AI order authority.
+Resume from the metadata and active delivery protocol at the top of this file,
+then read `PRODUCT.md`, `docs/product-strategy.md`, the active 0027 iteration,
+its tracked design and executable plan, ADR-0015, the roadmap, issue #122 and
+current Git/PR state. Start from the first incomplete vertical slice; do not
+reopen framework bake-offs unless a DecisionPacket requirement proves the
+native contracts insufficient. Treat 0021 soak as an independent maintenance
+track and never infer real-money, mainnet, credential or AI order authority.

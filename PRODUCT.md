@@ -16,25 +16,27 @@ pipeline and generated API-client contract require an ADR before implementation.
 
 ## Users
 
-The primary user is a solo quantitative researcher and trader operating a
-local workstation. They need to compare evidence across equities, crypto and
-prediction markets, evaluate strategies, and rehearse decisions in paper mode
-without reconstructing state through the CLI or database.
+The primary user is a research-minded individual active trader operating a
+local workstation. They need to turn a ticker or watchlist idea into a
+defensible risk-first decision quickly, without trusting a black-box signal or
+reconstructing evidence through the CLI or database.
 
 ## Product Purpose
 
 QuantMesh turns heterogeneous market data, experiments, forecasts and venue
-state into one inspectable research-to-paper-trade workflow. Success means the
-operator can start the application, understand data provenance and freshness,
-inspect a signal, place a simulated order, and verify its portfolio, risk and
-audit effects from the UI.
+state into one inspectable DecisionPacket. Success means the operator can move
+from ticker to a saved Reject, Watch or Paper proposal in no more than two
+minutes, understand every blocker and citation, and later replay the paper
+result and review from the UI.
 
 ## Positioning
 
-Unlike a single-venue trading terminal or a generic AI dashboard, QuantMesh
-joins equities, crypto and event probabilities under one local evidence and
-risk model while preserving each venue's constraints. AI may explain and
-challenge research, but deterministic code retains execution authority.
+Unlike a single-venue trading terminal or a generic AI signal dashboard,
+QuantMesh joins equities, crypto and event probabilities under one local
+evidence and risk model while preserving each venue's constraints. It
+compresses market context, scenarios, risk, evidence and action into one short
+path. AI may explain and challenge research, but deterministic code retains
+evidence, risk and execution authority.
 
 ## Operating Context
 
@@ -42,8 +44,9 @@ challenge research, but deterministic code retains execution authority.
 - Deterministic offline demo data is the default acceptance environment.
 - Optional read-only or simulated integrations include Moomoo OpenD,
   Hyperliquid testnet and supported prediction-market data providers.
-- The normal loop is discover market state, inspect evidence, compare research,
-  submit a paper order, and review positions, P&L, risk and audit history.
+- The normal loop is ticker/watchlist → market state and key levels →
+  Bull/Base/Bear scenarios → entry/invalidation/stop/target/size → Reject,
+  Watch or Paper proposal → monitoring and review.
 
 ## Capabilities and Constraints
 
@@ -52,7 +55,14 @@ challenge research, but deterministic code retains execution authority.
 - External integrations must expose connected, delayed, stale, empty and error
   states rather than silently producing blank screens.
 - AI output is research input and cannot bypass deterministic risk approval.
-- Real-money orders, mainnet signing and credential use remain outside RC2.
+- A deterministic DecisionPacket remains available when no model service is
+  configured or an AI response fails schema or citation validation.
+- Stale, low-quality, leakage-affected or missing evidence blocks Paper
+  proposal while leaving Reject and Watch available with explicit reasons.
+- Paper proposals use the existing risk kernel and require a second explicit
+  confirmation.
+- Real-money orders, mainnet signing and credential use remain outside
+  iteration 0027 and require separate explicit authority.
 - The backend domain, risk and execution contracts stay authoritative while
   the operator interface is replaced.
 
@@ -85,6 +95,8 @@ performance claims, and future UI work must not fabricate them.
 4. Dense information stays scannable, with progressive disclosure for evidence
    and risk details.
 5. Safety state is always visible, and paper/live authority is never ambiguous.
+6. Optimize for completed, replayable user decisions rather than framework,
+   model, route or test counts.
 
 ## Accessibility & Inclusion
 

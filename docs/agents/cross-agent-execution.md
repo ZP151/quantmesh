@@ -66,6 +66,26 @@ not ready.
    gate. Generate English primary and Simplified Chinese operator acceptance
    notes. Never promote the final version without explicit operator acceptance.
 
+## Vertical-slice operating limits
+
+- Run no more than two concurrent tracks: the active product iteration and the
+  iteration-0021 soak maintenance track. They use independent worktrees,
+  prompts, files and verification evidence; soak never blocks product work and
+  never changes product code opportunistically.
+- Every agent prompt has one deliverable, one stop condition and explicit
+  forbidden operations. Findings outside that boundary are recorded for later
+  triage rather than absorbed into the current task.
+- Planner/Product defines one user action and success metric. Quant Researcher
+  reviews leakage, costs, metrics and confidence semantics before implementation
+  but does not independently expand the research platform.
+- Implementer delivers one API/page/state/test loop that exposes visible value
+  within 24–48 hours. Reviewer evaluates the demonstrable slice boundary and is
+  capped at two rounds; a third structural problem returns the slice for scope
+  reduction instead of another patch cycle.
+- Verifier runs targeted checks during development. Broad suites run at each
+  coherent slice commit and the final PR boundary. Progress records the user
+  loop completed, not test count, code volume or ledger length.
+
 If execution is interrupted, the next agent starts with `git status`, fetches
 remote state, reads the tracked plan checkboxes and iteration checkpoints, and
 resumes the first incomplete task. It must not redispatch work whose commit and
