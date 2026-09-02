@@ -58,6 +58,7 @@ def base_url(tmp_path_factory) -> str:
     # browser regression deliberately exercises the legacy unconfigured
     # proposal client; Task 3 replaces it with the packet action API.
     app.state.decision_packet_service = None
+    app.state.decision_packets = None
     server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=port, log_level="warning"))
     thread = threading.Thread(
         target=server.run,

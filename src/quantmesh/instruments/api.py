@@ -27,6 +27,7 @@ from quantmesh.instruments.contracts import (
     ProposalStatus,
 )
 from quantmesh.instruments.decision_packets import (
+    DecisionPacketNotFoundError,
     DecisionPacketService,
     DecisionPacketStore,
 )
@@ -248,8 +249,10 @@ def instrument_router() -> APIRouter:
             raise HTTPException(status_code=404, detail="no decision packet store is attached")
         try:
             return store.get(packet_id)
-        except ValueError as error:
+        except DecisionPacketNotFoundError as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
+        except (ValueError, OSError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
 
     @router.post(
         "/decision-packets",
@@ -313,9 +316,22 @@ def instrument_router() -> APIRouter:
         decisions = getattr(request.app.state, "proposal_service", None)
         if not isinstance(decisions, PaperDecisionService):
             decisions = getattr(request.app.state, "paper_decisions", None)
+        packet_store = getattr(request.app.state, "decision_packets", None)
+        packet_required = isinstance(packet_store, DecisionPacketStore)
+        packet_service = getattr(request.app.state, "decision_packet_service", None)
+        if packet_required and body.decision_packet_id is None:
+            raise HTTPException(
+                status_code=409,
+                detail="paper proposal requires a persisted decision packet binding",
+            )
         if not callable(getattr(registry, "get", None)) or not isinstance(
             decisions, PaperDecisionService
         ):
+            if packet_required:
+                raise HTTPException(
+                    status_code=409,
+                    detail="packet-bound paper proposal service is unavailable",
+                )
             raise HTTPException(status_code=404, detail="no paper proposal service is attached")
         try:
             artifact = registry.get(body.artifact_id)
@@ -323,12 +339,11 @@ def instrument_router() -> APIRouter:
             raise HTTPException(status_code=404, detail=str(error)) from error
         if artifact.instrument.venue is not body.venue or artifact.instrument.symbol != body.symbol:
             raise _unprocessable("proposal venue and symbol must match the forecast artifact")
-        packet_service = getattr(request.app.state, "decision_packet_service", None)
-        if isinstance(packet_service, DecisionPacketService):
-            if body.decision_packet_id is None:
+        if packet_required:
+            if not isinstance(packet_service, DecisionPacketService):
                 raise HTTPException(
                     status_code=409,
-                    detail="paper proposal requires a persisted decision packet binding",
+                    detail="packet-bound decision packet service is unavailable",
                 )
             try:
                 packet = packet_service.store.get(body.decision_packet_id)

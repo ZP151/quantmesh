@@ -131,6 +131,7 @@ _MUTABLE_FILES = frozenset(
         "orders/proposals/.proposals.lock",
         "orders/proposals/proposals.jsonl",
         "decisions/packets/.decision-packets.lock",
+        "decisions/packets/decision-action-intents.jsonl",
         "decisions/packets/decision-packets.jsonl",
         "watchlists/watchlist.jsonl",
     }
@@ -1669,6 +1670,9 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     decision_packet_root = root / "decisions" / "packets"
     decision_packet_root.mkdir(parents=True, exist_ok=True)
     (decision_packet_root / ".decision-packets.lock").write_text("", encoding="utf-8")
+    (decision_packet_root / "decision-action-intents.jsonl").write_text(
+        "", encoding="utf-8"
+    )
     (decision_packet_root / "decision-packets.jsonl").write_text("", encoding="utf-8")
     ownership_text = _ownership_text(root)
     (root / OWNERSHIP_NAME).write_text(ownership_text, encoding="utf-8")

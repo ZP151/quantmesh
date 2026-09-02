@@ -5,11 +5,14 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import threading
 from collections.abc import Callable, Iterator
-from contextlib import contextmanager
-from datetime import datetime
+from contextlib import contextmanager, nullcontext
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from quantmesh.domain.models import Side, Venue
 from quantmesh.instruments.contracts import (
@@ -18,12 +21,51 @@ from quantmesh.instruments.contracts import (
     DecisionPacketActionResult,
     HistoryRange,
     InstrumentWorkspace,
+    PaperProposal,
+    PriceForecastArtifact,
+    ProposalStatus,
 )
-from quantmesh.instruments.proposals import PaperDecisionService
+from quantmesh.instruments.proposals import (
+    PaperDecisionService,
+    forecast_freshness_blocker,
+)
 from quantmesh.persistence.jsonl import JsonlStore
 
 _LOCKS_GUARD = threading.Lock()
 _ROOT_LOCKS: dict[str, threading.RLock] = {}
+_PACKET_ID = re.compile(r"^packet-[0-9a-f]{24}$")
+_PACKET_FRESHNESS = timedelta(days=1)
+
+
+class DecisionPacketNotFoundError(ValueError):
+    """The exact packet identity is absent from an otherwise valid store."""
+
+
+class DecisionActionIntent(BaseModel):
+    """Durable action intent used to recover the proposal-to-child crash window."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    parent_packet_id: str = Field(pattern=r"^packet-[0-9a-f]{24}$")
+    disposition: DecisionDisposition
+    operator_reason: str | None = None
+    side: Side
+    quantity: float = Field(gt=0)
+    limit_price: float | None = Field(default=None, gt=0)
+    created_at: datetime
+
+    @field_validator("created_at")
+    @classmethod
+    def created_at_is_utc(cls, value: datetime) -> datetime:
+        if value.tzinfo is None:
+            raise ValueError("decision action intent time must be timezone-aware")
+        return value.astimezone(UTC)
+
+    @model_validator(mode="after")
+    def paper_only(self) -> DecisionActionIntent:
+        if self.disposition is not DecisionDisposition.PAPER_PROPOSAL:
+            raise ValueError("durable decision action intent is paper-only")
+        return self
 
 
 def _root_lock(root: Path) -> threading.RLock:
@@ -73,6 +115,7 @@ class DecisionPacketStore:
 
     def __init__(self, root: Path) -> None:
         self._lock = _root_lock(root)
+        self._local = threading.local()
         self._store = JsonlStore(
             root,
             filename="decision-packets.jsonl",
@@ -82,6 +125,14 @@ class DecisionPacketStore:
             key=lambda packet: packet.packet_id,
             extra_validate=self._validate_identity,
         )
+        self._intents = JsonlStore(
+            root,
+            filename="decision-action-intents.jsonl",
+            model=DecisionActionIntent,
+            label="decision action intent store",
+            id_label="decision packet parent",
+            key=lambda intent: intent.parent_packet_id,
+        )
 
     @property
     def root(self) -> Path:
@@ -90,6 +141,29 @@ class DecisionPacketStore:
     @property
     def path(self) -> Path:
         return self._store.path
+
+    @property
+    def intent_path(self) -> Path:
+        return self._intents.path
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        """Serialize packet, intent, proposal-delegation and child publication."""
+        with self._lock:
+            depth = getattr(self._local, "depth", 0)
+            if depth:
+                self._local.depth = depth + 1
+                try:
+                    yield
+                finally:
+                    self._local.depth = depth
+                return
+            with _interprocess_lock(self.root):
+                self._local.depth = 1
+                try:
+                    yield
+                finally:
+                    self._local.depth = 0
 
     @staticmethod
     def _validate_identity(packet: DecisionPacket) -> None:
@@ -166,7 +240,7 @@ class DecisionPacketStore:
 
     def record(self, packet: DecisionPacket) -> DecisionPacket:
         """Append one validated immutable packet and immediately replay-check it."""
-        with self._lock, _interprocess_lock(self.root):
+        with self.transaction():
             packets = self._records()
             self._validate_identity(packet)
             self._store.check_absent(packet, packets)
@@ -176,10 +250,27 @@ class DecisionPacketStore:
         return packet
 
     def get(self, packet_id: str) -> DecisionPacket:
+        if _PACKET_ID.fullmatch(packet_id) is None:
+            raise DecisionPacketNotFoundError(f"decision packet {packet_id!r} is not recorded")
         for packet in self._records():
             if packet.packet_id == packet_id:
                 return packet
-        raise ValueError(f"decision packet {packet_id!r} is not recorded")
+        raise DecisionPacketNotFoundError(f"decision packet {packet_id!r} is not recorded")
+
+    def reserve_action_intent(self, intent: DecisionActionIntent) -> DecisionActionIntent:
+        """Record or replay the one exact durable Paper intent for a parent packet."""
+        with self.transaction():
+            intents = self._intents.read()
+            existing = next(
+                (item for item in intents if item.parent_packet_id == intent.parent_packet_id),
+                None,
+            )
+            if existing is not None:
+                if existing != intent.model_copy(update={"created_at": existing.created_at}):
+                    raise ValueError("decision packet already has a different durable intent")
+                return existing
+            self._intents.append(intent)
+            return intent
 
     def all(self) -> tuple[DecisionPacket, ...]:
         return tuple(self._records())
@@ -239,24 +330,107 @@ class DecisionPacketService:
         *,
         expected_packet_id: str,
     ) -> DecisionPacket:
-        workspace: InstrumentWorkspace = self._workspace().render(
-            venue,
-            symbol,
-            selected_range,
+        workspace_service = self._workspace()
+        staged = getattr(workspace_service, "staged_draft", None)
+        draft = (
+            staged(
+                expected_packet_id,
+                venue=venue,
+                symbol=symbol,
+                selected_range=selected_range,
+            )
+            if callable(staged)
+            else None
         )
-        draft = workspace.decision.draft
+        if draft is None:
+            workspace: InstrumentWorkspace = workspace_service.render(
+                venue,
+                symbol,
+                selected_range,
+            )
+            draft = workspace.decision.draft
         if draft.packet_id != expected_packet_id:
             raise ValueError(
                 "expected decision packet id does not match the current workspace draft"
             )
-        try:
-            existing = self.store.get(draft.packet_id)
-        except ValueError as error:
-            if "is not recorded" not in str(error):
-                raise
-        else:
+        with self.store.transaction():
+            try:
+                existing = self.store.get(draft.packet_id)
+            except DecisionPacketNotFoundError:
+                return self.store.record(draft)
             return existing
-        return self.store.record(draft)
+
+    @staticmethod
+    def _validate_packet_clock(parent: DecisionPacket, now: datetime) -> None:
+        if now.tzinfo is None:
+            raise ValueError("decision action clock must be timezone-aware")
+        now = now.astimezone(UTC)
+        if now < parent.as_of:
+            raise ValueError("decision action clock cannot predate the packet")
+        evidence_times = [parent.evidence.history_generated_at]
+        if parent.evidence.forecast_generated_at is not None:
+            evidence_times.append(parent.evidence.forecast_generated_at)
+        if any(now - value > _PACKET_FRESHNESS for value in evidence_times):
+            raise ValueError("decision packet expired before paper proposal")
+
+    @staticmethod
+    def _validate_artifact_binding(
+        parent: DecisionPacket,
+        artifact: PriceForecastArtifact,
+    ) -> None:
+        evidence = parent.evidence
+        chronology = evidence.forecast_chronology
+        chronology_matches = chronology is not None and (
+            chronology.train_start == artifact.train_start
+            and chronology.train_end == artifact.train_end
+            and chronology.validation_start == artifact.validation_start
+            and chronology.validation_end == artifact.validation_end
+            and chronology.test_start == artifact.test_start
+            and chronology.test_end == artifact.test_end
+        )
+        if (
+            evidence.forecast_artifact_id != artifact.id
+            or parent.instrument.model_dump(mode="json")
+            != artifact.instrument.model_dump(mode="json")
+            or evidence.forecast_dataset_id != artifact.dataset_id
+            or evidence.forecast_dataset_revision != artifact.dataset_revision
+            or evidence.forecast_manifest_id != artifact.manifest_id
+            or evidence.forecast_quality_evaluation_id != artifact.quality_evaluation_id
+            or evidence.forecast_synthetic != (artifact.source == "demo-synthetic")
+            or evidence.forecast_eligible != artifact.eligible
+            or evidence.forecast_blockers != artifact.blockers
+            or evidence.forecast_limitations != artifact.limitations
+            or evidence.forecast_model_name != artifact.model_name
+            or evidence.forecast_model_version != artifact.model_version
+            or evidence.forecast_config_digest != artifact.config_digest
+            or evidence.forecast_history_digest != artifact.history_digest
+            or evidence.forecast_benchmark_name != artifact.benchmark_name
+            or evidence.forecast_generated_at != artifact.generated_at
+            or evidence.forecast_paths != artifact.paths
+            or evidence.forecast_metrics != artifact.metrics
+            or not chronology_matches
+        ):
+            raise ValueError("forecast artifact does not match immutable packet evidence")
+
+    @staticmethod
+    def _validate_proposal_binding(
+        parent: DecisionPacket,
+        proposal: PaperProposal,
+    ) -> None:
+        evidence = parent.evidence
+        if (
+            proposal.status is not ProposalStatus.PENDING
+            or proposal.artifact_id != evidence.forecast_artifact_id
+            or proposal.instrument.model_dump(mode="json")
+            != parent.instrument.model_dump(mode="json")
+            or proposal.dataset_id != evidence.forecast_dataset_id
+            or proposal.dataset_revision != evidence.forecast_dataset_revision
+            or proposal.forecast_generated_at != evidence.forecast_generated_at
+            or proposal.model_version != evidence.forecast_model_version
+            or proposal.config_digest != evidence.forecast_config_digest
+            or proposal.history_digest != evidence.forecast_history_digest
+        ):
+            raise ValueError("paper proposal does not match immutable decision packet evidence")
 
     def _existing_child(
         self,
@@ -324,7 +498,6 @@ class DecisionPacketService:
         quantity: float | None = None,
         limit_price: float | None = None,
     ) -> DecisionPacketActionResult:
-        parent = self.store.get(parent_packet_id)
         if disposition in {DecisionDisposition.REJECT, DecisionDisposition.WATCH}:
             if operator_reason is None or not operator_reason.strip():
                 raise ValueError("reject and watch require a nonblank operator reason")
@@ -335,57 +508,81 @@ class DecisionPacketService:
                 raise ValueError("paper proposal requires side and quantity")
         else:
             raise ValueError("draft is not an operator action")
-        existing = self._existing_child(
-            parent,
-            disposition=disposition,
-            operator_reason=operator_reason,
-            side=side,
-            quantity=quantity,
-            limit_price=limit_price,
+        proposal_transaction = (
+            self._proposals.ledger.transaction()
+            if disposition is DecisionDisposition.PAPER_PROPOSAL
+            and self._proposals is not None
+            else nullcontext()
         )
-        if existing is not None:
-            return existing
-        if parent.disposition is not DecisionDisposition.DRAFT:
-            raise ValueError("only a draft decision packet can transition")
+        with self.store.transaction(), proposal_transaction:
+            parent = self.store.get(parent_packet_id)
+            existing = self._existing_child(
+                parent,
+                disposition=disposition,
+                operator_reason=operator_reason,
+                side=side,
+                quantity=quantity,
+                limit_price=limit_price,
+            )
+            if existing is not None:
+                return existing
+            if parent.disposition is not DecisionDisposition.DRAFT:
+                raise ValueError("only a draft decision packet can transition")
 
-        if disposition in {DecisionDisposition.REJECT, DecisionDisposition.WATCH}:
+            if disposition in {DecisionDisposition.REJECT, DecisionDisposition.WATCH}:
+                child = self._child(
+                    parent,
+                    disposition=disposition,
+                    operator_reason=operator_reason,
+                    proposal_id=None,
+                    created_at=parent.created_at,
+                )
+                return DecisionPacketActionResult(packet=self.store.record(child))
+
+            if not parent.paper_capability.allowed or parent.paper_capability.blockers:
+                raise ValueError("decision packet is blocked from paper proposal")
+            if self._proposals is None:
+                raise ValueError("paper proposal service is not attached")
+            artifact_id = parent.evidence.forecast_artifact_id
+            if artifact_id is None:
+                raise ValueError("decision packet has no forecast artifact binding")
+            action_at = self._proposals.current_time()
+            self._validate_packet_clock(parent, action_at)
+            artifact = self._proposals.resolve_artifact(artifact_id)
+            self._validate_artifact_binding(parent, artifact)
+            if not artifact.eligible:
+                raise ValueError("forecast artifact is not eligible for paper proposal")
+            freshness = forecast_freshness_blocker(artifact, action_at)
+            if freshness is not None:
+                raise ValueError(f"decision packet expired: {freshness}")
+            intent = self.store.reserve_action_intent(
+                DecisionActionIntent(
+                    parent_packet_id=parent.packet_id,
+                    disposition=disposition,
+                    operator_reason=operator_reason,
+                    side=side,
+                    quantity=quantity,
+                    limit_price=limit_price,
+                    created_at=action_at,
+                )
+            )
+            proposal = self._proposals.propose(
+                artifact_id,
+                side=side,
+                quantity=quantity,
+                limit_price=limit_price,
+                created_at=intent.created_at,
+                expected_artifact=artifact,
+            )
+            self._validate_proposal_binding(parent, proposal)
             child = self._child(
                 parent,
                 disposition=disposition,
                 operator_reason=operator_reason,
-                proposal_id=None,
-                created_at=parent.created_at,
+                proposal_id=proposal.id,
+                created_at=max(parent.created_at, proposal.created_at),
             )
-            return DecisionPacketActionResult(packet=self.store.record(child))
-
-        if not parent.paper_capability.allowed or parent.paper_capability.blockers:
-            raise ValueError("decision packet is blocked from paper proposal")
-        if self._proposals is None:
-            raise ValueError("paper proposal service is not attached")
-        artifact_id = parent.evidence.forecast_artifact_id
-        if artifact_id is None:
-            raise ValueError("decision packet has no forecast artifact binding")
-        proposal = self._proposals.propose(
-            artifact_id,
-            side=side,
-            quantity=quantity,
-            limit_price=limit_price,
-        )
-        if (
-            proposal.artifact_id != artifact_id
-            or proposal.instrument != parent.instrument
-            or proposal.dataset_id != parent.evidence.forecast_dataset_id
-            or proposal.dataset_revision != parent.evidence.forecast_dataset_revision
-        ):
-            raise ValueError("paper proposal does not match immutable decision packet evidence")
-        child = self._child(
-            parent,
-            disposition=disposition,
-            operator_reason=operator_reason,
-            proposal_id=proposal.id,
-            created_at=max(parent.created_at, proposal.created_at),
-        )
-        return DecisionPacketActionResult(
-            packet=self.store.record(child),
-            proposal=proposal,
-        )
+            return DecisionPacketActionResult(
+                packet=self.store.record(child),
+                proposal=proposal,
+            )

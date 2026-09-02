@@ -1,15 +1,24 @@
 from __future__ import annotations
 
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
+from quantmesh.api.workstation import create_workstation_app
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
-from quantmesh.domain.models import Venue
-from quantmesh.instruments.contracts import HistoryRange
+from quantmesh.demo.seeder import seed_demo_root
+from quantmesh.domain.models import Side, Venue
+from quantmesh.instruments.contracts import DecisionDisposition, HistoryRange
+from quantmesh.instruments.decision_packets import (
+    DecisionPacketService,
+    DecisionPacketStore,
+)
+from quantmesh.instruments.proposals import PaperDecisionService
 
 SCENARIO = DemoScenario()
 
@@ -296,3 +305,302 @@ def test_clean_demo_restart_reopens_identical_packet_bytes(tmp_path: Path) -> No
     assert reopened.status_code == 200
     assert reopened.json() == action["packet"]
     assert packet_path.read_bytes() == before
+
+
+def test_advancing_workspace_clock_saves_the_exact_observed_draft_and_reopens_latest(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "demo"
+    app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    tick = 0
+
+    def advancing_clock():
+        nonlocal tick
+        value = SCENARIO.anchor + timedelta(seconds=tick)
+        tick += 1
+        return value
+
+    app.state.instrument_workspace._now = advancing_clock  # noqa: SLF001
+    with TestClient(app) as client:
+        observed = _draft(client)
+        saved_response = _save(client, observed)
+
+    assert saved_response.status_code == 200
+    saved = saved_response.json()
+    assert saved["packet_id"] == observed["packet_id"]
+    assert saved["as_of"] == observed["as_of"]
+
+    restarted = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    restarted.app_state_clock = SCENARIO.anchor + timedelta(minutes=5)
+    restarted.state.instrument_workspace._now = (  # noqa: SLF001
+        lambda: restarted.app_state_clock
+    )
+    with TestClient(restarted) as client:
+        reopened = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m")
+
+    assert reopened.status_code == 200
+    assert reopened.json()["decision"]["draft"] == saved
+    assert reopened.json()["decision"]["latest"] == saved
+
+
+@pytest.mark.parametrize("disposition", [DecisionDisposition.REJECT, DecisionDisposition.WATCH])
+def test_concurrent_nonpaper_actions_append_one_idempotent_child(
+    tmp_path: Path,
+    disposition: DecisionDisposition,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        parent = _save(client, _draft(client)).json()
+
+    workers = 8
+    barrier = threading.Barrier(workers)
+    services = tuple(
+        DecisionPacketService(
+            store=DecisionPacketStore(app.state.decision_packets.root),
+            workspace_provider=lambda: app.state.instrument_workspace,
+            proposals=app.state.paper_decisions,
+        )
+        for _ in range(workers)
+    )
+
+    def apply(service: DecisionPacketService):
+        barrier.wait()
+        return service.transition(
+            parent["packet_id"],
+            disposition=disposition,
+            operator_reason="Wait for one exact condition.",
+        )
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        results = tuple(executor.map(apply, services))
+
+    assert len({result.packet.packet_id for result in results}) == 1
+    assert len(app.state.decision_packets.all()) == 2
+    assert app.state.paper_decisions.ledger.all() == ()
+
+
+def test_crash_after_proposal_write_retries_without_a_second_proposal(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        parent = _save(client, _draft(client)).json()
+
+    clock_tick = 0
+
+    def proposal_clock():
+        nonlocal clock_tick
+        value = SCENARIO.anchor + timedelta(microseconds=clock_tick)
+        clock_tick += 1
+        return value
+
+    app.state.paper_decisions._now = proposal_clock  # noqa: SLF001
+    store = app.state.decision_packets
+    original_record = store.record
+    crashed = False
+
+    def crash_on_child(packet):
+        nonlocal crashed
+        if packet.version == 2 and not crashed:
+            crashed = True
+            raise RuntimeError("simulated stop after proposal durability")
+        return original_record(packet)
+
+    store.record = crash_on_child
+    with pytest.raises(RuntimeError, match="simulated stop"):
+        app.state.decision_packet_service.transition(
+            parent["packet_id"],
+            disposition=DecisionDisposition.PAPER_PROPOSAL,
+            side=Side.BUY,
+            quantity=1.0,
+        )
+    store.record = original_record
+
+    recovered = app.state.decision_packet_service.transition(
+        parent["packet_id"],
+        disposition=DecisionDisposition.PAPER_PROPOSAL,
+        side=Side.BUY,
+        quantity=1.0,
+    )
+
+    assert len(app.state.paper_decisions.ledger.all()) == 1
+    assert recovered.proposal == app.state.paper_decisions.ledger.all()[0]
+    assert recovered.packet.proposal_id == recovered.proposal.id
+    assert len(store.all()) == 2
+
+
+def test_concurrent_paper_actions_create_one_proposal_and_one_child(tmp_path: Path) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        parent = _save(client, _draft(client)).json()
+
+    workers = 4
+    proposal_barrier = threading.Barrier(workers)
+    original = app.state.paper_decisions
+
+    class RacingPaperService(PaperDecisionService):
+        def propose(self, *args, **kwargs):
+            try:
+                proposal_barrier.wait(timeout=1)
+            except threading.BrokenBarrierError:
+                pass
+            return super().propose(*args, **kwargs)
+
+    racing = RacingPaperService(
+        ledger=original.ledger,
+        forecast_registry=original._forecast_registry,  # noqa: SLF001
+        account_provider=original._account_provider,  # noqa: SLF001
+        account_sink=original._account_sink,  # noqa: SLF001
+        account_transaction=original._account_transaction,  # noqa: SLF001
+        journal=original._journal,  # noqa: SLF001
+        snapshot_provider=original._snapshot_provider,  # noqa: SLF001
+        quote_fence=original._quote_fence,  # noqa: SLF001
+        demo_quote_provider=original._demo_quote_provider,  # noqa: SLF001
+        now=original._now,  # noqa: SLF001
+    )
+    barrier = threading.Barrier(workers)
+    services = tuple(
+        DecisionPacketService(
+            store=DecisionPacketStore(app.state.decision_packets.root),
+            workspace_provider=lambda: app.state.instrument_workspace,
+            proposals=racing,
+        )
+        for _ in range(workers)
+    )
+
+    def apply(service: DecisionPacketService):
+        barrier.wait()
+        return service.transition(
+            parent["packet_id"],
+            disposition=DecisionDisposition.PAPER_PROPOSAL,
+            side=Side.BUY,
+            quantity=1.0,
+        )
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        results = tuple(executor.map(apply, services))
+
+    assert len({result.packet.packet_id for result in results}) == 1
+    assert len({result.proposal.id for result in results if result.proposal is not None}) == 1
+    assert len(app.state.paper_decisions.ledger.all()) == 1
+    assert len(app.state.decision_packets.all()) == 2
+
+
+def test_saved_packet_that_naturally_expires_refuses_before_proposal_write(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        parent = _save(client, _draft(client)).json()
+        app.state.paper_decisions._now = (  # noqa: SLF001
+            lambda: SCENARIO.anchor + timedelta(days=3)
+        )
+        refused = client.post(
+            f"/api/decision-packets/{parent['packet_id']}/actions",
+            json={
+                "disposition": "paper_proposal",
+                "operator_reason": None,
+                "side": "buy",
+                "quantity": 1.0,
+                "limit_price": None,
+            },
+        )
+
+    assert refused.status_code == 409
+    assert "expired" in refused.json()["detail"].lower()
+    assert app.state.paper_decisions.ledger.all() == ()
+    assert app.state.decision_packets.latest(
+        Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS
+    ).packet_id == parent["packet_id"]
+
+
+def test_partial_packet_bound_configuration_still_refuses_bare_artifact(
+    tmp_path: Path,
+) -> None:
+    seeded = seed_demo_root(tmp_path / "partial")
+    app = create_workstation_app(
+        account=seeded.account,
+        marks=seeded.marks,
+        journal=seeded.journal,
+        price_forecasts=seeded.price_forecasts,
+        proposal_ledger=seeded.proposal_ledger,
+        decision_packets=seeded.decision_packets,
+        workspace_clock=lambda: seeded.scenario.anchor,
+        host="127.0.0.1",
+    )
+    artifact = next(
+        item for item in seeded.price_forecasts.all() if item.instrument.symbol == "NVDA"
+    )
+
+    with TestClient(app) as client:
+        refused = client.post(
+            "/api/paper/proposals",
+            json={
+                "venue": "moomoo",
+                "symbol": "NVDA",
+                "artifact_id": artifact.id,
+                "side": "buy",
+                "quantity": 1.0,
+                "limit_price": None,
+            },
+        )
+
+    assert not hasattr(app.state, "instrument_workspace")
+    assert refused.status_code == 409
+    assert "decision packet" in refused.json()["detail"].lower()
+    assert seeded.proposal_ledger.all() == ()
+
+
+def test_registry_drift_between_preflight_and_propose_has_zero_external_writes(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        parent = _save(client, _draft(client)).json()
+
+        original = app.state.paper_decisions._forecast_registry.get(  # noqa: SLF001
+            parent["evidence"]["forecast_artifact_id"]
+        )
+        drifted = original.model_copy(
+            update={"model_version": f"{original.model_version}-drift"}
+        )
+
+        class DriftingRegistry:
+            calls = 0
+
+            def get(self, artifact_id: str):
+                assert artifact_id == original.id
+                self.calls += 1
+                return original if self.calls == 1 else drifted
+
+        registry = DriftingRegistry()
+        app.state.paper_decisions._forecast_registry = registry  # noqa: SLF001
+        refused = client.post(
+            f"/api/decision-packets/{parent['packet_id']}/actions",
+            json={
+                "disposition": "paper_proposal",
+                "operator_reason": None,
+                "side": "buy",
+                "quantity": 1.0,
+                "limit_price": None,
+            },
+        )
+
+    assert registry.calls == 2
+    assert refused.status_code == 409
+    assert "forecast" in refused.json()["detail"].lower()
+    assert app.state.paper_decisions.ledger.all() == ()
+    assert len(app.state.decision_packets.all()) == 1
+
+
+def test_exact_packet_get_distinguishes_missing_from_corrupt_store(tmp_path: Path) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    missing_id = "packet-" + "f" * 24
+    with TestClient(app) as client:
+        missing = client.get(f"/api/decision-packets/{missing_id}")
+        app.state.decision_packets.path.write_text("{broken-json\n", encoding="utf-8")
+        corrupt = client.get(f"/api/decision-packets/{missing_id}")
+
+    assert missing.status_code == 404
+    assert corrupt.status_code == 409
+    assert "invalid" in corrupt.json()["detail"].lower()

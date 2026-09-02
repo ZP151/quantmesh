@@ -449,6 +449,10 @@ class PaperDecisionService:
     def _resolve_artifact(self, artifact_id: str) -> PriceForecastArtifact:
         return self._forecast_registry.get(artifact_id)
 
+    def resolve_artifact(self, artifact_id: str) -> PriceForecastArtifact:
+        """Resolve one registry-validated artifact for packet-bound preflight."""
+        return self._resolve_artifact(artifact_id)
+
     def propose(
         self,
         artifact_id: str,
@@ -456,13 +460,20 @@ class PaperDecisionService:
         side: Side,
         quantity: float,
         limit_price: float | None = None,
+        created_at: datetime | None = None,
+        expected_artifact: PriceForecastArtifact | None = None,
     ) -> PaperProposal:
         with self.ledger.transaction():
             artifact = self._resolve_artifact(artifact_id)
-            created_at = self.current_time()
+            if expected_artifact is not None and artifact != expected_artifact:
+                raise ValueError("forecast artifact changed after packet-bound preflight")
+            proposal_time = self.current_time() if created_at is None else created_at
+            if proposal_time.tzinfo is None:
+                raise ValueError("proposal time must be timezone-aware")
+            proposal_time = proposal_time.astimezone(UTC)
             order_type = OrderType.LIMIT if limit_price is not None else OrderType.MARKET
             blockers = artifact.blockers if not artifact.eligible else ()
-            freshness = forecast_freshness_blocker(artifact, created_at)
+            freshness = forecast_freshness_blocker(artifact, proposal_time)
             if freshness is not None:
                 blockers = (*blockers, freshness)
             candidate = PaperProposal(
@@ -479,7 +490,7 @@ class PaperDecisionService:
                 quantity=quantity,
                 order_type=order_type,
                 limit_price=limit_price,
-                created_at=created_at,
+                created_at=proposal_time,
                 confirmation_token="0" * 64,
                 status=(ProposalStatus.BLOCKED if blockers else ProposalStatus.PENDING),
                 blockers=blockers,

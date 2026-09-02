@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import math
+import threading
+from collections import OrderedDict
 from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 
@@ -10,6 +12,7 @@ from quantmesh.domain.models import Venue
 from quantmesh.execution.accounting import PaperAccount, position_key
 from quantmesh.instruments.contracts import (
     ComparisonSeries,
+    DecisionPacket,
     DecisionWorkspaceState,
     HistoryRange,
     InstrumentWorkspace,
@@ -159,6 +162,37 @@ class InstrumentWorkspaceService:
         self._decisions = decisions
         self._decision_packets = decision_packets
         self._now = now
+        self._draft_lock = threading.RLock()
+        self._staged_drafts: OrderedDict[str, DecisionPacket] = OrderedDict()
+
+    def staged_draft(
+        self,
+        packet_id: str,
+        *,
+        venue: Venue,
+        symbol: str,
+        selected_range: HistoryRange,
+    ) -> DecisionPacket | None:
+        """Return an exact draft previously exposed by this workspace process."""
+        with self._draft_lock:
+            draft = self._staged_drafts.get(packet_id)
+            if draft is None:
+                return None
+            if (
+                draft.instrument.venue is not venue
+                or draft.instrument.symbol != symbol
+                or draft.selected_range is not selected_range
+            ):
+                raise ValueError("staged decision packet does not match the requested scope")
+            self._staged_drafts.move_to_end(packet_id)
+            return draft
+
+    def _stage_draft(self, draft: DecisionPacket) -> None:
+        with self._draft_lock:
+            self._staged_drafts[draft.packet_id] = draft
+            self._staged_drafts.move_to_end(draft.packet_id)
+            while len(self._staged_drafts) > 256:
+                self._staged_drafts.popitem(last=False)
 
     def _latest_forecast(
         self, venue: Venue, symbol: str, *, as_of: datetime
@@ -235,6 +269,15 @@ class InstrumentWorkspaceService:
         if generated_at.tzinfo is None:
             raise ValueError("workspace clock must be timezone-aware")
         generated_at = generated_at.astimezone(UTC)
+        latest = (
+            self._decision_packets.latest(venue, symbol, selected_range)
+            if self._decision_packets is not None
+            else None
+        )
+        persisted_root = None
+        if latest is not None and self._decision_packets is not None:
+            persisted_root = self._decision_packets.lineage(latest.packet_id)[0]
+        decision_as_of = persisted_root.as_of if persisted_root is not None else generated_at
         valuation, proposals = self._valuation_and_proposals(
             venue,
             symbol,
@@ -244,7 +287,7 @@ class InstrumentWorkspaceService:
             venue,
             symbol,
             selected_range,
-            as_of=generated_at,
+            as_of=decision_as_of,
         )
         comparison: ComparisonSeries | None = None
         if peers:
@@ -252,7 +295,7 @@ class InstrumentWorkspaceService:
                 primary=(venue, symbol),
                 peers=peers,
                 range=selected_range,
-                as_of=generated_at,
+                as_of=decision_as_of,
             )
         live = _live_evidence(
             self._live_feed,
@@ -351,23 +394,21 @@ class InstrumentWorkspaceService:
             blockers=tuple(proposal_blockers),
             proposals=proposals,
         )
-        draft = compose_decision_packet(
-            history=history,
-            forecast=forecast,
-            live=live,
-            risk=risk,
-            proposal=proposal,
-            account=account,
-            selected_range=selected_range,
-            as_of=generated_at,
+        draft = (
+            persisted_root
+            if persisted_root is not None
+            else compose_decision_packet(
+                history=history,
+                forecast=forecast,
+                live=live,
+                risk=risk,
+                proposal=proposal,
+                account=account,
+                selected_range=selected_range,
+                as_of=decision_as_of,
+            )
         )
-        latest = (
-            self._decision_packets.latest(venue, symbol, selected_range)
-            if self._decision_packets is not None
-            else None
-        )
-        if latest is not None and latest.as_of != generated_at:
-            latest = None
+        self._stage_draft(draft)
 
         return InstrumentWorkspace(
             generated_at=generated_at,
