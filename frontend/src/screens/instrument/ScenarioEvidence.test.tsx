@@ -47,7 +47,7 @@ const packet = {
       trigger: 'Close below 180.',
     },
   ],
-} as DecisionPacket
+} as unknown as DecisionPacket
 
 const packetWithMetricWindows = {
   ...packet,
@@ -113,7 +113,7 @@ const packetWithMetricWindows = {
     history_limitations: [],
     history_source: 'trusted-test-source',
   },
-} as DecisionPacket
+} as unknown as DecisionPacket
 
 describe('ScenarioEvidence', () => {
   it('renders the exact Bull, Base and Bear facts without inventing probabilities', () => {

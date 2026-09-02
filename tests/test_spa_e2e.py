@@ -15,13 +15,18 @@ check-then-bind race with another process on shared CI runners.
 
 import socket
 import threading
+from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
+from time import perf_counter
 
 import pytest
 import uvicorn
+from fastapi import FastAPI
 
 from quantmesh.api import workstation
 from quantmesh.demo.datalink import ConnectorState, DatalinkService
+from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.hyperliquid.errors import HyperliquidSDKMissingError
 
@@ -44,6 +49,14 @@ def _restore_legacy_ui() -> None:
 
 
 HOST = "127.0.0.1"
+SCENARIO = DemoScenario()
+
+
+@dataclass(frozen=True)
+class _DemoStation:
+    app: FastAPI
+    root: Path
+    url: str
 
 
 class _MissingSdkTransport:
@@ -87,7 +100,7 @@ def _wait_for_server(server: uvicorn.Server) -> None:
 
 
 @pytest.fixture(scope="session")
-def base_url(tmp_path_factory) -> str:
+def demo_station(tmp_path_factory) -> _DemoStation:
     listener = socket.socket()
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listener.bind((HOST, 0))
@@ -109,11 +122,16 @@ def base_url(tmp_path_factory) -> str:
     thread.start()
     try:
         _wait_for_server(server)
-        yield f"http://{HOST}:{port}"
+        yield _DemoStation(app=app, root=root, url=f"http://{HOST}:{port}")
     finally:
         server.should_exit = True
         thread.join(timeout=15)
         listener.close()
+
+
+@pytest.fixture(scope="session")
+def base_url(demo_station: _DemoStation) -> str:
+    return demo_station.url
 
 
 @pytest.fixture(scope="module")
@@ -151,6 +169,28 @@ def _wait_demo_attached(page) -> None:
     """The shell's provenance line switches from the operator-mode
     placeholder once the demo-status query settles."""
     page.get_by_text("Deterministic paper session", exact=False).first.wait_for()
+
+
+def _reset_demo(page, base_url: str) -> None:
+    response = page.request.post(f"{base_url}/api/demo/reset")
+    assert response.status == 200
+
+
+def _decision_packet_id(page) -> str:
+    packet_id = page.locator('code[title^="packet-"]').first.inner_text()
+    assert packet_id.startswith("packet-")
+    return packet_id
+
+
+def _proposal_id(page) -> str:
+    proposal_id = (
+        page.get_by_text("Proposal ID", exact=True)
+        .locator("..")
+        .locator("dd")
+        .inner_text()
+    )
+    assert proposal_id.startswith("proposal-")
+    return proposal_id
 
 
 def test_demo_paper_workflow_through_the_ui(page, base_url) -> None:
@@ -375,3 +415,191 @@ def test_keyboard_only_walk(page, base_url) -> None:
     page.get_by_label("Venue").focus()
     page.get_by_label("Venue").press("ArrowDown")
     assert "hyperliquid" in page.get_by_label("Venue").input_value()
+
+
+def test_nvda_decision_packet_one_page_watch_is_durable_in_under_two_minutes(
+    page,
+    base_url,
+) -> None:
+    _reset_demo(page, base_url)
+    started = perf_counter()
+    workspace_url = f"{base_url}/app/instruments/moomoo/NVDA?range=6m"
+    page.goto(workspace_url)
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    main = page.get_by_role("main")
+
+    assert page.url == workspace_url
+    assert main.get_by_role("region", name="Market canvas").count() == 1
+    assert main.get_by_role("region", name="Market structure and key levels").count() == 1
+    assert main.get_by_role("region", name="Evidence").count() == 1
+    assert main.get_by_role("region", name="Scenarios").locator("article").count() == 3
+    assert main.get_by_role("complementary", name="Decision").count() == 1
+    assert main.get_by_role("region", name="Risk plan").count() == 1
+    assert main.get_by_role("region", name="DecisionPacket actions").count() == 1
+    text = main.inner_text()
+    for fact in (
+        "Bull",
+        "Base",
+        "Bear",
+        "Paper only · explicit confirmation required",
+    ):
+        assert fact in text
+
+    page.get_by_label("Decision reason").fill("Wait for the entry zone")
+    with page.expect_response(
+        lambda response: "/api/decision-packets/" in response.url
+        and response.url.endswith("/actions")
+    ) as saved:
+        page.get_by_role("button", name="Watch decision").click()
+    assert saved.value.status == 200
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    elapsed = perf_counter() - started
+    print(f"ticker_to_watch_seconds={elapsed:.3f}")
+    assert elapsed < 120
+    assert page.url == workspace_url
+
+    exact = page.request.get(f"{base_url}/api/decision-packets/{packet_id}")
+    assert exact.status == 200
+    assert exact.json()["packet_id"] == packet_id
+    assert exact.json()["disposition"] == "watch"
+    page.reload()
+    page.get_by_text("Watching", exact=True).wait_for()
+    assert _decision_packet_id(page) == packet_id
+
+
+def test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order(
+    page,
+    base_url,
+    demo_station: _DemoStation,
+) -> None:
+    _reset_demo(page, base_url)
+    workspace = demo_station.app.state.instrument_workspace
+    paper_decisions = demo_station.app.state.paper_decisions
+    original_workspace_clock = workspace._now  # noqa: SLF001
+    original_proposal_clock = paper_decisions._now  # noqa: SLF001
+    stale_now = SCENARIO.anchor + timedelta(days=10)
+    workspace._now = lambda: stale_now  # noqa: SLF001
+    paper_decisions._now = lambda: stale_now  # noqa: SLF001
+    proposals_before = paper_decisions.ledger.all()
+    orders_before = demo_station.app.state.account_store.get().orders
+    try:
+        page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+        page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+        page.get_by_text("Evidence blocked", exact=True).wait_for()
+        main = page.get_by_role("main")
+        blockers = main.get_by_role("region", name="Paper blockers")
+        assert blockers.count() == 1
+        assert blockers.inner_text().strip()
+
+        reason = page.get_by_label("Decision reason")
+        reason.fill("Wait for fresh evidence")
+        assert page.get_by_role("button", name="Reject decision").is_enabled()
+        assert page.get_by_role("button", name="Watch decision").is_enabled()
+        assert page.get_by_role("button", name="Create paper proposal").is_disabled()
+        assert paper_decisions.ledger.all() == proposals_before
+        assert demo_station.app.state.account_store.get().orders == orders_before
+    finally:
+        workspace._now = original_workspace_clock  # noqa: SLF001
+        paper_decisions._now = original_proposal_clock  # noqa: SLF001
+        _reset_demo(page, base_url)
+
+
+def test_nvda_second_confirmation_refusal_keeps_packet_and_proposal_visible(
+    page,
+    base_url,
+    demo_station: _DemoStation,
+) -> None:
+    _reset_demo(page, base_url)
+    page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    filled_before = sum(
+        order.status.value == "filled"
+        for order in demo_station.app.state.account_store.get().orders.values()
+    )
+    accepted_before = sum(
+        order.status.value == "accepted"
+        for order in demo_station.app.state.account_store.get().orders.values()
+    )
+
+    page.get_by_role("button", name="Create paper proposal").click()
+    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    proposal_id = _proposal_id(page)
+    token = (
+        page.get_by_text("Displayed confirmation token", exact=True)
+        .locator("..")
+        .locator("code")
+        .inner_text()
+    )
+    engaged = page.request.post(
+        f"{base_url}/api/kill-switch",
+        data={"action": "engage", "venue": None},
+    )
+    assert engaged.status == 200
+
+    page.get_by_label("Confirmation token").fill(token)
+    with page.expect_response(
+        lambda response: response.url.endswith(f"/api/paper/proposals/{proposal_id}/confirm")
+    ) as refused:
+        page.get_by_role("button", name="Confirm paper proposal").click()
+    assert refused.value.status == 409
+    page.get_by_text("Proposal rejected", exact=True).wait_for()
+    assert packet_id in page.get_by_role("main").inner_text()
+    assert proposal_id in page.get_by_role("main").inner_text()
+    assert "Rejected" in page.get_by_role("main").inner_text()
+    filled_after = sum(
+        order.status.value == "filled"
+        for order in demo_station.app.state.account_store.get().orders.values()
+    )
+    accepted_after = sum(
+        order.status.value == "accepted"
+        for order in demo_station.app.state.account_store.get().orders.values()
+    )
+    assert filled_after == filled_before
+    assert accepted_after == accepted_before
+    _reset_demo(page, base_url)
+
+
+def test_nvda_decision_safety_copy_keyboard_reduced_motion_and_mobile_boundary(
+    browser,
+    base_url,
+) -> None:
+    context = browser.new_context(
+        reduced_motion="reduce",
+        viewport={"width": 390, "height": 844},
+    )
+    page = context.new_page()
+    try:
+        _reset_demo(page, base_url)
+        page.goto(f"{base_url}/app/settings")
+        page.get_by_label("Interface language").select_option("zh-CN")
+        page.get_by_role("heading", name="全局设置", exact=True).first.wait_for()
+        page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+        page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+        main = page.get_by_role("main")
+        assert "仅模拟盘 · 必须明确确认" in main.inner_text()
+        assert main.get_by_role("region", name="DecisionPacket 操作").count() == 1
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+
+        reason = page.get_by_label("决策原因")
+        reason.focus()
+        page.keyboard.type("等待入场区")
+        watch = page.get_by_role("button", name="观察决策")
+        watch.focus()
+        focused_style = watch.evaluate(
+            "element => { const style = getComputedStyle(element); "
+            "return { boxShadow: style.boxShadow, outline: style.outlineStyle, "
+            "transitionSeconds: Math.max(0, ...style.transitionDuration.split(',').map(value => { "
+            "const duration = value.trim(); "
+            "return duration.endsWith('ms') ? parseFloat(duration) / 1000 : parseFloat(duration); "
+            "}).filter(Number.isFinite)) }; }"
+        )
+        assert focused_style["boxShadow"] != "none" or focused_style["outline"] != "none"
+        assert focused_style["transitionSeconds"] <= 0.001
+        page.keyboard.press("Enter")
+        page.get_by_text("观察中", exact=True).wait_for()
+        assert _decision_packet_id(page).startswith("packet-")
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    finally:
+        context.close()

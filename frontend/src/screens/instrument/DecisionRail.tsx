@@ -221,6 +221,8 @@ function DecisionRailContext({
           <Fact label={t('screen.workspace.accountEquity')} value={valuationComplete ? money(workspace.risk.equity, locale) : t('screen.workspace.valueUnavailable')} />
           <Fact label={t('screen.workspace.unrealizedPnl')} value={!positionMarkAvailable ? t('screen.workspace.valueUnavailable') : money(workspace.position?.unrealized_pnl, locale)} />
           <Fact label={t('screen.workspace.cash')} value={money(workspace.risk.cash, locale)} />
+          <Fact label={t('screen.workspace.globalKillSwitch')} value={t(workspace.risk.global_kill_switch ? 'screen.workspace.switchEngaged' : 'screen.workspace.switchDisarmed')} />
+          <Fact label={t('screen.workspace.venueKillSwitch')} value={t(workspace.risk.venue_kill_switch ? 'screen.workspace.switchEngaged' : 'screen.workspace.switchDisarmed')} />
           {heldPosition && <Fact label={t('screen.valuation.markStatus')} value={t(`screen.pnl.marks.status.${workspace.position?.mark_status?.status ?? 'unavailable'}`)} />}
         </dl>
         {!valuationComplete && (

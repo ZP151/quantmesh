@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { HistoricalSeries } from '@/lib/api'
+import { dateTime } from '@/lib/format'
 import { PreferencesProvider } from '@/lib/preferences'
 
 vi.mock('@/components/charts/InstrumentChart', () => ({
@@ -131,7 +132,9 @@ describe('MarketCanvas', () => {
     expect(screen.getByText('Support').closest('div')).toHaveTextContent('180')
     expect(screen.getByText('Resistance').closest('div')).toHaveTextContent('195')
     expect(screen.getByText('Invalidation').closest('div')).toHaveTextContent('176')
-    expect(screen.getByText('Key-level source bars').closest('div')).toHaveTextContent('Aug 8')
+    expect(screen.getByText('Key-level source bars').closest('div')).toHaveTextContent(
+      dateTime('2026-08-07T20:00:00Z', 'en'),
+    )
     expect(screen.getByText('Key-level source bars').closest('div')).toHaveAttribute(
       'title',
       '2026-08-07T20:00:00Z',

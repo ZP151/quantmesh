@@ -204,6 +204,8 @@ describe('DecisionRail', () => {
     expect(screen.getByText('Fees').closest('div')).toHaveTextContent('1.5 bps')
     expect(screen.getByText('Slippage').closest('div')).toHaveTextContent('2.5 bps')
     expect(screen.getByText('Spread captured at confirmation')).toBeInTheDocument()
+    expect(screen.getByText('Global kill switch').closest('div')).toHaveTextContent('Disarmed')
+    expect(screen.getByText('Venue kill switch').closest('div')).toHaveTextContent('Disarmed')
     expect(screen.getByLabelText('Decision reason')).toBeInTheDocument()
     expect(screen.getByLabelText('Quantity')).toHaveValue(10)
     expect(screen.getByLabelText('Optional limit price')).toHaveValue(182)

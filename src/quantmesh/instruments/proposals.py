@@ -572,13 +572,17 @@ class PaperDecisionService:
                 expected_created_at is not None
                 and order.created_at.astimezone(UTC) != expected_created_at
             )
-            or order.status not in {OrderStatus.FILLED, OrderStatus.REJECTED}
+            or order.status
+            not in {OrderStatus.ACCEPTED, OrderStatus.FILLED, OrderStatus.REJECTED}
         ):
             raise ValueError("journal order does not match immutable proposal intent")
         if proposal.order_id is not None and order.order_id != proposal.order_id:
             raise ValueError("journal order does not match proposal order_id")
-        if proposal.status is ProposalStatus.CONFIRMED and order.status is not OrderStatus.FILLED:
-            raise ValueError("confirmed proposal is not backed by a filled order")
+        if proposal.status is ProposalStatus.CONFIRMED and order.status not in {
+            OrderStatus.ACCEPTED,
+            OrderStatus.FILLED,
+        }:
+            raise ValueError("confirmed proposal is not backed by an accepted paper order")
         if proposal.status is ProposalStatus.REJECTED and order.status is not OrderStatus.REJECTED:
             raise ValueError("rejected proposal is not backed by a rejected order")
         validate_order_replay(order)

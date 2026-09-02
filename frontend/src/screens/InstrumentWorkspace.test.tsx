@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import { ApiError, api, type InstrumentWorkspace } from '@/lib/api'
+import { dateTime } from '@/lib/format'
 import { useLiveConnection } from '@/lib/live'
 import { PreferencesProvider } from '@/lib/preferences'
 
@@ -325,6 +326,9 @@ describe('InstrumentWorkspaceScreen', () => {
       provenance: 'demo-synthetic',
       received_at: '2026-08-08T12:00:30Z',
       sequence: 13,
+      sequence_gap: false,
+      state: 'connected',
+      state_note: null,
       venue: 'moomoo',
     }))
     await waitFor(() => expect(mockedWorkspace).toHaveBeenCalledTimes(2))
@@ -367,7 +371,7 @@ describe('InstrumentWorkspaceScreen', () => {
           mae: 3.5,
           residual_count: 120,
           rmse: 4.1,
-          sessions: 30,
+          sessions: 30 as const,
           test_end: '2026-06-30T20:00:00Z',
           test_start: '2026-06-01T20:00:00Z',
           validation_end: '2026-05-31T20:00:00Z',
@@ -380,7 +384,7 @@ describe('InstrumentWorkspaceScreen', () => {
             p025: 150, p10: 160, p25: 170, p50: 185, p75: 195, p90: 205, p975: 215,
             session: 1, timestamp: '2026-07-02T20:00:00Z',
           }],
-          sessions: 30,
+          sessions: 30 as const,
         }],
         forecast_synthetic: true,
         history_dataset_id: archivedDataset,
@@ -413,8 +417,12 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(within(evidence).getByText('Rolling validation window').closest('div')).toHaveTextContent('May')
     expect(within(evidence).getByText('Rolling test window').closest('div')).toHaveTextContent('Jun')
     expect(within(evidence).getByText(/30-session forecast path/).closest('details')).toHaveTextContent('185')
-    expect(within(evidence).getByText('History gaps').closest('details')).toHaveTextContent('Jun 4')
-    expect(within(evidence).getByText('History duplicates').closest('details')).toHaveTextContent('Jun 3')
+    expect(within(evidence).getByText('History gaps').closest('details')).toHaveTextContent(
+      dateTime('2026-06-03T20:00:00Z', 'en'),
+    )
+    expect(within(evidence).getByText('History duplicates').closest('details')).toHaveTextContent(
+      dateTime('2026-06-02T20:00:00Z', 'en'),
+    )
     expect(within(evidence).getByText(/Coverage 50\/80\/95/).closest('div')).toHaveTextContent('51%')
     expect(screen.getByText('Current chart only — not archived packet evidence')).toBeInTheDocument()
     expect(screen.getByText(/Archived packet levels as of/)).toHaveTextContent('Aug 8')
@@ -469,7 +477,7 @@ describe('InstrumentWorkspaceScreen', () => {
       dataset_id: 'demo-history', dataset_revision: 1, forecast_generated_at: '2026-08-08T12:00:00Z',
       history_digest: 'history-range-gate', id: 'proposal-range-gate', instrument: workspace.instrument,
       limit_price: 182, model_version: '1.0.0', order_id: null, order_type: 'limit' as const,
-      quantity: 10, quote_provenance: 'demo-synthetic', side: 'buy' as const, status: 'pending' as const,
+      quantity: 10, quote_provenance: null, side: 'buy' as const, status: 'pending' as const,
     }
     mockedDecisionPacket.mockResolvedValue(proposed)
     mockedWorkspace
