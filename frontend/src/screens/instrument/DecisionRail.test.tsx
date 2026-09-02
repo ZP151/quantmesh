@@ -182,6 +182,7 @@ function Providers({ children }: { children: React.ReactNode }) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  window.localStorage.clear()
   mocked.saveDecisionPacket.mockResolvedValue(packet)
   mocked.applyDecisionPacketAction.mockResolvedValue({
     packet: { ...packet, disposition: 'paper_proposal', packet_id: 'packet-paper-000000000001', parent_packet_id: packet.packet_id, proposal_id: proposal.id, version: 2 },
@@ -191,6 +192,55 @@ beforeEach(() => {
 })
 
 describe('DecisionRail', () => {
+  it('localizes a known English blocker while keeping the raw server evidence visible', () => {
+    const raw = 'Forecast artifact forecast-raw-123 exceeds one session.'
+    const blocked = {
+      ...packet,
+      paper_capability: {
+        allowed: false,
+        blockers: [{ code: 'forecast-freshness', evidence_ref: 'forecast-raw-123', message: raw }],
+      },
+    } as DecisionPacket
+
+    render(<DecisionRail packet={blocked} workspace={{ ...workspace, decision: { draft: blocked, latest: null } }} />, { wrapper: Providers })
+
+    expect(screen.getByText('Forecast evidence is stale.')).toBeInTheDocument()
+    expect(screen.getByText(`Original server evidence: ${raw}`)).toBeInTheDocument()
+  })
+
+  it('localizes a known zh-CN blocker while keeping the raw server evidence visible', () => {
+    const raw = 'Raw checksum gap in history manifest history-raw-456.'
+    const blocked = {
+      ...packet,
+      paper_capability: {
+        allowed: false,
+        blockers: [{ code: 'history-quality', evidence_ref: 'history-raw-456', message: raw }],
+      },
+    } as DecisionPacket
+    window.localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+
+    render(<DecisionRail packet={blocked} workspace={{ ...workspace, decision: { draft: blocked, latest: null } }} />, { wrapper: Providers })
+
+    expect(screen.getByText('历史数据未通过质量检查。')).toBeInTheDocument()
+    expect(screen.getByText(`服务端原始证据：${raw}`)).toBeInTheDocument()
+  })
+
+  it('shows an unknown server blocker message verbatim instead of inventing localized authority', () => {
+    const raw = 'Future server policy blocked Paper.'
+    const blocked = {
+      ...packet,
+      paper_capability: {
+        allowed: false,
+        blockers: [{ code: 'future-policy', evidence_ref: 'future-policy', message: raw }],
+      },
+    } as unknown as DecisionPacket
+
+    render(<DecisionRail packet={blocked} workspace={{ ...workspace, decision: { draft: blocked, latest: null } }} />, { wrapper: Providers })
+
+    expect(screen.getByText(raw)).toBeInTheDocument()
+    expect(screen.queryByText(/Original server evidence:/)).not.toBeInTheDocument()
+  })
+
   it('shows risk, explicit costs, and accessible server-owned paper inputs', () => {
     render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
 
@@ -224,7 +274,7 @@ describe('DecisionRail', () => {
     render(<DecisionRail workspace={value} />, { wrapper: Providers })
 
     expect(screen.getByText('Evidence blocked')).toBeInTheDocument()
-    expect(screen.getByText('Forecast is stale.')).toBeInTheDocument()
+    expect(screen.getByText('Original server evidence: Forecast is stale.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeDisabled()
     await user.type(screen.getByLabelText('Decision reason'), 'Wait for fresh evidence')
     expect(screen.getByRole('button', { name: 'Reject decision' })).toBeEnabled()

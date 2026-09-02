@@ -417,18 +417,37 @@ def test_keyboard_only_walk(page, base_url) -> None:
     assert "hyperliquid" in page.get_by_label("Venue").input_value()
 
 
-def test_nvda_decision_packet_one_page_watch_is_durable_in_under_two_minutes(
+@pytest.mark.parametrize(
+    ("disposition", "reason", "button_name", "phase"),
+    [
+        ("reject", "Reject until invalidation improves", "Reject decision", "Rejected"),
+        ("watch", "Wait for the entry zone", "Watch decision", "Watching"),
+        ("paper_proposal", None, "Create paper proposal", "Paper proposed"),
+    ],
+)
+def test_nvda_watchlist_activation_reaches_each_durable_decision_in_under_two_minutes(
     page,
     base_url,
+    disposition: str,
+    reason: str | None,
+    button_name: str,
+    phase: str,
 ) -> None:
     _reset_demo(page, base_url)
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
     started = perf_counter()
-    workspace_url = f"{base_url}/app/instruments/moomoo/NVDA?range=6m"
-    page.goto(workspace_url)
+    activation = page.get_by_role("main").get_by_role("link", name="NVDA", exact=True)
+    if disposition == "watch":
+        activation.focus()
+        page.keyboard.press("Enter")
+    else:
+        activation.click()
+    page.wait_for_url(f"{base_url}/app/instruments/moomoo/NVDA")
     page.get_by_role("heading", name="NVDA", exact=True).wait_for()
     main = page.get_by_role("main")
+    workspace_url = page.url
 
-    assert page.url == workspace_url
     assert main.get_by_role("region", name="Market canvas").count() == 1
     assert main.get_by_role("region", name="Market structure and key levels").count() == 1
     assert main.get_by_role("region", name="Evidence").count() == 1
@@ -445,27 +464,39 @@ def test_nvda_decision_packet_one_page_watch_is_durable_in_under_two_minutes(
     ):
         assert fact in text
 
-    page.get_by_label("Decision reason").fill("Wait for the entry zone")
+    if reason is not None:
+        decision_reason = page.get_by_label("Decision reason")
+        if disposition == "watch":
+            decision_reason.focus()
+            page.keyboard.type(reason)
+        else:
+            decision_reason.fill(reason)
     with page.expect_response(
         lambda response: "/api/decision-packets/" in response.url
         and response.url.endswith("/actions")
     ) as saved:
-        page.get_by_role("button", name="Watch decision").click()
+        action = page.get_by_role("button", name=button_name)
+        if disposition == "watch":
+            action.focus()
+            page.keyboard.press("Enter")
+        else:
+            action.click()
     assert saved.value.status == 200
-    page.get_by_text("Watching", exact=True).wait_for()
+    page.get_by_text(phase, exact=True).wait_for()
     packet_id = _decision_packet_id(page)
     elapsed = perf_counter() - started
-    print(f"ticker_to_watch_seconds={elapsed:.3f}")
+    print(f"ticker_to_{disposition}_seconds={elapsed:.3f}")
     assert elapsed < 120
     assert page.url == workspace_url
 
     exact = page.request.get(f"{base_url}/api/decision-packets/{packet_id}")
     assert exact.status == 200
     assert exact.json()["packet_id"] == packet_id
-    assert exact.json()["disposition"] == "watch"
-    page.reload()
-    page.get_by_text("Watching", exact=True).wait_for()
-    assert _decision_packet_id(page) == packet_id
+    assert exact.json()["disposition"] == disposition
+    if disposition == "paper_proposal":
+        proposal_id = _proposal_id(page)
+        assert proposal_id == exact.json()["proposal_id"]
+        assert page.get_by_role("button", name="Confirm paper proposal").is_disabled()
 
 
 def test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order(

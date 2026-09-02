@@ -321,6 +321,13 @@ export function InstrumentWorkspaceScreen() {
             contextKey={decisionContextKey}
             evidenceUpdating={evidenceUpdating}
             key={`${decisionContextKey}:${packetSource}:${activeSelection.revision}:${evidenceUpdating ? 'updating' : 'ready'}`}
+            onActionResult={(result) => setPacketSelection({
+              contextKey: decisionContextKey,
+              mode: 'persisted',
+              packetId: result.packet.packet_id,
+              revision: activeSelection.revision + 1,
+              snapshot: result.packet,
+            })}
             onNewAnalysis={packetSource === 'persisted'
               ? () => setPacketSelection({
                   contextKey: decisionContextKey,

@@ -11,6 +11,7 @@ import {
   type InstrumentWorkspace,
 } from '@/lib/api'
 import { money, moneyPrecise, number, quantity } from '@/lib/format'
+import type { MessageKey } from '@/lib/messages'
 import { usePreferences } from '@/lib/preferences'
 import { ProposalConfirmation } from './ProposalConfirmation'
 
@@ -22,6 +23,7 @@ interface DecisionRailProps {
   contextKey?: string
   evidenceUpdating?: boolean
   onNewAnalysis?: () => void
+  onActionResult?: (result: DecisionPacketActionResult) => void
   packet?: DecisionPacket
   packetSource?: 'fresh' | 'persisted'
   workspace: InstrumentWorkspace
@@ -47,6 +49,7 @@ export function DecisionRail(props: DecisionRailProps) {
 function DecisionRailContext({
   contextKey: contextKeyOverride,
   evidenceUpdating = false,
+  onActionResult,
   onNewAnalysis,
   packet: packetOverride,
   packetSource: packetSourceOverride,
@@ -54,6 +57,7 @@ function DecisionRailContext({
 }: {
   contextKey: string
   evidenceUpdating?: boolean
+  onActionResult?: (result: DecisionPacketActionResult) => void
   onNewAnalysis?: () => void
   packet: DecisionPacket
   packetSource: 'fresh' | 'persisted'
@@ -146,7 +150,10 @@ function DecisionRailContext({
       return result
     },
     onSuccess: (result) => {
-      if (result !== null) setActionResult(result)
+      if (result !== null) {
+        setActionResult(result)
+        onActionResult?.(result)
+      }
     },
   })
 
@@ -243,7 +250,7 @@ function DecisionRailContext({
             {displayedPacket.paper_capability.blockers.map((blocker) => (
               <li className="rounded-lg bg-destructive/10 px-2.5 py-2" key={blocker.code}>
                 <span className="font-mono text-[10px] uppercase text-destructive">{blocker.code}</span>
-                <p className="mt-1 text-foreground" title={blocker.message}>{blocker.message}</p>
+                <BlockerCopy blocker={blocker} />
               </li>
             ))}
           </ul>
@@ -304,6 +311,38 @@ function DecisionRailContext({
 }
 
 type ActionDisposition = 'reject' | 'watch' | 'paper_proposal'
+type DecisionBlocker = DecisionPacket['paper_capability']['blockers'][number]
+
+const blockerCopyKeys = {
+  chronology: 'screen.workspace.blocker.chronology',
+  'cost-evidence': 'screen.workspace.blocker.costEvidence',
+  'forecast-freshness': 'screen.workspace.blocker.forecastFreshness',
+  'forecast-ineligible': 'screen.workspace.blocker.forecastIneligible',
+  'forecast-missing': 'screen.workspace.blocker.forecastMissing',
+  'history-freshness': 'screen.workspace.blocker.historyFreshness',
+  'history-lineage': 'screen.workspace.blocker.historyLineage',
+  'history-quality': 'screen.workspace.blocker.historyQuality',
+  'kill-switch': 'screen.workspace.blocker.killSwitch',
+  leakage: 'screen.workspace.blocker.leakage',
+  'proposal-service': 'screen.workspace.blocker.proposalService',
+  valuation: 'screen.workspace.blocker.valuation',
+} satisfies Record<DecisionBlocker['code'], MessageKey>
+
+function BlockerCopy({ blocker }: { blocker: DecisionBlocker }) {
+  const { t } = usePreferences()
+  const localizedKey = blockerCopyKeys[blocker.code as DecisionBlocker['code']] as MessageKey | undefined
+  if (localizedKey === undefined) {
+    return <p className="mt-1 text-foreground">{blocker.message}</p>
+  }
+  return (
+    <div className="mt-1 space-y-1">
+      <p className="text-foreground">{t(localizedKey)}</p>
+      <p className="text-[10px] leading-relaxed text-muted-foreground">
+        {t('screen.workspace.blocker.originalEvidence', { message: blocker.message })}
+      </p>
+    </div>
+  )
+}
 
 interface ViewIdentity {
   contextKey: string

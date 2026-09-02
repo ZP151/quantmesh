@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
-import { ApiError, api, type InstrumentWorkspace } from '@/lib/api'
+import { ApiError, api, type DecisionPacket, type InstrumentWorkspace } from '@/lib/api'
 import { dateTime } from '@/lib/format'
 import { useLiveConnection } from '@/lib/live'
 import { PreferencesProvider } from '@/lib/preferences'
@@ -210,6 +210,8 @@ const workspace: InstrumentWorkspace = {
 
 const mockedWorkspace = vi.mocked(api.instrumentWorkspace)
 const mockedDecisionPacket = vi.mocked(api.decisionPacket)
+const mockedSaveDecisionPacket = vi.mocked(api.saveDecisionPacket)
+const mockedApplyDecisionPacketAction = vi.mocked(api.applyDecisionPacketAction)
 const mockedConfirmPaperProposal = vi.mocked(api.confirmPaperProposal)
 const mockedHealth = vi.mocked(api.health)
 const mockedLiveState = vi.mocked(api.liveState)
@@ -285,6 +287,95 @@ beforeEach(() => {
 })
 
 describe('InstrumentWorkspaceScreen', () => {
+  it('promotes an action result across market, scenarios, evidence, risk, and actions during polling', async () => {
+    const user = userEvent.setup()
+    const parent = {
+      ...workspace.decision.draft,
+      evidence: {
+        ...workspace.decision.draft.evidence,
+        history_dataset_id: 'action-lineage-history',
+      },
+      market_state: {
+        ...workspace.decision.draft.market_state,
+        support: 181.25,
+      },
+      packet_id: 'packet-action-parent-0001',
+      risk_plan: {
+        ...workspace.decision.draft.risk_plan,
+        entry_price: 182.25,
+      },
+      scenarios: workspace.decision.draft.scenarios.map((scenario) => scenario.kind === 'bull'
+        ? { ...scenario, thesis: 'Action lineage bull thesis' }
+        : scenario),
+    } satisfies DecisionPacket
+    const child = {
+      ...parent,
+      disposition: 'watch' as const,
+      operator_reason: 'Keep the action lineage',
+      packet_id: 'packet-action-watch-0002',
+      parent_packet_id: parent.packet_id,
+      version: 2,
+    } satisfies DecisionPacket
+    const initial = {
+      ...workspace,
+      decision: { draft: parent, latest: null },
+      history: { ...workspace.history, dataset_id: 'action-lineage-history' },
+    } satisfies InstrumentWorkspace
+    const backgroundDraft = {
+      ...parent,
+      evidence: { ...parent.evidence, history_dataset_id: 'background-draft-history' },
+      market_state: { ...parent.market_state, support: 999.25 },
+      packet_id: 'packet-background-draft-0003',
+      risk_plan: { ...parent.risk_plan, entry_price: 998.25 },
+      scenarios: parent.scenarios.map((scenario) => scenario.kind === 'bull'
+        ? { ...scenario, thesis: 'Background draft bull thesis' }
+        : scenario),
+    } satisfies DecisionPacket
+    const refreshed = {
+      ...initial,
+      decision: { draft: backgroundDraft, latest: null },
+      generated_at: '2026-08-08T12:01:00Z',
+      history: { ...initial.history, dataset_id: 'background-draft-history' },
+    } satisfies InstrumentWorkspace
+    mockedWorkspace.mockResolvedValueOnce(initial).mockResolvedValue(refreshed)
+    mockedSaveDecisionPacket.mockResolvedValue(parent)
+    mockedApplyDecisionPacketAction.mockResolvedValue({ packet: child, proposal: null })
+    renderWorkspace()
+
+    await user.type(await screen.findByLabelText('Decision reason'), 'Keep the action lineage')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+    expect(await screen.findByText(child.packet_id)).toBeInTheDocument()
+
+    await act(async () => publishLiveUpdate({
+      data_time: '2026-08-08T12:00:30Z',
+      instrument: 'NVDA',
+      kind: 'quote',
+      payload: { ask: 185, bid: 184 },
+      provenance: 'demo-synthetic',
+      received_at: '2026-08-08T12:00:30Z',
+      sequence: 13,
+      sequence_gap: false,
+      state: 'connected',
+      state_note: null,
+      venue: 'moomoo',
+    }))
+    await waitFor(() => expect(mockedWorkspace).toHaveBeenCalledTimes(2))
+
+    const market = screen.getByRole('region', { name: 'Observed market canvas' })
+    expect(within(market).getByText('181.25')).toBeInTheDocument()
+    expect(within(market).queryByText('999.25')).not.toBeInTheDocument()
+    const evidence = screen.getByRole('region', { name: 'Evidence' })
+    expect(within(evidence).getByText('Action lineage bull thesis')).toBeInTheDocument()
+    expect(within(evidence).getByText('action-lineage-history')).toBeInTheDocument()
+    expect(within(evidence).queryByText('Background draft bull thesis')).not.toBeInTheDocument()
+    expect(within(evidence).queryByText('background-draft-history')).not.toBeInTheDocument()
+    const decision = screen.getByRole('complementary', { name: 'Decision rail' })
+    expect(within(decision).getByText('Entry').closest('div')).toHaveTextContent('$182.2500')
+    expect(within(decision).getByText(child.packet_id)).toBeInTheDocument()
+    expect(within(decision).queryByText('$998.2500')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New analysis' })).toBeInTheDocument()
+  })
+
   it('keeps a persisted decision visible when a background refresh returns a fresh draft', async () => {
     const persisted = {
       ...workspace.decision.draft,

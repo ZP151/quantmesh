@@ -1,6 +1,6 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: active (design approved; Slice 1 execution)
+- Status: active (Slice 1 complete; Slice 2 requires separate approved design/plan)
 - Started: 2026-09-02
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
 - Branch: `codex/0027-evidence-backed-decision-copilot` from
@@ -125,25 +125,25 @@ to-review lineage and explains both accepted and rejected paths.
 
 ## Acceptance criteria
 
-- [ ] On the deterministic NVDA acceptance station, timing starts when the
+- [x] On the deterministic NVDA acceptance station, timing starts when the
       operator submits the ticker or selects its watchlist row and stops when
       Reject, Watch or Paper proposal is durably saved; elapsed time is at most
       two minutes. Application installation/startup and optional AI latency are
       outside the timer.
-- [ ] The primary loop remains in Instrument Workspace and requires no CLI,
+- [x] The primary loop remains in Instrument Workspace and requires no CLI,
       database access or route hopping.
-- [ ] One desktop view makes market state, scenarios, risk, evidence, blockers
+- [x] One desktop view makes market state, scenarios, risk, evidence, blockers
       and actions scannable; compact layout preserves the same ordered flow.
-- [ ] No model service, model timeout or invalid AI result prevents the
+- [x] No model service, model timeout or invalid AI result prevents the
       deterministic packet from rendering or being saved as Reject/Watch.
-- [ ] Stale, low-quality, leakage-affected or missing evidence blocks Paper
+- [x] Stale, low-quality, leakage-affected or missing evidence blocks Paper
       proposal with an actionable reason.
-- [ ] Every Paper proposal passes the existing deterministic risk kernel and
+- [x] Every Paper proposal passes the existing deterministic risk kernel and
       an explicit second confirmation before any paper order is created.
 - [ ] DecisionPacket, evidence references, operator disposition, paper result
       and review recover from a clean restart and replay without identity drift.
-- [ ] NVDA E2E covers the happy path, stale-data block and risk-refusal state.
-- [ ] English and Simplified-Chinese safety semantics, keyboard operation,
+- [x] NVDA E2E covers the happy path, stale-data block and risk-refusal state.
+- [x] English and Simplified-Chinese safety semantics, keyboard operation,
       reduced motion and 390 px no-overflow remain intact.
 
 ## Non-goals
@@ -228,11 +228,85 @@ to-review lineage and explains both accepted and rejected paths.
   independent review returned APPROVED/CLEAN. Two older timezone-dependent UI
   assertions are explicitly carried into Task 4 acceptance correction.
 
+## Slice 1 completion evidence — 2026-09-03
+
+- **Planner/Product:** the accepted boundary remained one real ticker/watchlist
+  activation followed by one Reject, Watch or pending Paper proposal. The
+  browser paths start at `/app/markets/watchlist`, activate NVDA, stay on the
+  same Instrument Workspace route, and expose market state, three scenarios,
+  risk, evidence, blockers and actions together. Structured Copilot,
+  monitoring and outcome/review were not entered.
+- **Quant Researcher:** the completed surface preserves literal forecast and
+  evidence facts, keeps deterministic blocker codes authoritative, and shows
+  the server's original blocker message as labeled evidence. No model service
+  is needed for deterministic save, stale evidence remains fail-closed, and a
+  risk refusal cannot create an accepted or filled paper order.
+- **Implementer:** action results now promote one immutable packet snapshot to
+  the whole workspace, so market/scenario/evidence/risk/action columns cannot
+  mix a saved result with a fresh background draft. Known blockers have
+  understandable English and Simplified-Chinese copy plus their raw server
+  evidence; unknown messages fall back verbatim. A test-only portable Git
+  discovery ceiling makes the no-repository experiment test honest when its
+  basetemp lives below the worktree. Production commit resolution is unchanged.
+- **Reviewer:** round 1 required three authoritative browser entry paths,
+  cross-column packet ownership, localized blocker evidence, and the complete
+  repository gate. All Important findings were closed. The remaining blocker
+  taxonomy duplication is recorded as a later design smell; it was not
+  refactored inside this slice.
+- **Verifier:** Chromium completed independent Reject, Watch and Paper-proposal
+  paths in `9.980s`, `9.759s` and `12.423s`, respectively (`3 passed`,
+  `9 deselected`, `5 warnings`, `141.49s`, exit `0`). Watch used keyboard
+  activation and save. Each path displayed and re-read its exact durable
+  packet ID; Paper stopped at its bound pending-confirmation proposal ID.
+  Existing API acceptance also reopens the exact complete JSON after a clean
+  application restart and records the deterministic examples
+  `packet-0e184acac704481ab38feb03` (Reject),
+  `packet-1fabf1b1c1491b8c9830aad7` (Watch),
+  `packet-37b3005fa521765287051224` (Paper), and
+  `proposal-72b8ec44d530596ef34fa90d`. Stale evidence leaves Reject/Watch
+  available while producing zero proposal/order; confirmation-time risk
+  refusal retains its packet/proposal/rejected-order lineage and produces zero
+  accepted or filled order.
+
+The final coherent Slice 1 selection passed `176` tests with `3` expected
+skips and `6` warnings in `2141.98s` (`35:41`), exit `0`. The final complete
+repository run used a fresh local basetemp and passed `3150` tests with `9`
+skips and `7` dependency warnings in `2953.81s` (`49:13`), exit `0`. Its
+command was:
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q --basetemp \
+  .superpowers/sdd/2026-09-02-decision-packet-foundation/pytest-task4-review-full-final
+```
+
+The first complete run correctly stopped with `2 failed, 3149 passed, 8
+skipped` in `3197.28s`: the local environment lacked the already pinned
+`moomoo-api==10.10.7008` extra, and a no-repository unit test accidentally ran
+under the worktree because its local basetemp was itself below the Git root.
+Installing the repository's constrained `[moomoo]` extra changed only the
+fresh `.venv`; `pip check` then reported no broken requirements and the exact
+license test passed. The test-only Git ceiling went RED then GREEN locally; the
+two former failures passed together before the final full run.
+
+Final static/frontend gates were: full `ruff check .` — clean, exit `0`;
+`TZ=UTC npm exec vitest -- run` — `18` files and `167` tests passed in
+`39.98s`, exit `0`; TypeScript — exit `0`; lint — exit `0` with four existing
+Fast Refresh warnings; OpenAPI client freshness — current, exit `0`; packaged
+SPA build — `2080` modules in `17.43s`, exit `0`; and `git diff --check` — exit
+`0`. Six pre-existing mirrored skill-script Ruff blockers were changed only by
+mechanical import modernization/line wrapping after their `cb8f4b0` provenance
+was proved; no skill semantics or version changed. The Task 3 Impeccable result
+was `[]`; a review-session duplicate read-only detector invocation also
+returned `[]`, modified no file, and was not repeated.
+
+Known limits remain explicit: all acceptance evidence is local deterministic
+demo evidence, not real Provider/OpenD or live-trading evidence. Slice 1 proves
+packet/disposition/proposal recovery; the unchecked full paper-result and
+review replay criterion belongs to the separately approved outcome/review
+slice.
+
 ## Current frontier
 
-Execute Task 4 of
-`docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`: prove the
-complete deterministic NVDA loop, including timing, stale and risk-refusal
-states, clean restart, English/Chinese keyboard behavior and 390 px layout.
-Only acceptance-blocking corrections are allowed; stop at the Slice 1 commit
-and review gate and do not begin Slices 2–4.
+Slice 1 is complete. Slice 2 requires a separate approved design and executable
+plan. Do not start Structured Copilot, monitoring, outcome/review, another
+model framework, or any 0021 soak work from this frontier.

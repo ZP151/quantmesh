@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0027 Slice 1 execution
+- Status: active — iteration 0027 Slice 1 complete; Slice 2 awaits approval
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -19,11 +19,9 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: Slice 1 Task 4, prove the complete NVDA ticker-to-durable-
-  decision loop, stale Paper block, confirmation risk refusal, clean restart,
-  compact accessibility and the two-minute interaction target. Only
-  acceptance-blocking corrections are allowed; do not begin Slices 2–4 or add
-  another model framework.
+- Current frontier: Slice 2 requires a separate approved design and executable
+  plan. Do not begin Structured Copilot, monitoring, outcome/review, another
+  model framework, or any 0021 soak work from this goal state.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.
@@ -130,7 +128,31 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
 - The UTC verification also exposed two older Task 3 assertions that hard-code
   local rendered dates in MarketCanvas and InstrumentWorkspace tests. They are
   recorded as Task 4 acceptance blockers; no Task 3R scope was expanded to fix
-  them. Task 4 is now the active frontier.
+  them.
+- Task 4 completes Slice 1. Three independent Chromium paths begin at the real
+  Watchlist NVDA activation, remain in Instrument Workspace, and durably save
+  Reject, Watch and pending Paper-proposal packets in `9.980s`, `9.759s` and
+  `12.423s`; all expose market, three scenarios, risk, evidence, blockers and
+  actions. The Watch path uses keyboard activation/save. The component and API
+  acceptance proves one packet owns every workspace column, deterministic save
+  works without a model service, stale evidence produces zero proposal/order,
+  risk refusal produces zero accepted/filled order, blocker evidence is clear
+  in English and Simplified Chinese, and exact JSON/disposition survives a
+  clean application restart.
+- Task 4's final coherent selection passed `176` tests with `3` skips in
+  `2141.98s`; the final complete repository run passed `3150` tests with `9`
+  skips in `2953.81s`. Full Ruff, dependency integrity and license closure,
+  UTC full Vitest (`167` tests), TypeScript, lint, OpenAPI freshness, packaged
+  build and diff checks passed. The first full run exposed only an incomplete
+  local optional-extra install and a test whose local basetemp still belonged
+  to the parent Git worktree; the constrained `[moomoo]` environment install
+  and test-only Git discovery ceiling were verified together and by the final
+  full run. No production commit resolver or external state changed.
+- The exact browser/API packet, proposal, restart, stale/refusal, role and gate
+  evidence is recorded in the active iteration ledger. Six pre-existing skill
+  mirror Ruff blockers received only authorized mechanical import/line-wrap
+  corrections; blocker taxonomy duplication remains a non-blocking follow-up.
+  Slice 1 is complete. Slice 2 requires a separate approved design/plan.
 
 ## Historical delivery record
 
