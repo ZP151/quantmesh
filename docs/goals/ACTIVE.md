@@ -141,9 +141,16 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   clean application restart.
 - Task 4's final coherent selection passed `176` tests with `3` skips in
   `2141.98s`; the final complete repository run passed `3150` tests with `9`
-  skips in `2953.81s`. Full Ruff, dependency integrity and license closure,
-  UTC full Vitest (`167` tests), TypeScript, lint, OpenAPI freshness, packaged
-  build and diff checks passed. The first full run exposed only an incomplete
+  skips in `2953.81s`, and the controller independently repeated it with
+  `3150` passed, `9` skipped and `7` warnings in `2998.64s`. Full Ruff,
+  dependency integrity, the exact installed license classification/inventory
+  tests, UTC full Vitest (`167` tests), TypeScript, lint, OpenAPI freshness,
+  packaged build and diff checks passed. The direct ambient license CLI
+  correctly refused four baseline audit-lock omissions (`cloudpickle`,
+  `formulaic`, `interface-meta`, `wrapt`); Slice 1 changes no dependency or
+  license file, does not claim that release gate green, and leaves the
+  inherited lock drift to separately scoped release maintenance. The first
+  full run exposed only an incomplete
   local optional-extra install and a test whose local basetemp still belonged
   to the parent Git worktree; the constrained `[moomoo]` environment install
   and test-only Git discovery ceiling were verified together and by the final

@@ -288,6 +288,20 @@ fresh `.venv`; `pip check` then reported no broken requirements and the exact
 license test passed. The test-only Git ceiling went RED then GREEN locally; the
 two former failures passed together before the final full run.
 
+The controller independently repeated the complete repository command at the
+final candidate and again received `3150` passed, `9` skipped and `7` warnings
+in `2998.64s` (`49:58`), exit `0`. That fresh verification also clarified a
+pre-existing release-closure issue rather than hiding it: the exact installed
+closure classification/inventory tests pass, but invoking
+`tools/license_review.py` directly in this development environment exits `1`
+because `cloudpickle==3.1.2`, `formulaic==1.2.2`, `interface-meta==2.0.1` and
+`wrapt==2.4.0` are installed transitives absent from the baseline
+`requirements-audit.txt`. Slice 1 changes none of the lock, package metadata,
+license policy or those dependencies. Per the no-side-defect-expansion rule,
+repairing that inherited audit-lock drift is a separate release-maintenance
+follow-up; this slice does not claim the direct deterministic release-license
+gate is green.
+
 Final static/frontend gates were: full `ruff check .` — clean, exit `0`;
 `TZ=UTC npm exec vitest -- run` — `18` files and `167` tests passed in
 `39.98s`, exit `0`; TypeScript — exit `0`; lint — exit `0` with four existing
