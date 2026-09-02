@@ -15,6 +15,7 @@ from quantmesh.instruments.contracts import (
     DecisionCostEvidence,
     DecisionDisposition,
     DecisionEvidence,
+    DecisionForecastChronology,
     DecisionMarketState,
     DecisionPacket,
     DecisionPaperCapability,
@@ -377,6 +378,39 @@ def test_paper_proposal_child_requires_allowed_unblocked_capability() -> None:
 
     with pytest.raises(ValidationError, match="allowed unblocked paper capability"):
         DecisionPacket.model_validate(payload)
+
+
+def test_real_forecast_evidence_without_paired_lineage_cannot_form_paper_child() -> None:
+    parent = packet()
+    evidence = parent.evidence.model_dump() | {
+        "forecast_artifact_id": "forecast-" + "a" * 24,
+        "forecast_dataset_id": "trusted-forecast",
+        "forecast_dataset_revision": 3,
+        "forecast_manifest_id": None,
+        "forecast_quality_evaluation_id": None,
+        "forecast_synthetic": False,
+        "forecast_eligible": True,
+        "forecast_model_name": "median-log-drift-conformal",
+        "forecast_model_version": "fixture-v1",
+        "forecast_config_digest": "a" * 64,
+        "forecast_history_digest": "b" * 64,
+        "forecast_benchmark_name": "last-price-random-walk",
+        "forecast_generated_at": NOW,
+        "forecast_chronology": DecisionForecastChronology(
+            train_start=NOW - timedelta(days=2), train_end=NOW
+        ).model_dump(),
+    }
+    child = parent.model_dump() | {
+        "packet_id": "packet-" + "c" * 24,
+        "version": 2,
+        "parent_packet_id": parent.packet_id,
+        "evidence": evidence,
+        "disposition": DecisionDisposition.PAPER_PROPOSAL,
+        "proposal_id": "proposal-" + "b" * 24,
+    }
+
+    with pytest.raises(ValidationError, match="real forecast requires manifest and quality"):
+        DecisionPacket.model_validate(child)
 
 
 def test_composer_preserves_exact_real_forecast_evidence_and_role_chronology() -> None:

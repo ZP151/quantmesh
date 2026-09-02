@@ -1434,6 +1434,11 @@ class DecisionEvidence(StrictContract):
             self.forecast_quality_evaluation_id is None
         ):
             raise ValueError("forecast manifest and quality IDs must be present together")
+        if self.forecast_synthetic is False and (
+            self.forecast_manifest_id is None
+            or self.forecast_quality_evaluation_id is None
+        ):
+            raise ValueError("real forecast requires manifest and quality evidence")
         return self
 
 
