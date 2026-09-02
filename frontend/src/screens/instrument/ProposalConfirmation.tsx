@@ -22,11 +22,13 @@ function errorText(error: unknown): string {
 
 export function ProposalConfirmation({
   contextKey,
+  interactionBlocked = false,
   onDismiss,
   packetId,
   proposal,
 }: {
   contextKey?: string
+  interactionBlocked?: boolean
   onDismiss: () => void
   packetId?: string
   proposal: PaperProposal
@@ -181,6 +183,7 @@ export function ProposalConfirmation({
         <Label htmlFor="proposal-confirmation-token">{t('screen.workspace.confirmationToken')}</Label>
         <Input
           autoComplete="off"
+          disabled={interactionBlocked}
           id="proposal-confirmation-token"
           onChange={(event) => setConfirmationToken(event.target.value)}
           value={confirmationToken}
@@ -191,8 +194,10 @@ export function ProposalConfirmation({
       )}
       <Button
         className="w-full"
-        disabled={proposalBlocked || confirmation.isPending || confirmationToken !== effectiveProposal.confirmation_token}
-        onClick={() => confirmation.mutate()}
+        disabled={interactionBlocked || proposalBlocked || confirmation.isPending || confirmationToken !== effectiveProposal.confirmation_token}
+        onClick={() => {
+          if (!interactionBlocked) confirmation.mutate()
+        }}
         type="button"
       >
         {confirmation.isPending

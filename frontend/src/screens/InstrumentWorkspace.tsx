@@ -6,6 +6,7 @@ import { WorkspaceLoading } from '@/components/workspace-loading'
 import {
   ApiError,
   api,
+  type DecisionPacket,
   type HistoricalVenue,
   type HistoryRange,
   type MarketUpdate,
@@ -41,7 +42,9 @@ function forecastHorizon(value: string | null): ForecastHorizon {
 interface PacketSelection {
   contextKey: string
   mode: 'fresh' | 'persisted'
+  packetId: string | null
   revision: number
+  snapshot: DecisionPacket | null
 }
 
 export function InstrumentWorkspaceScreen() {
@@ -101,6 +104,14 @@ export function InstrumentWorkspaceScreen() {
     refetchInterval: 5_000,
     retry: false,
   })
+  const selectedPacketId = packetSelection?.mode === 'persisted' ? packetSelection.packetId : null
+  const exactPacketQuery = useQuery({
+    enabled: selectedPacketId !== null,
+    queryFn: () => api.decisionPacket(selectedPacketId!),
+    queryKey: ['decision-packet', selectedPacketId],
+    retry: false,
+    staleTime: Number.POSITIVE_INFINITY,
+  })
   const liveRuntime = health.data?.runtime_mode === 'live'
   const stream = useLiveConnection(onLiveUpdate, liveRuntime && query.data !== undefined)
 
@@ -116,19 +127,39 @@ export function InstrumentWorkspaceScreen() {
   }
   const workspace = query.data
   const displayedRange = query.isPlaceholderData ? workspace.history.range : range
-  const decisionContextKey = `${workspace.instrument.venue}:${workspace.instrument.symbol}:${displayedRange}`
+  const decisionContextKey = `${venue}:${symbol}:${range}`
+  const workspaceContextKey = `${workspace.instrument.venue}:${workspace.instrument.symbol}:${workspace.history.range}`
+  const draftContextKey = `${workspace.decision.draft.instrument.venue}:${workspace.decision.draft.instrument.symbol}:${workspace.decision.draft.selected_range}`
+  const responseContextReady = !query.isPlaceholderData
+    && workspaceContextKey === decisionContextKey
+    && draftContextKey === decisionContextKey
   const defaultPacketMode = workspace.decision.latest === null || workspace.decision.latest === undefined
     ? 'fresh'
     : 'persisted'
+  const defaultSelection: PacketSelection = {
+    contextKey: decisionContextKey,
+    mode: defaultPacketMode,
+    packetId: workspace.decision.latest?.packet_id ?? null,
+    revision: 0,
+    snapshot: workspace.decision.latest ?? null,
+  }
   const activeSelection: PacketSelection = packetSelection?.contextKey === decisionContextKey
     ? packetSelection
-    : { contextKey: decisionContextKey, mode: defaultPacketMode, revision: 0 }
-  if (packetSelection === null || packetSelection.contextKey !== decisionContextKey) {
-    setPacketSelection(activeSelection)
+    : defaultSelection
+  if (responseContextReady && (packetSelection === null || packetSelection.contextKey !== decisionContextKey)) {
+    setPacketSelection(defaultSelection)
   }
-  const persistedPacket = activeSelection.mode === 'persisted' ? workspace.decision.latest : null
+  const fetchedExactPacket = exactPacketQuery.data?.packet_id === activeSelection.packetId
+    && `${exactPacketQuery.data.instrument.venue}:${exactPacketQuery.data.instrument.symbol}:${exactPacketQuery.data.selected_range}` === decisionContextKey
+    ? exactPacketQuery.data
+    : null
+  const persistedPacket = activeSelection.mode === 'persisted'
+    ? fetchedExactPacket ?? activeSelection.snapshot
+    : null
   const packetSource = persistedPacket === null || persistedPacket === undefined ? 'fresh' : 'persisted'
   const displayedPacket = persistedPacket ?? workspace.decision.draft
+  const displayedPacketContextKey = `${displayedPacket.instrument.venue}:${displayedPacket.instrument.symbol}:${displayedPacket.selected_range}`
+  const evidenceUpdating = !responseContextReady || displayedPacketContextKey !== decisionContextKey
   const displayedComparisons = query.isPlaceholderData
     ? (workspace.comparison?.keys ?? []).filter(
         (key) => key !== `${workspace.instrument.venue}:${workspace.instrument.symbol}`,
@@ -215,6 +246,7 @@ export function InstrumentWorkspaceScreen() {
         >
           <MarketCanvas
             archivedPacket={packetSource === 'persisted'}
+            archivedPacketAsOf={packetSource === 'persisted' ? displayedPacket.as_of : undefined}
             comparison={workspace.comparison}
             forecast={forecastPath}
             history={workspace.history}
@@ -287,13 +319,15 @@ export function InstrumentWorkspaceScreen() {
         <aside className="space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.decision')}>
           <DecisionRail
             contextKey={decisionContextKey}
-            evidenceUpdating={query.isPlaceholderData}
-            key={`${decisionContextKey}:${packetSource}:${activeSelection.revision}`}
-            onNewAnalysis={workspace.decision.latest
+            evidenceUpdating={evidenceUpdating}
+            key={`${decisionContextKey}:${packetSource}:${activeSelection.revision}:${evidenceUpdating ? 'updating' : 'ready'}`}
+            onNewAnalysis={packetSource === 'persisted'
               ? () => setPacketSelection({
                   contextKey: decisionContextKey,
                   mode: 'fresh',
+                  packetId: null,
                   revision: activeSelection.revision + 1,
+                  snapshot: null,
                 })
               : undefined}
             packet={displayedPacket}

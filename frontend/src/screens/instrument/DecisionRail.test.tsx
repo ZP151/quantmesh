@@ -360,6 +360,80 @@ describe('DecisionRail', () => {
     expect(screen.queryByText('packet-refresh-draft-0003')).not.toBeInTheDocument()
   })
 
+  it('completes an exact saved action when same-context polling replaces the fresh draft ID', async () => {
+    const user = userEvent.setup()
+    const pendingSave = deferred<DecisionPacket>()
+    const watch = {
+      ...packet,
+      disposition: 'watch' as const,
+      operator_reason: 'Keep exact action',
+      packet_id: 'packet-watch-after-save-refetch',
+      parent_packet_id: packet.packet_id,
+      version: 2,
+    }
+    mocked.saveDecisionPacket.mockReturnValue(pendingSave.promise)
+    mocked.applyDecisionPacketAction.mockResolvedValue({ packet: watch, proposal: null })
+    const view = render(
+      <DecisionRail contextKey="moomoo:NVDA:6m" packet={packet} packetSource="fresh" workspace={workspace} />,
+      { wrapper: Providers },
+    )
+    await user.type(screen.getByLabelText('Decision reason'), 'Keep exact action')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+
+    const refreshedDraft = { ...packet, packet_id: 'packet-same-context-refresh-during-save' }
+    view.rerender(
+      <DecisionRail
+        contextKey="moomoo:NVDA:6m"
+        packet={refreshedDraft}
+        packetSource="fresh"
+        workspace={{ ...workspace, decision: { draft: refreshedDraft, latest: null } }}
+      />,
+    )
+    await act(async () => pendingSave.resolve(packet))
+
+    expect(await screen.findByText('packet-watch-after-save-refetch')).toBeInTheDocument()
+    expect(mocked.applyDecisionPacketAction).toHaveBeenCalledWith(packet.packet_id, expect.objectContaining({
+      disposition: 'watch', operator_reason: 'Keep exact action',
+    }))
+  })
+
+  it('accepts a durable action result when same-context polling changes the draft during the request', async () => {
+    const user = userEvent.setup()
+    const pendingAction = deferred<Awaited<ReturnType<typeof api.applyDecisionPacketAction>>>()
+    mocked.applyDecisionPacketAction.mockReturnValue(pendingAction.promise)
+    const view = render(
+      <DecisionRail contextKey="moomoo:NVDA:6m" packet={packet} packetSource="fresh" workspace={workspace} />,
+      { wrapper: Providers },
+    )
+    await user.type(screen.getByLabelText('Decision reason'), 'Keep durable result')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+    await waitFor(() => expect(mocked.applyDecisionPacketAction).toHaveBeenCalledTimes(1))
+
+    const refreshedDraft = { ...packet, packet_id: 'packet-same-context-refresh-during-action' }
+    view.rerender(
+      <DecisionRail
+        contextKey="moomoo:NVDA:6m"
+        packet={refreshedDraft}
+        packetSource="fresh"
+        workspace={{ ...workspace, decision: { draft: refreshedDraft, latest: null } }}
+      />,
+    )
+    await act(async () => pendingAction.resolve({
+      packet: {
+        ...packet,
+        disposition: 'watch',
+        operator_reason: 'Keep durable result',
+        packet_id: 'packet-watch-durable-result',
+        parent_packet_id: packet.packet_id,
+        version: 2,
+      },
+      proposal: null,
+    }))
+
+    expect(await screen.findByText('packet-watch-durable-result')).toBeInTheDocument()
+    expect(screen.queryByText('packet-same-context-refresh-during-action')).not.toBeInTheDocument()
+  })
+
   it('drops a deferred save/action response after the full workspace context changes', async () => {
     const user = userEvent.setup()
     const pendingSave = deferred<DecisionPacket>()

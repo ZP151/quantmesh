@@ -15,6 +15,8 @@ vi.mock('@/lib/api', async (importOriginal) => {
     api: {
       ...actual.api,
       applyDecisionPacketAction: vi.fn(),
+      confirmPaperProposal: vi.fn(),
+      decisionPacket: vi.fn(),
       health: vi.fn(),
       instrumentWorkspace: vi.fn(),
       liveState: vi.fn(),
@@ -206,11 +208,19 @@ const workspace: InstrumentWorkspace = {
 }
 
 const mockedWorkspace = vi.mocked(api.instrumentWorkspace)
+const mockedDecisionPacket = vi.mocked(api.decisionPacket)
+const mockedConfirmPaperProposal = vi.mocked(api.confirmPaperProposal)
 const mockedHealth = vi.mocked(api.health)
 const mockedLiveState = vi.mocked(api.liveState)
 const mockedMarkets = vi.mocked(api.markets)
 const mockedLiveConnection = vi.mocked(useLiveConnection)
 let publishLiveUpdate: Parameters<typeof useLiveConnection>[0]
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((next) => { resolve = next })
+  return { promise, resolve }
+}
 
 function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -236,6 +246,7 @@ beforeEach(() => {
     return 'live'
   })
   mockedWorkspace.mockResolvedValue(workspace)
+  mockedDecisionPacket.mockRejectedValue(new ApiError(404, 'Exact packet fixture not configured'))
   mockedLiveState.mockResolvedValue({
     generated_at: '2026-08-08T12:00:00Z',
     instruments: {
@@ -292,9 +303,14 @@ describe('InstrumentWorkspaceScreen', () => {
           as_of: '2026-08-08T12:01:00Z',
           packet_id: 'packet-fresh-background-0001',
         },
-        latest: persisted,
+        latest: {
+          ...persisted,
+          operator_reason: 'A newer persisted decision',
+          packet_id: 'packet-watch-newer-0002',
+        },
       },
     }
+    mockedDecisionPacket.mockResolvedValue(persisted)
     mockedWorkspace.mockResolvedValueOnce(first).mockResolvedValue(refreshed)
     renderWorkspace()
 
@@ -315,6 +331,8 @@ describe('InstrumentWorkspaceScreen', () => {
 
     expect(screen.getByText('packet-watch-persisted-0001')).toBeInTheDocument()
     expect(screen.queryByText('packet-fresh-background-0001')).not.toBeInTheDocument()
+    expect(screen.queryByText('packet-watch-newer-0002')).not.toBeInTheDocument()
+    expect(mockedDecisionPacket).toHaveBeenCalledWith('packet-watch-persisted-0001')
     expect(screen.getByRole('button', { name: 'New analysis' })).toBeInTheDocument()
   })
 
@@ -328,11 +346,47 @@ describe('InstrumentWorkspaceScreen', () => {
         ...workspace.decision.draft.evidence,
         forecast_artifact_id: 'artifact-archived-without-any-break-opportunity-0123456789',
         forecast_benchmark_name: 'archived-last-close',
+        forecast_chronology: {
+          test_end: '2026-06-30T20:00:00Z',
+          test_start: '2026-06-01T20:00:00Z',
+          train_end: '2026-04-30T20:00:00Z',
+          train_start: '2024-01-01T20:00:00Z',
+          validation_end: '2026-05-31T20:00:00Z',
+          validation_start: '2026-05-01T20:00:00Z',
+        },
+        forecast_dataset_id: 'forecast-dataset-archived-0123456789',
+        forecast_dataset_revision: 11,
+        forecast_eligible: false,
         forecast_generated_at: '2026-07-01T12:00:00Z',
+        forecast_metrics: [{
+          benchmark_mae: 4.5,
+          coverage_50: 0.51,
+          coverage_80: 0.79,
+          coverage_95: 0.94,
+          interval_test_count: 12,
+          mae: 3.5,
+          residual_count: 120,
+          rmse: 4.1,
+          sessions: 30,
+          test_end: '2026-06-30T20:00:00Z',
+          test_start: '2026-06-01T20:00:00Z',
+          validation_end: '2026-05-31T20:00:00Z',
+          validation_start: '2026-05-01T20:00:00Z',
+        }],
         forecast_model_name: archivedModel,
         forecast_model_version: 'archived-model-version-1',
+        forecast_paths: [{
+          points: [{
+            p025: 150, p10: 160, p25: 170, p50: 185, p75: 195, p90: 205, p975: 215,
+            session: 1, timestamp: '2026-07-02T20:00:00Z',
+          }],
+          sessions: 30,
+        }],
+        forecast_synthetic: true,
         history_dataset_id: archivedDataset,
         history_dataset_revision: 7,
+        history_duplicates: ['2026-06-02T20:00:00Z'],
+        history_gaps: ['2026-06-03T20:00:00Z'],
         history_generated_at: '2026-07-01T12:00:00Z',
       },
       operator_reason: 'Replay archived decision',
@@ -340,6 +394,7 @@ describe('InstrumentWorkspaceScreen', () => {
       parent_packet_id: workspace.decision.draft.packet_id,
       version: 2,
     }
+    mockedDecisionPacket.mockResolvedValue(persisted)
     mockedWorkspace.mockResolvedValue({
       ...workspace,
       history: { ...workspace.history, dataset_id: 'current-workspace-dataset' },
@@ -352,7 +407,90 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(within(evidence).getByText(archivedDataset)).toHaveClass('break-all', '[overflow-wrap:anywhere]')
     expect(within(evidence).getByText(archivedModel)).toHaveClass('break-all', '[overflow-wrap:anywhere]')
     expect(within(evidence).queryByText('current-workspace-dataset')).not.toBeInTheDocument()
-    expect(screen.getByText('Current market, not archived packet evidence')).toBeInTheDocument()
+    expect(within(evidence).getByText('forecast-dataset-archived-0123456789')).toBeInTheDocument()
+    expect(within(evidence).getByText(/Not eligible/)).toBeInTheDocument()
+    expect(within(evidence).getByText('Synthetic')).toBeInTheDocument()
+    expect(within(evidence).getByText('Rolling validation window').closest('div')).toHaveTextContent('May')
+    expect(within(evidence).getByText('Rolling test window').closest('div')).toHaveTextContent('Jun')
+    expect(within(evidence).getByText(/30-session forecast path/).closest('details')).toHaveTextContent('185')
+    expect(within(evidence).getByText('History gaps').closest('details')).toHaveTextContent('Jun 4')
+    expect(within(evidence).getByText('History duplicates').closest('details')).toHaveTextContent('Jun 3')
+    expect(within(evidence).getByText(/Coverage 50\/80\/95/).closest('div')).toHaveTextContent('51%')
+    expect(screen.getByText('Current chart only — not archived packet evidence')).toBeInTheDocument()
+    expect(screen.getByText(/Archived packet levels as of/)).toHaveTextContent('Aug 8')
+  })
+
+  it('pauses Reject, Watch, and Paper while a requested range still shows placeholder evidence', async () => {
+    const pending = deferred<InstrumentWorkspace>()
+    const allowedDraft = {
+      ...workspace.decision.draft,
+      paper_capability: { allowed: true, blockers: [] },
+    }
+    mockedWorkspace
+      .mockResolvedValueOnce({
+        ...workspace,
+        decision: { draft: allowedDraft, latest: null },
+        proposal: { allowed: true, blockers: [], proposals: [] },
+      })
+      .mockReturnValueOnce(pending.promise)
+    const user = userEvent.setup()
+    renderWorkspace()
+    await user.type(await screen.findByLabelText('Decision reason'), 'Wait for alignment')
+    expect(screen.getByRole('button', { name: 'Reject decision' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Watch decision' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeEnabled()
+
+    await user.click(screen.getByRole('button', { name: '1M' }))
+
+    expect(await screen.findByText('Decision actions and confirmation are paused while requested evidence replaces the displayed prior context.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reject decision' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Watch decision' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Reject decision' }))
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+    await user.click(screen.getByRole('button', { name: 'Create paper proposal' }))
+    expect(api.saveDecisionPacket).not.toHaveBeenCalled()
+    expect(api.applyDecisionPacketAction).not.toHaveBeenCalled()
+  })
+
+  it('pauses an existing proposal confirmation while a requested range still shows placeholder evidence', async () => {
+    const pending = deferred<InstrumentWorkspace>()
+    const proposed = {
+      ...workspace.decision.draft,
+      disposition: 'paper_proposal' as const,
+      packet_id: 'packet-proposed-range-gate',
+      parent_packet_id: workspace.decision.draft.packet_id,
+      proposal_id: 'proposal-range-gate',
+      version: 2,
+    }
+    const pendingProposal = {
+      artifact_id: 'artifact-range-gate', blockers: [], config_digest: 'config-range-gate',
+      confirmation_token: 'CONFIRM-RANGE', created_at: '2026-08-08T12:01:00Z',
+      dataset_id: 'demo-history', dataset_revision: 1, forecast_generated_at: '2026-08-08T12:00:00Z',
+      history_digest: 'history-range-gate', id: 'proposal-range-gate', instrument: workspace.instrument,
+      limit_price: 182, model_version: '1.0.0', order_id: null, order_type: 'limit' as const,
+      quantity: 10, quote_provenance: 'demo-synthetic', side: 'buy' as const, status: 'pending' as const,
+    }
+    mockedDecisionPacket.mockResolvedValue(proposed)
+    mockedWorkspace
+      .mockResolvedValueOnce({
+        ...workspace,
+        decision: { draft: workspace.decision.draft, latest: proposed },
+        proposal: { allowed: true, blockers: [], proposals: [pendingProposal] },
+      })
+      .mockReturnValueOnce(pending.promise)
+    const user = userEvent.setup()
+    renderWorkspace()
+    await user.type(await screen.findByLabelText('Confirmation token'), pendingProposal.confirmation_token)
+    expect(screen.getByRole('button', { name: 'Confirm paper proposal' })).toBeEnabled()
+
+    await user.click(screen.getByRole('button', { name: '1M' }))
+
+    expect(await screen.findByText('Decision actions and confirmation are paused while requested evidence replaces the displayed prior context.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Confirmation token')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Confirm paper proposal' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Confirm paper proposal' }))
+    expect(mockedConfirmPaperProposal).not.toHaveBeenCalled()
   })
 
   it('resets packet selection when the venue-symbol-range context changes', async () => {

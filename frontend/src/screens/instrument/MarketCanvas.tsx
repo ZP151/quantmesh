@@ -25,6 +25,7 @@ const RANGES: readonly { label: string; value: HistoryRange }[] = [
 
 export interface MarketCanvasProps {
   archivedPacket?: boolean
+  archivedPacketAsOf?: string
   comparison: ComparisonSeries | null
   forecast: ForecastPath | null
   history: HistoricalSeries
@@ -97,7 +98,7 @@ export function MarketCanvas(props: MarketCanvasProps) {
     <div className="space-y-3">
       {props.archivedPacket && (
         <p className="border-l-2 border-amber-500 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground" role="note">
-          {t('screen.workspace.currentMarketNotArchived')}
+          {t('screen.workspace.currentChartNotArchived')}
         </p>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
@@ -145,7 +146,11 @@ export function MarketCanvas(props: MarketCanvasProps) {
               {t(`screen.workspace.trend.${props.marketState.trend}`)}
             </h2>
             <span className="font-mono text-[10px] text-muted-foreground">
-              {t('screen.workspace.serverDerived')}
+              {props.archivedPacket && props.archivedPacketAsOf
+                ? t('screen.workspace.archivedPacketLevels', {
+                    time: dateTime(props.archivedPacketAsOf, locale),
+                  })
+                : t('screen.workspace.serverDerived')}
             </span>
           </div>
           <dl className="grid grid-cols-3 gap-x-4 gap-y-2 text-xs">

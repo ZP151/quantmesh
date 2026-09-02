@@ -124,7 +124,7 @@ function DecisionRailContext({
             symbol: submission.identity.symbol,
             venue: submission.identity.venue,
           })
-      if (!activeRef.current || !sameIdentity(viewIdentityRef.current, submission.identity)) return null
+      if (!activeRef.current || !sameContext(viewIdentityRef.current, submission.identity)) return null
       assertSavedPacket(parent, submission)
       const result = await api.applyDecisionPacketAction(parent.packet_id, submission.disposition === 'paper_proposal'
         ? {
@@ -141,7 +141,7 @@ function DecisionRailContext({
             quantity: null,
             side: null,
           })
-      if (!activeRef.current || !sameIdentity(viewIdentityRef.current, submission.identity)) return null
+      if (!activeRef.current || !sameContext(viewIdentityRef.current, submission.identity)) return null
       assertActionResult(result, parent, submission)
       return result
     },
@@ -150,19 +150,24 @@ function DecisionRailContext({
     },
   })
 
-  const submitAction = (disposition: ActionDisposition) => action.mutate({
-    disposition,
-    identity: viewIdentity,
-    limitPrice: numericLimit,
-    operatorReason: operatorReason.trim(),
-    packet,
-    quantity: numericQuantity,
-    side,
-  })
+  const submitAction = (disposition: ActionDisposition) => {
+    if (evidenceUpdating) return
+    action.mutate({
+      disposition,
+      identity: viewIdentity,
+      limitPrice: numericLimit,
+      operatorReason: operatorReason.trim(),
+      packet,
+      quantity: numericQuantity,
+      side,
+    })
+  }
 
   const persistedProposals = [...workspace.proposal.proposals]
     .reverse()
-    .filter((candidate) => !dismissedProposalIds.includes(candidate.id))
+    .filter((candidate) => !dismissedProposalIds.includes(candidate.id)
+      && candidate.instrument.venue === displayedPacket.instrument.venue
+      && candidate.instrument.symbol === displayedPacket.instrument.symbol)
   const proposal = actionResult?.proposal
     ?? persistedProposals.find((candidate) => candidate.id === displayedPacket.proposal_id)
     ?? null
@@ -179,6 +184,11 @@ function DecisionRailContext({
           </span>
         </div>
         <p className="text-xs text-muted-foreground">{t('screen.workspace.paperOnly')}</p>
+        {evidenceUpdating && (
+          <p className="border-l-2 border-sky-600 bg-sky-500/5 px-2.5 py-2 text-xs text-muted-foreground" role="status">
+            {t('screen.workspace.workspaceActionsPaused')}
+          </p>
+        )}
         <div className="min-w-0 border-y border-border py-2">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('screen.workspace.packetId')}</p>
           <code className="block break-all font-mono text-[10px] [overflow-wrap:anywhere]" title={displayedPacket.packet_id}>{displayedPacket.packet_id}</code>
@@ -246,8 +256,8 @@ function DecisionRailContext({
             <Input id="decision-reason" onChange={(event) => setOperatorReason(event.target.value)} placeholder={t('screen.workspace.decisionReasonHint')} value={operatorReason} />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Button disabled={!reasonReady || action.isPending} onClick={() => submitAction('reject')} type="button" variant="outline">{t('screen.workspace.rejectDecision')}</Button>
-            <Button disabled={!reasonReady || action.isPending} onClick={() => submitAction('watch')} type="button" variant="outline">{t('screen.workspace.watchDecision')}</Button>
+            <Button disabled={!reasonReady || evidenceUpdating || action.isPending} onClick={() => submitAction('reject')} type="button" variant="outline">{t('screen.workspace.rejectDecision')}</Button>
+            <Button disabled={!reasonReady || evidenceUpdating || action.isPending} onClick={() => submitAction('watch')} type="button" variant="outline">{t('screen.workspace.watchDecision')}</Button>
           </div>
           <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
             <div className="space-y-2">
@@ -278,6 +288,7 @@ function DecisionRailContext({
         <ProposalConfirmation
           key={`${proposal.id}:${proposal.status}:${proposal.order_id ?? ''}`}
           contextKey={contextKey}
+          interactionBlocked={evidenceUpdating}
           onDismiss={() => {
             setActionResult(null)
             setDismissedProposalIds((current) => [...new Set([...current, proposal.id])])
@@ -311,11 +322,9 @@ interface ActionSubmission {
   side: 'buy' | 'sell'
 }
 
-function sameIdentity(current: ViewIdentity, submitted: ViewIdentity): boolean {
+function sameContext(current: ViewIdentity, submitted: ViewIdentity): boolean {
   return current.contextKey === submitted.contextKey
-    && current.packetId === submitted.packetId
     && current.range === submitted.range
-    && current.source === submitted.source
     && current.symbol === submitted.symbol
     && current.venue === submitted.venue
 }
