@@ -194,6 +194,11 @@ class InstrumentWorkspaceService:
             while len(self._staged_drafts) > 256:
                 self._staged_drafts.popitem(last=False)
 
+    def clear_staged_drafts(self) -> None:
+        """Forget process-local drafts when their backing root is replaced."""
+        with self._draft_lock:
+            self._staged_drafts.clear()
+
     def _latest_forecast(
         self, venue: Venue, symbol: str, *, as_of: datetime
     ) -> tuple[PriceForecastArtifact | None, str | None]:
@@ -274,10 +279,6 @@ class InstrumentWorkspaceService:
             if self._decision_packets is not None
             else None
         )
-        persisted_root = None
-        if latest is not None and self._decision_packets is not None:
-            persisted_root = self._decision_packets.lineage(latest.packet_id)[0]
-        decision_as_of = persisted_root.as_of if persisted_root is not None else generated_at
         valuation, proposals = self._valuation_and_proposals(
             venue,
             symbol,
@@ -287,7 +288,7 @@ class InstrumentWorkspaceService:
             venue,
             symbol,
             selected_range,
-            as_of=decision_as_of,
+            as_of=generated_at,
         )
         comparison: ComparisonSeries | None = None
         if peers:
@@ -295,7 +296,7 @@ class InstrumentWorkspaceService:
                 primary=(venue, symbol),
                 peers=peers,
                 range=selected_range,
-                as_of=decision_as_of,
+                as_of=generated_at,
             )
         live = _live_evidence(
             self._live_feed,
@@ -394,19 +395,15 @@ class InstrumentWorkspaceService:
             blockers=tuple(proposal_blockers),
             proposals=proposals,
         )
-        draft = (
-            persisted_root
-            if persisted_root is not None
-            else compose_decision_packet(
-                history=history,
-                forecast=forecast,
-                live=live,
-                risk=risk,
-                proposal=proposal,
-                account=account,
-                selected_range=selected_range,
-                as_of=decision_as_of,
-            )
+        draft = compose_decision_packet(
+            history=history,
+            forecast=forecast,
+            live=live,
+            risk=risk,
+            proposal=proposal,
+            account=account,
+            selected_range=selected_range,
+            as_of=generated_at,
         )
         self._stage_draft(draft)
 

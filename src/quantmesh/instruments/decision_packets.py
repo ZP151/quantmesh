@@ -9,7 +9,7 @@ import re
 import threading
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager, nullcontext
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -34,7 +34,7 @@ from quantmesh.persistence.jsonl import JsonlStore
 _LOCKS_GUARD = threading.Lock()
 _ROOT_LOCKS: dict[str, threading.RLock] = {}
 _PACKET_ID = re.compile(r"^packet-[0-9a-f]{24}$")
-_PACKET_FRESHNESS = timedelta(days=1)
+_INTENT_ID = re.compile(r"^intent-[0-9a-f]{24}$")
 
 
 class DecisionPacketNotFoundError(ValueError):
@@ -46,7 +46,9 @@ class DecisionActionIntent(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    intent_id: str = Field(pattern=r"^intent-[0-9a-f]{24}$")
     parent_packet_id: str = Field(pattern=r"^packet-[0-9a-f]{24}$")
+    proposal_id: str = Field(pattern=r"^proposal-[0-9a-f]{24}$")
     disposition: DecisionDisposition
     operator_reason: str | None = None
     side: Side
@@ -66,6 +68,13 @@ class DecisionActionIntent(BaseModel):
         if self.disposition is not DecisionDisposition.PAPER_PROPOSAL:
             raise ValueError("durable decision action intent is paper-only")
         return self
+
+
+def decision_action_intent_id(intent: DecisionActionIntent) -> str:
+    """Return the canonical identity of every authority-bearing intent fact."""
+    payload = intent.model_dump(mode="json", exclude={"intent_id"})
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return f"intent-{hashlib.sha256(canonical).hexdigest()[:24]}"
 
 
 def _root_lock(root: Path) -> threading.RLock:
@@ -130,8 +139,12 @@ class DecisionPacketStore:
             filename="decision-action-intents.jsonl",
             model=DecisionActionIntent,
             label="decision action intent store",
-            id_label="decision packet parent",
-            key=lambda intent: intent.parent_packet_id,
+            id_label="decision action intent",
+            key=lambda intent: intent.intent_id,
+            extra_validate=self._validate_intent_identity,
+            secondary_keys=(
+                ("decision packet parent id", lambda intent: intent.parent_packet_id),
+            ),
         )
 
     @property
@@ -169,6 +182,13 @@ class DecisionPacketStore:
     def _validate_identity(packet: DecisionPacket) -> None:
         if packet.packet_id != decision_packet_id(packet):
             raise ValueError("decision packet identity does not match canonical content")
+
+    @staticmethod
+    def _validate_intent_identity(intent: DecisionActionIntent) -> None:
+        if _INTENT_ID.fullmatch(intent.intent_id) is None:
+            raise ValueError("decision action intent id is not canonical")
+        if intent.intent_id != decision_action_intent_id(intent):
+            raise ValueError("decision action intent identity does not match canonical content")
 
     @classmethod
     def _validate_collection(cls, packets: list[DecisionPacket]) -> None:
@@ -261,16 +281,25 @@ class DecisionPacketStore:
         """Record or replay the one exact durable Paper intent for a parent packet."""
         with self.transaction():
             intents = self._intents.read()
+            self._validate_intent_identity(intent)
             existing = next(
                 (item for item in intents if item.parent_packet_id == intent.parent_packet_id),
                 None,
             )
             if existing is not None:
-                if existing != intent.model_copy(update={"created_at": existing.created_at}):
+                if existing != intent:
                     raise ValueError("decision packet already has a different durable intent")
                 return existing
             self._intents.append(intent)
             return intent
+
+    def action_intent(self, parent_packet_id: str) -> DecisionActionIntent | None:
+        """Return the validated durable Paper intent for one exact packet, if any."""
+        intents = self._intents.read()
+        return next(
+            (item for item in intents if item.parent_packet_id == parent_packet_id),
+            None,
+        )
 
     def all(self) -> tuple[DecisionPacket, ...]:
         return tuple(self._records())
@@ -361,17 +390,68 @@ class DecisionPacketService:
             return existing
 
     @staticmethod
-    def _validate_packet_clock(parent: DecisionPacket, now: datetime) -> None:
-        if now.tzinfo is None:
+    def _action_time(parent: DecisionPacket, value: datetime) -> datetime:
+        if value.tzinfo is None:
             raise ValueError("decision action clock must be timezone-aware")
-        now = now.astimezone(UTC)
-        if now < parent.as_of:
+        action_at = value.astimezone(UTC)
+        if action_at < parent.as_of:
             raise ValueError("decision action clock cannot predate the packet")
-        evidence_times = [parent.evidence.history_generated_at]
-        if parent.evidence.forecast_generated_at is not None:
-            evidence_times.append(parent.evidence.forecast_generated_at)
-        if any(now - value > _PACKET_FRESHNESS for value in evidence_times):
-            raise ValueError("decision packet expired before paper proposal")
+        return action_at
+
+    @staticmethod
+    def _intent_for(
+        parent: DecisionPacket,
+        proposal: PaperProposal,
+        *,
+        operator_reason: str | None,
+    ) -> DecisionActionIntent:
+        provisional = DecisionActionIntent(
+            intent_id="intent-" + "0" * 24,
+            parent_packet_id=parent.packet_id,
+            proposal_id=proposal.id,
+            disposition=DecisionDisposition.PAPER_PROPOSAL,
+            operator_reason=operator_reason,
+            side=proposal.side,
+            quantity=proposal.quantity,
+            limit_price=proposal.limit_price,
+            created_at=proposal.created_at,
+        )
+        return provisional.model_copy(
+            update={"intent_id": decision_action_intent_id(provisional)}
+        )
+
+    @staticmethod
+    def _validate_intent_request(
+        intent: DecisionActionIntent,
+        *,
+        disposition: DecisionDisposition,
+        operator_reason: str | None,
+        side: Side | None,
+        quantity: float | None,
+        limit_price: float | None,
+    ) -> None:
+        if (
+            intent.disposition is not disposition
+            or intent.operator_reason != operator_reason
+            or intent.side is not side
+            or intent.quantity != quantity
+            or intent.limit_price != limit_price
+        ):
+            raise ValueError("decision packet already has a different durable intent")
+
+    @staticmethod
+    def _validate_intent_proposal(
+        intent: DecisionActionIntent,
+        proposal: PaperProposal,
+    ) -> None:
+        if (
+            intent.proposal_id != proposal.id
+            or intent.side is not proposal.side
+            or intent.quantity != proposal.quantity
+            or intent.limit_price != proposal.limit_price
+            or intent.created_at != proposal.created_at
+        ):
+            raise ValueError("durable decision action intent does not match paper proposal")
 
     @staticmethod
     def _validate_artifact_binding(
@@ -546,8 +626,40 @@ class DecisionPacketService:
             artifact_id = parent.evidence.forecast_artifact_id
             if artifact_id is None:
                 raise ValueError("decision packet has no forecast artifact binding")
-            action_at = self._proposals.current_time()
-            self._validate_packet_clock(parent, action_at)
+
+            intent = self.store.action_intent(parent.packet_id)
+            if intent is not None:
+                self._validate_intent_request(
+                    intent,
+                    disposition=disposition,
+                    operator_reason=operator_reason,
+                    side=side,
+                    quantity=quantity,
+                    limit_price=limit_price,
+                )
+                try:
+                    durable_proposal = self._proposals.ledger.get(intent.proposal_id)
+                except ValueError as error:
+                    if "no proposal recorded" not in str(error):
+                        raise
+                else:
+                    self._validate_intent_proposal(intent, durable_proposal)
+                    self._validate_proposal_binding(parent, durable_proposal)
+                    child = self._child(
+                        parent,
+                        disposition=disposition,
+                        operator_reason=operator_reason,
+                        proposal_id=durable_proposal.id,
+                        created_at=max(parent.created_at, durable_proposal.created_at),
+                    )
+                    return DecisionPacketActionResult(
+                        packet=self.store.record(child),
+                        proposal=durable_proposal,
+                    )
+                action_at = self._action_time(parent, intent.created_at)
+            else:
+                action_at = self._action_time(parent, self._proposals.current_time())
+
             artifact = self._proposals.resolve_artifact(artifact_id)
             self._validate_artifact_binding(parent, artifact)
             if not artifact.eligible:
@@ -555,24 +667,27 @@ class DecisionPacketService:
             freshness = forecast_freshness_blocker(artifact, action_at)
             if freshness is not None:
                 raise ValueError(f"decision packet expired: {freshness}")
-            intent = self.store.reserve_action_intent(
-                DecisionActionIntent(
-                    parent_packet_id=parent.packet_id,
-                    disposition=disposition,
+
+            def reserve_intent(proposal: PaperProposal) -> None:
+                candidate = self._intent_for(
+                    parent,
+                    proposal,
                     operator_reason=operator_reason,
-                    side=side,
-                    quantity=quantity,
-                    limit_price=limit_price,
-                    created_at=action_at,
                 )
-            )
+                if intent is not None and candidate != intent:
+                    raise ValueError(
+                        "durable decision action intent does not match paper proposal"
+                    )
+                self.store.reserve_action_intent(candidate)
+
             proposal = self._proposals.propose(
                 artifact_id,
                 side=side,
                 quantity=quantity,
                 limit_price=limit_price,
-                created_at=intent.created_at,
+                created_at=action_at,
                 expected_artifact=artifact,
+                before_record=reserve_intent,
             )
             self._validate_proposal_binding(parent, proposal)
             child = self._child(

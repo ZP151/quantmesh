@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import timedelta
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -130,3 +131,30 @@ def test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state(tmp_path: 
         restored = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m")
         assert restored.status_code == 200
         assert restored.json()["proposal"]["proposals"] == []
+
+
+def test_demo_reset_discards_staged_drafts_from_the_replaced_root(tmp_path: Path) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    workspace = app.state.instrument_workspace
+    workspace._now = lambda: SCENARIO.anchor + timedelta(minutes=1)  # noqa: SLF001
+
+    with TestClient(app) as client:
+        before_reset = client.get(
+            "/api/instruments/moomoo/NVDA/workspace?range=6m"
+        ).json()["decision"]["draft"]
+        workspace._now = lambda: SCENARIO.anchor + timedelta(minutes=2)  # noqa: SLF001
+        reset = client.post("/api/demo/reset")
+        revived = client.post(
+            "/api/decision-packets",
+            json={
+                "venue": "moomoo",
+                "symbol": "NVDA",
+                "selected_range": "6m",
+                "expected_packet_id": before_reset["packet_id"],
+            },
+        )
+
+    assert reset.status_code == 200
+    assert revived.status_code == 409
+    assert "expected" in revived.json()["detail"].lower()
+    assert app.state.decision_packets.all() == ()

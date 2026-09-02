@@ -1596,11 +1596,11 @@ class InstrumentWorkspace(StrictContract):
         if self.decision.draft.as_of != self.history.as_of:
             raise ValueError("workspace decision as_of must match history")
         if self.decision.latest is not None and (
-            self.decision.latest.instrument != self.history.instrument
+            self.decision.latest.instrument.venue is not self.history.instrument.venue
+            or self.decision.latest.instrument.symbol != self.history.instrument.symbol
             or self.decision.latest.selected_range is not self.history.range
-            or self.decision.latest.as_of != self.history.as_of
         ):
-            raise ValueError("workspace latest decision as_of and identity must match history")
+            raise ValueError("workspace latest decision instrument and range must match history")
         if (self.forecast is None) != (self.forecast_unavailable_reason is not None):
             raise ValueError(
                 "workspace must carry either forecast evidence or an unavailable reason"

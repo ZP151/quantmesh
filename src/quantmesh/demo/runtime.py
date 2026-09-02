@@ -192,6 +192,9 @@ def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
         packet_service.store = seeded.decision_packets
     workspace = getattr(app.state, "instrument_workspace", None)
     if workspace is not None:
+        clear_staged_drafts = getattr(workspace, "clear_staged_drafts", None)
+        if callable(clear_staged_drafts):
+            clear_staged_drafts()
         workspace._decision_packets = seeded.decision_packets  # noqa: SLF001
     app.state.page_context = PageContext(
         account=seeded.account,

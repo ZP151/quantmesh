@@ -462,6 +462,7 @@ class PaperDecisionService:
         limit_price: float | None = None,
         created_at: datetime | None = None,
         expected_artifact: PriceForecastArtifact | None = None,
+        before_record: Callable[[PaperProposal], None] | None = None,
     ) -> PaperProposal:
         with self.ledger.transaction():
             artifact = self._resolve_artifact(artifact_id)
@@ -513,7 +514,11 @@ class PaperDecisionService:
             else:
                 if _proposal_identity(existing) != _proposal_identity(proposal):
                     raise ValueError("proposal id collision with different immutable facts")
+                if before_record is not None:
+                    before_record(existing)
                 return existing
+            if before_record is not None:
+                before_record(proposal)
             return self.ledger.record(proposal)
 
     def _terminal_result(self, proposal: PaperProposal) -> ProposalConfirmation:

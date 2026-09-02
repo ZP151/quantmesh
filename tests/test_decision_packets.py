@@ -537,18 +537,29 @@ def test_store_serializes_concurrent_roots_without_lost_updates(tmp_path: Path) 
     }
 
 
-def test_workspace_latest_packet_must_match_history_as_of() -> None:
+def test_workspace_latest_packet_may_have_prior_as_of_but_must_match_scope() -> None:
     history = _history_for_composition()
     latest = packet(as_of=NOW + timedelta(seconds=1))
-    with pytest.raises(ValidationError, match="latest decision as_of"):
+    payload = {
+        "generated_at": NOW,
+        "instrument": NVDA,
+        "history": history,
+        "live": WorkspaceLiveEvidence(status="unavailable", reason="fixture"),
+        "forecast": None,
+        "forecast_unavailable_reason": "fixture",
+        "risk": _ready_risk(),
+        "proposal": ProposalCapability(allowed=True, blockers=(), proposals=()),
+        "decision": DecisionWorkspaceState(draft=packet(), latest=latest),
+    }
+
+    workspace = InstrumentWorkspace(**payload)
+    assert workspace.decision.latest == latest
+
+    wrong_range = latest.model_copy(update={"selected_range": HistoryRange.ONE_YEAR})
+    with pytest.raises(ValidationError, match="instrument and range"):
         InstrumentWorkspace(
-            generated_at=NOW,
-            instrument=NVDA,
-            history=history,
-            live=WorkspaceLiveEvidence(status="unavailable", reason="fixture"),
-            forecast=None,
-            forecast_unavailable_reason="fixture",
-            risk=_ready_risk(),
-            proposal=ProposalCapability(allowed=True, blockers=(), proposals=()),
-            decision=DecisionWorkspaceState(draft=packet(), latest=latest),
+            **{
+                **payload,
+                "decision": DecisionWorkspaceState(draft=packet(), latest=wrong_range),
+            }
         )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
@@ -15,6 +16,7 @@ from quantmesh.demo.seeder import seed_demo_root
 from quantmesh.domain.models import Side, Venue
 from quantmesh.instruments.contracts import DecisionDisposition, HistoryRange
 from quantmesh.instruments.decision_packets import (
+    DecisionActionIntent,
     DecisionPacketService,
     DecisionPacketStore,
 )
@@ -307,7 +309,7 @@ def test_clean_demo_restart_reopens_identical_packet_bytes(tmp_path: Path) -> No
     assert packet_path.read_bytes() == before
 
 
-def test_advancing_workspace_clock_saves_the_exact_observed_draft_and_reopens_latest(
+def test_advancing_workspace_clock_saves_exact_draft_then_refreshes_fresh_alongside_latest(
     tmp_path: Path,
 ) -> None:
     root = tmp_path / "demo"
@@ -339,8 +341,18 @@ def test_advancing_workspace_clock_saves_the_exact_observed_draft_and_reopens_la
         reopened = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m")
 
     assert reopened.status_code == 200
-    assert reopened.json()["decision"]["draft"] == saved
-    assert reopened.json()["decision"]["latest"] == saved
+    body = reopened.json()
+    refreshed_at = (SCENARIO.anchor + timedelta(minutes=5)).isoformat().replace(
+        "+00:00", "Z"
+    )
+    assert body["generated_at"] == refreshed_at
+    assert body["history"]["as_of"] == refreshed_at
+    assert body["decision"]["draft"]["as_of"] == refreshed_at
+    assert body["decision"]["draft"]["packet_id"] != saved["packet_id"]
+    assert body["decision"]["draft"]["evidence"]["forecast_generated_at"] == (
+        body["forecast"]["generated_at"]
+    )
+    assert body["decision"]["latest"] == saved
 
 
 @pytest.mark.parametrize("disposition", [DecisionDisposition.REJECT, DecisionDisposition.WATCH])
@@ -415,6 +427,9 @@ def test_crash_after_proposal_write_retries_without_a_second_proposal(
             quantity=1.0,
         )
     store.record = original_record
+    app.state.paper_decisions._now = (  # noqa: SLF001
+        lambda: SCENARIO.anchor + timedelta(days=3)
+    )
 
     recovered = app.state.decision_packet_service.transition(
         parent["packet_id"],
@@ -427,6 +442,97 @@ def test_crash_after_proposal_write_retries_without_a_second_proposal(
     assert recovered.proposal == app.state.paper_decisions.ledger.all()[0]
     assert recovered.packet.proposal_id == recovered.proposal.id
     assert len(store.all()) == 2
+
+
+def test_intent_only_crash_recovers_at_original_action_time_across_days(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        parent = _save(client, _draft(client)).json()
+
+    ledger = app.state.paper_decisions.ledger
+    original_record = ledger.record
+
+    def crash_before_proposal(proposal):
+        raise RuntimeError("simulated stop after durable action intent")
+
+    ledger.record = crash_before_proposal
+    with pytest.raises(RuntimeError, match="durable action intent"):
+        app.state.decision_packet_service.transition(
+            parent["packet_id"],
+            disposition=DecisionDisposition.PAPER_PROPOSAL,
+            side=Side.BUY,
+            quantity=1.0,
+        )
+    ledger.record = original_record
+
+    assert ledger.all() == ()
+    assert len(app.state.decision_packets.all()) == 1
+    assert len(app.state.decision_packets.intent_path.read_text(encoding="utf-8").splitlines()) == 1
+
+    app.state.paper_decisions._now = (  # noqa: SLF001
+        lambda: SCENARIO.anchor + timedelta(days=3)
+    )
+    recovered = app.state.decision_packet_service.transition(
+        parent["packet_id"],
+        disposition=DecisionDisposition.PAPER_PROPOSAL,
+        side=Side.BUY,
+        quantity=1.0,
+    )
+
+    assert recovered.proposal is not None
+    assert recovered.proposal.created_at == SCENARIO.anchor
+    assert len(ledger.all()) == 1
+    assert len(app.state.decision_packets.all()) == 2
+
+
+def test_action_intent_content_identity_refuses_schema_valid_tampering(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        parent = _save(client, _draft(client)).json()
+
+    ledger = app.state.paper_decisions.ledger
+    original_record = ledger.record
+    ledger.record = lambda _proposal: (_ for _ in ()).throw(
+        RuntimeError("simulated intent-only stop")
+    )
+    with pytest.raises(RuntimeError, match="intent-only"):
+        app.state.decision_packet_service.transition(
+            parent["packet_id"],
+            disposition=DecisionDisposition.PAPER_PROPOSAL,
+            side=Side.BUY,
+            quantity=1.0,
+        )
+    ledger.record = original_record
+
+    intent_path = app.state.decision_packets.intent_path
+    original_text = intent_path.read_text(encoding="utf-8")
+    original_payload = json.loads(original_text)
+    assert original_payload["intent_id"].startswith("intent-")
+    original_intent = DecisionActionIntent.model_validate(original_payload)
+    mutations = {
+        "created_at": "2026-08-09T12:00:00Z",
+        "quantity": 2.0,
+        "parent_packet_id": "packet-" + "f" * 24,
+    }
+    refusals: dict[str, bool] = {}
+    for field, value in mutations.items():
+        tampered = {**original_payload, field: value}
+        intent_path.write_text(json.dumps(tampered) + "\n", encoding="utf-8")
+        try:
+            DecisionPacketStore(app.state.decision_packets.root).reserve_action_intent(
+                original_intent
+            )
+        except ValueError:
+            refusals[field] = True
+        else:
+            refusals[field] = False
+    intent_path.write_text(original_text, encoding="utf-8")
+
+    assert refusals == {"created_at": True, "quantity": True, "parent_packet_id": True}
 
 
 def test_concurrent_paper_actions_create_one_proposal_and_one_child(tmp_path: Path) -> None:
@@ -492,6 +598,7 @@ def test_saved_packet_that_naturally_expires_refuses_before_proposal_write(
     app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
     with TestClient(app) as client:
         parent = _save(client, _draft(client)).json()
+        intent_before = app.state.decision_packets.intent_path.read_bytes()
         app.state.paper_decisions._now = (  # noqa: SLF001
             lambda: SCENARIO.anchor + timedelta(days=3)
         )
@@ -509,6 +616,7 @@ def test_saved_packet_that_naturally_expires_refuses_before_proposal_write(
     assert refused.status_code == 409
     assert "expired" in refused.json()["detail"].lower()
     assert app.state.paper_decisions.ledger.all() == ()
+    assert app.state.decision_packets.intent_path.read_bytes() == intent_before
     assert app.state.decision_packets.latest(
         Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS
     ).packet_id == parent["packet_id"]
@@ -557,6 +665,7 @@ def test_registry_drift_between_preflight_and_propose_has_zero_external_writes(
     app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
     with TestClient(app) as client:
         parent = _save(client, _draft(client)).json()
+        intent_before = app.state.decision_packets.intent_path.read_bytes()
 
         original = app.state.paper_decisions._forecast_registry.get(  # noqa: SLF001
             parent["evidence"]["forecast_artifact_id"]
@@ -590,7 +699,33 @@ def test_registry_drift_between_preflight_and_propose_has_zero_external_writes(
     assert refused.status_code == 409
     assert "forecast" in refused.json()["detail"].lower()
     assert app.state.paper_decisions.ledger.all() == ()
+    assert app.state.decision_packets.intent_path.read_bytes() == intent_before
     assert len(app.state.decision_packets.all()) == 1
+
+
+def test_equity_packet_remains_actionable_over_weekend_for_one_market_session(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        parent = _save(client, _draft(client)).json()
+        app.state.paper_decisions._now = (  # noqa: SLF001
+            lambda: SCENARIO.anchor + timedelta(days=2)
+        )
+        action = client.post(
+            f"/api/decision-packets/{parent['packet_id']}/actions",
+            json={
+                "disposition": "paper_proposal",
+                "operator_reason": None,
+                "side": "buy",
+                "quantity": 1.0,
+                "limit_price": None,
+            },
+        )
+
+    assert action.status_code == 200
+    assert action.json()["proposal"]["status"] == "pending"
+    assert len(app.state.paper_decisions.ledger.all()) == 1
 
 
 def test_exact_packet_get_distinguishes_missing_from_corrupt_store(tmp_path: Path) -> None:
