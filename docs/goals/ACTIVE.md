@@ -19,10 +19,11 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: Slice 1 Task 1, fix DecisionPacket identity/authority in
-  ADR-0019, then implement the deterministic domain and fail-closed store by
-  test-first development. The complete Slice 1 sequence is governed by the
-  executable plan above; do not begin Slices 2–4 or add another model framework.
+- Current frontier: Slice 1 Task 2, bind the reviewed DecisionPacket domain to
+  Instrument Workspace, durable API/runtime/demo state and the existing paper
+  authority by test-first development. The complete Slice 1 sequence is
+  governed by the executable plan above; do not begin Slices 2–4 or add another
+  model framework.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.
@@ -90,6 +91,16 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
 - Execution uses
   `docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`, with one
   implementer deliverable and one two-round review ceiling per task.
+- Task 1 is complete through `4409bcf9d630`: ADR-0019, strict frozen packet
+  contracts, the deterministic composer and fail-closed JSONL lineage store
+  now establish the reviewed domain boundary. Real forecast evidence cannot
+  become paper-capable without paired manifest and quality IDs, including when
+  a packet is constructed outside the composer.
+- Task 1 final verification passed `76` tests with `3` expected skips; focused
+  Ruff and `git diff --check` passed. The second and final review round returned
+  APPROVED with no Critical, Important or Minor finding. Task 2 is the active
+  frontier; no UI, Copilot, monitoring, review, provider or soak scope has been
+  entered.
 
 ## Historical delivery record
 

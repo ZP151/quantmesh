@@ -201,19 +201,24 @@ to-review lineage and explains both accepted and rejected paths.
   separately named promotion/proposal freshness. Account fee and matcher
   slippage are pinned while half-spread is explicitly resolved by the existing
   confirmation quote rather than fabricated as zero.
-- **Implementer:** Slice 1 Task 1 is active under the executable plan; no
-  production change precedes its failing domain/store tests.
-- **Reviewer:** reviews each demonstrable task boundary in at most two rounds;
-  a third structural issue returns the design for scope reduction.
+- **Implementer:** Task 1 completed ADR-0019, strict packet/domain contracts,
+  the deterministic composer and fail-closed JSONL lineage store through
+  `4409bcf9d630`. Task 2 now owns only the Workspace/API/runtime/demo binding.
+- **Reviewer:** Task 1 used its two permitted corrective rounds. The final
+  verdict was APPROVED with no Critical, Important or Minor finding; notably,
+  contract-level validation now rejects real forecast evidence without paired
+  manifest and quality IDs even when callers bypass the composer.
 - **Verifier:** isolated worktree bootstrap is complete. Before behavior
   changes, the adjacent Python baseline passed `122` tests with `3` skips in
   `365.09s` using a worktree-local basetemp; the adjacent frontend baseline
   passed `35` tests in `4.50s` under Node `22.12.0`.
+  Task 1 final verification passed `76` tests with `3` expected skips; focused
+  Ruff and `git diff --check` passed.
 
 ## Current frontier
 
-Execute Task 1 of
-`docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`: record
-ADR-0019, add the strict packet/domain contracts, deterministic composer and
-fail-closed JSONL lineage store. Stop scope expansion at the Task 1 review
-boundary; do not implement Slices 2–4.
+Execute Task 2 of
+`docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`: bind the
+reviewed DecisionPacket domain to Instrument Workspace, durable same-origin
+APIs, production/demo roots and the existing paper proposal authority. Stop at
+the Task 2 review boundary; do not implement frontend UI or Slices 2–4.
