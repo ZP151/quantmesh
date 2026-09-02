@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'react-router-dom'
 
@@ -19,6 +19,7 @@ import { DecisionRail } from './instrument/DecisionRail'
 import { evidenceText } from './instrument/evidence-copy'
 import { ForecastEvidence, type ForecastHorizon } from './instrument/ForecastEvidence'
 import { MarketCanvas } from './instrument/MarketCanvas'
+import { ScenarioEvidence } from './instrument/ScenarioEvidence'
 import { WorkspaceDegraded, WorkspaceError, WorkspaceRefreshWarning } from './instrument/WorkspaceStates'
 import { retainSameInstrument } from './instrument/workspace-query'
 
@@ -50,6 +51,7 @@ export function InstrumentWorkspaceScreen() {
   const showSma50 = search.get('sma50') === '1'
   const validVenue = isVenue(venue)
   const queryClient = useQueryClient()
+  const [showFreshAnalysis, setShowFreshAnalysis] = useState(false)
   const lastLiveRefresh = useRef(0)
   const trailingLiveRefresh = useRef<ReturnType<typeof setTimeout> | null>(null)
   const refreshWorkspace = useCallback(() => {
@@ -107,6 +109,10 @@ export function InstrumentWorkspaceScreen() {
     return <WorkspaceError error={query.error} symbol={symbol} venue={venue} />
   }
   const workspace = query.data
+  const displayedPacket = showFreshAnalysis || workspace.decision.latest === null
+    || workspace.decision.latest === undefined
+    ? workspace.decision.draft
+    : workspace.decision.latest
   const displayedRange = query.isPlaceholderData ? workspace.history.range : range
   const displayedComparisons = query.isPlaceholderData
     ? (workspace.comparison?.keys ?? []).filter(
@@ -196,6 +202,7 @@ export function InstrumentWorkspaceScreen() {
             comparison={workspace.comparison}
             forecast={forecastPath}
             history={workspace.history}
+            marketState={displayedPacket.market_state}
             mode={mode}
             onModeChange={(next) => updateParam('mode', next === 'candles' ? null : next)}
             onRangeChange={(next) => updateParam('range', next)}
@@ -243,6 +250,7 @@ export function InstrumentWorkspaceScreen() {
               </dd>
             </div>
           </dl>
+          <ScenarioEvidence packet={displayedPacket} />
           <ForecastEvidence
             forecast={workspace.forecast}
             horizon={horizon}
@@ -256,6 +264,8 @@ export function InstrumentWorkspaceScreen() {
           <DecisionRail
             key={`${workspace.instrument.venue}:${workspace.instrument.symbol}`}
             evidenceUpdating={query.isPlaceholderData}
+            onNewAnalysis={workspace.decision.latest ? () => setShowFreshAnalysis(true) : undefined}
+            packet={displayedPacket}
             workspace={workspace}
           />
         </aside>

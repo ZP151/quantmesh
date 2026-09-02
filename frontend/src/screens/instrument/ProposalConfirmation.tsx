@@ -22,9 +22,11 @@ function errorText(error: unknown): string {
 
 export function ProposalConfirmation({
   onDismiss,
+  packetId,
   proposal,
 }: {
   onDismiss: () => void
+  packetId?: string
   proposal: PaperProposal
 }) {
   const { locale, t } = usePreferences()
@@ -98,6 +100,7 @@ export function ProposalConfirmation({
         <p className="mt-1 text-xs text-muted-foreground">{t('screen.workspace.proposalPreviewNote')}</p>
       </div>
       <dl className="space-y-1 text-xs">
+        {packetId && <Fact label={t('screen.workspace.packetId')} value={packetId} />}
         <Fact label={t('screen.workspace.proposalId')} value={effectiveProposal.id} />
         <Fact label={t('screen.workspace.venue')} value={effectiveProposal.instrument.venue} />
         <Fact label={t('screen.workspace.symbol')} value={effectiveProposal.instrument.symbol} />

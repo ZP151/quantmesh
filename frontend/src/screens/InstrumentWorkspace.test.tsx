@@ -14,10 +14,12 @@ vi.mock('@/lib/api', async (importOriginal) => {
     ...actual,
     api: {
       ...actual.api,
+      applyDecisionPacketAction: vi.fn(),
       health: vi.fn(),
       instrumentWorkspace: vi.fn(),
       liveState: vi.fn(),
       markets: vi.fn(),
+      saveDecisionPacket: vi.fn(),
     },
   }
 })
@@ -38,6 +40,72 @@ import { retainSameInstrument } from './instrument/workspace-query'
 
 const workspace: InstrumentWorkspace = {
   comparison: null,
+  decision: {
+    draft: {
+      as_of: '2026-08-08T12:00:00Z',
+      created_at: '2026-08-08T12:00:00Z',
+      disposition: 'draft',
+      evidence: {
+        costs: { fee_bps: 1.5, half_spread_bps: null, slippage_bps: 2.5, spread_status: 'confirmation-quote-required' },
+        forecast_artifact_id: null,
+        forecast_blockers: ['No promoted artifact for this range.'],
+        forecast_eligible: null,
+        forecast_limitations: [],
+        forecast_metrics: [],
+        forecast_paths: [],
+        forecast_synthetic: null,
+        history_dataset_id: 'demo-history',
+        history_dataset_revision: 1,
+        history_duplicates: [],
+        history_gaps: [],
+        history_generated_at: '2026-08-08T12:00:00Z',
+        history_limitations: ['Synthetic data'],
+        history_source: 'demo-synthetic',
+      },
+      instrument: {
+        currency: 'USD', instrument_type: 'equity', metadata: {}, symbol: 'NVDA', venue: 'moomoo',
+      },
+      market_state: {
+        invalidation: 176,
+        key_level_bar_times: ['2026-08-07T20:00:00Z'],
+        latest_close: 184,
+        observed_drawdown: -0.08,
+        observed_volatility: 0.24,
+        resistance: 195,
+        sma20: 185,
+        sma50: 180,
+        support: 180,
+        trend: 'bullish',
+      },
+      operator_reason: null,
+      packet_id: 'packet-draft-000000000001',
+      paper_capability: {
+        allowed: false,
+        blockers: [{ code: 'forecast-missing', evidence_ref: 'workspace', message: 'No promoted artifact for this range.' }],
+      },
+      parent_packet_id: null,
+      proposal_id: null,
+      risk_plan: {
+        entry_price: 182,
+        proposal_input_only: true,
+        reward_per_unit: 18,
+        reward_to_risk: 3,
+        risk_per_unit: 6,
+        stop_price: 176,
+        suggested_notional: 1820,
+        suggested_quantity: 10,
+        target_price: 200,
+      },
+      scenarios: [
+        { confidence: 'qualitative', confidence_reason: 'Not calibrated.', invalidation: 180, kind: 'bull', probability: null, target: 210, thesis: 'Bull thesis', trigger: 'Bull trigger' },
+        { confidence: 'qualitative', confidence_reason: 'Not calibrated.', invalidation: 178, kind: 'base', probability: null, target: 200, thesis: 'Base thesis', trigger: 'Base trigger' },
+        { confidence: 'qualitative', confidence_reason: 'Not calibrated.', invalidation: 176, kind: 'bear', probability: null, target: 165, thesis: 'Bear thesis', trigger: 'Bear trigger' },
+      ],
+      selected_range: '6m',
+      version: 1,
+    },
+    latest: null,
+  },
   forecast: null,
   forecast_unavailable_reason: 'No promoted artifact for this range.',
   generated_at: '2026-08-08T12:00:00Z',
@@ -205,6 +273,51 @@ beforeEach(() => {
 })
 
 describe('InstrumentWorkspaceScreen', () => {
+  it('keeps a persisted decision visible when a background refresh returns a fresh draft', async () => {
+    const persisted = {
+      ...workspace.decision.draft,
+      disposition: 'watch' as const,
+      operator_reason: 'Wait for entry',
+      packet_id: 'packet-watch-persisted-0001',
+      parent_packet_id: workspace.decision.draft.packet_id,
+      version: 2,
+    }
+    const first = { ...workspace, decision: { draft: workspace.decision.draft, latest: persisted } }
+    const refreshed = {
+      ...workspace,
+      generated_at: '2026-08-08T12:01:00Z',
+      decision: {
+        draft: {
+          ...workspace.decision.draft,
+          as_of: '2026-08-08T12:01:00Z',
+          packet_id: 'packet-fresh-background-0001',
+        },
+        latest: persisted,
+      },
+    }
+    mockedWorkspace.mockResolvedValueOnce(first).mockResolvedValue(refreshed)
+    renderWorkspace()
+
+    expect(await screen.findByText('packet-watch-persisted-0001')).toBeInTheDocument()
+    expect(screen.getByText('Watching')).toBeInTheDocument()
+
+    await act(async () => publishLiveUpdate({
+      data_time: '2026-08-08T12:00:30Z',
+      instrument: 'NVDA',
+      kind: 'quote',
+      payload: { ask: 185, bid: 184 },
+      provenance: 'demo-synthetic',
+      received_at: '2026-08-08T12:00:30Z',
+      sequence: 13,
+      venue: 'moomoo',
+    }))
+    await waitFor(() => expect(mockedWorkspace).toHaveBeenCalledTimes(2))
+
+    expect(screen.getByText('packet-watch-persisted-0001')).toBeInTheDocument()
+    expect(screen.queryByText('packet-fresh-background-0001')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New analysis' })).toBeInTheDocument()
+  })
+
   it('reuses placeholder evidence only for the same venue and symbol', () => {
     expect(retainSameInstrument(
       workspace,
@@ -280,7 +393,7 @@ describe('InstrumentWorkspaceScreen', () => {
     renderWorkspace()
 
     await waitFor(() => expect(screen.getByText('Stale market evidence')).toBeInTheDocument())
-    expect(screen.getAllByText('Quote age exceeds the paper-action fence.')).toHaveLength(2)
+    expect(screen.getByText('Quote age exceeds the paper-action fence.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeDisabled()
   })
 
