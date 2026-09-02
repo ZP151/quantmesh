@@ -2,8 +2,17 @@ import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { DecisionPacket } from '@/lib/api'
+import { dateTime } from '@/lib/format'
 import { PreferencesProvider } from '@/lib/preferences'
 import { PacketEvidenceSummary, ScenarioEvidence } from './ScenarioEvidence'
+
+function displayTime(value: string): string {
+  return dateTime(value, 'en')
+}
+
+function displayWindow(start: string, end: string): string {
+  return [displayTime(start), displayTime(end)].join(' → ')
+}
 
 const packet = {
   scenarios: [
@@ -124,8 +133,14 @@ describe('ScenarioEvidence', () => {
     render(<PacketEvidenceSummary packet={packetWithMetricWindows} />, { wrapper: PreferencesProvider })
 
     const artifactOverview = screen.getByRole('group', { name: 'Forecast artifact chronology overview' })
-    expect(within(artifactOverview).getByText('Nov 1, 08:00 AM → Nov 30, 08:00 AM')).toBeInTheDocument()
-    expect(within(artifactOverview).getByText('Dec 1, 08:00 AM → Dec 31, 08:00 AM')).toBeInTheDocument()
+    expect(within(artifactOverview).getByText(displayWindow(
+      '2025-11-01T00:00:00Z',
+      '2025-11-30T00:00:00Z',
+    ))).toBeInTheDocument()
+    expect(within(artifactOverview).getByText(displayWindow(
+      '2025-12-01T00:00:00Z',
+      '2025-12-31T00:00:00Z',
+    ))).toBeInTheDocument()
 
     const sevenSession = screen.getByRole('group', { name: '7-session metrics' })
     expect(within(sevenSession).getByText('1.1')).toBeInTheDocument()
@@ -134,12 +149,15 @@ describe('ScenarioEvidence', () => {
     expect(within(sevenSession).getByText('51% / 81% / 96%')).toBeInTheDocument()
     expect(within(sevenSession).getByText('70')).toBeInTheDocument()
     expect(within(sevenSession).getByText('7')).toBeInTheDocument()
-    expect(within(sevenSession).getByText('Jan 10, 08:00 AM')).toBeInTheDocument()
-    expect(within(sevenSession).getByText('Jan 20, 08:00 AM')).toBeInTheDocument()
-    expect(within(sevenSession).getByText('Feb 1, 08:00 AM')).toBeInTheDocument()
-    expect(within(sevenSession).getByText('Feb 7, 08:00 AM')).toBeInTheDocument()
-    expect(within(sevenSession).queryByText('Mar 1, 08:00 AM')).not.toBeInTheDocument()
-    expect(within(sevenSession).queryByText('Nov 1, 08:00 AM → Nov 30, 08:00 AM')).not.toBeInTheDocument()
+    expect(within(sevenSession).getByText(displayTime('2026-01-10T00:00:00Z'))).toBeInTheDocument()
+    expect(within(sevenSession).getByText(displayTime('2026-01-20T00:00:00Z'))).toBeInTheDocument()
+    expect(within(sevenSession).getByText(displayTime('2026-02-01T00:00:00Z'))).toBeInTheDocument()
+    expect(within(sevenSession).getByText(displayTime('2026-02-07T00:00:00Z'))).toBeInTheDocument()
+    expect(within(sevenSession).queryByText(displayTime('2026-03-01T00:00:00Z'))).not.toBeInTheDocument()
+    expect(within(sevenSession).queryByText(displayWindow(
+      '2025-11-01T00:00:00Z',
+      '2025-11-30T00:00:00Z',
+    ))).not.toBeInTheDocument()
 
     const thirtySession = screen.getByRole('group', { name: '30-session metrics' })
     expect(within(thirtySession).getByText('3.1')).toBeInTheDocument()
@@ -148,10 +166,10 @@ describe('ScenarioEvidence', () => {
     expect(within(thirtySession).getByText('52% / 82% / 97%')).toBeInTheDocument()
     expect(within(thirtySession).getByText('300')).toBeInTheDocument()
     expect(within(thirtySession).getByText('30')).toBeInTheDocument()
-    expect(within(thirtySession).getByText('Mar 1, 08:00 AM')).toBeInTheDocument()
-    expect(within(thirtySession).getByText('Mar 31, 08:00 AM')).toBeInTheDocument()
-    expect(within(thirtySession).getByText('Apr 1, 08:00 AM')).toBeInTheDocument()
-    expect(within(thirtySession).getByText('Apr 30, 08:00 AM')).toBeInTheDocument()
-    expect(within(thirtySession).queryByText('Jan 10, 08:00 AM')).not.toBeInTheDocument()
+    expect(within(thirtySession).getByText(displayTime('2026-03-01T00:00:00Z'))).toBeInTheDocument()
+    expect(within(thirtySession).getByText(displayTime('2026-03-31T00:00:00Z'))).toBeInTheDocument()
+    expect(within(thirtySession).getByText(displayTime('2026-04-01T00:00:00Z'))).toBeInTheDocument()
+    expect(within(thirtySession).getByText(displayTime('2026-04-30T00:00:00Z'))).toBeInTheDocument()
+    expect(within(thirtySession).queryByText(displayTime('2026-01-10T00:00:00Z'))).not.toBeInTheDocument()
   })
 })
