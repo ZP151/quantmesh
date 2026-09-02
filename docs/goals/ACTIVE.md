@@ -19,11 +19,11 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: Slice 1 Task 3, expose the reviewed DecisionPacket and its
-  Reject, Watch and guarded Paper-proposal actions in the existing Instrument
-  Workspace single-screen flow. The complete Slice 1 sequence is governed by
-  the executable plan above; do not begin Slices 2–4 or add another model
-  framework.
+- Current frontier: Slice 1 Task 3R, the approved scope reduction that binds
+  every archived forecast metric to its own literal validation and test
+  windows. Do not continue broad Task 3 patching. Task 4 remains blocked until
+  this narrow evidence-integrity boundary passes one independent review; do
+  not begin Slices 2–4 or add another model framework.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.
@@ -113,6 +113,16 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   warnings; OpenAPI freshness, TypeScript, Ruff and diff checks passed. The
   second and final review returned APPROVED with no new finding. Task 3 is now
   the active frontier.
+- Task 3 delivered the single-screen flow through `d786ec26a791` and closed
+  packet/context races, exact persisted selection, write/confirmation gating,
+  terminal IDs, compact wrapping and archived/current time-domain separation.
+  Its final allowed review retained one Important finding: per-horizon metrics
+  omitted their own validation/test windows and could appear associated with
+  artifact-wide chronology.
+- Per the two-round ceiling, broad Task 3 patching stopped. The operator
+  approved Task 3R: only render each stored metric with its own literal four
+  sample-window timestamps and prove distinct-horizon association. State, API,
+  chart and backend changes are prohibited.
 
 ## Historical delivery record
 

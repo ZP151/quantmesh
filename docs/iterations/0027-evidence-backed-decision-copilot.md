@@ -203,13 +203,18 @@ to-review lineage and explains both accepted and rejected paths.
   confirmation quote rather than fabricated as zero.
 - **Implementer:** Task 1 completed the DecisionPacket domain through
   `4409bcf9d630`; Task 2 completed Workspace/API/runtime/demo persistence and
-  paper-authority binding through `9494d59a5c79`. Task 3 now owns only the
-  existing Instrument Workspace surface and its component tests.
+  paper-authority binding through `9494d59a5c79`; Task 3 delivered the broader
+  Instrument Workspace surface through `d786ec26a791`. Task 3R now owns only
+  literal per-metric sample-window rendering and its focused test.
 - **Reviewer:** Tasks 1 and 2 each used their two permitted corrective rounds
   and ended APPROVED with no open finding. Task 2 review closed dynamic-clock
   save drift, action concurrency/crash replay, current freshness, complete
   forecast binding, partial-config bypass, reset isolation and corrupt replay
   diagnostics without adding confirmation or order authority.
+  Task 3 closed all state, action, replay, time-domain and compact-layout
+  findings but exhausted its review ceiling with one metric-window evidence
+  association issue. Broad patching stopped and the approved Task 3R scope was
+  reduced to that single literal rendering boundary.
 - **Verifier:** isolated worktree bootstrap is complete. Before behavior
   changes, the adjacent Python baseline passed `122` tests with `3` skips in
   `365.09s` using a worktree-local basetemp; the adjacent frontend baseline
@@ -221,8 +226,9 @@ to-review lineage and explains both accepted and rejected paths.
 
 ## Current frontier
 
-Execute Task 3 of
-`docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`: implement the
-approved single-screen DecisionPacket flow inside Instrument Workspace using
-the generated Task 2 API. Stop at the Task 3 review boundary; do not implement
-Copilot, watch-condition evaluation, outcome review or other Slices 2–4 work.
+Execute Task 3R of
+`docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`: render every
+archived forecast metric with its own literal validation/test timestamps and
+prove that different horizons cannot inherit artifact-wide chronology. Stop
+for one independent scoped review; do not change state, APIs, charts, backend
+authority, Copilot, watch evaluation, outcome review or other Slices 2–4 work.

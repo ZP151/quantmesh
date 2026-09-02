@@ -323,6 +323,58 @@ Expected: targeted Vitest/typecheck/lint pass; detector has no unresolved blocki
 
 ---
 
+### Task 3R: Narrow archived forecast evidence to literal metric windows
+
+**Reason for rescope:** Task 3 exhausted its two corrective review rounds with
+one Important evidence-integrity finding still open. Do not continue patching
+the broader UI. This replacement task is limited to removing the ambiguous
+association between horizon metrics and artifact-wide chronology.
+
+**Files:**
+- Modify: `frontend/src/screens/instrument/ScenarioEvidence.tsx`
+- Modify: `frontend/src/screens/instrument/ScenarioEvidence.test.tsx`
+- Modify only if labels are absent: `frontend/src/lib/messages.ts`
+
+**Interface:** Consume each stored forecast metric literally. For every metric,
+render its horizon/name, MAE, RMSE, benchmark error, empirical coverage, sample
+count, `validation_start`, `validation_end`, `test_start`, and `test_end` in one
+bounded row/group. Artifact-wide chronology remains a separately labeled
+overview and never supplies a metric's sample window.
+
+- [ ] **Step 1: Write the focused failing regression**
+
+Use at least two forecast metrics with different validation and test windows.
+Assert that each rendered metric remains associated with its own four boundary
+timestamps and values. The test must fail against `d786ec2` because those
+metric-specific timestamps are absent.
+
+- [ ] **Step 2: Render literal per-metric evidence**
+
+Render only the server-provided fields; do not calculate, normalize, inherit or
+merge chronology in TypeScript. Keep the existing archived evidence disclosure,
+compact wrapping and English/Simplified-Chinese label conventions. Do not alter
+packet selection, action state, API calls, chart behavior or backend contracts.
+
+- [ ] **Step 3: Verify and commit the narrowed task**
+
+```powershell
+Set-Location frontend
+npm exec vitest -- run src/screens/instrument/ScenarioEvidence.test.tsx
+npm exec vitest -- run src/screens/InstrumentWorkspace.test.tsx src/screens/instrument/ScenarioEvidence.test.tsx src/screens/instrument/DecisionRail.test.tsx src/screens/instrument/MarketCanvas.test.tsx src/lib/messages.test.ts
+npm run typecheck
+npm run lint
+Set-Location ..
+git diff --check
+git add frontend/src/screens/instrument/ScenarioEvidence.tsx frontend/src/screens/instrument/ScenarioEvidence.test.tsx frontend/src/lib/messages.ts
+git commit -m "fix(workspace): bind metrics to sample windows"
+```
+
+Expected: focused and Task 3 component selections pass; typecheck, lint and diff
+checks pass. Do not rerun the Impeccable detector: Task 3 already consumed its
+single allowed run with an empty result. Stop for one independent scoped review.
+
+---
+
 ### Task 4: Prove the NVDA slice and record the user loop
 
 **Files:**
