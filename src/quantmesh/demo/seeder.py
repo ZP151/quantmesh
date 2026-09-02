@@ -87,6 +87,7 @@ from quantmesh.instruments.contracts import (
     HistoricalSeries,
     HistoryRange,
 )
+from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.proposals import ProposalLedger
@@ -129,6 +130,8 @@ _MUTABLE_FILES = frozenset(
         "orders/journal.jsonl",
         "orders/proposals/.proposals.lock",
         "orders/proposals/proposals.jsonl",
+        "decisions/packets/.decision-packets.lock",
+        "decisions/packets/decision-packets.jsonl",
         "watchlists/watchlist.jsonl",
     }
 )
@@ -253,6 +256,7 @@ class DemoSeeded:
     history: HistoryService
     price_forecasts: PriceForecastRegistry
     proposal_ledger: ProposalLedger
+    decision_packets: DecisionPacketStore
     provenance: dict[str, object] = field(default_factory=dict)
 
 
@@ -1640,6 +1644,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         "history": sum(dataset_rows.values()),
         "price_forecasts": len(price_forecasts.all()),
         "paper_proposals": 0,
+        "decision_packets": 0,
         "orders": len(order_quotes),
         **research_rows,
         **forecast_rows,
@@ -1661,6 +1666,10 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     proposal_root.mkdir(parents=True, exist_ok=True)
     (proposal_root / ".proposals.lock").write_text("", encoding="utf-8")
     (proposal_root / "proposals.jsonl").write_text("", encoding="utf-8")
+    decision_packet_root = root / "decisions" / "packets"
+    decision_packet_root.mkdir(parents=True, exist_ok=True)
+    (decision_packet_root / ".decision-packets.lock").write_text("", encoding="utf-8")
+    (decision_packet_root / "decision-packets.jsonl").write_text("", encoding="utf-8")
     ownership_text = _ownership_text(root)
     (root / OWNERSHIP_NAME).write_text(ownership_text, encoding="utf-8")
     ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()
@@ -1687,6 +1696,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         history=history,
         price_forecasts=price_forecasts,
         proposal_ledger=proposal_ledger,
+        decision_packets=DecisionPacketStore(decision_packet_root),
         provenance=provenance,
     )
 
@@ -1764,6 +1774,7 @@ def load_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
             bindings=history_bindings,
         ),
         proposal_ledger=ProposalLedger(root / "orders" / "proposals"),
+        decision_packets=stores.decision_packets,
         provenance=provenance,
     )
 

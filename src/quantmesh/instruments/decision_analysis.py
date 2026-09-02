@@ -197,6 +197,7 @@ def compose_decision_packet(
 
     final_quantiles: tuple[float, float, float] | None = None
     forecast_chronology: DecisionForecastChronology | None = None
+    bound_forecast = forecast
     if forecast is None:
         blockers.append(
             _blocker("forecast-missing", "no forecast is attached", "forecast:missing")
@@ -268,6 +269,12 @@ def compose_decision_packet(
                     f"forecast:{forecast.artifact_id}",
                 )
             )
+            # The strict evidence contract cannot carry an incomplete real
+            # binding. Keep the workspace summary visible, but omit the
+            # untrusted forecast from the immutable packet and its scenarios.
+            bound_forecast = None
+            final_quantiles = None
+            forecast_chronology = None
     if any(bar.timestamp > selected_as_of for bar in history.bars):
         blockers.append(
             _blocker(
@@ -368,26 +375,46 @@ def compose_decision_packet(
         history_gaps=history.gaps,
         history_duplicates=history.duplicates,
         history_limitations=history.limitations,
-            forecast_artifact_id=forecast.artifact_id if forecast is not None else None,
-            forecast_dataset_id=forecast.dataset_id if forecast is not None else None,
-            forecast_dataset_revision=forecast.dataset_revision if forecast is not None else None,
-            forecast_manifest_id=forecast.manifest_id if forecast is not None else None,
-            forecast_quality_evaluation_id=(
-                forecast.quality_evaluation_id if forecast is not None else None
-            ),
-            forecast_synthetic=forecast.synthetic if forecast is not None else None,
-            forecast_eligible=forecast.eligible if forecast is not None else None,
-            forecast_blockers=forecast.blockers if forecast is not None else (),
-            forecast_limitations=forecast.limitations if forecast is not None else (),
-        forecast_model_name=forecast.model_name if forecast is not None else None,
-        forecast_model_version=forecast.model_version if forecast is not None else None,
-        forecast_config_digest=forecast.config_digest if forecast is not None else None,
-        forecast_history_digest=forecast.history_digest if forecast is not None else None,
-        forecast_benchmark_name=forecast.benchmark_name if forecast is not None else None,
-        forecast_generated_at=forecast.generated_at if forecast is not None else None,
+        forecast_artifact_id=(
+            bound_forecast.artifact_id if bound_forecast is not None else None
+        ),
+        forecast_dataset_id=(
+            bound_forecast.dataset_id if bound_forecast is not None else None
+        ),
+        forecast_dataset_revision=(
+            bound_forecast.dataset_revision if bound_forecast is not None else None
+        ),
+        forecast_manifest_id=(
+            bound_forecast.manifest_id if bound_forecast is not None else None
+        ),
+        forecast_quality_evaluation_id=(
+            bound_forecast.quality_evaluation_id if bound_forecast is not None else None
+        ),
+        forecast_synthetic=(bound_forecast.synthetic if bound_forecast is not None else None),
+        forecast_eligible=(bound_forecast.eligible if bound_forecast is not None else None),
+        forecast_blockers=(bound_forecast.blockers if bound_forecast is not None else ()),
+        forecast_limitations=(
+            bound_forecast.limitations if bound_forecast is not None else ()
+        ),
+        forecast_model_name=(bound_forecast.model_name if bound_forecast is not None else None),
+        forecast_model_version=(
+            bound_forecast.model_version if bound_forecast is not None else None
+        ),
+        forecast_config_digest=(
+            bound_forecast.config_digest if bound_forecast is not None else None
+        ),
+        forecast_history_digest=(
+            bound_forecast.history_digest if bound_forecast is not None else None
+        ),
+        forecast_benchmark_name=(
+            bound_forecast.benchmark_name if bound_forecast is not None else None
+        ),
+        forecast_generated_at=(
+            bound_forecast.generated_at if bound_forecast is not None else None
+        ),
         forecast_chronology=forecast_chronology,
-        forecast_paths=forecast.paths if forecast is not None else (),
-        forecast_metrics=forecast.metrics if forecast is not None else (),
+        forecast_paths=bound_forecast.paths if bound_forecast is not None else (),
+        forecast_metrics=bound_forecast.metrics if bound_forecast is not None else (),
         costs=DecisionCostEvidence(
             fee_bps=account.fee_model.fee_bps,
             slippage_bps=account.matcher.slippage_bps,

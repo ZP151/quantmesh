@@ -71,19 +71,28 @@ def test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state(tmp_path: 
         assert body["forecast"]["synthetic"] is True
         assert body["proposal"]["allowed"] is True
 
-        preview = client.post(
-            "/api/paper/proposals",
+        saved = client.post(
+            "/api/decision-packets",
             json={
                 "venue": "moomoo",
                 "symbol": "NVDA",
-                "artifact_id": body["forecast"]["artifact_id"],
+                "selected_range": "6m",
+                "expected_packet_id": body["decision"]["draft"]["packet_id"],
+            },
+        )
+        assert saved.status_code == 200
+        preview = client.post(
+            f"/api/decision-packets/{saved.json()['packet_id']}/actions",
+            json={
+                "disposition": "paper_proposal",
+                "operator_reason": None,
                 "side": "buy",
                 "quantity": 1.0,
                 "limit_price": None,
             },
         )
         assert preview.status_code == 200
-        proposal = preview.json()
+        proposal = preview.json()["proposal"]
         assert proposal["status"] == "pending"
         assert client.get("/api/demo/status").json()["surfaces"]["paper_proposals"]["rows"] == 1
 
@@ -116,6 +125,7 @@ def test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state(tmp_path: 
         reset = client.post("/api/demo/reset")
         assert reset.status_code == 200
         assert reset.json()["surfaces"]["paper_proposals"]["rows"] == 0
+        assert reset.json()["surfaces"]["decision_packets"]["rows"] == 0
         assert _tree_digest(tmp_path / "demo") == pristine
         restored = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m")
         assert restored.status_code == 200

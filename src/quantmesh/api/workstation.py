@@ -80,6 +80,10 @@ from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
 from quantmesh.instruments.api import instrument_router
+from quantmesh.instruments.decision_packets import (
+    DecisionPacketService,
+    DecisionPacketStore,
+)
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.live_history import LiveHistoryService
@@ -1041,6 +1045,7 @@ def create_workstation_app(
     live_feed: LiveFeed | None = None,
     prediction: PredictionBoard | None = None,
     data_catalog: DataCatalogReader | None = None,
+    decision_packets: DecisionPacketStore | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1114,6 +1119,7 @@ def create_workstation_app(
     app.state.data_catalog = data_catalog
     clock = workspace_clock if workspace_clock is not None else lambda: datetime.now(UTC)
     app.state.instrument_clock = clock
+    app.state.decision_packets = decision_packets
 
     def publish_account(updated: PaperAccount) -> None:
         if account_sink is not None:
@@ -1179,12 +1185,19 @@ def create_workstation_app(
             history=effective_history,
             forecasts=price_forecasts,
             account_provider=account_store.get,
-            marks_provider=lambda: mark_snapshot_provider(clock()).marks,
-            valuation_provider=mark_snapshot_provider,
+            marks_provider=lambda: app.state.mark_snapshot_provider(clock()).marks,
+            valuation_provider=lambda as_of: app.state.mark_snapshot_provider(as_of),
             live_feed=live_feed,
             decisions=paper_decisions,
+            decision_packets=decision_packets,
             now=clock,
         )
+        if decision_packets is not None:
+            app.state.decision_packet_service = DecisionPacketService(
+                store=decision_packets,
+                workspace_provider=lambda: app.state.instrument_workspace,
+                proposals=paper_decisions,
+            )
 
     # The SPA JSON surface (Phase C) in both modes: a strict superset
     # of the M1 API, so a client that wants JSON has one source of
@@ -1793,6 +1806,7 @@ def main(argv: list[str] | None = None) -> None:
                 live_feed=feed,
                 prediction=prediction,
                 data_catalog=trusted_catalog,
+                decision_packets=DecisionPacketStore(settings.decisions_dir / "packets"),
                 host=host,
             )
         else:

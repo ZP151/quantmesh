@@ -10,6 +10,7 @@ from quantmesh.domain.models import Venue
 from quantmesh.execution.accounting import PaperAccount, position_key
 from quantmesh.instruments.contracts import (
     ComparisonSeries,
+    DecisionWorkspaceState,
     HistoryRange,
     InstrumentWorkspace,
     PaperProposal,
@@ -21,6 +22,8 @@ from quantmesh.instruments.contracts import (
     WorkspacePosition,
     WorkspaceRisk,
 )
+from quantmesh.instruments.decision_analysis import compose_decision_packet
+from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.live_history import LiveHistoryService
@@ -144,6 +147,7 @@ class InstrumentWorkspaceService:
         valuation_provider: Callable[[datetime], AccountValuationSnapshot] | None = None,
         live_feed: LiveFeed | None = None,
         decisions: PaperDecisionService | None = None,
+        decision_packets: DecisionPacketStore | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         self._history = history
@@ -153,6 +157,7 @@ class InstrumentWorkspaceService:
         self._valuation_provider = valuation_provider
         self._live_feed = live_feed
         self._decisions = decisions
+        self._decision_packets = decision_packets
         self._now = now
 
     def _latest_forecast(
@@ -333,11 +338,36 @@ class InstrumentWorkspaceService:
                 proposal_blockers.append(
                     live.reason or "a fresh real quote is required for paper confirmation"
                 )
+        if self._decision_packets is None:
+            proposal_blockers.append("decision packet persistence is not attached")
         if account.kill_switch:
             proposal_blockers.append("kill switch enabled")
         if account.kill_switches.get(venue):
             proposal_blockers.append(f"kill switch enabled for venue {venue.value}")
         proposal_blockers = list(dict.fromkeys(proposal_blockers))
+
+        proposal = ProposalCapability(
+            allowed=not proposal_blockers,
+            blockers=tuple(proposal_blockers),
+            proposals=proposals,
+        )
+        draft = compose_decision_packet(
+            history=history,
+            forecast=forecast,
+            live=live,
+            risk=risk,
+            proposal=proposal,
+            account=account,
+            selected_range=selected_range,
+            as_of=generated_at,
+        )
+        latest = (
+            self._decision_packets.latest(venue, symbol, selected_range)
+            if self._decision_packets is not None
+            else None
+        )
+        if latest is not None and latest.as_of != generated_at:
+            latest = None
 
         return InstrumentWorkspace(
             generated_at=generated_at,
@@ -349,9 +379,6 @@ class InstrumentWorkspaceService:
             forecast_unavailable_reason=forecast_error,
             position=position,
             risk=risk,
-            proposal=ProposalCapability(
-                allowed=not proposal_blockers,
-                blockers=tuple(proposal_blockers),
-                proposals=proposals,
-            ),
+            proposal=proposal,
+            decision=DecisionWorkspaceState(draft=draft, latest=latest),
         )

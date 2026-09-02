@@ -37,7 +37,11 @@ from quantmesh.instruments.contracts import (
     WorkspaceRisk,
 )
 from quantmesh.instruments.decision_analysis import compose_decision_packet
-from quantmesh.instruments.decision_packets import DecisionPacketStore, decision_packet_id
+from quantmesh.instruments.decision_packets import (
+    DecisionPacketService,
+    DecisionPacketStore,
+    decision_packet_id,
+)
 from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
@@ -56,6 +60,7 @@ __all__ = [
     "DecisionMarketState",
     "DecisionPacket",
     "DecisionPacketStore",
+    "DecisionPacketService",
     "DecisionPaperCapability",
     "DecisionRiskPlan",
     "DecisionScenario",

@@ -19,10 +19,12 @@ from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.events.forecast import ForecastReportRegistry
 from quantmesh.events.mapping import MappingLedger
 from quantmesh.execution.journal import OrderJournal
+from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.ops.enablement import ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
 from quantmesh.research.reports import ReportRegistry
+from quantmesh.settings import settings
 
 
 @dataclass(frozen=True)
@@ -40,6 +42,7 @@ class WorkstationStores:
     decisions: DecisionLog
     documents: DocumentIndex
     enablement: ApprovalLedger
+    decision_packets: DecisionPacketStore
 
 
 def build_workstation_stores(
@@ -65,6 +68,7 @@ def build_workstation_stores(
             decisions=DecisionLog(),
             documents=DocumentIndex(),
             enablement=ApprovalLedger(),
+            decision_packets=DecisionPacketStore(settings.decisions_dir / "packets"),
         )
     root = Path(root)
     effective_lake = root / "market" / "lake" if lake_root is None else Path(lake_root)
@@ -84,4 +88,5 @@ def build_workstation_stores(
         decisions=DecisionLog(root=root / "decisions"),
         documents=DocumentIndex(root=root / "documents"),
         enablement=ApprovalLedger(root=root / "enablement"),
+        decision_packets=DecisionPacketStore(root / "decisions" / "packets"),
     )

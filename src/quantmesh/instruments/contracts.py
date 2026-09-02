@@ -1544,6 +1544,22 @@ class DecisionWorkspaceState(StrictContract):
     latest: DecisionPacket | None = None
 
 
+class DecisionPacketActionResult(StrictContract):
+    """One immutable packet transition and its optional paper proposal."""
+
+    packet: DecisionPacket
+    proposal: PaperProposal | None = None
+
+    @model_validator(mode="after")
+    def proposal_matches_packet(self) -> "DecisionPacketActionResult":
+        if self.packet.disposition is DecisionDisposition.PAPER_PROPOSAL:
+            if self.proposal is None or self.packet.proposal_id != self.proposal.id:
+                raise ValueError("paper decision packet must bind its exact proposal")
+        elif self.proposal is not None:
+            raise ValueError("non-paper decision packet cannot return a proposal")
+        return self
+
+
 class InstrumentWorkspace(StrictContract):
     """Point-in-time read model for one venue-aware decision workspace."""
 

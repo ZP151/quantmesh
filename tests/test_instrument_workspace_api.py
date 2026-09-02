@@ -376,8 +376,12 @@ def _harness(
     app.state.price_forecasts = catalog
     app.state.proposal_service = proposals
     app.state.instrument_clock = lambda: NOW
+    app.state.instrument_workspace._now = lambda: NOW  # noqa: SLF001
+    app.state.instrument_workspace._forecasts = catalog  # noqa: SLF001
+    app.state.instrument_workspace._decisions = proposals  # noqa: SLF001
     if live is not None:
         app.state.live = live
+        app.state.instrument_workspace._live_feed = live  # noqa: SLF001
     return ApiHarness(app, history, catalog, proposals, state, sink_calls, journal)
 
 

@@ -54,6 +54,10 @@ def base_url(tmp_path_factory) -> str:
     port = listener.getsockname()[1]
     root = Path(tmp_path_factory.mktemp("instrument-workspace-e2e")) / "demo"
     app = create_demo_app(root=root, host=HOST)
+    # Task 2 closes the configured direct-proposal bypass. This pre-Task-3
+    # browser regression deliberately exercises the legacy unconfigured
+    # proposal client; Task 3 replaces it with the packet action API.
+    app.state.decision_packet_service = None
     server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=port, log_level="warning"))
     thread = threading.Thread(
         target=server.run,

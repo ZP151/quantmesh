@@ -129,6 +129,7 @@ def _status(runtime: DemoRuntime) -> dict[str, object]:
         sum(1 for path in forecast_root.iterdir() if path.is_dir()) if forecast_root.exists() else 0
     )
     surfaces["paper_proposals"]["rows"] = len(seeded.proposal_ledger.all())
+    surfaces["decision_packets"]["rows"] = len(seeded.decision_packets.all())
     surfaces["orders"]["rows"] = len(seeded.journal.all())
     retained_paths = retained_demo_reset_paths(runtime.root)
     retained_set = set(retained_paths)
@@ -185,6 +186,13 @@ def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
     app.state.marks = seeded.marks
     app.state.history = seeded.history
     app.state.price_forecasts = seeded.price_forecasts
+    app.state.decision_packets = seeded.decision_packets
+    packet_service = getattr(app.state, "decision_packet_service", None)
+    if packet_service is not None:
+        packet_service.store = seeded.decision_packets
+    workspace = getattr(app.state, "instrument_workspace", None)
+    if workspace is not None:
+        workspace._decision_packets = seeded.decision_packets  # noqa: SLF001
     app.state.page_context = PageContext(
         account=seeded.account,
         marks=seeded.marks,
@@ -439,6 +447,7 @@ def create_demo_app(
         history=seeded.history,
         price_forecasts=seeded.price_forecasts,
         proposal_ledger=seeded.proposal_ledger,
+        decision_packets=seeded.decision_packets,
         account_sink=lambda account: persist_demo_account(root, account),
         demo_quote_provider=lambda instrument, now: _workspace_demo_quote(
             seeded,

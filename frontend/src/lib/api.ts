@@ -564,6 +564,12 @@ export type InstrumentWorkspace = DeepReadonly<
 export type PaperProposal = DeepReadonly<components['schemas']['PaperProposal']>
 export type ProposalConfirmation = DeepReadonly<components['schemas']['ProposalConfirmation']>
 export type ProposalCreateInput = components['schemas']['ProposalCreateBody']
+export type DecisionPacket = DeepReadonly<components['schemas']['DecisionPacket']>
+export type DecisionPacketActionResult = DeepReadonly<
+  components['schemas']['DecisionPacketActionResult']
+>
+export type DecisionPacketSaveInput = components['schemas']['DecisionPacketSaveBody']
+export type DecisionPacketActionInput = components['schemas']['DecisionPacketActionBody']
 
 // --- Trusted data catalog (iteration 0021 Slice 6) -----------------------
 
@@ -774,6 +780,38 @@ export const api = {
             compare: compare.length > 0 ? [...compare] : undefined,
           },
         },
+      },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async saveDecisionPacket(input: DecisionPacketSaveInput): Promise<DecisionPacket> {
+    const { data, error, response } = await generatedApi.POST('/api/decision-packets', {
+      body: input,
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async decisionPacket(packetId: string): Promise<DecisionPacket> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/decision-packets/{packet_id}',
+      { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async applyDecisionPacketAction(
+    packetId: string,
+    input: DecisionPacketActionInput,
+  ): Promise<DecisionPacketActionResult> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/decision-packets/{packet_id}/actions',
+      {
+        params: { path: { packet_id: packetId } },
+        body: input,
       },
     )
     if (!response.ok || data === undefined) throw generatedApiError(response, error)

@@ -106,6 +106,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decision-packets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Decision Packet */
+        post: operations["api_save_decision_packet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/decision-packets/{packet_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decision Packet */
+        get: operations["api_decision_packet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/decision-packets/{packet_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply Decision Packet Action */
+        post: operations["api_apply_decision_packet_action"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/enablement": {
         parameters: {
             query?: never;
@@ -579,6 +630,57 @@ export interface paths {
         get: operations["redirect_audit_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decision-packets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Decision Packet */
+        post: operations["save_decision_packet_decision_packets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decision-packets/{packet_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decision Packet */
+        get: operations["decision_packet_decision_packets__packet_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decision-packets/{packet_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply Decision Packet Action */
+        post: operations["apply_decision_packet_action_decision_packets__packet_id__actions_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1373,6 +1475,302 @@ export interface components {
          */
         DataKind: "bars" | "quotes" | "books" | "trades" | "adjustment-factors" | "splits" | "dividends";
         /**
+         * DecisionBlocker
+         * @description One ordered, evidence-addressable reason paper action is unavailable.
+         */
+        DecisionBlocker: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "history-quality" | "history-lineage" | "history-freshness" | "forecast-missing" | "forecast-ineligible" | "forecast-freshness" | "leakage" | "chronology" | "cost-evidence" | "valuation" | "kill-switch" | "proposal-service";
+            /** Evidence Ref */
+            evidence_ref: string;
+            /** Message */
+            message: string;
+        };
+        /**
+         * DecisionCostEvidence
+         * @description Pinned account costs; quote spread remains a confirmation concern.
+         */
+        DecisionCostEvidence: {
+            /** Fee Bps */
+            fee_bps: number;
+            /** Half Spread Bps */
+            half_spread_bps?: number | null;
+            /** Slippage Bps */
+            slippage_bps: number;
+            /**
+             * Spread Status
+             * @constant
+             */
+            spread_status: "confirmation-quote-required";
+        };
+        /**
+         * DecisionDisposition
+         * @description The immutable operator state recorded by one decision packet version.
+         * @enum {string}
+         */
+        DecisionDisposition: "draft" | "reject" | "watch" | "paper_proposal";
+        /**
+         * DecisionEvidence
+         * @description Pinned history, forecast, chronology, metric, and cost inputs.
+         */
+        DecisionEvidence: {
+            costs: components["schemas"]["DecisionCostEvidence"];
+            /** Forecast Artifact Id */
+            forecast_artifact_id?: string | null;
+            /** Forecast Benchmark Name */
+            forecast_benchmark_name?: string | null;
+            /** Forecast Blockers */
+            forecast_blockers?: string[];
+            forecast_chronology?: components["schemas"]["DecisionForecastChronology"] | null;
+            /** Forecast Config Digest */
+            forecast_config_digest?: string | null;
+            /** Forecast Dataset Id */
+            forecast_dataset_id?: string | null;
+            /** Forecast Dataset Revision */
+            forecast_dataset_revision?: number | null;
+            /** Forecast Eligible */
+            forecast_eligible?: boolean | null;
+            /** Forecast Generated At */
+            forecast_generated_at?: string | null;
+            /** Forecast History Digest */
+            forecast_history_digest?: string | null;
+            /** Forecast Limitations */
+            forecast_limitations?: string[];
+            /** Forecast Manifest Id */
+            forecast_manifest_id?: string | null;
+            /** Forecast Metrics */
+            forecast_metrics?: components["schemas"]["ForecastMetrics"][];
+            /** Forecast Model Name */
+            forecast_model_name?: string | null;
+            /** Forecast Model Version */
+            forecast_model_version?: string | null;
+            /** Forecast Paths */
+            forecast_paths?: components["schemas"]["ForecastPath"][];
+            /** Forecast Quality Evaluation Id */
+            forecast_quality_evaluation_id?: string | null;
+            /** Forecast Synthetic */
+            forecast_synthetic?: boolean | null;
+            /** History Dataset Id */
+            history_dataset_id: string;
+            /** History Dataset Revision */
+            history_dataset_revision: number;
+            /** History Duplicates */
+            history_duplicates?: string[];
+            /** History Gaps */
+            history_gaps?: string[];
+            /**
+             * History Generated At
+             * Format: date-time
+             */
+            history_generated_at: string;
+            /** History Limitations */
+            history_limitations?: string[];
+            /** History Manifest Id */
+            history_manifest_id?: string | null;
+            /** History Quality Evaluation Id */
+            history_quality_evaluation_id?: string | null;
+            /** History Source */
+            history_source: string;
+        };
+        /**
+         * DecisionForecastChronology
+         * @description Role-named forecast training and evaluation boundaries.
+         */
+        DecisionForecastChronology: {
+            /** Test End */
+            test_end?: string | null;
+            /** Test Start */
+            test_start?: string | null;
+            /**
+             * Train End
+             * Format: date-time
+             */
+            train_end: string;
+            /**
+             * Train Start
+             * Format: date-time
+             */
+            train_start: string;
+            /** Validation End */
+            validation_end?: string | null;
+            /** Validation Start */
+            validation_start?: string | null;
+        };
+        /**
+         * DecisionMarketState
+         * @description Transparent observed market structure used by a packet.
+         */
+        DecisionMarketState: {
+            /** Invalidation */
+            invalidation: number;
+            /** Key Level Bar Times */
+            key_level_bar_times: string[];
+            /** Latest Close */
+            latest_close: number;
+            /** Observed Drawdown */
+            observed_drawdown: number;
+            /** Observed Volatility */
+            observed_volatility: number;
+            /** Resistance */
+            resistance: number;
+            /** Sma20 */
+            sma20: number;
+            /** Sma50 */
+            sma50: number;
+            /** Support */
+            support: number;
+            /**
+             * Trend
+             * @enum {string}
+             */
+            trend: "bullish" | "bearish" | "neutral";
+        };
+        /**
+         * DecisionPacket
+         * @description Frozen, versioned, content-addressed decision analysis and disposition.
+         */
+        DecisionPacket: {
+            /**
+             * As Of
+             * Format: date-time
+             */
+            as_of: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            disposition: components["schemas"]["DecisionDisposition"];
+            evidence: components["schemas"]["DecisionEvidence"];
+            instrument: components["schemas"]["InstrumentSnapshot"];
+            market_state: components["schemas"]["DecisionMarketState"];
+            /** Operator Reason */
+            operator_reason?: string | null;
+            /** Packet Id */
+            packet_id: string;
+            paper_capability: components["schemas"]["DecisionPaperCapability"];
+            /** Parent Packet Id */
+            parent_packet_id?: string | null;
+            /** Proposal Id */
+            proposal_id?: string | null;
+            risk_plan: components["schemas"]["DecisionRiskPlan"];
+            /** Scenarios */
+            scenarios: [
+                components["schemas"]["DecisionScenario"],
+                components["schemas"]["DecisionScenario"],
+                components["schemas"]["DecisionScenario"]
+            ];
+            selected_range: components["schemas"]["HistoryRange"];
+            /** Version */
+            version: number;
+        };
+        /** DecisionPacketActionBody */
+        DecisionPacketActionBody: {
+            disposition: components["schemas"]["DecisionDisposition"];
+            /** Limit Price */
+            limit_price?: number | null;
+            /** Operator Reason */
+            operator_reason?: string | null;
+            /** Quantity */
+            quantity?: number | null;
+            side?: components["schemas"]["Side"] | null;
+        };
+        /**
+         * DecisionPacketActionResult
+         * @description One immutable packet transition and its optional paper proposal.
+         */
+        DecisionPacketActionResult: {
+            packet: components["schemas"]["DecisionPacket"];
+            proposal?: components["schemas"]["PaperProposal"] | null;
+        };
+        /** DecisionPacketSaveBody */
+        DecisionPacketSaveBody: {
+            /** Expected Packet Id */
+            expected_packet_id: string;
+            selected_range: components["schemas"]["HistoryRange"];
+            /** Symbol */
+            symbol: string;
+            venue: components["schemas"]["Venue"];
+        };
+        /**
+         * DecisionPaperCapability
+         * @description Packet-local action gate retaining typed, ordered evidence blockers.
+         */
+        DecisionPaperCapability: {
+            /** Allowed */
+            allowed: boolean;
+            /** Blockers */
+            blockers?: components["schemas"]["DecisionBlocker"][];
+        };
+        /**
+         * DecisionRiskPlan
+         * @description Deterministic proposal inputs, not a paper-risk approval.
+         */
+        DecisionRiskPlan: {
+            /** Entry Price */
+            entry_price: number;
+            /**
+             * Proposal Input Only
+             * @default true
+             * @constant
+             */
+            proposal_input_only: true;
+            /** Reward Per Unit */
+            reward_per_unit: number;
+            /** Reward To Risk */
+            reward_to_risk: number;
+            /** Risk Per Unit */
+            risk_per_unit: number;
+            /** Stop Price */
+            stop_price: number;
+            /** Suggested Notional */
+            suggested_notional?: number | null;
+            /** Suggested Quantity */
+            suggested_quantity?: number | null;
+            /** Target Price */
+            target_price: number;
+        };
+        /**
+         * DecisionScenario
+         * @description One qualitative Bull, Base, or Bear outcome; never a fabricated probability.
+         */
+        DecisionScenario: {
+            /**
+             * Confidence
+             * @default qualitative
+             * @constant
+             */
+            confidence: "qualitative";
+            /** Confidence Reason */
+            confidence_reason: string;
+            /** Invalidation */
+            invalidation: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "bull" | "base" | "bear";
+            /** Probability */
+            probability?: null;
+            /** Target */
+            target: number;
+            /** Thesis */
+            thesis: string;
+            /** Trigger */
+            trigger: string;
+        };
+        /**
+         * DecisionWorkspaceState
+         * @description Fresh deterministic draft and optional persisted packet for one workspace.
+         */
+        DecisionWorkspaceState: {
+            draft: components["schemas"]["DecisionPacket"];
+            latest?: components["schemas"]["DecisionPacket"] | null;
+        };
+        /**
          * EntitlementState
          * @description Whether the local operator can currently use a capability.
          * @enum {string}
@@ -1590,6 +1988,7 @@ export interface components {
          */
         InstrumentWorkspace: {
             comparison?: components["schemas"]["ComparisonSeries"] | null;
+            decision: components["schemas"]["DecisionWorkspaceState"];
             forecast?: components["schemas"]["WorkspaceForecast"] | null;
             /** Forecast Unavailable Reason */
             forecast_unavailable_reason?: string | null;
@@ -1806,6 +2205,8 @@ export interface components {
         ProposalCreateBody: {
             /** Artifact Id */
             artifact_id: string;
+            /** Decision Packet Id */
+            decision_packet_id?: string | null;
             /** Limit Price */
             limit_price?: number | null;
             /** Quantity */
@@ -2159,6 +2560,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogLineage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_save_decision_packet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionPacketSaveBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionPacket"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_decision_packet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionPacket"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_apply_decision_packet_action: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionPacketActionBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionPacketActionResult"];
                 };
             };
             /** @description Validation Error */
@@ -2868,6 +3368,105 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    save_decision_packet_decision_packets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionPacketSaveBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionPacket"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decision_packet_decision_packets__packet_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionPacket"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_decision_packet_action_decision_packets__packet_id__actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionPacketActionBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionPacketActionResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

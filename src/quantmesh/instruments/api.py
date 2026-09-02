@@ -16,6 +16,9 @@ from quantmesh.data.layout import validate_symbol
 from quantmesh.domain.models import Side, Venue
 from quantmesh.instruments.contracts import (
     ComparisonSeries,
+    DecisionDisposition,
+    DecisionPacket,
+    DecisionPacketActionResult,
     HistoricalSeries,
     HistoryRange,
     InstrumentWorkspace,
@@ -23,10 +26,13 @@ from quantmesh.instruments.contracts import (
     ProposalConfirmation,
     ProposalStatus,
 )
+from quantmesh.instruments.decision_packets import (
+    DecisionPacketService,
+    DecisionPacketStore,
+)
 from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
 from quantmesh.instruments.live_history import LiveHistoryService
 from quantmesh.instruments.proposals import PaperDecisionService
-from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.feed import LiveFeed
 
 _MAX_COMPARE_INSTRUMENTS = 3
@@ -53,12 +59,35 @@ class ProposalCreateBody(BaseModel):
     side: Side
     quantity: float = Field(gt=0)
     limit_price: float | None = Field(default=None, gt=0)
+    decision_packet_id: str | None = Field(
+        default=None,
+        pattern=r"^packet-[0-9a-f]{24}$",
+    )
 
 
 class ProposalConfirmBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     confirmation_token: str = Field(min_length=1, max_length=128)
+
+
+class DecisionPacketSaveBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    venue: Venue
+    symbol: str
+    selected_range: HistoryRange
+    expected_packet_id: str = Field(pattern=r"^packet-[0-9a-f]{24}$")
+
+
+class DecisionPacketActionBody(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+
+    disposition: DecisionDisposition
+    operator_reason: str | None = Field(default=None, max_length=2_000)
+    side: Side | None = None
+    quantity: float | None = Field(default=None, gt=0)
+    limit_price: float | None = Field(default=None, gt=0)
 
 
 def _unprocessable(detail: str) -> HTTPException:
@@ -194,40 +223,12 @@ def instrument_router() -> APIRouter:
     ) -> InstrumentWorkspace:
         _validate_api_symbol(symbol, field="symbol")
         peers = _parse_compare(compare, primary=(venue, symbol))
-        history = getattr(request.app.state, "history", None)
-        live = getattr(request.app.state, "live", None)
-        if not isinstance(history, (HistoryService, LiveHistoryService)):
+        service = getattr(request.app.state, "instrument_workspace", None)
+        if not callable(getattr(service, "render", None)):
             raise HTTPException(
                 status_code=404,
                 detail="no instrument workspace service is attached",
             )
-        effective_history = history
-        if isinstance(live, LiveFeed) and not isinstance(history, LiveHistoryService):
-            effective_history = LiveHistoryService(history, live)
-        forecasts = getattr(request.app.state, "price_forecasts", None)
-        decisions = getattr(request.app.state, "proposal_service", None)
-        if not isinstance(decisions, PaperDecisionService):
-            decisions = getattr(request.app.state, "paper_decisions", None)
-        clock = getattr(request.app.state, "instrument_clock", None)
-        if not callable(clock):
-
-            def clock() -> datetime:
-                return datetime.now(UTC)
-
-        service = InstrumentWorkspaceService(
-            history=effective_history,
-            forecasts=forecasts,
-            account_provider=lambda: request.app.state.account,
-            marks_provider=lambda: request.app.state.marks,
-            valuation_provider=(
-                request.app.state.mark_snapshot_provider
-                if callable(getattr(request.app.state, "mark_snapshot_provider", None))
-                else None
-            ),
-            live_feed=live if isinstance(live, LiveFeed) else None,
-            decisions=(decisions if isinstance(decisions, PaperDecisionService) else None),
-            now=clock,
-        )
         try:
             return service.render(venue, symbol, selected_range, peers=peers)
         except HistoryUnavailableError as error:
@@ -235,6 +236,70 @@ def instrument_router() -> APIRouter:
                 status_code=404,
                 detail=f"instrument workspace unavailable: {error}",
             ) from error
+
+    @router.get(
+        "/decision-packets/{packet_id}",
+        response_model=DecisionPacket,
+        name="decision_packet",
+    )
+    def decision_packet(request: Request, packet_id: str) -> DecisionPacket:
+        store = getattr(request.app.state, "decision_packets", None)
+        if not isinstance(store, DecisionPacketStore):
+            raise HTTPException(status_code=404, detail="no decision packet store is attached")
+        try:
+            return store.get(packet_id)
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+
+    @router.post(
+        "/decision-packets",
+        response_model=DecisionPacket,
+        name="save_decision_packet",
+    )
+    def save_decision_packet(
+        request: Request,
+        body: DecisionPacketSaveBody,
+    ) -> DecisionPacket:
+        _guard_json_origin(request, "decision packet save")
+        _validate_api_symbol(body.symbol, field="symbol")
+        service = getattr(request.app.state, "decision_packet_service", None)
+        if not isinstance(service, DecisionPacketService):
+            raise HTTPException(status_code=404, detail="no decision packet service is attached")
+        try:
+            return service.save_draft(
+                body.venue,
+                body.symbol,
+                body.selected_range,
+                expected_packet_id=body.expected_packet_id,
+            )
+        except (ValueError, OSError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @router.post(
+        "/decision-packets/{packet_id}/actions",
+        response_model=DecisionPacketActionResult,
+        name="apply_decision_packet_action",
+    )
+    def apply_decision_packet_action(
+        request: Request,
+        packet_id: str,
+        body: DecisionPacketActionBody,
+    ) -> DecisionPacketActionResult:
+        _guard_json_origin(request, "decision packet action")
+        service = getattr(request.app.state, "decision_packet_service", None)
+        if not isinstance(service, DecisionPacketService):
+            raise HTTPException(status_code=404, detail="no decision packet service is attached")
+        try:
+            return service.transition(
+                packet_id,
+                disposition=body.disposition,
+                operator_reason=body.operator_reason,
+                side=body.side,
+                quantity=body.quantity,
+                limit_price=body.limit_price,
+            )
+        except (ValueError, OSError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
 
     @router.post(
         "/paper/proposals",
@@ -258,6 +323,31 @@ def instrument_router() -> APIRouter:
             raise HTTPException(status_code=404, detail=str(error)) from error
         if artifact.instrument.venue is not body.venue or artifact.instrument.symbol != body.symbol:
             raise _unprocessable("proposal venue and symbol must match the forecast artifact")
+        packet_service = getattr(request.app.state, "decision_packet_service", None)
+        if isinstance(packet_service, DecisionPacketService):
+            if body.decision_packet_id is None:
+                raise HTTPException(
+                    status_code=409,
+                    detail="paper proposal requires a persisted decision packet binding",
+                )
+            try:
+                packet = packet_service.store.get(body.decision_packet_id)
+                if packet.evidence.forecast_artifact_id != artifact.id:
+                    raise ValueError(
+                        "forecast artifact does not match the persisted decision packet"
+                    )
+                result = packet_service.transition(
+                    packet.packet_id,
+                    disposition=DecisionDisposition.PAPER_PROPOSAL,
+                    side=body.side,
+                    quantity=body.quantity,
+                    limit_price=body.limit_price,
+                )
+                if result.proposal is None:
+                    raise ValueError("decision packet action returned no paper proposal")
+                return result.proposal
+            except ValueError as error:
+                raise HTTPException(status_code=409, detail=str(error)) from error
         try:
             return decisions.propose(
                 artifact.id,
