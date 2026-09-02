@@ -56,8 +56,23 @@ export function PacketEvidenceSummary({ packet }: { packet: DecisionPacket }) {
             ? null
             : t(evidence.forecast_synthetic ? 'screen.workspace.synthetic' : 'screen.workspace.nonSynthetic')}
         />
-        {chronology && (
-          <>
+        <EvidenceFact label={t('screen.workspace.fees')} value={`${number(evidence.costs.fee_bps, locale)} bps`} />
+        <EvidenceFact label={t('screen.workspace.slippage')} value={`${number(evidence.costs.slippage_bps, locale)} bps`} />
+        <EvidenceFact
+          label={t('screen.workspace.halfSpread')}
+          value={evidence.costs.half_spread_bps === null || evidence.costs.half_spread_bps === undefined
+            ? t('screen.workspace.spreadAtConfirmation')
+            : `${number(evidence.costs.half_spread_bps, locale)} bps`}
+        />
+      </dl>
+      {chronology && (
+        <div
+          aria-label={t('screen.workspace.forecastChronologyOverview')}
+          className="space-y-1 border-b border-border pb-3 text-xs"
+          role="group"
+        >
+          <p className="font-semibold">{t('screen.workspace.forecastChronologyOverview')}</p>
+          <dl className="space-y-1">
             <EvidenceFact
               label={t('screen.workspace.trainWindow')}
               value={`${dateTime(chronology.train_start, locale)} → ${dateTime(chronology.train_end, locale)}`}
@@ -70,35 +85,46 @@ export function PacketEvidenceSummary({ packet }: { packet: DecisionPacket }) {
               label={t('screen.workspace.testWindow')}
               value={timeWindow(chronology.test_start, chronology.test_end, locale)}
             />
-          </>
-        )}
-        <EvidenceFact label={t('screen.workspace.fees')} value={`${number(evidence.costs.fee_bps, locale)} bps`} />
-        <EvidenceFact label={t('screen.workspace.slippage')} value={`${number(evidence.costs.slippage_bps, locale)} bps`} />
-        <EvidenceFact
-          label={t('screen.workspace.halfSpread')}
-          value={evidence.costs.half_spread_bps === null || evidence.costs.half_spread_bps === undefined
-            ? t('screen.workspace.spreadAtConfirmation')
-            : `${number(evidence.costs.half_spread_bps, locale)} bps`}
-        />
-      </dl>
+          </dl>
+        </div>
+      )}
       {forecastMetrics.length > 0 && (
         <div className="space-y-3 border-b border-border pb-3 text-xs">
-          {forecastMetrics.map((metric) => (
-            <div className="space-y-1" key={metric.sessions}>
-              <p className="font-semibold">{t('screen.workspace.metricHorizon', { sessions: String(metric.sessions) })}</p>
-              <dl className="space-y-1">
-                <EvidenceFact label={t('screen.workspace.oosMae')} value={number(metric.mae, locale)} />
-                <EvidenceFact label={t('screen.workspace.oosRmse')} value={number(metric.rmse, locale)} />
-                <EvidenceFact label={t('screen.workspace.benchmarkMae')} value={number(metric.benchmark_mae, locale)} />
-                <EvidenceFact
-                  label={t('screen.workspace.coverage')}
-                  value={`${percent(metric.coverage_50, locale)} / ${percent(metric.coverage_80, locale)} / ${percent(metric.coverage_95, locale)}`}
-                />
-                <EvidenceFact label={t('screen.workspace.residualSamples')} value={number(metric.residual_count, locale)} />
-                <EvidenceFact label={t('screen.workspace.intervalTests')} value={number(metric.interval_test_count, locale)} />
-              </dl>
-            </div>
-          ))}
+          {forecastMetrics.map((metric) => {
+            const metricLabel = t('screen.workspace.metricHorizon', { sessions: String(metric.sessions) })
+            return (
+              <div aria-label={metricLabel} className="space-y-1" key={metric.sessions} role="group">
+                <p className="font-semibold">{metricLabel}</p>
+                <dl className="space-y-1">
+                  <EvidenceFact label={t('screen.workspace.oosMae')} value={number(metric.mae, locale)} />
+                  <EvidenceFact label={t('screen.workspace.oosRmse')} value={number(metric.rmse, locale)} />
+                  <EvidenceFact label={t('screen.workspace.benchmarkMae')} value={number(metric.benchmark_mae, locale)} />
+                  <EvidenceFact
+                    label={t('screen.workspace.coverage')}
+                    value={`${percent(metric.coverage_50, locale)} / ${percent(metric.coverage_80, locale)} / ${percent(metric.coverage_95, locale)}`}
+                  />
+                  <EvidenceFact label={t('screen.workspace.residualSamples')} value={number(metric.residual_count, locale)} />
+                  <EvidenceFact label={t('screen.workspace.intervalTests')} value={number(metric.interval_test_count, locale)} />
+                  <EvidenceFact
+                    label={t('screen.workspace.validationStart')}
+                    value={metric.validation_start ? dateTime(metric.validation_start, locale) : null}
+                  />
+                  <EvidenceFact
+                    label={t('screen.workspace.validationEnd')}
+                    value={metric.validation_end ? dateTime(metric.validation_end, locale) : null}
+                  />
+                  <EvidenceFact
+                    label={t('screen.workspace.testStart')}
+                    value={metric.test_start ? dateTime(metric.test_start, locale) : null}
+                  />
+                  <EvidenceFact
+                    label={t('screen.workspace.testEnd')}
+                    value={metric.test_end ? dateTime(metric.test_end, locale) : null}
+                  />
+                </dl>
+              </div>
+            )
+          })}
         </div>
       )}
       {forecastPaths.map((path) => (
