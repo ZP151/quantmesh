@@ -19,11 +19,11 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: Slice 1 Task 3R, the approved scope reduction that binds
-  every archived forecast metric to its own literal validation and test
-  windows. Do not continue broad Task 3 patching. Task 4 remains blocked until
-  this narrow evidence-integrity boundary passes one independent review; do
-  not begin Slices 2–4 or add another model framework.
+- Current frontier: Slice 1 Task 4, prove the complete NVDA ticker-to-durable-
+  decision loop, stale Paper block, confirmation risk refusal, clean restart,
+  compact accessibility and the two-minute interaction target. Only
+  acceptance-blocking corrections are allowed; do not begin Slices 2–4 or add
+  another model framework.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.
@@ -123,6 +123,14 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   approved Task 3R: only render each stored metric with its own literal four
   sample-window timestamps and prove distinct-horizon association. State, API,
   chart and backend changes are prohibited.
+- Task 3R is complete through `41b677f57734`. Every archived forecast metric
+  now owns its literal validation/test boundaries; two distinct horizons prove
+  there is no artifact-wide chronology inheritance. Default and UTC focused
+  tests passed, and the independent review returned APPROVED/CLEAN.
+- The UTC verification also exposed two older Task 3 assertions that hard-code
+  local rendered dates in MarketCanvas and InstrumentWorkspace tests. They are
+  recorded as Task 4 acceptance blockers; no Task 3R scope was expanded to fix
+  them. Task 4 is now the active frontier.
 
 ## Historical delivery record
 

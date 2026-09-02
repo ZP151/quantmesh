@@ -223,12 +223,16 @@ to-review lineage and explains both accepted and rejected paths.
   Ruff and `git diff --check` passed.
   Task 2 final verification passed `97` tests with `6` existing dependency
   warnings; OpenAPI freshness, TypeScript, Ruff and diff checks passed.
+  Task 3 component verification passed `48` tests before scope reduction;
+  Task 3R passed `49` component tests plus focused default/UTC checks. Its
+  independent review returned APPROVED/CLEAN. Two older timezone-dependent UI
+  assertions are explicitly carried into Task 4 acceptance correction.
 
 ## Current frontier
 
-Execute Task 3R of
-`docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`: render every
-archived forecast metric with its own literal validation/test timestamps and
-prove that different horizons cannot inherit artifact-wide chronology. Stop
-for one independent scoped review; do not change state, APIs, charts, backend
-authority, Copilot, watch evaluation, outcome review or other Slices 2–4 work.
+Execute Task 4 of
+`docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`: prove the
+complete deterministic NVDA loop, including timing, stale and risk-refusal
+states, clean restart, English/Chinese keyboard behavior and 390 px layout.
+Only acceptance-blocking corrections are allowed; stop at the Slice 1 commit
+and review gate and do not begin Slices 2–4.
