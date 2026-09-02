@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 
@@ -21,10 +21,12 @@ function errorText(error: unknown): string {
 }
 
 export function ProposalConfirmation({
+  contextKey,
   onDismiss,
   packetId,
   proposal,
 }: {
+  contextKey?: string
   onDismiss: () => void
   packetId?: string
   proposal: PaperProposal
@@ -33,20 +35,46 @@ export function ProposalConfirmation({
   const queryClient = useQueryClient()
   const [confirmationToken, setConfirmationToken] = useState('')
   const [result, setResult] = useState<ProposalConfirmationResult | null>(null)
+  const confirmationIdentity = {
+    contextKey: contextKey ?? `${proposal.instrument.venue}:${proposal.instrument.symbol}`,
+    proposalId: proposal.id,
+    symbol: proposal.instrument.symbol,
+    venue: proposal.instrument.venue,
+  }
+  const identityRef = useRef(confirmationIdentity)
+  const activeRef = useRef(true)
+  identityRef.current = confirmationIdentity
+  useEffect(() => {
+    activeRef.current = true
+    return () => {
+      activeRef.current = false
+    }
+  }, [])
   const effectiveProposal = result?.proposal ?? proposal
   const proposalBlocked = effectiveProposal.status !== 'pending' || effectiveProposal.blockers.length > 0
   const confirmation = useMutation({
-    mutationFn: () => api.confirmPaperProposal(proposal.id, confirmationToken),
+    mutationFn: async () => {
+      const submitted = confirmationIdentity
+      try {
+        const next = await api.confirmPaperProposal(proposal.id, confirmationToken)
+        if (!activeRef.current || !sameConfirmationIdentity(identityRef.current, submitted)) return null
+        assertConfirmationResult(next, submitted)
+        return next
+      } catch (error) {
+        if (!(error instanceof ProposalRefusalError)) throw error
+        if (!activeRef.current || !sameConfirmationIdentity(identityRef.current, submitted)) return null
+        assertConfirmationResult(error.result, submitted)
+        return error.result
+      }
+    },
     onSuccess: (next) => {
+      if (next === null) return
       setResult(next)
       void Promise.all(
         ['instrument-workspace', 'orders', 'positions', 'pnl', 'audit'].map((key) =>
           queryClient.invalidateQueries({ queryKey: [key] }),
         ),
       )
-    },
-    onError: (error) => {
-      if (error instanceof ProposalRefusalError) setResult(error.result)
     },
   })
   const confirmationError = confirmationErrorText(result, confirmation.error)
@@ -63,6 +91,8 @@ export function ProposalConfirmation({
           {t('screen.workspace.orderCreated')}
         </p>
         <dl className="space-y-1 text-xs">
+          {packetId && <Fact label={t('screen.workspace.packetId')} value={packetId} />}
+          <Fact label={t('screen.workspace.proposalId')} value={effectiveProposal.id} />
           <Fact label={t('screen.workspace.orderId')} value={effectiveProposal.order_id} />
           {order !== null && order !== undefined && (
             <Fact label={t('screen.workspace.orderStatus')} value={orderStatus(order.status, t)} />
@@ -145,7 +175,7 @@ export function ProposalConfirmation({
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
           {t('screen.workspace.displayedToken')}
         </p>
-        <code className="mt-1 block break-all font-mono text-xs">{proposal.confirmation_token}</code>
+        <code className="mt-1 block break-all font-mono text-xs [overflow-wrap:anywhere]">{proposal.confirmation_token}</code>
       </div>
       <div className="space-y-2">
         <Label htmlFor="proposal-confirmation-token">{t('screen.workspace.confirmationToken')}</Label>
@@ -189,6 +219,40 @@ function confirmationErrorText(
   return errorText(error)
 }
 
+interface ConfirmationIdentity {
+  contextKey: string
+  proposalId: string
+  symbol: string
+  venue: PaperProposal['instrument']['venue']
+}
+
+function sameConfirmationIdentity(
+  current: ConfirmationIdentity,
+  submitted: ConfirmationIdentity,
+): boolean {
+  return current.contextKey === submitted.contextKey
+    && current.proposalId === submitted.proposalId
+    && current.symbol === submitted.symbol
+    && current.venue === submitted.venue
+}
+
+function assertConfirmationResult(
+  result: ProposalConfirmationResult,
+  submitted: ConfirmationIdentity,
+): void {
+  if (
+    result.proposal.id !== submitted.proposalId
+    || result.proposal.instrument.venue !== submitted.venue
+    || result.proposal.instrument.symbol !== submitted.symbol
+    || (result.order !== null && result.order !== undefined && (
+      result.order.instrument.venue !== submitted.venue
+      || result.order.instrument.symbol !== submitted.symbol
+    ))
+  ) {
+    throw new Error('Proposal confirmation response does not match the displayed packet context.')
+  }
+}
+
 function metadataText(metadata: Readonly<Record<string, string>> | undefined): string {
   if (metadata === undefined || Object.keys(metadata).length === 0) return '—'
   return JSON.stringify(Object.fromEntries(Object.entries(metadata).sort(([left], [right]) => left.localeCompare(right))))
@@ -198,7 +262,7 @@ function DigestFact({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-1 py-1">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd><code className="block select-all break-all font-mono text-[10px]">{value}</code></dd>
+      <dd><code className="block select-all break-all font-mono text-[10px] [overflow-wrap:anywhere]">{value}</code></dd>
     </div>
   )
 }
@@ -217,9 +281,9 @@ function orderStatus(
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-3">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="max-w-44 break-all text-right font-mono tabular-nums">{value}</dd>
+    <div className="flex min-w-0 justify-between gap-3">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 max-w-44 break-all text-right font-mono tabular-nums [overflow-wrap:anywhere]">{value}</dd>
     </div>
   )
 }

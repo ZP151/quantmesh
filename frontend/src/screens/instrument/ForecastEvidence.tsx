@@ -67,7 +67,7 @@ export function ForecastEvidence({
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {t('screen.workspace.forecast')}
           </h2>
-          <p className="mt-1 text-sm font-medium">{forecast.model_name}</p>
+          <p className="mt-1 break-all text-sm font-medium [overflow-wrap:anywhere]">{forecast.model_name}</p>
         </div>
         <div className="flex flex-wrap gap-1">
           <Badge variant={forecast.eligible ? 'default' : 'destructive'}>
@@ -179,9 +179,9 @@ export function ForecastEvidence({
 
 function Fact({ label, title, value }: { label: string; title?: string; value: string }) {
   return (
-    <div className="flex justify-between gap-3" title={title}>
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="max-w-44 text-right font-mono tabular-nums">{value}</dd>
+    <div className="flex min-w-0 justify-between gap-3" title={title}>
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 max-w-44 break-all text-right font-mono tabular-nums [overflow-wrap:anywhere]">{value}</dd>
     </div>
   )
 }

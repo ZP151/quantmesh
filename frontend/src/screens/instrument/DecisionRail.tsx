@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
@@ -18,19 +18,51 @@ function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-export function DecisionRail({
-  evidenceUpdating = false,
-  onNewAnalysis,
-  packet: packetOverride,
-  workspace,
-}: {
+interface DecisionRailProps {
+  contextKey?: string
   evidenceUpdating?: boolean
   onNewAnalysis?: () => void
   packet?: DecisionPacket
+  packetSource?: 'fresh' | 'persisted'
+  workspace: InstrumentWorkspace
+}
+
+export function DecisionRail(props: DecisionRailProps) {
+  const packet = props.packet ?? props.workspace.decision.latest ?? props.workspace.decision.draft
+  const contextKey = props.contextKey
+    ?? `${packet.instrument.venue}:${packet.instrument.symbol}:${packet.selected_range}`
+  const packetSource = props.packetSource
+    ?? (props.workspace.decision.latest?.packet_id === packet.packet_id ? 'persisted' : 'fresh')
+  return (
+    <DecisionRailContext
+      {...props}
+      contextKey={contextKey}
+      key={contextKey}
+      packet={packet}
+      packetSource={packetSource}
+    />
+  )
+}
+
+function DecisionRailContext({
+  contextKey: contextKeyOverride,
+  evidenceUpdating = false,
+  onNewAnalysis,
+  packet: packetOverride,
+  packetSource: packetSourceOverride,
+  workspace,
+}: {
+  contextKey: string
+  evidenceUpdating?: boolean
+  onNewAnalysis?: () => void
+  packet: DecisionPacket
+  packetSource: 'fresh' | 'persisted'
   workspace: InstrumentWorkspace
 }) {
   const { locale, t } = usePreferences()
-  const packet = packetOverride ?? workspace.decision.latest ?? workspace.decision.draft
+  const packet = packetOverride
+  const contextKey = contextKeyOverride
+  const packetSource = packetSourceOverride
   const [actionResult, setActionResult] = useState<DecisionPacketActionResult | null>(null)
   const displayedPacket = actionResult?.packet ?? packet
   const [side, setSide] = useState<'buy' | 'sell'>('buy')
@@ -52,13 +84,23 @@ export function DecisionRail({
       : !heldPosition
   const valuationReason = workspace.risk.valuation_reason
     ?? workspace.position?.mark_status?.reason
-
+  const viewIdentity = {
+    contextKey,
+    packetId: packet.packet_id,
+    range: packet.selected_range,
+    source: packetSource,
+    symbol: packet.instrument.symbol,
+    venue: packet.instrument.venue,
+  } as const
+  const viewIdentityRef = useRef(viewIdentity)
+  const activeRef = useRef(true)
+  viewIdentityRef.current = viewIdentity
   useEffect(() => {
-    setActionResult(null)
-    setQuantityValue(String(packet.risk_plan.suggested_quantity ?? ''))
-    setLimitPrice(String(packet.risk_plan.entry_price))
-    setOperatorReason('')
-  }, [packet.packet_id, packet.risk_plan.entry_price, packet.risk_plan.suggested_quantity])
+    activeRef.current = true
+    return () => {
+      activeRef.current = false
+    }
+  }, [])
 
   const numericQuantity = Number(quantityValue)
   const numericLimit = limitPrice.trim() === '' ? null : Number(limitPrice)
@@ -73,31 +115,49 @@ export function DecisionRail({
     && validPaperInput
 
   const action = useMutation({
-    mutationFn: async (disposition: 'reject' | 'watch' | 'paper_proposal') => {
-      const draft = workspace.decision.draft
-      const saved = await api.saveDecisionPacket({
-        expected_packet_id: draft.packet_id,
-        selected_range: draft.selected_range,
-        symbol: draft.instrument.symbol,
-        venue: draft.instrument.venue,
-      })
-      return api.applyDecisionPacketAction(saved.packet_id, disposition === 'paper_proposal'
+    mutationFn: async (submission: ActionSubmission) => {
+      const parent = submission.identity.source === 'persisted'
+        ? submission.packet
+        : await api.saveDecisionPacket({
+            expected_packet_id: submission.packet.packet_id,
+            selected_range: submission.identity.range,
+            symbol: submission.identity.symbol,
+            venue: submission.identity.venue,
+          })
+      if (!activeRef.current || !sameIdentity(viewIdentityRef.current, submission.identity)) return null
+      assertSavedPacket(parent, submission)
+      const result = await api.applyDecisionPacketAction(parent.packet_id, submission.disposition === 'paper_proposal'
         ? {
-            disposition,
-            limit_price: numericLimit,
+            disposition: submission.disposition,
+            limit_price: submission.limitPrice,
             operator_reason: null,
-            quantity: numericQuantity,
-            side,
+            quantity: submission.quantity,
+            side: submission.side,
           }
         : {
-            disposition,
+            disposition: submission.disposition,
             limit_price: null,
-            operator_reason: operatorReason.trim(),
+            operator_reason: submission.operatorReason,
             quantity: null,
             side: null,
           })
+      if (!activeRef.current || !sameIdentity(viewIdentityRef.current, submission.identity)) return null
+      assertActionResult(result, parent, submission)
+      return result
     },
-    onSuccess: setActionResult,
+    onSuccess: (result) => {
+      if (result !== null) setActionResult(result)
+    },
+  })
+
+  const submitAction = (disposition: ActionDisposition) => action.mutate({
+    disposition,
+    identity: viewIdentity,
+    limitPrice: numericLimit,
+    operatorReason: operatorReason.trim(),
+    packet,
+    quantity: numericQuantity,
+    side,
   })
 
   const persistedProposals = [...workspace.proposal.proposals]
@@ -121,9 +181,9 @@ export function DecisionRail({
         <p className="text-xs text-muted-foreground">{t('screen.workspace.paperOnly')}</p>
         <div className="min-w-0 border-y border-border py-2">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('screen.workspace.packetId')}</p>
-          <code className="block break-all font-mono text-[10px]" title={displayedPacket.packet_id}>{displayedPacket.packet_id}</code>
+          <code className="block break-all font-mono text-[10px] [overflow-wrap:anywhere]" title={displayedPacket.packet_id}>{displayedPacket.packet_id}</code>
         </div>
-        {!isDraft && onNewAnalysis && (
+        {packetSource === 'persisted' && onNewAnalysis && (
           <Button className="w-full" onClick={onNewAnalysis} type="button" variant="outline">{t('screen.workspace.newAnalysis')}</Button>
         )}
       </div>
@@ -186,8 +246,8 @@ export function DecisionRail({
             <Input id="decision-reason" onChange={(event) => setOperatorReason(event.target.value)} placeholder={t('screen.workspace.decisionReasonHint')} value={operatorReason} />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Button disabled={!reasonReady || action.isPending} onClick={() => action.mutate('reject')} type="button" variant="outline">{t('screen.workspace.rejectDecision')}</Button>
-            <Button disabled={!reasonReady || action.isPending} onClick={() => action.mutate('watch')} type="button" variant="outline">{t('screen.workspace.watchDecision')}</Button>
+            <Button disabled={!reasonReady || action.isPending} onClick={() => submitAction('reject')} type="button" variant="outline">{t('screen.workspace.rejectDecision')}</Button>
+            <Button disabled={!reasonReady || action.isPending} onClick={() => submitAction('watch')} type="button" variant="outline">{t('screen.workspace.watchDecision')}</Button>
           </div>
           <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
             <div className="space-y-2">
@@ -208,7 +268,7 @@ export function DecisionRail({
           </div>
           {evidenceUpdating && <p className="text-xs text-muted-foreground" role="status">{t('screen.workspace.proposalWaitingForEvidence')}</p>}
           {action.isError && <p className="text-xs text-destructive" role="alert">{errorText(action.error)}</p>}
-          <Button className="w-full" disabled={!paperAllowed || action.isPending} onClick={() => action.mutate('paper_proposal')} type="button">
+          <Button className="w-full" disabled={!paperAllowed || action.isPending} onClick={() => submitAction('paper_proposal')} type="button">
             {action.isPending ? t('screen.workspace.creatingProposal') : t('screen.workspace.createProposal')}
           </Button>
         </section>
@@ -217,6 +277,7 @@ export function DecisionRail({
       {proposal && (
         <ProposalConfirmation
           key={`${proposal.id}:${proposal.status}:${proposal.order_id ?? ''}`}
+          contextKey={contextKey}
           onDismiss={() => {
             setActionResult(null)
             setDismissedProposalIds((current) => [...new Set([...current, proposal.id])])
@@ -227,6 +288,70 @@ export function DecisionRail({
       )}
     </div>
   )
+}
+
+type ActionDisposition = 'reject' | 'watch' | 'paper_proposal'
+
+interface ViewIdentity {
+  contextKey: string
+  packetId: string
+  range: DecisionPacket['selected_range']
+  source: 'fresh' | 'persisted'
+  symbol: string
+  venue: DecisionPacket['instrument']['venue']
+}
+
+interface ActionSubmission {
+  disposition: ActionDisposition
+  identity: ViewIdentity
+  limitPrice: number | null
+  operatorReason: string
+  packet: DecisionPacket
+  quantity: number
+  side: 'buy' | 'sell'
+}
+
+function sameIdentity(current: ViewIdentity, submitted: ViewIdentity): boolean {
+  return current.contextKey === submitted.contextKey
+    && current.packetId === submitted.packetId
+    && current.range === submitted.range
+    && current.source === submitted.source
+    && current.symbol === submitted.symbol
+    && current.venue === submitted.venue
+}
+
+function assertSavedPacket(saved: DecisionPacket, submission: ActionSubmission): void {
+  if (
+    saved.packet_id !== submission.identity.packetId
+    || saved.instrument.venue !== submission.identity.venue
+    || saved.instrument.symbol !== submission.identity.symbol
+    || saved.selected_range !== submission.identity.range
+  ) {
+    throw new Error('Saved DecisionPacket does not match the displayed packet context.')
+  }
+}
+
+function assertActionResult(
+  result: DecisionPacketActionResult,
+  parent: DecisionPacket,
+  submission: ActionSubmission,
+): void {
+  const child = result.packet
+  const contextMatches = child.parent_packet_id === parent.packet_id
+    && child.instrument.venue === submission.identity.venue
+    && child.instrument.symbol === submission.identity.symbol
+    && child.selected_range === submission.identity.range
+    && child.disposition === submission.disposition
+  const proposalMatches = submission.disposition !== 'paper_proposal'
+    ? result.proposal === null || result.proposal === undefined
+    : result.proposal !== null
+      && result.proposal !== undefined
+      && child.proposal_id === result.proposal.id
+      && result.proposal.instrument.venue === submission.identity.venue
+      && result.proposal.instrument.symbol === submission.identity.symbol
+  if (!contextMatches || !proposalMatches) {
+    throw new Error('Decision action response does not match the displayed packet context.')
+  }
 }
 
 function phaseText(packet: DecisionPacket, t: ReturnType<typeof usePreferences>['t']): string {
@@ -240,7 +365,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex min-w-0 justify-between gap-3">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 break-words text-right font-mono tabular-nums">{value}</dd>
+      <dd className="min-w-0 break-all text-right font-mono tabular-nums [overflow-wrap:anywhere]">{value}</dd>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -316,6 +316,84 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(screen.getByText('packet-watch-persisted-0001')).toBeInTheDocument()
     expect(screen.queryByText('packet-fresh-background-0001')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'New analysis' })).toBeInTheDocument()
+  })
+
+  it('separates current chart context from complete archived packet evidence', async () => {
+    const archivedDataset = 'dataset-archived-without-any-break-opportunity-0123456789'
+    const archivedModel = 'model-archived-without-any-break-opportunity-0123456789'
+    const persisted = {
+      ...workspace.decision.draft,
+      disposition: 'watch' as const,
+      evidence: {
+        ...workspace.decision.draft.evidence,
+        forecast_artifact_id: 'artifact-archived-without-any-break-opportunity-0123456789',
+        forecast_benchmark_name: 'archived-last-close',
+        forecast_generated_at: '2026-07-01T12:00:00Z',
+        forecast_model_name: archivedModel,
+        forecast_model_version: 'archived-model-version-1',
+        history_dataset_id: archivedDataset,
+        history_dataset_revision: 7,
+        history_generated_at: '2026-07-01T12:00:00Z',
+      },
+      operator_reason: 'Replay archived decision',
+      packet_id: 'packet-archived-without-any-break-opportunity-0123456789',
+      parent_packet_id: workspace.decision.draft.packet_id,
+      version: 2,
+    }
+    mockedWorkspace.mockResolvedValue({
+      ...workspace,
+      history: { ...workspace.history, dataset_id: 'current-workspace-dataset' },
+      decision: { draft: workspace.decision.draft, latest: persisted },
+    })
+    renderWorkspace()
+
+    const evidence = await screen.findByRole('region', { name: 'Evidence' })
+    expect(within(evidence).getByText('Archived DecisionPacket evidence')).toBeInTheDocument()
+    expect(within(evidence).getByText(archivedDataset)).toHaveClass('break-all', '[overflow-wrap:anywhere]')
+    expect(within(evidence).getByText(archivedModel)).toHaveClass('break-all', '[overflow-wrap:anywhere]')
+    expect(within(evidence).queryByText('current-workspace-dataset')).not.toBeInTheDocument()
+    expect(screen.getByText('Current market, not archived packet evidence')).toBeInTheDocument()
+  })
+
+  it('resets packet selection when the venue-symbol-range context changes', async () => {
+    const user = userEvent.setup()
+    const persisted = {
+      ...workspace.decision.draft,
+      disposition: 'watch' as const,
+      operator_reason: 'Six month archive',
+      packet_id: 'packet-6m-latest',
+      parent_packet_id: workspace.decision.draft.packet_id,
+      version: 2,
+    }
+    const nextDraft = {
+      ...workspace.decision.draft,
+      packet_id: 'packet-1m-draft',
+      selected_range: '1m' as const,
+    }
+    const nextLatest = {
+      ...nextDraft,
+      disposition: 'watch' as const,
+      operator_reason: 'One month archive',
+      packet_id: 'packet-1m-latest',
+      parent_packet_id: nextDraft.packet_id,
+      version: 2,
+    }
+    mockedWorkspace
+      .mockResolvedValueOnce({ ...workspace, decision: { draft: workspace.decision.draft, latest: persisted } })
+      .mockResolvedValue({
+        ...workspace,
+        history: { ...workspace.history, range: '1m' },
+        decision: { draft: nextDraft, latest: nextLatest },
+      })
+    renderWorkspace()
+
+    expect(await screen.findByText('packet-6m-latest')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'New analysis' }))
+    expect(screen.getByText(workspace.decision.draft.packet_id)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '1M' }))
+
+    expect(await screen.findByText('packet-1m-latest')).toBeInTheDocument()
+    expect(screen.queryByText('packet-1m-draft')).not.toBeInTheDocument()
   })
 
   it('reuses placeholder evidence only for the same venue and symbol', () => {

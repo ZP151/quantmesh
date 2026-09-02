@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -166,6 +166,12 @@ const workspace = {
 
 const mocked = vi.mocked(api)
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((next) => { resolve = next })
+  return { promise, resolve }
+}
+
 function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
@@ -233,6 +239,40 @@ describe('DecisionRail', () => {
     expect(screen.getByText('Watching')).toBeInTheDocument()
   })
 
+  it('acts directly on an exact persisted Draft and offers an explicit fresh-analysis switch', async () => {
+    const user = userEvent.setup()
+    const persistedDraft = { ...packet, packet_id: 'packet-persisted-draft-0001' }
+    const watch = {
+      ...persistedDraft,
+      disposition: 'watch' as const,
+      operator_reason: 'Wait for entry',
+      packet_id: 'packet-persisted-watch-0001',
+      parent_packet_id: persistedDraft.packet_id,
+      version: 2,
+    }
+    mocked.applyDecisionPacketAction.mockResolvedValue({ packet: watch, proposal: null })
+    render(
+      <DecisionRail
+        contextKey="moomoo:NVDA:6m"
+        onNewAnalysis={vi.fn()}
+        packet={persistedDraft}
+        packetSource="persisted"
+        workspace={{ ...workspace, decision: { draft: packet, latest: persistedDraft } }}
+      />,
+      { wrapper: Providers },
+    )
+
+    expect(screen.getByRole('button', { name: 'New analysis' })).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Decision reason'), 'Wait for entry')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+
+    expect(mocked.saveDecisionPacket).not.toHaveBeenCalled()
+    expect(mocked.applyDecisionPacketAction).toHaveBeenCalledWith(persistedDraft.packet_id, {
+      disposition: 'watch', limit_price: null, operator_reason: 'Wait for entry', quantity: null, side: null,
+    })
+    expect(await screen.findByText('packet-persisted-watch-0001')).toBeInTheDocument()
+  })
+
   it('saves the exact draft before creating a packet-bound proposal and leaves confirmation explicit', async () => {
     const user = userEvent.setup()
     render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
@@ -265,6 +305,168 @@ describe('DecisionRail', () => {
     }))
   })
 
+  it('preserves draft inputs and a completed action result across same-context polling', async () => {
+    const user = userEvent.setup()
+    const watch = {
+      ...packet,
+      disposition: 'watch' as const,
+      operator_reason: 'Wait for entry',
+      packet_id: 'packet-watch-stable-result',
+      parent_packet_id: packet.packet_id,
+      version: 2,
+    }
+    mocked.applyDecisionPacketAction.mockResolvedValue({ packet: watch, proposal: null })
+    const view = render(
+      <DecisionRail contextKey="moomoo:NVDA:6m" packet={packet} packetSource="fresh" workspace={workspace} />,
+      { wrapper: Providers },
+    )
+    await user.type(screen.getByLabelText('Decision reason'), 'Wait for entry')
+    await user.clear(screen.getByLabelText('Quantity'))
+    await user.type(screen.getByLabelText('Quantity'), '12')
+    const refreshedDraft = {
+      ...packet,
+      as_of: '2026-08-08T12:01:00Z',
+      packet_id: 'packet-refresh-draft-0002',
+    }
+    mocked.saveDecisionPacket.mockResolvedValue(refreshedDraft)
+    mocked.applyDecisionPacketAction.mockResolvedValue({
+      packet: { ...watch, parent_packet_id: refreshedDraft.packet_id },
+      proposal: null,
+    })
+    view.rerender(
+      <DecisionRail
+        contextKey="moomoo:NVDA:6m"
+        packet={refreshedDraft}
+        packetSource="fresh"
+        workspace={{ ...workspace, decision: { draft: refreshedDraft, latest: null } }}
+      />,
+    )
+
+    expect(screen.getByLabelText('Decision reason')).toHaveValue('Wait for entry')
+    expect(screen.getByLabelText('Quantity')).toHaveValue(12)
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+    expect(await screen.findByText('packet-watch-stable-result')).toBeInTheDocument()
+
+    const nextDraft = { ...refreshedDraft, packet_id: 'packet-refresh-draft-0003' }
+    view.rerender(
+      <DecisionRail
+        contextKey="moomoo:NVDA:6m"
+        packet={nextDraft}
+        packetSource="fresh"
+        workspace={{ ...workspace, decision: { draft: nextDraft, latest: null } }}
+      />,
+    )
+    expect(screen.getByText('packet-watch-stable-result')).toBeInTheDocument()
+    expect(screen.queryByText('packet-refresh-draft-0003')).not.toBeInTheDocument()
+  })
+
+  it('drops a deferred save/action response after the full workspace context changes', async () => {
+    const user = userEvent.setup()
+    const pendingSave = deferred<DecisionPacket>()
+    mocked.saveDecisionPacket.mockReturnValue(pendingSave.promise)
+    const view = render(
+      <DecisionRail contextKey="moomoo:NVDA:6m" packet={packet} packetSource="fresh" workspace={workspace} />,
+      { wrapper: Providers },
+    )
+    await user.type(screen.getByLabelText('Decision reason'), 'Wait here')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+
+    const aaplInstrument = { ...instrument, symbol: 'AAPL' }
+    const aaplPacket = {
+      ...packet,
+      instrument: aaplInstrument,
+      packet_id: 'packet-aapl-draft-0001',
+    } as DecisionPacket
+    view.rerender(
+      <DecisionRail
+        contextKey="moomoo:AAPL:6m"
+        packet={aaplPacket}
+        packetSource="fresh"
+        workspace={{
+          ...workspace,
+          decision: { draft: aaplPacket, latest: null },
+          history: { ...workspace.history, instrument: aaplInstrument },
+          instrument: aaplInstrument,
+        }}
+      />,
+    )
+    await act(async () => pendingSave.resolve(packet))
+
+    await waitFor(() => expect(screen.getByText('packet-aapl-draft-0001')).toBeInTheDocument())
+    expect(mocked.applyDecisionPacketAction).not.toHaveBeenCalled()
+    expect(screen.queryByText('packet-watch-stable-result')).not.toBeInTheDocument()
+  })
+
+  it('drops a deferred action result after the full workspace context changes', async () => {
+    const user = userEvent.setup()
+    const pendingAction = deferred<Awaited<ReturnType<typeof api.applyDecisionPacketAction>>>()
+    mocked.applyDecisionPacketAction.mockReturnValue(pendingAction.promise)
+    const view = render(
+      <DecisionRail contextKey="moomoo:NVDA:6m" packet={packet} packetSource="fresh" workspace={workspace} />,
+      { wrapper: Providers },
+    )
+    await user.type(screen.getByLabelText('Decision reason'), 'Wait here')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+    await waitFor(() => expect(mocked.applyDecisionPacketAction).toHaveBeenCalledTimes(1))
+
+    const aaplInstrument = { ...instrument, symbol: 'AAPL' }
+    const aaplPacket = {
+      ...packet,
+      instrument: aaplInstrument,
+      packet_id: 'packet-aapl-draft-0002',
+    } as DecisionPacket
+    view.rerender(
+      <DecisionRail
+        contextKey="moomoo:AAPL:6m"
+        packet={aaplPacket}
+        packetSource="fresh"
+        workspace={{
+          ...workspace,
+          decision: { draft: aaplPacket, latest: null },
+          history: { ...workspace.history, instrument: aaplInstrument },
+          instrument: aaplInstrument,
+        }}
+      />,
+    )
+    await act(async () => pendingAction.resolve({
+      packet: {
+        ...packet,
+        disposition: 'watch',
+        packet_id: 'packet-watch-stale-response',
+        parent_packet_id: packet.packet_id,
+        version: 2,
+      },
+      proposal: null,
+    }))
+
+    expect(screen.getByText('packet-aapl-draft-0002')).toBeInTheDocument()
+    expect(screen.queryByText('packet-watch-stale-response')).not.toBeInTheDocument()
+  })
+
+  it('rejects an action response that is not bound to the submitted packet context', async () => {
+    const user = userEvent.setup()
+    mocked.applyDecisionPacketAction.mockResolvedValue({
+      packet: {
+        ...packet,
+        instrument: { ...instrument, symbol: 'AAPL' },
+        disposition: 'watch',
+        packet_id: 'packet-wrong-context',
+        parent_packet_id: packet.packet_id,
+        version: 2,
+      },
+      proposal: null,
+    })
+    render(
+      <DecisionRail contextKey="moomoo:NVDA:6m" packet={packet} packetSource="fresh" workspace={workspace} />,
+      { wrapper: Providers },
+    )
+    await user.type(screen.getByLabelText('Decision reason'), 'Wait here')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('does not match')
+    expect(screen.queryByText('packet-wrong-context')).not.toBeInTheDocument()
+  })
+
   it('requires the displayed token and delegates the only second confirmation to the existing authority', async () => {
     const user = userEvent.setup()
     render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
@@ -279,12 +481,74 @@ describe('DecisionRail', () => {
       proposal.id,
       proposal.confirmation_token,
     ))
-    expect(screen.getByText('Paper order created')).toBeInTheDocument()
-    expect(screen.getByText('Order ID').closest('div')).toHaveTextContent('paper-order-1')
+    const terminal = screen.getByText('Paper order created').closest('section')!
+    expect(within(terminal).getByText('packet-paper-000000000001')).toHaveClass('break-all')
+    expect(within(terminal).getByText(proposal.id)).toHaveClass('break-all')
+    expect(within(terminal).getByText('Order ID').closest('div')).toHaveTextContent('paper-order-1')
+    expect(within(terminal).getByText('paper-order-1')).toHaveClass('break-all')
     expect(screen.getByRole('link', { name: 'Open audit lineage' })).toHaveAttribute(
       'href',
       '/ops/audit?order=paper-order-1',
     )
+  })
+
+  it('wraps long packet, proposal, and order identities in the terminal state', async () => {
+    const user = userEvent.setup()
+    const longPacketId = `packet-${'p'.repeat(96)}`
+    const longProposalId = `proposal-${'r'.repeat(96)}`
+    const longOrderId = `order-${'o'.repeat(96)}`
+    const longRoot = { ...packet, packet_id: longPacketId }
+    const longProposal = { ...proposal, id: longProposalId }
+    mocked.saveDecisionPacket.mockResolvedValue(longRoot)
+    mocked.applyDecisionPacketAction.mockResolvedValue({
+      packet: {
+        ...longRoot,
+        disposition: 'paper_proposal',
+        packet_id: `packet-result-${'x'.repeat(96)}`,
+        parent_packet_id: longRoot.packet_id,
+        proposal_id: longProposal.id,
+        version: 2,
+      },
+      proposal: longProposal,
+    })
+    mocked.confirmPaperProposal.mockResolvedValue({
+      ...confirmation,
+      order: { ...confirmation.order!, order_id: longOrderId },
+      proposal: { ...longProposal, order_id: longOrderId, status: 'confirmed' },
+    })
+    render(
+      <DecisionRail
+        contextKey="moomoo:NVDA:6m"
+        packet={longRoot}
+        packetSource="fresh"
+        workspace={{ ...workspace, decision: { draft: longRoot, latest: null } }}
+      />,
+      { wrapper: Providers },
+    )
+    await user.click(screen.getByRole('button', { name: 'Create paper proposal' }))
+    await user.type(await screen.findByLabelText('Confirmation token'), longProposal.confirmation_token)
+    await user.click(screen.getByRole('button', { name: 'Confirm paper proposal' }))
+
+    const terminal = (await screen.findByText('Paper order created')).closest('section')!
+    for (const identity of [`packet-result-${'x'.repeat(96)}`, longProposal.id, longOrderId]) {
+      expect(within(terminal).getByText(identity)).toHaveClass('break-all', '[overflow-wrap:anywhere]')
+    }
+  })
+
+  it('rejects a confirmation response for another instrument context', async () => {
+    const user = userEvent.setup()
+    mocked.confirmPaperProposal.mockResolvedValue({
+      ...confirmation,
+      order: { ...confirmation.order!, instrument: { ...instrument, symbol: 'AAPL' } },
+      proposal: { ...confirmation.proposal, instrument: { ...instrument, symbol: 'AAPL' } },
+    })
+    render(<DecisionRail workspace={workspace} />, { wrapper: Providers })
+    await user.click(screen.getByRole('button', { name: 'Create paper proposal' }))
+    await user.type(await screen.findByLabelText('Confirmation token'), proposal.confirmation_token)
+    await user.click(screen.getByRole('button', { name: 'Confirm paper proposal' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('does not match')
+    expect(screen.queryByText('Paper order created')).not.toBeInTheDocument()
   })
 
   it('resumes a persisted packet-bound pending proposal after remount', () => {

@@ -24,6 +24,7 @@ const RANGES: readonly { label: string; value: HistoryRange }[] = [
 ]
 
 export interface MarketCanvasProps {
+  archivedPacket?: boolean
   comparison: ComparisonSeries | null
   forecast: ForecastPath | null
   history: HistoricalSeries
@@ -94,6 +95,11 @@ export function MarketCanvas(props: MarketCanvasProps) {
 
   return (
     <div className="space-y-3">
+      {props.archivedPacket && (
+        <p className="border-l-2 border-amber-500 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground" role="note">
+          {t('screen.workspace.currentMarketNotArchived')}
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <div className="flex flex-wrap gap-1" aria-label={t('screen.workspace.ranges')}>
           {RANGES.map((item) => (
@@ -147,6 +153,19 @@ export function MarketCanvas(props: MarketCanvasProps) {
             <LevelFact label={t('screen.workspace.resistance')} value={props.marketState.resistance} />
             <LevelFact label={t('screen.workspace.invalidation')} value={props.marketState.invalidation} />
           </dl>
+          <div
+            className="mt-3 min-w-0 border-t border-border pt-2 text-xs"
+            title={props.marketState.key_level_bar_times.join(' · ')}
+          >
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('screen.workspace.keyLevelSourceBars')}
+            </p>
+            <p
+              className="mt-1 break-all font-mono text-[10px] [overflow-wrap:anywhere]"
+            >
+              {props.marketState.key_level_bar_times.map((time) => dateTime(time, locale)).join(' · ')}
+            </p>
+          </div>
         </section>
       )}
       {props.comparison !== null && props.comparison.points.length > 0 && (

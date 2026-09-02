@@ -19,7 +19,7 @@ import { DecisionRail } from './instrument/DecisionRail'
 import { evidenceText } from './instrument/evidence-copy'
 import { ForecastEvidence, type ForecastHorizon } from './instrument/ForecastEvidence'
 import { MarketCanvas } from './instrument/MarketCanvas'
-import { ScenarioEvidence } from './instrument/ScenarioEvidence'
+import { PacketEvidenceSummary, ScenarioEvidence } from './instrument/ScenarioEvidence'
 import { WorkspaceDegraded, WorkspaceError, WorkspaceRefreshWarning } from './instrument/WorkspaceStates'
 import { retainSameInstrument } from './instrument/workspace-query'
 
@@ -38,6 +38,12 @@ function forecastHorizon(value: string | null): ForecastHorizon {
   return value === '7' || value === '126' ? Number(value) as ForecastHorizon : 30
 }
 
+interface PacketSelection {
+  contextKey: string
+  mode: 'fresh' | 'persisted'
+  revision: number
+}
+
 export function InstrumentWorkspaceScreen() {
   const { locale, t } = usePreferences()
   const { symbol = '', venue = '' } = useParams<{ symbol: string; venue: string }>()
@@ -51,7 +57,7 @@ export function InstrumentWorkspaceScreen() {
   const showSma50 = search.get('sma50') === '1'
   const validVenue = isVenue(venue)
   const queryClient = useQueryClient()
-  const [showFreshAnalysis, setShowFreshAnalysis] = useState(false)
+  const [packetSelection, setPacketSelection] = useState<PacketSelection | null>(null)
   const lastLiveRefresh = useRef(0)
   const trailingLiveRefresh = useRef<ReturnType<typeof setTimeout> | null>(null)
   const refreshWorkspace = useCallback(() => {
@@ -109,11 +115,20 @@ export function InstrumentWorkspaceScreen() {
     return <WorkspaceError error={query.error} symbol={symbol} venue={venue} />
   }
   const workspace = query.data
-  const displayedPacket = showFreshAnalysis || workspace.decision.latest === null
-    || workspace.decision.latest === undefined
-    ? workspace.decision.draft
-    : workspace.decision.latest
   const displayedRange = query.isPlaceholderData ? workspace.history.range : range
+  const decisionContextKey = `${workspace.instrument.venue}:${workspace.instrument.symbol}:${displayedRange}`
+  const defaultPacketMode = workspace.decision.latest === null || workspace.decision.latest === undefined
+    ? 'fresh'
+    : 'persisted'
+  const activeSelection: PacketSelection = packetSelection?.contextKey === decisionContextKey
+    ? packetSelection
+    : { contextKey: decisionContextKey, mode: defaultPacketMode, revision: 0 }
+  if (packetSelection === null || packetSelection.contextKey !== decisionContextKey) {
+    setPacketSelection(activeSelection)
+  }
+  const persistedPacket = activeSelection.mode === 'persisted' ? workspace.decision.latest : null
+  const packetSource = persistedPacket === null || persistedPacket === undefined ? 'fresh' : 'persisted'
+  const displayedPacket = persistedPacket ?? workspace.decision.draft
   const displayedComparisons = query.isPlaceholderData
     ? (workspace.comparison?.keys ?? []).filter(
         (key) => key !== `${workspace.instrument.venue}:${workspace.instrument.symbol}`,
@@ -199,6 +214,7 @@ export function InstrumentWorkspaceScreen() {
           className="min-w-0 border-y border-border py-3"
         >
           <MarketCanvas
+            archivedPacket={packetSource === 'persisted'}
             comparison={workspace.comparison}
             forecast={forecastPath}
             history={workspace.history}
@@ -217,55 +233,71 @@ export function InstrumentWorkspaceScreen() {
         </section>
 
         <section className="space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.evidence')}>
-          <div className="space-y-1 px-3">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {t('screen.workspace.evidence')}
-            </h2>
-            <p className="font-mono text-xs">{workspace.history.dataset_id}</p>
-            <p className="text-xs text-muted-foreground">
-              {t('screen.workspace.revision', { revision: String(workspace.history.dataset_revision) })}
-            </p>
-          </div>
-          <ComparisonPicker
-            onChange={updateComparisons}
-            primary={`${workspace.instrument.venue}:${workspace.instrument.symbol}`}
-            selected={displayedComparisons}
-          />
-          <dl className="divide-y divide-border border-y border-border text-xs">
-            <div className="flex justify-between gap-3 px-3 py-2">
-              <dt className="text-muted-foreground">{t('screen.workspace.rows')}</dt>
-              <dd className="font-mono tabular-nums">{workspace.history.coverage.rows}</dd>
-            </div>
-            <div className="flex justify-between gap-3 px-3 py-2">
-              <dt className="text-muted-foreground">{t('screen.workspace.calendar')}</dt>
-              <dd className="font-mono">{workspace.history.calendar}</dd>
-            </div>
-            <div className="flex justify-between gap-3 px-3 py-2">
-              <dt className="text-muted-foreground">{t('screen.workspace.license')}</dt>
-              <dd
-                className="max-w-40 break-words text-right font-mono"
-                title={workspace.history.license}
-              >
-                {workspace.history.license}
-              </dd>
-            </div>
-          </dl>
+          {packetSource === 'persisted' ? (
+            <PacketEvidenceSummary packet={displayedPacket} />
+          ) : (
+            <>
+              <div className="min-w-0 space-y-1 px-3">
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  {t('screen.workspace.evidence')}
+                </h2>
+                <p className="break-all font-mono text-xs [overflow-wrap:anywhere]">{workspace.history.dataset_id}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('screen.workspace.revision', { revision: String(workspace.history.dataset_revision) })}
+                </p>
+              </div>
+              <ComparisonPicker
+                onChange={updateComparisons}
+                primary={`${workspace.instrument.venue}:${workspace.instrument.symbol}`}
+                selected={displayedComparisons}
+              />
+              <dl className="divide-y divide-border border-y border-border text-xs">
+                <div className="flex justify-between gap-3 px-3 py-2">
+                  <dt className="text-muted-foreground">{t('screen.workspace.rows')}</dt>
+                  <dd className="font-mono tabular-nums">{workspace.history.coverage.rows}</dd>
+                </div>
+                <div className="flex justify-between gap-3 px-3 py-2">
+                  <dt className="text-muted-foreground">{t('screen.workspace.calendar')}</dt>
+                  <dd className="font-mono">{workspace.history.calendar}</dd>
+                </div>
+                <div className="flex justify-between gap-3 px-3 py-2">
+                  <dt className="text-muted-foreground">{t('screen.workspace.license')}</dt>
+                  <dd
+                    className="max-w-40 break-words text-right font-mono"
+                    title={workspace.history.license}
+                  >
+                    {workspace.history.license}
+                  </dd>
+                </div>
+              </dl>
+            </>
+          )}
           <ScenarioEvidence packet={displayedPacket} />
-          <ForecastEvidence
-            forecast={workspace.forecast}
-            horizon={horizon}
-            onHorizonChange={(next) => updateParam('horizon', next === 30 ? null : String(next))}
-            synthetic={syntheticForecast}
-            unavailableReason={workspace.forecast_unavailable_reason}
-          />
+          {packetSource === 'fresh' && (
+            <ForecastEvidence
+              forecast={workspace.forecast}
+              horizon={horizon}
+              onHorizonChange={(next) => updateParam('horizon', next === 30 ? null : String(next))}
+              synthetic={syntheticForecast}
+              unavailableReason={workspace.forecast_unavailable_reason}
+            />
+          )}
         </section>
 
         <aside className="space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.decision')}>
           <DecisionRail
-            key={`${workspace.instrument.venue}:${workspace.instrument.symbol}`}
+            contextKey={decisionContextKey}
             evidenceUpdating={query.isPlaceholderData}
-            onNewAnalysis={workspace.decision.latest ? () => setShowFreshAnalysis(true) : undefined}
+            key={`${decisionContextKey}:${packetSource}:${activeSelection.revision}`}
+            onNewAnalysis={workspace.decision.latest
+              ? () => setPacketSelection({
+                  contextKey: decisionContextKey,
+                  mode: 'fresh',
+                  revision: activeSelection.revision + 1,
+                })
+              : undefined}
             packet={displayedPacket}
+            packetSource={packetSource}
             workspace={workspace}
           />
         </aside>

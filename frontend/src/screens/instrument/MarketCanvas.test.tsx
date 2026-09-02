@@ -131,6 +131,11 @@ describe('MarketCanvas', () => {
     expect(screen.getByText('Support').closest('div')).toHaveTextContent('180')
     expect(screen.getByText('Resistance').closest('div')).toHaveTextContent('195')
     expect(screen.getByText('Invalidation').closest('div')).toHaveTextContent('176')
+    expect(screen.getByText('Key-level source bars').closest('div')).toHaveTextContent('Aug 8')
+    expect(screen.getByText('Key-level source bars').closest('div')).toHaveAttribute(
+      'title',
+      '2026-08-07T20:00:00Z',
+    )
   })
 
   it('changes range and chart controls with real pressed states', async () => {
