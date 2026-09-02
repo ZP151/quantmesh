@@ -4,11 +4,53 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import threading
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 from quantmesh.domain.models import Venue
 from quantmesh.instruments.contracts import DecisionPacket, HistoryRange
 from quantmesh.persistence.jsonl import JsonlStore
+
+_LOCKS_GUARD = threading.Lock()
+_ROOT_LOCKS: dict[str, threading.RLock] = {}
+
+
+def _root_lock(root: Path) -> threading.RLock:
+    key = str(root.resolve(strict=False)).casefold()
+    with _LOCKS_GUARD:
+        return _ROOT_LOCKS.setdefault(key, threading.RLock())
+
+
+@contextmanager
+def _interprocess_lock(root: Path) -> Iterator[None]:
+    root.mkdir(parents=True, exist_ok=True)
+    path = root / ".decision-packets.lock"
+    with path.open("a+b") as handle:
+        handle.seek(0, os.SEEK_END)
+        if handle.tell() == 0:
+            handle.write(b"\0")
+            handle.flush()
+        handle.seek(0)
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+            try:
+                yield
+            finally:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 def decision_packet_id(packet: DecisionPacket) -> str:
@@ -22,6 +64,7 @@ class DecisionPacketStore:
     """Fail-closed JSONL replay for one immutable decision-packet collection."""
 
     def __init__(self, root: Path) -> None:
+        self._lock = _root_lock(root)
         self._store = JsonlStore(
             root,
             filename="decision-packets.jsonl",
@@ -49,6 +92,7 @@ class DecisionPacketStore:
     def _validate_collection(cls, packets: list[DecisionPacket]) -> None:
         by_id: dict[str, DecisionPacket] = {}
         child_by_parent: dict[str, str] = {}
+        root_scopes: set[tuple[str, str, str, str]] = set()
         for packet in packets:
             cls._validate_identity(packet)
             if packet.packet_id in by_id:
@@ -58,6 +102,15 @@ class DecisionPacketStore:
                     raise ValueError("root decision packet must have version 1")
                 if packet.disposition.value != "draft":
                     raise ValueError("root decision packet must be draft")
+                scope = (
+                    packet.instrument.venue.value,
+                    packet.instrument.symbol,
+                    packet.selected_range.value,
+                    packet.as_of.isoformat(),
+                )
+                if scope in root_scopes:
+                    raise ValueError("decision packet lineage scope already has a root")
+                root_scopes.add(scope)
             else:
                 parent = by_id.get(packet.parent_packet_id)
                 if parent is None:
@@ -77,6 +130,22 @@ class DecisionPacketStore:
                     raise ValueError("decision packet child must preserve its parent as_of")
                 if packet.created_at < parent.created_at:
                     raise ValueError("decision packet child cannot predate its parent")
+                parent_facts = parent.model_dump(
+                    mode="json",
+                    exclude={
+                        "packet_id", "version", "parent_packet_id", "created_at",
+                        "disposition", "operator_reason", "proposal_id",
+                    },
+                )
+                child_facts = packet.model_dump(
+                    mode="json",
+                    exclude={
+                        "packet_id", "version", "parent_packet_id", "created_at",
+                        "disposition", "operator_reason", "proposal_id",
+                    },
+                )
+                if child_facts != parent_facts:
+                    raise ValueError("decision packet child must preserve parent semantic facts")
                 if packet.parent_packet_id in child_by_parent:
                     raise ValueError("decision packet parent already has a child transition")
                 child_by_parent[packet.parent_packet_id] = packet.packet_id
@@ -89,12 +158,13 @@ class DecisionPacketStore:
 
     def record(self, packet: DecisionPacket) -> DecisionPacket:
         """Append one validated immutable packet and immediately replay-check it."""
-        packets = self._records()
-        self._validate_identity(packet)
-        self._store.check_absent(packet, packets)
-        self._validate_collection([*packets, packet])
-        self._store.append(packet)
-        self._records()
+        with self._lock, _interprocess_lock(self.root):
+            packets = self._records()
+            self._validate_identity(packet)
+            self._store.check_absent(packet, packets)
+            self._validate_collection([*packets, packet])
+            self._store.append(packet)
+            self._records()
         return packet
 
     def get(self, packet_id: str) -> DecisionPacket:

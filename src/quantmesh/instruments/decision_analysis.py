@@ -11,6 +11,7 @@ from quantmesh.instruments.contracts import (
     DecisionCostEvidence,
     DecisionDisposition,
     DecisionEvidence,
+    DecisionForecastChronology,
     DecisionMarketState,
     DecisionPacket,
     DecisionPaperCapability,
@@ -27,6 +28,12 @@ from quantmesh.instruments.decision_packets import decision_packet_id
 
 _KEY_LEVEL_LOOKBACK = 20
 _FORECAST_FRESHNESS = timedelta(days=1)
+_HISTORY_FRESHNESS = timedelta(days=1)
+_BLOCKER_ORDER = (
+    "history-quality", "history-lineage", "history-freshness", "forecast-missing",
+    "forecast-ineligible", "forecast-freshness", "leakage", "chronology",
+    "cost-evidence", "valuation", "kill-switch", "proposal-service",
+)
 
 
 def _utc(value: datetime, name: str) -> datetime:
@@ -60,6 +67,21 @@ def _maximum_drawdown(closes: tuple[float, ...]) -> float:
 
 def _blocker(code: str, message: str, ref: str) -> DecisionBlocker:
     return DecisionBlocker(code=code, message=message, evidence_ref=ref)
+
+
+def _normalized_blockers(blockers: list[DecisionBlocker]) -> tuple[DecisionBlocker, ...]:
+    grouped: dict[str, list[DecisionBlocker]] = {}
+    for blocker in blockers:
+        grouped.setdefault(blocker.code, []).append(blocker)
+    return tuple(
+        DecisionBlocker(
+            code=code,
+            message="; ".join(dict.fromkeys(item.message for item in grouped[code])),
+            evidence_ref="; ".join(dict.fromkeys(item.evidence_ref for item in grouped[code])),
+        )
+        for code in _BLOCKER_ORDER
+        if code in grouped
+    )
 
 
 def _suggested_quantity(
@@ -148,17 +170,33 @@ def compose_decision_packet(
                 f"history:{history.dataset_id}",
             )
         )
-    if history.as_of < selected_as_of:
+    if history.generated_at > selected_as_of:
         blockers.append(
             _blocker(
                 "history-freshness",
-                "history as_of precedes the decision clock",
+                "history generated_at is after the decision clock",
+                f"history:{history.dataset_id}",
+            )
+        )
+    elif selected_as_of - history.generated_at > _HISTORY_FRESHNESS:
+        blockers.append(
+            _blocker(
+                "history-freshness",
+                "history is older than one day",
+                f"history:{history.dataset_id}",
+            )
+        )
+    if selected_as_of - observed[-1].timestamp > _HISTORY_FRESHNESS:
+        blockers.append(
+            _blocker(
+                "history-freshness",
+                "latest observed bar is older than one day",
                 f"history:{history.dataset_id}",
             )
         )
 
     final_quantiles: tuple[float, float, float] | None = None
-    forecast_chronology: tuple[datetime, ...] = ()
+    forecast_chronology: DecisionForecastChronology | None = None
     if forecast is None:
         blockers.append(
             _blocker("forecast-missing", "no forecast is attached", "forecast:missing")
@@ -172,7 +210,15 @@ def compose_decision_packet(
                     f"forecast:{forecast.artifact_id}",
                 )
             )
-        if selected_as_of - forecast.generated_at > _FORECAST_FRESHNESS:
+        if forecast.generated_at > selected_as_of:
+            blockers.append(
+                _blocker(
+                    "chronology",
+                    "forecast generated_at is after the decision clock",
+                    f"forecast:{forecast.artifact_id}",
+                )
+            )
+        elif selected_as_of - forecast.generated_at > _FORECAST_FRESHNESS:
             blockers.append(
                 _blocker(
                     "forecast-freshness",
@@ -196,21 +242,29 @@ def compose_decision_packet(
         else:
             final = path30.points[-1]
             final_quantiles = (final.p75, final.p50, final.p25)
-        forecast_chronology = tuple(
-            sorted(
-                {
-                    forecast.train_start,
-                    forecast.train_end,
-                    forecast.generated_at,
-                    *(point.timestamp for path in forecast.paths for point in path.points),
-                }
-            )
+        forecast_chronology = DecisionForecastChronology(
+            train_start=forecast.train_start,
+            train_end=forecast.train_end,
+            validation_start=forecast.validation_start,
+            validation_end=forecast.validation_end,
+            test_start=forecast.test_start,
+            test_end=forecast.test_end,
         )
         if forecast.train_end > selected_as_of:
             blockers.append(
                 _blocker(
                     "leakage",
                     "forecast training end is after the decision clock",
+                    f"forecast:{forecast.artifact_id}",
+                )
+            )
+        if not forecast.synthetic and (
+            forecast.manifest_id is None or forecast.quality_evaluation_id is None
+        ):
+            blockers.append(
+                _blocker(
+                    "forecast-ineligible",
+                    "real forecast requires manifest and quality evidence",
                     f"forecast:{forecast.artifact_id}",
                 )
             )
@@ -314,7 +368,17 @@ def compose_decision_packet(
         history_gaps=history.gaps,
         history_duplicates=history.duplicates,
         history_limitations=history.limitations,
-        forecast_artifact_id=forecast.artifact_id if forecast is not None else None,
+            forecast_artifact_id=forecast.artifact_id if forecast is not None else None,
+            forecast_dataset_id=forecast.dataset_id if forecast is not None else None,
+            forecast_dataset_revision=forecast.dataset_revision if forecast is not None else None,
+            forecast_manifest_id=forecast.manifest_id if forecast is not None else None,
+            forecast_quality_evaluation_id=(
+                forecast.quality_evaluation_id if forecast is not None else None
+            ),
+            forecast_synthetic=forecast.synthetic if forecast is not None else None,
+            forecast_eligible=forecast.eligible if forecast is not None else None,
+            forecast_blockers=forecast.blockers if forecast is not None else (),
+            forecast_limitations=forecast.limitations if forecast is not None else (),
         forecast_model_name=forecast.model_name if forecast is not None else None,
         forecast_model_version=forecast.model_version if forecast is not None else None,
         forecast_config_digest=forecast.config_digest if forecast is not None else None,
@@ -344,8 +408,8 @@ def compose_decision_packet(
         risk_plan=risk_plan,
         evidence=evidence,
         paper_capability=DecisionPaperCapability(
-            allowed=not blockers,
-            blockers=tuple(blockers),
+            allowed=not _normalized_blockers(blockers),
+            blockers=_normalized_blockers(blockers),
         ),
         disposition=DecisionDisposition.DRAFT,
     )

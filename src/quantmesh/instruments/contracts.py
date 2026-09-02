@@ -1309,6 +1309,37 @@ class DecisionRiskPlan(StrictContract):
         return self
 
 
+class DecisionForecastChronology(StrictContract):
+    """Role-named forecast training and evaluation boundaries."""
+
+    train_start: datetime
+    train_end: datetime
+    validation_start: datetime | None = None
+    validation_end: datetime | None = None
+    test_start: datetime | None = None
+    test_end: datetime | None = None
+
+    @field_validator(
+        "train_start", "train_end", "validation_start", "validation_end", "test_start", "test_end"
+    )
+    @classmethod
+    def chronology_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
+        return None if value is None else _utc(value, info.field_name)
+
+    @model_validator(mode="after")
+    def chronology_boundaries_are_ordered(self) -> "DecisionForecastChronology":
+        for start, end, label in (
+            (self.train_start, self.train_end, "train"),
+            (self.validation_start, self.validation_end, "validation"),
+            (self.test_start, self.test_end, "test"),
+        ):
+            if (start is None) != (end is None):
+                raise ValueError(f"{label} chronology requires both boundaries")
+            if start is not None and start > end:
+                raise ValueError(f"{label} chronology start cannot follow end")
+        return self
+
+
 class DecisionEvidence(StrictContract):
     """Pinned history, forecast, chronology, metric, and cost inputs."""
 
@@ -1324,13 +1355,23 @@ class DecisionEvidence(StrictContract):
     history_duplicates: tuple[datetime, ...] = Field(default_factory=tuple)
     history_limitations: tuple[str, ...] = Field(default_factory=tuple)
     forecast_artifact_id: str | None = None
+    forecast_dataset_id: str | None = None
+    forecast_dataset_revision: int | None = Field(default=None, ge=1)
+    forecast_manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    forecast_quality_evaluation_id: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
+    forecast_synthetic: bool | None = None
+    forecast_eligible: bool | None = None
+    forecast_blockers: tuple[str, ...] = Field(default_factory=tuple)
+    forecast_limitations: tuple[str, ...] = Field(default_factory=tuple)
     forecast_model_name: str | None = None
     forecast_model_version: str | None = None
     forecast_config_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     forecast_history_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     forecast_benchmark_name: str | None = None
     forecast_generated_at: datetime | None = None
-    forecast_chronology: tuple[datetime, ...] = Field(default_factory=tuple)
+    forecast_chronology: DecisionForecastChronology | None = None
     forecast_paths: tuple[ForecastPath, ...] = Field(default_factory=tuple)
     forecast_metrics: tuple[ForecastMetrics, ...] = Field(default_factory=tuple)
     costs: DecisionCostEvidence
@@ -1343,7 +1384,7 @@ class DecisionEvidence(StrictContract):
     def evidence_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
         return None if value is None else _utc(value, info.field_name)
 
-    @field_validator("history_gaps", "history_duplicates", "forecast_chronology")
+    @field_validator("history_gaps", "history_duplicates")
     @classmethod
     def evidence_time_lists_are_unique_utc(
         cls, value: tuple[datetime, ...], info
@@ -1353,11 +1394,11 @@ class DecisionEvidence(StrictContract):
             raise ValueError(f"{info.field_name} must be unique and chronological")
         return normalized
 
-    @field_validator("history_limitations")
+    @field_validator("history_limitations", "forecast_blockers", "forecast_limitations")
     @classmethod
     def evidence_limitations_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not item.strip() for item in value) or len(set(value)) != len(value):
-            raise ValueError("history_limitations must be non-blank and unique")
+            raise ValueError("evidence messages must be non-blank and unique")
         return value
 
     @model_validator(mode="after")
@@ -1366,21 +1407,33 @@ class DecisionEvidence(StrictContract):
             raise ValueError("history manifest and quality IDs must be present together")
         forecast_fields = (
             self.forecast_artifact_id,
+            self.forecast_dataset_id,
+            self.forecast_dataset_revision,
             self.forecast_model_name,
             self.forecast_model_version,
             self.forecast_config_digest,
             self.forecast_history_digest,
             self.forecast_benchmark_name,
             self.forecast_generated_at,
+            self.forecast_synthetic,
+            self.forecast_eligible,
         )
         if any(value is not None for value in forecast_fields) != all(
             value is not None for value in forecast_fields
         ):
             raise ValueError("forecast evidence must be complete when present")
         if self.forecast_artifact_id is None and (
-            self.forecast_chronology or self.forecast_paths or self.forecast_metrics
+            self.forecast_chronology is not None
+            or self.forecast_paths
+            or self.forecast_metrics
+            or self.forecast_blockers
+            or self.forecast_limitations
         ):
             raise ValueError("forecast detail requires a forecast artifact")
+        if (self.forecast_manifest_id is None) != (
+            self.forecast_quality_evaluation_id is None
+        ):
+            raise ValueError("forecast manifest and quality IDs must be present together")
         return self
 
 
@@ -1472,6 +1525,10 @@ class DecisionPacket(StrictContract):
                 raise ValueError("reject and watch packets cannot carry a proposal reference")
         elif self.proposal_id is None:
             raise ValueError("paper proposal packet requires a proposal reference")
+        if self.disposition is DecisionDisposition.PAPER_PROPOSAL and (
+            not self.paper_capability.allowed or self.paper_capability.blockers
+        ):
+            raise ValueError("paper proposal requires an allowed unblocked paper capability")
         return self
 
 
@@ -1520,8 +1577,9 @@ class InstrumentWorkspace(StrictContract):
         if self.decision.latest is not None and (
             self.decision.latest.instrument != self.history.instrument
             or self.decision.latest.selected_range is not self.history.range
+            or self.decision.latest.as_of != self.history.as_of
         ):
-            raise ValueError("workspace latest decision must match history identity")
+            raise ValueError("workspace latest decision as_of and identity must match history")
         if (self.forecast is None) != (self.forecast_unavailable_reason is not None):
             raise ValueError(
                 "workspace must carry either forecast evidence or an unavailable reason"
