@@ -19,11 +19,11 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: Slice 1 Task 2, bind the reviewed DecisionPacket domain to
-  Instrument Workspace, durable API/runtime/demo state and the existing paper
-  authority by test-first development. The complete Slice 1 sequence is
-  governed by the executable plan above; do not begin Slices 2–4 or add another
-  model framework.
+- Current frontier: Slice 1 Task 3, expose the reviewed DecisionPacket and its
+  Reject, Watch and guarded Paper-proposal actions in the existing Instrument
+  Workspace single-screen flow. The complete Slice 1 sequence is governed by
+  the executable plan above; do not begin Slices 2–4 or add another model
+  framework.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.
@@ -101,6 +101,18 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   APPROVED with no Critical, Important or Minor finding. Task 2 is the active
   frontier; no UI, Copilot, monitoring, review, provider or soak scope has been
   entered.
+- Task 2 is complete through `9494d59a5c79`. Instrument Workspace now composes
+  a current point-in-time draft while returning the separately persisted
+  latest packet; exact staged save remains stable under a moving production
+  clock and demo reset clears staged authority.
+- Packet actions are same-origin, packet/forecast bound and recoverably
+  idempotent. Reject and Watch never call paper authority; Paper only records a
+  pending proposal after current session-aware freshness and full evidence
+  binding checks, and confirmation remains a separate existing authority.
+- Task 2 final verification passed `97` tests with `6` existing dependency
+  warnings; OpenAPI freshness, TypeScript, Ruff and diff checks passed. The
+  second and final review returned APPROVED with no new finding. Task 3 is now
+  the active frontier.
 
 ## Historical delivery record
 
