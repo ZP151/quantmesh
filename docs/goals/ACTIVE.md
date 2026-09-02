@@ -1,7 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0027 product direction approved; design and
-  executable slice planning in progress
+- Status: active — iteration 0027 Slice 1 execution
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -12,17 +11,18 @@
   `docs/iterations/0027-evidence-backed-decision-copilot.md`
 - Design:
   `docs/superpowers/specs/2026-09-02-evidence-backed-decision-copilot-design.md`
-- Executable plan: pending operator review of the tracked design
+- Executable plan:
+  `docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`
 - Integration branch: `codex/0027-evidence-backed-decision-copilot`
 - Baseline: `origin/main` at `f77b565`; immutable `v0.1.1-rc1` remains
   `b6b05b9`
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: Slice 1, the NVDA DecisionPacket foundation. Reuse the
-  existing Instrument Workspace, historical/forecast evidence, risk kernel,
-  paper proposal service and audit lineage. Do not add another model framework
-  before the deterministic ticker-to-saved-decision loop is demonstrable.
+- Current frontier: Slice 1 Task 1, fix DecisionPacket identity/authority in
+  ADR-0019, then implement the deterministic domain and fail-closed store by
+  test-first development. The complete Slice 1 sequence is governed by the
+  executable plan above; do not begin Slices 2–4 or add another model framework.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.
@@ -74,6 +74,22 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
 - Every agent prompt has one deliverable, one stop condition and explicit
   forbidden actions. Daily progress records completed user loops rather than
   test count, code volume or ledger length.
+
+## Slice 1 execution checkpoint — 2026-09-02
+
+- Operator approved the tracked design and authorized Slice 1 execution.
+- Planner fixed one user action: save and reopen an NVDA Reject, Watch or
+  guarded Paper-proposal packet inside Instrument Workspace. Success is a
+  durable identity in at most two minutes; later Copilot, monitoring and review
+  slices are prohibited expansions.
+- Quant Researcher confirmed that forecast quantiles/coverage cannot become
+  scenario probabilities, manifest/quality IDs remain inseparable for trusted
+  claims, and freshness/chronology/leakage stay fail-closed. Account fee and
+  matcher slippage are pinned cost assumptions; quote half-spread remains
+  explicitly pending until the existing second-confirmation quote fence.
+- Execution uses
+  `docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`, with one
+  implementer deliverable and one two-round review ceiling per task.
 
 ## Historical delivery record
 

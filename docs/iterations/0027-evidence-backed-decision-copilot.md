@@ -1,13 +1,14 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: planning (product direction approved; tracked design under review)
+- Status: active (design approved; Slice 1 execution)
 - Started: 2026-09-02
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
 - Branch: `codex/0027-evidence-backed-decision-copilot` from
   `origin/main` at `f77b565`
 - Design:
   `docs/superpowers/specs/2026-09-02-evidence-backed-decision-copilot-design.md`
-- Executable plan: pending operator review of the design
+- Executable plan:
+  `docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`
 - Ledger: this file
 
 ## Product wedge
@@ -190,20 +191,29 @@ to-review lineage and explains both accepted and rejected paths.
 - Regenerate or reconcile the design sidecar with `DESIGN.md` in a separate
   maintenance task. Neither blocks product-direction approval or Slice 1.
 
-## Role evidence — direction checkpoint, 2026-09-02
+## Role evidence — Slice 1 start, 2026-09-02
 
 - **Planner/Product:** selected the two-minute ticker-to-saved-decision wedge,
   one-page constraint, four vertical slices and explicit exclusions.
 - **Quant Researcher:** retained exact data/model/benchmark/out-of-sample/cost/
-  leakage bindings and required calibrated or qualitative confidence labeling.
-- **Implementer:** not started; design review precedes executable planning.
-- **Reviewer:** not started; first review occurs at the Slice 1 demonstrable
-  boundary, not per documentation micro-edit.
-- **Verifier:** current checkpoint verifies documentation and issue consistency;
-  no product behavior claim is made.
+  leakage bindings; forbids converting price quantiles or empirical coverage
+  into scenario probabilities; requires trusted manifest/quality pairs and
+  separately named promotion/proposal freshness. Account fee and matcher
+  slippage are pinned while half-spread is explicitly resolved by the existing
+  confirmation quote rather than fabricated as zero.
+- **Implementer:** Slice 1 Task 1 is active under the executable plan; no
+  production change precedes its failing domain/store tests.
+- **Reviewer:** reviews each demonstrable task boundary in at most two rounds;
+  a third structural issue returns the design for scope reduction.
+- **Verifier:** isolated worktree bootstrap is complete. Before behavior
+  changes, the adjacent Python baseline passed `122` tests with `3` skips in
+  `365.09s` using a worktree-local basetemp; the adjacent frontend baseline
+  passed `35` tests in `4.50s` under Node `22.12.0`.
 
 ## Current frontier
 
-Obtain operator review of the tracked design. After approval, create the
-test-first executable plan for Slice 1 only. Do not implement Slices 2–4 or any
-framework expansion as part of the first plan.
+Execute Task 1 of
+`docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`: record
+ADR-0019, add the strict packet/domain contracts, deterministic composer and
+fail-closed JSONL lineage store. Stop scope expansion at the Task 1 review
+boundary; do not implement Slices 2–4.

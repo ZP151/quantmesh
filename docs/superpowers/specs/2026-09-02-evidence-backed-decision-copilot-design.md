@@ -1,6 +1,6 @@
 # Evidence-backed Decision Copilot Design
 
-- Status: proposed for operator review
+- Status: approved for Slice 1 execution
 - Date: 2026-09-02
 - Iteration: 0027
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
