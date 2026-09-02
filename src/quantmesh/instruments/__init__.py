@@ -5,6 +5,16 @@ from quantmesh.instruments.contracts import (
     ComparisonSeries,
     CoverageSnapshot,
     DatasetBinding,
+    DecisionBlocker,
+    DecisionCostEvidence,
+    DecisionDisposition,
+    DecisionEvidence,
+    DecisionMarketState,
+    DecisionPacket,
+    DecisionPaperCapability,
+    DecisionRiskPlan,
+    DecisionScenario,
+    DecisionWorkspaceState,
     ForecastMetrics,
     ForecastPath,
     ForecastPoint,
@@ -25,6 +35,8 @@ from quantmesh.instruments.contracts import (
     WorkspacePosition,
     WorkspaceRisk,
 )
+from quantmesh.instruments.decision_analysis import compose_decision_packet
+from quantmesh.instruments.decision_packets import DecisionPacketStore, decision_packet_id
 from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
@@ -35,6 +47,17 @@ __all__ = [
     "ComparisonSeries",
     "CoverageSnapshot",
     "DatasetBinding",
+    "DecisionBlocker",
+    "DecisionCostEvidence",
+    "DecisionDisposition",
+    "DecisionEvidence",
+    "DecisionMarketState",
+    "DecisionPacket",
+    "DecisionPacketStore",
+    "DecisionPaperCapability",
+    "DecisionRiskPlan",
+    "DecisionScenario",
+    "DecisionWorkspaceState",
     "ForecastMetrics",
     "ForecastPath",
     "ForecastPoint",
@@ -60,4 +83,6 @@ __all__ = [
     "WorkspacePosition",
     "WorkspaceRisk",
     "run_price_forecast",
+    "compose_decision_packet",
+    "decision_packet_id",
 ]
