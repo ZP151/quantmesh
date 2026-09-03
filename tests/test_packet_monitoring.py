@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -253,6 +254,65 @@ def test_reopens_exact_registration_and_byte_identical_observation_replays(tmp_p
 
     assert restarted.register(packet.packet_id, (WatchConditionKind.ENTRY_ZONE,)) == registration
     assert replay == evaluation
+
+
+def test_register_and_check_is_one_durable_activation_record(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = packets.record(_packet())
+    root = tmp_path / "monitoring"
+    store = DecisionWatchStore(root)
+    service = DecisionWatchService(packet_store=packets, store=store)
+
+    def fail_append(_value) -> None:
+        raise OSError("injected activation append failure")
+
+    monkeypatch.setattr(store._activations, "append", fail_append)
+    with pytest.raises(OSError, match="injected activation append failure"):
+        service.register_and_check(
+            packet.packet_id,
+            (WatchConditionKind.ENTRY_ZONE,),
+            _price_observation(price=101.0, sequence=1, minutes=1),
+        )
+
+    restarted = DecisionWatchStore(root)
+    assert restarted.registration_for_packet(packet.packet_id) is None
+    assert not (root / "watch-registrations.jsonl").exists()
+    assert not (root / "watch-evaluations.jsonl").exists()
+
+
+def test_replay_recomputes_terminal_event_identity(tmp_path: Path) -> None:
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = packets.record(_packet())
+    root = tmp_path / "monitoring"
+    service = DecisionWatchService(packet_store=packets, store=DecisionWatchStore(root))
+    registration = service.register(packet.packet_id, (WatchConditionKind.ENTRY_ZONE,))
+    service.check(
+        registration.registration_id, _price_observation(price=101.0, sequence=1, minutes=1)
+    )
+    service.check(
+        registration.registration_id, _price_observation(price=99.0, sequence=2, minutes=3)
+    )
+
+    path = root / "watch-evaluations.jsonl"
+    records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    records[1]["results"][0]["event_id"] = "watch-event-" + "f" * 24
+    identity_payload = {
+        "registration_id": records[1]["registration_id"],
+        "observation": records[1]["observation"],
+        "results": records[1]["results"],
+    }
+    digest = hashlib.sha256(
+        json.dumps(identity_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()[:24]
+    records[1]["evaluation_id"] = f"evaluation-{digest}"
+    path.write_text("\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="event identity"):
+        DecisionWatchService(packet_store=packets, store=DecisionWatchStore(root)).state(
+            packet.packet_id
+        )
 
 
 def test_initial_or_continued_in_band_price_never_backfills_entry_trigger(tmp_path: Path) -> None:

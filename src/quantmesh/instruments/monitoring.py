@@ -236,6 +236,19 @@ class UnavailableFacts(_Contract):
 WatchFacts = PriceFacts | StaleFacts | DriftFacts | UnavailableFacts
 
 
+def _event_identity(
+    condition_id: str, observation: DecisionWatchObservation, facts: WatchFacts
+) -> str:
+    return _identity(
+        "watch-event",
+        {
+            "condition_id": condition_id,
+            "observation": observation.model_dump(mode="json"),
+            "facts": facts.model_dump(mode="json"),
+        },
+    )
+
+
 class DecisionWatchResult(_Contract):
     condition_id: str = Field(pattern=r"^condition-[0-9a-f]{24}$")
     state: Literal["armed", "not_triggered", "triggered", "not_comparable"]
@@ -264,6 +277,26 @@ class DecisionWatchEvaluation(_Contract):
         }
         if self.evaluation_id != _identity("evaluation", payload):
             raise ValueError("watch evaluation identity does not match canonical content")
+        return self
+
+
+class DecisionWatchActivation(_Contract):
+    """One atomic first-registration plus first-evaluation commit."""
+
+    activation_id: str = Field(pattern=r"^activation-[0-9a-f]{24}$")
+    registration: DecisionWatchRegistration
+    evaluation: DecisionWatchEvaluation
+
+    @model_validator(mode="after")
+    def canonical_activation(self) -> DecisionWatchActivation:
+        if self.evaluation.registration_id != self.registration.registration_id:
+            raise ValueError("watch activation evaluation differs from registration")
+        payload = {
+            "registration": self.registration.model_dump(mode="json"),
+            "evaluation": self.evaluation.model_dump(mode="json"),
+        }
+        if self.activation_id != _identity("activation", payload):
+            raise ValueError("watch activation identity does not match canonical content")
         return self
 
 
@@ -337,6 +370,15 @@ class DecisionWatchStore:
             key=lambda item: item.evaluation_id,
             extra_validate=self._validate_evaluation,
         )
+        self._activations = JsonlStore(
+            root,
+            filename="watch-activations.jsonl",
+            model=DecisionWatchActivation,
+            label="decision watch activation store",
+            id_label="decision watch activation",
+            key=lambda item: item.activation_id,
+            extra_validate=self._validate_activation,
+        )
 
     @property
     def root(self) -> Path:
@@ -349,6 +391,10 @@ class DecisionWatchStore:
     @staticmethod
     def _validate_evaluation(value: DecisionWatchEvaluation) -> None:
         value.canonical_identity()
+
+    @staticmethod
+    def _validate_activation(value: DecisionWatchActivation) -> None:
+        value.canonical_activation()
 
     @contextmanager
     def transaction(self) -> Iterator[None]:
@@ -368,14 +414,23 @@ class DecisionWatchStore:
                 self._local.transaction_depth = 0
 
     def registrations(self) -> tuple[DecisionWatchRegistration, ...]:
-        records = tuple(self._registrations.read())
-        if len({record.packet_id for record in records}) != len(records):
+        records = tuple(self._registrations.read()) + tuple(
+            activation.registration for activation in self._activations.read()
+        )
+        if len({record.packet_id for record in records}) != len(records) or len(
+            {record.registration_id for record in records}
+        ) != len(records):
             raise ValueError("duplicate decision watch registration for packet")
         return records
 
     def evaluations(self, registration_id: str) -> tuple[DecisionWatchEvaluation, ...]:
         registrations = {record.registration_id: record for record in self.registrations()}
-        records = tuple(
+        activated = tuple(
+            activation.evaluation
+            for activation in self._activations.read()
+            if activation.registration.registration_id == registration_id
+        )
+        records = activated + tuple(
             record
             for record in self._evaluations.read()
             if record.registration_id == registration_id
@@ -412,6 +467,10 @@ class DecisionWatchStore:
                 if prior_terminal is not None and result != prior_terminal:
                     raise ValueError("watch terminal event identity changed during replay")
                 if result.state == "triggered":
+                    if prior_terminal is None and result.event_id != _event_identity(
+                        result.condition_id, evaluation.observation, result.facts
+                    ):
+                        raise ValueError("watch terminal event identity is not canonical")
                     terminal[result.condition_id] = result
             accepted = any(
                 isinstance(result.facts, PriceFacts)
@@ -473,6 +532,27 @@ class DecisionWatchStore:
                 return existing
             self._evaluations.append(value)
             return value
+
+    def record_activation(
+        self,
+        registration: DecisionWatchRegistration,
+        evaluation: DecisionWatchEvaluation,
+    ) -> tuple[DecisionWatchRegistration, DecisionWatchEvaluation]:
+        """Atomically expose a registration only with its initial evaluation."""
+        with self.transaction():
+            if self.registration_for_packet(registration.packet_id) is not None:
+                raise ValueError("decision packet already has watch conditions")
+            payload = {
+                "registration": registration.model_dump(mode="json"),
+                "evaluation": evaluation.model_dump(mode="json"),
+            }
+            activation = DecisionWatchActivation(
+                activation_id=_identity("activation", payload),
+                registration=registration,
+                evaluation=evaluation,
+            )
+            self._activations.append(activation)
+            return registration, evaluation
 
 
 class DecisionWatchService:
@@ -557,22 +637,25 @@ class DecisionWatchService:
     def register(
         self, packet_id: str, kinds: tuple[WatchConditionKind, ...]
     ) -> DecisionWatchRegistration:
-        if not 1 <= len(kinds) <= 4 or len(set(kinds)) != len(kinds):
-            raise ValueError("watch conditions must be one to four unique fixed kinds")
         with self.store.transaction():
             packet = self.packet_store.get(packet_id)
-            conditions = tuple(self._condition(packet, kind) for kind in _ORDER if kind in kinds)
-            payload = {
-                "packet_id": packet_id,
-                "conditions": [item.model_dump(mode="json") for item in conditions],
-            }
-            return self.store.record_registration(
-                DecisionWatchRegistration(
-                    registration_id=_identity("registration", payload),
-                    packet_id=packet_id,
-                    conditions=conditions,
-                )
-            )
+            return self.store.record_registration(self._registration(packet, kinds))
+
+    def _registration(
+        self, packet, kinds: tuple[WatchConditionKind, ...]
+    ) -> DecisionWatchRegistration:
+        if not 1 <= len(kinds) <= 4 or len(set(kinds)) != len(kinds):
+            raise ValueError("watch conditions must be one to four unique fixed kinds")
+        conditions = tuple(self._condition(packet, kind) for kind in _ORDER if kind in kinds)
+        payload = {
+            "packet_id": packet.packet_id,
+            "conditions": [item.model_dump(mode="json") for item in conditions],
+        }
+        return DecisionWatchRegistration(
+            registration_id=_identity("registration", payload),
+            packet_id=packet.packet_id,
+            conditions=conditions,
+        )
 
     def register_and_check(
         self,
@@ -582,13 +665,21 @@ class DecisionWatchService:
     ) -> tuple[DecisionWatchRegistration, DecisionWatchEvaluation]:
         """Commit the fixed registration and its first server-derived check together.
 
-        The observation is built before this call; the root lock covers every
-        replay read and both durable writes, so concurrent processes cannot
-        derive competing cursors.
+        The observation is built before this call. A new registration and its
+        initial evaluation share one atomically replaced activation record;
+        concurrent processes cannot observe a half-registration or derive
+        competing cursors.
         """
         with self.store.transaction():
-            registration = self.register(packet_id, kinds)
-            return registration, self.check(registration.registration_id, observation)
+            packet = self.packet_store.get(packet_id)
+            registration = self._registration(packet, kinds)
+            existing = self.store.registration_for_packet(packet_id)
+            if existing is not None:
+                if existing != registration:
+                    raise ValueError("decision packet already has different watch conditions")
+                return existing, self.check(existing.registration_id, observation)
+            evaluation = self._evaluation(registration, packet, (), observation)
+            return self.store.record_activation(registration, evaluation)
 
     def state(
         self, packet_id: str
@@ -603,14 +694,7 @@ class DecisionWatchService:
     def _event_id(
         self, condition_id: str, observation: DecisionWatchObservation, facts: WatchFacts
     ) -> str:
-        return _identity(
-            "watch-event",
-            {
-                "condition_id": condition_id,
-                "observation": observation.model_dump(mode="json"),
-                "facts": facts.model_dump(mode="json"),
-            },
-        )
+        return _event_identity(condition_id, observation, facts)
 
     def _price_result(
         self,
@@ -801,47 +885,56 @@ class DecisionWatchService:
             )
             if replay is not None:
                 return replay
-            prior_price = next(
-                (
-                    item.observation
-                    for item in reversed(prior_evaluations)
-                    if any(
-                        isinstance(result.facts, PriceFacts)
-                        and result.facts.current_price == item.observation.price
-                        for result in item.results
-                    )
-                ),
-                None,
-            )
-            terminal = {
-                result.condition_id: result
-                for item in prior_evaluations
-                for result in item.results
-                if result.state == "triggered"
-            }
-            results: list[DecisionWatchResult] = []
-            for condition in registration.conditions:
-                if condition.condition_id in terminal:
-                    results.append(terminal[condition.condition_id])
-                elif condition.kind in {
-                    WatchConditionKind.ENTRY_ZONE,
-                    WatchConditionKind.INVALIDATION,
-                }:
-                    results.append(self._price_result(condition, packet, observation, prior_price))
-                elif condition.kind is WatchConditionKind.DATA_STALE:
-                    results.append(self._stale_result(condition, observation))
-                else:
-                    results.append(self._drift_result(condition, packet, observation))
-            payload = {
-                "registration_id": registration_id,
-                "observation": observation.model_dump(mode="json"),
-                "results": [result.model_dump(mode="json") for result in results],
-            }
             return self.store.record_evaluation(
-                DecisionWatchEvaluation(
-                    evaluation_id=_identity("evaluation", payload),
-                    registration_id=registration_id,
-                    observation=observation,
-                    results=tuple(results),
-                )
+                self._evaluation(registration, packet, prior_evaluations, observation)
             )
+
+    def _evaluation(
+        self,
+        registration: DecisionWatchRegistration,
+        packet,
+        prior_evaluations: tuple[DecisionWatchEvaluation, ...],
+        observation: DecisionWatchObservation,
+    ) -> DecisionWatchEvaluation:
+        prior_price = next(
+            (
+                item.observation
+                for item in reversed(prior_evaluations)
+                if any(
+                    isinstance(result.facts, PriceFacts)
+                    and result.facts.current_price == item.observation.price
+                    for result in item.results
+                )
+            ),
+            None,
+        )
+        terminal = {
+            result.condition_id: result
+            for item in prior_evaluations
+            for result in item.results
+            if result.state == "triggered"
+        }
+        results: list[DecisionWatchResult] = []
+        for condition in registration.conditions:
+            if condition.condition_id in terminal:
+                results.append(terminal[condition.condition_id])
+            elif condition.kind in {
+                WatchConditionKind.ENTRY_ZONE,
+                WatchConditionKind.INVALIDATION,
+            }:
+                results.append(self._price_result(condition, packet, observation, prior_price))
+            elif condition.kind is WatchConditionKind.DATA_STALE:
+                results.append(self._stale_result(condition, observation))
+            else:
+                results.append(self._drift_result(condition, packet, observation))
+        payload = {
+            "registration_id": registration.registration_id,
+            "observation": observation.model_dump(mode="json"),
+            "results": [result.model_dump(mode="json") for result in results],
+        }
+        return DecisionWatchEvaluation(
+            evaluation_id=_identity("evaluation", payload),
+            registration_id=registration.registration_id,
+            observation=observation,
+            results=tuple(results),
+        )

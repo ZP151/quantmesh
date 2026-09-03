@@ -140,6 +140,7 @@ def test_demo_reset_restores_pristine_packet_monitoring_files_after_a_check(tmp_
     assert checked.status_code == 200
     assert reset.status_code == 200
     monitoring = root / "decisions" / "monitoring"
+    assert (monitoring / "watch-activations.jsonl").read_bytes() == b""
     assert (monitoring / "watch-registrations.jsonl").read_bytes() == b""
     assert (monitoring / "watch-evaluations.jsonl").read_bytes() == b""
 
