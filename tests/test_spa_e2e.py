@@ -641,10 +641,22 @@ def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
         service.critic_gateway = None
         page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
         page.get_by_role("heading", name="NVDA", exact=True).wait_for()
-        page.get_by_label("Decision reason").fill("Exercise unavailable Copilot")
-        page.get_by_role("button", name="Watch decision").click()
-        page.get_by_text("Watching", exact=True).wait_for()
-        degraded_packet_id = _decision_packet_id(page)
+        displayed_draft_id = _decision_packet_id(page)
+        persisted = page.request.post(
+            f"{base_url}/api/decision-packets",
+            data={
+                "venue": "moomoo",
+                "symbol": "NVDA",
+                "selected_range": "6m",
+                "expected_packet_id": displayed_draft_id,
+            },
+        )
+        assert persisted.status == 200
+        assert persisted.json()["packet_id"] == displayed_draft_id
+        degraded_packet_id = displayed_draft_id
+        page.reload()
+        page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+        assert _decision_packet_id(page) == degraded_packet_id
         degraded_packet = page.request.get(
             f"{base_url}/api/decision-packets/{degraded_packet_id}"
         ).json()
@@ -655,9 +667,8 @@ def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
         assert main.get_by_role("region", name="Evidence").count() >= 1
         assert main.get_by_role("region", name="Scenarios").count() >= 1
         assert main.get_by_role("region", name="Risk plan").count() >= 1
-        action_region = main.get_by_role(
-            "region", name="DecisionPacket actions"
-        )
+        action_region = main.get_by_role("region", name="DecisionPacket actions")
+        assert action_region.count() == 1
         action_state_before = action_region.inner_text()
         with page.expect_response(
             lambda response: response.url.endswith(
