@@ -246,6 +246,10 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   exactly `fast-uri 3.1.5 -> 3.1.7` and `qs 6.15.3 -> 6.16.0`; `npm ci`, zero-
   vulnerability audit, the 646-package frontend license review and diff check
   now pass. No direct dependency or runtime source changed.
+- The CI-aligned Node 22.12 runner passed the formerly blocked frontend build and
+  reached 75% of pytest with no failure, but the gate's 2400-second timeout was
+  shorter than the verified 3806.57-second suite baseline. A test-first gate-only
+  correction raises that step to 5400 seconds; its three tests, Ruff and diff pass.
 - The only remaining work is the final fresh-clone release gate and PR boundary.
 
 ## Historical delivery record

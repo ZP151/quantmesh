@@ -470,3 +470,12 @@ runtime source changed. Fresh `npm ci` succeeded, `npm audit --audit-level=high`
 reported zero vulnerabilities, the 646-package locked frontend license review
 passed, and `git diff --check` exited `0`. The final fresh-clone gate remains the
 only frontier.
+
+The next run showed two environment/gate-budget facts without a product failure.
+System Node 22.11 did not satisfy the repository's declared 22.12+ engine and a
+fresh install therefore omitted Rolldown's optional native binding; rerunning with
+the already installed CI-aligned Node 22.12 passed that build boundary. The suite
+then reached 75% with no failed tests before the gate's historical 2400-second
+pytest timeout terminated it; the same suite's Slice 4 baseline is 3806.57s. A
+test-first release-gate correction raises only that step's budget to 5400 seconds.
+`tests/test_release_gate.py` passes `3` tests; targeted Ruff and diff checks pass.
