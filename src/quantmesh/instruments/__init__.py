@@ -60,6 +60,14 @@ from quantmesh.instruments.monitoring import (
     WatchConditionKind,
 )
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
+from quantmesh.instruments.reviews import (
+    DecisionOutcomeReviewService,
+    DecisionOutcomeReviewState,
+    DecisionOutcomeSnapshot,
+    DecisionReviewRecord,
+    DecisionReviewStore,
+    ReviewClassification,
+)
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
 
 __all__ = [
@@ -76,8 +84,13 @@ __all__ = [
     "DecisionPacket",
     "DecisionPacketStore",
     "DecisionPacketService",
+    "DecisionOutcomeReviewService",
+    "DecisionOutcomeReviewState",
+    "DecisionOutcomeSnapshot",
     "DecisionPaperCapability",
     "DecisionRiskPlan",
+    "DecisionReviewRecord",
+    "DecisionReviewStore",
     "DecisionScenario",
     "DecisionWorkspaceState",
     "ForecastMetrics",
@@ -108,6 +121,7 @@ __all__ = [
     "ProposalEvent",
     "ProposalLedger",
     "ProposalStatus",
+    "ReviewClassification",
     "WorkspaceForecast",
     "WorkspaceLiveEvidence",
     "WorkspacePosition",

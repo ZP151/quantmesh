@@ -92,6 +92,7 @@ from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.live_history import LiveHistoryService
 from quantmesh.instruments.monitoring import DecisionWatchService, DecisionWatchStore
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
+from quantmesh.instruments.reviews import DecisionOutcomeReviewService, DecisionReviewStore
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.api import live_router
 from quantmesh.live.contract import UpdateKind
@@ -1053,6 +1054,7 @@ def create_workstation_app(
     packet_copilot_store: PacketCopilotStore | None = None,
     packet_copilot: PacketCopilotService | None = None,
     packet_monitoring: DecisionWatchStore | None = None,
+    packet_reviews: DecisionReviewStore | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1128,6 +1130,7 @@ def create_workstation_app(
     app.state.packet_copilot_store = packet_copilot_store
     app.state.packet_copilot = packet_copilot
     app.state.packet_monitoring_store = packet_monitoring
+    app.state.packet_review_store = packet_reviews
 
     def publish_account(updated: PaperAccount) -> None:
         if account_sink is not None:
@@ -1211,6 +1214,17 @@ def create_workstation_app(
                     packet_store=decision_packets,
                     store=packet_monitoring,
                     forecast_registry=price_forecasts,
+                )
+            if packet_reviews is not None:
+                app.state.packet_reviews = DecisionOutcomeReviewService(
+                    packet_store=decision_packets,
+                    review_store=packet_reviews,
+                    forecast_registry=price_forecasts,
+                    history=effective_history,
+                    proposal_ledger=proposal_ledger,
+                    journal=journal,
+                    monitoring=packet_monitoring,
+                    now=clock,
                 )
 
     # The SPA JSON surface (Phase C) in both modes: a strict superset
@@ -1809,6 +1823,7 @@ def main(argv: list[str] | None = None) -> None:
             decision_packets = DecisionPacketStore(settings.decisions_dir / "packets")
             packet_copilot_store = PacketCopilotStore(settings.decisions_dir / "copilot")
             packet_monitoring = DecisionWatchStore(settings.decisions_dir / "monitoring")
+            packet_reviews = DecisionReviewStore(settings.decisions_dir / "reviews")
             copilot_decisions = DecisionLog()
             packet_copilot = None
             if settings.model_name:
@@ -1847,6 +1862,7 @@ def main(argv: list[str] | None = None) -> None:
                 packet_copilot_store=packet_copilot_store,
                 packet_copilot=packet_copilot,
                 packet_monitoring=packet_monitoring,
+                packet_reviews=packet_reviews,
                 host=host,
             )
         else:

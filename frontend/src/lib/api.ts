@@ -575,6 +575,10 @@ export type PacketCopilotState = DeepReadonly<components['schemas']['PacketCopil
 // select only the fixed condition kinds; observations are constructed by the
 // local runtime from its workspace and registry snapshots.
 export type WatchConditionKind = components['schemas']['WatchConditionKind']
+export type DecisionOutcomeReviewState = DeepReadonly<
+  components['schemas']['DecisionOutcomeReviewState']
+>
+export type DecisionOutcomeReviewInput = components['schemas']['DecisionOutcomeReviewBody']
 
 // --- Trusted data catalog (iteration 0021 Slice 6) -----------------------
 
@@ -858,6 +862,30 @@ export const api = {
       '/api/decision-packets/{packet_id}/watch-conditions',
       {
         body: { kinds: [...kinds] },
+        params: { path: { packet_id: packetId } },
+      },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async packetOutcomeReview(packetId: string): Promise<DecisionOutcomeReviewState> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/decision-packets/{packet_id}/outcome-review',
+      { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async savePacketOutcomeReview(
+    packetId: string,
+    input: DecisionOutcomeReviewInput,
+  ): Promise<DecisionOutcomeReviewState> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/decision-packets/{packet_id}/outcome-review',
+      {
+        body: input,
         params: { path: { packet_id: packetId } },
       },
     )

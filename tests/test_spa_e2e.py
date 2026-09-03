@@ -190,10 +190,7 @@ def _decision_packet_id(page) -> str:
 
 def _proposal_id(page) -> str:
     proposal_id = (
-        page.get_by_text("Proposal ID", exact=True)
-        .locator("..")
-        .locator("dd")
-        .inner_text()
+        page.get_by_text("Proposal ID", exact=True).locator("..").locator("dd").inner_text()
     )
     assert proposal_id.startswith("proposal-")
     return proposal_id
@@ -242,12 +239,8 @@ def _copilot_script(packet: dict) -> tuple[list[dict], list[dict]]:
                 "/evidence/history_limitations",
             )
         ],
-        "limitations": [
-            item("Scenario confidence is packet-bounded.", "/scenarios/1/confidence")
-        ],
-        "operator_questions": [
-            item("Will the stored support hold?", "/market_state/support")
-        ],
+        "limitations": [item("Scenario confidence is packet-bounded.", "/scenarios/1/confidence")],
+        "operator_questions": [item("Will the stored support hold?", "/market_state/support")],
     }
     critic = {
         "packet_id": packet["packet_id"],
@@ -323,9 +316,7 @@ def test_connector_panel_and_provider_failure(page, base_url) -> None:
     assert "synthetic" in fallback_text.lower()
 
 
-def test_data_catalog_populated_state_has_no_mobile_overflow(
-    page, base_url
-) -> None:
+def test_data_catalog_populated_state_has_no_mobile_overflow(page, base_url) -> None:
     """The package-served route remains bounded with production-length
     manifest, report, checkpoint and run identities at the minimum viewport."""
     manifest_id = "a" * 64
@@ -418,9 +409,7 @@ def test_csv_import_validation_and_commit(page, base_url) -> None:
 
     csv_text = (
         "timestamp,open,high,low,close,volume\n"
-        + "".join(
-            f"2026-08-0{i},100,101,99,100.5,1000\n" for i in range(1, 5)
-        )
+        + "".join(f"2026-08-0{i},100,101,99,100.5,1000\n" for i in range(1, 5))
         + "2026-08-05,oops,106,104,105,1500\n"
     )
     page.set_input_files(
@@ -539,8 +528,9 @@ def test_nvda_watchlist_activation_reaches_each_durable_decision_in_under_two_mi
         else:
             decision_reason.fill(reason)
     with page.expect_response(
-        lambda response: "/api/decision-packets/" in response.url
-        and response.url.endswith("/actions")
+        lambda response: (
+            "/api/decision-packets/" in response.url and response.url.endswith("/actions")
+        )
     ) as saved:
         action = page.get_by_role("button", name=button_name)
         if disposition == "watch":
@@ -606,10 +596,10 @@ def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
         assert action.is_enabled()
         action.focus()
         with page.expect_response(
-            lambda response: response.url.endswith(
-                f"/api/decision-packets/{packet_id}/copilot"
+            lambda response: (
+                response.url.endswith(f"/api/decision-packets/{packet_id}/copilot")
+                and response.request.method == "POST"
             )
-            and response.request.method == "POST"
         ) as accepted:
             page.keyboard.press("Enter")
         assert accepted.value.status == 200
@@ -626,9 +616,9 @@ def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
             assert copilot.get_by_role("heading", name=section).count() == 1
         copilot.get_by_text("1 packet fact").first.click()
         assert copilot.get_by_text("/market_state/trend", exact=True).count() == 1
-        assert page.request.get(
-            f"{base_url}/api/decision-packets/{packet_id}"
-        ).json() == packet_before
+        assert (
+            page.request.get(f"{base_url}/api/decision-packets/{packet_id}").json() == packet_before
+        )
         assert demo_station.app.state.paper_decisions.ledger.all() == proposals_before
         assert demo_station.app.state.account_store.get().orders == orders_before
 
@@ -671,10 +661,10 @@ def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
         assert action_region.count() == 1
         action_state_before = action_region.inner_text()
         with page.expect_response(
-            lambda response: response.url.endswith(
-                f"/api/decision-packets/{degraded_packet_id}/copilot"
+            lambda response: (
+                response.url.endswith(f"/api/decision-packets/{degraded_packet_id}/copilot")
+                and response.request.method == "POST"
             )
-            and response.request.method == "POST"
         ) as unavailable:
             page.get_by_role("button", name="Explain & challenge").click()
         assert unavailable.value.status == 200
@@ -683,9 +673,10 @@ def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
             "actions are unaffected."
         ).wait_for()
         assert action_region.inner_text() == action_state_before
-        assert page.request.get(
-            f"{base_url}/api/decision-packets/{degraded_packet_id}"
-        ).json() == degraded_packet
+        assert (
+            page.request.get(f"{base_url}/api/decision-packets/{degraded_packet_id}").json()
+            == degraded_packet
+        )
         assert demo_station.app.state.paper_decisions.ledger.all() == proposals_before
         assert demo_station.app.state.account_store.get().orders == orders_before
     finally:
@@ -710,19 +701,17 @@ def test_nvda_packet_monitoring_is_packet_bound_and_survives_workspace_reload(
     page.get_by_role("button", name="Watch decision").click()
     page.get_by_text("Watching", exact=True).wait_for()
     packet_id = _decision_packet_id(page)
-    packet_before = page.request.get(
-        f"{base_url}/api/decision-packets/{packet_id}"
-    ).json()
+    packet_before = page.request.get(f"{base_url}/api/decision-packets/{packet_id}").json()
     proposals_before = demo_station.app.state.paper_decisions.ledger.all()
     orders_before = demo_station.app.state.account_store.get().orders
 
     monitoring = page.get_by_test_id("packet-monitoring")
     monitoring.get_by_role("button", name="Save & check").wait_for()
     with page.expect_response(
-        lambda response: response.url.endswith(
-            f"/api/decision-packets/{packet_id}/watch-conditions"
+        lambda response: (
+            response.url.endswith(f"/api/decision-packets/{packet_id}/watch-conditions")
+            and response.request.method == "POST"
         )
-        and response.request.method == "POST"
     ) as checked:
         monitoring.get_by_role("button", name="Save & check").click()
     assert checked.value.status == 200
@@ -736,11 +725,70 @@ def test_nvda_packet_monitoring_is_packet_bound_and_survives_workspace_reload(
     assert page.url == workspace_url
     recovered = page.get_by_test_id("packet-monitoring")
     recovered.get_by_role("button", name="Check now").wait_for()
-    assert page.request.get(
-        f"{base_url}/api/decision-packets/{packet_id}"
-    ).json() == packet_before
+    assert page.request.get(f"{base_url}/api/decision-packets/{packet_id}").json() == packet_before
     assert demo_station.app.state.paper_decisions.ledger.all() == proposals_before
     assert demo_station.app.state.account_store.get().orders == orders_before
+
+
+def test_nvda_filled_open_packet_review_saves_and_reopens_exact_identity(
+    page,
+    base_url,
+    demo_station: _DemoStation,
+) -> None:
+    _reset_demo(page, base_url)
+    page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    workspace_url = page.url
+
+    page.get_by_label("Optional limit").fill("")
+    page.get_by_role("button", name="Create paper proposal").click()
+    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    proposal_id = _proposal_id(page)
+    token = (
+        page.get_by_text("Displayed confirmation token", exact=True)
+        .locator("..")
+        .locator("code")
+        .inner_text()
+    )
+    page.get_by_label("Confirmation token").fill(token)
+    page.get_by_role("button", name="Confirm paper proposal").click()
+    page.get_by_text("Paper order created", exact=True).wait_for()
+
+    # Reopen the same workspace so the preview is recomposed from the exact
+    # terminal proposal/order snapshot, not an earlier pending query cache.
+    page.reload()
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    review = page.get_by_test_id("packet-outcome-review")
+    review.get_by_text("Realized paper R", exact=True).wait_for()
+    assert review.get_by_text("Filled open", exact=True).is_visible()
+    assert review.get_by_text("Unavailable", exact=True).count() >= 1
+    review.get_by_label("Review note (optional)").fill(
+        "Entry filled; exit and complete fees remain unavailable."
+    )
+    with page.expect_response(
+        lambda response: (
+            response.url.endswith(f"/api/decision-packets/{packet_id}/outcome-review")
+            and response.request.method == "POST"
+        )
+    ) as saved:
+        review.get_by_role("button", name="Save review").click()
+    assert saved.value.status == 200
+    body = saved.value.json()
+    assert body["packet_id"] == packet_id
+    assert body["outcome"]["paper"]["proposal"]["id"] == proposal_id
+    assert body["outcome"]["paper"]["state"] == "filled_open"
+    assert body["outcome"]["realized_paper_r"]["status"] == "unavailable"
+    review_id = body["review"]["review_id"]
+    review.get_by_text(review_id, exact=True).wait_for()
+
+    page.reload()
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    assert page.url == workspace_url
+    reopened = page.get_by_test_id("packet-outcome-review")
+    reopened.get_by_text("Review saved", exact=True).wait_for()
+    assert reopened.get_by_text(review_id, exact=True).is_visible()
+    assert _decision_packet_id(page) == packet_id
 
 
 def test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order(

@@ -175,6 +175,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decision-packets/{packet_id}/outcome-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decision Packet Outcome Review */
+        get: operations["api_decision_packet_outcome_review"];
+        put?: never;
+        /** Save Decision Packet Outcome Review */
+        post: operations["api_save_decision_packet_outcome_review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/decision-packets/{packet_id}/watch-conditions": {
         parameters: {
             query?: never;
@@ -735,6 +753,24 @@ export interface paths {
         put?: never;
         /** Request Decision Packet Copilot */
         post: operations["request_decision_packet_copilot_decision_packets__packet_id__copilot_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decision-packets/{packet_id}/outcome-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decision Packet Outcome Review */
+        get: operations["decision_packet_outcome_review_decision_packets__packet_id__outcome_review_get"];
+        put?: never;
+        /** Save Decision Packet Outcome Review */
+        post: operations["save_decision_packet_outcome_review_decision_packets__packet_id__outcome_review_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1726,6 +1762,66 @@ export interface components {
             trend: "bullish" | "bearish" | "neutral";
         };
         /**
+         * DecisionOutcomeReviewBody
+         * @description The browser may judge only the exact outcome snapshot it inspected.
+         */
+        DecisionOutcomeReviewBody: {
+            classification: components["schemas"]["ReviewClassification"];
+            /** Expected Outcome Id */
+            expected_outcome_id: string;
+            /** Note */
+            note?: string | null;
+        };
+        /** DecisionOutcomeReviewState */
+        DecisionOutcomeReviewState: {
+            outcome: components["schemas"]["DecisionOutcomeSnapshot"];
+            /** Packet Id */
+            packet_id: string;
+            review?: components["schemas"]["DecisionReviewRecord"] | null;
+            root_packet: components["schemas"]["DecisionPacket"];
+        };
+        /** DecisionOutcomeSnapshot */
+        DecisionOutcomeSnapshot: {
+            entry_fill_deviation_r: components["schemas"]["OutcomeMetric"];
+            /**
+             * Evaluated At
+             * Format: date-time
+             */
+            evaluated_at: string;
+            /**
+             * Evidence Status
+             * @enum {string}
+             */
+            evidence_status: "complete" | "partial" | "pending" | "unavailable";
+            gross_path_r: components["schemas"]["OutcomeMetric"];
+            /** Horizon Target At */
+            horizon_target_at?: string | null;
+            mark_to_market_paper_r: components["schemas"]["OutcomeMetric"];
+            monitoring: components["schemas"]["MonitoringOutcome"];
+            /** Outcome Id */
+            outcome_id: string;
+            packet: components["schemas"]["DecisionPacket"];
+            /** Packet Id */
+            packet_id: string;
+            paper: components["schemas"]["PaperOutcome"];
+            path: components["schemas"]["OutcomePath"];
+            /** Planned Reward To Risk */
+            planned_reward_to_risk: number;
+            realized_paper_r: components["schemas"]["OutcomeMetric"];
+            root_packet: components["schemas"]["DecisionPacket"];
+            /** Scenarios */
+            scenarios: [
+                components["schemas"]["ScenarioObservation"],
+                components["schemas"]["ScenarioObservation"],
+                components["schemas"]["ScenarioObservation"]
+            ];
+            /**
+             * Target Stop Ordering
+             * @enum {string}
+             */
+            target_stop_ordering: "target_first" | "stop_first" | "ambiguous_same_bar" | "neither" | "unavailable";
+        };
+        /**
          * DecisionPacket
          * @description Frozen, versioned, content-addressed decision analysis and disposition.
          */
@@ -1801,6 +1897,22 @@ export interface components {
             allowed: boolean;
             /** Blockers */
             blockers?: components["schemas"]["DecisionBlocker"][];
+        };
+        /** DecisionReviewRecord */
+        DecisionReviewRecord: {
+            classification: components["schemas"]["ReviewClassification"];
+            /** Note */
+            note?: string | null;
+            outcome: components["schemas"]["DecisionOutcomeSnapshot"];
+            /** Packet Id */
+            packet_id: string;
+            /** Review Id */
+            review_id: string;
+            /**
+             * Reviewed At
+             * Format: date-time
+             */
+            reviewed_at: string;
         };
         /**
          * DecisionRiskPlan
@@ -2321,6 +2433,89 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** MonitoringOutcome */
+        MonitoringOutcome: {
+            /**
+             * Evaluations
+             * @default []
+             */
+            evaluations: components["schemas"]["DecisionWatchEvaluation"][];
+            /**
+             * Event Ids
+             * @default []
+             */
+            event_ids: string[];
+            registration?: components["schemas"]["DecisionWatchRegistration"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_applicable" | "not_monitored" | "coverage_incomplete" | "no_trigger_recorded" | "triggered";
+        };
+        /**
+         * Order
+         * @description Replayable order; state fields must agree with the event history.
+         */
+        Order: {
+            /** Broker Order Id */
+            broker_order_id?: string | null;
+            /** Client Order Id */
+            client_order_id?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Events */
+            events?: components["schemas"]["OrderEvent"][];
+            /**
+             * Filled Quantity
+             * @default 0
+             */
+            filled_quantity: number;
+            /** Idempotency Key */
+            idempotency_key?: string | null;
+            instrument: components["schemas"]["Instrument"];
+            /** Limit Price */
+            limit_price?: number | null;
+            /** Order Id */
+            order_id: string;
+            order_type: components["schemas"]["OrderType"];
+            /** Quantity */
+            quantity: number;
+            side: components["schemas"]["Side"];
+            /** @default pending */
+            status: components["schemas"]["OrderStatus"];
+        };
+        /**
+         * OrderEvent
+         * @description One append-only lifecycle record; state is derived from this history.
+         *
+         *     Fill events carry the venue's own deal id and fee when the venue
+         *     reported them, so fills can be re-derived from the history for
+         *     fill-level reconciliation (ADR-0006 decision 4).
+         */
+        OrderEvent: {
+            /** Broker Fill Id */
+            broker_fill_id?: string | null;
+            event_type: components["schemas"]["OrderEventType"];
+            /** Fee */
+            fee?: number | null;
+            /** Price */
+            price?: number | null;
+            /** Quantity */
+            quantity?: number | null;
+            /** Reason */
+            reason?: string | null;
+            /** Sequence */
+            sequence: number;
+            status: components["schemas"]["OrderStatus"];
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+        };
         /**
          * OrderEventSnapshot
          * @description Deeply immutable public copy of one paper-order event.
@@ -2392,6 +2587,69 @@ export interface components {
          * @enum {string}
          */
         OrderType: "market" | "limit";
+        /**
+         * OutcomeMetric
+         * @description A value that never turns missing outcome evidence into zero.
+         */
+        OutcomeMetric: {
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "unavailable";
+            /** Value */
+            value?: number | null;
+        };
+        /**
+         * OutcomePath
+         * @description Exact daily close path and the provenance used to read it.
+         */
+        OutcomePath: {
+            /** Adjustment */
+            adjustment?: string | null;
+            /**
+             * Bars
+             * @default []
+             */
+            bars: components["schemas"]["HistoricalBar"][];
+            /** Calendar */
+            calendar?: string | null;
+            coverage?: components["schemas"]["CoverageSnapshot"] | null;
+            /**
+             * Cutoff At
+             * Format: date-time
+             */
+            cutoff_at: string;
+            /** Dataset Id */
+            dataset_id?: string | null;
+            /** Dataset Revision */
+            dataset_revision?: number | null;
+            /** Generated At */
+            generated_at?: string | null;
+            /** Interval */
+            interval?: string | null;
+            /** License */
+            license?: string | null;
+            /** Manifest Id */
+            manifest_id?: string | null;
+            /** Path Digest */
+            path_digest?: string | null;
+            /** Quality Evaluation Id */
+            quality_evaluation_id?: string | null;
+            /** Reason */
+            reason?: string | null;
+            /** Source */
+            source?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "complete" | "partial" | "pending" | "unavailable";
+            /** Target At */
+            target_at?: string | null;
+        };
         /** PacketCopilotDraft */
         PacketCopilotDraft: {
             base_explanation: components["schemas"]["PacketCopilotItem"];
@@ -2456,6 +2714,18 @@ export interface components {
              * @enum {string}
              */
             status: "idle" | "ready" | "degraded";
+        };
+        /** PaperOutcome */
+        PaperOutcome: {
+            order?: components["schemas"]["Order"] | null;
+            proposal?: components["schemas"]["PaperProposal"] | null;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "not_applicable" | "watch_only" | "pending_no_order" | "blocked" | "risk_rejected" | "accepted_unfilled" | "filled_open" | "unavailable";
         };
         /**
          * PaperProposal
@@ -2574,6 +2844,42 @@ export interface components {
          * @enum {string}
          */
         QualityStatus: "pass" | "fail" | "not-due" | "unavailable";
+        /**
+         * ReviewClassification
+         * @enum {string}
+         */
+        ReviewClassification: "supported" | "challenged" | "mixed" | "inconclusive";
+        /** ScenarioObservation */
+        ScenarioObservation: {
+            /** Invalidation At */
+            invalidation_at?: string | null;
+            /** Invalidation Level */
+            invalidation_level?: number | null;
+            /**
+             * Invalidation State
+             * @enum {string}
+             */
+            invalidation_state: "observed" | "not_observed" | "unavailable";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "bull" | "base" | "bear";
+            /** Threshold */
+            threshold: number;
+            /** Threshold At */
+            threshold_at?: string | null;
+            /**
+             * Threshold Kind
+             * @enum {string}
+             */
+            threshold_kind: "resistance" | "support";
+            /**
+             * Threshold State
+             * @enum {string}
+             */
+            threshold_state: "observed" | "not_observed" | "unavailable";
+        };
         /**
          * SessionPolicy
          * @description Trading-session boundaries admitted by a calendar request.
@@ -3116,6 +3422,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PacketCopilotState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_decision_packet_outcome_review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionOutcomeReviewState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_save_decision_packet_outcome_review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionOutcomeReviewBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionOutcomeReviewState"];
                 };
             };
             /** @description Validation Error */
@@ -4042,6 +4414,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PacketCopilotState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decision_packet_outcome_review_decision_packets__packet_id__outcome_review_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionOutcomeReviewState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_decision_packet_outcome_review_decision_packets__packet_id__outcome_review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionOutcomeReviewBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionOutcomeReviewState"];
                 };
             };
             /** @description Validation Error */

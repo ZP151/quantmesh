@@ -55,6 +55,15 @@ operator disposition, while allowing restart-safe replay.
     are constructed by the local workspace/runtime, and trigger identities are
     content-addressed so terminal conditions replay at most once.
 
+11. Outcome review is a separate immutable reverse binding from one exact
+    non-draft action packet. A deterministic preview reads only the packet's
+    pinned 30-session forecast horizon, compatible local daily history, exact
+    proposal/order records, and existing monitoring records. One atomic
+    operator review binds the complete content-addressed outcome snapshot;
+    missing horizon, continuous monitoring, exit fills, or attributable fees
+    stays typed unavailable and never becomes zero performance. Outcome review
+    cannot mutate packet, monitoring, proposal, risk, order, or position state.
+
 ## Consequences
 
 DecisionPacket replay is content-addressed and fails closed if a persisted

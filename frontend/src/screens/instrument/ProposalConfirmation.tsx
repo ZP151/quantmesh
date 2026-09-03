@@ -73,7 +73,7 @@ export function ProposalConfirmation({
       if (next === null) return
       setResult(next)
       void Promise.all(
-        ['instrument-workspace', 'orders', 'positions', 'pnl', 'audit'].map((key) =>
+        ['instrument-workspace', 'orders', 'positions', 'pnl', 'audit', 'packet-outcome-review'].map((key) =>
           queryClient.invalidateQueries({ queryKey: [key] }),
         ),
       )

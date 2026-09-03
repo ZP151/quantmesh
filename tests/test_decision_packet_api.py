@@ -126,6 +126,123 @@ def test_packet_watch_conditions_accept_only_fixed_kinds_and_never_mutate_packet
     assert reopened.json() == checked.json()
 
 
+def test_packet_outcome_review_get_is_read_only_and_post_is_fenced_restart_safe(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "demo"
+    app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        saved = _save(client, _draft(client)).json()
+        action = client.post(
+            f"/api/decision-packets/{saved['packet_id']}/actions",
+            json={
+                "disposition": "watch",
+                "operator_reason": "Review this exact watch packet.",
+                "side": None,
+                "quantity": None,
+                "limit_price": None,
+            },
+        ).json()
+        packet_id = action["packet"]["packet_id"]
+        path = f"/api/decision-packets/{packet_id}/outcome-review"
+        reviews = root / "decisions" / "reviews" / "decision-reviews.jsonl"
+        before = reviews.read_bytes()
+
+        preview = client.get(path)
+        assert preview.status_code == 200
+        assert reviews.read_bytes() == before
+        assert preview.json()["packet_id"] == packet_id
+        assert preview.json()["review"] is None
+        outcome_id = preview.json()["outcome"]["outcome_id"]
+
+        wrong_origin = client.post(
+            path,
+            headers={"Origin": "http://localhost"},
+            json={
+                "expected_outcome_id": outcome_id,
+                "classification": "inconclusive",
+                "note": None,
+            },
+        )
+        extra = client.post(
+            path,
+            json={
+                "expected_outcome_id": outcome_id,
+                "classification": "inconclusive",
+                "note": None,
+                "probability": 0.9,
+            },
+        )
+        saved_review = client.post(
+            path,
+            json={
+                "expected_outcome_id": outcome_id,
+                "classification": "inconclusive",
+                "note": "  Local   evidence remains incomplete. ",
+            },
+        )
+        drift = client.post(
+            path,
+            json={
+                "expected_outcome_id": "outcome-" + "f" * 24,
+                "classification": "inconclusive",
+                "note": None,
+            },
+        )
+
+    assert wrong_origin.status_code == 403
+    assert extra.status_code == 422
+    assert saved_review.status_code == 200
+    assert saved_review.json()["review"]["note"] == "Local evidence remains incomplete."
+    assert drift.status_code == 409
+
+    restarted = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(restarted) as client:
+        reopened = client.get(path)
+    assert reopened.status_code == 200
+    assert reopened.json()["review"] == saved_review.json()["review"]
+
+
+def test_packet_outcome_review_refuses_draft_unknown_and_reset_clears_owned_store(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "demo"
+    app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        saved = _save(client, _draft(client)).json()
+        draft = client.get(f"/api/decision-packets/{saved['packet_id']}/outcome-review")
+        missing = client.get(f"/api/decision-packets/packet-{'f' * 24}/outcome-review")
+        action = client.post(
+            f"/api/decision-packets/{saved['packet_id']}/actions",
+            json={
+                "disposition": "reject",
+                "operator_reason": "No paper action.",
+                "side": None,
+                "quantity": None,
+                "limit_price": None,
+            },
+        ).json()
+        packet_id = action["packet"]["packet_id"]
+        preview = client.get(f"/api/decision-packets/{packet_id}/outcome-review").json()
+        stored = client.post(
+            f"/api/decision-packets/{packet_id}/outcome-review",
+            json={
+                "expected_outcome_id": preview["outcome"]["outcome_id"],
+                "classification": "inconclusive",
+                "note": None,
+            },
+        )
+        reset = client.post("/api/demo/reset")
+
+    assert draft.status_code == 409
+    assert missing.status_code == 404
+    assert stored.status_code == 200
+    assert reset.status_code == 200
+    reviews = root / "decisions" / "reviews"
+    assert (reviews / ".decision-reviews.lock").read_bytes() == b""
+    assert (reviews / "decision-reviews.jsonl").read_bytes() == b""
+
+
 def test_demo_reset_restores_pristine_packet_monitoring_files_after_a_check(tmp_path: Path) -> None:
     root = tmp_path / "demo"
     app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")

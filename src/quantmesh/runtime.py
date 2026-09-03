@@ -22,6 +22,7 @@ from quantmesh.execution.journal import OrderJournal
 from quantmesh.instruments.copilot import PacketCopilotStore
 from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.instruments.monitoring import DecisionWatchStore
+from quantmesh.instruments.reviews import DecisionReviewStore
 from quantmesh.ops.enablement import ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
@@ -47,6 +48,7 @@ class WorkstationStores:
     decision_packets: DecisionPacketStore
     packet_copilot: PacketCopilotStore
     packet_monitoring: DecisionWatchStore
+    packet_reviews: DecisionReviewStore
 
 
 def build_workstation_stores(
@@ -75,6 +77,7 @@ def build_workstation_stores(
             decision_packets=DecisionPacketStore(settings.decisions_dir / "packets"),
             packet_copilot=PacketCopilotStore(settings.decisions_dir / "copilot"),
             packet_monitoring=DecisionWatchStore(settings.decisions_dir / "monitoring"),
+            packet_reviews=DecisionReviewStore(settings.decisions_dir / "reviews"),
         )
     root = Path(root)
     effective_lake = root / "market" / "lake" if lake_root is None else Path(lake_root)
@@ -95,4 +98,5 @@ def build_workstation_stores(
         decision_packets=DecisionPacketStore(root / "decisions" / "packets"),
         packet_copilot=PacketCopilotStore(root / "decisions" / "copilot"),
         packet_monitoring=DecisionWatchStore(root / "decisions" / "monitoring"),
+        packet_reviews=DecisionReviewStore(root / "decisions" / "reviews"),
     )

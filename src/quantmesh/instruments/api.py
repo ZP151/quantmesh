@@ -45,6 +45,11 @@ from quantmesh.instruments.monitoring import (
     WatchConditionKind,
 )
 from quantmesh.instruments.proposals import PaperDecisionService
+from quantmesh.instruments.reviews import (
+    DecisionOutcomeReviewService,
+    DecisionOutcomeReviewState,
+    ReviewClassification,
+)
 from quantmesh.live.feed import LiveFeed
 
 _MAX_COMPARE_INSTRUMENTS = 3
@@ -107,6 +112,15 @@ class DecisionWatchConditionBody(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     kinds: tuple[WatchConditionKind, ...] = Field(min_length=1, max_length=4)
+
+
+class DecisionOutcomeReviewBody(BaseModel):
+    """The browser may judge only the exact outcome snapshot it inspected."""
+
+    model_config = ConfigDict(extra="forbid")
+    expected_outcome_id: str = Field(pattern=r"^outcome-[0-9a-f]{24}$")
+    classification: ReviewClassification
+    note: str | None = Field(default=None, max_length=2_000)
 
 
 def _unprocessable(detail: str) -> HTTPException:
@@ -387,6 +401,50 @@ def instrument_router() -> APIRouter:
                 packet_id=packet_id,
                 registration=registration,
                 evaluation=evaluation,
+            )
+        except DecisionPacketNotFoundError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except (ValueError, OSError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @router.get(
+        "/decision-packets/{packet_id}/outcome-review",
+        response_model=DecisionOutcomeReviewState,
+        name="decision_packet_outcome_review",
+    )
+    def decision_packet_outcome_review(
+        request: Request, packet_id: str
+    ) -> DecisionOutcomeReviewState:
+        service = getattr(request.app.state, "packet_reviews", None)
+        if not isinstance(service, DecisionOutcomeReviewService):
+            raise HTTPException(status_code=404, detail="no packet review service is attached")
+        try:
+            return service.preview(packet_id)
+        except DecisionPacketNotFoundError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except (ValueError, OSError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @router.post(
+        "/decision-packets/{packet_id}/outcome-review",
+        response_model=DecisionOutcomeReviewState,
+        name="save_decision_packet_outcome_review",
+    )
+    def save_decision_packet_outcome_review(
+        request: Request,
+        packet_id: str,
+        body: DecisionOutcomeReviewBody,
+    ) -> DecisionOutcomeReviewState:
+        _guard_json_origin(request, "decision packet outcome review")
+        service = getattr(request.app.state, "packet_reviews", None)
+        if not isinstance(service, DecisionOutcomeReviewService):
+            raise HTTPException(status_code=404, detail="no packet review service is attached")
+        try:
+            return service.save(
+                packet_id,
+                expected_outcome_id=body.expected_outcome_id,
+                classification=body.classification,
+                note=body.note,
             )
         except DecisionPacketNotFoundError as error:
             raise HTTPException(status_code=404, detail=str(error)) from error

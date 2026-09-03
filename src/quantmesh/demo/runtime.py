@@ -190,6 +190,7 @@ def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
     app.state.decision_packets = seeded.decision_packets
     app.state.packet_copilot_store = seeded.packet_copilot
     app.state.packet_monitoring_store = seeded.packet_monitoring
+    app.state.packet_review_store = seeded.packet_reviews
     packet_service = getattr(app.state, "decision_packet_service", None)
     if packet_service is not None:
         packet_service.store = seeded.decision_packets
@@ -198,6 +199,15 @@ def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
         monitoring.packet_store = seeded.decision_packets
         monitoring.store = seeded.packet_monitoring
         monitoring.forecast_registry = seeded.price_forecasts
+    reviews = getattr(app.state, "packet_reviews", None)
+    if reviews is not None:
+        reviews.packet_store = seeded.decision_packets
+        reviews.review_store = seeded.packet_reviews
+        reviews.forecast_registry = seeded.price_forecasts
+        reviews.history = seeded.history
+        reviews.proposal_ledger = seeded.proposal_ledger
+        reviews.journal = seeded.journal
+        reviews.monitoring = seeded.packet_monitoring
     copilot = getattr(app.state, "packet_copilot", None)
     if isinstance(copilot, PacketCopilotService):
         copilot.packet_store = seeded.decision_packets
@@ -476,6 +486,7 @@ def create_demo_app(
         packet_copilot_store=seeded.packet_copilot,
         packet_copilot=packet_copilot,
         packet_monitoring=seeded.packet_monitoring,
+        packet_reviews=seeded.packet_reviews,
         account_sink=lambda account: persist_demo_account(root, account),
         demo_quote_provider=lambda instrument, now: _workspace_demo_quote(
             seeded,

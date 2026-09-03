@@ -93,6 +93,7 @@ from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_fore
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.monitoring import DecisionWatchStore
 from quantmesh.instruments.proposals import ProposalLedger
+from quantmesh.instruments.reviews import DecisionReviewStore
 from quantmesh.ops.enablement import ApprovalLedger
 from quantmesh.research.drift import (
     AlertLedger,
@@ -141,6 +142,8 @@ _MUTABLE_FILES = frozenset(
         "decisions/monitoring/watch-activations.jsonl",
         "decisions/monitoring/watch-registrations.jsonl",
         "decisions/monitoring/watch-evaluations.jsonl",
+        "decisions/reviews/.decision-reviews.lock",
+        "decisions/reviews/decision-reviews.jsonl",
         "watchlists/watchlist.jsonl",
     }
 )
@@ -268,6 +271,7 @@ class DemoSeeded:
     decision_packets: DecisionPacketStore
     packet_copilot: PacketCopilotStore
     packet_monitoring: DecisionWatchStore
+    packet_reviews: DecisionReviewStore
     provenance: dict[str, object] = field(default_factory=dict)
 
 
@@ -1678,6 +1682,10 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     (packet_monitoring_root / "watch-activations.jsonl").write_text("", encoding="utf-8")
     (packet_monitoring_root / "watch-registrations.jsonl").write_text("", encoding="utf-8")
     (packet_monitoring_root / "watch-evaluations.jsonl").write_text("", encoding="utf-8")
+    packet_reviews_root = root / "decisions" / "reviews"
+    packet_reviews_root.mkdir(parents=True, exist_ok=True)
+    (packet_reviews_root / ".decision-reviews.lock").write_text("", encoding="utf-8")
+    (packet_reviews_root / "decision-reviews.jsonl").write_text("", encoding="utf-8")
     ownership_text = _ownership_text(root)
     (root / OWNERSHIP_NAME).write_text(ownership_text, encoding="utf-8")
     ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()
@@ -1707,6 +1715,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         decision_packets=DecisionPacketStore(decision_packet_root),
         packet_copilot=PacketCopilotStore(root / "decisions" / "copilot"),
         packet_monitoring=DecisionWatchStore(root / "decisions" / "monitoring"),
+        packet_reviews=DecisionReviewStore(root / "decisions" / "reviews"),
         provenance=provenance,
     )
 
@@ -1787,6 +1796,7 @@ def load_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         decision_packets=stores.decision_packets,
         packet_copilot=stores.packet_copilot,
         packet_monitoring=stores.packet_monitoring,
+        packet_reviews=stores.packet_reviews,
         provenance=provenance,
     )
 
