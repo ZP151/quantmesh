@@ -450,8 +450,14 @@ license-text spelling needed by `interface_meta`; GPL, Commons Clause and unknow
 metadata refusal behavior is unchanged.
 
 Test-first evidence recorded the exact MIT spelling RED before implementation.
-After the repair, `tests/test_security.py` passed `20` tests in `0.33s`; targeted
+The first fresh-clone gate then exposed that the resolver had advanced 17 allowed
+packages while the audit file still carried older versions; it stopped at
+`simplejson==4.1.2` rather than falsely claiming a frozen closure. The lock and
+inventory were updated to that fresh resolution, the `simplejson` exception was
+version-bound to 4.1.2, and the gate now explicitly refuses any installed version
+that differs from its pin. Both new contracts went RED then GREEN. In the retained
+fresh environment, `tests/test_security.py` passed `21` tests in `0.36s`; targeted
 Ruff and `git diff --check` exited `0`; and `tools/license_review.py` reviewed all
 70 installed closure members, tolerated the six documented Linux-only pins and
-exited `0` with `all licenses allowed`. No dependency was installed, upgraded or
-removed, and no product/runtime behavior changed.
+exited `0` with `all licenses allowed`. No project dependency constraint or
+product/runtime behavior changed.

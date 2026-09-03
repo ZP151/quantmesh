@@ -234,10 +234,13 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
 - `requirements-audit.txt` and `docs/licenses.md` now agree on the exact 76-package
   cross-platform closure. The license parser recognizes the exact `MIT` text used
   by `interface_meta` without weakening unknown or copyleft refusal.
-- The parser test went RED first. Final evidence is `20 passed` in `0.33s`,
-  targeted Ruff/diff clean, and direct license review exit `0` after classifying
-  all 70 installed members and tolerating only the six documented Linux-only
-  pins. No dependency or runtime state changed.
+- The MIT parser and exact-version enforcement tests both went RED then GREEN.
+  The first fresh-clone gate exposed 17 resolver-advanced versions and stopped on
+  `simplejson==4.1.2`; the lock/inventory and version-bound exception now match
+  that fresh resolution. Retained-fresh evidence is `21 passed` in `0.36s`,
+  targeted Ruff/diff clean, and license review exit `0` after classifying all 70
+  installed members and tolerating only the six documented Linux-only pins. No
+  project dependency constraint or runtime behavior changed.
 - The only remaining work is the final fresh-clone release gate and PR boundary.
 
 ## Historical delivery record

@@ -111,10 +111,10 @@ LICENSE_EXCEPTIONS = {
 # selects. This stays separate from the generic parser, which deliberately
 # refuses ``MIT OR GPL``-shaped expressions when any branch violates policy.
 LICENSE_EXPRESSION_EXCEPTIONS = {
-    ("simplejson", "4.1.1", "MIT OR AFL-2.1"): "MIT",
+    ("simplejson", "4.1.2", "MIT OR AFL-2.1"): "MIT",
 }
 LICENSE_TEXT_EXCEPTIONS = {
-    ("simplejson", "4.1.1", "MIT OR AFL-2.1"): "MIT",
+    ("simplejson", "4.1.2", "MIT OR AFL-2.1"): "MIT",
 }
 
 # SPDX expressions sometimes carry a versioned form we do not model.
@@ -286,6 +286,11 @@ def review(closure: dict[str, str]) -> tuple[list[str], list[str], list[str], li
                     "installed — incomplete release environment"
                 )
             continue
+        if dist.version != version:
+            failures.append(
+                f"{name}=={version} pinned in requirements-audit.txt but installed "
+                f"version is {dist.version}"
+            )
         key = classify(dist)
         rows.append(f"{name}=={version}  {key}")
         if key == "UNKNOWN" or key.startswith("UNKNOWN ("):

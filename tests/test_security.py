@@ -155,7 +155,7 @@ class TestLicenseReview:
         assert review._from_text("3-Clause BSD License") == "BSD-3-Clause"
         simplejson = _FakeDist(
             "simplejson",
-            "4.1.1",
+            "4.1.2",
             License="MIT OR AFL-2.1",
         )
         assert review.classify(simplejson) == "MIT (documented exception)"
@@ -299,6 +299,22 @@ class TestClosureContract:
         )
         assert len(failures) == 1
         assert "never-installed" in failures[0]
+
+    def test_installed_version_must_match_the_frozen_pin(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        review = _load_license_review()
+        monkeypatch.setattr(
+            review,
+            "md",
+            _FakeMetaModule(
+                [_FakeDist("pinnedpkg", "2.0", **{"License-Expression": "MIT"})]
+            ),
+        )
+        _, failures, _, _ = review.review({"pinnedpkg": "1.0"})
+        assert failures == [
+            "pinnedpkg==1.0 pinned in requirements-audit.txt but installed version is 2.0"
+        ]
 
     def test_platform_tolerated_members_may_be_absent(
         self, monkeypatch: pytest.MonkeyPatch
