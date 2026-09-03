@@ -236,8 +236,9 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   by `interface_meta` without weakening unknown or copyleft refusal.
 - The MIT parser and exact-version enforcement tests both went RED then GREEN.
   The first fresh-clone gate exposed 17 resolver-advanced versions and stopped on
-  `simplejson==4.1.2`; the lock/inventory and version-bound exception now match
-  that fresh resolution. Retained-fresh evidence is `21 passed` in `0.36s`,
+  `simplejson==4.1.2`; the lock/inventory and exact 4.1.1/4.1.2 reviewed
+  exceptions now cover the fresh resolution and existing dev environment.
+  Retained-fresh evidence is `21 passed` in `0.36s`,
   targeted Ruff/diff clean, and license review exit `0` after classifying all 70
   installed members and tolerating only the six documented Linux-only pins. No
   project dependency constraint or runtime behavior changed.
@@ -250,6 +251,10 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   reached 75% of pytest with no failure, but the gate's 2400-second timeout was
   shorter than the verified 3806.57-second suite baseline. A test-first gate-only
   correction raises that step to 5400 seconds; its three tests, Ruff and diff pass.
+- The expanded-budget fresh suite reached 100% with `3219 passed, 9 skipped` and
+  one lock-order failure in `4682.45s`. Swapping adjacent `cloudpickle`/`colorama`
+  rows closed it; the exact release/security selection now passes `28` tests in
+  `0.43s`, with Ruff and diff green. No product behavior changed.
 - The only remaining work is the final fresh-clone release gate and PR boundary.
 
 ## Historical delivery record

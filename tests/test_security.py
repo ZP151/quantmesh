@@ -159,6 +159,12 @@ class TestLicenseReview:
             License="MIT OR AFL-2.1",
         )
         assert review.classify(simplejson) == "MIT (documented exception)"
+        previous_simplejson = _FakeDist(
+            "simplejson",
+            "4.1.1",
+            License="MIT OR AFL-2.1",
+        )
+        assert review.classify(previous_simplejson) == "MIT (documented exception)"
 
     def test_every_installed_closure_member_classifies_allowed(
         self,

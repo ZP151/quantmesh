@@ -453,8 +453,9 @@ Test-first evidence recorded the exact MIT spelling RED before implementation.
 The first fresh-clone gate then exposed that the resolver had advanced 17 allowed
 packages while the audit file still carried older versions; it stopped at
 `simplejson==4.1.2` rather than falsely claiming a frozen closure. The lock and
-inventory were updated to that fresh resolution, the `simplejson` exception was
-version-bound to 4.1.2, and the gate now explicitly refuses any installed version
+inventory were updated to that fresh resolution, the current `simplejson` pin is
+version-bound to 4.1.2 while retaining the previously reviewed 4.1.1 classifier
+for the development environment, and the gate explicitly refuses any installed version
 that differs from its pin. Both new contracts went RED then GREEN. In the retained
 fresh environment, `tests/test_security.py` passed `21` tests in `0.36s`; targeted
 Ruff and `git diff --check` exited `0`; and `tools/license_review.py` reviewed all
@@ -479,3 +480,9 @@ then reached 75% with no failed tests before the gate's historical 2400-second
 pytest timeout terminated it; the same suite's Slice 4 baseline is 3806.57s. A
 test-first release-gate correction raises only that step's budget to 5400 seconds.
 `tests/test_release_gate.py` passes `3` tests; targeted Ruff and diff checks pass.
+
+With the expanded budget, the fresh suite completed all 3220 tests in 4682.45s.
+It reported `3219 passed, 9 skipped` and one deterministic lock-order failure:
+`cloudpickle` preceded by `colorama`. Swapping those adjacent inventory entries
+made the exact release/security contract selection pass `28` tests in `0.43s`;
+Ruff and diff checks remained green. No test or product behavior was changed.

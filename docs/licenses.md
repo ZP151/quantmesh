@@ -241,8 +241,8 @@ Version numbers drift with the lock; the license key is the contract.
 | certifi | 2026.7.22 | MPL-2.0 (documented exception) |
 | cffi | 2.1.1 (Linux-only) | MIT-0 |
 | click | 8.5.0 | BSD-3-Clause |
-| colorama | 0.4.6 (Windows-only) | BSD-3-Clause |
 | cloudpickle | 3.1.2 | BSD-3-Clause |
+| colorama | 0.4.6 (Windows-only) | BSD-3-Clause |
 | cryptography | 50.0.0 (Linux-only) | Apache-2.0 | BSD-3-Clause |
 | duckdb | 1.5.5 | MIT |
 | exchange_calendars | 4.13.2 | Apache-2.0 |
