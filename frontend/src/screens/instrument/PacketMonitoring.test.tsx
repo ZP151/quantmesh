@@ -112,6 +112,26 @@ describe('PacketMonitoring', () => {
     expect(screen.queryByText('Entry zone 180–184')).not.toBeInTheDocument()
   })
 
+  it('does not leak a failed save into a switched packet context', async () => {
+    mockedCheckPacketMonitoring.mockRejectedValueOnce(new Error('offline'))
+    const user = userEvent.setup()
+    const rendered = renderMonitoring()
+    await screen.findByRole('checkbox', { name: 'Entry zone crossing' })
+    await user.click(screen.getByRole('button', { name: 'Save & check' }))
+    await waitFor(() => expect(mockedCheckPacketMonitoring).toHaveBeenCalledTimes(1))
+    await screen.findByText('Local packet monitoring is temporarily unavailable. The DecisionPacket and decision actions are unaffected.')
+
+    rendered.rerender(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <PreferencesProvider>
+          <PacketMonitoring contextKey="moomoo:AMD:6m" packetId="packet-000000000002" />
+        </PreferencesProvider>
+      </QueryClientProvider>,
+    )
+
+    expect(screen.queryByText('Local packet monitoring is temporarily unavailable. The DecisionPacket and decision actions are unaffected.')).not.toBeInTheDocument()
+  })
+
   it('wraps the disclosure on a narrow viewport', async () => {
     renderMonitoring()
     await screen.findByRole('checkbox', { name: 'Entry zone crossing' })

@@ -100,12 +100,18 @@ def test_packet_watch_conditions_accept_only_fixed_kinds_and_never_mutate_packet
             f"/api/decision-packets/{packet_id}/watch-conditions",
             json={"kinds": ["entry_zone", "data_stale"]},
         )
+        wrong_origin = client.post(
+            f"/api/decision-packets/{packet_id}/watch-conditions",
+            headers={"Origin": "http://localhost"},
+            json={"kinds": ["entry_zone"]},
+        )
         after = client.get(f"/api/decision-packets/{packet_id}").json()
 
     assert initial.status_code == 200
     assert initial.json()["registration"] is None
     assert invalid.status_code == 422
     assert checked.status_code == 200
+    assert wrong_origin.status_code == 403
     assert [item["kind"] for item in checked.json()["registration"]["conditions"]] == [
         "entry_zone",
         "data_stale",
@@ -118,6 +124,24 @@ def test_packet_watch_conditions_accept_only_fixed_kinds_and_never_mutate_packet
 
     assert reopened.status_code == 200
     assert reopened.json() == checked.json()
+
+
+def test_demo_reset_restores_pristine_packet_monitoring_files_after_a_check(tmp_path: Path) -> None:
+    root = tmp_path / "demo"
+    app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        saved = _save(client, _draft(client)).json()
+        checked = client.post(
+            f"/api/decision-packets/{saved['packet_id']}/watch-conditions",
+            json={"kinds": ["entry_zone"]},
+        )
+        reset = client.post("/api/demo/reset")
+
+    assert checked.status_code == 200
+    assert reset.status_code == 200
+    monitoring = root / "decisions" / "monitoring"
+    assert (monitoring / "watch-registrations.jsonl").read_bytes() == b""
+    assert (monitoring / "watch-evaluations.jsonl").read_bytes() == b""
 
 
 @pytest.mark.parametrize("disposition", ["reject", "watch"])

@@ -74,15 +74,28 @@ class InvalidationDefinition(_Contract):
 
 class StaleDefinition(_Contract):
     reference_at: datetime
+    history_generated_at: datetime
+    forecast_generated_at: datetime | None = None
     calendar_id: Literal["XNYS", "24/7"]
     calendar_version: str = Field(min_length=1)
     session_policy: SessionPolicy
     maximum_completed_sessions: Literal[1] = 1
 
-    @field_validator("reference_at")
+    @field_validator("reference_at", "history_generated_at", "forecast_generated_at")
     @classmethod
-    def utc_reference(cls, value: datetime) -> datetime:
-        return _utc(value, "stale reference")
+    def utc_reference(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else _utc(value, "stale evidence")
+
+    @model_validator(mode="after")
+    def reference_is_oldest_evidence(self) -> StaleDefinition:
+        expected = min(
+            value
+            for value in (self.history_generated_at, self.forecast_generated_at)
+            if value is not None
+        )
+        if self.reference_at != expected:
+            raise ValueError("stale reference must freeze the oldest packet evidence time")
+        return self
 
 
 class DriftDefinition(_Contract):
@@ -93,6 +106,10 @@ class DriftDefinition(_Contract):
     model_name: str | None = None
     model_version: str | None = None
     config_digest: str | None = None
+    target: str | None = None
+    calendar: str | None = None
+    baseline_dataset_id: str | None = None
+    baseline_dataset_revision: int | None = Field(default=None, ge=1)
     risk_per_unit: float = Field(gt=0)
 
     @field_validator("baseline_generated_at", "target_at")
@@ -301,6 +318,7 @@ class DecisionWatchStore:
 
     def __init__(self, root: Path) -> None:
         self._lock = _root_lock(root)
+        self._local = threading.local()
         self._registrations = JsonlStore(
             root,
             filename="watch-registrations.jsonl",
@@ -334,8 +352,20 @@ class DecisionWatchStore:
 
     @contextmanager
     def transaction(self) -> Iterator[None]:
+        depth = getattr(self._local, "transaction_depth", 0)
+        if depth:
+            self._local.transaction_depth = depth + 1
+            try:
+                yield
+            finally:
+                self._local.transaction_depth -= 1
+            return
         with self._lock, _interprocess_lock(self.root):
-            yield
+            self._local.transaction_depth = 1
+            try:
+                yield
+            finally:
+                self._local.transaction_depth = 0
 
     def registrations(self) -> tuple[DecisionWatchRegistration, ...]:
         records = tuple(self._registrations.read())
@@ -344,11 +374,63 @@ class DecisionWatchStore:
         return records
 
     def evaluations(self, registration_id: str) -> tuple[DecisionWatchEvaluation, ...]:
-        return tuple(
+        registrations = {record.registration_id: record for record in self.registrations()}
+        records = tuple(
             record
             for record in self._evaluations.read()
             if record.registration_id == registration_id
         )
+        registration = registrations.get(registration_id)
+        if registration is None and records:
+            raise ValueError("watch evaluation has no recorded registration")
+        if registration is not None:
+            self._validate_evaluation_chain(registration, records)
+        return records
+
+    @staticmethod
+    def _validate_evaluation_chain(
+        registration: DecisionWatchRegistration,
+        evaluations: tuple[DecisionWatchEvaluation, ...],
+    ) -> None:
+        expected = tuple(condition.condition_id for condition in registration.conditions)
+        terminal: dict[str, DecisionWatchResult] = {}
+        previous_at: datetime | None = None
+        previous_cursor: DecisionWatchObservation | None = None
+        for evaluation in evaluations:
+            if evaluation.registration_id != registration.registration_id:
+                raise ValueError("watch evaluation registration binding differs")
+            actual = tuple(result.condition_id for result in evaluation.results)
+            if actual != expected or len(set(actual)) != len(actual):
+                raise ValueError(
+                    "watch evaluation results must completely follow registration conditions"
+                )
+            if previous_at is not None and evaluation.observation.evaluated_at <= previous_at:
+                raise ValueError("watch evaluations must be strictly ordered")
+            previous_at = evaluation.observation.evaluated_at
+            for result in evaluation.results:
+                prior_terminal = terminal.get(result.condition_id)
+                if prior_terminal is not None and result != prior_terminal:
+                    raise ValueError("watch terminal event identity changed during replay")
+                if result.state == "triggered":
+                    terminal[result.condition_id] = result
+            accepted = any(
+                isinstance(result.facts, PriceFacts)
+                and result.facts.current_price == evaluation.observation.price
+                for result in evaluation.results
+            )
+            if accepted:
+                current = evaluation.observation
+                if previous_cursor is not None and (
+                    current.sequence != previous_cursor.sequence + 1
+                    or current.data_time is None
+                    or previous_cursor.data_time is None
+                    or current.data_time <= previous_cursor.data_time
+                    or current.received_at is None
+                    or previous_cursor.received_at is None
+                    or current.received_at <= previous_cursor.received_at
+                ):
+                    raise ValueError("watch price cursor does not continuously advance")
+                previous_cursor = current
 
     def registration_for_packet(self, packet_id: str) -> DecisionWatchRegistration | None:
         return next(
@@ -411,6 +493,7 @@ class DecisionWatchService:
 
     def _drift_definition(self, packet) -> DriftDefinition:
         baseline = None
+        artifact = None
         artifact_id = packet.evidence.forecast_artifact_id
         if artifact_id is not None and self.forecast_registry is not None:
             try:
@@ -426,6 +509,10 @@ class DecisionWatchService:
             model_name=packet.evidence.forecast_model_name,
             model_version=packet.evidence.forecast_model_version,
             config_digest=packet.evidence.forecast_config_digest,
+            target=None if artifact is None else artifact.target,
+            calendar=None if artifact is None else artifact.calendar,
+            baseline_dataset_id=packet.evidence.forecast_dataset_id,
+            baseline_dataset_revision=packet.evidence.forecast_dataset_revision,
             risk_per_unit=packet.risk_plan.risk_per_unit,
         )
 
@@ -439,8 +526,16 @@ class DecisionWatchService:
             definition = InvalidationDefinition(level=packet.market_state.invalidation)
         elif kind is WatchConditionKind.DATA_STALE:
             continuous = packet.instrument.metadata.get("calendar") == "24/7"
+            history_generated_at = packet.evidence.history_generated_at
+            forecast_generated_at = packet.evidence.forecast_generated_at
             definition = StaleDefinition(
-                reference_at=packet.evidence.history_generated_at,
+                reference_at=min(
+                    value
+                    for value in (history_generated_at, forecast_generated_at)
+                    if value is not None
+                ),
+                history_generated_at=history_generated_at,
+                forecast_generated_at=forecast_generated_at,
                 calendar_id="24/7" if continuous else "XNYS",
                 calendar_version=CONTINUOUS_UTC_VERSION if continuous else XNYS_REGULAR_VERSION,
                 session_policy=SessionPolicy.CONTINUOUS if continuous else SessionPolicy.REGULAR,
@@ -464,32 +559,46 @@ class DecisionWatchService:
     ) -> DecisionWatchRegistration:
         if not 1 <= len(kinds) <= 4 or len(set(kinds)) != len(kinds):
             raise ValueError("watch conditions must be one to four unique fixed kinds")
-        self.packet_store.get(packet_id)
-        conditions = tuple(
-            self._condition(self.packet_store.get(packet_id), kind)
-            for kind in _ORDER
-            if kind in kinds
-        )
-        payload = {
-            "packet_id": packet_id,
-            "conditions": [item.model_dump(mode="json") for item in conditions],
-        }
-        return self.store.record_registration(
-            DecisionWatchRegistration(
-                registration_id=_identity("registration", payload),
-                packet_id=packet_id,
-                conditions=conditions,
+        with self.store.transaction():
+            packet = self.packet_store.get(packet_id)
+            conditions = tuple(self._condition(packet, kind) for kind in _ORDER if kind in kinds)
+            payload = {
+                "packet_id": packet_id,
+                "conditions": [item.model_dump(mode="json") for item in conditions],
+            }
+            return self.store.record_registration(
+                DecisionWatchRegistration(
+                    registration_id=_identity("registration", payload),
+                    packet_id=packet_id,
+                    conditions=conditions,
+                )
             )
-        )
+
+    def register_and_check(
+        self,
+        packet_id: str,
+        kinds: tuple[WatchConditionKind, ...],
+        observation: DecisionWatchObservation,
+    ) -> tuple[DecisionWatchRegistration, DecisionWatchEvaluation]:
+        """Commit the fixed registration and its first server-derived check together.
+
+        The observation is built before this call; the root lock covers every
+        replay read and both durable writes, so concurrent processes cannot
+        derive competing cursors.
+        """
+        with self.store.transaction():
+            registration = self.register(packet_id, kinds)
+            return registration, self.check(registration.registration_id, observation)
 
     def state(
         self, packet_id: str
     ) -> tuple[DecisionWatchRegistration | None, DecisionWatchEvaluation | None]:
-        registration = self.store.registration_for_packet(packet_id)
-        if registration is None:
-            return None, None
-        evaluations = self.store.evaluations(registration.registration_id)
-        return registration, evaluations[-1] if evaluations else None
+        with self.store.transaction():
+            registration = self.store.registration_for_packet(packet_id)
+            if registration is None:
+                return None, None
+            evaluations = self.store.evaluations(registration.registration_id)
+            return registration, evaluations[-1] if evaluations else None
 
     def _event_id(
         self, condition_id: str, observation: DecisionWatchObservation, facts: WatchFacts
@@ -652,7 +761,10 @@ class DecisionWatchService:
             or candidate.model_name != definition.model_name
             or candidate.model_version != definition.model_version
             or candidate.config_digest != definition.config_digest
-            or candidate.target != "unadjusted-close"
+            or candidate.target != definition.target
+            or candidate.calendar != definition.calendar
+            or candidate.dataset_id != definition.baseline_dataset_id
+            or candidate.dataset_revision != definition.baseline_dataset_revision
         ):
             return DecisionWatchResult(
                 condition_id=condition.condition_id,
@@ -678,48 +790,58 @@ class DecisionWatchService:
     def check(
         self, registration_id: str, observation: DecisionWatchObservation
     ) -> DecisionWatchEvaluation:
-        registration = self.store.registration(registration_id)
-        if registration is None:
-            raise ValueError("decision watch registration is not recorded")
-        packet = self.packet_store.get(registration.packet_id)
-        prior_evaluations = self.store.evaluations(registration_id)
-        replay = next((item for item in prior_evaluations if item.observation == observation), None)
-        if replay is not None:
-            return replay
-        prior_price = next(
-            (
-                item.observation
-                for item in reversed(prior_evaluations)
-                if item.observation.price is not None
-            ),
-            None,
-        )
-        terminal = {
-            result.condition_id: result
-            for item in prior_evaluations
-            for result in item.results
-            if result.state == "triggered"
-        }
-        results: list[DecisionWatchResult] = []
-        for condition in registration.conditions:
-            if condition.condition_id in terminal:
-                results.append(terminal[condition.condition_id])
-            elif condition.kind in {WatchConditionKind.ENTRY_ZONE, WatchConditionKind.INVALIDATION}:
-                results.append(self._price_result(condition, packet, observation, prior_price))
-            elif condition.kind is WatchConditionKind.DATA_STALE:
-                results.append(self._stale_result(condition, observation))
-            else:
-                results.append(self._drift_result(condition, packet, observation))
-        payload = {
-            "registration_id": registration_id,
-            "observation": observation.model_dump(mode="json"),
-            "results": [result.model_dump(mode="json") for result in results],
-        }
-        return self.store.record_evaluation(
-            DecisionWatchEvaluation(
-                evaluation_id=_identity("evaluation", payload),
-                registration_id=registration_id,
-                observation=observation,
-                results=tuple(results),
+        with self.store.transaction():
+            registration = self.store.registration(registration_id)
+            if registration is None:
+                raise ValueError("decision watch registration is not recorded")
+            packet = self.packet_store.get(registration.packet_id)
+            prior_evaluations = self.store.evaluations(registration_id)
+            replay = next(
+                (item for item in prior_evaluations if item.observation == observation), None
             )
-        )
+            if replay is not None:
+                return replay
+            prior_price = next(
+                (
+                    item.observation
+                    for item in reversed(prior_evaluations)
+                    if any(
+                        isinstance(result.facts, PriceFacts)
+                        and result.facts.current_price == item.observation.price
+                        for result in item.results
+                    )
+                ),
+                None,
+            )
+            terminal = {
+                result.condition_id: result
+                for item in prior_evaluations
+                for result in item.results
+                if result.state == "triggered"
+            }
+            results: list[DecisionWatchResult] = []
+            for condition in registration.conditions:
+                if condition.condition_id in terminal:
+                    results.append(terminal[condition.condition_id])
+                elif condition.kind in {
+                    WatchConditionKind.ENTRY_ZONE,
+                    WatchConditionKind.INVALIDATION,
+                }:
+                    results.append(self._price_result(condition, packet, observation, prior_price))
+                elif condition.kind is WatchConditionKind.DATA_STALE:
+                    results.append(self._stale_result(condition, observation))
+                else:
+                    results.append(self._drift_result(condition, packet, observation))
+            payload = {
+                "registration_id": registration_id,
+                "observation": observation.model_dump(mode="json"),
+                "results": [result.model_dump(mode="json") for result in results],
+            }
+            return self.store.record_evaluation(
+                DecisionWatchEvaluation(
+                    evaluation_id=_identity("evaluation", payload),
+                    registration_id=registration_id,
+                    observation=observation,
+                    results=tuple(results),
+                )
+            )

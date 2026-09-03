@@ -1954,10 +1954,16 @@ export interface components {
         DriftDefinition: {
             /** Baseline Artifact Id */
             baseline_artifact_id?: string | null;
+            /** Baseline Dataset Id */
+            baseline_dataset_id?: string | null;
+            /** Baseline Dataset Revision */
+            baseline_dataset_revision?: number | null;
             /** Baseline Generated At */
             baseline_generated_at?: string | null;
             /** Baseline P50 */
             baseline_p50?: number | null;
+            /** Calendar */
+            calendar?: string | null;
             /** Config Digest */
             config_digest?: string | null;
             /** Model Name */
@@ -1966,6 +1972,8 @@ export interface components {
             model_version?: string | null;
             /** Risk Per Unit */
             risk_per_unit: number;
+            /** Target */
+            target?: string | null;
             /** Target At */
             target_at?: string | null;
         };
@@ -2586,6 +2594,13 @@ export interface components {
             calendar_id: "XNYS" | "24/7";
             /** Calendar Version */
             calendar_version: string;
+            /** Forecast Generated At */
+            forecast_generated_at?: string | null;
+            /**
+             * History Generated At
+             * Format: date-time
+             */
+            history_generated_at: string;
             /**
              * Maximum Completed Sessions
              * @default 1

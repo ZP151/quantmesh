@@ -34,8 +34,12 @@ export function PacketMonitoring({ contextKey, packetId }: PacketMonitoringProps
   const queryClient = useQueryClient()
   const currentRequestContext = useRef({ contextKey, packetId })
   const [selectedKinds, setSelectedKinds] = useState<readonly WatchConditionKind[]>(FIXED_CONDITIONS)
+  const [failedRequest, setFailedRequest] = useState<{ contextKey: string; packetId: string } | null>(null)
   currentRequestContext.current = { contextKey, packetId }
-  useEffect(() => setSelectedKinds(FIXED_CONDITIONS), [contextKey, packetId])
+  useEffect(() => {
+    setSelectedKinds(FIXED_CONDITIONS)
+    setFailedRequest(null)
+  }, [contextKey, packetId])
 
   const queryKey = ['packet-monitoring', contextKey, packetId] as const
   const query = useQuery({
@@ -56,6 +60,10 @@ export function PacketMonitoring({ contextKey, packetId }: PacketMonitoringProps
       if (current.contextKey !== requested.contextKey || current.packetId !== requested.packetId) return
       queryClient.setQueryData(['packet-monitoring', requested.contextKey, requested.packetId], state)
     },
+    onError: (_error, requested) => setFailedRequest({
+      contextKey: requested.contextKey,
+      packetId: requested.packetId,
+    }),
   })
 
   const state = query.data
@@ -66,7 +74,9 @@ export function PacketMonitoring({ contextKey, packetId }: PacketMonitoringProps
     && check.variables.contextKey === contextKey
     && check.variables.packetId === packetId
   ))
-  const unavailable = query.isError || check.isError
+  const unavailable = query.isError || (
+    failedRequest?.contextKey === contextKey && failedRequest.packetId === packetId
+  )
   const submit = () => {
     if (packetId === null) return
     check.mutate({ contextKey, kinds: registered ? registered.conditions.map((condition) => condition.kind) : selectedKinds, packetId })
@@ -179,22 +189,30 @@ function definitionText(
   t: ReturnType<typeof usePreferences>['t'],
 ) {
   if (kind === 'entry_zone') {
-    const entry = definition as { lower: number; upper: number }
-    return t('screen.workspace.monitoringDefinitionEntry', { lower: String(entry.lower), upper: String(entry.upper) })
+    if ('lower' in definition && 'upper' in definition) {
+      return t('screen.workspace.monitoringDefinitionEntry', { lower: String(definition.lower), upper: String(definition.upper) })
+    }
+    return t('screen.workspace.monitoringUnavailable')
   }
   if (kind === 'invalidation') {
-    const invalidation = definition as { level: number }
-    return t('screen.workspace.monitoringDefinitionInvalidation', { level: String(invalidation.level) })
+    if ('level' in definition) {
+      return t('screen.workspace.monitoringDefinitionInvalidation', { level: String(definition.level) })
+    }
+    return t('screen.workspace.monitoringUnavailable')
   }
   if (kind === 'data_stale') {
-    const stale = definition as { calendar_id: string; maximum_completed_sessions: number }
-    return t('screen.workspace.monitoringDefinitionStale', {
-      calendar: stale.calendar_id,
-      sessions: String(stale.maximum_completed_sessions),
-    })
+    if ('calendar_id' in definition && 'maximum_completed_sessions' in definition) {
+      return t('screen.workspace.monitoringDefinitionStale', {
+        calendar: definition.calendar_id,
+        sessions: String(definition.maximum_completed_sessions),
+      })
+    }
+    return t('screen.workspace.monitoringUnavailable')
   }
-  const drift = definition as { risk_per_unit: number }
-  return t('screen.workspace.monitoringDefinitionDrift', { threshold: String(drift.risk_per_unit) })
+  if ('risk_per_unit' in definition) {
+    return t('screen.workspace.monitoringDefinitionDrift', { threshold: String(definition.risk_per_unit) })
+  }
+  return t('screen.workspace.monitoringUnavailable')
 }
 
 function factsText(

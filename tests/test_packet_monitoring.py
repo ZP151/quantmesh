@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
@@ -317,6 +318,28 @@ def test_price_causality_fail_closed_for_pre_asof_future_or_gapped_evidence(
     assert result.results[0].facts.code == "unusable_price_evidence"
 
 
+def test_rejected_price_evidence_never_becomes_the_durable_crossing_cursor(tmp_path: Path) -> None:
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = packets.record(_packet())
+    service = DecisionWatchService(
+        packet_store=packets, store=DecisionWatchStore(tmp_path / "monitoring")
+    )
+    registration = service.register(packet.packet_id, (WatchConditionKind.ENTRY_ZONE,))
+
+    rejected = service.check(
+        registration.registration_id,
+        _price_observation(price=101.0, sequence=1, minutes=1).model_copy(
+            update={"sequence_gap": True}
+        ),
+    )
+    accepted = service.check(
+        registration.registration_id, _price_observation(price=101.0, sequence=1, minutes=3)
+    )
+
+    assert rejected.results[0].state == "not_comparable"
+    assert accepted.results[0].state == "armed"
+
+
 def test_registration_conflict_and_corrupt_replay_fail_closed(tmp_path: Path) -> None:
     root = tmp_path / "monitoring"
     packets = DecisionPacketStore(tmp_path / "packets")
@@ -369,6 +392,74 @@ def test_stale_uses_xnys_holiday_and_early_close_boundaries(tmp_path: Path) -> N
     assert monday_close.results[0].state == "triggered"
 
 
+def test_stale_freezes_the_oldest_history_or_forecast_evidence_time(tmp_path: Path) -> None:
+    history = NOW + timedelta(days=2)
+    original = _forecast_packet()
+    evidence = original.evidence.model_copy(update={"history_generated_at": history})
+    provisional = original.model_copy(
+        update={"packet_id": "packet-" + "0" * 24, "evidence": evidence}
+    )
+    packet = provisional.model_copy(update={"packet_id": decision_packet_id(provisional)})
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = packets.record(packet)
+    service = DecisionWatchService(
+        packet_store=packets, store=DecisionWatchStore(tmp_path / "monitoring")
+    )
+
+    registration = service.register(packet.packet_id, (WatchConditionKind.DATA_STALE,))
+    definition = registration.conditions[0].definition
+
+    assert definition.reference_at == NOW + timedelta(minutes=1)
+    assert definition.history_generated_at == history
+    assert definition.forecast_generated_at == NOW + timedelta(minutes=1)
+
+
+def test_stale_24_7_counts_completed_utc_sessions(tmp_path: Path) -> None:
+    original = _packet_with_history_generated_at(NOW)
+    instrument = NVDA.model_copy(update={"metadata": {"calendar": "24/7"}})
+    provisional = original.model_copy(
+        update={"packet_id": "packet-" + "0" * 24, "instrument": instrument}
+    )
+    packet = provisional.model_copy(update={"packet_id": decision_packet_id(provisional)})
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = packets.record(packet)
+    service = DecisionWatchService(
+        packet_store=packets, store=DecisionWatchStore(tmp_path / "monitoring")
+    )
+    registration = service.register(packet.packet_id, (WatchConditionKind.DATA_STALE,))
+
+    evaluation = service.check(
+        registration.registration_id,
+        DecisionWatchObservation(evaluated_at=NOW + timedelta(days=2, minutes=1)),
+    )
+
+    assert evaluation.results[0].facts.completed_sessions == 2
+    assert evaluation.results[0].state == "triggered"
+
+
+def test_replay_refuses_evaluation_with_missing_or_reordered_condition_results(
+    tmp_path: Path,
+) -> None:
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = packets.record(_packet())
+    root = tmp_path / "monitoring"
+    service = DecisionWatchService(packet_store=packets, store=DecisionWatchStore(root))
+    registration = service.register(
+        packet.packet_id, (WatchConditionKind.ENTRY_ZONE, WatchConditionKind.INVALIDATION)
+    )
+    service.check(
+        registration.registration_id, _price_observation(price=101.0, sequence=1, minutes=1)
+    )
+    payload = json.loads((root / "watch-evaluations.jsonl").read_text(encoding="utf-8"))
+    payload["results"] = payload["results"][:1]
+    (root / "watch-evaluations.jsonl").write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid"):
+        DecisionWatchService(packet_store=packets, store=DecisionWatchStore(root)).state(
+            packet.packet_id
+        )
+
+
 def _forecast_packet() -> DecisionPacket:
     original = _packet()
     evidence = original.evidence.model_copy(
@@ -406,6 +497,9 @@ def _forecast_artifact(
     target = NOW + timedelta(days=30)
     point = SimpleNamespace(timestamp=target, p50=p50)
     return SimpleNamespace(
+        calendar="XNYS",
+        dataset_id="nvda-demo",
+        dataset_revision=1,
         id=artifact_id,
         instrument=packet.instrument,
         generated_at=generated_at,

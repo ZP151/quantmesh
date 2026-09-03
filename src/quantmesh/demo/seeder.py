@@ -137,6 +137,9 @@ _MUTABLE_FILES = frozenset(
         "decisions/packets/.decision-packets.lock",
         "decisions/packets/decision-action-intents.jsonl",
         "decisions/packets/decision-packets.jsonl",
+        "decisions/monitoring/.decision-watch.lock",
+        "decisions/monitoring/watch-registrations.jsonl",
+        "decisions/monitoring/watch-evaluations.jsonl",
         "watchlists/watchlist.jsonl",
     }
 )
@@ -1668,6 +1671,11 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     packet_copilot_root = root / "decisions" / "copilot"
     packet_copilot_root.mkdir(parents=True, exist_ok=True)
     (packet_copilot_root / "packet-copilot-records.jsonl").write_text("", encoding="utf-8")
+    packet_monitoring_root = root / "decisions" / "monitoring"
+    packet_monitoring_root.mkdir(parents=True, exist_ok=True)
+    (packet_monitoring_root / ".decision-watch.lock").write_text("", encoding="utf-8")
+    (packet_monitoring_root / "watch-registrations.jsonl").write_text("", encoding="utf-8")
+    (packet_monitoring_root / "watch-evaluations.jsonl").write_text("", encoding="utf-8")
     ownership_text = _ownership_text(root)
     (root / OWNERSHIP_NAME).write_text(ownership_text, encoding="utf-8")
     ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()

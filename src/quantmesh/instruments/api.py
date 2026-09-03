@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from ipaddress import ip_address
 from typing import Annotated
 from urllib.parse import urlsplit
 
@@ -119,16 +118,20 @@ def _guard_json_origin(request: Request, surface: str) -> None:
     if origin is None:
         return
     try:
-        hostname = urlsplit(origin).hostname
-        loopback = hostname == "localhost" or (
-            hostname is not None and ip_address(hostname).is_loopback
-        )
+        parsed = urlsplit(origin)
     except ValueError:
-        loopback = False
-    if not loopback:
+        parsed = None
+    expected = f"{request.url.scheme}://{request.headers.get('host', '')}"
+    if (
+        parsed is None
+        or parsed.path not in {"", "/"}
+        or parsed.query
+        or parsed.fragment
+        or origin.rstrip("/") != expected.rstrip("/")
+    ):
         raise HTTPException(
             status_code=403,
-            detail=f"{surface} refused: cross-origin send is not loopback",
+            detail=f"{surface} refused: cross-origin send does not match this request origin",
         )
 
 
@@ -356,7 +359,6 @@ def instrument_router() -> APIRouter:
             raise HTTPException(status_code=404, detail="no decision watch service is attached")
         try:
             packet = packets.get(packet_id)
-            registration = watches.register(packet_id, body.kinds)
             now = clock() if callable(clock) else datetime.now(UTC)
             if not isinstance(now, datetime) or now.tzinfo is None:
                 raise ValueError("instrument clock is invalid")
@@ -378,7 +380,9 @@ def instrument_router() -> APIRouter:
                     workspace.forecast.artifact_id if workspace.forecast else None
                 ),
             )
-            evaluation = watches.check(registration.registration_id, observation)
+            registration, evaluation = watches.register_and_check(
+                packet_id, body.kinds, observation
+            )
             return DecisionWatchState(
                 packet_id=packet_id,
                 registration=registration,
