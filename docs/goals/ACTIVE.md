@@ -241,6 +241,11 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   targeted Ruff/diff clean, and license review exit `0` after classifying all 70
   installed members and tolerating only the six documented Linux-only pins. No
   project dependency constraint or runtime behavior changed.
+- A subsequent fresh gate passed Python license and `pip-audit` before two new
+  frontend transitive advisories stopped `npm audit`. The lock-only fix updates
+  exactly `fast-uri 3.1.5 -> 3.1.7` and `qs 6.15.3 -> 6.16.0`; `npm ci`, zero-
+  vulnerability audit, the 646-package frontend license review and diff check
+  now pass. No direct dependency or runtime source changed.
 - The only remaining work is the final fresh-clone release gate and PR boundary.
 
 ## Historical delivery record

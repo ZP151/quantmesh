@@ -461,3 +461,12 @@ Ruff and `git diff --check` exited `0`; and `tools/license_review.py` reviewed a
 70 installed closure members, tolerated the six documented Linux-only pins and
 exited `0` with `all licenses allowed`. No project dependency constraint or
 product/runtime behavior changed.
+
+The next fresh gate passed Python license and `pip-audit`, then stopped at two
+new registry advisories in transitive frontend tooling: high-severity `fast-uri`
+and moderate-severity `qs`. The minimal lock-only repair advances exactly
+`fast-uri 3.1.5 -> 3.1.7` and `qs 6.15.3 -> 6.16.0`; no direct dependency or
+runtime source changed. Fresh `npm ci` succeeded, `npm audit --audit-level=high`
+reported zero vulnerabilities, the 646-package locked frontend license review
+passed, and `git diff --check` exited `0`. The final fresh-clone gate remains the
+only frontier.
