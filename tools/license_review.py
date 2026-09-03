@@ -159,6 +159,7 @@ def _from_expression(expr: str) -> str | None:
 # credit a bundled text as the project's own license. Unknown first
 # lines (copyright lines, prose) fall through to the keyword scan.
 _LINE1_NAMES = {
+    "MIT": "MIT",
     "3-Clause BSD License": "BSD-3-Clause",
     "BSD 3-Clause License": "BSD-3-Clause",
     "BSD 2-Clause License": "BSD-2-Clause",

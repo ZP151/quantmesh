@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0027 Slices 1–4 complete; final license closure and PR gate pending
+- Status: active — iteration 0027 Slices 1–4 and license closure complete; final PR gate pending
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -19,9 +19,9 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: repair only the approved Python release-license closure drift,
-  then run the final 0027 PR gate. Slices 1–4 are complete; do not add another
-  product slice or expand into exit orders, a performance dashboard, AI review,
+- Current frontier: run only the final 0027 PR gate. Slices 1–4 and the approved
+  Python release-license closure repair are complete; do not add another product
+  slice or expand into exit orders, a performance dashboard, AI review,
   another model framework, Provider/OpenD, another symbol, external notification
   or any 0021 soak work.
 - External gate: none for the deterministic product slice. Model services,
@@ -222,10 +222,23 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   `pip check`, OpenAPI, TypeScript, lint, build, packaged bundle freshness and
   diff checks passed. The existing Fast Refresh and local Node/Vite advisories
   remain non-blocking.
-- Slices 1–4 are complete. The only active work is the approved Python
-  release-license closure repair and final 0027 PR gate. No Provider/OpenD/model
+- Slices 1–4 are complete. The only active work is the final 0027 PR gate. No Provider/OpenD/model
   call, real trade, other symbol, external notification or 0021 soak state was
   touched.
+
+## Final license-closure checkpoint — 2026-09-03
+
+- The direct gate reproduced four missing transitive pins and bound them to their
+  installed dependency chain: `cloudpickle==3.1.2`, `formulaic==1.2.2`,
+  `interface_meta==2.0.1` and `wrapt==2.4.0`.
+- `requirements-audit.txt` and `docs/licenses.md` now agree on the exact 76-package
+  cross-platform closure. The license parser recognizes the exact `MIT` text used
+  by `interface_meta` without weakening unknown or copyleft refusal.
+- The parser test went RED first. Final evidence is `20 passed` in `0.33s`,
+  targeted Ruff/diff clean, and direct license review exit `0` after classifying
+  all 70 installed members and tolerating only the six documented Linux-only
+  pins. No dependency or runtime state changed.
+- The only remaining work is the final fresh-clone release gate and PR boundary.
 
 ## Historical delivery record
 

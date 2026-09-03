@@ -141,6 +141,10 @@ class TestLicenseReview:
             "Apache-2.0 | CNRI-Python"
         )
 
+    def test_exact_mit_license_text_is_allowed(self) -> None:
+        review = _load_license_review()
+        assert review._from_text("MIT") == "MIT"
+
     def test_copyleft_expression_is_refused(self) -> None:
         review = _load_license_review()
         assert review._from_expression("GPL-3.0-only") is None

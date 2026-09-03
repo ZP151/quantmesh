@@ -403,9 +403,9 @@ size warnings while exiting `0`.
 
 ## Current frontier
 
-Slices 1–4 are complete. The only remaining frontier is the previously approved,
-bounded Python release-license closure repair followed by the final 0027 PR gate.
-Do not add another product slice or expand into an exit-order lifecycle,
+Slices 1–4 and the bounded Python release-license closure repair are complete.
+The only remaining frontier is the final 0027 PR gate. Do not add another product
+slice or expand into an exit-order lifecycle,
 performance dashboard, AI review, another model framework, Provider/OpenD,
 another symbol, external notification or 0021 soak.
 
@@ -437,3 +437,21 @@ bundle freshness and `git diff --check` all exited `0`. Four existing Fast Refre
 warnings and the local Node `22.11.0` versus Vite `22.12+` advisory remained
 non-blocking. No Provider/OpenD/model/notification call, real trade, other symbol
 or 0021 soak state was touched.
+
+## Final license-closure checkpoint — 2026-09-03
+
+The direct license gate first reproduced the inherited refusal exactly: four
+installed transitives were outside the 72-pin audit closure. Dependency metadata
+bound them to `joblib -> cloudpickle==3.1.2` and `statsmodels ->
+formulaic==1.2.2 -> interface_meta==2.0.1/wrapt==2.4.0`. The audit lock and
+license inventory now contain those exact versions, producing a 76-package
+cross-platform closure. The conservative parser gained only the exact `MIT`
+license-text spelling needed by `interface_meta`; GPL, Commons Clause and unknown
+metadata refusal behavior is unchanged.
+
+Test-first evidence recorded the exact MIT spelling RED before implementation.
+After the repair, `tests/test_security.py` passed `20` tests in `0.33s`; targeted
+Ruff and `git diff --check` exited `0`; and `tools/license_review.py` reviewed all
+70 installed closure members, tolerated the six documented Linux-only pins and
+exited `0` with `all licenses allowed`. No dependency was installed, upgraded or
+removed, and no product/runtime behavior changed.

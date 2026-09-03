@@ -225,7 +225,7 @@ source-available restriction, no untracked package.
   change beyond patch level requires a re-check of this section and the
   explicit SPDX allowlist.
 
-## Inventory (generated 2026-08-14; 72 packages in the release
+## Inventory (generated 2026-09-03; 76 packages in the release
 closure `.[dev,research,e2e,moomoo]`)
 
 Regenerate with `python tools/license_review.py` in an environment
@@ -242,10 +242,12 @@ Version numbers drift with the lock; the license key is the contract.
 | cffi | 2.1.1 (Linux-only) | MIT-0 |
 | click | 8.4.2 | BSD-3-Clause |
 | colorama | 0.4.6 (Windows-only) | BSD-3-Clause |
+| cloudpickle | 3.1.2 | BSD-3-Clause |
 | cryptography | 50.0.0 (Linux-only) | Apache-2.0 | BSD-3-Clause |
 | duckdb | 1.5.5 | MIT |
 | exchange_calendars | 4.13.2 | Apache-2.0 |
 | fastapi | 0.141.1 | MIT |
+| formulaic | 1.2.2 | MIT |
 | greenlet | 3.5.5 | MIT | PSF-2.0 |
 | h11 | 0.16.0 | MIT |
 | httpcore | 1.0.9 | BSD-3-Clause |
@@ -253,6 +255,7 @@ Version numbers drift with the lock; the license key is the contract.
 | httpx | 0.28.1 | BSD-3-Clause |
 | idna | 3.18 | BSD-3-Clause |
 | iniconfig | 2.3.0 | MIT |
+| interface_meta | 2.0.1 | MIT |
 | jaraco.classes | 3.4.0 | MIT |
 | jaraco.context | 6.1.2 | MIT |
 | jaraco.functools | 4.6.0 | MIT |
@@ -306,3 +309,4 @@ Version numbers drift with the lock; the license key is the contract.
 | uvloop | 0.22.1 (Linux-only) | MIT |
 | watchfiles | 1.2.0 | MIT |
 | websockets | 17.0.1 | BSD-3-Clause |
+| wrapt | 2.4.0 | BSD-2-Clause |
