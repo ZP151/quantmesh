@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0027 Slice 1 complete; Slice 2 awaits approval
+- Status: active — iteration 0027 Slice 2 approved and planned; implementation active
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -10,18 +10,19 @@
 - Active iteration:
   `docs/iterations/0027-evidence-backed-decision-copilot.md`
 - Design:
-  `docs/superpowers/specs/2026-09-02-evidence-backed-decision-copilot-design.md`
+  `docs/superpowers/specs/2026-09-03-structured-decision-copilot-design.md`
 - Executable plan:
-  `docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`
+  `docs/superpowers/plans/2026-09-03-structured-decision-copilot.md`
 - Integration branch: `codex/0027-evidence-backed-decision-copilot`
 - Baseline: `origin/main` at `f77b565`; immutable `v0.1.1-rc1` remains
   `b6b05b9`
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: Slice 2 requires a separate approved design and executable
-  plan. Do not begin Structured Copilot, monitoring, outcome/review, another
-  model framework, or any 0021 soak work from this goal state.
+- Current frontier: implement the approved Slice 2 persisted-packet Copilot as one
+  API/page/state/test vertical deliverable. Do not begin monitoring,
+  outcome/review, another model framework, Provider/OpenD, another symbol, or any
+  0021 soak work from this goal state.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.

@@ -1,14 +1,14 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: active (Slice 1 complete; Slice 2 requires separate approved design/plan)
+- Status: active (Slice 1 complete; Slice 2 approved, planned and in implementation)
 - Started: 2026-09-02
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
 - Branch: `codex/0027-evidence-backed-decision-copilot` from
   `origin/main` at `f77b565`
-- Design:
-  `docs/superpowers/specs/2026-09-02-evidence-backed-decision-copilot-design.md`
-- Executable plan:
-  `docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`
+- Active design:
+  `docs/superpowers/specs/2026-09-03-structured-decision-copilot-design.md`
+- Active executable plan:
+  `docs/superpowers/plans/2026-09-03-structured-decision-copilot.md`
 - Ledger: this file
 
 ## Product wedge
@@ -321,6 +321,21 @@ slice.
 
 ## Current frontier
 
-Slice 1 is complete. Slice 2 requires a separate approved design and executable
-plan. Do not start Structured Copilot, monitoring, outcome/review, another
-model framework, or any 0021 soak work from this frontier.
+Slice 1 is complete. The operator approved Slice 2, Slice 3 and Slice 4 semantics.
+Slice 2 now uses the separate approved design and executable plan linked above.
+
+Its single user action requests a complete Base explanation, Bull/Bear challenges,
+evidence gaps, limitations and operator questions against an already persisted
+packet. Planner and Quant Researcher agree that the advisory result lives in a
+separate immutable record keyed to the exact packet, not a child packet or packet
+identity field. A fresh draft is ineligible; invalid schema, unresolvable packet/
+path/digest, critic refusal, timeout or unavailable model degrades only the panel.
+AI supplies no confidence, probability, direction, size, risk approval, blocker
+override or action authority.
+
+Implement
+`docs/superpowers/plans/2026-09-03-structured-decision-copilot.md` as one bounded
+API/page/state/test loop with one boundary review and at most one correction round.
+Broad gates run once at the coherent slice boundary. Do not start monitoring,
+outcome/review, another model framework, Provider/OpenD, another symbol, 0021 soak,
+or the deferred Python release-license repair from this frontier.
