@@ -589,22 +589,36 @@ def run(root: Path) -> None:
         )
 
         order_rows_before = client.get("/api/demo/status").json()["surfaces"]["orders"]["rows"]
-        proposal_payload = {
-            "venue": "moomoo",
-            "symbol": "NVDA",
-            "artifact_id": workspace["forecast"]["artifact_id"],
+        draft = workspace["decision"]["draft"]
+        saved_response = client.post(
+            "/api/decision-packets",
+            json={
+                "venue": "moomoo",
+                "symbol": "NVDA",
+                "selected_range": "6m",
+                "expected_packet_id": draft["packet_id"],
+            },
+        )
+        saved = saved_response.json()
+        action_payload = {
+            "disposition": "paper_proposal",
+            "operator_reason": None,
             "side": "buy",
             "quantity": 1.0,
             "limit_price": None,
         }
-        preview_response = client.post("/api/paper/proposals", json=proposal_payload)
-        preview = preview_response.json()
+        preview_response = client.post(
+            f"/api/decision-packets/{saved['packet_id']}/actions",
+            json=action_payload,
+        )
+        preview = preview_response.json()["proposal"]
         order_rows_after_preview = client.get("/api/demo/status").json()["surfaces"][
             "orders"
         ]["rows"]
         check(
             "workspace: proposal preview is pending and creates no order",
-            preview_response.status_code == 200
+            saved_response.status_code == 200
+            and preview_response.status_code == 200
             and preview["status"] == "pending"
             and order_rows_after_preview == order_rows_before,
         )
@@ -628,10 +642,25 @@ def run(root: Path) -> None:
             isinstance(order_id, str) and order_id in audit_body,
         )
 
-        race_preview = client.post(
-            "/api/paper/proposals",
-            json={**proposal_payload, "quantity": 2.0},
+        race_reset = client.post("/api/demo/reset")
+        race_workspace = client.get(
+            "/api/instruments/moomoo/NVDA/workspace?range=6m"
         ).json()
+        race_draft = race_workspace["decision"]["draft"]
+        race_saved = client.post(
+            "/api/decision-packets",
+            json={
+                "venue": "moomoo",
+                "symbol": "NVDA",
+                "selected_range": "6m",
+                "expected_packet_id": race_draft["packet_id"],
+            },
+        ).json()
+        race_preview_response = client.post(
+            f"/api/decision-packets/{race_saved['packet_id']}/actions",
+            json={**action_payload, "quantity": 2.0},
+        )
+        race_preview = race_preview_response.json()["proposal"]
         client.post("/api/kill-switch", json={"action": "engage"})
         refused_response = client.post(
             f"/api/paper/proposals/{race_preview['id']}/confirm",
@@ -640,7 +669,9 @@ def run(root: Path) -> None:
         refused = refused_response.json()
         check(
             "workspace: kill-switch race refuses confirmation with typed evidence",
-            refused_response.status_code == 409
+            race_reset.status_code == 200
+            and race_preview_response.status_code == 200
+            and refused_response.status_code == 409
             and refused["proposal"]["status"] in {"blocked", "rejected"}
             and bool(refused["blocker"]),
         )

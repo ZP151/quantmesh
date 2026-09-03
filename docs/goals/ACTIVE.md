@@ -257,6 +257,24 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   `0.43s`, with Ruff and diff green. No product behavior changed.
 - The only remaining work is the final fresh-clone release gate and PR boundary.
 
+## Final-gate compatibility checkpoint — 2026-09-04
+
+- The Node 22.12 fresh-clone gate passed source cleanliness, clone/version,
+  fresh Python installation, Ruff, trusted-data tooling, Python and frontend
+  license closure, `pip-audit`, `npm audit`, bundle freshness, Vitest and the
+  complete Python suite (`3220 passed, 9 skipped` in `2825.5s`).
+- Its sole failure was the historical golden-path script posting a bare legacy
+  proposal and treating the required 409 response as the former flat proposal
+  shape. Product code and tests were already green.
+- `tools/golden_path.py` now exercises the accepted DecisionPacket workflow:
+  save the exact draft, record a packet-bound paper action, then separately
+  confirm its proposal. The kill-switch race uses a deterministic demo reset
+  and a second exact NVDA packet; no Provider, OpenD or external state is used.
+  The corrected walk passes all `60` checks with exit `0`.
+- The only remaining work is one fresh-clone release gate on the corrected
+  commit, followed by the final PR boundary. No additional product slice is
+  authorized.
+
 ## Historical delivery record
 
 The checkpoints below preserve prior goals and evidence. Their embedded

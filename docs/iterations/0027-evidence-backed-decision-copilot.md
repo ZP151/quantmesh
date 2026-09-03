@@ -486,3 +486,22 @@ It reported `3219 passed, 9 skipped` and one deterministic lock-order failure:
 `cloudpickle` preceded by `colorama`. Swapping those adjacent inventory entries
 made the exact release/security contract selection pass `28` tests in `0.43s`;
 Ruff and diff checks remained green. No test or product behavior was changed.
+
+## Final-gate compatibility checkpoint — 2026-09-04
+
+The next Node 22.12 fresh-clone gate passed every boundary through the complete
+Python suite: source/clone cleanliness, version consistency, fresh dependency
+installation, Ruff, trusted-data tooling, Python and frontend license closure,
+`pip-audit`, `npm audit`, bundle freshness, Vitest, and `3220 passed, 9 skipped`
+in `2825.5s`. The only failing step was the historical golden-path script: it
+posted a proposal without the now-mandatory exact DecisionPacket binding, then
+indexed the intentional 409 error as the former flat proposal response.
+
+The gate script now uses the product's accepted flow—save the exact workspace
+draft, record its packet-bound paper action, and confirm the returned proposal.
+Its kill-switch race resets only the temporary demo root before creating a
+second exact NVDA packet. The corrected golden path passes `60/60` checks with
+exit `0`, including no-order preview, exact-token confirmation, audit lineage,
+typed risk refusal and deterministic reset. Product code, Provider/OpenD,
+external state and the 0021 soak track were untouched. One final fresh-clone
+gate on the corrected commit remains before the PR boundary.
