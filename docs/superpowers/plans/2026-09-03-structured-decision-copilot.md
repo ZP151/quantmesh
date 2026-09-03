@@ -59,9 +59,11 @@ proposal/order counts, and risk/confirmation behavior remain unchanged.
 - Create: `tests/test_packet_copilot.py`
 - Create: `frontend/src/screens/instrument/PacketCopilot.test.tsx`
 - Modify: `src/quantmesh/ai/retrieval.py`
+- Modify: `docs/adr/0019-decision-packet-identity-and-authority.md`
 - Modify: `src/quantmesh/instruments/api.py`
 - Modify: `src/quantmesh/api/workstation.py`
 - Modify: `src/quantmesh/instruments/__init__.py`
+- Modify: `src/quantmesh/runtime.py`
 - Modify: `frontend/src/lib/api.ts`
 - Modify: `frontend/src/lib/messages.ts`
 - Modify: `frontend/src/screens/InstrumentWorkspace.tsx`
@@ -71,10 +73,10 @@ proposal/order counts, and risk/confirmation behavior remain unchanged.
 - Test/modify as needed: `tests/test_spa_e2e.py`
 - Test/modify as needed: `frontend/src/screens/InstrumentWorkspace.test.tsx`
 
-Implementation may touch `src/quantmesh/runtime.py`, `src/quantmesh/demo/seeder.py`,
-or `src/quantmesh/demo/runtime.py` only if required to bind the new optional service
-or ledger to an existing root and restart test. Do not seed fabricated accepted
-Copilot output into the default demo and do not change demo/provider authority.
+Implementation may touch `src/quantmesh/demo/seeder.py` or
+`src/quantmesh/demo/runtime.py` only as required to bind the new optional ledger to
+the existing demo root and prove restart. Do not seed fabricated accepted Copilot
+output into the default demo and do not change demo/provider authority.
 
 #### Interfaces
 
@@ -168,6 +170,10 @@ exist.
 
 #### Step 2: Implement the domain and service GREEN
 
+- [ ] Extend ADR-0019 before production code with the durable decision that advisory
+  Copilot records reverse-bind to an exact packet and packet citations resolve a
+  restricted JSON pointer plus canonical value digest; neither changes packet
+  identity or authority.
 - [ ] Add the source-specific citation validation and exact packet resolver without
   widening retrieval search.
 - [ ] Implement canonical pointer selection/digest verification and strict Copilot
@@ -197,8 +203,11 @@ Run:
 
 Expected before binding: FAIL on the missing routes/app state. Add the two routes to
 `instrument_router`, inject the optional service in `create_workstation_app`, and
-return strict `PacketCopilotState` envelopes. Do not construct a real transport or
-call a model from default workstation/demo startup.
+return strict `PacketCopilotState` envelopes. Add `PacketCopilotStore` to
+`WorkstationStores` under the existing decisions root. The normal workstation may
+construct the loopback-only `HttpModelTransport` only when `settings.model_name` is
+non-empty; a blank model name and the default demo stay explicitly degraded and make
+no model call. Deterministic tests inject scripted gateways.
 
 #### Step 4: Write UI RED tests
 
