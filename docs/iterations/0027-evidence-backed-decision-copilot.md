@@ -1,14 +1,14 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: active (Slices 1–2 complete; Slice 3 design/plan next)
+- Status: active (Slices 1–2 complete; Slice 3 implementation active)
 - Started: 2026-09-02
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
 - Branch: `codex/0027-evidence-backed-decision-copilot` from
   `origin/main` at `f77b565`
 - Active design:
-  `docs/superpowers/specs/2026-09-03-structured-decision-copilot-design.md`
+  `docs/superpowers/specs/2026-09-03-local-packet-monitoring-design.md`
 - Active executable plan:
-  `docs/superpowers/plans/2026-09-03-structured-decision-copilot.md`
+  `docs/superpowers/plans/2026-09-03-local-packet-monitoring.md`
 - Ledger: this file
 
 ## Product wedge
@@ -376,9 +376,17 @@ implementer checkpoint above.
 
 ## Current frontier
 
-The active frontier is a separate approved Slice 3 local-monitoring design and
-executable plan. Its one action saves local conditions from an exact packet and its
-stop condition proves deterministic trigger/non-trigger replay plus stale evidence.
-Do not start implementation before that plan exists; do not begin outcome/review,
+The active frontier is the approved Slice 3 local-monitoring implementation plan.
+Its one action saves and checks local conditions from an exact packet; its stop
+condition proves deterministic trigger/non-trigger replay plus stale evidence.
+Planner/Product fixed one packet-keyed registration and one in-workspace action.
+Quant Researcher fixed time causality, downward long-only invalidation, pinned
+session-calendar freshness, same-target p50 drift, durable crossing cursors, and
+the rule that missing/uncomparable evidence cannot masquerade as zero drift. The
+packet currently has one entry price, so the monitoring definition transparently
+freezes and displays the closed support-to-entry pullback zone rather than inventing
+an undisclosed percentage band or rewriting packet identity.
+
+Do not begin outcome/review,
 another model framework, Provider/OpenD, another symbol, external notification,
 0021 soak, or the deferred Python release-license repair from this frontier.

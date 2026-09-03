@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0027 Slice 2 complete; Slice 3 design/plan next
+- Status: active — iteration 0027 Slices 1–2 complete; Slice 3 implementation active
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -10,17 +10,17 @@
 - Active iteration:
   `docs/iterations/0027-evidence-backed-decision-copilot.md`
 - Design:
-  `docs/superpowers/specs/2026-09-03-structured-decision-copilot-design.md`
+  `docs/superpowers/specs/2026-09-03-local-packet-monitoring-design.md`
 - Executable plan:
-  `docs/superpowers/plans/2026-09-03-structured-decision-copilot.md`
+  `docs/superpowers/plans/2026-09-03-local-packet-monitoring.md`
 - Integration branch: `codex/0027-evidence-backed-decision-copilot`
 - Baseline: `origin/main` at `f77b565`; immutable `v0.1.1-rc1` remains
   `b6b05b9`
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: create the separately bounded Slice 3 local-monitoring design
-  and executable plan before implementation. Do not begin outcome/review, another
+- Current frontier: execute the approved Slice 3 packet-bound local-monitoring plan
+  as one targeted vertical slice. Do not begin outcome/review, another
   model framework, Provider/OpenD, another symbol, external notification, or any
   0021 soak work from this goal state.
 - External gate: none for the deterministic product slice. Model services,
