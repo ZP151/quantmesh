@@ -656,7 +656,7 @@ def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
         assert main.get_by_role("region", name="Scenarios").count() >= 1
         assert main.get_by_role("region", name="Risk plan").count() >= 1
         action_region = main.get_by_role(
-            "region", name="DecisionPacket actions", exact=True
+            "region", name="DecisionPacket actions"
         )
         action_state_before = action_region.inner_text()
         with page.expect_response(
