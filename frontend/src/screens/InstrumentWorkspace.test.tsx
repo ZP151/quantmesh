@@ -22,7 +22,9 @@ vi.mock('@/lib/api', async (importOriginal) => {
       instrumentWorkspace: vi.fn(),
       liveState: vi.fn(),
       markets: vi.fn(),
+      checkPacketMonitoring: vi.fn(),
       packetCopilot: vi.fn(),
+      packetMonitoring: vi.fn(),
       requestPacketCopilot: vi.fn(),
       saveDecisionPacket: vi.fn(),
     },
@@ -219,6 +221,7 @@ const mockedHealth = vi.mocked(api.health)
 const mockedLiveState = vi.mocked(api.liveState)
 const mockedMarkets = vi.mocked(api.markets)
 const mockedPacketCopilot = vi.mocked(api.packetCopilot)
+const mockedPacketMonitoring = vi.mocked(api.packetMonitoring)
 const mockedRequestPacketCopilot = vi.mocked(api.requestPacketCopilot)
 const mockedLiveConnection = vi.mocked(useLiveConnection)
 let publishLiveUpdate: Parameters<typeof useLiveConnection>[0]
@@ -258,6 +261,10 @@ beforeEach(() => {
     reason_code: null,
     record: null,
     status: 'idle',
+  }))
+  mockedPacketMonitoring.mockImplementation(async (packetId) => ({
+    packet_id: packetId,
+    registration: null,
   }))
   mockedRequestPacketCopilot.mockImplementation(async (packetId) => ({
     packet_id: packetId,
@@ -303,6 +310,14 @@ beforeEach(() => {
 })
 
 describe('InstrumentWorkspaceScreen', () => {
+  it('keeps local monitoring save-first for an unsaved DecisionPacket', async () => {
+    renderWorkspace()
+
+    expect(await screen.findByTestId('packet-monitoring')).toBeInTheDocument()
+    expect(screen.getByText('Save this DecisionPacket before monitoring it locally.')).toBeInTheDocument()
+    expect(mockedPacketMonitoring).not.toHaveBeenCalled()
+  })
+
   it('promotes an action result across market, scenarios, evidence, risk, and actions during polling', async () => {
     const user = userEvent.setup()
     const parent = {

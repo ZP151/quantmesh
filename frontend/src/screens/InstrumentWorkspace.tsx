@@ -21,6 +21,7 @@ import { evidenceText } from './instrument/evidence-copy'
 import { ForecastEvidence, type ForecastHorizon } from './instrument/ForecastEvidence'
 import { MarketCanvas } from './instrument/MarketCanvas'
 import { PacketCopilot } from './instrument/PacketCopilot'
+import { PacketMonitoring } from './instrument/PacketMonitoring'
 import { PacketEvidenceSummary, ScenarioEvidence } from './instrument/ScenarioEvidence'
 import { WorkspaceDegraded, WorkspaceError, WorkspaceRefreshWarning } from './instrument/WorkspaceStates'
 import { retainSameInstrument } from './instrument/workspace-query'
@@ -311,6 +312,12 @@ export function InstrumentWorkspaceScreen() {
           <ScenarioEvidence packet={displayedPacket} />
           {copilotContextReady && (
             <PacketCopilot
+              contextKey={decisionContextKey}
+              packetId={packetSource === 'persisted' ? activeSelection.packetId : null}
+            />
+          )}
+          {copilotContextReady && (
+            <PacketMonitoring
               contextKey={decisionContextKey}
               packetId={packetSource === 'persisted' ? activeSelection.packetId : null}
             />

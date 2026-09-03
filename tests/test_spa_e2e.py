@@ -696,6 +696,53 @@ def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
         _reset_demo(page, base_url)
 
 
+def test_nvda_packet_monitoring_is_packet_bound_and_survives_workspace_reload(
+    page,
+    base_url,
+    demo_station: _DemoStation,
+) -> None:
+    """The local disclosure has no proposal, order, or navigation authority."""
+    _reset_demo(page, base_url)
+    page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    workspace_url = page.url
+    page.get_by_label("Decision reason").fill("Persist a packet-bound local check")
+    page.get_by_role("button", name="Watch decision").click()
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    packet_before = page.request.get(
+        f"{base_url}/api/decision-packets/{packet_id}"
+    ).json()
+    proposals_before = demo_station.app.state.paper_decisions.ledger.all()
+    orders_before = demo_station.app.state.account_store.get().orders
+
+    monitoring = page.get_by_test_id("packet-monitoring")
+    monitoring.get_by_role("button", name="Save & check").wait_for()
+    with page.expect_response(
+        lambda response: response.url.endswith(
+            f"/api/decision-packets/{packet_id}/watch-conditions"
+        )
+        and response.request.method == "POST"
+    ) as checked:
+        monitoring.get_by_role("button", name="Save & check").click()
+    assert checked.value.status == 200
+    body = checked.value.json()
+    assert body["packet_id"] == packet_id
+    assert len(body["registration"]["conditions"]) == 4
+    monitoring.get_by_role("button", name="Check now").wait_for()
+
+    page.reload()
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    assert page.url == workspace_url
+    recovered = page.get_by_test_id("packet-monitoring")
+    recovered.get_by_role("button", name="Check now").wait_for()
+    assert page.request.get(
+        f"{base_url}/api/decision-packets/{packet_id}"
+    ).json() == packet_before
+    assert demo_station.app.state.paper_decisions.ledger.all() == proposals_before
+    assert demo_station.app.state.account_store.get().orders == orders_before
+
+
 def test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order(
     page,
     base_url,

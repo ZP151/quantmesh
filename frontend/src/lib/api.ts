@@ -571,6 +571,10 @@ export type DecisionPacketActionResult = DeepReadonly<
 export type DecisionPacketSaveInput = components['schemas']['DecisionPacketSaveBody']
 export type DecisionPacketActionInput = components['schemas']['DecisionPacketActionBody']
 export type PacketCopilotState = DeepReadonly<components['schemas']['PacketCopilotState']>
+// Local monitoring is a generated, packet-bound contract.  The browser can
+// select only the fixed condition kinds; observations are constructed by the
+// local runtime from its workspace and registry snapshots.
+export type WatchConditionKind = components['schemas']['WatchConditionKind']
 
 // --- Trusted data catalog (iteration 0021 Slice 6) -----------------------
 
@@ -832,6 +836,30 @@ export const api = {
     const { data, error, response } = await generatedApi.POST(
       '/api/decision-packets/{packet_id}/copilot',
       { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async packetMonitoring(packetId: string): Promise<components['schemas']['DecisionWatchState']> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/decision-packets/{packet_id}/watch-conditions',
+      { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async checkPacketMonitoring(
+    packetId: string,
+    kinds: readonly WatchConditionKind[],
+  ): Promise<components['schemas']['DecisionWatchState']> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/decision-packets/{packet_id}/watch-conditions',
+      {
+        body: { kinds: [...kinds] },
+        params: { path: { packet_id: packetId } },
+      },
     )
     if (!response.ok || data === undefined) throw generatedApiError(response, error)
     return data
