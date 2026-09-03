@@ -274,6 +274,12 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
 - The only remaining work is one fresh-clone release gate on the corrected
   commit, followed by the final PR boundary. No additional product slice is
   authorized.
+- That rerun stopped fail-closed before audits/tests because the unconstrained
+  dev resolver advanced `ruff 0.16.5 -> 0.16.6`. The exact MIT audit pin and
+  inventory now follow the fresh resolution. The retained fresh environment
+  classifies all 70 installed members of the 76-package closure and exits `0`;
+  the exact release/security selection passes `28` tests in `0.35s`. No
+  application dependency or runtime behavior changed.
 
 ## Historical delivery record
 

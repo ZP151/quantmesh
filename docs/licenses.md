@@ -292,7 +292,7 @@ Version numbers drift with the lock; the license key is the contract.
 | pytz | 2026.3.post1 | MIT |
 | pywin32-ctypes | 0.2.3 (Windows-only) | BSD-3-Clause |
 | PyYAML | 6.0.3 | MIT |
-| ruff | 0.16.5 | MIT |
+| ruff | 0.16.6 | MIT |
 | scikit-learn | 1.9.0 | BSD-3-Clause |
 | scipy | 1.18.1 | BSD-3-Clause |
 | SecretStorage | 3.5.0 (Linux-only) | BSD-3-Clause |

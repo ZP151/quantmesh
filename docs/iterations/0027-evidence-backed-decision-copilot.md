@@ -505,3 +505,12 @@ exit `0`, including no-order preview, exact-token confirmation, audit lineage,
 typed risk refusal and deterministic reset. Product code, Provider/OpenD,
 external state and the 0021 soak track were untouched. One final fresh-clone
 gate on the corrected commit remains before the PR boundary.
+
+That rerun stopped fail-closed at license classification before the remaining
+audits and tests: fresh installation resolved `ruff==0.16.6` while the exact
+audit inventory still named `0.16.5`. Both artifacts now bind the newly resolved
+MIT version. The retained fresh environment reviews all 70 installed members of
+the 76-package cross-platform closure and exits `0`; the exact release/security
+selection passes `28` tests in `0.35s`, with targeted Ruff and diff checks green.
+This is audit-only drift; no project dependency constraint, application source
+or runtime behavior changed.
