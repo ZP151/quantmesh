@@ -30,6 +30,7 @@ from quantmesh.instruments.copilot import (
     DEGRADED_REASON,
     PacketCopilotService,
     PacketCopilotState,
+    PacketCopilotStore,
 )
 from quantmesh.instruments.decision_packets import (
     DecisionPacketNotFoundError,
@@ -273,6 +274,16 @@ def instrument_router() -> APIRouter:
             raise HTTPException(status_code=404, detail="no decision packet store is attached")
         try:
             packet_store.get(packet_id)
+            record_store = getattr(request.app.state, "packet_copilot_store", None)
+            if isinstance(record_store, PacketCopilotStore):
+                record = record_store.latest(packet_id)
+                if record is None:
+                    return PacketCopilotState(status="idle", packet_id=packet_id)
+                return PacketCopilotState(
+                    status="ready",
+                    packet_id=packet_id,
+                    record=record,
+                )
             service = getattr(request.app.state, "packet_copilot", None)
             if not isinstance(service, PacketCopilotService):
                 return PacketCopilotState(

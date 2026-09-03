@@ -161,6 +161,9 @@ export function InstrumentWorkspaceScreen() {
   const displayedPacket = persistedPacket ?? workspace.decision.draft
   const displayedPacketContextKey = `${displayedPacket.instrument.venue}:${displayedPacket.instrument.symbol}:${displayedPacket.selected_range}`
   const evidenceUpdating = !responseContextReady || displayedPacketContextKey !== decisionContextKey
+  const copilotContextReady = responseContextReady
+    && displayedPacketContextKey === decisionContextKey
+    && activeSelection.contextKey === decisionContextKey
   const displayedComparisons = query.isPlaceholderData
     ? (workspace.comparison?.keys ?? []).filter(
         (key) => key !== `${workspace.instrument.venue}:${workspace.instrument.symbol}`,
@@ -306,10 +309,12 @@ export function InstrumentWorkspaceScreen() {
             </>
           )}
           <ScenarioEvidence packet={displayedPacket} />
-          <PacketCopilot
-            contextKey={decisionContextKey}
-            packetId={packetSource === 'persisted' ? activeSelection.packetId : null}
-          />
+          {copilotContextReady && (
+            <PacketCopilot
+              contextKey={decisionContextKey}
+              packetId={packetSource === 'persisted' ? activeSelection.packetId : null}
+            />
+          )}
           {packetSource === 'fresh' && (
             <ForecastEvidence
               forecast={workspace.forecast}

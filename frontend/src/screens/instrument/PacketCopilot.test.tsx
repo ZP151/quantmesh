@@ -191,6 +191,33 @@ describe('PacketCopilot', () => {
     expect(mockedLatest).toHaveBeenCalledWith(packetB)
   })
 
+  it('discards a late request when only the context changes for the same packet', async () => {
+    const user = userEvent.setup()
+    const pending = deferred<PacketCopilotState>()
+    mockedRequest.mockReturnValue(pending.promise)
+    const rendered = renderPanel()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Explain & challenge' })).toBeEnabled()
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Explain & challenge' }))
+    rendered.rerender(
+      <QueryClientProvider client={rendered.queryClient}>
+        <PreferencesProvider>
+          <PacketCopilot contextKey="moomoo:NVDA:1m" packetId={packetA} />
+        </PreferencesProvider>
+      </QueryClientProvider>,
+    )
+    pending.resolve(ready(packetA))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Explain & challenge' })).toBeEnabled()
+    })
+    expect(screen.queryByText('Base explanation')).not.toBeInTheDocument()
+    expect(rendered.queryClient.getQueryData(['packet-copilot', 'moomoo:NVDA:6m', packetA]))
+      .toEqual(idle(packetA))
+  })
+
   it('keeps long packet fields and digests inside a compact rail', async () => {
     mockedLatest.mockResolvedValue(ready(packetA))
     const { container } = renderPanel()

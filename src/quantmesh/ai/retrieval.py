@@ -129,7 +129,7 @@ class Citation(BaseModel):
         return self
 
     @model_serializer(mode="wrap")
-    def _preserve_legacy_shape(self, handler: SerializerFunctionWrapHandler) -> dict:
+    def _preserve_legacy_shape(self, handler: SerializerFunctionWrapHandler):
         serialized = handler(self)
         if self.source_kind != "packet":
             serialized.pop("json_pointer", None)

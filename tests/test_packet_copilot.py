@@ -13,9 +13,11 @@ from quantmesh.ai.decisions import DecisionLog, ModelMeta
 from quantmesh.ai.gateway import ModelGateway
 from quantmesh.ai.retrieval import Citation, DecisionPacketSource, resolve_citation
 from quantmesh.ai.transport import ModelTransport, ScriptedModelTransport
+from quantmesh.api.workstation import create_workstation_app
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
+from quantmesh.execution.accounting import PaperAccount
 from quantmesh.instruments.contracts import (
     DecisionCostEvidence,
     DecisionDisposition,
@@ -36,6 +38,7 @@ from quantmesh.instruments.copilot import (
     PacketCopilotStore,
 )
 from quantmesh.instruments.decision_packets import DecisionPacketStore, decision_packet_id
+from quantmesh.settings import settings
 
 NOW = datetime(2026, 9, 3, 10, 0, tzinfo=UTC)
 MODEL = ModelMeta(name="fixture-copilot", version="v1", endpoint_kind="scripted")
@@ -256,6 +259,23 @@ def test_legacy_citation_serialization_is_byte_compatible() -> None:
     assert citation.model_dump_json() == (
         '{"source_kind":"document","source_id":"doc-1","span":[2,7]}'
     )
+
+
+def test_openapi_citation_contract_exposes_typed_fields() -> None:
+    app = create_workstation_app(account=PaperAccount(cash=100_000.0), host="127.0.0.1")
+
+    citation = app.openapi()["components"]["schemas"]["Citation"]
+
+    assert citation["type"] == "object"
+    assert citation["additionalProperties"] is False
+    assert set(citation["properties"]) == {
+        "source_kind",
+        "source_id",
+        "span",
+        "json_pointer",
+        "value_digest",
+    }
+    assert set(citation["required"]) == {"source_kind", "source_id"}
 
 
 def test_packet_source_resolves_exact_scalar_and_scalar_list_values(tmp_path: Path) -> None:
@@ -497,6 +517,22 @@ def test_store_rejects_tampered_or_duplicate_record_identity(tmp_path: Path) -> 
         )
 
 
+def test_accepted_record_refuses_naive_timestamp() -> None:
+    packet = _packet()
+    report = PacketCopilotDraft.model_validate(_draft_payload(packet))
+
+    with pytest.raises(ValueError, match="recorded_at must be timezone-aware"):
+        PacketCopilotRecord.accepted(
+            packet_id=packet.packet_id,
+            report=report,
+            analyst_decision_id="a" * 16,
+            critic_decision_id="b" * 16,
+            analyst_model=MODEL,
+            critic_model=MODEL,
+            recorded_at=NOW.replace(tzinfo=None),
+        )
+
+
 def test_critic_contract_requires_flags_only_for_flag_verdict() -> None:
     packet = _packet()
     with pytest.raises(ValidationError, match="flagged_items"):
@@ -601,6 +637,48 @@ def test_copilot_api_model_unavailable_degrades_only_advisory_state(
     assert packet_path.read_bytes() == packet_bytes
     assert len(app.state.paper_decisions.ledger.all()) == proposal_count
     assert len(app.state.page_context.journal.all()) == order_count
+
+
+def test_normal_workstation_reopens_accepted_record_without_model(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    packet = _packet()
+    service, _, _ = _service(
+        tmp_path,
+        packet,
+        _script(_draft_payload(packet)),
+        _script(_critic_payload(packet)),
+    )
+    accepted = service.request(packet.packet_id)
+    packets = DecisionPacketStore(tmp_path / "packets")
+    copilot_records = PacketCopilotStore(tmp_path / "copilot")
+    packet_bytes = packets.path.read_bytes()
+    copilot_bytes = copilot_records.path.read_bytes()
+    monkeypatch.setattr(settings, "model_name", "")
+    reconstructed = create_workstation_app(
+        account=PaperAccount(cash=100_000.0),
+        decision_packets=packets,
+        packet_copilot_store=copilot_records,
+        packet_copilot=None,
+        host="127.0.0.1",
+    )
+
+    with TestClient(reconstructed) as client:
+        reopened = client.get(f"/api/decision-packets/{packet.packet_id}/copilot")
+        unavailable = client.post(f"/api/decision-packets/{packet.packet_id}/copilot")
+
+    assert reopened.status_code == 200
+    assert reopened.json() == accepted.model_dump(mode="json")
+    assert unavailable.status_code == 200
+    assert unavailable.json() == {
+        "status": "degraded",
+        "packet_id": packet.packet_id,
+        "record": None,
+        "reason_code": "copilot-unavailable",
+    }
+    assert packets.path.read_bytes() == packet_bytes
+    assert copilot_records.path.read_bytes() == copilot_bytes
 
 
 def test_copilot_api_preserves_packet_lookup_and_same_origin_failures(

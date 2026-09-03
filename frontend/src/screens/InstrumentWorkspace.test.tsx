@@ -554,10 +554,12 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(screen.getByRole('button', { name: 'Reject decision' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Watch decision' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeEnabled()
+    expect(screen.getByTestId('packet-copilot')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '1M' }))
 
     expect(await screen.findByText('Decision actions and confirmation are paused while requested evidence replaces the displayed prior context.')).toBeInTheDocument()
+    expect(screen.queryByTestId('packet-copilot')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reject decision' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Watch decision' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeDisabled()

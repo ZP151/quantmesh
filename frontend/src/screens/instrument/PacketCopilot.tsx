@@ -16,8 +16,8 @@ interface PacketCopilotProps {
 export function PacketCopilot({ contextKey, packetId }: PacketCopilotProps) {
   const { t } = usePreferences()
   const queryClient = useQueryClient()
-  const currentPacket = useRef(packetId)
-  currentPacket.current = packetId
+  const currentRequestContext = useRef({ contextKey, packetId })
+  currentRequestContext.current = { contextKey, packetId }
   const queryKey = ['packet-copilot', contextKey, packetId] as const
   const query = useQuery({
     enabled: packetId !== null,
@@ -26,24 +26,33 @@ export function PacketCopilot({ contextKey, packetId }: PacketCopilotProps) {
     retry: false,
   })
   const request = useMutation({
-    mutationFn: (requestedPacketId: string) => api.requestPacketCopilot(requestedPacketId),
-    mutationKey: ['request-packet-copilot', packetId],
-    onSuccess: (state, requestedPacketId) => {
-      if (currentPacket.current !== requestedPacketId) return
+    mutationFn: (requested: { contextKey: string; packetId: string }) => (
+      api.requestPacketCopilot(requested.packetId)
+    ),
+    mutationKey: ['request-packet-copilot', contextKey, packetId],
+    onSuccess: (state, requested) => {
+      const current = currentRequestContext.current
+      if (current.contextKey !== requested.contextKey || current.packetId !== requested.packetId) {
+        return
+      }
       queryClient.setQueryData(
-        ['packet-copilot', contextKey, requestedPacketId],
+        ['packet-copilot', requested.contextKey, requested.packetId],
         state,
       )
     },
   })
   const loading = packetId !== null && (
-    query.isPending || (request.isPending && request.variables === packetId)
+    query.isPending || (
+      request.isPending
+      && request.variables.contextKey === contextKey
+      && request.variables.packetId === packetId
+    )
   )
   const state = query.data
   const degraded = query.isError || request.isError || state?.status === 'degraded'
   const report = state?.status === 'ready' ? state.record?.report : null
   const requestReport = () => {
-    if (packetId !== null) request.mutate(packetId)
+    if (packetId !== null) request.mutate({ contextKey, packetId })
   }
 
   return (

@@ -161,6 +161,8 @@ class PacketCopilotRecord(_StrictModel):
         critic_model: ModelMeta | None,
         recorded_at: datetime,
     ) -> PacketCopilotRecord:
+        if recorded_at.tzinfo is None:
+            raise ValueError("recorded_at must be timezone-aware")
         provisional = cls.model_construct(
             record_id="copilot-" + "0" * 24,
             schema_version=1,

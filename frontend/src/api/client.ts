@@ -1448,8 +1448,30 @@ export interface components {
             /** Unavailable Reason */
             unavailable_reason?: string | null;
         };
+        /**
+         * Citation
+         * @description A resolvable identity into a source record, never a blob.
+         */
         Citation: {
-            [key: string]: unknown;
+            /** Json Pointer */
+            json_pointer?: string | null;
+            /** Source Id */
+            source_id: string;
+            /**
+             * Source Kind
+             * @enum {string}
+             */
+            source_kind: "document" | "experiment" | "audit" | "packet";
+            /**
+             * Span
+             * @description optional [start, end) char offsets into the record text
+             */
+            span?: [
+                number,
+                number
+            ] | null;
+            /** Value Digest */
+            value_digest?: string | null;
         };
         /**
          * ComparisonPoint
