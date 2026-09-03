@@ -189,9 +189,15 @@ def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
     app.state.price_forecasts = seeded.price_forecasts
     app.state.decision_packets = seeded.decision_packets
     app.state.packet_copilot_store = seeded.packet_copilot
+    app.state.packet_monitoring_store = seeded.packet_monitoring
     packet_service = getattr(app.state, "decision_packet_service", None)
     if packet_service is not None:
         packet_service.store = seeded.decision_packets
+    monitoring = getattr(app.state, "packet_monitoring", None)
+    if monitoring is not None:
+        monitoring.packet_store = seeded.decision_packets
+        monitoring.store = seeded.packet_monitoring
+        monitoring.forecast_registry = seeded.price_forecasts
     copilot = getattr(app.state, "packet_copilot", None)
     if isinstance(copilot, PacketCopilotService):
         copilot.packet_store = seeded.decision_packets
@@ -469,6 +475,7 @@ def create_demo_app(
         decision_packets=seeded.decision_packets,
         packet_copilot_store=seeded.packet_copilot,
         packet_copilot=packet_copilot,
+        packet_monitoring=seeded.packet_monitoring,
         account_sink=lambda account: persist_demo_account(root, account),
         demo_quote_provider=lambda instrument, now: _workspace_demo_quote(
             seeded,

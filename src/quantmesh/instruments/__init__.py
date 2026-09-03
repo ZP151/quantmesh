@@ -52,6 +52,7 @@ from quantmesh.instruments.decision_packets import (
     DecisionPacketStore,
     decision_packet_id,
 )
+from quantmesh.instruments.monitoring import DecisionWatchService, DecisionWatchStore, WatchConditionKind
 from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
@@ -110,4 +111,7 @@ __all__ = [
     "run_price_forecast",
     "compose_decision_packet",
     "decision_packet_id",
+    "DecisionWatchService",
+    "DecisionWatchStore",
+    "WatchConditionKind",
 ]

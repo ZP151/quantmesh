@@ -90,6 +90,7 @@ from quantmesh.instruments.decision_packets import (
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.live_history import LiveHistoryService
+from quantmesh.instruments.monitoring import DecisionWatchService, DecisionWatchStore
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.api import live_router
@@ -1051,6 +1052,7 @@ def create_workstation_app(
     decision_packets: DecisionPacketStore | None = None,
     packet_copilot_store: PacketCopilotStore | None = None,
     packet_copilot: PacketCopilotService | None = None,
+    packet_monitoring: DecisionWatchStore | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1116,9 +1118,7 @@ def create_workstation_app(
         hl_posture=hl_posture,
         enablement=enablement,
     )
-    effective_history = (
-        LiveHistoryService(history, live_feed) if live_feed is not None else history
-    )
+    effective_history = LiveHistoryService(history, live_feed) if live_feed is not None else history
     app.state.history = effective_history
     app.state.price_forecasts = price_forecasts
     app.state.data_catalog = data_catalog
@@ -1127,6 +1127,7 @@ def create_workstation_app(
     app.state.decision_packets = decision_packets
     app.state.packet_copilot_store = packet_copilot_store
     app.state.packet_copilot = packet_copilot
+    app.state.packet_monitoring_store = packet_monitoring
 
     def publish_account(updated: PaperAccount) -> None:
         if account_sink is not None:
@@ -1205,6 +1206,12 @@ def create_workstation_app(
                 workspace_provider=lambda: app.state.instrument_workspace,
                 proposals=paper_decisions,
             )
+            if packet_monitoring is not None:
+                app.state.packet_monitoring = DecisionWatchService(
+                    packet_store=decision_packets,
+                    store=packet_monitoring,
+                    forecast_registry=price_forecasts,
+                )
 
     # The SPA JSON surface (Phase C) in both modes: a strict superset
     # of the M1 API, so a client that wants JSON has one source of
@@ -1531,6 +1538,7 @@ def _register_kill_switch(app: FastAPI) -> None:
                     "/kill-switch/control",
                     f"kill-switch POST refused: unknown venue {venue!r}",
                 )
+
         def flip(current: PaperAccount) -> PaperAccount:
             if venue_enum is None:
                 return current.model_copy(update={"kill_switch": action == "engage"})
@@ -1800,6 +1808,7 @@ def main(argv: list[str] | None = None) -> None:
             )
             decision_packets = DecisionPacketStore(settings.decisions_dir / "packets")
             packet_copilot_store = PacketCopilotStore(settings.decisions_dir / "copilot")
+            packet_monitoring = DecisionWatchStore(settings.decisions_dir / "monitoring")
             copilot_decisions = DecisionLog()
             packet_copilot = None
             if settings.model_name:
@@ -1837,6 +1846,7 @@ def main(argv: list[str] | None = None) -> None:
                 decision_packets=decision_packets,
                 packet_copilot_store=packet_copilot_store,
                 packet_copilot=packet_copilot,
+                packet_monitoring=packet_monitoring,
                 host=host,
             )
         else:

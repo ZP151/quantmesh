@@ -39,6 +39,12 @@ from quantmesh.instruments.decision_packets import (
 )
 from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
 from quantmesh.instruments.live_history import LiveHistoryService
+from quantmesh.instruments.monitoring import (
+    DecisionWatchObservation,
+    DecisionWatchService,
+    DecisionWatchState,
+    WatchConditionKind,
+)
 from quantmesh.instruments.proposals import PaperDecisionService
 from quantmesh.live.feed import LiveFeed
 
@@ -95,6 +101,13 @@ class DecisionPacketActionBody(BaseModel):
     side: Side | None = None
     quantity: float | None = Field(default=None, gt=0)
     limit_price: float | None = Field(default=None, gt=0)
+
+
+class DecisionWatchConditionBody(BaseModel):
+    """Browser selects fixed kinds only; observations remain server-derived."""
+
+    model_config = ConfigDict(extra="forbid")
+    kinds: tuple[WatchConditionKind, ...] = Field(min_length=1, max_length=4)
 
 
 def _unprocessable(detail: str) -> HTTPException:
@@ -292,6 +305,85 @@ def instrument_router() -> APIRouter:
                     reason_code=DEGRADED_REASON,
                 )
             return service.latest(packet_id)
+        except DecisionPacketNotFoundError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except (ValueError, OSError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @router.get(
+        "/decision-packets/{packet_id}/watch-conditions",
+        response_model=DecisionWatchState,
+        name="decision_packet_watch_conditions",
+    )
+    def decision_packet_watch_conditions(request: Request, packet_id: str) -> DecisionWatchState:
+        packets = getattr(request.app.state, "decision_packets", None)
+        watches = getattr(request.app.state, "packet_monitoring", None)
+        if not isinstance(packets, DecisionPacketStore) or not isinstance(
+            watches, DecisionWatchService
+        ):
+            raise HTTPException(status_code=404, detail="no decision watch service is attached")
+        try:
+            packets.get(packet_id)
+            registration, evaluation = watches.state(packet_id)
+            return DecisionWatchState(
+                packet_id=packet_id,
+                registration=registration,
+                evaluation=evaluation,
+            )
+        except DecisionPacketNotFoundError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except (ValueError, OSError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @router.post(
+        "/decision-packets/{packet_id}/watch-conditions",
+        response_model=DecisionWatchState,
+        name="check_decision_packet_watch_conditions",
+    )
+    def check_decision_packet_watch_conditions(
+        request: Request, packet_id: str, body: DecisionWatchConditionBody
+    ) -> DecisionWatchState:
+        _guard_json_origin(request, "decision watch conditions")
+        packets = getattr(request.app.state, "decision_packets", None)
+        watches = getattr(request.app.state, "packet_monitoring", None)
+        workspace_service = getattr(request.app.state, "instrument_workspace", None)
+        clock = getattr(request.app.state, "instrument_clock", None)
+        if (
+            not isinstance(packets, DecisionPacketStore)
+            or not isinstance(watches, DecisionWatchService)
+            or not callable(getattr(workspace_service, "render", None))
+        ):
+            raise HTTPException(status_code=404, detail="no decision watch service is attached")
+        try:
+            packet = packets.get(packet_id)
+            registration = watches.register(packet_id, body.kinds)
+            now = clock() if callable(clock) else datetime.now(UTC)
+            if not isinstance(now, datetime) or now.tzinfo is None:
+                raise ValueError("instrument clock is invalid")
+            workspace = workspace_service.render(
+                packet.instrument.venue, packet.instrument.symbol, packet.selected_range
+            )
+            live = workspace.live
+            observation = DecisionWatchObservation(
+                evaluated_at=now.astimezone(UTC),
+                price=live.last,
+                instrument=packet.instrument if live.last is not None else None,
+                source=live.source,
+                provenance=live.provenance,
+                data_time=live.data_time,
+                received_at=live.received_at,
+                sequence=live.sequence,
+                sequence_gap=live.sequence_gap,
+                candidate_forecast_artifact_id=(
+                    workspace.forecast.artifact_id if workspace.forecast else None
+                ),
+            )
+            evaluation = watches.check(registration.registration_id, observation)
+            return DecisionWatchState(
+                packet_id=packet_id,
+                registration=registration,
+                evaluation=evaluation,
+            )
         except DecisionPacketNotFoundError as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
         except (ValueError, OSError) as error:

@@ -76,9 +76,48 @@ def test_workspace_uses_the_bound_packet_service_and_save_refuses_expected_id_dr
     assert draft["as_of"] == SCENARIO.anchor.isoformat().replace("+00:00", "Z")
     assert mismatch.status_code == 409
     assert "expected" in mismatch.json()["detail"].lower()
-    assert app.state.decision_packets.latest(
-        Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS
-    ) is None
+    assert app.state.decision_packets.latest(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS) is None
+
+
+def test_packet_watch_conditions_accept_only_fixed_kinds_and_never_mutate_packet(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+
+    with TestClient(app) as client:
+        draft = _draft(client)
+        saved = _save(client, draft)
+        assert saved.status_code == 200
+        packet_id = saved.json()["packet_id"]
+        before = client.get(f"/api/decision-packets/{packet_id}").json()
+
+        initial = client.get(f"/api/decision-packets/{packet_id}/watch-conditions")
+        invalid = client.post(
+            f"/api/decision-packets/{packet_id}/watch-conditions",
+            json={"kinds": ["operator-price"]},
+        )
+        checked = client.post(
+            f"/api/decision-packets/{packet_id}/watch-conditions",
+            json={"kinds": ["entry_zone", "data_stale"]},
+        )
+        after = client.get(f"/api/decision-packets/{packet_id}").json()
+
+    assert initial.status_code == 200
+    assert initial.json()["registration"] is None
+    assert invalid.status_code == 422
+    assert checked.status_code == 200
+    assert [item["kind"] for item in checked.json()["registration"]["conditions"]] == [
+        "entry_zone",
+        "data_stale",
+    ]
+    assert after == before
+
+    restarted = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(restarted) as client:
+        reopened = client.get(f"/api/decision-packets/{packet_id}/watch-conditions")
+
+    assert reopened.status_code == 200
+    assert reopened.json() == checked.json()
 
 
 @pytest.mark.parametrize("disposition", ["reject", "watch"])
@@ -102,9 +141,7 @@ def test_reject_and_watch_are_exactly_reopenable_and_idempotent(
         }
         first = client.post(path, json=payload)
         replay = client.post(path, json=payload)
-        exact = client.get(
-            f"/api/decision-packets/{first.json()['packet']['packet_id']}"
-        )
+        exact = client.get(f"/api/decision-packets/{first.json()['packet']['packet_id']}")
 
     assert first.status_code == 200
     assert replay.status_code == 200
@@ -145,9 +182,7 @@ def test_stale_packet_blocks_paper_without_creating_a_proposal(tmp_path: Path) -
 def test_untrusted_packet_blocks_paper_without_creating_a_proposal(tmp_path: Path) -> None:
     app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
     artifact = next(
-        item
-        for item in app.state.price_forecasts.all()
-        if item.instrument.symbol == "NVDA"
+        item for item in app.state.price_forecasts.all() if item.instrument.symbol == "NVDA"
     )
     untrusted = artifact.model_copy(
         update={"eligible": False, "blockers": ("quality evaluation failed",)}
@@ -227,11 +262,14 @@ def test_packet_bound_paper_action_never_confirms_and_risk_refusal_stays_bound(
     assert refused.status_code == 409
     assert refused.json()["proposal"]["status"] == "rejected"
     assert refused.json()["order"]["status"] == "rejected"
-    assert result["packet"]["packet_id"] == app.state.decision_packets.latest(
-        Venue.MOOMOO,
-        "NVDA",
-        HistoryRange.SIX_MONTHS,
-    ).packet_id
+    assert (
+        result["packet"]["packet_id"]
+        == app.state.decision_packets.latest(
+            Venue.MOOMOO,
+            "NVDA",
+            HistoryRange.SIX_MONTHS,
+        ).packet_id
+    )
 
 
 def test_legacy_proposal_route_requires_an_exact_packet_artifact_binding(
@@ -300,9 +338,7 @@ def test_clean_demo_restart_reopens_identical_packet_bytes(tmp_path: Path) -> No
 
     restarted = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
     with TestClient(restarted) as client:
-        reopened = client.get(
-            f"/api/decision-packets/{action['packet']['packet_id']}"
-        )
+        reopened = client.get(f"/api/decision-packets/{action['packet']['packet_id']}")
 
     assert reopened.status_code == 200
     assert reopened.json() == action["packet"]
@@ -342,15 +378,14 @@ def test_advancing_workspace_clock_saves_exact_draft_then_refreshes_fresh_alongs
 
     assert reopened.status_code == 200
     body = reopened.json()
-    refreshed_at = (SCENARIO.anchor + timedelta(minutes=5)).isoformat().replace(
-        "+00:00", "Z"
-    )
+    refreshed_at = (SCENARIO.anchor + timedelta(minutes=5)).isoformat().replace("+00:00", "Z")
     assert body["generated_at"] == refreshed_at
     assert body["history"]["as_of"] == refreshed_at
     assert body["decision"]["draft"]["as_of"] == refreshed_at
     assert body["decision"]["draft"]["packet_id"] != saved["packet_id"]
-    assert body["decision"]["draft"]["evidence"]["forecast_generated_at"] == (
-        body["forecast"]["generated_at"]
+    assert (
+        body["decision"]["draft"]["evidence"]["forecast_generated_at"]
+        == (body["forecast"]["generated_at"])
     )
     assert body["decision"]["latest"] == saved
 
@@ -617,9 +652,10 @@ def test_saved_packet_that_naturally_expires_refuses_before_proposal_write(
     assert "expired" in refused.json()["detail"].lower()
     assert app.state.paper_decisions.ledger.all() == ()
     assert app.state.decision_packets.intent_path.read_bytes() == intent_before
-    assert app.state.decision_packets.latest(
-        Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS
-    ).packet_id == parent["packet_id"]
+    assert (
+        app.state.decision_packets.latest(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS).packet_id
+        == parent["packet_id"]
+    )
 
 
 def test_partial_packet_bound_configuration_still_refuses_bare_artifact(
@@ -670,9 +706,7 @@ def test_registry_drift_between_preflight_and_propose_has_zero_external_writes(
         original = app.state.paper_decisions._forecast_registry.get(  # noqa: SLF001
             parent["evidence"]["forecast_artifact_id"]
         )
-        drifted = original.model_copy(
-            update={"model_version": f"{original.model_version}-drift"}
-        )
+        drifted = original.model_copy(update={"model_version": f"{original.model_version}-drift"})
 
         class DriftingRegistry:
             calls = 0

@@ -47,6 +47,14 @@ operator disposition, while allowing restart-safe replay.
    scalar-list leaves, and recomputes the value digest.  Existing document,
    experiment and audit citation shapes and serialization remain unchanged.
 
+10. Local monitoring is a separate immutable reverse binding from one exact
+    persisted packet to one fixed condition set. Each evaluation atomically
+    persists its complete local observation and typed results; it never mutates
+    packet, Copilot, proposal, risk, confirmation, order or position authority.
+    Browser requests select only fixed condition kinds. Price and forecast facts
+    are constructed by the local workspace/runtime, and trigger identities are
+    content-addressed so terminal conditions replay at most once.
+
 ## Consequences
 
 DecisionPacket replay is content-addressed and fails closed if a persisted
