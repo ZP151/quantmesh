@@ -1,7 +1,9 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: active (Slices 1–4 complete; final license closure and PR gate pending)
+- Status: completed (2026-09-04; [PR #128](https://github.com/ZP151/quantmesh/pull/128)
+  open for human review)
 - Started: 2026-09-02
+- Completed: 2026-09-04
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
 - Branch: `codex/0027-evidence-backed-decision-copilot` from
   `origin/main` at `f77b565`
@@ -514,3 +516,20 @@ the 76-package cross-platform closure and exits `0`; the exact release/security
 selection passes `28` tests in `0.35s`, with targeted Ruff and diff checks green.
 This is audit-only drift; no project dependency constraint, application source
 or runtime behavior changed.
+
+## Final PR evidence — 2026-09-04
+
+The definitive Node 22.12.0 fresh-clone release gate passed all 18 steps on
+`e9b4f766e21e157fbdfe4a5cfd4012ea5af5b9f2`, exit `0`. It installed the full
+release extras into a new venv, passed Ruff and trusted-data tooling, classified
+the Python 76-package and frontend 646-package locked closures, passed
+`pip-audit` and `npm audit --audit-level=high`, reproduced the packaged bundle,
+and passed frontend Vitest. The full Python suite reported `3220 passed, 9
+skipped` in `2846.8s`; the integrated golden path passed `60/60` checks in
+`75.9s`. The clone was clean at both boundaries.
+
+[PR #128](https://github.com/ZP151/quantmesh/pull/128) is the single final
+integration and human-review boundary and links issue #122. Iteration 0027 is
+complete at that boundary; merge remains a repository-owner decision. No
+Provider/OpenD/model call, real trade, other symbol, external notification or
+0021 soak state was touched.

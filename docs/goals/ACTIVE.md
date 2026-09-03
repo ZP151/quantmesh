@@ -1,6 +1,7 @@
 # Active Goal
 
-- Status: active — iteration 0027 Slices 1–4 and license closure complete; final PR gate pending
+- Status: complete — iteration 0027 verified at `e9b4f766` and opened as
+  [PR #128](https://github.com/ZP151/quantmesh/pull/128)
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -19,11 +20,10 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: run only the final 0027 PR gate. Slices 1–4 and the approved
-  Python release-license closure repair are complete; do not add another product
-  slice or expand into exit orders, a performance dashboard, AI review,
-  another model framework, Provider/OpenD, another symbol, external notification
-  or any 0021 soak work.
+- Current frontier: delivery is complete and awaiting human review in PR #128.
+  Do not add another product slice or expand into exit orders, a performance
+  dashboard, AI review, another model framework, Provider/OpenD, another symbol,
+  external notification or any 0021 soak work.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.
@@ -280,6 +280,19 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   classifies all 70 installed members of the 76-package closure and exits `0`;
   the exact release/security selection passes `28` tests in `0.35s`. No
   application dependency or runtime behavior changed.
+
+## Final PR checkpoint — 2026-09-04
+
+- The definitive fresh-clone gate passed all 18 steps on
+  `e9b4f766e21e157fbdfe4a5cfd4012ea5af5b9f2` with Node 22.12.0.
+- The full Python suite passed `3220` tests with `9` skips in `2846.8s`;
+  golden path passed all `60` checks in `75.9s`. Ruff, trusted-data tooling,
+  Python/frontend license closures, `pip-audit`, `npm audit`, bundle freshness,
+  Vitest and clean-checkout proof all passed. The clone was clean at start and
+  end, and the gate exited `0`.
+- Final review boundary is [PR #128](https://github.com/ZP151/quantmesh/pull/128),
+  linked to issue #122. No Provider/OpenD/model call, real trade, other symbol,
+  external notification or 0021 soak state was touched.
 
 ## Historical delivery record
 
