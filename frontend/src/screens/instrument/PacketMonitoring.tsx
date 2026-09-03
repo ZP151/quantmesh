@@ -59,6 +59,10 @@ export function PacketMonitoring({ contextKey, packetId }: PacketMonitoringProps
       const current = currentRequestContext.current
       if (current.contextKey !== requested.contextKey || current.packetId !== requested.packetId) return
       queryClient.setQueryData(['packet-monitoring', requested.contextKey, requested.packetId], state)
+      void queryClient.invalidateQueries({
+        exact: true,
+        queryKey: ['packet-outcome-review', requested.contextKey, requested.packetId],
+      })
     },
     onError: (_error, requested) => setFailedRequest({
       contextKey: requested.contextKey,

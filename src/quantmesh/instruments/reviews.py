@@ -17,6 +17,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from quantmesh.domain.models import Side
 from quantmesh.domain.orders import Order, OrderStatus, validate_order_replay
 from quantmesh.instruments.contracts import (
     CoverageSnapshot,
@@ -32,13 +33,16 @@ from quantmesh.instruments.contracts import (
 from quantmesh.instruments.decision_packets import (
     DecisionPacketNotFoundError,
     DecisionPacketStore,
+    decision_packet_id,
+    validate_decision_packet_lineage,
 )
 from quantmesh.instruments.monitoring import (
     DecisionWatchEvaluation,
     DecisionWatchRegistration,
     DecisionWatchStore,
+    validate_watch_replay,
 )
-from quantmesh.instruments.proposals import ProposalLedger
+from quantmesh.instruments.proposals import ProposalLedger, validate_proposal_replay
 from quantmesh.persistence.jsonl import JsonlStore
 
 _LOCKS: dict[str, threading.RLock] = {}
@@ -57,6 +61,69 @@ def _utc(value: datetime, label: str) -> datetime:
     if value.tzinfo is None:
         raise ValueError(f"{label} time must be timezone-aware")
     return value.astimezone(UTC)
+
+
+def _validate_packet_lineage(root: DecisionPacket, packet: DecisionPacket) -> None:
+    try:
+        validate_decision_packet_lineage((root, packet))
+    except ValueError as error:
+        label = "root" if root.packet_id != decision_packet_id(root) else "action"
+        raise ValueError(
+            f"embedded {label} packet identity or lineage is invalid: {error}"
+        ) from error
+
+
+def _validate_proposal_binding(
+    root: DecisionPacket, packet: DecisionPacket, proposal: PaperProposal
+) -> None:
+    validate_proposal_replay(proposal)
+    evidence = root.evidence
+    if (
+        proposal.id != packet.proposal_id
+        or proposal.instrument.model_dump(mode="json") != packet.instrument.model_dump(mode="json")
+        or proposal.artifact_id != evidence.forecast_artifact_id
+        or proposal.dataset_id != evidence.forecast_dataset_id
+        or proposal.dataset_revision != evidence.forecast_dataset_revision
+        or proposal.forecast_generated_at != evidence.forecast_generated_at
+        or proposal.model_version != evidence.forecast_model_version
+        or proposal.config_digest != evidence.forecast_config_digest
+        or proposal.history_digest != evidence.forecast_history_digest
+        or proposal.created_at < root.created_at
+        or proposal.created_at > packet.created_at
+    ):
+        raise ValueError("proposal does not match immutable action packet evidence")
+
+
+def _validate_order_binding(proposal: PaperProposal, order: Order) -> None:
+    validate_order_replay(order)
+    if (
+        order.order_id != proposal.order_id
+        or order.idempotency_key != f"proposal:{proposal.id}"
+        or order.instrument.model_dump(mode="json") != proposal.instrument.model_dump(mode="json")
+        or order.side is not proposal.side
+        or not math.isclose(order.quantity, proposal.quantity)
+        or order.limit_price != proposal.limit_price
+        or order.created_at < proposal.created_at
+    ):
+        raise ValueError("order does not match exact proposal")
+
+
+def _path_digest_payload(path: OutcomePath) -> dict[str, object]:
+    return {
+        "dataset_id": path.dataset_id,
+        "dataset_revision": path.dataset_revision,
+        "manifest_id": path.manifest_id,
+        "quality_evaluation_id": path.quality_evaluation_id,
+        "source": path.source,
+        "license": path.license,
+        "generated_at": path.generated_at.isoformat() if path.generated_at else None,
+        "interval": path.interval,
+        "calendar": path.calendar,
+        "adjustment": path.adjustment,
+        "coverage": path.coverage.model_dump(mode="json") if path.coverage else None,
+        "expected_session_times": [item.isoformat() for item in path.expected_session_times],
+        "bars": [bar.model_dump(mode="json") for bar in path.bars],
+    }
 
 
 class _Contract(BaseModel):
@@ -95,6 +162,7 @@ class OutcomePath(_Contract):
     status: Literal["complete", "partial", "pending", "unavailable"]
     target_at: datetime | None = None
     cutoff_at: datetime
+    expected_session_times: tuple[datetime, ...] = ()
     bars: tuple[HistoricalBar, ...] = ()
     dataset_id: str | None = None
     dataset_revision: int | None = Field(default=None, ge=1)
@@ -114,6 +182,14 @@ class OutcomePath(_Contract):
     @classmethod
     def times_are_utc(cls, value: datetime | None) -> datetime | None:
         return None if value is None else _utc(value, "outcome path")
+
+    @field_validator("expected_session_times")
+    @classmethod
+    def expected_times_are_utc(cls, value: tuple[datetime, ...]) -> tuple[datetime, ...]:
+        normalized = tuple(_utc(item, "expected outcome session") for item in value)
+        if normalized != tuple(sorted(set(normalized))):
+            raise ValueError("expected outcome sessions must be unique and chronological")
+        return normalized
 
     @model_validator(mode="after")
     def path_shape(self) -> OutcomePath:
@@ -137,8 +213,29 @@ class OutcomePath(_Contract):
                 raise ValueError("outcome bars must be strictly chronological")
             if any(bar.timestamp > self.cutoff_at for bar in self.bars):
                 raise ValueError("outcome path cannot contain future knowledge")
+            if any(bar.is_live_tail for bar in self.bars):
+                raise ValueError("outcome path cannot contain a live tail")
+            digest = hashlib.sha256(_canonical(_path_digest_payload(self))).hexdigest()
+            if self.path_digest != digest:
+                raise ValueError("outcome path digest does not match embedded evidence")
         elif any(value is not None for value in provenance):
             raise ValueError("empty outcome path cannot carry fabricated provenance")
+        if self.target_at is not None:
+            if (
+                len(self.expected_session_times) != 30
+                or self.expected_session_times[-1] != self.target_at
+            ):
+                raise ValueError("outcome path requires the exact 30-session forecast timestamps")
+        elif self.expected_session_times:
+            raise ValueError("outcome sessions require a pinned target")
+        actual = tuple(bar.timestamp for bar in self.bars)
+        expected_by_cutoff = tuple(
+            timestamp for timestamp in self.expected_session_times if timestamp <= self.cutoff_at
+        )
+        if self.status in {"complete", "pending"} and actual != expected_by_cutoff:
+            raise ValueError("outcome path does not match expected completed sessions")
+        if self.status == "complete" and actual != self.expected_session_times:
+            raise ValueError("complete outcome path must contain all 30 expected sessions")
         if (self.manifest_id is None) != (self.quality_evaluation_id is None):
             raise ValueError("outcome manifest and quality IDs must be present together")
         if self.status in {"partial", "unavailable"}:
@@ -219,9 +316,9 @@ class PaperOutcome(_Contract):
     @model_validator(mode="after")
     def exact_bindings(self) -> PaperOutcome:
         if self.order is not None:
-            validate_order_replay(self.order)
-            if self.proposal is None or self.order.order_id != self.proposal.order_id:
+            if self.proposal is None:
                 raise ValueError("paper outcome order differs from its proposal")
+            _validate_order_binding(self.proposal, self.order)
         if self.state in {"not_applicable", "watch_only"} and (
             self.proposal is not None or self.order is not None
         ):
@@ -231,6 +328,40 @@ class PaperOutcome(_Contract):
                 raise ValueError("blocked paper outcome requires an exact reason")
         elif self.reason is not None:
             raise ValueError("non-blocked paper outcome cannot carry a reason")
+        expected = {
+            "pending_no_order": (
+                self.proposal is not None
+                and self.proposal.status is ProposalStatus.PENDING
+                and self.order is None
+            ),
+            "blocked": (
+                self.proposal is not None
+                and self.proposal.status is ProposalStatus.BLOCKED
+                and self.order is None
+            ),
+            "risk_rejected": (
+                self.proposal is not None
+                and self.proposal.status is ProposalStatus.REJECTED
+                and self.order is not None
+                and self.order.status is OrderStatus.REJECTED
+                and not self.order.fills
+            ),
+            "accepted_unfilled": (
+                self.proposal is not None
+                and self.proposal.status is ProposalStatus.CONFIRMED
+                and self.order is not None
+                and self.order.status in {OrderStatus.ACCEPTED, OrderStatus.PENDING}
+                and not self.order.fills
+            ),
+            "filled_open": (
+                self.proposal is not None
+                and self.proposal.status is ProposalStatus.CONFIRMED
+                and self.order is not None
+                and bool(self.order.fills)
+            ),
+        }
+        if self.state in expected and not expected[self.state]:
+            raise ValueError("paper outcome state differs from proposal/order evidence")
         return self
 
 
@@ -241,6 +372,9 @@ class DecisionOutcomeSnapshot(_Contract):
     packet: DecisionPacket
     root_packet: DecisionPacket
     horizon_target_at: datetime | None = None
+    attribution_policy_version: Literal["strict-close-v1"]
+    attribution_basis: Literal["completed_daily_close"]
+    attribution_equality: Literal["equality_does_not_cross"]
     evidence_status: Literal["complete", "partial", "pending", "unavailable"]
     path: OutcomePath
     scenarios: tuple[ScenarioObservation, ScenarioObservation, ScenarioObservation]
@@ -266,14 +400,70 @@ class DecisionOutcomeSnapshot(_Contract):
 
     @model_validator(mode="after")
     def canonical_outcome(self) -> DecisionOutcomeSnapshot:
+        _validate_packet_lineage(self.root_packet, self.packet)
+        if self.evaluated_at < self.packet.created_at or self.evaluated_at < self.root_packet.as_of:
+            raise ValueError("outcome evaluation predates its exact packet evidence")
         if self.packet.packet_id != self.packet_id:
             raise ValueError("outcome packet binding differs")
         if self.root_packet.disposition is not DecisionDisposition.DRAFT:
             raise ValueError("outcome root packet must be the draft analysis")
         if self.path.status != self.evidence_status:
             raise ValueError("outcome evidence status must match its path")
+        if self.horizon_target_at != self.path.target_at:
+            raise ValueError("outcome horizon must match its exact path target")
+        if self.path.cutoff_at > self.evaluated_at:
+            raise ValueError("outcome path cutoff exceeds its evaluation boundary")
+        if self.path.generated_at is not None and self.path.generated_at > self.evaluated_at:
+            raise ValueError("outcome path was generated after its evaluation boundary")
         if tuple(item.kind for item in self.scenarios) != ("bull", "base", "bear"):
             raise ValueError("outcome scenarios must be ordered bull, base, bear")
+        if any(
+            observed_at is not None and observed_at > self.path.cutoff_at
+            for scenario in self.scenarios
+            for observed_at in (scenario.threshold_at, scenario.invalidation_at)
+        ):
+            raise ValueError("scenario observation exceeds its exact path cutoff")
+        if self.paper.proposal is not None:
+            _validate_proposal_binding(self.root_packet, self.packet, self.paper.proposal)
+        if self.paper.order is not None:
+            if self.paper.proposal is None:
+                raise ValueError("outcome order has no proposal")
+            _validate_order_binding(self.paper.proposal, self.paper.order)
+            if self.paper.order.created_at > self.evaluated_at or any(
+                event.timestamp > self.evaluated_at for event in self.paper.order.events
+            ):
+                raise ValueError("order evidence exceeds its evaluation boundary")
+        if self.monitoring.registration is not None:
+            if self.monitoring.registration.packet_id != self.packet_id:
+                raise ValueError("outcome monitoring registration differs from action packet")
+            validate_watch_replay(
+                self.monitoring.registration,
+                self.monitoring.evaluations,
+            )
+            exact_events = tuple(
+                dict.fromkeys(
+                    result.event_id
+                    for evaluation in self.monitoring.evaluations
+                    for result in evaluation.results
+                    if result.event_id is not None
+                )
+            )
+            if self.monitoring.event_ids != exact_events:
+                raise ValueError("outcome monitoring event identities differ from evaluations")
+        elif self.monitoring.evaluations:
+            raise ValueError("outcome monitoring evaluations have no registration")
+        if any(
+            evaluation.observation.evaluated_at > self.evaluated_at
+            or any(
+                timestamp is not None and timestamp > evaluation.observation.evaluated_at
+                for timestamp in (
+                    evaluation.observation.data_time,
+                    evaluation.observation.received_at,
+                )
+            )
+            for evaluation in self.monitoring.evaluations
+        ):
+            raise ValueError("outcome monitoring evidence exceeds its evaluation boundary")
         payload = self.model_dump(mode="json", exclude={"outcome_id"})
         if self.outcome_id != _identity("outcome", payload):
             raise ValueError("decision outcome identity does not match canonical content")
@@ -315,6 +505,18 @@ class DecisionOutcomeReviewState(_Contract):
     root_packet: DecisionPacket
     outcome: DecisionOutcomeSnapshot
     review: DecisionReviewRecord | None = None
+
+    @model_validator(mode="after")
+    def exact_authoritative_packets(self) -> DecisionOutcomeReviewState:
+        if self.outcome.packet_id != self.packet_id or self.outcome.root_packet != self.root_packet:
+            raise ValueError("outcome review state packet binding differs")
+        if self.review is not None and (
+            self.review.packet_id != self.packet_id
+            or self.review.outcome.packet != self.outcome.packet
+            or self.review.outcome.root_packet != self.root_packet
+        ):
+            raise ValueError("saved review packet lineage differs from authoritative packets")
+        return self
 
 
 def _root_lock(root: Path) -> threading.RLock:
@@ -498,22 +700,26 @@ class DecisionOutcomeReviewService:
 
     def _forecast_target(
         self, root: DecisionPacket
-    ) -> tuple[PriceForecastArtifact | None, datetime | None, str | None]:
+    ) -> tuple[PriceForecastArtifact | None, tuple[datetime, ...], str | None]:
         artifact_id = root.evidence.forecast_artifact_id
         if artifact_id is None or self.forecast_registry is None:
-            return None, None, "exact 30-session forecast binding is unavailable"
+            return None, (), "exact 30-session forecast binding is unavailable"
         try:
             artifact = self.forecast_registry.get(artifact_id)
             self._validate_forecast_binding(root, artifact)
         except (ValueError, OSError) as error:
-            return None, None, f"exact forecast evidence is unavailable: {error}"
+            return None, (), f"exact forecast evidence is unavailable: {error}"
         path = next((item for item in artifact.paths if item.sessions == 30), None)
         if path is None or len(path.points) != 30:
-            return artifact, None, "exact 30-session forecast horizon is unavailable"
-        return artifact, path.points[-1].timestamp, None
+            return artifact, (), "exact 30-session forecast horizon is unavailable"
+        return artifact, tuple(point.timestamp for point in path.points), None
 
     @staticmethod
-    def _path_digest(series: HistoricalSeries, bars: tuple[HistoricalBar, ...]) -> str:
+    def _path_digest(
+        series: HistoricalSeries,
+        bars: tuple[HistoricalBar, ...],
+        expected_session_times: tuple[datetime, ...],
+    ) -> str:
         payload = {
             "dataset_id": series.dataset_id,
             "dataset_revision": series.dataset_revision,
@@ -526,6 +732,7 @@ class DecisionOutcomeReviewService:
             "calendar": series.calendar,
             "adjustment": series.adjustment,
             "coverage": series.coverage.model_dump(mode="json"),
+            "expected_session_times": [item.isoformat() for item in expected_session_times],
             "bars": [bar.model_dump(mode="json") for bar in bars],
         }
         return hashlib.sha256(_canonical(payload)).hexdigest()
@@ -534,16 +741,18 @@ class DecisionOutcomeReviewService:
         self,
         root: DecisionPacket,
         artifact: PriceForecastArtifact | None,
-        target_at: datetime | None,
+        expected_session_times: tuple[datetime, ...],
         target_error: str | None,
         now: datetime,
     ) -> OutcomePath:
+        target_at = expected_session_times[-1] if expected_session_times else None
         query_cutoff = min(now, target_at) if target_at is not None else now
         if target_error is not None or artifact is None or target_at is None:
             return OutcomePath(
                 status="unavailable",
                 cutoff_at=root.as_of,
                 target_at=target_at,
+                expected_session_times=expected_session_times,
                 reason=target_error or "exact forecast evidence is unavailable",
             )
         if self.history is None:
@@ -551,6 +760,7 @@ class DecisionOutcomeReviewService:
                 status="unavailable",
                 cutoff_at=target_at if now >= target_at else root.as_of,
                 target_at=target_at,
+                expected_session_times=expected_session_times,
                 reason="local daily outcome history is unavailable",
             )
         try:
@@ -565,6 +775,7 @@ class DecisionOutcomeReviewService:
                 status="unavailable",
                 cutoff_at=target_at if now >= target_at else root.as_of,
                 target_at=target_at,
+                expected_session_times=expected_session_times,
                 reason=f"local daily outcome history is unavailable: {error}",
             )
         if (
@@ -577,22 +788,60 @@ class DecisionOutcomeReviewService:
                 status="unavailable",
                 cutoff_at=target_at if now >= target_at else root.as_of,
                 target_at=target_at,
+                expected_session_times=expected_session_times,
                 reason="local outcome history does not match packet instrument/calendar",
+            )
+        if series.generated_at > now:
+            return OutcomePath(
+                status="unavailable",
+                cutoff_at=target_at if now >= target_at else root.as_of,
+                target_at=target_at,
+                expected_session_times=expected_session_times,
+                reason="local outcome history was generated after the review clock",
+            )
+        if series.as_of > now or any(bar.timestamp > query_cutoff for bar in series.bars):
+            return OutcomePath(
+                status="unavailable",
+                cutoff_at=target_at if now >= target_at else root.as_of,
+                target_at=target_at,
+                expected_session_times=expected_session_times,
+                reason="local outcome history contains future knowledge",
+            )
+        if any(bar.is_live_tail for bar in series.bars):
+            return OutcomePath(
+                status="unavailable",
+                cutoff_at=target_at if now >= target_at else root.as_of,
+                target_at=target_at,
+                expected_session_times=expected_session_times,
+                reason="local outcome history contains a live tail",
             )
         bars = tuple(bar for bar in series.bars if root.as_of < bar.timestamp <= query_cutoff)
         if not bars:
             if now < target_at:
-                return OutcomePath(status="pending", cutoff_at=root.as_of, target_at=target_at)
+                return OutcomePath(
+                    status="pending",
+                    cutoff_at=root.as_of,
+                    target_at=target_at,
+                    expected_session_times=expected_session_times,
+                )
             return OutcomePath(
                 status="unavailable",
                 cutoff_at=target_at,
                 target_at=target_at,
+                expected_session_times=expected_session_times,
                 reason="no completed post-decision daily bars reach the pinned horizon",
             )
         reason = None
         status: Literal["complete", "partial", "pending", "unavailable"]
         relevant_gaps = tuple(item for item in series.gaps if root.as_of < item <= query_cutoff)
-        if relevant_gaps or series.duplicates:
+        actual_times = tuple(bar.timestamp for bar in bars)
+        expected_completed = tuple(
+            timestamp for timestamp in expected_session_times if timestamp <= query_cutoff
+        )
+        if actual_times != expected_completed:
+            status = "partial"
+            reason = "local daily outcome path is missing an expected 30-session timestamp"
+        elif relevant_gaps or series.duplicates:
             status = "partial"
             reason = "local daily outcome path has a gap or duplicate"
         elif now < target_at:
@@ -606,6 +855,7 @@ class DecisionOutcomeReviewService:
             status=status,
             target_at=target_at,
             cutoff_at=bars[-1].timestamp,
+            expected_session_times=expected_session_times,
             bars=bars,
             dataset_id=series.dataset_id,
             dataset_revision=series.dataset_revision,
@@ -618,7 +868,7 @@ class DecisionOutcomeReviewService:
             calendar=series.calendar,
             adjustment=series.adjustment,
             coverage=series.coverage,
-            path_digest=self._path_digest(series, bars),
+            path_digest=self._path_digest(series, bars, expected_session_times),
             reason=reason,
         )
 
@@ -694,27 +944,6 @@ class DecisionOutcomeReviewService:
             return "target_first"
         return "stop_first"
 
-    @staticmethod
-    def _validate_proposal_binding(
-        root: DecisionPacket, packet: DecisionPacket, proposal: PaperProposal
-    ) -> None:
-        evidence = root.evidence
-        if (
-            proposal.id != packet.proposal_id
-            or proposal.instrument.model_dump(mode="json")
-            != packet.instrument.model_dump(mode="json")
-            or proposal.artifact_id != evidence.forecast_artifact_id
-            or proposal.dataset_id != evidence.forecast_dataset_id
-            or proposal.dataset_revision != evidence.forecast_dataset_revision
-            or proposal.forecast_generated_at != evidence.forecast_generated_at
-            or proposal.model_version != evidence.forecast_model_version
-            or proposal.config_digest != evidence.forecast_config_digest
-            or proposal.history_digest != evidence.forecast_history_digest
-            or proposal.created_at < root.created_at
-            or proposal.created_at > packet.created_at
-        ):
-            raise ValueError("proposal does not match immutable action packet evidence")
-
     def _paper(self, root: DecisionPacket, packet: DecisionPacket, now: datetime) -> PaperOutcome:
         if packet.disposition is DecisionDisposition.REJECT:
             return PaperOutcome(state="not_applicable")
@@ -730,7 +959,7 @@ class DecisionOutcomeReviewService:
             return PaperOutcome(
                 state="unavailable", reason=f"exact proposal is unavailable: {error}"
             )
-        self._validate_proposal_binding(root, packet, proposal)
+        _validate_proposal_binding(root, packet, proposal)
         if proposal.created_at > now:
             raise ValueError("proposal postdates the review clock")
         if proposal.status is ProposalStatus.PENDING:
@@ -755,17 +984,8 @@ class DecisionOutcomeReviewService:
                 proposal=proposal,
                 reason=f"exact order is unavailable: {error}",
             )
-        validate_order_replay(order)
-        if (
-            order.idempotency_key != f"proposal:{proposal.id}"
-            or order.instrument.model_dump(mode="json")
-            != proposal.instrument.model_dump(mode="json")
-            or order.side is not proposal.side
-            or not math.isclose(order.quantity, proposal.quantity)
-            or order.limit_price != proposal.limit_price
-            or order.created_at > now
-            or any(event.timestamp > now for event in order.events)
-        ):
+        _validate_order_binding(proposal, order)
+        if order.created_at > now or any(event.timestamp > now for event in order.events):
             raise ValueError("order does not match exact proposal or review clock")
         if proposal.status is ProposalStatus.REJECTED:
             if order.status is not OrderStatus.REJECTED or order.fills:
@@ -835,16 +1055,21 @@ class DecisionOutcomeReviewService:
         )
         fills = paper.order.fills if paper.order is not None else []
         if fills:
+            direction = 1.0 if paper.order.side is Side.BUY else -1.0
             quantity = sum(fill.quantity for fill in fills)
             average = sum(fill.quantity * fill.price for fill in fills) / quantity
             deviation = OutcomeMetric(
                 status="available",
-                value=(average - root.risk_plan.entry_price) / root.risk_plan.risk_per_unit,
+                value=(average - root.risk_plan.entry_price)
+                * direction
+                / root.risk_plan.risk_per_unit,
             )
             mark = (
                 OutcomeMetric(
                     status="available",
-                    value=(path.bars[-1].close - average) / root.risk_plan.risk_per_unit,
+                    value=(path.bars[-1].close - average)
+                    * direction
+                    / root.risk_plan.risk_per_unit,
                 )
                 if path.bars
                 else _unavailable("filled entry has no valid local terminal mark")
@@ -861,8 +1086,9 @@ class DecisionOutcomeReviewService:
         root, packet = self._lineage(packet_id)
         if now < packet.created_at or now < root.as_of:
             raise ValueError("outcome review clock cannot predate the decision packet")
-        artifact, target_at, target_error = self._forecast_target(root)
-        path = self._path(root, artifact, target_at, target_error, now)
+        artifact, expected_session_times, target_error = self._forecast_target(root)
+        target_at = expected_session_times[-1] if expected_session_times else None
+        path = self._path(root, artifact, expected_session_times, target_error, now)
         paper = self._paper(root, packet, now)
         monitoring = self._monitoring(packet, now)
         gross, deviation, mark, realized = self._metrics(root, path, paper)
@@ -885,6 +1111,9 @@ class DecisionOutcomeReviewService:
             packet=packet,
             root_packet=root,
             horizon_target_at=target_at,
+            attribution_policy_version="strict-close-v1",
+            attribution_basis="completed_daily_close",
+            attribution_equality="equality_does_not_cross",
             evidence_status=path.status,
             path=path,
             scenarios=scenarios,
@@ -957,11 +1186,14 @@ class DecisionOutcomeReviewService:
             state = self._compose(packet_id, now)
             if state.outcome.outcome_id != expected_outcome_id:
                 raise ValueError("expected outcome identity drifted before review save")
+            final_state = self._compose(packet_id, now)
+            if final_state.outcome != state.outcome:
+                raise ValueError("source evidence changed before review append")
             provisional = DecisionReviewRecord.model_construct(
                 review_id="review-" + "0" * 24,
                 packet_id=packet_id,
                 reviewed_at=now,
-                outcome=state.outcome,
+                outcome=final_state.outcome,
                 classification=selected,
                 note=normalized_note,
             )
@@ -974,4 +1206,4 @@ class DecisionOutcomeReviewService:
                 }
             )
             saved = self.review_store.record(record)
-            return state.model_copy(update={"review": saved})
+            return final_state.model_copy(update={"review": saved})

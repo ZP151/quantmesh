@@ -17,6 +17,7 @@ import hashlib
 import json
 import socket
 import threading
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
@@ -63,6 +64,30 @@ class _DemoStation:
     app: FastAPI
     root: Path
     url: str
+
+
+@contextmanager
+def _serve_restarted_demo(root: Path):
+    listener = socket.socket()
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listener.bind((HOST, 0))
+    listener.listen(128)
+    port = listener.getsockname()[1]
+    app = create_demo_app(root=root, host=HOST)
+    server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=port, log_level="warning"))
+    thread = threading.Thread(
+        target=server.run,
+        kwargs={"sockets": [listener]},
+        daemon=True,
+    )
+    thread.start()
+    try:
+        _wait_for_server(server)
+        yield _DemoStation(app=app, root=root, url=f"http://{HOST}:{port}")
+    finally:
+        server.should_exit = True
+        thread.join(timeout=15)
+        listener.close()
 
 
 class _MissingSdkTransport:
@@ -190,7 +215,11 @@ def _decision_packet_id(page) -> str:
 
 def _proposal_id(page) -> str:
     proposal_id = (
-        page.get_by_text("Proposal ID", exact=True).locator("..").locator("dd").inner_text()
+        page.get_by_label("Decision rail")
+        .get_by_text("Proposal ID", exact=True)
+        .locator("..")
+        .locator("dd")
+        .inner_text()
     )
     assert proposal_id.startswith("proposal-")
     return proposal_id
@@ -738,7 +767,6 @@ def test_nvda_filled_open_packet_review_saves_and_reopens_exact_identity(
     _reset_demo(page, base_url)
     page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
     page.get_by_role("heading", name="NVDA", exact=True).wait_for()
-    workspace_url = page.url
 
     page.get_by_label("Optional limit").fill("")
     page.get_by_role("button", name="Create paper proposal").click()
@@ -780,15 +808,20 @@ def test_nvda_filled_open_packet_review_saves_and_reopens_exact_identity(
     assert body["outcome"]["paper"]["state"] == "filled_open"
     assert body["outcome"]["realized_paper_r"]["status"] == "unavailable"
     review_id = body["review"]["review_id"]
+    outcome_id = body["outcome"]["outcome_id"]
     review.get_by_text(review_id, exact=True).wait_for()
 
-    page.reload()
-    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
-    assert page.url == workspace_url
-    reopened = page.get_by_test_id("packet-outcome-review")
-    reopened.get_by_text("Review saved", exact=True).wait_for()
-    assert reopened.get_by_text(review_id, exact=True).is_visible()
-    assert _decision_packet_id(page) == packet_id
+    with _serve_restarted_demo(demo_station.root) as restarted:
+        replay = restarted.app.state.packet_reviews.preview(packet_id)
+        assert replay.review.review_id == review_id
+        assert replay.review.outcome.outcome_id == outcome_id
+        page.goto(f"{restarted.url}/app/instruments/moomoo/NVDA?range=6m")
+        page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+        reopened = page.get_by_test_id("packet-outcome-review")
+        reopened.get_by_text("Review saved", exact=True).wait_for()
+        assert reopened.get_by_text(review_id, exact=True).is_visible()
+        assert reopened.get_by_text(outcome_id, exact=True).is_visible()
+        assert _decision_packet_id(page) == packet_id
 
 
 def test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order(

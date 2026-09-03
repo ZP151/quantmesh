@@ -142,9 +142,7 @@ class DecisionPacketStore:
             id_label="decision action intent",
             key=lambda intent: intent.intent_id,
             extra_validate=self._validate_intent_identity,
-            secondary_keys=(
-                ("decision packet parent id", lambda intent: intent.parent_packet_id),
-            ),
+            secondary_keys=(("decision packet parent id", lambda intent: intent.parent_packet_id),),
         )
 
     @property
@@ -235,15 +233,25 @@ class DecisionPacketStore:
                 parent_facts = parent.model_dump(
                     mode="json",
                     exclude={
-                        "packet_id", "version", "parent_packet_id", "created_at",
-                        "disposition", "operator_reason", "proposal_id",
+                        "packet_id",
+                        "version",
+                        "parent_packet_id",
+                        "created_at",
+                        "disposition",
+                        "operator_reason",
+                        "proposal_id",
                     },
                 )
                 child_facts = packet.model_dump(
                     mode="json",
                     exclude={
-                        "packet_id", "version", "parent_packet_id", "created_at",
-                        "disposition", "operator_reason", "proposal_id",
+                        "packet_id",
+                        "version",
+                        "parent_packet_id",
+                        "created_at",
+                        "disposition",
+                        "operator_reason",
+                        "proposal_id",
                     },
                 )
                 if child_facts != parent_facts:
@@ -331,6 +339,15 @@ class DecisionPacketStore:
         return max(packets, key=lambda packet: (packet.as_of, packet.version, packet.packet_id))
 
 
+def validate_decision_packet_lineage(packets: tuple[DecisionPacket, ...]) -> None:
+    """Purely validate canonical packet identities and one exact parent chain."""
+    DecisionPacketStore._validate_collection(list(packets))
+    if not packets:
+        raise ValueError("decision packet lineage cannot be empty")
+    if packets[-1].version != len(packets):
+        raise ValueError("decision packet lineage is incomplete")
+
+
 class DecisionPacketService:
     """Persist workspace drafts and append operator actions without order authority."""
 
@@ -416,9 +433,7 @@ class DecisionPacketService:
             limit_price=proposal.limit_price,
             created_at=proposal.created_at,
         )
-        return provisional.model_copy(
-            update={"intent_id": decision_action_intent_id(provisional)}
-        )
+        return provisional.model_copy(update={"intent_id": decision_action_intent_id(provisional)})
 
     @staticmethod
     def _validate_intent_request(
@@ -590,8 +605,7 @@ class DecisionPacketService:
             raise ValueError("draft is not an operator action")
         proposal_transaction = (
             self._proposals.ledger.transaction()
-            if disposition is DecisionDisposition.PAPER_PROPOSAL
-            and self._proposals is not None
+            if disposition is DecisionDisposition.PAPER_PROPOSAL and self._proposals is not None
             else nullcontext()
         )
         with self.store.transaction(), proposal_transaction:
@@ -675,9 +689,7 @@ class DecisionPacketService:
                     operator_reason=operator_reason,
                 )
                 if intent is not None and candidate != intent:
-                    raise ValueError(
-                        "durable decision action intent does not match paper proposal"
-                    )
+                    raise ValueError("durable decision action intent does not match paper proposal")
                 self.store.reserve_action_intent(candidate)
 
             proposal = self._proposals.propose(

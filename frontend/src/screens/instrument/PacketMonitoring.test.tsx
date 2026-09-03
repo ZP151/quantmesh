@@ -49,9 +49,13 @@ const registeredState = {
   },
 } as never
 
-function renderMonitoring(packetId: string | null = 'packet-000000000001', contextKey = 'moomoo:NVDA:6m') {
+function renderMonitoring(
+  packetId: string | null = 'packet-000000000001',
+  contextKey = 'moomoo:NVDA:6m',
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   return render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <QueryClientProvider client={client}>
       <PreferencesProvider>
         <PacketMonitoring contextKey={contextKey} packetId={packetId} />
       </PreferencesProvider>
@@ -77,7 +81,9 @@ describe('PacketMonitoring', () => {
 
   it('registers the persisted packet with fixed checks and renders typed evaluation facts', async () => {
     const user = userEvent.setup()
-    renderMonitoring()
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const invalidate = vi.spyOn(client, 'invalidateQueries')
+    renderMonitoring('packet-000000000001', 'moomoo:NVDA:6m', client)
 
     await screen.findByRole('checkbox', { name: 'Entry zone crossing' })
     await user.click(screen.getByRole('checkbox', { name: 'Forecast drift' }))
@@ -91,6 +97,10 @@ describe('PacketMonitoring', () => {
     expect(screen.getByText('Entry zone 180–184')).toBeVisible()
     expect(screen.getAllByText('Price 181')).toHaveLength(2)
     expect(screen.getByRole('button', { name: 'Check now' })).toBeVisible()
+    expect(invalidate).toHaveBeenCalledWith({
+      exact: true,
+      queryKey: ['packet-outcome-review', 'moomoo:NVDA:6m', 'packet-000000000001'],
+    })
   })
 
   it('does not display a late response after the operator switches context', async () => {

@@ -1782,6 +1782,21 @@ export interface components {
         };
         /** DecisionOutcomeSnapshot */
         DecisionOutcomeSnapshot: {
+            /**
+             * Attribution Basis
+             * @constant
+             */
+            attribution_basis: "completed_daily_close";
+            /**
+             * Attribution Equality
+             * @constant
+             */
+            attribution_equality: "equality_does_not_cross";
+            /**
+             * Attribution Policy Version
+             * @constant
+             */
+            attribution_policy_version: "strict-close-v1";
             entry_fill_deviation_r: components["schemas"]["OutcomeMetric"];
             /**
              * Evaluated At
@@ -2626,6 +2641,11 @@ export interface components {
             dataset_id?: string | null;
             /** Dataset Revision */
             dataset_revision?: number | null;
+            /**
+             * Expected Session Times
+             * @default []
+             */
+            expected_session_times: string[];
             /** Generated At */
             generated_at?: string | null;
             /** Interval */

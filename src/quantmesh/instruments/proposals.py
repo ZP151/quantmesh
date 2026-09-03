@@ -158,6 +158,11 @@ def _validate_proposal_seal(proposal: PaperProposal) -> None:
         raise ValueError("proposal confirmation token does not match its immutable intent")
 
 
+def validate_proposal_replay(proposal: PaperProposal) -> None:
+    """Purely validate the immutable proposal ID and confirmation-token seals."""
+    _validate_proposal_seal(proposal)
+
+
 def _validate_artifact_binding(
     proposal: PaperProposal,
     artifact: PriceForecastArtifact,
@@ -572,8 +577,7 @@ class PaperDecisionService:
                 expected_created_at is not None
                 and order.created_at.astimezone(UTC) != expected_created_at
             )
-            or order.status
-            not in {OrderStatus.ACCEPTED, OrderStatus.FILLED, OrderStatus.REJECTED}
+            or order.status not in {OrderStatus.ACCEPTED, OrderStatus.FILLED, OrderStatus.REJECTED}
         ):
             raise ValueError("journal order does not match immutable proposal intent")
         if proposal.order_id is not None and order.order_id != proposal.order_id:

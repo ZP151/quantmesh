@@ -74,17 +74,14 @@ const orderingKeys = {
 export function PacketOutcomeReview({ contextKey, packetId }: PacketOutcomeReviewProps) {
   const { locale, t } = usePreferences()
   const queryClient = useQueryClient()
-  const currentContext = useRef({ contextKey, packetId })
+  const currentContext = useRef<{ contextKey: string, outcomeId: string | null, packetId: string | null }>({
+    contextKey,
+    outcomeId: null,
+    packetId,
+  })
   const [classification, setClassification] = useState<Classification>('inconclusive')
   const [note, setNote] = useState('')
   const [failedContext, setFailedContext] = useState<string | null>(null)
-  currentContext.current = { contextKey, packetId }
-
-  useEffect(() => {
-    setClassification('inconclusive')
-    setNote('')
-    setFailedContext(null)
-  }, [contextKey, packetId])
 
   const queryKey = ['packet-outcome-review', contextKey, packetId] as const
   const query = useQuery({
@@ -93,24 +90,31 @@ export function PacketOutcomeReview({ contextKey, packetId }: PacketOutcomeRevie
     queryKey,
     retry: false,
   })
+  const queriedOutcomeId = query.data?.review?.outcome.outcome_id
+    ?? query.data?.outcome.outcome_id
+    ?? null
   const save = useMutation({
     mutationFn: (requested: {
       contextKey: string
       input: DecisionOutcomeReviewInput
+      outcomeId: string
       packetId: string
     }) => api.savePacketOutcomeReview(requested.packetId, requested.input),
-    mutationKey: ['save-packet-outcome-review', contextKey, packetId],
+    mutationKey: ['save-packet-outcome-review', contextKey, packetId, queriedOutcomeId],
     onError: (_error, requested) => {
       if (
         currentContext.current.contextKey === requested.contextKey
         && currentContext.current.packetId === requested.packetId
-      ) setFailedContext(`${requested.contextKey}:${requested.packetId}`)
+        && currentContext.current.outcomeId === requested.outcomeId
+      ) setFailedContext(`${requested.contextKey}:${requested.packetId}:${requested.outcomeId}`)
     },
     onSuccess: (state, requested) => {
       if (
         currentContext.current.contextKey !== requested.contextKey
         || currentContext.current.packetId !== requested.packetId
+        || currentContext.current.outcomeId !== requested.outcomeId
         || state.packet_id !== requested.packetId
+        || state.review?.outcome.outcome_id !== requested.outcomeId
       ) return
       queryClient.setQueryData(
         ['packet-outcome-review', requested.contextKey, requested.packetId],
@@ -121,9 +125,18 @@ export function PacketOutcomeReview({ contextKey, packetId }: PacketOutcomeRevie
   })
 
   const state = query.data?.packet_id === packetId ? query.data : null
-  const outcome = state?.outcome ?? null
   const saved = state?.review ?? null
-  const ownContext = packetId === null ? null : `${contextKey}:${packetId}`
+  const outcome = saved?.outcome ?? state?.outcome ?? null
+  const outcomeId = outcome?.outcome_id ?? null
+  currentContext.current = { contextKey, outcomeId, packetId }
+  useEffect(() => {
+    setClassification('inconclusive')
+    setNote('')
+    setFailedContext(null)
+  }, [contextKey, outcomeId, packetId])
+  const ownContext = packetId === null || outcomeId === null
+    ? null
+    : `${contextKey}:${packetId}:${outcomeId}`
   const unavailable = query.isError || failedContext === ownContext
   const loading = packetId !== null && (query.isPending || (
     save.isPending
@@ -141,6 +154,7 @@ export function PacketOutcomeReview({ contextKey, packetId }: PacketOutcomeRevie
         expected_outcome_id: outcome.outcome_id,
         note: note.trim() || null,
       },
+      outcomeId: outcome.outcome_id,
       packetId,
     })
   }
@@ -242,6 +256,34 @@ function OutcomeEvidence({ locale, outcome }: { locale: string, outcome: Outcome
         <Fact label={t('screen.workspace.reviewOutcomeId')} value={outcome.outcome_id} mono />
         <Fact label={t('screen.workspace.reviewHorizon')} value={formatTime(outcome.horizon_target_at)} />
         <Fact label={t('screen.workspace.reviewEvaluated')} value={formatTime(outcome.evaluated_at)} />
+        <Fact label={t('screen.workspace.reviewPolicy')} value={outcome.attribution_policy_version} mono />
+        <Fact
+          label={t('screen.workspace.reviewBasis')}
+          value={`${outcome.attribution_basis} · ${t('screen.workspace.reviewBasisValue')}`}
+        />
+        <Fact
+          label={t('screen.workspace.reviewEquality')}
+          value={`${outcome.attribution_equality} · ${t('screen.workspace.reviewEqualityValue')}`}
+        />
+        <Fact label={t('screen.workspace.reviewPathSource')} value={outcome.path.source ?? t('screen.workspace.reviewUnavailableValue')} />
+        <Fact
+          label={t('screen.workspace.reviewPathDataset')}
+          value={outcome.path.dataset_id === null || outcome.path.dataset_id === undefined
+            ? t('screen.workspace.reviewUnavailableValue')
+            : `${outcome.path.dataset_id} · r${outcome.path.dataset_revision}`}
+          mono
+        />
+        <Fact label={t('screen.workspace.reviewPathCutoff')} value={formatTime(outcome.path.cutoff_at)} />
+        <Fact
+          label={t('screen.workspace.reviewPathDigest')}
+          value={outcome.path.path_digest === null || outcome.path.path_digest === undefined
+            ? t('screen.workspace.reviewUnavailableValue')
+            : `${outcome.path.path_digest.slice(0, 12)}…`}
+          mono
+        />
+        {outcome.path.reason !== null && outcome.path.reason !== undefined && (
+          <Fact label={t('screen.workspace.reviewPathIssue')} value={outcome.path.reason} />
+        )}
       </dl>
       <ul className="min-w-0 divide-y divide-border border-y border-border text-xs">
         {outcome.scenarios.map((scenario) => (
@@ -256,6 +298,13 @@ function OutcomeEvidence({ locale, outcome }: { locale: string, outcome: Outcome
               {observation(scenario.threshold_state)}
               {scenario.threshold_at === null ? '' : ` · ${formatTime(scenario.threshold_at)}`}
             </span>
+            {scenario.kind !== 'bear' && scenario.invalidation_level !== null && (
+              <span className="block text-muted-foreground">
+                {t('screen.workspace.reviewInvalidation', { level: String(scenario.invalidation_level) })}
+                {' · '}{observation(scenario.invalidation_state)}
+                {scenario.invalidation_at === null ? '' : ` · ${formatTime(scenario.invalidation_at)}`}
+              </span>
+            )}
           </li>
         ))}
       </ul>
@@ -265,6 +314,7 @@ function OutcomeEvidence({ locale, outcome }: { locale: string, outcome: Outcome
         <Fact label={t('screen.workspace.reviewMonitoring')} value={t(monitoringKeys[outcome.monitoring.status])} />
         <Fact label={t('screen.workspace.reviewOrdering')} value={t(orderingKeys[outcome.target_stop_ordering])} />
       </dl>
+      <EvidenceTimeline formatTime={formatTime} outcome={outcome} />
       <dl className="min-w-0 divide-y divide-border border-y border-border text-xs">
         <Metric label={t('screen.workspace.reviewPlannedR')} value={outcome.planned_reward_to_risk} />
         <Metric label={t('screen.workspace.reviewGrossR')} metric={outcome.gross_path_r} />
@@ -309,7 +359,70 @@ function Metric({
           ? t('screen.workspace.reviewUnavailableValue')
           : `${available.toFixed(2)} R`}
       </dd>
+      {metric?.status === 'unavailable' && (
+        <p className="w-full text-right text-[10px] leading-relaxed text-muted-foreground">
+          {metric.reason}
+        </p>
+      )}
     </div>
+  )
+}
+
+function EvidenceTimeline({
+  formatTime,
+  outcome,
+}: {
+  formatTime: (value: string | null | undefined) => string
+  outcome: Outcome
+}) {
+  const { t } = usePreferences()
+  const fills = outcome.paper.order?.events.filter((event) => event.event_type === 'fill') ?? []
+  const watchEvents = outcome.monitoring.evaluations.flatMap((evaluation) => (
+    evaluation.results
+      .filter((result) => result.event_id !== null)
+      .map((result) => ({
+        eventId: result.event_id!,
+        timestamp: evaluation.observation.evaluated_at,
+      }))
+  )).filter((event, index, all) => (
+    all.findIndex((candidate) => candidate.eventId === event.eventId) === index
+  ))
+  return (
+    <dl className="min-w-0 divide-y divide-border border-y border-border text-xs">
+      {outcome.paper.proposal !== null && outcome.paper.proposal !== undefined && (
+        <>
+          <Fact label={t('screen.workspace.reviewProposalId')} value={outcome.paper.proposal.id} mono />
+          <Fact label={t('screen.workspace.reviewProposalAt')} value={formatTime(outcome.paper.proposal.created_at)} />
+        </>
+      )}
+      {outcome.paper.order !== null && outcome.paper.order !== undefined && (
+        <>
+          <Fact label={t('screen.workspace.reviewOrderId')} value={outcome.paper.order.order_id} mono />
+          <Fact label={t('screen.workspace.reviewOrderAt')} value={formatTime(outcome.paper.order.created_at)} />
+        </>
+      )}
+      {fills.map((fill) => (
+        <div className="contents" key={`${fill.sequence}:${fill.timestamp}`}>
+          <Fact label={t('screen.workspace.reviewFillId')} value={fill.broker_fill_id ?? t('screen.workspace.reviewUnavailableValue')} mono />
+          <Fact label={t('screen.workspace.reviewFillAt')} value={formatTime(fill.timestamp)} />
+        </div>
+      ))}
+      {outcome.monitoring.registration !== null && outcome.monitoring.registration !== undefined && (
+        <Fact label={t('screen.workspace.reviewRegistrationId')} value={outcome.monitoring.registration.registration_id} mono />
+      )}
+      {outcome.monitoring.evaluations.map((evaluation) => (
+        <div className="contents" key={evaluation.evaluation_id}>
+          <Fact label={t('screen.workspace.reviewEvaluationId')} value={evaluation.evaluation_id} mono />
+          <Fact label={t('screen.workspace.reviewEvaluationAt')} value={formatTime(evaluation.observation.evaluated_at)} />
+        </div>
+      ))}
+      {watchEvents.map((event) => (
+        <div className="contents" key={event.eventId}>
+          <Fact label={t('screen.workspace.reviewEventId')} value={event.eventId} mono />
+          <Fact label={t('screen.workspace.reviewEventAt')} value={formatTime(event.timestamp)} />
+        </div>
+      ))}
+    </dl>
   )
 }
 

@@ -555,6 +555,17 @@ class DecisionWatchStore:
             return registration, evaluation
 
 
+def validate_watch_replay(
+    registration: DecisionWatchRegistration,
+    evaluations: tuple[DecisionWatchEvaluation, ...],
+) -> None:
+    """Purely validate embedded registration/evaluation/event identities and order."""
+    registration.canonical_conditions()
+    for evaluation in evaluations:
+        evaluation.canonical_identity()
+    DecisionWatchStore._validate_evaluation_chain(registration, evaluations)
+
+
 class DecisionWatchService:
     """Derive fixed rules from an exact packet and evaluate local facts only."""
 

@@ -25,6 +25,9 @@ const mockedSave = vi.mocked(api.savePacketOutcomeReview)
 
 const previewState = {
   outcome: {
+    attribution_basis: 'completed_daily_close',
+    attribution_equality: 'equality_does_not_cross',
+    attribution_policy_version: 'strict-close-v1',
     entry_fill_deviation_r: { reason: 'No exact entry fill.', status: 'unavailable', value: null },
     evaluated_at: '2026-08-08T12:00:00Z',
     evidence_status: 'pending',
@@ -115,6 +118,100 @@ describe('PacketOutcomeReview', () => {
     expect(await screen.findByText('Review saved')).toBeVisible()
     expect(screen.getByText('review-000000000000000000000001')).toBeVisible()
     expect(screen.queryByRole('button', { name: 'Save review' })).not.toBeInTheDocument()
+  })
+
+  it('shows explicit attribution provenance, invalidation, and exact paper/watch timeline facts', async () => {
+    mockedPreview.mockResolvedValueOnce({
+      ...previewState,
+      outcome: {
+        ...previewState.outcome,
+        evidence_status: 'partial',
+        monitoring: {
+          evaluations: [{
+            evaluation_id: 'evaluation-000000000000000000000001',
+            observation: { evaluated_at: '2026-08-08T12:03:00Z' },
+            registration_id: 'registration-000000000000000000000001',
+            results: [{
+              condition_id: 'condition-000000000000000000000001',
+              event_id: 'watch-event-000000000000000000000001',
+              facts: { current_price: 181 },
+              state: 'triggered',
+            }],
+          }],
+          event_ids: ['watch-event-000000000000000000000001'],
+          registration: {
+            conditions: [],
+            packet_id: previewState.packet_id,
+            registration_id: 'registration-000000000000000000000001',
+          },
+          status: 'triggered',
+        },
+        paper: {
+          order: {
+            created_at: '2026-08-08T12:02:00Z',
+            events: [{
+              broker_fill_id: 'fill-nvda-1',
+              event_type: 'fill',
+              price: 181,
+              quantity: 1,
+              sequence: 2,
+              status: 'filled',
+              timestamp: '2026-08-08T12:02:00Z',
+            }],
+            order_id: 'paper-proposal:proposal-000000000000000000000001',
+          },
+          proposal: {
+            created_at: '2026-08-08T12:01:00Z',
+            id: 'proposal-000000000000000000000001',
+          },
+          reason: null,
+          state: 'filled_open',
+        },
+        path: {
+          ...previewState.outcome.path,
+          cutoff_at: '2026-08-12T20:00:00Z',
+          dataset_id: 'demo-moomoo-nvda',
+          dataset_revision: 2,
+          path_digest: 'a'.repeat(64),
+          reason: 'One expected 30-session timestamp is missing.',
+          source: 'demo-synthetic',
+          status: 'partial',
+        },
+      },
+    } as unknown as DecisionOutcomeReviewState)
+    renderReview()
+
+    expect(await screen.findByText('demo-synthetic')).toBeVisible()
+    expect(screen.getByText('demo-moomoo-nvda · r2')).toBeVisible()
+    expect(screen.getByText('aaaaaaaaaaaa…')).toBeVisible()
+    expect(screen.getByText('One expected 30-session timestamp is missing.')).toBeVisible()
+    expect(screen.getByText('strict-close-v1')).toBeVisible()
+    expect(screen.getByText(/completed_daily_close/)).toBeVisible()
+    expect(screen.getByText(/equality_does_not_cross/)).toBeVisible()
+    expect(screen.getByText(/Equality does not cross a level\./)).toBeVisible()
+    expect(screen.getAllByText(/Invalidation 176/)).toHaveLength(2)
+    expect(screen.getByText('proposal-000000000000000000000001')).toBeVisible()
+    expect(screen.getByText('paper-proposal:proposal-000000000000000000000001')).toBeVisible()
+    expect(screen.getByText('fill-nvda-1')).toBeVisible()
+    expect(screen.getByText('registration-000000000000000000000001')).toBeVisible()
+    expect(screen.getByText('evaluation-000000000000000000000001')).toBeVisible()
+    expect(screen.getByText('watch-event-000000000000000000000001')).toBeVisible()
+  })
+
+  it('renders a saved review from its frozen outcome instead of a newer preview', async () => {
+    const frozen = {
+      ...savedState,
+      outcome: {
+        ...savedState.outcome,
+        outcome_id: 'outcome-000000000000000000000002',
+      },
+    }
+    mockedPreview.mockResolvedValueOnce(frozen)
+    renderReview()
+
+    expect(await screen.findByText('Review saved')).toBeVisible()
+    expect(screen.getByText('outcome-000000000000000000000001')).toBeVisible()
+    expect(screen.queryByText('outcome-000000000000000000000002')).not.toBeInTheDocument()
   })
 
   it('isolates late responses and failures by exact packet context', async () => {
