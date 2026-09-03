@@ -87,6 +87,7 @@ from quantmesh.instruments.contracts import (
     HistoricalSeries,
     HistoryRange,
 )
+from quantmesh.instruments.copilot import PacketCopilotStore
 from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
 from quantmesh.instruments.history import HistoryService
@@ -130,6 +131,8 @@ _MUTABLE_FILES = frozenset(
         "orders/journal.jsonl",
         "orders/proposals/.proposals.lock",
         "orders/proposals/proposals.jsonl",
+        "decisions/copilot/packet-copilot-records.jsonl",
+        "decisions/decisions.jsonl",
         "decisions/packets/.decision-packets.lock",
         "decisions/packets/decision-action-intents.jsonl",
         "decisions/packets/decision-packets.jsonl",
@@ -258,6 +261,7 @@ class DemoSeeded:
     price_forecasts: PriceForecastRegistry
     proposal_ledger: ProposalLedger
     decision_packets: DecisionPacketStore
+    packet_copilot: PacketCopilotStore
     provenance: dict[str, object] = field(default_factory=dict)
 
 
@@ -1674,6 +1678,11 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         "", encoding="utf-8"
     )
     (decision_packet_root / "decision-packets.jsonl").write_text("", encoding="utf-8")
+    packet_copilot_root = root / "decisions" / "copilot"
+    packet_copilot_root.mkdir(parents=True, exist_ok=True)
+    (packet_copilot_root / "packet-copilot-records.jsonl").write_text(
+        "", encoding="utf-8"
+    )
     ownership_text = _ownership_text(root)
     (root / OWNERSHIP_NAME).write_text(ownership_text, encoding="utf-8")
     ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()
@@ -1701,6 +1710,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         price_forecasts=price_forecasts,
         proposal_ledger=proposal_ledger,
         decision_packets=DecisionPacketStore(decision_packet_root),
+        packet_copilot=PacketCopilotStore(root / "decisions" / "copilot"),
         provenance=provenance,
     )
 
@@ -1779,6 +1789,7 @@ def load_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         ),
         proposal_ledger=ProposalLedger(root / "orders" / "proposals"),
         decision_packets=stores.decision_packets,
+        packet_copilot=stores.packet_copilot,
         provenance=provenance,
     )
 

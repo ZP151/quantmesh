@@ -61,8 +61,10 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from quantmesh import __version__
-from quantmesh.ai.decisions import DecisionLog
+from quantmesh.ai.decisions import DecisionLog, ModelMeta
+from quantmesh.ai.gateway import ModelGateway
 from quantmesh.ai.retrieval import DocumentIndex
+from quantmesh.ai.transport import HttpModelTransport
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.data_catalog import DataCatalogReader, data_catalog_router
 from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
@@ -80,6 +82,7 @@ from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
 from quantmesh.instruments.api import instrument_router
+from quantmesh.instruments.copilot import PacketCopilotService, PacketCopilotStore
 from quantmesh.instruments.decision_packets import (
     DecisionPacketService,
     DecisionPacketStore,
@@ -1046,6 +1049,8 @@ def create_workstation_app(
     prediction: PredictionBoard | None = None,
     data_catalog: DataCatalogReader | None = None,
     decision_packets: DecisionPacketStore | None = None,
+    packet_copilot_store: PacketCopilotStore | None = None,
+    packet_copilot: PacketCopilotService | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1120,6 +1125,8 @@ def create_workstation_app(
     clock = workspace_clock if workspace_clock is not None else lambda: datetime.now(UTC)
     app.state.instrument_clock = clock
     app.state.decision_packets = decision_packets
+    app.state.packet_copilot_store = packet_copilot_store
+    app.state.packet_copilot = packet_copilot
 
     def publish_account(updated: PaperAccount) -> None:
         if account_sink is not None:
@@ -1791,6 +1798,26 @@ def main(argv: list[str] | None = None) -> None:
                 dataset_loader=Lake(settings.lake_root).dataset,
                 trusted_catalog=trusted_catalog,
             )
+            decision_packets = DecisionPacketStore(settings.decisions_dir / "packets")
+            packet_copilot_store = PacketCopilotStore(settings.decisions_dir / "copilot")
+            copilot_decisions = DecisionLog()
+            packet_copilot = None
+            if settings.model_name:
+                gateway = ModelGateway(HttpModelTransport(), model_name=settings.model_name)
+                model_meta = ModelMeta(
+                    name=settings.model_name,
+                    version="configured",
+                    endpoint_kind="loopback",
+                )
+                packet_copilot = PacketCopilotService(
+                    packet_store=decision_packets,
+                    store=packet_copilot_store,
+                    decision_log=copilot_decisions,
+                    analyst_gateway=gateway,
+                    critic_gateway=gateway,
+                    analyst_model=model_meta,
+                    critic_model=model_meta,
+                )
             app = create_workstation_app(
                 account=account,
                 markets=market_directory,
@@ -1802,11 +1829,14 @@ def main(argv: list[str] | None = None) -> None:
                 ),
                 proposal_ledger=ProposalLedger(settings.orders_dir / "proposals"),
                 journal=journal,
+                decisions=copilot_decisions,
                 account_sink=account_snapshot.save,
                 live_feed=feed,
                 prediction=prediction,
                 data_catalog=trusted_catalog,
-                decision_packets=DecisionPacketStore(settings.decisions_dir / "packets"),
+                decision_packets=decision_packets,
+                packet_copilot_store=packet_copilot_store,
+                packet_copilot=packet_copilot,
                 host=host,
             )
         else:

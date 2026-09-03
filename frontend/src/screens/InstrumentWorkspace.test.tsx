@@ -22,6 +22,8 @@ vi.mock('@/lib/api', async (importOriginal) => {
       instrumentWorkspace: vi.fn(),
       liveState: vi.fn(),
       markets: vi.fn(),
+      packetCopilot: vi.fn(),
+      requestPacketCopilot: vi.fn(),
       saveDecisionPacket: vi.fn(),
     },
   }
@@ -216,6 +218,8 @@ const mockedConfirmPaperProposal = vi.mocked(api.confirmPaperProposal)
 const mockedHealth = vi.mocked(api.health)
 const mockedLiveState = vi.mocked(api.liveState)
 const mockedMarkets = vi.mocked(api.markets)
+const mockedPacketCopilot = vi.mocked(api.packetCopilot)
+const mockedRequestPacketCopilot = vi.mocked(api.requestPacketCopilot)
 const mockedLiveConnection = vi.mocked(useLiveConnection)
 let publishLiveUpdate: Parameters<typeof useLiveConnection>[0]
 
@@ -249,6 +253,18 @@ beforeEach(() => {
     return 'live'
   })
   mockedWorkspace.mockResolvedValue(workspace)
+  mockedPacketCopilot.mockImplementation(async (packetId) => ({
+    packet_id: packetId,
+    reason_code: null,
+    record: null,
+    status: 'idle',
+  }))
+  mockedRequestPacketCopilot.mockImplementation(async (packetId) => ({
+    packet_id: packetId,
+    reason_code: 'copilot-unavailable',
+    record: null,
+    status: 'degraded',
+  }))
   mockedDecisionPacket.mockRejectedValue(new ApiError(404, 'Exact packet fixture not configured'))
   mockedLiveState.mockResolvedValue({
     generated_at: '2026-08-08T12:00:00Z',

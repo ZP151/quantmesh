@@ -13,6 +13,8 @@ stays green. Reserving the socket before starting uvicorn avoids a
 check-then-bind race with another process on shared CI runners.
 """
 
+import hashlib
+import json
 import socket
 import threading
 from dataclasses import dataclass
@@ -24,11 +26,15 @@ import pytest
 import uvicorn
 from fastapi import FastAPI
 
+from quantmesh.ai.decisions import ModelMeta
+from quantmesh.ai.gateway import ModelGateway
+from quantmesh.ai.transport import ScriptedModelTransport
 from quantmesh.api import workstation
 from quantmesh.demo.datalink import ConnectorState, DatalinkService
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.hyperliquid.errors import HyperliquidSDKMissingError
+from quantmesh.instruments.copilot import PacketCopilotService
 
 pytest.importorskip(
     "playwright.sync_api",
@@ -191,6 +197,67 @@ def _proposal_id(page) -> str:
     )
     assert proposal_id.startswith("proposal-")
     return proposal_id
+
+
+def _packet_fact(packet: dict, pointer: str) -> object:
+    value: object = packet
+    for part in pointer.removeprefix("/").split("/"):
+        value = value[int(part)] if isinstance(value, list) else value[part]
+    return value
+
+
+def _packet_citation(packet: dict, pointer: str) -> dict[str, object]:
+    value = _packet_fact(packet, pointer)
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return {
+        "source_kind": "packet",
+        "source_id": packet["packet_id"],
+        "span": None,
+        "json_pointer": pointer,
+        "value_digest": hashlib.sha256(encoded).hexdigest(),
+    }
+
+
+def _copilot_script(packet: dict) -> tuple[list[dict], list[dict]]:
+    def item(text: str, pointer: str) -> dict[str, object]:
+        return {"text": text, "citations": [_packet_citation(packet, pointer)]}
+
+    report = {
+        "packet_id": packet["packet_id"],
+        "base_explanation": item(
+            "The stored market structure is the base evidence.",
+            "/market_state/trend",
+        ),
+        "bull_challenge": item(
+            "The bull case still requires its stored trigger.",
+            "/scenarios/0/trigger",
+        ),
+        "bear_challenge": item(
+            "The bear scenario remains a contrary case.",
+            "/scenarios/2/thesis",
+        ),
+        "evidence_gaps_or_contradictions": [
+            item(
+                "The packet names the limits of its history evidence.",
+                "/evidence/history_limitations",
+            )
+        ],
+        "limitations": [
+            item("Scenario confidence is packet-bounded.", "/scenarios/1/confidence")
+        ],
+        "operator_questions": [
+            item("Will the stored support hold?", "/market_state/support")
+        ],
+    }
+    critic = {
+        "packet_id": packet["packet_id"],
+        "verdict": "pass",
+        "flagged_items": [],
+    }
+    return (
+        [{"content": json.dumps(report, sort_keys=True)}],
+        [{"content": json.dumps(critic, sort_keys=True)}],
+    )
 
 
 def test_demo_paper_workflow_through_the_ui(page, base_url) -> None:
@@ -497,6 +564,125 @@ def test_nvda_watchlist_activation_reaches_each_durable_decision_in_under_two_mi
         proposal_id = _proposal_id(page)
         assert proposal_id == exact.json()["proposal_id"]
         assert page.get_by_role("button", name="Confirm paper proposal").is_disabled()
+
+
+def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
+    page,
+    base_url,
+    demo_station: _DemoStation,
+) -> None:
+    service = demo_station.app.state.packet_copilot
+    assert isinstance(service, PacketCopilotService)
+    original_analyst = service.analyst_gateway
+    original_critic = service.critic_gateway
+    original_analyst_model = service.analyst_model
+    original_critic_model = service.critic_model
+    model = ModelMeta(name="fixture-copilot", version="v1", endpoint_kind="scripted")
+    try:
+        _reset_demo(page, base_url)
+        page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+        page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+        page.get_by_label("Decision reason").fill("Inspect the packet-bound explanation")
+        page.get_by_role("button", name="Watch decision").click()
+        page.get_by_text("Watching", exact=True).wait_for()
+        packet_id = _decision_packet_id(page)
+        packet_response = page.request.get(f"{base_url}/api/decision-packets/{packet_id}")
+        assert packet_response.status == 200
+        packet_before = packet_response.json()
+        proposals_before = demo_station.app.state.paper_decisions.ledger.all()
+        orders_before = demo_station.app.state.account_store.get().orders
+        analyst_script, critic_script = _copilot_script(packet_before)
+        service.analyst_gateway = ModelGateway(
+            ScriptedModelTransport(analyst_script), model_name=model.name
+        )
+        service.critic_gateway = ModelGateway(
+            ScriptedModelTransport(critic_script), model_name=model.name
+        )
+        service.analyst_model = model
+        service.critic_model = model
+
+        action = page.get_by_role("button", name="Explain & challenge")
+        action.wait_for(state="visible")
+        assert action.is_enabled()
+        action.focus()
+        with page.expect_response(
+            lambda response: response.url.endswith(
+                f"/api/decision-packets/{packet_id}/copilot"
+            )
+            and response.request.method == "POST"
+        ) as accepted:
+            page.keyboard.press("Enter")
+        assert accepted.value.status == 200
+        page.get_by_text("The stored market structure is the base evidence.").wait_for()
+        copilot = page.get_by_test_id("packet-copilot")
+        for section in (
+            "Base explanation",
+            "Bull challenge",
+            "Bear challenge",
+            "Evidence gaps or contradictions",
+            "Limitations",
+            "Operator questions",
+        ):
+            assert copilot.get_by_role("heading", name=section).count() == 1
+        copilot.get_by_text("1 packet fact").first.click()
+        assert copilot.get_by_text("/market_state/trend", exact=True).count() == 1
+        assert page.request.get(
+            f"{base_url}/api/decision-packets/{packet_id}"
+        ).json() == packet_before
+        assert demo_station.app.state.paper_decisions.ledger.all() == proposals_before
+        assert demo_station.app.state.account_store.get().orders == orders_before
+
+        page.reload()
+        page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+        page.get_by_text("The stored market structure is the base evidence.").wait_for()
+
+        _reset_demo(page, base_url)
+        service.analyst_gateway = None
+        service.critic_gateway = None
+        page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+        page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+        page.get_by_label("Decision reason").fill("Exercise unavailable Copilot")
+        page.get_by_role("button", name="Watch decision").click()
+        page.get_by_text("Watching", exact=True).wait_for()
+        degraded_packet_id = _decision_packet_id(page)
+        degraded_packet = page.request.get(
+            f"{base_url}/api/decision-packets/{degraded_packet_id}"
+        ).json()
+        proposals_before = demo_station.app.state.paper_decisions.ledger.all()
+        orders_before = demo_station.app.state.account_store.get().orders
+        main = page.get_by_role("main")
+        assert main.get_by_role("region", name="Market canvas").count() >= 1
+        assert main.get_by_role("region", name="Evidence").count() >= 1
+        assert main.get_by_role("region", name="Scenarios").count() >= 1
+        assert main.get_by_role("region", name="Risk plan").count() >= 1
+        action_region = main.get_by_role(
+            "region", name="DecisionPacket actions", exact=True
+        )
+        action_state_before = action_region.inner_text()
+        with page.expect_response(
+            lambda response: response.url.endswith(
+                f"/api/decision-packets/{degraded_packet_id}/copilot"
+            )
+            and response.request.method == "POST"
+        ) as unavailable:
+            page.get_by_role("button", name="Explain & challenge").click()
+        assert unavailable.value.status == 200
+        page.get_by_text(
+            "Copilot is temporarily unavailable. The DecisionPacket and decision "
+            "actions are unaffected."
+        ).wait_for()
+        assert action_region.inner_text() == action_state_before
+        assert page.request.get(
+            f"{base_url}/api/decision-packets/{degraded_packet_id}"
+        ).json() == degraded_packet
+        assert demo_station.app.state.paper_decisions.ledger.all() == proposals_before
+        assert demo_station.app.state.account_store.get().orders == orders_before
+    finally:
+        service.analyst_gateway = original_analyst
+        service.critic_gateway = original_critic
+        service.analyst_model = original_analyst_model
+        service.critic_model = original_critic_model
+        _reset_demo(page, base_url)
 
 
 def test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order(

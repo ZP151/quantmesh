@@ -20,6 +20,7 @@ import { DecisionRail } from './instrument/DecisionRail'
 import { evidenceText } from './instrument/evidence-copy'
 import { ForecastEvidence, type ForecastHorizon } from './instrument/ForecastEvidence'
 import { MarketCanvas } from './instrument/MarketCanvas'
+import { PacketCopilot } from './instrument/PacketCopilot'
 import { PacketEvidenceSummary, ScenarioEvidence } from './instrument/ScenarioEvidence'
 import { WorkspaceDegraded, WorkspaceError, WorkspaceRefreshWarning } from './instrument/WorkspaceStates'
 import { retainSameInstrument } from './instrument/workspace-query'
@@ -305,6 +306,10 @@ export function InstrumentWorkspaceScreen() {
             </>
           )}
           <ScenarioEvidence packet={displayedPacket} />
+          <PacketCopilot
+            contextKey={decisionContextKey}
+            packetId={packetSource === 'persisted' ? activeSelection.packetId : null}
+          />
           {packetSource === 'fresh' && (
             <ForecastEvidence
               forecast={workspace.forecast}

@@ -36,6 +36,16 @@ from quantmesh.instruments.contracts import (
     WorkspacePosition,
     WorkspaceRisk,
 )
+from quantmesh.instruments.copilot import (
+    PacketCopilotCritic,
+    PacketCopilotDraft,
+    PacketCopilotFlag,
+    PacketCopilotItem,
+    PacketCopilotRecord,
+    PacketCopilotService,
+    PacketCopilotState,
+    PacketCopilotStore,
+)
 from quantmesh.instruments.decision_analysis import compose_decision_packet
 from quantmesh.instruments.decision_packets import (
     DecisionPacketService,
@@ -77,6 +87,14 @@ __all__ = [
     "InstrumentSnapshot",
     "OOSForecast",
     "PaperDecisionService",
+    "PacketCopilotCritic",
+    "PacketCopilotDraft",
+    "PacketCopilotFlag",
+    "PacketCopilotItem",
+    "PacketCopilotRecord",
+    "PacketCopilotService",
+    "PacketCopilotState",
+    "PacketCopilotStore",
     "PaperProposal",
     "PriceForecastArtifact",
     "PriceForecastRegistry",

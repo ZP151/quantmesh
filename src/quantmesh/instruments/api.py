@@ -26,6 +26,11 @@ from quantmesh.instruments.contracts import (
     ProposalConfirmation,
     ProposalStatus,
 )
+from quantmesh.instruments.copilot import (
+    DEGRADED_REASON,
+    PacketCopilotService,
+    PacketCopilotState,
+)
 from quantmesh.instruments.decision_packets import (
     DecisionPacketNotFoundError,
     DecisionPacketService,
@@ -249,6 +254,61 @@ def instrument_router() -> APIRouter:
             raise HTTPException(status_code=404, detail="no decision packet store is attached")
         try:
             return store.get(packet_id)
+        except DecisionPacketNotFoundError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except (ValueError, OSError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @router.get(
+        "/decision-packets/{packet_id}/copilot",
+        response_model=PacketCopilotState,
+        name="decision_packet_copilot",
+    )
+    def decision_packet_copilot(
+        request: Request,
+        packet_id: str,
+    ) -> PacketCopilotState:
+        packet_store = getattr(request.app.state, "decision_packets", None)
+        if not isinstance(packet_store, DecisionPacketStore):
+            raise HTTPException(status_code=404, detail="no decision packet store is attached")
+        try:
+            packet_store.get(packet_id)
+            service = getattr(request.app.state, "packet_copilot", None)
+            if not isinstance(service, PacketCopilotService):
+                return PacketCopilotState(
+                    status="degraded",
+                    packet_id=packet_id,
+                    reason_code=DEGRADED_REASON,
+                )
+            return service.latest(packet_id)
+        except DecisionPacketNotFoundError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except (ValueError, OSError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @router.post(
+        "/decision-packets/{packet_id}/copilot",
+        response_model=PacketCopilotState,
+        name="request_decision_packet_copilot",
+    )
+    def request_decision_packet_copilot(
+        request: Request,
+        packet_id: str,
+    ) -> PacketCopilotState:
+        _guard_json_origin(request, "decision packet Copilot")
+        packet_store = getattr(request.app.state, "decision_packets", None)
+        if not isinstance(packet_store, DecisionPacketStore):
+            raise HTTPException(status_code=404, detail="no decision packet store is attached")
+        try:
+            packet_store.get(packet_id)
+            service = getattr(request.app.state, "packet_copilot", None)
+            if not isinstance(service, PacketCopilotService):
+                return PacketCopilotState(
+                    status="degraded",
+                    packet_id=packet_id,
+                    reason_code=DEGRADED_REASON,
+                )
+            return service.request(packet_id)
         except DecisionPacketNotFoundError as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
         except (ValueError, OSError) as error:

@@ -1,6 +1,6 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: active (Slice 1 complete; Slice 2 approved, planned and in implementation)
+- Status: active (Slice 1 complete; Slice 2 implementation checkpoint awaits review)
 - Started: 2026-09-02
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
 - Branch: `codex/0027-evidence-backed-decision-copilot` from
@@ -319,10 +319,42 @@ packet/disposition/proposal recovery; the unchecked full paper-result and
 review replay criterion belongs to the separately approved outcome/review
 slice.
 
+## Slice 2 implementer checkpoint — 2026-09-03
+
+- **Planner/Product boundary:** the implementation remains one on-demand action
+  against an exact persisted NVDA DecisionPacket. A fresh draft is ineligible;
+  the accepted result is a separate immutable advisory record and cannot mutate
+  packet, risk, proposal, confirmation or order authority.
+- **Quant Researcher:** every advisory item requires a packet-only citation with
+  a restricted JSON pointer and canonical value digest. The independent critic
+  must pass the complete report; invalid schema, substituted packet identity,
+  missing/container/escaped pointer, digest mismatch, critic flag, timeout or
+  unavailable model returns only `copilot-unavailable` with no draft leakage.
+- **Implementer:** added strict contracts/service/store, two audit decisions,
+  same-origin GET/POST routes, optional loopback-only model wiring, generated
+  client bindings, localized inline evidence rail, demo reset ownership, and
+  packaged SPA assets. Default demo and blank-model workstation paths make no
+  model call. DecisionRail inputs and all authority counts remain unchanged.
+- **Verifier evidence:** the coherent Python/API/browser selection completed
+  `66 passed, 1 failed, 6 warnings in 2278.46s`; its sole failure was a new
+  ambiguous `Evidence` region count after the valid scripted report, citation,
+  invariance, reload and reset checks had passed. The one authorized isolated
+  rerun completed `1 failed, 5 warnings in 132.11s`; it stopped on an exact
+  `Market canvas` accessible-name assumption before the degraded POST. The
+  test now follows the established non-exact region semantics, but that corrected
+  isolated browser case remains the single unverified item for post-review.
+  Service/API/component degraded coverage is green. Final component/workspace
+  coverage is `23 passed`; generated API freshness, TypeScript, changed-file
+  Ruff and packaged-bundle freshness pass.
+- **Concern:** do not claim browser degraded-path PASS until the controller runs
+  the corrected isolated case. Reviewer, detector and broad slice gate are also
+  controller-owned and have not run at this checkpoint.
+
 ## Current frontier
 
-Slice 1 is complete. The operator approved Slice 2, Slice 3 and Slice 4 semantics.
-Slice 2 now uses the separate approved design and executable plan linked above.
+Slice 1 is complete. Slice 2 has an implementer checkpoint and now awaits its
+combined boundary review, the one corrected isolated browser verification,
+detector, and broad slice gate. Slice 3 must not start before those gates close.
 
 Its single user action requests a complete Base explanation, Bull/Bear challenges,
 evidence gaps, limitations and operator questions against an already persisted
@@ -333,9 +365,9 @@ path/digest, critic refusal, timeout or unavailable model degrades only the pane
 AI supplies no confidence, probability, direction, size, risk approval, blocker
 override or action authority.
 
-Implement
+Review and verify
 `docs/superpowers/plans/2026-09-03-structured-decision-copilot.md` as one bounded
-API/page/state/test loop with one boundary review and at most one correction round.
-Broad gates run once at the coherent slice boundary. Do not start monitoring,
+API/page/state/test loop with at most one correction round. Broad gates run once
+at the coherent slice boundary. Do not start monitoring,
 outcome/review, another model framework, Provider/OpenD, another symbol, 0021 soak,
 or the deferred Python release-license repair from this frontier.

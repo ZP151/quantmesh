@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0027 Slice 2 approved and planned; implementation active
+- Status: active — iteration 0027 Slice 2 implementation awaits review and final gates
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -19,8 +19,9 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: implement the approved Slice 2 persisted-packet Copilot as one
-  API/page/state/test vertical deliverable. Do not begin monitoring,
+- Current frontier: review and verify the Slice 2 persisted-packet Copilot checkpoint,
+  including one corrected isolated browser case, then run its detector and broad
+  gate. Do not begin monitoring,
   outcome/review, another model framework, Provider/OpenD, another symbol, or any
   0021 soak work from this goal state.
 - External gate: none for the deterministic product slice. Model services,
@@ -161,6 +162,26 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   mirror Ruff blockers received only authorized mechanical import/line-wrap
   corrections; blocker taxonomy duplication remains a non-blocking follow-up.
   Slice 1 is complete. Slice 2 requires a separate approved design/plan.
+
+## Slice 2 implementation checkpoint — 2026-09-03
+
+- The persisted-packet Copilot vertical slice is implemented as a separate,
+  immutable, packet-bound advisory record with strict analyst/critic schemas and
+  packet-pointer/digest citations. AI output has no confidence, sizing, risk,
+  blocker-override, proposal, confirmation or order authority.
+- Default demo and blank-model workstation operation are explicitly degraded and
+  make no model call. Accepted reports and both audit stages survive a clean app
+  reconstruction; demo reset owns the new mutable ledgers explicitly.
+- Service/API/component acceptance is green, including invalid outputs, citation
+  failures, critic flags, unknown/corrupt/cross-origin handling, secret redaction,
+  cache/context isolation, localization, keyboard use and compact wrapping.
+- The coherent selection recorded `66 passed, 1 selector-only failure`; its valid
+  scripted browser path reached accepted report, citation expansion, invariant
+  counts, reload reopen and reset. The one authorized isolated rerun stopped on a
+  second selector-only visibility assertion before degraded POST. The assertion
+  now matches established suite semantics, but the corrected isolated E2E remains
+  the sole unverified item. This checkpoint is `DONE_WITH_CONCERNS` pending the
+  controller's browser verification, review, detector and broad gate.
 
 ## Historical delivery record
 

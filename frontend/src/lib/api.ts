@@ -570,6 +570,7 @@ export type DecisionPacketActionResult = DeepReadonly<
 >
 export type DecisionPacketSaveInput = components['schemas']['DecisionPacketSaveBody']
 export type DecisionPacketActionInput = components['schemas']['DecisionPacketActionBody']
+export type PacketCopilotState = DeepReadonly<components['schemas']['PacketCopilotState']>
 
 // --- Trusted data catalog (iteration 0021 Slice 6) -----------------------
 
@@ -813,6 +814,24 @@ export const api = {
         params: { path: { packet_id: packetId } },
         body: input,
       },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async packetCopilot(packetId: string): Promise<PacketCopilotState> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/decision-packets/{packet_id}/copilot',
+      { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async requestPacketCopilot(packetId: string): Promise<PacketCopilotState> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/decision-packets/{packet_id}/copilot',
+      { params: { path: { packet_id: packetId } } },
     )
     if (!response.ok || data === undefined) throw generatedApiError(response, error)
     return data

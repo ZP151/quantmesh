@@ -59,6 +59,7 @@ from quantmesh.demo.seeder import (
 )
 from quantmesh.domain.models import Instrument, OrderRequest, Quote, Side
 from quantmesh.execution.account_store import PaperAccountStore, recover_account_from_journal
+from quantmesh.instruments.copilot import PacketCopilotService
 from quantmesh.settings import settings
 
 
@@ -187,9 +188,15 @@ def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
     app.state.history = seeded.history
     app.state.price_forecasts = seeded.price_forecasts
     app.state.decision_packets = seeded.decision_packets
+    app.state.packet_copilot_store = seeded.packet_copilot
     packet_service = getattr(app.state, "decision_packet_service", None)
     if packet_service is not None:
         packet_service.store = seeded.decision_packets
+    copilot = getattr(app.state, "packet_copilot", None)
+    if isinstance(copilot, PacketCopilotService):
+        copilot.packet_store = seeded.decision_packets
+        copilot.store = seeded.packet_copilot
+        copilot.decision_log = seeded.decisions
     workspace = getattr(app.state, "instrument_workspace", None)
     if workspace is not None:
         clear_staged_drafts = getattr(workspace, "clear_staged_drafts", None)
@@ -432,6 +439,15 @@ def create_demo_app(
             encoding="utf-8"
         )
         trusted_reset_archive = build_demo_reset_archive(root)
+    packet_copilot = PacketCopilotService(
+        packet_store=seeded.decision_packets,
+        store=seeded.packet_copilot,
+        decision_log=seeded.decisions,
+        analyst_gateway=None,
+        critic_gateway=None,
+        analyst_model=None,
+        critic_model=None,
+    )
     app = create_workstation_app(
         account=seeded.account,
         marks=seeded.marks,
@@ -451,6 +467,8 @@ def create_demo_app(
         price_forecasts=seeded.price_forecasts,
         proposal_ledger=seeded.proposal_ledger,
         decision_packets=seeded.decision_packets,
+        packet_copilot_store=seeded.packet_copilot,
+        packet_copilot=packet_copilot,
         account_sink=lambda account: persist_demo_account(root, account),
         demo_quote_provider=lambda instrument, now: _workspace_demo_quote(
             seeded,

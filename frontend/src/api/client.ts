@@ -157,6 +157,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decision-packets/{packet_id}/copilot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decision Packet Copilot */
+        get: operations["api_decision_packet_copilot"];
+        put?: never;
+        /** Request Decision Packet Copilot */
+        post: operations["api_request_decision_packet_copilot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/enablement": {
         parameters: {
             query?: never;
@@ -681,6 +699,24 @@ export interface paths {
         put?: never;
         /** Apply Decision Packet Action */
         post: operations["apply_decision_packet_action_decision_packets__packet_id__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decision-packets/{packet_id}/copilot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decision Packet Copilot */
+        get: operations["decision_packet_copilot_decision_packets__packet_id__copilot_get"];
+        put?: never;
+        /** Request Decision Packet Copilot */
+        post: operations["request_decision_packet_copilot_decision_packets__packet_id__copilot_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1412,6 +1448,9 @@ export interface components {
             /** Unavailable Reason */
             unavailable_reason?: string | null;
         };
+        Citation: {
+            [key: string]: unknown;
+        };
         /**
          * ComparisonPoint
          * @description Normalized closes for one timestamp shared by every comparison series.
@@ -2059,6 +2098,18 @@ export interface components {
             venue: components["schemas"]["Venue"];
         };
         /**
+         * ModelMeta
+         * @description The model that produced the recorded output (metadata only).
+         */
+        ModelMeta: {
+            /** Endpoint Kind */
+            endpoint_kind: string;
+            /** Name */
+            name: string;
+            /** Version */
+            version: string;
+        };
+        /**
          * OrderEventSnapshot
          * @description Deeply immutable public copy of one paper-order event.
          */
@@ -2129,6 +2180,71 @@ export interface components {
          * @enum {string}
          */
         OrderType: "market" | "limit";
+        /** PacketCopilotDraft */
+        PacketCopilotDraft: {
+            base_explanation: components["schemas"]["PacketCopilotItem"];
+            bear_challenge: components["schemas"]["PacketCopilotItem"];
+            bull_challenge: components["schemas"]["PacketCopilotItem"];
+            /** Evidence Gaps Or Contradictions */
+            evidence_gaps_or_contradictions: components["schemas"]["PacketCopilotItem"][];
+            /** Limitations */
+            limitations: components["schemas"]["PacketCopilotItem"][];
+            /** Operator Questions */
+            operator_questions: components["schemas"]["PacketCopilotItem"][];
+            /** Packet Id */
+            packet_id: string;
+        };
+        /** PacketCopilotItem */
+        PacketCopilotItem: {
+            /** Citations */
+            citations: components["schemas"]["Citation"][];
+            /** Text */
+            text: string;
+        };
+        /** PacketCopilotRecord */
+        PacketCopilotRecord: {
+            /** Analyst Decision Id */
+            analyst_decision_id: string;
+            analyst_model: components["schemas"]["ModelMeta"];
+            /** Critic Decision Id */
+            critic_decision_id: string;
+            critic_model: components["schemas"]["ModelMeta"];
+            /** Packet Id */
+            packet_id: string;
+            /** Record Id */
+            record_id: string;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            report: components["schemas"]["PacketCopilotDraft"];
+            /**
+             * Request Kind
+             * @default explain-and-challenge
+             * @constant
+             */
+            request_kind: "explain-and-challenge";
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+        };
+        /** PacketCopilotState */
+        PacketCopilotState: {
+            /** Packet Id */
+            packet_id: string;
+            /** Reason Code */
+            reason_code?: string | null;
+            record?: components["schemas"]["PacketCopilotRecord"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "idle" | "ready" | "degraded";
+        };
         /**
          * PaperProposal
          * @description Immutable forecast-to-paper intent; creation never places an order.
@@ -2659,6 +2775,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DecisionPacketActionResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_decision_packet_copilot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PacketCopilotState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_request_decision_packet_copilot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PacketCopilotState"];
                 };
             };
             /** @description Validation Error */
@@ -3457,6 +3635,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DecisionPacketActionResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decision_packet_copilot_decision_packets__packet_id__copilot_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PacketCopilotState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_decision_packet_copilot_decision_packets__packet_id__copilot_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PacketCopilotState"];
                 };
             };
             /** @description Validation Error */

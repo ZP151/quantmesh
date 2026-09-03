@@ -36,6 +36,16 @@ operator disposition, while allowing restart-safe replay.
 7. Existing deterministic paper risk evaluation and second confirmation remain
    authoritative.  A packet supplies proposal inputs and evidence; it cannot
    place or approve an order.
+8. Structured Copilot output is a separate immutable advisory record that
+   reverse-binds to one exact persisted `packet_id`.  It is not a packet field,
+   packet version, evidence override, risk verdict or execution authority, and
+   its availability cannot change packet identity or action capability.
+9. A packet Copilot citation binds the exact packet ID to a restricted JSON
+   pointer and SHA-256 digest of the canonical JSON value selected at that
+   pointer.  Resolution reloads the packet from `DecisionPacketStore`, refuses
+   missing, escaped, ambiguous or container paths, permits only scalar or
+   scalar-list leaves, and recomputes the value digest.  Existing document,
+   experiment and audit citation shapes and serialization remain unchanged.
 
 ## Consequences
 
@@ -43,3 +53,8 @@ DecisionPacket replay is content-addressed and fails closed if a persisted
 record's identity or lineage drifts.  Reject and Watch can preserve useful
 research under evidence blockers, but Paper remains governed by the existing
 proposal, quote-fence, risk, and confirmation boundaries.
+
+An accepted Copilot report can be reopened independently after restart, while
+an unavailable model, invalid structured output, unresolved citation, critic
+refusal or Copilot-ledger failure degrades only that advisory surface.  No such
+failure writes or rewrites a packet, proposal, risk decision, order or position.
