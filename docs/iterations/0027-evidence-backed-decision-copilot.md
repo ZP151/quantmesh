@@ -1,6 +1,6 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: active (Slices 1–2 complete; Slice 3 implementation active)
+- Status: active (Slices 1–3 complete; Slice 4 implementation ready)
 - Started: 2026-09-02
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
 - Branch: `codex/0027-evidence-backed-decision-copilot` from
@@ -374,19 +374,44 @@ TypeScript, lint, production build, diff and the single Impeccable detector are
 green. Exact details and the preceding transparent selector failures remain in the
 implementer checkpoint above.
 
+## Slice 3 completion evidence — 2026-09-03
+
+Slices 1–3 are complete. The local monitoring panel saves one immutable set of
+fixed conditions against an exact persisted packet, displays deterministic typed
+facts, and recovers its cursor and terminal event identities after restart. The
+entry pullback zone, long-only invalidation, pinned-calendar staleness and exact-
+target forecast drift are server-derived; missing or incompatible evidence remains
+`not_comparable`. The slice adds no scheduler, notification, provider or order
+authority.
+
+The first review found seven Important and two Minor issues. One correction closed
+demo reset ownership, locked cursor derivation, rejected-observation handling,
+complete replay binding, stale/forecast evidence binding, exact Origin comparison
+and UI state/type handling. The second and final review left two structural items;
+the design was reduced as required to one atomic activation envelope and canonical
+terminal-event revalidation rather than opening a third review loop. Targeted
+regressions then passed: monitoring/API `23 passed`, Chromium `1 passed`, and
+workspace components `25 passed`. The packaged SPA is current and the single
+Impeccable detector run returned no findings.
+
+The one broad slice gate completed with `3203 passed, 9 skipped, 7 warnings in
+3522.09s`, exit `0`; UTC Vitest completed `20` files / `180` tests, exit `0`.
+Full Ruff, `pip check`, OpenAPI freshness, TypeScript, lint, production build,
+bundle freshness and `git diff --check` all exited `0`. Lint retained four existing
+Fast Refresh warnings; Vite retained the known local Node 22.11 version and chunk-
+size warnings while exiting `0`.
+
 ## Current frontier
 
-The active frontier is the approved Slice 3 local-monitoring implementation plan.
-Its one action saves and checks local conditions from an exact packet; its stop
-condition proves deterministic trigger/non-trigger replay plus stale evidence.
-Planner/Product fixed one packet-keyed registration and one in-workspace action.
-Quant Researcher fixed time causality, downward long-only invalidation, pinned
-session-calendar freshness, same-target p50 drift, durable crossing cursors, and
-the rule that missing/uncomparable evidence cannot masquerade as zero drift. The
-packet currently has one entry price, so the monitoring definition transparently
-freezes and displays the closed support-to-entry pullback zone rather than inventing
-an undisclosed percentage band or rewriting packet identity.
+The active frontier is the approved Slice 4 packet outcome/review plan. Its single
+user action reopens an exact persisted NVDA action packet, compares the frozen
+decision with honest local path/paper/risk evidence, and atomically saves one
+review without leaving Instrument Workspace. Planner and Quant Researcher agree
+that review is a separate reverse-binding closure; `DecisionPacket` identity is
+unchanged. Missing horizon, continuous watch coverage, proposal-bound exit fills
+or complete costs remains explicitly unavailable and cannot become zero P&L or a
+fabricated realized R.
 
-Do not begin outcome/review,
-another model framework, Provider/OpenD, another symbol, external notification,
-0021 soak, or the deferred Python release-license repair from this frontier.
+Do not add an exit-order lifecycle, performance dashboard, AI review, another
+model framework, Provider/OpenD, another symbol, external notification, 0021 soak,
+or the deferred Python release-license repair from this product frontier.

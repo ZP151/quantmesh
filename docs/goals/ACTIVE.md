@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0027 Slices 1–2 complete; Slice 3 implementation active
+- Status: active — iteration 0027 Slices 1–3 complete; Slice 4 implementation ready
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -10,19 +10,20 @@
 - Active iteration:
   `docs/iterations/0027-evidence-backed-decision-copilot.md`
 - Design:
-  `docs/superpowers/specs/2026-09-03-local-packet-monitoring-design.md`
+  `docs/superpowers/specs/2026-09-03-packet-outcome-review-design.md`
 - Executable plan:
-  `docs/superpowers/plans/2026-09-03-local-packet-monitoring.md`
+  `docs/superpowers/plans/2026-09-03-packet-outcome-review.md`
 - Integration branch: `codex/0027-evidence-backed-decision-copilot`
 - Baseline: `origin/main` at `f77b565`; immutable `v0.1.1-rc1` remains
   `b6b05b9`
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: execute the approved Slice 3 packet-bound local-monitoring plan
-  as one targeted vertical slice. Do not begin outcome/review, another
-  model framework, Provider/OpenD, another symbol, external notification, or any
-  0021 soak work from this goal state.
+- Current frontier: execute the approved Slice 4 packet outcome/review plan as one
+  targeted vertical slice. Reopen one exact persisted NVDA action packet and save
+  one honest, restart-safe review closure. Do not add exit orders, a performance
+  dashboard, AI review, another model framework, Provider/OpenD, another symbol,
+  external notification, or any 0021 soak work from this goal state.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.

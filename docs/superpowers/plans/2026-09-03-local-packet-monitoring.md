@@ -72,20 +72,20 @@ proposal, risk, order, Copilot, and external state remain unchanged.
 
 #### Step 1: Write domain/store RED tests
 
-- [ ] Define strict frozen contracts for condition, registration, price/forecast
+- [x] Define strict frozen contracts for condition, registration, price/forecast
   observation, typed condition result, and atomic evaluation.
-- [ ] Test canonical identities, exact packet reload, fixed kind ordering, one
+- [x] Test canonical identities, exact packet reload, fixed kind ordering, one
   registration per packet, duplicate/concurrent convergence, conflict refusal,
   corruption, and restart replay.
-- [ ] Test entry outside→inside, initial inside, inside→inside, invalidation
+- [x] Test entry outside→inside, initial inside, inside→inside, invalidation
   `>=→<`, equality, duplicate/reversed/gapped sequence, pre/as-of/future times,
   and at-most-once trigger behavior.
-- [ ] Test XNYS weekend, holiday, early close, exact close/threshold boundary and
+- [x] Test XNYS weekend, holiday, early close, exact close/threshold boundary and
   24/7 UTC day close with the pinned `CalendarService`.
-- [ ] Test same-target forecast p50 below/equal/above one-risk-unit threshold,
+- [x] Test same-target forecast p50 below/equal/above one-risk-unit threshold,
   missing target, incompatible or future/corrupt candidate, and absence of any
   probability field.
-- [ ] Snapshot packet/proposal/order files around failures and evaluations.
+- [x] Snapshot packet/proposal/order files around failures and evaluations.
 
 Run:
 
@@ -97,27 +97,27 @@ Expected initially: FAIL because the monitoring contracts and service do not exi
 
 #### Step 2: Implement domain/store/service GREEN
 
-- [ ] Extend ADR-0019 with monitoring reverse binding, identity, atomic evaluation,
+- [x] Extend ADR-0019 with monitoring reverse binding, identity, atomic evaluation,
   fixed rule definitions, and no-authority decisions before production code.
-- [ ] Implement the strict contracts and canonical hash helpers.
-- [ ] Implement a root-locked, fail-closed store for registrations/evaluations and
+- [x] Implement the strict contracts and canonical hash helpers.
+- [x] Implement a root-locked, fail-closed store for registrations/evaluations and
   replay validation, using one evaluation record as the price cursor.
-- [ ] Implement exact packet-derived registration and deterministic evaluation.
-- [ ] Re-run Step 1 until green and refactor without broadening the API.
+- [x] Implement exact packet-derived registration and deterministic evaluation.
+- [x] Re-run Step 1 until green and refactor without broadening the API.
 
 #### Step 3: Write API/runtime/demo RED tests and bind the service
 
-- [ ] Prove GET is read-only; POST requires same origin, an exact persisted packet,
+- [x] Prove GET is read-only; POST requires same origin, an exact persisted packet,
   and one to four unique fixed kinds.
-- [ ] Prove the first POST registers/checks, a later identical POST checks again,
+- [x] Prove the first POST registers/checks, a later identical POST checks again,
   exact observation replay is idempotent, conflicting registration is 409, and
   missing/corrupt packet or monitoring state remains 404/409.
-- [ ] Build the observation only from the current local workspace and exact local
+- [x] Build the observation only from the current local workspace and exact local
   forecast registry, retaining live lineage. No arbitrary browser price body and
   no provider call are allowed.
-- [ ] Bind `DecisionWatchStore` under `decisions/monitoring` for normal/demo stores;
+- [x] Bind `DecisionWatchStore` under `decisions/monitoring` for normal/demo stores;
   make demo reset replace it and include its owned files without seeding a trigger.
-- [ ] Reconstruct an app on the same root and prove byte-identical recovery plus
+- [x] Reconstruct an app on the same root and prove byte-identical recovery plus
   unchanged packet/proposal/order/Copilot state.
 
 Run:
@@ -128,15 +128,15 @@ Run:
 
 #### Step 4: Write UI RED tests and implement the compact disclosure
 
-- [ ] Fresh packet: localized save-first state and no enabled monitoring action.
-- [ ] Persisted packet: four keyboard-selectable fixed kinds, disclosed derived
+- [x] Fresh packet: localized save-first state and no enabled monitoring action.
+- [x] Persisted packet: four keyboard-selectable fixed kinds, disclosed derived
   facts, one Save & check action, loading isolated to the panel, and exact typed
   results.
-- [ ] Registered packet: immutable definitions, latest event/facts, Check now, and
+- [x] Registered packet: immutable definitions, latest event/facts, Check now, and
   no change to DecisionRail or Copilot behavior.
-- [ ] Packet/range/instrument switching discards late results; zh-CN and 390 px
+- [x] Packet/range/instrument switching discards late results; zh-CN and 390 px
   wrapping remain correct.
-- [ ] Generate OpenAPI types rather than hand-shaping the client contract.
+- [x] Generate OpenAPI types rather than hand-shaping the client contract.
 
 Run:
 
@@ -150,12 +150,12 @@ Set-Location ..
 
 #### Step 5: Prove the NVDA loop and no-authority boundary
 
-- [ ] Add one Chromium path from Watchlist NVDA to an exact persisted packet,
+- [x] Add one Chromium path from Watchlist NVDA to an exact persisted packet,
   selecting conditions and showing initial typed results without leaving the
   workspace.
-- [ ] Inject later local observations for entry/invalidation/drift/stale trigger
+- [x] Inject later local observations for entry/invalidation/drift/stale trigger
   and non-trigger paths; restart and reopen identical event identity.
-- [ ] Assert no provider/OpenD/notification call and byte-identical packet,
+- [x] Assert no provider/OpenD/notification call and byte-identical packet,
   proposal, order, risk, and Copilot files.
 
 Focused coherent selection:
@@ -171,11 +171,11 @@ Set-Location ..
 
 #### Step 6: Review and verify once at the slice boundary
 
-- [ ] Submit the complete vertical slice to one combined Reviewer. Correct at most
+- [x] Submit the complete vertical slice to one combined Reviewer. Correct at most
   one Critical/Important round; a further structural problem reduces scope.
-- [ ] Immediately before final UI verification, read the Impeccable craft floor;
+- [x] Immediately before final UI verification, read the Impeccable craft floor;
   after UI is final, run its detector exactly once and record the result.
-- [ ] After review, run the broad slice gate once:
+- [x] After review, run the broad slice gate once:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q --basetemp .superpowers/sdd/2026-09-03-local-packet-monitoring/pytest-slice3-final
@@ -198,9 +198,9 @@ is the approved final-PR maintenance item.
 
 #### Step 7: Record the slice checkpoint
 
-- [ ] Update the active iteration and Goal with the completed user loop, exact
+- [x] Update the active iteration and Goal with the completed user loop, exact
   review/verification evidence, degraded behavior, and narrow known limits.
-- [ ] Commit and push the coherent Slice 3 checkpoint, then advance the Goal only
+- [x] Commit and push the coherent Slice 3 checkpoint, then advance the Goal only
   to the separately approved Slice 4 outcome/review design and plan.
 
 Suggested implementation commit:
