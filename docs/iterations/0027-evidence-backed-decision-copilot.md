@@ -1,6 +1,6 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: active (Slice 1 complete; Slice 2 implementation checkpoint awaits review)
+- Status: active (Slices 1–2 complete; Slice 3 design/plan next)
 - Started: 2026-09-02
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
 - Branch: `codex/0027-evidence-backed-decision-copilot` from
@@ -350,11 +350,13 @@ slice.
   the corrected isolated case. Reviewer, detector and broad slice gate are also
   controller-owned and have not run at this checkpoint.
 
-## Current frontier
+## Slice 2 completion evidence — 2026-09-03
 
-Slice 1 is complete. Slice 2 has an implementer checkpoint and now awaits its
-combined boundary review, the one corrected isolated browser verification,
-detector, and broad slice gate. Slice 3 must not start before those gates close.
+Slices 1 and 2 are complete. The second and final Slice 2 review found all three
+Important items and the one Minor item ADDRESSED, with no new Critical or Important
+breakage. The completed product loop lets an operator request and reopen a fully
+cited explanation/challenge of an exact persisted packet, while invalid or missing
+AI degrades only the panel.
 
 Its single user action requests a complete Base explanation, Bull/Bear challenges,
 evidence gaps, limitations and operator questions against an already persisted
@@ -365,9 +367,18 @@ path/digest, critic refusal, timeout or unavailable model degrades only the pane
 AI supplies no confidence, probability, direction, size, risk approval, blocker
 override or action authority.
 
-Review and verify
-`docs/superpowers/plans/2026-09-03-structured-decision-copilot.md` as one bounded
-API/page/state/test loop with at most one correction round. Broad gates run once
-at the coherent slice boundary. Do not start monitoring,
-outcome/review, another model framework, Provider/OpenD, another symbol, 0021 soak,
-or the deferred Python release-license repair from this frontier.
+Final verification is `3179 passed, 9 skipped, 7 warnings in 3823.34s`, exit `0`;
+the corrected packaged-SPA Chromium path is `1 passed, 5 warnings in 138.98s`, exit
+`0`; UTC Vitest is `19` files / `173` tests, and Ruff, `pip check`, OpenAPI,
+TypeScript, lint, production build, diff and the single Impeccable detector are
+green. Exact details and the preceding transparent selector failures remain in the
+implementer checkpoint above.
+
+## Current frontier
+
+The active frontier is a separate approved Slice 3 local-monitoring design and
+executable plan. Its one action saves local conditions from an exact packet and its
+stop condition proves deterministic trigger/non-trigger replay plus stale evidence.
+Do not start implementation before that plan exists; do not begin outcome/review,
+another model framework, Provider/OpenD, another symbol, external notification,
+0021 soak, or the deferred Python release-license repair from this frontier.

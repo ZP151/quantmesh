@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0027 Slice 2 implementation awaits review and final gates
+- Status: active — iteration 0027 Slice 2 complete; Slice 3 design/plan next
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -19,10 +19,9 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: review and verify the Slice 2 persisted-packet Copilot checkpoint,
-  including one corrected isolated browser case, then run its detector and broad
-  gate. Do not begin monitoring,
-  outcome/review, another model framework, Provider/OpenD, another symbol, or any
+- Current frontier: create the separately bounded Slice 3 local-monitoring design
+  and executable plan before implementation. Do not begin outcome/review, another
+  model framework, Provider/OpenD, another symbol, external notification, or any
   0021 soak work from this goal state.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
@@ -182,6 +181,28 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   now matches established suite semantics, but the corrected isolated E2E remains
   the sole unverified item. This checkpoint is `DONE_WITH_CONCERNS` pending the
   controller's browser verification, review, detector and broad gate.
+
+## Slice 2 completion checkpoint — 2026-09-03
+
+- Commit `60ee6f9` closed the final review's three Important findings: Copilot is
+  withheld during range-placeholder drift and late responses bind context plus
+  packet ID; accepted records reopen from the validated store without a configured
+  model while POST remains degraded; generated Citation types are concrete without
+  changing legacy wire bytes. It also closes naive timestamp acceptance.
+- The second and final review found every item ADDRESSED with no new Critical or
+  Important breakage. The single Impeccable detector run returned `[]`.
+- After correcting test-only acceptance setup, the isolated Chromium path passed
+  `1` test with `5` existing dependency warnings in `138.98s`, exit `0`. It proves
+  valid report/citations/reload and unavailable persisted-draft action, packet,
+  proposal and order invariance in the real packaged SPA.
+- The one broad Slice 2 gate passed `3179` Python tests with `9` skips and `7`
+  warnings in `3823.34s`, exit `0`; full Ruff, `pip check` and diff checks passed.
+  UTC Vitest passed `19` files / `173` tests in `31.16s`; OpenAPI freshness,
+  TypeScript, lint and production build (`2081` modules in `9.04s`) passed. Four
+  existing Fast Refresh warnings, the ambient Node `22.11.0` versus Vite `22.12+`
+  advisory, and the known final-PR Python license-lock drift are not expanded here.
+- Slice 2 is complete. No real model/provider call, OpenD, real trading, another
+  symbol, external notification, monitoring, outcome/review or 0021 soak work ran.
 
 ## Historical delivery record
 
