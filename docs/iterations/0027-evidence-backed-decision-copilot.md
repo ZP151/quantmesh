@@ -1,14 +1,14 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: active (Slices 1–3 complete; Slice 4 implementation ready)
+- Status: active (Slices 1–4 complete; final license closure and PR gate pending)
 - Started: 2026-09-02
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
 - Branch: `codex/0027-evidence-backed-decision-copilot` from
   `origin/main` at `f77b565`
 - Active design:
-  `docs/superpowers/specs/2026-09-03-local-packet-monitoring-design.md`
+  `docs/superpowers/specs/2026-09-03-packet-outcome-review-design.md`
 - Active executable plan:
-  `docs/superpowers/plans/2026-09-03-local-packet-monitoring.md`
+  `docs/superpowers/plans/2026-09-03-packet-outcome-review.md`
 - Ledger: this file
 
 ## Product wedge
@@ -403,15 +403,37 @@ size warnings while exiting `0`.
 
 ## Current frontier
 
-The active frontier is the approved Slice 4 packet outcome/review plan. Its single
-user action reopens an exact persisted NVDA action packet, compares the frozen
-decision with honest local path/paper/risk evidence, and atomically saves one
-review without leaving Instrument Workspace. Planner and Quant Researcher agree
-that review is a separate reverse-binding closure; `DecisionPacket` identity is
-unchanged. Missing horizon, continuous watch coverage, proposal-bound exit fills
-or complete costs remains explicitly unavailable and cannot become zero P&L or a
-fabricated realized R.
+Slices 1–4 are complete. The only remaining frontier is the previously approved,
+bounded Python release-license closure repair followed by the final 0027 PR gate.
+Do not add another product slice or expand into an exit-order lifecycle,
+performance dashboard, AI review, another model framework, Provider/OpenD,
+another symbol, external notification or 0021 soak.
 
-Do not add an exit-order lifecycle, performance dashboard, AI review, another
-model framework, Provider/OpenD, another symbol, external notification, 0021 soak,
-or the deferred Python release-license repair from this product frontier.
+## Slice 4 completion evidence — 2026-09-03
+
+An operator can reopen one exact persisted non-draft NVDA action packet in
+Instrument Workspace, inspect a frozen 30-session close-based outcome plus exact
+paper-risk/watch provenance, classify it and save one immutable review. Exact
+packet, proposal, order, fill, monitoring, path and outcome identities are
+revalidated on replay. Missing continuous coverage, exit fills or complete costs
+remain explicitly unavailable; the UI never fabricates realized R or zero P&L.
+The saved review and its embedded outcome reopen with identical IDs after a clean
+application reconstruction.
+
+The combined boundary review used its two allowed rounds. After the single planned
+correction, two narrowly scoped replay/UI gaps remained: exact order type and
+quantity binding, and visibility of accepted/rejected order events. A final
+test-first boundary correction fixed only those already identified gaps without a
+third review or design expansion. Targeted proof passed: the exact order-tamper
+regression `1 passed, 10 deselected` in `65.35s`; the component file `7 passed`;
+the packaged Chromium save/restart path `1 passed, 14 deselected, 5 warnings` in
+`154.97s`; targeted Ruff, Oxlint, TypeScript, bundle build/freshness and diff
+checks exited `0`. The one required Impeccable detector had already returned `[]`.
+
+The one broad Slice 4 gate passed `3217` Python tests with `9` skips and `7`
+warnings in `3806.57s`, exit `0`. UTC Vitest passed `21` files / `187` tests;
+Ruff, `pip check`, OpenAPI freshness, TypeScript, lint, production build, packaged
+bundle freshness and `git diff --check` all exited `0`. Four existing Fast Refresh
+warnings and the local Node `22.11.0` versus Vite `22.12+` advisory remained
+non-blocking. No Provider/OpenD/model/notification call, real trade, other symbol
+or 0021 soak state was touched.

@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0027 Slices 1–3 complete; Slice 4 implementation ready
+- Status: active — iteration 0027 Slices 1–4 complete; final license closure and PR gate pending
 - Objective: enable a research-minded individual active trader to turn a
   ticker into a verifiable, risk-first decision package in no more than two
   minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
@@ -19,11 +19,11 @@
 - Delivery mode: one 0027 product track and one independent 0021 soak
   maintenance track at most. Each track uses one integration branch and one
   final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: execute the approved Slice 4 packet outcome/review plan as one
-  targeted vertical slice. Reopen one exact persisted NVDA action packet and save
-  one honest, restart-safe review closure. Do not add exit orders, a performance
-  dashboard, AI review, another model framework, Provider/OpenD, another symbol,
-  external notification, or any 0021 soak work from this goal state.
+- Current frontier: repair only the approved Python release-license closure drift,
+  then run the final 0027 PR gate. Slices 1–4 are complete; do not add another
+  product slice or expand into exit orders, a performance dashboard, AI review,
+  another model framework, Provider/OpenD, another symbol, external notification
+  or any 0021 soak work.
 - External gate: none for the deterministic product slice. Model services,
   OpenD and real providers are optional degraded-state inputs and never merge
   gates.
@@ -204,6 +204,28 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   advisory, and the known final-PR Python license-lock drift are not expanded here.
 - Slice 2 is complete. No real model/provider call, OpenD, real trading, another
   symbol, external notification, monitoring, outcome/review or 0021 soak work ran.
+
+## Slice 4 completion checkpoint — 2026-09-03
+
+- The exact persisted NVDA packet now reopens in Instrument Workspace with an
+  immutable outcome/review closure. It binds the 30-session local path, exact
+  proposal/order/fill and monitoring provenance, and clean-restart identities;
+  unavailable exit/cost evidence never becomes realized R or zero P&L.
+- The two allowed combined-review rounds completed. A final narrow test-first
+  correction addressed only the already identified exact order-binding and full
+  order-event timeline gaps; no third review or feature expansion occurred.
+- Targeted proof passed: order-tamper regression `1 passed, 10 deselected` in
+  `65.35s`; component `7 passed`; Chromium save/restart `1 passed, 14 deselected,
+  5 warnings` in `154.97s`; targeted static and bundle checks all exited `0`.
+- The one broad Slice 4 gate passed `3217 passed, 9 skipped, 7 warnings` in
+  `3806.57s`, exit `0`; UTC Vitest passed `21` files / `187` tests. Ruff,
+  `pip check`, OpenAPI, TypeScript, lint, build, packaged bundle freshness and
+  diff checks passed. The existing Fast Refresh and local Node/Vite advisories
+  remain non-blocking.
+- Slices 1–4 are complete. The only active work is the approved Python
+  release-license closure repair and final 0027 PR gate. No Provider/OpenD/model
+  call, real trade, other symbol, external notification or 0021 soak state was
+  touched.
 
 ## Historical delivery record
 

@@ -15,14 +15,14 @@ expansion.
 
 ## Step 1 — Outcome/review contracts and store
 
-- [ ] Start RED in `tests/test_packet_reviews.py` for strict immutable contracts,
+- [x] Start RED in `tests/test_packet_reviews.py` for strict immutable contracts,
   canonical outcome/review IDs, one review per exact action packet, idempotence,
   conflict, corruption and clean-restart replay.
-- [ ] Implement `src/quantmesh/instruments/reviews.py` with a single atomic
+- [x] Implement `src/quantmesh/instruments/reviews.py` with a single atomic
   `DecisionReviewRecord` append that embeds the outcome snapshot.
-- [ ] Validate exact non-draft action packet and root analysis lineage; never use
+- [x] Validate exact non-draft action packet and root analysis lineage; never use
   `latest`, a workspace draft, or a recomposed packet as authority.
-- [ ] Prove packet, proposal, order, monitoring, account and Copilot ledgers are
+- [x] Prove packet, proposal, order, monitoring, account and Copilot ledgers are
   byte-identical before and after preview/save.
 
 Targeted command:
@@ -33,34 +33,34 @@ Targeted command:
 
 ## Step 2 — Honest local attribution
 
-- [ ] Bind the exact 30-session forecast target/calendar; missing binding is
+- [x] Bind the exact 30-session forecast target/calendar; missing binding is
   unavailable and never falls back to weekdays or another path.
-- [ ] Freeze strictly ordered post-decision daily OHLC evidence with provenance
+- [x] Freeze strictly ordered post-decision daily OHLC evidence with provenance
   and digest. Reject future knowledge, wrong instruments, gaps and incompatible
   evidence.
-- [ ] Implement the disclosed close-based Bull/Base/Bear threshold observations,
+- [x] Implement the disclosed close-based Bull/Base/Bear threshold observations,
   strict equality boundaries, first-observed times and same-bar ambiguity. Keep
   narrative triggers and Bear invalidation explicitly unavailable.
-- [ ] Separate planned R, gross path R, entry-fill deviation, mark-to-market R
+- [x] Separate planned R, gross path R, entry-fill deviation, mark-to-market R
   and realized R. Realized R stays unavailable without proposal-bound exit fills,
   attributable quantity and complete fees.
-- [ ] Read exact proposal/order/fill/risk-refusal and monitoring records without
+- [x] Read exact proposal/order/fill/risk-refusal and monitoring records without
   invoking confirmation, recovery, monitoring evaluation or any external call.
-- [ ] Cover Reject, Watch, pending/blocked, risk-rejected, accepted-unfilled and
+- [x] Cover Reject, Watch, pending/blocked, risk-rejected, accepted-unfilled and
   filled-open states. Event absence must not claim full-horizon non-trigger.
 
 ## Step 3 — Read-only preview and atomic save API
 
-- [ ] Add GET/POST on
+- [x] Add GET/POST on
   `/api/decision-packets/{packet_id}/outcome-review` with generated contracts.
-- [ ] GET is read-only. POST accepts only expected outcome identity,
+- [x] GET is read-only. POST accepts only expected outcome identity,
   classification and note; it recomposes under the injected clock and returns
   409 on drift, conflict or corruption.
-- [ ] Apply exact scheme/host/port same-origin browser protection and the existing
+- [x] Apply exact scheme/host/port same-origin browser protection and the existing
   explicit absent-Origin non-browser exception.
-- [ ] Wire normal and demo runtimes under `decisions/reviews`; seed ownership and
+- [x] Wire normal and demo runtimes under `decisions/reviews`; seed ownership and
   reset files; reconstruct the app on the same root and reopen identical state.
-- [ ] Keep missing evidence typed unavailable. Unknown packet is 404; draft or
+- [x] Keep missing evidence typed unavailable. Unknown packet is 404; draft or
   invalid classification is 409/422 as appropriate.
 
 Targeted command:
@@ -71,16 +71,16 @@ Targeted command:
 
 ## Step 4 — Instrument Workspace review panel
 
-- [ ] Start RED component tests for save-first draft, exact action packet,
+- [x] Start RED component tests for save-first draft, exact action packet,
   complete/partial/unavailable evidence, accepted/risk-rejected/Watch/Reject,
   saved read-only state and recovery copy.
-- [ ] Add `PacketOutcomeReview` below PacketMonitoring in the evidence rail; no
+- [x] Add `PacketOutcomeReview` below PacketMonitoring in the evidence rail; no
   route hop, modal, new chart or layout replacement.
-- [ ] Show horizon/evidence state, scenario observations, paper/risk timeline,
+- [x] Show horizon/evidence state, scenario observations, paper/risk timeline,
   distinct R labels, classification, optional note and one Save review action.
-- [ ] Isolate query/mutation state by context, exact packet and outcome identity;
+- [x] Isolate query/mutation state by context, exact packet and outcome identity;
   discard late responses after range/instrument/new-analysis switches.
-- [ ] Generate OpenAPI client, add English/Simplified-Chinese copy, keyboard and
+- [x] Generate OpenAPI client, add English/Simplified-Chinese copy, keyboard and
   390 px coverage. Rebuild the packaged SPA only after UI settles.
 
 Targeted command:
@@ -95,12 +95,12 @@ Set-Location ..
 
 ## Step 5 — NVDA browser and restart proof
 
-- [ ] Prove a confirmed/filled-open paper entry can save an inconclusive or
+- [x] Prove a confirmed/filled-open paper entry can save an inconclusive or
   evidence-supported review while realized R remains unavailable.
-- [ ] Prove deterministic risk refusal saves/reopens its exact reason without an
+- [x] Prove deterministic risk refusal saves/reopens its exact reason without an
   order fill or fabricated zero result.
-- [ ] Cover operator Reject/Watch in targeted service/API tests.
-- [ ] Reconstruct the app on the same root and reopen exact packet, outcome and
+- [x] Cover operator Reject/Watch in targeted service/API tests.
+- [x] Reconstruct the app on the same root and reopen exact packet, outcome and
   review IDs in Instrument Workspace. Assert no Provider/OpenD/model/notification
   call and no mutation outside the review store.
 
@@ -112,11 +112,11 @@ Focused command:
 
 ## Step 6 — One review boundary and one broad gate
 
-- [ ] Submit the demonstrable slice to one combined Reviewer. Correct at most one
+- [x] Submit the demonstrable slice to one combined Reviewer. Correct at most one
   Critical/Important round; a remaining structural problem shrinks the feature.
-- [ ] Immediately before final UI verification, load the Impeccable craft floor;
+- [x] Immediately before final UI verification, load the Impeccable craft floor;
   run the detector exactly once after the UI is final.
-- [ ] Run the broad gate once after review:
+- [x] Run the broad gate once after review:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q --basetemp .superpowers/sdd/2026-09-03-packet-outcome-review/pytest-slice4-final
@@ -140,8 +140,8 @@ maintenance item runs once at the final PR boundary.
 
 ## Step 7 — Checkpoint and final-PR transition
 
-- [ ] Record the completed user loop, honest unavailable states, review result
+- [x] Record the completed user loop, honest unavailable states, review result
   and exact verification evidence in the iteration and Active Goal.
-- [ ] Commit and push the Slice 4 checkpoint.
-- [ ] Advance the Goal only to license-closure repair and the final 0027 PR gate;
+- [x] Commit and push the Slice 4 checkpoint.
+- [x] Advance the Goal only to license-closure repair and the final 0027 PR gate;
   do not add another product slice.
