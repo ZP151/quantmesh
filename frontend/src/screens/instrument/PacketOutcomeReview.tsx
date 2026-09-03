@@ -376,7 +376,7 @@ function EvidenceTimeline({
   outcome: Outcome
 }) {
   const { t } = usePreferences()
-  const fills = outcome.paper.order?.events.filter((event) => event.event_type === 'fill') ?? []
+  const orderEvents = outcome.paper.order?.events ?? []
   const watchEvents = outcome.monitoring.evaluations.flatMap((evaluation) => (
     evaluation.results
       .filter((result) => result.event_id !== null)
@@ -401,10 +401,20 @@ function EvidenceTimeline({
           <Fact label={t('screen.workspace.reviewOrderAt')} value={formatTime(outcome.paper.order.created_at)} />
         </>
       )}
-      {fills.map((fill) => (
-        <div className="contents" key={`${fill.sequence}:${fill.timestamp}`}>
-          <Fact label={t('screen.workspace.reviewFillId')} value={fill.broker_fill_id ?? t('screen.workspace.reviewUnavailableValue')} mono />
-          <Fact label={t('screen.workspace.reviewFillAt')} value={formatTime(fill.timestamp)} />
+      {orderEvents.map((event) => (
+        <div className="contents" key={`${event.sequence}:${event.timestamp}`}>
+          <Fact
+            label={t('screen.workspace.reviewOrderEvent')}
+            value={`#${event.sequence} · ${event.event_type} · ${event.status}`}
+            mono
+          />
+          <Fact label={t('screen.workspace.reviewOrderEventAt')} value={formatTime(event.timestamp)} />
+          {event.reason !== null && event.reason !== undefined && (
+            <Fact label={t('screen.workspace.reviewOrderEventReason')} value={event.reason} />
+          )}
+          {event.event_type === 'fill' && (
+            <Fact label={t('screen.workspace.reviewFillId')} value={event.broker_fill_id ?? t('screen.workspace.reviewUnavailableValue')} mono />
+          )}
         </div>
       ))}
       {outcome.monitoring.registration !== null && outcome.monitoring.registration !== undefined && (

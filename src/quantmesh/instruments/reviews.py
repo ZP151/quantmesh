@@ -98,11 +98,15 @@ def _validate_order_binding(proposal: PaperProposal, order: Order) -> None:
     validate_order_replay(order)
     if (
         order.order_id != proposal.order_id
+        or order.order_id != f"paper-proposal:{proposal.id}"
         or order.idempotency_key != f"proposal:{proposal.id}"
         or order.instrument.model_dump(mode="json") != proposal.instrument.model_dump(mode="json")
         or order.side is not proposal.side
-        or not math.isclose(order.quantity, proposal.quantity)
+        or order.quantity != proposal.quantity
+        or order.order_type is not proposal.order_type
         or order.limit_price != proposal.limit_price
+        or order.client_order_id is not None
+        or order.broker_order_id is not None
         or order.created_at < proposal.created_at
     ):
         raise ValueError("order does not match exact proposal")

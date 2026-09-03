@@ -555,6 +555,23 @@ def test_filled_open_entry_has_fill_metrics_but_never_fabricates_realized_r(
     )
     with pytest.raises(ValueError, match="line 1 is invalid"):
         store.for_packet(action["packet"]["packet_id"])
+    record = json.loads(json.dumps(original))
+    record["outcome"]["paper"]["order"]["quantity"] += 1e-12
+    store.path.write_text(
+        json.dumps(_rehash_outer_review(record), separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="line 1 is invalid"):
+        store.for_packet(action["packet"]["packet_id"])
+    record = json.loads(json.dumps(original))
+    record["outcome"]["paper"]["order"]["order_type"] = "limit"
+    record["outcome"]["paper"]["order"]["limit_price"] = 1.0
+    store.path.write_text(
+        json.dumps(_rehash_outer_review(record), separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="line 1 is invalid"):
+        store.for_packet(action["packet"]["packet_id"])
 
 
 def test_risk_refusal_and_operator_invoked_watch_coverage_remain_exact(

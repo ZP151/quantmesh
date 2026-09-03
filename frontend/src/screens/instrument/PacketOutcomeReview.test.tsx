@@ -149,15 +149,28 @@ describe('PacketOutcomeReview', () => {
         paper: {
           order: {
             created_at: '2026-08-08T12:02:00Z',
-            events: [{
-              broker_fill_id: 'fill-nvda-1',
-              event_type: 'fill',
-              price: 181,
-              quantity: 1,
-              sequence: 2,
-              status: 'filled',
-              timestamp: '2026-08-08T12:02:00Z',
-            }],
+            events: [
+              {
+                broker_fill_id: null,
+                event_type: 'accepted',
+                price: null,
+                quantity: null,
+                reason: null,
+                sequence: 1,
+                status: 'accepted',
+                timestamp: '2026-08-08T12:01:30Z',
+              },
+              {
+                broker_fill_id: 'fill-nvda-1',
+                event_type: 'fill',
+                price: 181,
+                quantity: 1,
+                reason: null,
+                sequence: 2,
+                status: 'filled',
+                timestamp: '2026-08-08T12:02:00Z',
+              },
+            ],
             order_id: 'paper-proposal:proposal-000000000000000000000001',
           },
           proposal: {
@@ -192,10 +205,48 @@ describe('PacketOutcomeReview', () => {
     expect(screen.getAllByText(/Invalidation 176/)).toHaveLength(2)
     expect(screen.getByText('proposal-000000000000000000000001')).toBeVisible()
     expect(screen.getByText('paper-proposal:proposal-000000000000000000000001')).toBeVisible()
+    expect(screen.getByText('#1 · accepted · accepted')).toBeVisible()
+    expect(screen.getByText('#2 · fill · filled')).toBeVisible()
     expect(screen.getByText('fill-nvda-1')).toBeVisible()
     expect(screen.getByText('registration-000000000000000000000001')).toBeVisible()
     expect(screen.getByText('evaluation-000000000000000000000001')).toBeVisible()
     expect(screen.getByText('watch-event-000000000000000000000001')).toBeVisible()
+  })
+
+  it('shows the exact rejected order event time and reason', async () => {
+    mockedPreview.mockResolvedValueOnce({
+      ...previewState,
+      outcome: {
+        ...previewState.outcome,
+        paper: {
+          order: {
+            created_at: '2026-08-08T12:02:00Z',
+            events: [{
+              broker_fill_id: null,
+              event_type: 'rejected',
+              price: null,
+              quantity: null,
+              reason: 'Global kill switch is active.',
+              sequence: 1,
+              status: 'rejected',
+              timestamp: '2026-08-08T12:02:01Z',
+            }],
+            order_id: 'paper-proposal:proposal-000000000000000000000002',
+          },
+          proposal: {
+            created_at: '2026-08-08T12:01:00Z',
+            id: 'proposal-000000000000000000000002',
+          },
+          reason: 'Global kill switch is active.',
+          state: 'risk_rejected',
+        },
+      },
+    } as unknown as DecisionOutcomeReviewState)
+    renderReview()
+
+    expect(await screen.findByText('#1 · rejected · rejected')).toBeVisible()
+    expect(screen.getAllByText('Global kill switch is active.').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Aug 8, 2026/).length).toBeGreaterThan(0)
   })
 
   it('renders a saved review from its frozen outcome instead of a newer preview', async () => {
