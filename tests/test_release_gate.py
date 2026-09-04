@@ -28,3 +28,7 @@ def test_venv_script_resolves_platform_console_entrypoint() -> None:
         assert path == Path("acceptance-venv/Scripts/quantmesh-data.exe")
     else:
         assert path == Path("acceptance-venv/bin/quantmesh-data")
+
+
+def test_full_pytest_timeout_covers_the_observed_hour_long_suite() -> None:
+    assert release_gate.FULL_PYTEST_TIMEOUT_SECONDS == 5400

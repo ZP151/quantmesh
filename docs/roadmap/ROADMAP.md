@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-08-11
+Last updated: 2026-09-02
 
 ## Status legend
 
@@ -328,23 +328,29 @@ passed the 17-step clean-checkout gate and isolated demo/live-degraded browser
 acceptance. It is accepted for prototype use; final `v0.1.1` promotion remains
 a separate explicit operator gate.
 
-### M14 — Trusted data and algorithm expansion (`ACTIVE`)
+### M14 — Trusted decisions and learning loop (`ACTIVE`)
 
-Outcome: enable many data and model candidates to be compared safely behind
-stable adapters instead of increasing product complexity per provider.
+Outcome: turn the trusted-data and Instrument Workspace foundations into a
+short, evidence-backed decision loop that an individual active trader can use,
+monitor and learn from without surrendering risk or execution authority.
 
 Sequence for operator review:
 
 1. **Done as iteration 0021 (merged PR #120):** trusted data fabric: provider
    registry, symbol/calendar/corporate-action normalization, raw/normalized/
-   feature layers, manifests, source rights and quality SLAs. See
+   feature layers, manifests, source rights and quality SLAs. Its 168-hour soak
+   continues as a non-blocking maintenance/release-confidence track. See
    [issue #110](https://github.com/ZP151/quantmesh/issues/110),
    `docs/iterations/0021-trusted-data-fabric.md` and
    `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`.
-2. **Next as iteration 0027:** algorithm evaluation lab: extend the
-   iteration-0020 FinRL-X/Nautilus decision with Qlib and Darts comparisons,
-   then selected LEAN or other candidates under common walk-forward, cost,
-   leakage and calibration gates.
-3. Grounded research copilot with citations and no order authority.
-4. Paper shadow portfolio with scheduled proposals and outcome monitoring.
+2. **Active as iteration 0027:** Evidence-backed Decision Copilot. Starting
+   with NVDA, compose market state, Bull/Base/Bear scenarios, risk, evidence and
+   Reject/Watch/Paper actions into a versioned DecisionPacket inside Instrument
+   Workspace, then add optional cited Copilot explanation, local watch
+   conditions and replayable outcome review.
+3. Expand datasets, baselines or selected Qlib/Darts adapters only where a
+   DecisionPacket slice demonstrates a missing capability. Framework count and
+   model ranking are not product milestones.
+4. Extend the proven decision loop to a bounded multi-instrument paper shadow
+   portfolio after the single-instrument monitoring and journal loop is usable.
 5. Guarded broker/testnet execution only after a separate authorization.

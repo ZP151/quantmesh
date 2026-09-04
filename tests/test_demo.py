@@ -621,14 +621,20 @@ def test_provenance_contract(tmp_path: Path) -> None:
         set(SURFACE_COUNTS)
         | market_keys
         | {f"lake:demo-{spec.venue}-{spec.symbol.lower()}" for spec in universe}
-        | {"orders", "history", "price_forecasts", "paper_proposals"}
+        | {
+            "orders",
+            "history",
+            "price_forecasts",
+            "paper_proposals",
+            "decision_packets",
+        }
     )
     for name, surface in surfaces.items():
         assert surface["source"] == "demo"
         assert surface["synthetic"] is True
         assert surface["updated_at"] == ANCHOR.isoformat()
         assert isinstance(surface["rows"], int)
-        if name in {"paper_proposals", "price_forecasts"}:
+        if name in {"paper_proposals", "price_forecasts", "decision_packets"}:
             assert surface["rows"] == 0
         else:
             assert surface["rows"] >= 1

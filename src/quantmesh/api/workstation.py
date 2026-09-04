@@ -61,8 +61,10 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from quantmesh import __version__
-from quantmesh.ai.decisions import DecisionLog
+from quantmesh.ai.decisions import DecisionLog, ModelMeta
+from quantmesh.ai.gateway import ModelGateway
 from quantmesh.ai.retrieval import DocumentIndex
+from quantmesh.ai.transport import HttpModelTransport
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.data_catalog import DataCatalogReader, data_catalog_router
 from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
@@ -80,10 +82,17 @@ from quantmesh.execution.accounting import PaperAccount
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
 from quantmesh.instruments.api import instrument_router
+from quantmesh.instruments.copilot import PacketCopilotService, PacketCopilotStore
+from quantmesh.instruments.decision_packets import (
+    DecisionPacketService,
+    DecisionPacketStore,
+)
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.live_history import LiveHistoryService
+from quantmesh.instruments.monitoring import DecisionWatchService, DecisionWatchStore
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
+from quantmesh.instruments.reviews import DecisionOutcomeReviewService, DecisionReviewStore
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.api import live_router
 from quantmesh.live.contract import UpdateKind
@@ -1041,6 +1050,11 @@ def create_workstation_app(
     live_feed: LiveFeed | None = None,
     prediction: PredictionBoard | None = None,
     data_catalog: DataCatalogReader | None = None,
+    decision_packets: DecisionPacketStore | None = None,
+    packet_copilot_store: PacketCopilotStore | None = None,
+    packet_copilot: PacketCopilotService | None = None,
+    packet_monitoring: DecisionWatchStore | None = None,
+    packet_reviews: DecisionReviewStore | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1106,14 +1120,17 @@ def create_workstation_app(
         hl_posture=hl_posture,
         enablement=enablement,
     )
-    effective_history = (
-        LiveHistoryService(history, live_feed) if live_feed is not None else history
-    )
+    effective_history = LiveHistoryService(history, live_feed) if live_feed is not None else history
     app.state.history = effective_history
     app.state.price_forecasts = price_forecasts
     app.state.data_catalog = data_catalog
     clock = workspace_clock if workspace_clock is not None else lambda: datetime.now(UTC)
     app.state.instrument_clock = clock
+    app.state.decision_packets = decision_packets
+    app.state.packet_copilot_store = packet_copilot_store
+    app.state.packet_copilot = packet_copilot
+    app.state.packet_monitoring_store = packet_monitoring
+    app.state.packet_review_store = packet_reviews
 
     def publish_account(updated: PaperAccount) -> None:
         if account_sink is not None:
@@ -1179,12 +1196,36 @@ def create_workstation_app(
             history=effective_history,
             forecasts=price_forecasts,
             account_provider=account_store.get,
-            marks_provider=lambda: mark_snapshot_provider(clock()).marks,
-            valuation_provider=mark_snapshot_provider,
+            marks_provider=lambda: app.state.mark_snapshot_provider(clock()).marks,
+            valuation_provider=lambda as_of: app.state.mark_snapshot_provider(as_of),
             live_feed=live_feed,
             decisions=paper_decisions,
+            decision_packets=decision_packets,
             now=clock,
         )
+        if decision_packets is not None:
+            app.state.decision_packet_service = DecisionPacketService(
+                store=decision_packets,
+                workspace_provider=lambda: app.state.instrument_workspace,
+                proposals=paper_decisions,
+            )
+            if packet_monitoring is not None:
+                app.state.packet_monitoring = DecisionWatchService(
+                    packet_store=decision_packets,
+                    store=packet_monitoring,
+                    forecast_registry=price_forecasts,
+                )
+            if packet_reviews is not None:
+                app.state.packet_reviews = DecisionOutcomeReviewService(
+                    packet_store=decision_packets,
+                    review_store=packet_reviews,
+                    forecast_registry=price_forecasts,
+                    history=effective_history,
+                    proposal_ledger=proposal_ledger,
+                    journal=journal,
+                    monitoring=packet_monitoring,
+                    now=clock,
+                )
 
     # The SPA JSON surface (Phase C) in both modes: a strict superset
     # of the M1 API, so a client that wants JSON has one source of
@@ -1511,6 +1552,7 @@ def _register_kill_switch(app: FastAPI) -> None:
                     "/kill-switch/control",
                     f"kill-switch POST refused: unknown venue {venue!r}",
                 )
+
         def flip(current: PaperAccount) -> PaperAccount:
             if venue_enum is None:
                 return current.model_copy(update={"kill_switch": action == "engage"})
@@ -1778,6 +1820,28 @@ def main(argv: list[str] | None = None) -> None:
                 dataset_loader=Lake(settings.lake_root).dataset,
                 trusted_catalog=trusted_catalog,
             )
+            decision_packets = DecisionPacketStore(settings.decisions_dir / "packets")
+            packet_copilot_store = PacketCopilotStore(settings.decisions_dir / "copilot")
+            packet_monitoring = DecisionWatchStore(settings.decisions_dir / "monitoring")
+            packet_reviews = DecisionReviewStore(settings.decisions_dir / "reviews")
+            copilot_decisions = DecisionLog()
+            packet_copilot = None
+            if settings.model_name:
+                gateway = ModelGateway(HttpModelTransport(), model_name=settings.model_name)
+                model_meta = ModelMeta(
+                    name=settings.model_name,
+                    version="configured",
+                    endpoint_kind="loopback",
+                )
+                packet_copilot = PacketCopilotService(
+                    packet_store=decision_packets,
+                    store=packet_copilot_store,
+                    decision_log=copilot_decisions,
+                    analyst_gateway=gateway,
+                    critic_gateway=gateway,
+                    analyst_model=model_meta,
+                    critic_model=model_meta,
+                )
             app = create_workstation_app(
                 account=account,
                 markets=market_directory,
@@ -1789,10 +1853,16 @@ def main(argv: list[str] | None = None) -> None:
                 ),
                 proposal_ledger=ProposalLedger(settings.orders_dir / "proposals"),
                 journal=journal,
+                decisions=copilot_decisions,
                 account_sink=account_snapshot.save,
                 live_feed=feed,
                 prediction=prediction,
                 data_catalog=trusted_catalog,
+                decision_packets=decision_packets,
+                packet_copilot_store=packet_copilot_store,
+                packet_copilot=packet_copilot,
+                packet_monitoring=packet_monitoring,
+                packet_reviews=packet_reviews,
                 host=host,
             )
         else:

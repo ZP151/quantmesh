@@ -564,6 +564,21 @@ export type InstrumentWorkspace = DeepReadonly<
 export type PaperProposal = DeepReadonly<components['schemas']['PaperProposal']>
 export type ProposalConfirmation = DeepReadonly<components['schemas']['ProposalConfirmation']>
 export type ProposalCreateInput = components['schemas']['ProposalCreateBody']
+export type DecisionPacket = DeepReadonly<components['schemas']['DecisionPacket']>
+export type DecisionPacketActionResult = DeepReadonly<
+  components['schemas']['DecisionPacketActionResult']
+>
+export type DecisionPacketSaveInput = components['schemas']['DecisionPacketSaveBody']
+export type DecisionPacketActionInput = components['schemas']['DecisionPacketActionBody']
+export type PacketCopilotState = DeepReadonly<components['schemas']['PacketCopilotState']>
+// Local monitoring is a generated, packet-bound contract.  The browser can
+// select only the fixed condition kinds; observations are constructed by the
+// local runtime from its workspace and registry snapshots.
+export type WatchConditionKind = components['schemas']['WatchConditionKind']
+export type DecisionOutcomeReviewState = DeepReadonly<
+  components['schemas']['DecisionOutcomeReviewState']
+>
+export type DecisionOutcomeReviewInput = components['schemas']['DecisionOutcomeReviewBody']
 
 // --- Trusted data catalog (iteration 0021 Slice 6) -----------------------
 
@@ -774,6 +789,104 @@ export const api = {
             compare: compare.length > 0 ? [...compare] : undefined,
           },
         },
+      },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async saveDecisionPacket(input: DecisionPacketSaveInput): Promise<DecisionPacket> {
+    const { data, error, response } = await generatedApi.POST('/api/decision-packets', {
+      body: input,
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async decisionPacket(packetId: string): Promise<DecisionPacket> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/decision-packets/{packet_id}',
+      { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async applyDecisionPacketAction(
+    packetId: string,
+    input: DecisionPacketActionInput,
+  ): Promise<DecisionPacketActionResult> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/decision-packets/{packet_id}/actions',
+      {
+        params: { path: { packet_id: packetId } },
+        body: input,
+      },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async packetCopilot(packetId: string): Promise<PacketCopilotState> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/decision-packets/{packet_id}/copilot',
+      { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async requestPacketCopilot(packetId: string): Promise<PacketCopilotState> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/decision-packets/{packet_id}/copilot',
+      { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async packetMonitoring(packetId: string): Promise<components['schemas']['DecisionWatchState']> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/decision-packets/{packet_id}/watch-conditions',
+      { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async checkPacketMonitoring(
+    packetId: string,
+    kinds: readonly WatchConditionKind[],
+  ): Promise<components['schemas']['DecisionWatchState']> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/decision-packets/{packet_id}/watch-conditions',
+      {
+        body: { kinds: [...kinds] },
+        params: { path: { packet_id: packetId } },
+      },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async packetOutcomeReview(packetId: string): Promise<DecisionOutcomeReviewState> {
+    const { data, error, response } = await generatedApi.GET(
+      '/api/decision-packets/{packet_id}/outcome-review',
+      { params: { path: { packet_id: packetId } } },
+    )
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async savePacketOutcomeReview(
+    packetId: string,
+    input: DecisionOutcomeReviewInput,
+  ): Promise<DecisionOutcomeReviewState> {
+    const { data, error, response } = await generatedApi.POST(
+      '/api/decision-packets/{packet_id}/outcome-review',
+      {
+        body: input,
+        params: { path: { packet_id: packetId } },
       },
     )
     if (!response.ok || data === undefined) throw generatedApiError(response, error)

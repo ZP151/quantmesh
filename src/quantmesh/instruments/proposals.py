@@ -158,6 +158,11 @@ def _validate_proposal_seal(proposal: PaperProposal) -> None:
         raise ValueError("proposal confirmation token does not match its immutable intent")
 
 
+def validate_proposal_replay(proposal: PaperProposal) -> None:
+    """Purely validate the immutable proposal ID and confirmation-token seals."""
+    _validate_proposal_seal(proposal)
+
+
 def _validate_artifact_binding(
     proposal: PaperProposal,
     artifact: PriceForecastArtifact,
@@ -449,6 +454,10 @@ class PaperDecisionService:
     def _resolve_artifact(self, artifact_id: str) -> PriceForecastArtifact:
         return self._forecast_registry.get(artifact_id)
 
+    def resolve_artifact(self, artifact_id: str) -> PriceForecastArtifact:
+        """Resolve one registry-validated artifact for packet-bound preflight."""
+        return self._resolve_artifact(artifact_id)
+
     def propose(
         self,
         artifact_id: str,
@@ -456,13 +465,21 @@ class PaperDecisionService:
         side: Side,
         quantity: float,
         limit_price: float | None = None,
+        created_at: datetime | None = None,
+        expected_artifact: PriceForecastArtifact | None = None,
+        before_record: Callable[[PaperProposal], None] | None = None,
     ) -> PaperProposal:
         with self.ledger.transaction():
             artifact = self._resolve_artifact(artifact_id)
-            created_at = self.current_time()
+            if expected_artifact is not None and artifact != expected_artifact:
+                raise ValueError("forecast artifact changed after packet-bound preflight")
+            proposal_time = self.current_time() if created_at is None else created_at
+            if proposal_time.tzinfo is None:
+                raise ValueError("proposal time must be timezone-aware")
+            proposal_time = proposal_time.astimezone(UTC)
             order_type = OrderType.LIMIT if limit_price is not None else OrderType.MARKET
             blockers = artifact.blockers if not artifact.eligible else ()
-            freshness = forecast_freshness_blocker(artifact, created_at)
+            freshness = forecast_freshness_blocker(artifact, proposal_time)
             if freshness is not None:
                 blockers = (*blockers, freshness)
             candidate = PaperProposal(
@@ -479,7 +496,7 @@ class PaperDecisionService:
                 quantity=quantity,
                 order_type=order_type,
                 limit_price=limit_price,
-                created_at=created_at,
+                created_at=proposal_time,
                 confirmation_token="0" * 64,
                 status=(ProposalStatus.BLOCKED if blockers else ProposalStatus.PENDING),
                 blockers=blockers,
@@ -502,7 +519,11 @@ class PaperDecisionService:
             else:
                 if _proposal_identity(existing) != _proposal_identity(proposal):
                     raise ValueError("proposal id collision with different immutable facts")
+                if before_record is not None:
+                    before_record(existing)
                 return existing
+            if before_record is not None:
+                before_record(proposal)
             return self.ledger.record(proposal)
 
     def _terminal_result(self, proposal: PaperProposal) -> ProposalConfirmation:
@@ -556,13 +577,16 @@ class PaperDecisionService:
                 expected_created_at is not None
                 and order.created_at.astimezone(UTC) != expected_created_at
             )
-            or order.status not in {OrderStatus.FILLED, OrderStatus.REJECTED}
+            or order.status not in {OrderStatus.ACCEPTED, OrderStatus.FILLED, OrderStatus.REJECTED}
         ):
             raise ValueError("journal order does not match immutable proposal intent")
         if proposal.order_id is not None and order.order_id != proposal.order_id:
             raise ValueError("journal order does not match proposal order_id")
-        if proposal.status is ProposalStatus.CONFIRMED and order.status is not OrderStatus.FILLED:
-            raise ValueError("confirmed proposal is not backed by a filled order")
+        if proposal.status is ProposalStatus.CONFIRMED and order.status not in {
+            OrderStatus.ACCEPTED,
+            OrderStatus.FILLED,
+        }:
+            raise ValueError("confirmed proposal is not backed by an accepted paper order")
         if proposal.status is ProposalStatus.REJECTED and order.status is not OrderStatus.REJECTED:
             raise ValueError("rejected proposal is not backed by a rejected order")
         validate_order_replay(order)

@@ -27,6 +27,8 @@ def test_build_stores_under_a_demo_root(tmp_path: Path) -> None:
     assert stores.journal.root == tmp_path / "orders"
     assert stores.mappings.root == tmp_path / "mappings"
     assert stores.decisions.root == tmp_path / "decisions"
+    assert stores.decision_packets.root == tmp_path / "decisions" / "packets"
+    assert stores.packet_monitoring.root == tmp_path / "decisions" / "monitoring"
     assert stores.documents.root == tmp_path / "documents"
     assert stores.enablement.root == tmp_path / "enablement"
 
@@ -38,3 +40,5 @@ def test_build_stores_uses_settings_defaults_without_a_root() -> None:
     assert stores.experiments.root == settings.experiments_dir
     assert stores.reports.root == settings.reports_dir
     assert stores.journal.root == settings.orders_dir
+    assert stores.decision_packets.root == settings.decisions_dir / "packets"
+    assert stores.packet_monitoring.root == settings.decisions_dir / "monitoring"

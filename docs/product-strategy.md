@@ -14,13 +14,21 @@ freshness, test a hypothesis, rehearse a paper trade, and audit the result.
 The product optimizes for trust and reproducibility, not for maximum venue
 count or autonomous activity.
 
+The current product wedge is narrower: for a research-minded individual active
+trader, turn one ticker into a verifiable, risk-first, paper-executable and
+reviewable DecisionPacket in no more than two minutes without leaving the
+Instrument Workspace.
+
 ## 2. First users and jobs to be done
 
-1. **Solo quant researcher** — compare heterogeneous markets, run reusable
+1. **Research-minded individual active trader** — turn an instrument idea into
+   structured scenarios, explicit invalidation and risk, a saved decision and
+   a replayable review without trusting a black-box signal.
+2. **Solo quant researcher** — compare heterogeneous markets, run reusable
    experiments, inspect walk-forward evidence and retain the full lineage.
-2. **Paper trader / systematic learner** — rehearse signals and portfolio
+3. **Paper trader / systematic learner** — rehearse signals and portfolio
    decisions without credentials or real-money risk.
-3. **Advanced operator** — connect read-only live feeds and optional broker
+4. **Advanced operator** — connect read-only live feeds and optional broker
    paper surfaces while preserving local control and fail-closed states.
 
 The first segment is the solo researcher who needs a trustworthy local loop;
@@ -41,13 +49,15 @@ cost, privacy and reproducibility.
 prediction-market pages, notebooks and scripts; freshness and provenance are
 easy to lose.
 
-**How:** QuantMesh normalizes source data, experiments, forecasts, risk state
-and paper orders behind local APIs and a coherent workstation. Every displayed
-live value is labeled with venue/source/time/age and every order is recorded in
-the deterministic paper kernel and audit trail.
+**How:** QuantMesh composes source data, market structure, Bull/Base/Bear
+scenarios, forecast evidence, risk state and paper authority into a versioned
+DecisionPacket inside one workspace. Every displayed live value is labeled
+with venue/source/time/age and every proposal/result is recorded through the
+deterministic risk, paper and audit boundaries.
 
-**After:** the operator can move from market evidence to a defensible paper
-decision and reproduce what happened after restart or replay.
+**After:** the operator can save Reject, Watch or Paper proposal in under two
+minutes and later reproduce what was known, why the action was allowed or
+blocked, and how the paper path performed after restart or replay.
 
 **Alternatives:** separate broker terminals, TradingView, exchange dashboards,
 Jupyter notebooks, OpenBB, Qlib, Freqtrade, Hummingbot and ad-hoc scripts.
@@ -78,6 +88,12 @@ operator inspects sourced evidence, records a strategy/forecast decision,
 executes a paper order or rejects it, and can replay the evidence and audit
 result from a clean restart.
 
+Iteration-0027 activation metric: from submitting a ticker or selecting a
+watchlist row to persisting Reject, Watch or Paper proposal takes no more than
+two minutes on the deterministic NVDA acceptance station. Application startup,
+environment installation and optional model latency are outside the timer; a
+model failure must not prevent the deterministic path from meeting it.
+
 Supporting metrics:
 
 - live-data surfaces with truthful source/age/sequence states;
@@ -87,19 +103,29 @@ Supporting metrics:
 - stale/degraded states detected instead of silently rendered as fresh;
 - zero safety violations in kill-switch and quote-fence drills.
 
-Near-term OMTM: complete one venue-aware instrument decision loop in which the
-operator can inspect sourced historical/live prices, compare probabilistic
-forecast evidence, accept or reject a paper proposal, and replay the entire
-lineage without changing pages or re-entering context.
+Near-term OMTM: completed replayable DecisionPackets. The operator inspects
+sourced historical/live prices, scenarios, probabilistic forecast evidence and
+risk, then saves Reject, Watch or Paper proposal without changing pages or
+re-entering context.
 
-## 7. Growth and distribution
+## 7. Competitive lesson and scope discipline
+
+[KairoTrend](https://kairotrend.com/) demonstrates the value of compressing
+chart context, levels, risk, monitoring and review into one short path. The
+lesson is workflow compression, not its AI signal or pattern catalog. Its
+[Chrome extension listing](https://chromewebstore.google.com/detail/kairotrend-tradingview-ai/dkbeapckaiolimlhbiidjponpjacpjfe)
+shows an early public footprint rather than evidence of a mature category
+leader, so QuantMesh will not chase breadth. Its differentiation is trustworthy
+evidence, replay and deterministic risk.
+
+## 8. Growth and distribution
 
 The first growth motion is product-led and open-source: a deterministic demo,
 clear README, reusable connectors and reproducible research artifacts should
 let another technical user evaluate the product locally. No paid acquisition or
 hosted service is needed before the local workflow is credible.
 
-## 8. Capabilities and reuse boundaries
+## 9. Capabilities and reuse boundaries
 
 Build and own the normalized contracts, provenance/freshness semantics, paper
 kernel, risk gates, replay evidence, acceptance drills and product workflow.
@@ -115,18 +141,20 @@ Reuse behind adapters:
   LGPL/license and process-architecture ADR;
 - official or maintained Hyperliquid, Moomoo OpenD, Polymarket and Kalshi
   transports where licensing and read-only boundaries are clear;
-- Qlib, Darts, LightGBM and similar research components after license,
-  point-in-time and cost-model review; Commons-Clause VectorBT remains
-  excluded from the runtime;
+- Qlib, Darts, LightGBM and similar research components only when a product
+  slice needs them and after license, point-in-time and cost-model review;
+  they are internal support rather than iteration-level success measures.
+  Commons-Clause VectorBT remains excluded from the runtime;
 - local/OpenAI-compatible model gateways for advisory analysis.
 
-## 9. Defensibility
+## 10. Defensibility
 
-The defensible asset is not a secret indicator. It is the local evidence graph:
-normalized multi-market data, replayable experiments, calibrated forecasts,
-decision lineage, paper outcomes and explicit risk outcomes collected in one
-consistent model. Trustworthy failure states and reproducible operator drills
-create switching costs for a researcher whose history lives in the workstation.
+The defensible asset is not a secret indicator. It is the local DecisionPacket
+graph: normalized multi-market data, replayable experiments, calibrated
+forecasts, scenarios, operator decisions, paper outcomes and explicit risk
+outcomes collected in one consistent model. Trustworthy failure states and a
+replayable decision journal create switching costs for a trader whose learning
+history lives in the workstation.
 
 ## Final product shape
 

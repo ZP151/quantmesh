@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { HistoricalSeries } from '@/lib/api'
+import { dateTime } from '@/lib/format'
 import { PreferencesProvider } from '@/lib/preferences'
 
 vi.mock('@/components/charts/InstrumentChart', () => ({
@@ -94,6 +95,52 @@ const history: HistoricalSeries = {
 }
 
 describe('MarketCanvas', () => {
+  it('renders server-owned trend and key levels without deriving them in the browser', () => {
+    render(
+      <PreferencesProvider>
+        <MarketCanvas
+          comparison={null}
+          forecast={null}
+          history={history}
+          marketState={{
+            invalidation: 176,
+            key_level_bar_times: ['2026-08-07T20:00:00Z'],
+            latest_close: 184,
+            observed_drawdown: -0.08,
+            observed_volatility: 0.24,
+            resistance: 195,
+            sma20: 185,
+            sma50: 180,
+            support: 180,
+            trend: 'bullish',
+          }}
+          mode="candles"
+          onModeChange={vi.fn()}
+          onRangeChange={vi.fn()}
+          onSma20Change={vi.fn()}
+          onSma50Change={vi.fn()}
+          onVolumeChange={vi.fn()}
+          range="6m"
+          showSma20={false}
+          showSma50={false}
+          volume={false}
+        />
+      </PreferencesProvider>,
+    )
+
+    expect(screen.getByText('Bullish structure')).toBeInTheDocument()
+    expect(screen.getByText('Support').closest('div')).toHaveTextContent('180')
+    expect(screen.getByText('Resistance').closest('div')).toHaveTextContent('195')
+    expect(screen.getByText('Invalidation').closest('div')).toHaveTextContent('176')
+    expect(screen.getByText('Key-level source bars').closest('div')).toHaveTextContent(
+      dateTime('2026-08-07T20:00:00Z', 'en'),
+    )
+    expect(screen.getByText('Key-level source bars').closest('div')).toHaveAttribute(
+      'title',
+      '2026-08-07T20:00:00Z',
+    )
+  })
+
   it('changes range and chart controls with real pressed states', async () => {
     const user = userEvent.setup()
     const onRangeChange = vi.fn()

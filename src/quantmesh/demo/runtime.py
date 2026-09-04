@@ -59,6 +59,7 @@ from quantmesh.demo.seeder import (
 )
 from quantmesh.domain.models import Instrument, OrderRequest, Quote, Side
 from quantmesh.execution.account_store import PaperAccountStore, recover_account_from_journal
+from quantmesh.instruments.copilot import PacketCopilotService
 from quantmesh.settings import settings
 
 
@@ -129,6 +130,7 @@ def _status(runtime: DemoRuntime) -> dict[str, object]:
         sum(1 for path in forecast_root.iterdir() if path.is_dir()) if forecast_root.exists() else 0
     )
     surfaces["paper_proposals"]["rows"] = len(seeded.proposal_ledger.all())
+    surfaces["decision_packets"]["rows"] = len(seeded.decision_packets.all())
     surfaces["orders"]["rows"] = len(seeded.journal.all())
     retained_paths = retained_demo_reset_paths(runtime.root)
     retained_set = set(retained_paths)
@@ -185,6 +187,38 @@ def _apply_seeded(app: FastAPI, seeded: DemoSeeded) -> None:
     app.state.marks = seeded.marks
     app.state.history = seeded.history
     app.state.price_forecasts = seeded.price_forecasts
+    app.state.decision_packets = seeded.decision_packets
+    app.state.packet_copilot_store = seeded.packet_copilot
+    app.state.packet_monitoring_store = seeded.packet_monitoring
+    app.state.packet_review_store = seeded.packet_reviews
+    packet_service = getattr(app.state, "decision_packet_service", None)
+    if packet_service is not None:
+        packet_service.store = seeded.decision_packets
+    monitoring = getattr(app.state, "packet_monitoring", None)
+    if monitoring is not None:
+        monitoring.packet_store = seeded.decision_packets
+        monitoring.store = seeded.packet_monitoring
+        monitoring.forecast_registry = seeded.price_forecasts
+    reviews = getattr(app.state, "packet_reviews", None)
+    if reviews is not None:
+        reviews.packet_store = seeded.decision_packets
+        reviews.review_store = seeded.packet_reviews
+        reviews.forecast_registry = seeded.price_forecasts
+        reviews.history = seeded.history
+        reviews.proposal_ledger = seeded.proposal_ledger
+        reviews.journal = seeded.journal
+        reviews.monitoring = seeded.packet_monitoring
+    copilot = getattr(app.state, "packet_copilot", None)
+    if isinstance(copilot, PacketCopilotService):
+        copilot.packet_store = seeded.decision_packets
+        copilot.store = seeded.packet_copilot
+        copilot.decision_log = seeded.decisions
+    workspace = getattr(app.state, "instrument_workspace", None)
+    if workspace is not None:
+        clear_staged_drafts = getattr(workspace, "clear_staged_drafts", None)
+        if callable(clear_staged_drafts):
+            clear_staged_drafts()
+        workspace._decision_packets = seeded.decision_packets  # noqa: SLF001
     app.state.page_context = PageContext(
         account=seeded.account,
         marks=seeded.marks,
@@ -421,6 +455,15 @@ def create_demo_app(
             encoding="utf-8"
         )
         trusted_reset_archive = build_demo_reset_archive(root)
+    packet_copilot = PacketCopilotService(
+        packet_store=seeded.decision_packets,
+        store=seeded.packet_copilot,
+        decision_log=seeded.decisions,
+        analyst_gateway=None,
+        critic_gateway=None,
+        analyst_model=None,
+        critic_model=None,
+    )
     app = create_workstation_app(
         account=seeded.account,
         marks=seeded.marks,
@@ -439,6 +482,11 @@ def create_demo_app(
         history=seeded.history,
         price_forecasts=seeded.price_forecasts,
         proposal_ledger=seeded.proposal_ledger,
+        decision_packets=seeded.decision_packets,
+        packet_copilot_store=seeded.packet_copilot,
+        packet_copilot=packet_copilot,
+        packet_monitoring=seeded.packet_monitoring,
+        packet_reviews=seeded.packet_reviews,
         account_sink=lambda account: persist_demo_account(root, account),
         demo_quote_provider=lambda instrument, now: _workspace_demo_quote(
             seeded,

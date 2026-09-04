@@ -61,6 +61,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 STEPS: list[tuple[str, str]] = []
+FULL_PYTEST_TIMEOUT_SECONDS = 5400
 
 
 def print_console(value: object = "", *, file=None, flush: bool = False) -> None:
@@ -320,7 +321,7 @@ def main() -> int:
                 str(temp / "pytest-tmp"),
             ],
             checkout,
-            2400,
+            FULL_PYTEST_TIMEOUT_SECONDS,
         ),
         step(
             "golden path (walk)",

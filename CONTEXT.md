@@ -13,14 +13,14 @@ cockpit, venue-aware history, integrated instrument decision workspace,
 reproducible research evidence, local AI boundaries and guarded execution
 controls.
 
-Iteration 0021, Trusted Data Fabric, is active under issue #110. It unifies real
-Moomoo AAPL/NVDA and Hyperliquid BTC/ETH/SOL observations through a
-capability-aware read-only provider registry, bitemporal raw evidence,
-content-addressed manifests, normalized/adjusted/feature lineage, durable
-collection checkpoints, quality SLAs and a local catalog. Completion requires
-a clean-install real-data drill and at least 168 continuous hours of immutable
-quality evidence. Final `v0.1.1` promotion and real-money execution remain
-outside this iteration.
+Iteration 0021, Trusted Data Fabric, is merged; its real 168-hour soak continues
+as an independent maintenance and release-confidence track. Iteration 0027,
+Evidence-backed Decision Copilot, is the active product track under issue #122.
+It turns the existing Instrument Workspace into a two-minute ticker-to-decision
+loop whose versioned DecisionPacket binds market state, scenarios, risk,
+evidence, operator action, paper outcome and review. AI remains optional and
+advisory. Final `v0.1.1` promotion and real-money execution remain outside this
+iteration.
 
 ## Bounded context
 
@@ -43,6 +43,9 @@ QuantMesh currently uses one bounded context: quantitative research and guarded 
 - **Paper account**: A simulated portfolio with deterministic cash, positions, orders and fills.
 - **Connector**: An adapter that isolates venue-specific market-data or execution behavior.
 - **Promotion gate**: Evidence required to move a strategy from research to replay, paper trading and guarded live trading.
+- **DecisionPacket**: A versioned, replayable composition of one instrument's
+  as-of market state, scenarios, risk plan, evidence references and operator
+  disposition, with immutable links to later paper and review records.
 
 ## Architectural boundaries
 

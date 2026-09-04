@@ -139,6 +139,13 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
     assert "Config digest" in main.inner_text()
     assert "History digest" in main.inner_text()
 
+    # Return to the evidence-backed 6m packet before creating a proposal; the
+    # 1m chart exploration above has no matching promoted forecast and must
+    # remain fail-closed for Paper.
+    page.get_by_role("button", name="6M", exact=True).click()
+    page.wait_for_url(re.compile(r"range=6m"))
+    page.get_by_text("Ready to decide", exact=True).wait_for()
+
     # Stage one creates only a preview; stage two requires the exact token.
     page.get_by_label("Quantity", exact=True).fill("10")
     page.get_by_role("button", name="Create paper proposal").click()
@@ -157,9 +164,10 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
     audit_link = page.get_by_role("link", name="Open audit lineage")
     assert "/ops/audit?order=" in (audit_link.get_attribute("href") or "")
 
-    # Authoritative refetch preserves success evidence until the operator
-    # explicitly starts a distinct second intent.
-    page.get_by_role("button", name="Start another paper proposal").click()
+    # A distinct race-time intent starts from a reset DecisionPacket lineage;
+    # the prior immutable packet already owns its one terminal child.
+    _reset_from_shell(page)
+    page.goto(f"{base_url}{WORKSPACE_PATH}")
     page.get_by_role("button", name="Create paper proposal").wait_for()
     assert "Unavailable" not in page.get_by_text("Unrealized P&L").locator("..").inner_text()
     assert "Disarmed" in page.get_by_text("Global kill switch").locator("..").inner_text()

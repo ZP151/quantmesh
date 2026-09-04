@@ -112,9 +112,11 @@ LICENSE_EXCEPTIONS = {
 # refuses ``MIT OR GPL``-shaped expressions when any branch violates policy.
 LICENSE_EXPRESSION_EXCEPTIONS = {
     ("simplejson", "4.1.1", "MIT OR AFL-2.1"): "MIT",
+    ("simplejson", "4.1.2", "MIT OR AFL-2.1"): "MIT",
 }
 LICENSE_TEXT_EXCEPTIONS = {
     ("simplejson", "4.1.1", "MIT OR AFL-2.1"): "MIT",
+    ("simplejson", "4.1.2", "MIT OR AFL-2.1"): "MIT",
 }
 
 # SPDX expressions sometimes carry a versioned form we do not model.
@@ -159,6 +161,7 @@ def _from_expression(expr: str) -> str | None:
 # credit a bundled text as the project's own license. Unknown first
 # lines (copyright lines, prose) fall through to the keyword scan.
 _LINE1_NAMES = {
+    "MIT": "MIT",
     "3-Clause BSD License": "BSD-3-Clause",
     "BSD 3-Clause License": "BSD-3-Clause",
     "BSD 2-Clause License": "BSD-2-Clause",
@@ -285,6 +288,11 @@ def review(closure: dict[str, str]) -> tuple[list[str], list[str], list[str], li
                     "installed — incomplete release environment"
                 )
             continue
+        if dist.version != version:
+            failures.append(
+                f"{name}=={version} pinned in requirements-audit.txt but installed "
+                f"version is {dist.version}"
+            )
         key = classify(dist)
         rows.append(f"{name}=={version}  {key}")
         if key == "UNKNOWN" or key.startswith("UNKNOWN ("):

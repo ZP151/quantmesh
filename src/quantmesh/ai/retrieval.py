@@ -9,6 +9,7 @@ resolvable identity, never a blob — and ``resolve_citation`` fails
 closed on unknown kinds, missing records, and out-of-range spans.
 """
 
+import hashlib
 import json
 import math
 import re
@@ -18,7 +19,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 from quantmesh.ai.errors import CitationResolutionError, RetrievalError
 from quantmesh.execution.journal import OrderJournal
@@ -33,6 +42,7 @@ __all__ = [
     "Document",
     "DocumentIndex",
     "DocumentSource",
+    "DecisionPacketSource",
     "ExperimentSource",
     "ResolvedSource",
     "RetrievalSource",
@@ -84,11 +94,13 @@ class Citation(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    source_kind: Literal["document", "experiment", "audit"]
+    source_kind: Literal["document", "experiment", "audit", "packet"]
     source_id: str = Field(min_length=1)
     span: tuple[int, int] | None = Field(
         default=None, description="optional [start, end) char offsets into the record text"
     )
+    json_pointer: str | None = Field(default=None, min_length=1, max_length=512)
+    value_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("span")
     @classmethod
@@ -98,6 +110,31 @@ class Citation(BaseModel):
             if start < 0 or end < 0 or start > end:
                 raise ValueError(f"span {span} is not a valid [start, end) range")
         return span
+
+    @model_validator(mode="after")
+    def _source_fields_are_disjoint(self) -> "Citation":
+        if self.source_kind == "packet":
+            if re.fullmatch(r"packet-[0-9a-f]{24}", self.source_id) is None:
+                raise ValueError("packet citation source_id must be an exact packet id")
+            if self.span is not None:
+                raise ValueError("packet citation cannot carry a span")
+            if self.json_pointer is None:
+                raise ValueError("packet citation requires json_pointer")
+            if self.value_digest is None:
+                raise ValueError("packet citation requires value_digest")
+        elif self.json_pointer is not None or self.value_digest is not None:
+            raise ValueError(
+                "legacy citation sources cannot carry json_pointer or value_digest"
+            )
+        return self
+
+    @model_serializer(mode="wrap")
+    def _preserve_legacy_shape(self, handler: SerializerFunctionWrapHandler):
+        serialized = handler(self)
+        if self.source_kind != "packet":
+            serialized.pop("json_pointer", None)
+            serialized.pop("value_digest", None)
+        return serialized
 
 
 class RetrievedPassage(BaseModel):
@@ -344,6 +381,86 @@ class AuditSource:
         return ResolvedSource(self.kind, source_id, record, _render(record))
 
 
+class DecisionPacketSource:
+    """Exact persisted packet facts as a citation-only source.
+
+    This source intentionally has no search method: Slice 2 can cite only the
+    packet already selected by the operator and never widens retrieval.
+    """
+
+    kind = "packet"
+
+    def __init__(self, store) -> None:
+        self._store = store
+
+    def resolve(self, source_id: str) -> ResolvedSource:
+        from quantmesh.instruments.decision_packets import DecisionPacketNotFoundError
+
+        try:
+            record = self._store.get(source_id)
+        except DecisionPacketNotFoundError as error:
+            raise RetrievalError(str(error)) from None
+        except (ValueError, OSError) as error:
+            raise RetrievalError(str(error)) from error
+        return ResolvedSource(
+            self.kind,
+            source_id,
+            record,
+            json.dumps(
+                record.model_dump(mode="json"),
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+        )
+
+
+def _packet_pointer_value(record: BaseModel, pointer: str) -> object:
+    if "~" in pointer:
+        raise CitationResolutionError("packet citation escaped JSON pointer is refused")
+    if not pointer.startswith("/"):
+        raise CitationResolutionError("packet citation JSON pointer must start with '/'")
+    segments = pointer[1:].split("/")
+    if not segments or any(not segment for segment in segments):
+        raise CitationResolutionError("packet citation JSON pointer is empty")
+    current: object = record.model_dump(mode="json")
+    for segment in segments:
+        if isinstance(current, dict):
+            if segment not in current:
+                raise CitationResolutionError(
+                    f"packet citation JSON pointer {pointer!r} does not exist"
+                )
+            current = current[segment]
+            continue
+        if isinstance(current, list):
+            if re.fullmatch(r"0|[1-9][0-9]*", segment) is None:
+                raise CitationResolutionError(
+                    f"packet citation JSON pointer {pointer!r} has an invalid array index"
+                )
+            index = int(segment)
+            if index >= len(current):
+                raise CitationResolutionError(
+                    f"packet citation JSON pointer {pointer!r} does not exist"
+                )
+            current = current[index]
+            continue
+        raise CitationResolutionError(
+            f"packet citation JSON pointer {pointer!r} traverses a scalar"
+        )
+    scalar = current is None or isinstance(current, (str, int, float, bool))
+    scalar_list = isinstance(current, list) and all(
+        item is None or isinstance(item, (str, int, float, bool)) for item in current
+    )
+    if not scalar and not scalar_list:
+        raise CitationResolutionError(
+            f"packet citation JSON pointer {pointer!r} selects a container"
+        )
+    return current
+
+
+def _canonical_value(value: object) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
 def _render(record: object) -> str:
     """Canonical text of a non-document record; spans index into this."""
     if isinstance(record, BaseModel):
@@ -375,6 +492,22 @@ def resolve_citation(
         resolved = source.resolve(citation.source_id)
     except RetrievalError as error:
         raise CitationResolutionError(str(error)) from None
+    if citation.source_kind == "packet":
+        if citation.json_pointer is None or citation.value_digest is None:
+            raise CitationResolutionError("packet citation is missing its value binding")
+        value = _packet_pointer_value(resolved.record, citation.json_pointer)
+        canonical = _canonical_value(value)
+        actual_digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        if actual_digest != citation.value_digest:
+            raise CitationResolutionError(
+                f"packet citation value digest does not match {citation.json_pointer!r}"
+            )
+        return ResolvedSource(
+            resolved.source_kind,
+            resolved.source_id,
+            resolved.record,
+            canonical,
+        )
     if citation.span is not None:
         start, end = citation.span
         length = len(resolved.text)

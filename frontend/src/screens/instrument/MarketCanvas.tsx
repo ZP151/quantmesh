@@ -7,6 +7,7 @@ import type {
   ForecastPath,
   HistoricalSeries,
   HistoryRange,
+  DecisionPacket,
 } from '@/lib/api'
 import { dateTime } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
@@ -23,9 +24,12 @@ const RANGES: readonly { label: string; value: HistoryRange }[] = [
 ]
 
 export interface MarketCanvasProps {
+  archivedPacket?: boolean
+  archivedPacketAsOf?: string
   comparison: ComparisonSeries | null
   forecast: ForecastPath | null
   history: HistoricalSeries
+  marketState?: DecisionPacket['market_state']
   mode: 'candles' | 'line'
   onModeChange: (mode: 'candles' | 'line') => void
   onRangeChange: (range: HistoryRange) => void
@@ -92,6 +96,11 @@ export function MarketCanvas(props: MarketCanvasProps) {
 
   return (
     <div className="space-y-3">
+      {props.archivedPacket && (
+        <p className="border-l-2 border-amber-500 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground" role="note">
+          {t('screen.workspace.currentChartNotArchived')}
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <div className="flex flex-wrap gap-1" aria-label={t('screen.workspace.ranges')}>
           {RANGES.map((item) => (
@@ -130,6 +139,40 @@ export function MarketCanvas(props: MarketCanvasProps) {
         <span>{t('screen.workspace.observed')} · {props.history.interval}</span>
         <span>{t('screen.workspace.asOf', { time: dateTime(props.history.as_of, locale) })}</span>
       </div>
+      {props.marketState && (
+        <section className="border-y border-border px-1 py-3" aria-label={t('screen.workspace.marketStructure')}>
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-semibold">
+              {t(`screen.workspace.trend.${props.marketState.trend}`)}
+            </h2>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              {props.archivedPacket && props.archivedPacketAsOf
+                ? t('screen.workspace.archivedPacketLevels', {
+                    time: dateTime(props.archivedPacketAsOf, locale),
+                  })
+                : t('screen.workspace.serverDerived')}
+            </span>
+          </div>
+          <dl className="grid grid-cols-3 gap-x-4 gap-y-2 text-xs">
+            <LevelFact label={t('screen.workspace.support')} value={props.marketState.support} />
+            <LevelFact label={t('screen.workspace.resistance')} value={props.marketState.resistance} />
+            <LevelFact label={t('screen.workspace.invalidation')} value={props.marketState.invalidation} />
+          </dl>
+          <div
+            className="mt-3 min-w-0 border-t border-border pt-2 text-xs"
+            title={props.marketState.key_level_bar_times.join(' · ')}
+          >
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('screen.workspace.keyLevelSourceBars')}
+            </p>
+            <p
+              className="mt-1 break-all font-mono text-[10px] [overflow-wrap:anywhere]"
+            >
+              {props.marketState.key_level_bar_times.map((time) => dateTime(time, locale)).join(' · ')}
+            </p>
+          </div>
+        </section>
+      )}
       {props.comparison !== null && props.comparison.points.length > 0 && (
         <p className="px-1 font-mono text-[10px] text-muted-foreground">
           {t('screen.workspace.indexedComparison', {
@@ -149,6 +192,15 @@ export function MarketCanvas(props: MarketCanvasProps) {
         volume={props.volume && hasVolume}
       />
       <IndicatorStrip values={values} />
+    </div>
+  )
+}
+
+function LevelFact({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
+      <dd className="font-mono tabular-nums">{value}</dd>
     </div>
   )
 }

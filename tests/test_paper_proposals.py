@@ -216,6 +216,40 @@ def test_confirm_requires_exact_operator_token_then_crosses_quote_fence(tmp_path
     assert state["account"].positions["moomoo:NVDA"].quantity == 10
 
 
+def test_confirmation_binds_a_resting_limit_without_fabricating_a_fill(
+    tmp_path: Path,
+) -> None:
+    service, state, journal = _service(tmp_path)
+    proposal = service.propose(
+        _artifact().id,
+        side=Side.BUY,
+        quantity=10,
+        limit_price=99.0,
+    )
+
+    confirmed = service.confirm(
+        proposal.id,
+        confirmation=proposal.confirmation_token,
+        now=NOW,
+    )
+    replayed = service.confirm(
+        proposal.id,
+        confirmation=proposal.confirmation_token,
+        now=NOW,
+    )
+
+    assert confirmed.proposal.status == "confirmed"
+    assert confirmed.proposal.order_id == confirmed.order.order_id
+    assert confirmed.order.status == "accepted"
+    assert confirmed.order.filled_quantity == 0
+    assert confirmed.order.limit_price == 99.0
+    assert confirmed.quote_provenance == "real"
+    assert replayed == confirmed
+    assert journal.all() == [state["account"].orders[confirmed.order.order_id]]
+    assert "moomoo:NVDA" not in state["account"].positions
+    assert len(service.ledger.events(proposal.id)) == 2
+
+
 def test_confirmation_replay_is_exactly_once_even_concurrently(tmp_path: Path) -> None:
     service, state, journal = _service(tmp_path)
     proposal = service.propose(_artifact().id, side=Side.BUY, quantity=1)

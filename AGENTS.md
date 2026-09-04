@@ -30,20 +30,42 @@ Use role-based handoffs for non-trivial work:
 
 One agent may perform several roles, but each role's output must remain visible in the active iteration record. Parallel agents must work on independent files or branches and merge through a reviewer.
 
+For product iterations, roles collaborate around one vertical slice rather than
+building layer-specific backlogs. Planner/Product defines one user action, one
+success metric and explicit non-goals; Quant Researcher reviews leakage, costs,
+metrics and confidence semantics at slice start; Implementer owns the bounded
+API-to-UI loop; Reviewer works at the demonstrable slice boundary; Verifier
+runs targeted checks during development and broad gates only at slice commit
+and final PR boundaries.
+
+At most two tracks may run concurrently: the active product iteration and the
+iteration-0021 soak maintenance track. They use independent worktrees/files and
+must not opportunistically repair or refactor one another. Every delegated
+prompt names one deliverable, one stop condition and explicit forbidden
+actions. Review is capped at two rounds per slice; a third structural failure
+stops patching and returns the slice to Planner/Product for scope reduction.
+
 ## Work protocol
 
 1. Start from a GitHub issue with clear acceptance criteria.
 2. Link the issue from the active iteration record.
-3. Prefer a small vertical slice that produces observable user value.
+3. Define one user action, one measurable outcome and explicit expansion
+   prohibitions, then deliver a 24–48 hour vertical slice with observable user
+   value.
 4. Reuse upstream packages, SDKs or isolated services before copying code.
 5. Preserve upstream license and copyright notices for copied code.
 6. Add or update tests before marking implementation complete.
-7. Run the relevant checks listed in `docs/agents/collaboration.md`.
-8. Update the iteration record with decisions, evidence, risks and follow-ups.
+7. Run targeted checks while iterating; run the relevant broad checks listed in
+   `docs/agents/collaboration.md` at the slice commit and final PR boundaries.
+8. Update the iteration record with completed user-loop evidence, decisions,
+   risks and follow-ups. Test count, code volume and ledger length are not
+   substitutes for product progress.
 9. Use a pull request for review; do not force-push shared branches. For a
    solo milestone explicitly marked as a fast lane in `ACTIVE.md`, use one
    integration branch and one final milestone PR instead of a PR per slice;
    retain one tested, reviewed commit and iteration checkpoint per issue.
+10. Record unrelated defects without expanding the active task unless they
+    directly block its user action or safety acceptance.
 
 ## Branch hygiene after squash merges
 

@@ -35,6 +35,15 @@ sections become one ordered column: context, market evidence, forecast
 evidence, then paper action. No control or evidence may create horizontal
 document overflow at 390 px.
 
+Instrument Workspace is the complete DecisionPacket surface. The market canvas
+shows as-of price structure and key levels; the evidence rail shows
+Bull/Base/Bear scenarios, freshness, model/dataset/benchmark/cost evidence and
+AI citations; the decision rail shows invalidation, entry zone, stop, target,
+R multiple, proposed paper size, blockers and Reject/Watch/Paper actions. The
+primary loop must not route the operator to Forecasts, Risk or Audit pages.
+Details may open in-place through disclosures, drawers or linked evidence
+previews while preserving ticker, time range and draft decision context.
+
 ## 5. Components and motion
 
 Use the owned shadcn/Base UI primitives for buttons, fields and badges. Chart
@@ -43,6 +52,13 @@ components. Range, horizon, interval and chart-mode controls expose real
 pressed states. Background refresh preserves last-known evidence and focused
 controls. Motion is limited to short state transitions and is disabled when
 the operator requests reduced motion.
+
+A DecisionPacket uses explicit phase labels: Draft analysis, Evidence blocked,
+Ready to decide, Watching, Paper proposed, Paper confirmed and Reviewed. These
+labels describe persisted workflow state, not market direction. Bull/Base/Bear
+scenario emphasis never masquerades as BUY/SELL authority. When AI is absent,
+loading or invalid, deterministic analysis remains in place and the AI panel
+shows a neutral unavailable/degraded state with no layout collapse.
 
 ## 6. Accessibility and evidence rules
 
@@ -55,3 +71,9 @@ always expose vintage, dataset/model identity, uncertainty, benchmark and
 limitations. Paper proposals require an explicit second confirmation, and
 terminal success or refusal remains visible until the operator dismisses it
 or authoritative reset removes it.
+
+Evidence blockers are placed immediately above the action controls and identify
+the failing freshness, quality, leakage or lineage condition in text. Reject
+and Watch remain available when Paper proposal is blocked. Every saved action
+exposes its DecisionPacket identity and provides an in-workspace replay path to
+the evidence, risk decision, paper result and review that it references.

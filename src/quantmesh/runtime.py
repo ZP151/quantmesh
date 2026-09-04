@@ -19,10 +19,15 @@ from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.events.forecast import ForecastReportRegistry
 from quantmesh.events.mapping import MappingLedger
 from quantmesh.execution.journal import OrderJournal
+from quantmesh.instruments.copilot import PacketCopilotStore
+from quantmesh.instruments.decision_packets import DecisionPacketStore
+from quantmesh.instruments.monitoring import DecisionWatchStore
+from quantmesh.instruments.reviews import DecisionReviewStore
 from quantmesh.ops.enablement import ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
 from quantmesh.research.reports import ReportRegistry
+from quantmesh.settings import settings
 
 
 @dataclass(frozen=True)
@@ -40,6 +45,10 @@ class WorkstationStores:
     decisions: DecisionLog
     documents: DocumentIndex
     enablement: ApprovalLedger
+    decision_packets: DecisionPacketStore
+    packet_copilot: PacketCopilotStore
+    packet_monitoring: DecisionWatchStore
+    packet_reviews: DecisionReviewStore
 
 
 def build_workstation_stores(
@@ -65,6 +74,10 @@ def build_workstation_stores(
             decisions=DecisionLog(),
             documents=DocumentIndex(),
             enablement=ApprovalLedger(),
+            decision_packets=DecisionPacketStore(settings.decisions_dir / "packets"),
+            packet_copilot=PacketCopilotStore(settings.decisions_dir / "copilot"),
+            packet_monitoring=DecisionWatchStore(settings.decisions_dir / "monitoring"),
+            packet_reviews=DecisionReviewStore(settings.decisions_dir / "reviews"),
         )
     root = Path(root)
     effective_lake = root / "market" / "lake" if lake_root is None else Path(lake_root)
@@ -74,9 +87,7 @@ def build_workstation_stores(
             root=root / "research" / "experiments", lake_root=effective_lake
         ),
         promotions=PromotionLedger(root=root / "research" / "promotions"),
-        reports=ReportRegistry(
-            root=root / "research" / "reports", lake_root=effective_lake
-        ),
+        reports=ReportRegistry(root=root / "research" / "reports", lake_root=effective_lake),
         forecasts=ForecastReportRegistry(root=root / "research" / "reports"),
         alerts=AlertLedger(root=root / "alerts"),
         journal=OrderJournal(root=root / "orders"),
@@ -84,4 +95,8 @@ def build_workstation_stores(
         decisions=DecisionLog(root=root / "decisions"),
         documents=DocumentIndex(root=root / "documents"),
         enablement=ApprovalLedger(root=root / "enablement"),
+        decision_packets=DecisionPacketStore(root / "decisions" / "packets"),
+        packet_copilot=PacketCopilotStore(root / "decisions" / "copilot"),
+        packet_monitoring=DecisionWatchStore(root / "decisions" / "monitoring"),
+        packet_reviews=DecisionReviewStore(root / "decisions" / "reviews"),
     )

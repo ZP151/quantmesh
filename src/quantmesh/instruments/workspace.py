@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import math
+import threading
+from collections import OrderedDict
 from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 
@@ -10,6 +12,8 @@ from quantmesh.domain.models import Venue
 from quantmesh.execution.accounting import PaperAccount, position_key
 from quantmesh.instruments.contracts import (
     ComparisonSeries,
+    DecisionPacket,
+    DecisionWorkspaceState,
     HistoryRange,
     InstrumentWorkspace,
     PaperProposal,
@@ -21,6 +25,8 @@ from quantmesh.instruments.contracts import (
     WorkspacePosition,
     WorkspaceRisk,
 )
+from quantmesh.instruments.decision_analysis import compose_decision_packet
+from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.live_history import LiveHistoryService
@@ -144,6 +150,7 @@ class InstrumentWorkspaceService:
         valuation_provider: Callable[[datetime], AccountValuationSnapshot] | None = None,
         live_feed: LiveFeed | None = None,
         decisions: PaperDecisionService | None = None,
+        decision_packets: DecisionPacketStore | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         self._history = history
@@ -153,7 +160,44 @@ class InstrumentWorkspaceService:
         self._valuation_provider = valuation_provider
         self._live_feed = live_feed
         self._decisions = decisions
+        self._decision_packets = decision_packets
         self._now = now
+        self._draft_lock = threading.RLock()
+        self._staged_drafts: OrderedDict[str, DecisionPacket] = OrderedDict()
+
+    def staged_draft(
+        self,
+        packet_id: str,
+        *,
+        venue: Venue,
+        symbol: str,
+        selected_range: HistoryRange,
+    ) -> DecisionPacket | None:
+        """Return an exact draft previously exposed by this workspace process."""
+        with self._draft_lock:
+            draft = self._staged_drafts.get(packet_id)
+            if draft is None:
+                return None
+            if (
+                draft.instrument.venue is not venue
+                or draft.instrument.symbol != symbol
+                or draft.selected_range is not selected_range
+            ):
+                raise ValueError("staged decision packet does not match the requested scope")
+            self._staged_drafts.move_to_end(packet_id)
+            return draft
+
+    def _stage_draft(self, draft: DecisionPacket) -> None:
+        with self._draft_lock:
+            self._staged_drafts[draft.packet_id] = draft
+            self._staged_drafts.move_to_end(draft.packet_id)
+            while len(self._staged_drafts) > 256:
+                self._staged_drafts.popitem(last=False)
+
+    def clear_staged_drafts(self) -> None:
+        """Forget process-local drafts when their backing root is replaced."""
+        with self._draft_lock:
+            self._staged_drafts.clear()
 
     def _latest_forecast(
         self, venue: Venue, symbol: str, *, as_of: datetime
@@ -230,6 +274,11 @@ class InstrumentWorkspaceService:
         if generated_at.tzinfo is None:
             raise ValueError("workspace clock must be timezone-aware")
         generated_at = generated_at.astimezone(UTC)
+        latest = (
+            self._decision_packets.latest(venue, symbol, selected_range)
+            if self._decision_packets is not None
+            else None
+        )
         valuation, proposals = self._valuation_and_proposals(
             venue,
             symbol,
@@ -333,11 +382,30 @@ class InstrumentWorkspaceService:
                 proposal_blockers.append(
                     live.reason or "a fresh real quote is required for paper confirmation"
                 )
+        if self._decision_packets is None:
+            proposal_blockers.append("decision packet persistence is not attached")
         if account.kill_switch:
             proposal_blockers.append("kill switch enabled")
         if account.kill_switches.get(venue):
             proposal_blockers.append(f"kill switch enabled for venue {venue.value}")
         proposal_blockers = list(dict.fromkeys(proposal_blockers))
+
+        proposal = ProposalCapability(
+            allowed=not proposal_blockers,
+            blockers=tuple(proposal_blockers),
+            proposals=proposals,
+        )
+        draft = compose_decision_packet(
+            history=history,
+            forecast=forecast,
+            live=live,
+            risk=risk,
+            proposal=proposal,
+            account=account,
+            selected_range=selected_range,
+            as_of=generated_at,
+        )
+        self._stage_draft(draft)
 
         return InstrumentWorkspace(
             generated_at=generated_at,
@@ -349,9 +417,6 @@ class InstrumentWorkspaceService:
             forecast_unavailable_reason=forecast_error,
             position=position,
             risk=risk,
-            proposal=ProposalCapability(
-                allowed=not proposal_blockers,
-                blockers=tuple(proposal_blockers),
-                proposals=proposals,
-            ),
+            proposal=proposal,
+            decision=DecisionWorkspaceState(draft=draft, latest=latest),
         )

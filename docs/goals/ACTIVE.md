@@ -1,49 +1,311 @@
 # Active Goal
 
-- Status: iteration 0021 completed and merged (PR #120, squash `12cd258`);
-  trusted data fabric functional acceptance passed; the real 168-hour run
-  remains a post-merge stability gate
-- Objective: deliver the Trusted Data Fabric defined by issue #110 without
-  changing release or execution authority.
-- Started: 2026-08-14
-- Tracking issue: [#110](https://github.com/ZP151/quantmesh/issues/110)
-- Active iteration: `docs/iterations/0021-trusted-data-fabric.md`
-- Design: `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`
-- Executable plan: `docs/superpowers/plans/2026-08-14-trusted-data-fabric.md`
-- Integration branch: `0021-trusted-data-fabric`
-- Baseline: `origin/main` at `d4aeed3`; immutable `v0.1.1-rc1` at `b6b05b9`
-- Delivery mode: one integration branch and one final milestone PR; the main
-  thread is the only source writer and all subagents are read-only.
-- Current frontier: iteration 0021 is merged and issue #110 is closed. The
-  real 168-hour run is a post-merge stability gate (blocks release, not
-  merge). M14 part 2 (algorithm evaluation lab) and the remaining roadmap
-  items await explicit operator direction. Keep wallet, signing, account and
-  order surfaces structurally absent.
-- External gate: resolved. Local OpenD is running with US Stocks LV3
-  entitlement and `quantmesh-moomoo probe` reports
-  `quote=True history_kline=True`. No credential, paid-service or target-matrix
-  substitution was used.
+- Status: complete — iteration 0027 verified at `e9b4f766` and opened as
+  [PR #128](https://github.com/ZP151/quantmesh/pull/128)
+- Objective: enable a research-minded individual active trader to turn a
+  ticker into a verifiable, risk-first decision package in no more than two
+  minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
+  risk outcome and review after a clean restart.
+- Started: 2026-09-02
+- Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
+- Active iteration:
+  `docs/iterations/0027-evidence-backed-decision-copilot.md`
+- Design:
+  `docs/superpowers/specs/2026-09-03-packet-outcome-review-design.md`
+- Executable plan:
+  `docs/superpowers/plans/2026-09-03-packet-outcome-review.md`
+- Integration branch: `codex/0027-evidence-backed-decision-copilot`
+- Baseline: `origin/main` at `f77b565`; immutable `v0.1.1-rc1` remains
+  `b6b05b9`
+- Delivery mode: one 0027 product track and one independent 0021 soak
+  maintenance track at most. Each track uses one integration branch and one
+  final PR; neither may opportunistically modify the other's files or state.
+- Current frontier: delivery is complete and awaiting human review in PR #128.
+  Do not add another product slice or expand into exit orders, a performance
+  dashboard, AI review, another model framework, Provider/OpenD, another symbol,
+  external notification or any 0021 soak work.
+- External gate: none for the deterministic product slice. Model services,
+  OpenD and real providers are optional degraded-state inputs and never merge
+  gates.
 
 ## Product-readiness decision
 
-QuantMesh is currently an accepted local research-workstation prototype, not a
-trusted-data alpha or autonomous trading product. The shortest product path is
-to finish iteration 0021's immutable real-data lineage, recovery, catalog and
-seven-day evidence gate before adding strategies, AI orchestration or new venue
-breadth. Passing that gate establishes the real-data acceptance alpha; local
-research beta and guarded paper automation remain later vertical slices, while
-live-money authority remains a separately approved program. The durable detail
-and advancement criteria are recorded in
-`docs/iterations/0021-trusted-data-fabric.md` under **Product direction and
-readiness decision**.
+The product wedge is an evidence-backed decision copilot, not an AI signal
+generator or a framework laboratory. The shortest path begins with a ticker or
+watchlist row and stays inside Instrument Workspace while QuantMesh composes
+market state, key levels, Bull/Base/Bear scenarios, risk parameters, evidence
+and one explicit action. The durable product artifact is a versioned
+`DecisionPacket`; AI may explain or challenge its deterministic analysis but
+cannot create evidence, waive a blocker or gain order authority.
+
+Iteration 0021's 168-hour soak continues as a maintenance/release-confidence
+track. It does not block 0027 product work, and 0027 must not repair, migrate,
+backfill or otherwise modify soak Scheduler, provider or evidence state.
 
 ## Non-negotiable constraints
 
-- Do not modify or promote `v0.1.1-rc1` or create final `v0.1.1`.
-- Keep external venues read-only and execution paper-only.
-- Add no algorithm, model, AI workflow or real-order authority.
-- Never use synthetic data to repair or qualify a real dataset.
-- Stop for credentials, paid services or a major architecture change.
+- Keep external venues read-only and execution paper-only. Live trading,
+  signing, credentials and mainnet authority remain outside iteration 0027.
+- AI is advisory and schema-validated. Missing or failed AI must leave the
+  deterministic DecisionPacket usable.
+- Stale, low-quality, leakage-affected or missing evidence must block a paper
+  proposal with an actionable reason; it may not be hidden by AI confidence.
+- Every paper proposal passes the existing deterministic risk kernel and a
+  second operator confirmation.
+- Decision, evidence, paper result and review state must survive a clean
+  restart and remain replayable.
+- Qlib, Darts and model ranking are internal support or later work, not 0027
+  completion criteria. TradingView extensions, mobile clients, real trading,
+  social features and broad pattern-recognition catalogs are out of scope.
+- Each slice must expose user-visible value within 24–48 hours. Side defects
+  are recorded and left out of scope unless they block the slice.
+
+## Active delivery protocol
+
+- Planner/Product defines one user action, one success measure and explicit
+  expansion prohibitions per slice.
+- Quant Researcher reviews metrics, leakage, costs and confidence semantics at
+  slice start; the role does not independently expand the algorithm platform.
+- Implementer delivers the API, page state and targeted tests for one small
+  end-to-end loop.
+- Reviewer works at demonstrable slice boundaries and gets at most two rounds.
+  A third structural failure stops patching and shrinks the design.
+- Verifier runs targeted checks during development; broad suites run at slice
+  commit and final PR boundaries.
+- Every agent prompt has one deliverable, one stop condition and explicit
+  forbidden actions. Daily progress records completed user loops rather than
+  test count, code volume or ledger length.
+
+## Slice 1 execution checkpoint — 2026-09-02
+
+- Operator approved the tracked design and authorized Slice 1 execution.
+- Planner fixed one user action: save and reopen an NVDA Reject, Watch or
+  guarded Paper-proposal packet inside Instrument Workspace. Success is a
+  durable identity in at most two minutes; later Copilot, monitoring and review
+  slices are prohibited expansions.
+- Quant Researcher confirmed that forecast quantiles/coverage cannot become
+  scenario probabilities, manifest/quality IDs remain inseparable for trusted
+  claims, and freshness/chronology/leakage stay fail-closed. Account fee and
+  matcher slippage are pinned cost assumptions; quote half-spread remains
+  explicitly pending until the existing second-confirmation quote fence.
+- Execution uses
+  `docs/superpowers/plans/2026-09-02-decision-packet-foundation.md`, with one
+  implementer deliverable and one two-round review ceiling per task.
+- Task 1 is complete through `4409bcf9d630`: ADR-0019, strict frozen packet
+  contracts, the deterministic composer and fail-closed JSONL lineage store
+  now establish the reviewed domain boundary. Real forecast evidence cannot
+  become paper-capable without paired manifest and quality IDs, including when
+  a packet is constructed outside the composer.
+- Task 1 final verification passed `76` tests with `3` expected skips; focused
+  Ruff and `git diff --check` passed. The second and final review round returned
+  APPROVED with no Critical, Important or Minor finding. Task 2 is the active
+  frontier; no UI, Copilot, monitoring, review, provider or soak scope has been
+  entered.
+- Task 2 is complete through `9494d59a5c79`. Instrument Workspace now composes
+  a current point-in-time draft while returning the separately persisted
+  latest packet; exact staged save remains stable under a moving production
+  clock and demo reset clears staged authority.
+- Packet actions are same-origin, packet/forecast bound and recoverably
+  idempotent. Reject and Watch never call paper authority; Paper only records a
+  pending proposal after current session-aware freshness and full evidence
+  binding checks, and confirmation remains a separate existing authority.
+- Task 2 final verification passed `97` tests with `6` existing dependency
+  warnings; OpenAPI freshness, TypeScript, Ruff and diff checks passed. The
+  second and final review returned APPROVED with no new finding. Task 3 is now
+  the active frontier.
+- Task 3 delivered the single-screen flow through `d786ec26a791` and closed
+  packet/context races, exact persisted selection, write/confirmation gating,
+  terminal IDs, compact wrapping and archived/current time-domain separation.
+  Its final allowed review retained one Important finding: per-horizon metrics
+  omitted their own validation/test windows and could appear associated with
+  artifact-wide chronology.
+- Per the two-round ceiling, broad Task 3 patching stopped. The operator
+  approved Task 3R: only render each stored metric with its own literal four
+  sample-window timestamps and prove distinct-horizon association. State, API,
+  chart and backend changes are prohibited.
+- Task 3R is complete through `41b677f57734`. Every archived forecast metric
+  now owns its literal validation/test boundaries; two distinct horizons prove
+  there is no artifact-wide chronology inheritance. Default and UTC focused
+  tests passed, and the independent review returned APPROVED/CLEAN.
+- The UTC verification also exposed two older Task 3 assertions that hard-code
+  local rendered dates in MarketCanvas and InstrumentWorkspace tests. They are
+  recorded as Task 4 acceptance blockers; no Task 3R scope was expanded to fix
+  them.
+- Task 4 completes Slice 1. Three independent Chromium paths begin at the real
+  Watchlist NVDA activation, remain in Instrument Workspace, and durably save
+  Reject, Watch and pending Paper-proposal packets in `9.980s`, `9.759s` and
+  `12.423s`; all expose market, three scenarios, risk, evidence, blockers and
+  actions. The Watch path uses keyboard activation/save. The component and API
+  acceptance proves one packet owns every workspace column, deterministic save
+  works without a model service, stale evidence produces zero proposal/order,
+  risk refusal produces zero accepted/filled order, blocker evidence is clear
+  in English and Simplified Chinese, and exact JSON/disposition survives a
+  clean application restart.
+- Task 4's final coherent selection passed `176` tests with `3` skips in
+  `2141.98s`; the final complete repository run passed `3150` tests with `9`
+  skips in `2953.81s`, and the controller independently repeated it with
+  `3150` passed, `9` skipped and `7` warnings in `2998.64s`. Full Ruff,
+  dependency integrity, the exact installed license classification/inventory
+  tests, UTC full Vitest (`167` tests), TypeScript, lint, OpenAPI freshness,
+  packaged build and diff checks passed. The direct ambient license CLI
+  correctly refused four baseline audit-lock omissions (`cloudpickle`,
+  `formulaic`, `interface-meta`, `wrapt`); Slice 1 changes no dependency or
+  license file, does not claim that release gate green, and leaves the
+  inherited lock drift to separately scoped release maintenance. The first
+  full run exposed only an incomplete
+  local optional-extra install and a test whose local basetemp still belonged
+  to the parent Git worktree; the constrained `[moomoo]` environment install
+  and test-only Git discovery ceiling were verified together and by the final
+  full run. No production commit resolver or external state changed.
+- The exact browser/API packet, proposal, restart, stale/refusal, role and gate
+  evidence is recorded in the active iteration ledger. Six pre-existing skill
+  mirror Ruff blockers received only authorized mechanical import/line-wrap
+  corrections; blocker taxonomy duplication remains a non-blocking follow-up.
+  Slice 1 is complete. Slice 2 requires a separate approved design/plan.
+
+## Slice 2 implementation checkpoint — 2026-09-03
+
+- The persisted-packet Copilot vertical slice is implemented as a separate,
+  immutable, packet-bound advisory record with strict analyst/critic schemas and
+  packet-pointer/digest citations. AI output has no confidence, sizing, risk,
+  blocker-override, proposal, confirmation or order authority.
+- Default demo and blank-model workstation operation are explicitly degraded and
+  make no model call. Accepted reports and both audit stages survive a clean app
+  reconstruction; demo reset owns the new mutable ledgers explicitly.
+- Service/API/component acceptance is green, including invalid outputs, citation
+  failures, critic flags, unknown/corrupt/cross-origin handling, secret redaction,
+  cache/context isolation, localization, keyboard use and compact wrapping.
+- The coherent selection recorded `66 passed, 1 selector-only failure`; its valid
+  scripted browser path reached accepted report, citation expansion, invariant
+  counts, reload reopen and reset. The one authorized isolated rerun stopped on a
+  second selector-only visibility assertion before degraded POST. The assertion
+  now matches established suite semantics, but the corrected isolated E2E remains
+  the sole unverified item. This checkpoint is `DONE_WITH_CONCERNS` pending the
+  controller's browser verification, review, detector and broad gate.
+
+## Slice 2 completion checkpoint — 2026-09-03
+
+- Commit `60ee6f9` closed the final review's three Important findings: Copilot is
+  withheld during range-placeholder drift and late responses bind context plus
+  packet ID; accepted records reopen from the validated store without a configured
+  model while POST remains degraded; generated Citation types are concrete without
+  changing legacy wire bytes. It also closes naive timestamp acceptance.
+- The second and final review found every item ADDRESSED with no new Critical or
+  Important breakage. The single Impeccable detector run returned `[]`.
+- After correcting test-only acceptance setup, the isolated Chromium path passed
+  `1` test with `5` existing dependency warnings in `138.98s`, exit `0`. It proves
+  valid report/citations/reload and unavailable persisted-draft action, packet,
+  proposal and order invariance in the real packaged SPA.
+- The one broad Slice 2 gate passed `3179` Python tests with `9` skips and `7`
+  warnings in `3823.34s`, exit `0`; full Ruff, `pip check` and diff checks passed.
+  UTC Vitest passed `19` files / `173` tests in `31.16s`; OpenAPI freshness,
+  TypeScript, lint and production build (`2081` modules in `9.04s`) passed. Four
+  existing Fast Refresh warnings, the ambient Node `22.11.0` versus Vite `22.12+`
+  advisory, and the known final-PR Python license-lock drift are not expanded here.
+- Slice 2 is complete. No real model/provider call, OpenD, real trading, another
+  symbol, external notification, monitoring, outcome/review or 0021 soak work ran.
+
+## Slice 4 completion checkpoint — 2026-09-03
+
+- The exact persisted NVDA packet now reopens in Instrument Workspace with an
+  immutable outcome/review closure. It binds the 30-session local path, exact
+  proposal/order/fill and monitoring provenance, and clean-restart identities;
+  unavailable exit/cost evidence never becomes realized R or zero P&L.
+- The two allowed combined-review rounds completed. A final narrow test-first
+  correction addressed only the already identified exact order-binding and full
+  order-event timeline gaps; no third review or feature expansion occurred.
+- Targeted proof passed: order-tamper regression `1 passed, 10 deselected` in
+  `65.35s`; component `7 passed`; Chromium save/restart `1 passed, 14 deselected,
+  5 warnings` in `154.97s`; targeted static and bundle checks all exited `0`.
+- The one broad Slice 4 gate passed `3217 passed, 9 skipped, 7 warnings` in
+  `3806.57s`, exit `0`; UTC Vitest passed `21` files / `187` tests. Ruff,
+  `pip check`, OpenAPI, TypeScript, lint, build, packaged bundle freshness and
+  diff checks passed. The existing Fast Refresh and local Node/Vite advisories
+  remain non-blocking.
+- Slices 1–4 are complete. The only active work is the final 0027 PR gate. No Provider/OpenD/model
+  call, real trade, other symbol, external notification or 0021 soak state was
+  touched.
+
+## Final license-closure checkpoint — 2026-09-03
+
+- The direct gate reproduced four missing transitive pins and bound them to their
+  installed dependency chain: `cloudpickle==3.1.2`, `formulaic==1.2.2`,
+  `interface_meta==2.0.1` and `wrapt==2.4.0`.
+- `requirements-audit.txt` and `docs/licenses.md` now agree on the exact 76-package
+  cross-platform closure. The license parser recognizes the exact `MIT` text used
+  by `interface_meta` without weakening unknown or copyleft refusal.
+- The MIT parser and exact-version enforcement tests both went RED then GREEN.
+  The first fresh-clone gate exposed 17 resolver-advanced versions and stopped on
+  `simplejson==4.1.2`; the lock/inventory and exact 4.1.1/4.1.2 reviewed
+  exceptions now cover the fresh resolution and existing dev environment.
+  Retained-fresh evidence is `21 passed` in `0.36s`,
+  targeted Ruff/diff clean, and license review exit `0` after classifying all 70
+  installed members and tolerating only the six documented Linux-only pins. No
+  project dependency constraint or runtime behavior changed.
+- A subsequent fresh gate passed Python license and `pip-audit` before two new
+  frontend transitive advisories stopped `npm audit`. The lock-only fix updates
+  exactly `fast-uri 3.1.5 -> 3.1.7` and `qs 6.15.3 -> 6.16.0`; `npm ci`, zero-
+  vulnerability audit, the 646-package frontend license review and diff check
+  now pass. No direct dependency or runtime source changed.
+- The CI-aligned Node 22.12 runner passed the formerly blocked frontend build and
+  reached 75% of pytest with no failure, but the gate's 2400-second timeout was
+  shorter than the verified 3806.57-second suite baseline. A test-first gate-only
+  correction raises that step to 5400 seconds; its three tests, Ruff and diff pass.
+- The expanded-budget fresh suite reached 100% with `3219 passed, 9 skipped` and
+  one lock-order failure in `4682.45s`. Swapping adjacent `cloudpickle`/`colorama`
+  rows closed it; the exact release/security selection now passes `28` tests in
+  `0.43s`, with Ruff and diff green. No product behavior changed.
+- The only remaining work is the final fresh-clone release gate and PR boundary.
+
+## Final-gate compatibility checkpoint — 2026-09-04
+
+- The Node 22.12 fresh-clone gate passed source cleanliness, clone/version,
+  fresh Python installation, Ruff, trusted-data tooling, Python and frontend
+  license closure, `pip-audit`, `npm audit`, bundle freshness, Vitest and the
+  complete Python suite (`3220 passed, 9 skipped` in `2825.5s`).
+- Its sole failure was the historical golden-path script posting a bare legacy
+  proposal and treating the required 409 response as the former flat proposal
+  shape. Product code and tests were already green.
+- `tools/golden_path.py` now exercises the accepted DecisionPacket workflow:
+  save the exact draft, record a packet-bound paper action, then separately
+  confirm its proposal. The kill-switch race uses a deterministic demo reset
+  and a second exact NVDA packet; no Provider, OpenD or external state is used.
+  The corrected walk passes all `60` checks with exit `0`.
+- The only remaining work is one fresh-clone release gate on the corrected
+  commit, followed by the final PR boundary. No additional product slice is
+  authorized.
+- That rerun stopped fail-closed before audits/tests because the unconstrained
+  dev resolver advanced `ruff 0.16.5 -> 0.16.6`. The exact MIT audit pin and
+  inventory now follow the fresh resolution. The retained fresh environment
+  classifies all 70 installed members of the 76-package closure and exits `0`;
+  the exact release/security selection passes `28` tests in `0.35s`. No
+  application dependency or runtime behavior changed.
+
+## Final PR checkpoint — 2026-09-04
+
+- The definitive fresh-clone gate passed all 18 steps on
+  `e9b4f766e21e157fbdfe4a5cfd4012ea5af5b9f2` with Node 22.12.0.
+- The full Python suite passed `3220` tests with `9` skips in `2846.8s`;
+  golden path passed all `60` checks in `75.9s`. Ruff, trusted-data tooling,
+  Python/frontend license closures, `pip-audit`, `npm audit`, bundle freshness,
+  Vitest and clean-checkout proof all passed. The clone was clean at start and
+  end, and the gate exited `0`.
+- Final review boundary is [PR #128](https://github.com/ZP151/quantmesh/pull/128),
+  linked to issue #122. No Provider/OpenD/model call, real trade, other symbol,
+  external notification or 0021 soak state was touched.
+- The first PR review then blocked merge on four exact replay/monitoring gaps.
+  Test-first corrections now replay an action child by its exact parent even
+  after a newer analysis root exists, derive drift baselines from frozen packet
+  paths, allow same-dataset forward revisions, and refuse watch registration on
+  draft packets. The affected packet/API/monitoring/review closure passes `74`
+  tests in `1168.36s`; targeted Ruff and diff checks pass. Final PR-head CI is
+  the remaining merge condition, not a new product slice.
+
+## Historical delivery record
+
+The checkpoints below preserve prior goals and evidence. Their embedded
+"current frontier" headings are historical; the metadata above is the
+canonical current state.
 
 ## Checkpoint 0 — 2026-08-14
 
@@ -870,11 +1132,10 @@ labeled and isolated from non-demo operator state.
 
 ## Resume instruction
 
-Run `/goal`, then read this file, `PRODUCT.md`, `docs/product-strategy.md`,
-iteration 0020, the framework adoption ADR, the roadmap and current Git/tag/CI
-state. Do not repeat iteration 0020: PR #108 is merged and the immutable
-`v0.1.1-rc1` candidate has passed isolated acceptance. If the operator gives
-the exact promotion authority, run a separate final-release goal; if the
-operator reports a defect, preserve RC1 and cut a new repair candidate; if the
-operator requests continued product work, plan iteration 0021 from the trusted
-data-fabric frontier. Never infer real-money, mainnet or AI order authority.
+Resume from the metadata and active delivery protocol at the top of this file,
+then read `PRODUCT.md`, `docs/product-strategy.md`, the active 0027 iteration,
+its tracked design and executable plan, ADR-0015, the roadmap, issue #122 and
+current Git/PR state. Start from the first incomplete vertical slice; do not
+reopen framework bake-offs unless a DecisionPacket requirement proves the
+native contracts insufficient. Treat 0021 soak as an independent maintenance
+track and never infer real-money, mainnet, credential or AI order authority.

@@ -240,6 +240,7 @@ def test_commit_resolution_fails_closed(
 ) -> None:
     lake_root, registry_root = roots
     _pinned_dataset(lake_root)
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(Path(__file__).resolve().parents[1]))
     monkeypatch.chdir(tmp_path)
 
     with pytest.raises(ValueError, match="pass commit explicitly"):

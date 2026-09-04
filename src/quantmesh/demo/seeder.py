@@ -87,9 +87,13 @@ from quantmesh.instruments.contracts import (
     HistoricalSeries,
     HistoryRange,
 )
+from quantmesh.instruments.copilot import PacketCopilotStore
+from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.instruments.forecast import PriceForecastRegistry, run_price_forecast
 from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.monitoring import DecisionWatchStore
 from quantmesh.instruments.proposals import ProposalLedger
+from quantmesh.instruments.reviews import DecisionReviewStore
 from quantmesh.ops.enablement import ApprovalLedger
 from quantmesh.research.drift import (
     AlertLedger,
@@ -129,6 +133,17 @@ _MUTABLE_FILES = frozenset(
         "orders/journal.jsonl",
         "orders/proposals/.proposals.lock",
         "orders/proposals/proposals.jsonl",
+        "decisions/copilot/packet-copilot-records.jsonl",
+        "decisions/decisions.jsonl",
+        "decisions/packets/.decision-packets.lock",
+        "decisions/packets/decision-action-intents.jsonl",
+        "decisions/packets/decision-packets.jsonl",
+        "decisions/monitoring/.decision-watch.lock",
+        "decisions/monitoring/watch-activations.jsonl",
+        "decisions/monitoring/watch-registrations.jsonl",
+        "decisions/monitoring/watch-evaluations.jsonl",
+        "decisions/reviews/.decision-reviews.lock",
+        "decisions/reviews/decision-reviews.jsonl",
         "watchlists/watchlist.jsonl",
     }
 )
@@ -253,6 +268,10 @@ class DemoSeeded:
     history: HistoryService
     price_forecasts: PriceForecastRegistry
     proposal_ledger: ProposalLedger
+    decision_packets: DecisionPacketStore
+    packet_copilot: PacketCopilotStore
+    packet_monitoring: DecisionWatchStore
+    packet_reviews: DecisionReviewStore
     provenance: dict[str, object] = field(default_factory=dict)
 
 
@@ -432,9 +451,7 @@ def _operator_import_inventory(root: Path, dataset: str) -> dict[str, str] | Non
     if not manifest_path.is_file() or _is_link_or_junction(manifest_path):
         return None
     try:
-        manifest = DatasetManifest.model_validate_json(
-            manifest_path.read_text(encoding="utf-8")
-        )
+        manifest = DatasetManifest.model_validate_json(manifest_path.read_text(encoding="utf-8"))
         if manifest.dataset != dataset or manifest.source != "operator-import":
             return None
         Lake(lake_root).dataset(dataset)
@@ -475,8 +492,7 @@ def _is_valid_datalink_cache(root: Path, relative: str) -> bool:
         return False
     if (
         not isinstance(record, dict)
-        or set(record)
-        != {"symbol", "coin", "source", "synthetic", "fetched_at", "payload"}
+        or set(record) != {"symbol", "coin", "source", "synthetic", "fetched_at", "payload"}
         or not isinstance(record["symbol"], str)
         or not isinstance(record["coin"], str)
         or not isinstance(record["fetched_at"], str)
@@ -490,7 +506,8 @@ def _is_valid_datalink_cache(root: Path, relative: str) -> bool:
         return False
     return (
         record["coin"] == path.stem
-        and record["coin"] == (
+        and record["coin"]
+        == (
             record["symbol"][: -len("-USD")]
             if record["symbol"].endswith("-USD")
             else record["symbol"]
@@ -508,9 +525,7 @@ def _valid_dynamic_paths(
     unknown: set[str],
 ) -> bool:
     remaining = set(unknown)
-    cache_paths = {
-        relative for relative in remaining if Path(relative).parts[:1] == (".datalink",)
-    }
+    cache_paths = {relative for relative in remaining if Path(relative).parts[:1] == (".datalink",)}
     if cache_paths:
         for relative in cache_paths:
             parts = Path(relative).parts
@@ -532,16 +547,11 @@ def _valid_dynamic_paths(
     datasets = {
         Path(relative).parts[2]
         for relative in remaining
-        if len(Path(relative).parts) >= 3
-        and Path(relative).parts[:2] == ("market", "lake")
+        if len(Path(relative).parts) >= 3 and Path(relative).parts[:2] == ("market", "lake")
     }
     for dataset in datasets:
         prefix = ("market", "lake", dataset)
-        members = {
-            relative
-            for relative in remaining
-            if Path(relative).parts[:3] == prefix
-        }
+        members = {relative for relative in remaining if Path(relative).parts[:3] == prefix}
         expected = _operator_import_inventory(root, dataset)
         if expected is None or members != set(expected):
             return False
@@ -766,8 +776,7 @@ def _require_demo_tree_identity(
         trusted_ownership_text=trusted_ownership_text,
     ):
         raise DemoRootError(
-            f"{failure_message}: trusted ownership/structure validation failed; "
-            f"preserving {root}"
+            f"{failure_message}: trusted ownership/structure validation failed; preserving {root}"
         )
     try:
         identity_after = filesystem_identity(root)
@@ -801,10 +810,7 @@ def _restore_original_after_publish_mismatch(
     retained = (unexpected,)
     try:
         atomic_replace(root, unexpected)
-        if (
-            published_identity is None
-            or filesystem_identity(unexpected) != published_identity
-        ):
+        if published_identity is None or filesystem_identity(unexpected) != published_identity:
             raise DemoRootError(
                 "unexpected published object changed while it was quarantined",
                 retained_paths=retained,
@@ -1640,6 +1646,7 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         "history": sum(dataset_rows.values()),
         "price_forecasts": len(price_forecasts.all()),
         "paper_proposals": 0,
+        "decision_packets": 0,
         "orders": len(order_quotes),
         **research_rows,
         **forecast_rows,
@@ -1661,6 +1668,24 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
     proposal_root.mkdir(parents=True, exist_ok=True)
     (proposal_root / ".proposals.lock").write_text("", encoding="utf-8")
     (proposal_root / "proposals.jsonl").write_text("", encoding="utf-8")
+    decision_packet_root = root / "decisions" / "packets"
+    decision_packet_root.mkdir(parents=True, exist_ok=True)
+    (decision_packet_root / ".decision-packets.lock").write_text("", encoding="utf-8")
+    (decision_packet_root / "decision-action-intents.jsonl").write_text("", encoding="utf-8")
+    (decision_packet_root / "decision-packets.jsonl").write_text("", encoding="utf-8")
+    packet_copilot_root = root / "decisions" / "copilot"
+    packet_copilot_root.mkdir(parents=True, exist_ok=True)
+    (packet_copilot_root / "packet-copilot-records.jsonl").write_text("", encoding="utf-8")
+    packet_monitoring_root = root / "decisions" / "monitoring"
+    packet_monitoring_root.mkdir(parents=True, exist_ok=True)
+    (packet_monitoring_root / ".decision-watch.lock").write_text("", encoding="utf-8")
+    (packet_monitoring_root / "watch-activations.jsonl").write_text("", encoding="utf-8")
+    (packet_monitoring_root / "watch-registrations.jsonl").write_text("", encoding="utf-8")
+    (packet_monitoring_root / "watch-evaluations.jsonl").write_text("", encoding="utf-8")
+    packet_reviews_root = root / "decisions" / "reviews"
+    packet_reviews_root.mkdir(parents=True, exist_ok=True)
+    (packet_reviews_root / ".decision-reviews.lock").write_text("", encoding="utf-8")
+    (packet_reviews_root / "decision-reviews.jsonl").write_text("", encoding="utf-8")
     ownership_text = _ownership_text(root)
     (root / OWNERSHIP_NAME).write_text(ownership_text, encoding="utf-8")
     ownership_sha256 = hashlib.sha256(ownership_text.encode("utf-8")).hexdigest()
@@ -1687,6 +1712,10 @@ def seed_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
         history=history,
         price_forecasts=price_forecasts,
         proposal_ledger=proposal_ledger,
+        decision_packets=DecisionPacketStore(decision_packet_root),
+        packet_copilot=PacketCopilotStore(root / "decisions" / "copilot"),
+        packet_monitoring=DecisionWatchStore(root / "decisions" / "monitoring"),
+        packet_reviews=DecisionReviewStore(root / "decisions" / "reviews"),
         provenance=provenance,
     )
 
@@ -1764,6 +1793,10 @@ def load_demo_root(root: Path, scenario: DemoScenario = DemoScenario()) -> DemoS
             bindings=history_bindings,
         ),
         proposal_ledger=ProposalLedger(root / "orders" / "proposals"),
+        decision_packets=stores.decision_packets,
+        packet_copilot=stores.packet_copilot,
+        packet_monitoring=stores.packet_monitoring,
+        packet_reviews=stores.packet_reviews,
         provenance=provenance,
     )
 
@@ -1945,9 +1978,7 @@ def reset_demo_root(
         except BaseException:
             if not root.exists() and quarantine.exists():
                 try:
-                    quarantine_is_original = (
-                        filesystem_identity(quarantine) == root_identity
-                    )
+                    quarantine_is_original = filesystem_identity(quarantine) == root_identity
                 except OSError:
                     quarantine_is_original = False
                 if quarantine_is_original:

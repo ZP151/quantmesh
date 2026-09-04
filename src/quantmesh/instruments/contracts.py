@@ -31,6 +31,8 @@ FORECAST_ID_PATTERN = r"^forecast-[0-9a-f]{24}$"
 _FORECAST_ID = re.compile(FORECAST_ID_PATTERN)
 PROPOSAL_ID_PATTERN = r"^proposal-[0-9a-f]{24}$"
 _PROPOSAL_ID = re.compile(PROPOSAL_ID_PATTERN)
+DECISION_PACKET_ID_PATTERN = r"^packet-[0-9a-f]{24}$"
+_DECISION_PACKET_ID = re.compile(DECISION_PACKET_ID_PATTERN)
 
 
 def _utc(value: datetime, name: str) -> datetime:
@@ -1186,6 +1188,378 @@ class ProposalCapability(StrictContract):
         return self
 
 
+class DecisionDisposition(StrEnum):
+    """The immutable operator state recorded by one decision packet version."""
+
+    DRAFT = "draft"
+    REJECT = "reject"
+    WATCH = "watch"
+    PAPER_PROPOSAL = "paper_proposal"
+
+
+class DecisionBlocker(StrictContract):
+    """One ordered, evidence-addressable reason paper action is unavailable."""
+
+    code: Literal[
+        "history-quality",
+        "history-lineage",
+        "history-freshness",
+        "forecast-missing",
+        "forecast-ineligible",
+        "forecast-freshness",
+        "leakage",
+        "chronology",
+        "cost-evidence",
+        "valuation",
+        "kill-switch",
+        "proposal-service",
+    ]
+    message: str = Field(min_length=1)
+    evidence_ref: str = Field(min_length=1)
+
+
+class DecisionScenario(StrictContract):
+    """One qualitative Bull, Base, or Bear outcome; never a fabricated probability."""
+
+    kind: Literal["bull", "base", "bear"]
+    thesis: str = Field(min_length=1)
+    trigger: str = Field(min_length=1)
+    invalidation: float = Field(gt=0)
+    target: float = Field(gt=0)
+    probability: None = None
+    confidence: Literal["qualitative"] = "qualitative"
+    confidence_reason: str = Field(min_length=1)
+
+
+class DecisionCostEvidence(StrictContract):
+    """Pinned account costs; quote spread remains a confirmation concern."""
+
+    fee_bps: float = Field(ge=0)
+    slippage_bps: float = Field(ge=0)
+    half_spread_bps: float | None = Field(default=None, ge=0)
+    spread_status: Literal["confirmation-quote-required"]
+
+    @model_validator(mode="after")
+    def spread_is_not_fabricated(self) -> "DecisionCostEvidence":
+        if self.half_spread_bps is not None:
+            raise ValueError("half spread is captured only at confirmation")
+        return self
+
+
+class DecisionMarketState(StrictContract):
+    """Transparent observed market structure used by a packet."""
+
+    trend: Literal["bullish", "bearish", "neutral"]
+    latest_close: float = Field(gt=0)
+    sma20: float = Field(gt=0)
+    sma50: float = Field(gt=0)
+    support: float = Field(gt=0)
+    resistance: float = Field(gt=0)
+    invalidation: float = Field(gt=0)
+    observed_drawdown: float = Field(ge=0, le=1)
+    observed_volatility: float = Field(ge=0)
+    key_level_bar_times: tuple[datetime, ...] = Field(min_length=1)
+
+    @field_validator("key_level_bar_times")
+    @classmethod
+    def key_level_times_are_unique_utc(cls, value: tuple[datetime, ...]) -> tuple[datetime, ...]:
+        normalized = tuple(_utc(item, "key_level_bar_times") for item in value)
+        if normalized != tuple(sorted(set(normalized))):
+            raise ValueError("key_level_bar_times must be unique and chronological")
+        return normalized
+
+    @model_validator(mode="after")
+    def market_levels_are_ordered(self) -> "DecisionMarketState":
+        if self.support > self.resistance:
+            raise ValueError("support cannot exceed resistance")
+        return self
+
+
+class DecisionRiskPlan(StrictContract):
+    """Deterministic proposal inputs, not a paper-risk approval."""
+
+    entry_price: float = Field(gt=0)
+    stop_price: float = Field(gt=0)
+    target_price: float = Field(gt=0)
+    risk_per_unit: float = Field(gt=0)
+    reward_per_unit: float = Field(gt=0)
+    reward_to_risk: float = Field(gt=0)
+    suggested_quantity: float | None = Field(default=None, gt=0)
+    suggested_notional: float | None = Field(default=None, gt=0)
+    proposal_input_only: Literal[True] = True
+
+    @model_validator(mode="after")
+    def risk_math_is_consistent(self) -> "DecisionRiskPlan":
+        if self.stop_price >= self.entry_price:
+            raise ValueError("stop_price must remain below entry_price")
+        if self.target_price <= self.entry_price:
+            raise ValueError("target_price must exceed entry_price")
+        if not math.isclose(self.risk_per_unit, self.entry_price - self.stop_price):
+            raise ValueError("risk_per_unit must match entry_price minus stop_price")
+        if not math.isclose(self.reward_per_unit, self.target_price - self.entry_price):
+            raise ValueError("reward_per_unit must match target_price minus entry_price")
+        if not math.isclose(self.reward_to_risk, self.reward_per_unit / self.risk_per_unit):
+            raise ValueError("reward_to_risk must match the recorded unit values")
+        if (self.suggested_quantity is None) != (self.suggested_notional is None):
+            raise ValueError("suggested quantity and notional must be present together")
+        if self.suggested_quantity is not None and not math.isclose(
+            self.suggested_notional or 0.0, self.suggested_quantity * self.entry_price
+        ):
+            raise ValueError("suggested_notional must match quantity times entry_price")
+        return self
+
+
+class DecisionForecastChronology(StrictContract):
+    """Role-named forecast training and evaluation boundaries."""
+
+    train_start: datetime
+    train_end: datetime
+    validation_start: datetime | None = None
+    validation_end: datetime | None = None
+    test_start: datetime | None = None
+    test_end: datetime | None = None
+
+    @field_validator(
+        "train_start", "train_end", "validation_start", "validation_end", "test_start", "test_end"
+    )
+    @classmethod
+    def chronology_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
+        return None if value is None else _utc(value, info.field_name)
+
+    @model_validator(mode="after")
+    def chronology_boundaries_are_ordered(self) -> "DecisionForecastChronology":
+        for start, end, label in (
+            (self.train_start, self.train_end, "train"),
+            (self.validation_start, self.validation_end, "validation"),
+            (self.test_start, self.test_end, "test"),
+        ):
+            if (start is None) != (end is None):
+                raise ValueError(f"{label} chronology requires both boundaries")
+            if start is not None and start > end:
+                raise ValueError(f"{label} chronology start cannot follow end")
+        return self
+
+
+class DecisionEvidence(StrictContract):
+    """Pinned history, forecast, chronology, metric, and cost inputs."""
+
+    history_dataset_id: str = Field(min_length=1)
+    history_dataset_revision: int = Field(ge=1)
+    history_manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    history_quality_evaluation_id: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
+    history_source: str = Field(min_length=1)
+    history_generated_at: datetime
+    history_gaps: tuple[datetime, ...] = Field(default_factory=tuple)
+    history_duplicates: tuple[datetime, ...] = Field(default_factory=tuple)
+    history_limitations: tuple[str, ...] = Field(default_factory=tuple)
+    forecast_artifact_id: str | None = None
+    forecast_dataset_id: str | None = None
+    forecast_dataset_revision: int | None = Field(default=None, ge=1)
+    forecast_manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    forecast_quality_evaluation_id: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
+    forecast_synthetic: bool | None = None
+    forecast_eligible: bool | None = None
+    forecast_blockers: tuple[str, ...] = Field(default_factory=tuple)
+    forecast_limitations: tuple[str, ...] = Field(default_factory=tuple)
+    forecast_model_name: str | None = None
+    forecast_model_version: str | None = None
+    forecast_config_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    forecast_history_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    forecast_benchmark_name: str | None = None
+    forecast_generated_at: datetime | None = None
+    forecast_chronology: DecisionForecastChronology | None = None
+    forecast_paths: tuple[ForecastPath, ...] = Field(default_factory=tuple)
+    forecast_metrics: tuple[ForecastMetrics, ...] = Field(default_factory=tuple)
+    costs: DecisionCostEvidence
+
+    @field_validator(
+        "history_generated_at",
+        "forecast_generated_at",
+    )
+    @classmethod
+    def evidence_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
+        return None if value is None else _utc(value, info.field_name)
+
+    @field_validator("history_gaps", "history_duplicates")
+    @classmethod
+    def evidence_time_lists_are_unique_utc(
+        cls, value: tuple[datetime, ...], info
+    ) -> tuple[datetime, ...]:
+        normalized = tuple(_utc(item, info.field_name) for item in value)
+        if normalized != tuple(sorted(set(normalized))):
+            raise ValueError(f"{info.field_name} must be unique and chronological")
+        return normalized
+
+    @field_validator("history_limitations", "forecast_blockers", "forecast_limitations")
+    @classmethod
+    def evidence_limitations_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not item.strip() for item in value) or len(set(value)) != len(value):
+            raise ValueError("evidence messages must be non-blank and unique")
+        return value
+
+    @model_validator(mode="after")
+    def evidence_bindings_are_complete(self) -> "DecisionEvidence":
+        if (self.history_manifest_id is None) != (self.history_quality_evaluation_id is None):
+            raise ValueError("history manifest and quality IDs must be present together")
+        forecast_fields = (
+            self.forecast_artifact_id,
+            self.forecast_dataset_id,
+            self.forecast_dataset_revision,
+            self.forecast_model_name,
+            self.forecast_model_version,
+            self.forecast_config_digest,
+            self.forecast_history_digest,
+            self.forecast_benchmark_name,
+            self.forecast_generated_at,
+            self.forecast_synthetic,
+            self.forecast_eligible,
+        )
+        if any(value is not None for value in forecast_fields) != all(
+            value is not None for value in forecast_fields
+        ):
+            raise ValueError("forecast evidence must be complete when present")
+        if self.forecast_artifact_id is None and (
+            self.forecast_chronology is not None
+            or self.forecast_paths
+            or self.forecast_metrics
+            or self.forecast_blockers
+            or self.forecast_limitations
+        ):
+            raise ValueError("forecast detail requires a forecast artifact")
+        if (self.forecast_manifest_id is None) != (
+            self.forecast_quality_evaluation_id is None
+        ):
+            raise ValueError("forecast manifest and quality IDs must be present together")
+        if self.forecast_synthetic is False and (
+            self.forecast_manifest_id is None
+            or self.forecast_quality_evaluation_id is None
+        ):
+            raise ValueError("real forecast requires manifest and quality evidence")
+        return self
+
+
+class DecisionPaperCapability(StrictContract):
+    """Packet-local action gate retaining typed, ordered evidence blockers."""
+
+    allowed: bool
+    blockers: tuple[DecisionBlocker, ...] = Field(default_factory=tuple)
+
+    @field_validator("blockers")
+    @classmethod
+    def blockers_are_ordered_and_unique(
+        cls, value: tuple[DecisionBlocker, ...]
+    ) -> tuple[DecisionBlocker, ...]:
+        codes = tuple(item.code for item in value)
+        if len(set(codes)) != len(codes):
+            raise ValueError("decision blockers must be unique in their supplied order")
+        return value
+
+    @model_validator(mode="after")
+    def allowed_matches_blockers(self) -> "DecisionPaperCapability":
+        if self.allowed != (not self.blockers):
+            raise ValueError("decision paper capability must match blockers")
+        return self
+
+
+class DecisionPacket(StrictContract):
+    """Frozen, versioned, content-addressed decision analysis and disposition."""
+
+    packet_id: str
+    version: int = Field(ge=1)
+    parent_packet_id: str | None = None
+    instrument: InstrumentSnapshot
+    selected_range: HistoryRange
+    as_of: datetime
+    created_at: datetime
+    market_state: DecisionMarketState
+    scenarios: tuple[DecisionScenario, DecisionScenario, DecisionScenario]
+    risk_plan: DecisionRiskPlan
+    evidence: DecisionEvidence
+    paper_capability: DecisionPaperCapability
+    disposition: DecisionDisposition
+    operator_reason: str | None = None
+    proposal_id: str | None = None
+
+    @field_validator("packet_id", "parent_packet_id")
+    @classmethod
+    def packet_ids_are_canonical(cls, value: str | None, info) -> str | None:
+        if value is not None and _DECISION_PACKET_ID.fullmatch(value) is None:
+            raise ValueError(f"{info.field_name} must be packet- plus 24 lowercase hex characters")
+        return value
+
+    @field_validator("instrument", mode="before")
+    @classmethod
+    def instrument_is_a_detached_snapshot(cls, value: object) -> object:
+        return _instrument_snapshot(value)
+
+    @field_validator("as_of", "created_at")
+    @classmethod
+    def packet_times_are_utc(cls, value: datetime, info) -> datetime:
+        return _utc(value, info.field_name)
+
+    @field_validator("scenarios")
+    @classmethod
+    def scenarios_are_exactly_bull_base_bear(
+        cls, value: tuple[DecisionScenario, DecisionScenario, DecisionScenario]
+    ) -> tuple[DecisionScenario, DecisionScenario, DecisionScenario]:
+        if tuple(item.kind for item in value) != ("bull", "base", "bear"):
+            raise ValueError("scenarios must be ordered bull, base, bear")
+        return value
+
+    @model_validator(mode="after")
+    def version_and_disposition_are_consistent(self) -> "DecisionPacket":
+        if self.version == 1:
+            if (
+                self.parent_packet_id is not None
+                or self.disposition is not DecisionDisposition.DRAFT
+            ):
+                raise ValueError("version 1 requires no parent and draft disposition")
+        elif self.parent_packet_id is None:
+            raise ValueError("child decision packet requires a parent")
+        if self.disposition is DecisionDisposition.DRAFT:
+            if self.operator_reason is not None or self.proposal_id is not None:
+                raise ValueError("draft packet cannot carry action references")
+        elif self.disposition in {DecisionDisposition.REJECT, DecisionDisposition.WATCH}:
+            if self.operator_reason is None or not self.operator_reason.strip():
+                raise ValueError("reject and watch packet requires an operator reason")
+            if self.proposal_id is not None:
+                raise ValueError("reject and watch packets cannot carry a proposal reference")
+        elif self.proposal_id is None:
+            raise ValueError("paper proposal packet requires a proposal reference")
+        if self.disposition is DecisionDisposition.PAPER_PROPOSAL and (
+            not self.paper_capability.allowed or self.paper_capability.blockers
+        ):
+            raise ValueError("paper proposal requires an allowed unblocked paper capability")
+        return self
+
+
+class DecisionWorkspaceState(StrictContract):
+    """Fresh deterministic draft and optional persisted packet for one workspace."""
+
+    draft: DecisionPacket
+    latest: DecisionPacket | None = None
+
+
+class DecisionPacketActionResult(StrictContract):
+    """One immutable packet transition and its optional paper proposal."""
+
+    packet: DecisionPacket
+    proposal: PaperProposal | None = None
+
+    @model_validator(mode="after")
+    def proposal_matches_packet(self) -> "DecisionPacketActionResult":
+        if self.packet.disposition is DecisionDisposition.PAPER_PROPOSAL:
+            if self.proposal is None or self.packet.proposal_id != self.proposal.id:
+                raise ValueError("paper decision packet must bind its exact proposal")
+        elif self.proposal is not None:
+            raise ValueError("non-paper decision packet cannot return a proposal")
+        return self
+
+
 class InstrumentWorkspace(StrictContract):
     """Point-in-time read model for one venue-aware decision workspace."""
 
@@ -1199,6 +1573,7 @@ class InstrumentWorkspace(StrictContract):
     position: WorkspacePosition | None = None
     risk: WorkspaceRisk
     proposal: ProposalCapability
+    decision: DecisionWorkspaceState
 
     @field_validator("generated_at")
     @classmethod
@@ -1214,6 +1589,18 @@ class InstrumentWorkspace(StrictContract):
     def identities_match(self) -> "InstrumentWorkspace":
         if self.instrument != self.history.instrument:
             raise ValueError("workspace instrument must match history")
+        if self.decision.draft.instrument != self.history.instrument:
+            raise ValueError("workspace decision instrument must match history")
+        if self.decision.draft.selected_range is not self.history.range:
+            raise ValueError("workspace decision range must match history")
+        if self.decision.draft.as_of != self.history.as_of:
+            raise ValueError("workspace decision as_of must match history")
+        if self.decision.latest is not None and (
+            self.decision.latest.instrument.venue is not self.history.instrument.venue
+            or self.decision.latest.instrument.symbol != self.history.instrument.symbol
+            or self.decision.latest.selected_range is not self.history.range
+        ):
+            raise ValueError("workspace latest decision instrument and range must match history")
         if (self.forecast is None) != (self.forecast_unavailable_reason is not None):
             raise ValueError(
                 "workspace must carry either forecast evidence or an unavailable reason"
