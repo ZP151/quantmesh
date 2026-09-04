@@ -88,7 +88,21 @@ def test_packet_watch_conditions_accept_only_fixed_kinds_and_never_mutate_packet
         draft = _draft(client)
         saved = _save(client, draft)
         assert saved.status_code == 200
-        packet_id = saved.json()["packet_id"]
+        draft_registration = client.post(
+            f"/api/decision-packets/{saved.json()['packet_id']}/watch-conditions",
+            json={"kinds": ["entry_zone"]},
+        )
+        action = client.post(
+            f"/api/decision-packets/{saved.json()['packet_id']}/actions",
+            json={
+                "disposition": "watch",
+                "operator_reason": "Monitor this completed decision.",
+                "side": None,
+                "quantity": None,
+                "limit_price": None,
+            },
+        ).json()
+        packet_id = action["packet"]["packet_id"]
         before = client.get(f"/api/decision-packets/{packet_id}").json()
 
         initial = client.get(f"/api/decision-packets/{packet_id}/watch-conditions")
@@ -108,6 +122,8 @@ def test_packet_watch_conditions_accept_only_fixed_kinds_and_never_mutate_packet
         after = client.get(f"/api/decision-packets/{packet_id}").json()
 
     assert initial.status_code == 200
+    assert draft_registration.status_code == 409
+    assert "action packet" in draft_registration.json()["detail"]
     assert initial.json()["registration"] is None
     assert invalid.status_code == 422
     assert checked.status_code == 200
@@ -248,8 +264,18 @@ def test_demo_reset_restores_pristine_packet_monitoring_files_after_a_check(tmp_
     app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
     with TestClient(app) as client:
         saved = _save(client, _draft(client)).json()
+        action = client.post(
+            f"/api/decision-packets/{saved['packet_id']}/actions",
+            json={
+                "disposition": "watch",
+                "operator_reason": "Monitor this completed decision.",
+                "side": None,
+                "quantity": None,
+                "limit_price": None,
+            },
+        ).json()
         checked = client.post(
-            f"/api/decision-packets/{saved['packet_id']}/watch-conditions",
+            f"/api/decision-packets/{action['packet']['packet_id']}/watch-conditions",
             json={"kinds": ["entry_zone"]},
         )
         reset = client.post("/api/demo/reset")
@@ -530,6 +556,33 @@ def test_advancing_workspace_clock_saves_exact_draft_then_refreshes_fresh_alongs
         == (body["forecast"]["generated_at"])
     )
     assert body["decision"]["latest"] == saved
+
+
+def test_action_replay_uses_exact_parent_after_a_newer_analysis_root_is_saved(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    payload = {
+        "disposition": "watch",
+        "operator_reason": "Wait for the observed entry condition.",
+        "side": None,
+        "quantity": None,
+        "limit_price": None,
+    }
+
+    with TestClient(app) as client:
+        parent = _save(client, _draft(client)).json()
+        path = f"/api/decision-packets/{parent['packet_id']}/actions"
+        first = client.post(path, json=payload)
+        app.state.instrument_workspace._now = (  # noqa: SLF001
+            lambda: SCENARIO.anchor + timedelta(minutes=5)
+        )
+        newer = _save(client, _draft(client)).json()
+        replay = client.post(path, json=payload)
+
+    assert newer["packet_id"] != parent["packet_id"]
+    assert replay.status_code == 200
+    assert replay.json() == first.json()
 
 
 @pytest.mark.parametrize("disposition", [DecisionDisposition.REJECT, DecisionDisposition.WATCH])

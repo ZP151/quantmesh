@@ -533,3 +533,25 @@ integration and human-review boundary and links issue #122. Iteration 0027 is
 complete at that boundary; merge remains a repository-owner decision. No
 Provider/OpenD/model call, real trade, other symbol, external notification or
 0021 soak state was touched.
+
+## Final PR review hardening — 2026-09-04
+
+The initial PR review identified four bounded correctness gaps and blocked the
+merge. Each correction was reproduced RED before implementation:
+
+- action retries now find the exact child by `parent_packet_id` before applying
+  context-wide latest-actionability, preserving idempotency after a newer
+  analysis root is saved;
+- forecast-drift registration freezes its p50 and absolute target timestamp
+  from the packet's immutable 30-session path and trusts registry target/calendar
+  metadata only when the baseline artifact matches the packet binding and paths;
+- a later revision of the same dataset remains comparable when model, config,
+  target, calendar and absolute target agree, while older revisions stay refused;
+- watch registration requires a persisted non-draft action packet, preventing a
+  failed action flow from leaving monitoring attached to an abandoned draft.
+
+The affected DecisionPacket domain/API, monitoring and outcome/review closure
+passes `74` tests with `6` existing dependency warnings in `1168.36s`, exit `0`.
+Targeted Ruff and `git diff --check` pass. These changes add no provider,
+scheduler, external notification or order authority; PR-head CI is the final
+merge condition.

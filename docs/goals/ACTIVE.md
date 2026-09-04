@@ -293,6 +293,13 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
 - Final review boundary is [PR #128](https://github.com/ZP151/quantmesh/pull/128),
   linked to issue #122. No Provider/OpenD/model call, real trade, other symbol,
   external notification or 0021 soak state was touched.
+- The first PR review then blocked merge on four exact replay/monitoring gaps.
+  Test-first corrections now replay an action child by its exact parent even
+  after a newer analysis root exists, derive drift baselines from frozen packet
+  paths, allow same-dataset forward revisions, and refuse watch registration on
+  draft packets. The affected packet/API/monitoring/review closure passes `74`
+  tests in `1168.36s`; targeted Ruff and diff checks pass. Final PR-head CI is
+  the remaining merge condition, not a new product slice.
 
 ## Historical delivery record
 

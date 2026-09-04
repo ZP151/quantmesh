@@ -23,6 +23,7 @@ from quantmesh.data.calendars import (
     SessionPolicy,
 )
 from quantmesh.domain.models import Instrument
+from quantmesh.instruments.contracts import DecisionDisposition
 from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.persistence.jsonl import JsonlStore
 
@@ -583,27 +584,45 @@ class DecisionWatchService:
         self.calendar = calendar or CalendarService()
 
     def _drift_definition(self, packet) -> DriftDefinition:
-        baseline = None
+        evidence = packet.evidence
+        try:
+            baseline = next(
+                path.points[-1] for path in evidence.forecast_paths if path.sessions == 30
+            )
+        except StopIteration:
+            baseline = None
         artifact = None
-        artifact_id = packet.evidence.forecast_artifact_id
+        artifact_id = evidence.forecast_artifact_id
         if artifact_id is not None and self.forecast_registry is not None:
             try:
-                artifact = self.forecast_registry.get(artifact_id)
-                baseline = next(path.points[-1] for path in artifact.paths if path.sessions == 30)
-            except (OSError, ValueError, StopIteration):
-                baseline = None
+                candidate = self.forecast_registry.get(artifact_id)
+                if (
+                    candidate.id == artifact_id
+                    and candidate.instrument.model_dump(mode="json")
+                    == packet.instrument.model_dump(mode="json")
+                    and candidate.dataset_id == evidence.forecast_dataset_id
+                    and candidate.dataset_revision == evidence.forecast_dataset_revision
+                    and candidate.generated_at == evidence.forecast_generated_at
+                    and candidate.model_name == evidence.forecast_model_name
+                    and candidate.model_version == evidence.forecast_model_version
+                    and candidate.config_digest == evidence.forecast_config_digest
+                    and candidate.paths == evidence.forecast_paths
+                ):
+                    artifact = candidate
+            except (AttributeError, OSError, ValueError):
+                artifact = None
         return DriftDefinition(
             baseline_artifact_id=artifact_id,
-            baseline_generated_at=packet.evidence.forecast_generated_at,
+            baseline_generated_at=evidence.forecast_generated_at,
             target_at=None if baseline is None else baseline.timestamp,
             baseline_p50=None if baseline is None else baseline.p50,
-            model_name=packet.evidence.forecast_model_name,
-            model_version=packet.evidence.forecast_model_version,
-            config_digest=packet.evidence.forecast_config_digest,
+            model_name=evidence.forecast_model_name,
+            model_version=evidence.forecast_model_version,
+            config_digest=evidence.forecast_config_digest,
             target=None if artifact is None else artifact.target,
             calendar=None if artifact is None else artifact.calendar,
-            baseline_dataset_id=packet.evidence.forecast_dataset_id,
-            baseline_dataset_revision=packet.evidence.forecast_dataset_revision,
+            baseline_dataset_id=evidence.forecast_dataset_id,
+            baseline_dataset_revision=evidence.forecast_dataset_revision,
             risk_per_unit=packet.risk_plan.risk_per_unit,
         )
 
@@ -655,6 +674,8 @@ class DecisionWatchService:
     def _registration(
         self, packet, kinds: tuple[WatchConditionKind, ...]
     ) -> DecisionWatchRegistration:
+        if packet.disposition is DecisionDisposition.DRAFT:
+            raise ValueError("watch conditions require a completed action packet")
         if not 1 <= len(kinds) <= 4 or len(set(kinds)) != len(kinds):
             raise ValueError("watch conditions must be one to four unique fixed kinds")
         conditions = tuple(self._condition(packet, kind) for kind in _ORDER if kind in kinds)
@@ -859,7 +880,8 @@ class DecisionWatchService:
             or candidate.target != definition.target
             or candidate.calendar != definition.calendar
             or candidate.dataset_id != definition.baseline_dataset_id
-            or candidate.dataset_revision != definition.baseline_dataset_revision
+            or definition.baseline_dataset_revision is None
+            or candidate.dataset_revision < definition.baseline_dataset_revision
         ):
             return DecisionWatchResult(
                 condition_id=condition.condition_id,

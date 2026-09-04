@@ -537,15 +537,24 @@ class DecisionPacketService:
         quantity: float | None,
         limit_price: float | None,
     ) -> DecisionPacketActionResult | None:
-        latest = self.store.latest(
-            parent.instrument.venue,
-            parent.instrument.symbol,
-            parent.selected_range,
+        existing = next(
+            (
+                packet
+                for packet in self.store.all()
+                if packet.parent_packet_id == parent.packet_id
+            ),
+            None,
         )
-        if latest is None or latest.packet_id == parent.packet_id:
+        if existing is None:
+            latest = self.store.latest(
+                parent.instrument.venue,
+                parent.instrument.symbol,
+                parent.selected_range,
+            )
+            if latest is not None and latest.packet_id != parent.packet_id:
+                raise ValueError("decision packet is not the latest actionable version")
             return None
-        if latest.parent_packet_id != parent.packet_id:
-            raise ValueError("decision packet is not the latest actionable version")
+        latest = existing
         if latest.disposition is not disposition or latest.operator_reason != operator_reason:
             raise ValueError("decision packet already has a different child transition")
         proposal = None

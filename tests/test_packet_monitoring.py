@@ -18,6 +18,8 @@ from quantmesh.instruments.contracts import (
     DecisionPaperCapability,
     DecisionRiskPlan,
     DecisionScenario,
+    ForecastPath,
+    ForecastPoint,
     HistoryRange,
 )
 from quantmesh.instruments.decision_packets import DecisionPacketStore, decision_packet_id
@@ -124,9 +126,26 @@ def _packet() -> DecisionPacket:
     return provisional.model_copy(update={"packet_id": decision_packet_id(provisional)})
 
 
+def _record_action_packet(
+    store: DecisionPacketStore, draft: DecisionPacket | None = None
+) -> DecisionPacket:
+    parent = store.record(draft or _packet())
+    payload = parent.model_dump()
+    payload.update(
+        packet_id="packet-" + "0" * 24,
+        version=2,
+        parent_packet_id=parent.packet_id,
+        disposition=DecisionDisposition.WATCH,
+        operator_reason="Monitor the recorded decision.",
+    )
+    provisional = DecisionPacket.model_validate(payload)
+    child = provisional.model_copy(update={"packet_id": decision_packet_id(provisional)})
+    return store.record(child)
+
+
 def test_entry_zone_arms_then_triggers_only_on_outside_to_inside_crossing(tmp_path: Path) -> None:
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     service = DecisionWatchService(
         packet_store=packets, store=DecisionWatchStore(tmp_path / "monitoring")
     )
@@ -180,11 +199,23 @@ def _price_observation(*, price: float, sequence: int, minutes: int) -> Decision
     )
 
 
+def test_registration_refuses_a_draft_packet(tmp_path: Path) -> None:
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = packets.record(_packet())
+    store = DecisionWatchStore(tmp_path / "monitoring")
+    service = DecisionWatchService(packet_store=packets, store=store)
+
+    with pytest.raises(ValueError, match="action packet"):
+        service.register(packet.packet_id, (WatchConditionKind.ENTRY_ZONE,))
+
+    assert store.registrations() == ()
+
+
 def test_invalidation_requires_equality_or_above_then_strictly_below_and_preserves_event(
     tmp_path: Path,
 ) -> None:
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     service = DecisionWatchService(
         packet_store=packets,
         store=DecisionWatchStore(tmp_path / "monitoring"),
@@ -212,7 +243,7 @@ def test_invalidation_requires_equality_or_above_then_strictly_below_and_preserv
 
 def test_cursor_refuses_gap_and_stale_uses_completed_xnys_sessions(tmp_path: Path) -> None:
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     service = DecisionWatchService(
         packet_store=packets,
         store=DecisionWatchStore(tmp_path / "monitoring"),
@@ -241,7 +272,7 @@ def test_cursor_refuses_gap_and_stale_uses_completed_xnys_sessions(tmp_path: Pat
 def test_reopens_exact_registration_and_byte_identical_observation_replays(tmp_path: Path) -> None:
     root = tmp_path / "monitoring"
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     first = DecisionWatchService(packet_store=packets, store=DecisionWatchStore(root))
     registration = first.register(packet.packet_id, (WatchConditionKind.ENTRY_ZONE,))
     observation = _price_observation(price=101.0, sequence=1, minutes=1)
@@ -260,7 +291,7 @@ def test_register_and_check_is_one_durable_activation_record(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     root = tmp_path / "monitoring"
     store = DecisionWatchStore(root)
     service = DecisionWatchService(packet_store=packets, store=store)
@@ -284,7 +315,7 @@ def test_register_and_check_is_one_durable_activation_record(
 
 def test_replay_recomputes_terminal_event_identity(tmp_path: Path) -> None:
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     root = tmp_path / "monitoring"
     service = DecisionWatchService(packet_store=packets, store=DecisionWatchStore(root))
     registration = service.register(packet.packet_id, (WatchConditionKind.ENTRY_ZONE,))
@@ -317,7 +348,7 @@ def test_replay_recomputes_terminal_event_identity(tmp_path: Path) -> None:
 
 def test_initial_or_continued_in_band_price_never_backfills_entry_trigger(tmp_path: Path) -> None:
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     service = DecisionWatchService(
         packet_store=packets,
         store=DecisionWatchStore(tmp_path / "monitoring"),
@@ -363,7 +394,7 @@ def test_price_causality_fail_closed_for_pre_asof_future_or_gapped_evidence(
     mutate,
 ) -> None:
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     service = DecisionWatchService(
         packet_store=packets,
         store=DecisionWatchStore(tmp_path / "monitoring"),
@@ -380,7 +411,7 @@ def test_price_causality_fail_closed_for_pre_asof_future_or_gapped_evidence(
 
 def test_rejected_price_evidence_never_becomes_the_durable_crossing_cursor(tmp_path: Path) -> None:
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     service = DecisionWatchService(
         packet_store=packets, store=DecisionWatchStore(tmp_path / "monitoring")
     )
@@ -403,7 +434,7 @@ def test_rejected_price_evidence_never_becomes_the_durable_crossing_cursor(tmp_p
 def test_registration_conflict_and_corrupt_replay_fail_closed(tmp_path: Path) -> None:
     root = tmp_path / "monitoring"
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     store = DecisionWatchStore(root)
     service = DecisionWatchService(packet_store=packets, store=store)
     service.register(packet.packet_id, (WatchConditionKind.ENTRY_ZONE,))
@@ -430,7 +461,7 @@ def _packet_with_history_generated_at(value: datetime) -> DecisionPacket:
 def test_stale_uses_xnys_holiday_and_early_close_boundaries(tmp_path: Path) -> None:
     reference = datetime(2026, 11, 25, 21, 0, tzinfo=UTC)
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet_with_history_generated_at(reference))
+    packet = _record_action_packet(packets, _packet_with_history_generated_at(reference))
     service = DecisionWatchService(
         packet_store=packets,
         store=DecisionWatchStore(tmp_path / "monitoring"),
@@ -461,7 +492,7 @@ def test_stale_freezes_the_oldest_history_or_forecast_evidence_time(tmp_path: Pa
     )
     packet = provisional.model_copy(update={"packet_id": decision_packet_id(provisional)})
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(packet)
+    packet = _record_action_packet(packets, packet)
     service = DecisionWatchService(
         packet_store=packets, store=DecisionWatchStore(tmp_path / "monitoring")
     )
@@ -482,7 +513,7 @@ def test_stale_24_7_counts_completed_utc_sessions(tmp_path: Path) -> None:
     )
     packet = provisional.model_copy(update={"packet_id": decision_packet_id(provisional)})
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(packet)
+    packet = _record_action_packet(packets, packet)
     service = DecisionWatchService(
         packet_store=packets, store=DecisionWatchStore(tmp_path / "monitoring")
     )
@@ -501,7 +532,7 @@ def test_replay_refuses_evaluation_with_missing_or_reordered_condition_results(
     tmp_path: Path,
 ) -> None:
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(_packet())
+    packet = _record_action_packet(packets)
     root = tmp_path / "monitoring"
     service = DecisionWatchService(packet_store=packets, store=DecisionWatchStore(root))
     registration = service.register(
@@ -520,6 +551,26 @@ def test_replay_refuses_evaluation_with_missing_or_reordered_condition_results(
         )
 
 
+def _forecast_path(p50: float) -> ForecastPath:
+    return ForecastPath(
+        sessions=30,
+        points=tuple(
+            ForecastPoint(
+                session=session,
+                timestamp=NOW + timedelta(days=session),
+                p025=p50 - 3.0,
+                p10=p50 - 2.0,
+                p25=p50 - 1.0,
+                p50=p50,
+                p75=p50 + 1.0,
+                p90=p50 + 2.0,
+                p975=p50 + 3.0,
+            )
+            for session in range(1, 31)
+        ),
+    )
+
+
 def _forecast_packet() -> DecisionPacket:
     original = _packet()
     evidence = original.evidence.model_copy(
@@ -535,6 +586,7 @@ def _forecast_packet() -> DecisionPacket:
             "forecast_history_digest": "b" * 64,
             "forecast_benchmark_name": "last-price-random-walk",
             "forecast_generated_at": NOW + timedelta(minutes=1),
+            "forecast_paths": (_forecast_path(100.0),),
         }
     )
     provisional = original.model_copy(
@@ -554,8 +606,6 @@ class _ForecastRegistry:
 def _forecast_artifact(
     packet: DecisionPacket, *, artifact_id: str, generated_at: datetime, p50: float
 ):
-    target = NOW + timedelta(days=30)
-    point = SimpleNamespace(timestamp=target, p50=p50)
     return SimpleNamespace(
         calendar="XNYS",
         dataset_id="nvda-demo",
@@ -567,8 +617,35 @@ def _forecast_artifact(
         model_version="1",
         config_digest="a" * 64,
         target="unadjusted-close",
-        paths=(SimpleNamespace(sessions=30, points=(point,)),),
+        paths=(_forecast_path(p50),),
     )
+
+
+def test_forecast_drift_baseline_is_frozen_from_packet_not_mutable_registry(
+    tmp_path: Path,
+) -> None:
+    packet = _forecast_packet()
+    substituted = _forecast_artifact(
+        packet,
+        artifact_id=packet.evidence.forecast_artifact_id,
+        generated_at=packet.evidence.forecast_generated_at,
+        p50=130.0,
+    )
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = _record_action_packet(packets, packet)
+    service = DecisionWatchService(
+        packet_store=packets,
+        store=DecisionWatchStore(tmp_path / "monitoring"),
+        forecast_registry=_ForecastRegistry(substituted),
+    )
+
+    registration = service.register(packet.packet_id, (WatchConditionKind.FORECAST_DRIFT,))
+    definition = registration.conditions[0].definition
+
+    assert definition.baseline_p50 == 100.0
+    assert definition.target_at == NOW + timedelta(days=30)
+    assert definition.target is None
+    assert definition.calendar is None
 
 
 @pytest.mark.parametrize(
@@ -594,7 +671,7 @@ def test_forecast_drift_uses_same_absolute_target_and_strict_risk_threshold(
         p50=candidate_p50,
     )
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(packet)
+    packet = _record_action_packet(packets, packet)
     service = DecisionWatchService(
         packet_store=packets,
         store=DecisionWatchStore(tmp_path / "monitoring"),
@@ -610,6 +687,43 @@ def test_forecast_drift_uses_same_absolute_target_and_strict_risk_threshold(
     )
 
     assert evaluation.results[0].state == expected
+
+
+def test_forecast_drift_compares_a_newer_revision_of_the_same_dataset(
+    tmp_path: Path,
+) -> None:
+    packet = _forecast_packet()
+    baseline = _forecast_artifact(
+        packet,
+        artifact_id=packet.evidence.forecast_artifact_id,
+        generated_at=packet.evidence.forecast_generated_at,
+        p50=100.0,
+    )
+    candidate = _forecast_artifact(
+        packet,
+        artifact_id="forecast-" + "c" * 24,
+        generated_at=NOW + timedelta(minutes=2),
+        p50=107.0,
+    )
+    candidate.dataset_revision = 2
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = _record_action_packet(packets, packet)
+    service = DecisionWatchService(
+        packet_store=packets,
+        store=DecisionWatchStore(tmp_path / "monitoring"),
+        forecast_registry=_ForecastRegistry(baseline, candidate),
+    )
+    registration = service.register(packet.packet_id, (WatchConditionKind.FORECAST_DRIFT,))
+
+    evaluation = service.check(
+        registration.registration_id,
+        DecisionWatchObservation(
+            evaluated_at=NOW + timedelta(minutes=3),
+            candidate_forecast_artifact_id=candidate.id,
+        ),
+    )
+
+    assert evaluation.results[0].state == "triggered"
 
 
 def test_forecast_drift_refuses_missing_or_incompatible_candidate(tmp_path: Path) -> None:
@@ -628,7 +742,7 @@ def test_forecast_drift_refuses_missing_or_incompatible_candidate(tmp_path: Path
     )
     candidate.config_digest = "d" * 64
     packets = DecisionPacketStore(tmp_path / "packets")
-    packet = packets.record(packet)
+    packet = _record_action_packet(packets, packet)
     service = DecisionWatchService(
         packet_store=packets,
         store=DecisionWatchStore(tmp_path / "monitoring"),
