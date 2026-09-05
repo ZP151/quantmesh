@@ -56,7 +56,9 @@ def test_seeded_demo_has_deep_history_and_truthful_forecast_examples(tmp_path: P
     aapl = next(item for item in forecasts if item.instrument.symbol == "AAPL")
     assert nvda.history_sessions == 650
     assert nvda.eligible is True
-    assert aapl.eligible is False
+    assert aapl.history_sessions == 650
+    assert aapl.eligible is True
+    assert aapl.blockers == ()
     assert seeded.proposal_ledger.all() == ()
 
 
@@ -233,6 +235,72 @@ def test_nvda_decision_packet_action_is_durable_in_under_two_minutes_and_reopens
         ).json() == packet
         reopened = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m").json()
         assert reopened["decision"]["latest"] == packet
+
+
+@pytest.mark.parametrize("disposition", ["reject", "watch", "paper_proposal"])
+def test_aapl_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly(
+    tmp_path: Path,
+    disposition: str,
+) -> None:
+    root = tmp_path / disposition / "demo"
+    app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    orders_before = app.state.account_store.get().orders
+    journal_before = app.state.page_context.journal.all()
+
+    started = perf_counter()
+    with TestClient(app) as client:
+        workspace_response = client.get("/api/instruments/moomoo/AAPL/workspace?range=6m")
+        assert workspace_response.status_code == 200
+        workspace = workspace_response.json()
+        assert workspace["forecast"]["eligible"] is True
+        assert workspace["proposal"]["allowed"] is True
+        draft = workspace["decision"]["draft"]
+
+        saved_response = client.post(
+            "/api/decision-packets",
+            json={
+                "venue": "moomoo",
+                "symbol": "AAPL",
+                "selected_range": "6m",
+                "expected_packet_id": draft["packet_id"],
+            },
+        )
+        assert saved_response.status_code == 200
+        saved = saved_response.json()
+        action_response = client.post(
+            f"/api/decision-packets/{saved['packet_id']}/actions",
+            json={
+                "disposition": disposition,
+                "operator_reason": (
+                    None if disposition == "paper_proposal" else f"Acceptance {disposition}"
+                ),
+                "side": "buy" if disposition == "paper_proposal" else None,
+                "quantity": 1.0 if disposition == "paper_proposal" else None,
+                "limit_price": None,
+            },
+        )
+        assert action_response.status_code == 200
+        action = action_response.json()
+        packet = action["packet"]
+        assert packet["parent_packet_id"] == saved["packet_id"]
+        assert packet["disposition"] == disposition
+        if disposition == "paper_proposal":
+            proposal = action["proposal"]
+            assert proposal["id"] == packet["proposal_id"]
+            assert proposal["status"] == "pending"
+            assert proposal["order_id"] is None
+            assert app.state.account_store.get().orders == orders_before
+            assert app.state.page_context.journal.all() == journal_before
+        else:
+            assert action["proposal"] is None
+        assert client.get(f"/api/decision-packets/{packet['packet_id']}").json() == packet
+
+    elapsed = perf_counter() - started
+    assert elapsed < 120
+
+    restarted = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(restarted) as client:
+        assert client.get(f"/api/decision-packets/{packet['packet_id']}").json() == packet
 
 
 @pytest.mark.parametrize("safe_disposition", ["reject", "watch"])

@@ -353,7 +353,7 @@ shrinks the slice.
   analytical history used by the existing drift-conformal pipeline. No new
   model, provider or adapter is introduced.
 
-- [ ] **Step 1: Write AAPL RED acceptance tests**
+- [x] **Step 1: Write AAPL RED acceptance tests**
 
 Change the existing seed assertion from intentionally ineligible to eligible,
 then exercise AAPL Reject, Watch and pending Paper in independent roots:
@@ -369,7 +369,7 @@ the account/journal order count is unchanged. Measure ticker-to-saved-action
 with `perf_counter()` and require less than 120 seconds. Add one browser path
 from the AAPL Inbox row to a saved Watch, reload, and the same exact packet ID.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/test_demo_instrument_workspace.py tests/test_demo.py tests/test_spa_e2e.py -k "AAPL or seeded_demo_has_deep_history" -q
@@ -377,7 +377,7 @@ from the AAPL Inbox row to a saved Watch, reload, and the same exact packet ID.
 
 Expected: AAPL's current 420-session forecast is ineligible and Paper blocked.
 
-- [ ] **Step 3: Make the minimal deterministic seed correction**
+- [x] **Step 3: Make the minimal deterministic seed correction**
 
 Stop truncating AAPL daily analytical history to 420 rows. Run AAPL and NVDA
 from the same manifest constant:

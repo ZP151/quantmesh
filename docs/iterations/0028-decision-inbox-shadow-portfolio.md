@@ -133,3 +133,20 @@ license closure must pass at the final PR boundary.
   action while retaining pending-attention-over-newer-draft behavior.
 - Evidence: named RED failed as expected; named GREEN passed; Inbox suite
   passed 13 tests; Ruff and `git diff --check` passed. See the Task 1 report.
+
+### 2026-09-05 — Slice 2 Task 3: AAPL deterministic decision and pending Paper
+
+- AAPL now uses the same `HISTORICAL_DAILY_SESSIONS` (650) analytical history
+  as NVDA. The seed no longer truncates its daily bars, and both forecast runs
+  derive from the same manifest constant; no eligibility flag, model, provider,
+  adapter, or execution path was added.
+- RED recorded the former 420-session/ineligible AAPL behavior in the seeded
+  forecast and AAPL Reject, Watch, and Paper acceptance cases. The focused
+  AAPL action GREEN passed 3 tests in 179.91 seconds, including pending Paper
+  with no order ID and unchanged account/journal order records. The seed-level
+  deep-history assertion passed in the same focused run before the action
+  cases. Ruff and `git diff --check` passed.
+- Browser evidence is retained as a precise skip: Playwright Chromium is not
+  installed at `chromium_headless_shell-1234`; no browser was downloaded or
+  installed. The AAPL Inbox-to-saved-Watch-reload assertion remains covered in
+  the committed test, with API/unit acceptance evidence recorded above.

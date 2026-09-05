@@ -598,6 +598,32 @@ def test_decision_inbox_opens_the_exact_saved_packet(page, base_url) -> None:
     assert _decision_packet_id(page) == packet_id
 
 
+def test_aapl_decision_inbox_opens_a_saved_watch_packet_after_reload(page, base_url) -> None:
+    _reset_demo(page, base_url)
+    page.goto(f"{base_url}/app/instruments/moomoo/AAPL?range=6m")
+    page.get_by_role("heading", name="AAPL", exact=True).wait_for()
+    started = perf_counter()
+    page.get_by_label("Decision reason").fill("Reopen this exact AAPL Watch packet")
+    page.get_by_role("button", name="Watch decision").click()
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    elapsed = perf_counter() - started
+    print(f"ticker_to_aapl_watch_seconds={elapsed:.3f}")
+    assert elapsed < 120
+
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
+    aapl_row = page.get_by_role("row").filter(has_text="AAPL")
+    inbox_link = aapl_row.get_by_role("link", name="Open exact packet")
+    expected_path = f"/app/instruments/moomoo/AAPL?range=6m&packet={packet_id}"
+    assert inbox_link.get_attribute("href") == expected_path
+    inbox_link.click()
+    page.wait_for_url(f"{base_url}{expected_path}")
+    page.reload()
+    page.get_by_role("heading", name="AAPL", exact=True).wait_for()
+    assert _decision_packet_id(page) == packet_id
+
+
 def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
     page,
     base_url,
