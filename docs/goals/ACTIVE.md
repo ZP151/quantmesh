@@ -1,32 +1,88 @@
 # Active Goal
 
-- Status: complete — iteration 0027 verified at `e9b4f766` and opened as
-  [PR #128](https://github.com/ZP151/quantmesh/pull/128)
-- Objective: enable a research-minded individual active trader to turn a
-  ticker into a verifiable, risk-first decision package in no more than two
-  minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
-  risk outcome and review after a clean restart.
-- Started: 2026-09-02
-- Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
+- Status: active — iteration 0028 implementation and bounded PR-review
+  correction complete; exact-head integration gates pending.
+- Objective: give a research-minded individual active trader one watchlist-level
+  Decision Inbox that identifies the next evidence-backed action, opens the
+  exact DecisionPacket, and summarizes its bounded paper proposal, order,
+  monitoring and review state without adding execution authority.
+- Started: 2026-09-05
+- Tracking issue: [#129](https://github.com/ZP151/quantmesh/issues/129)
 - Active iteration:
-  `docs/iterations/0027-evidence-backed-decision-copilot.md`
+  `docs/iterations/0028-decision-inbox-shadow-portfolio.md`
 - Design:
-  `docs/superpowers/specs/2026-09-03-packet-outcome-review-design.md`
+  `docs/superpowers/specs/2026-09-05-decision-inbox-shadow-portfolio-design.md`
 - Executable plan:
-  `docs/superpowers/plans/2026-09-03-packet-outcome-review.md`
-- Integration branch: `codex/0027-evidence-backed-decision-copilot`
-- Baseline: `origin/main` at `f77b565`; immutable `v0.1.1-rc1` remains
-  `b6b05b9`
-- Delivery mode: one 0027 product track and one independent 0021 soak
-  maintenance track at most. Each track uses one integration branch and one
-  final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: delivery is complete and awaiting human review in PR #128.
-  Do not add another product slice or expand into exit orders, a performance
-  dashboard, AI review, another model framework, Provider/OpenD, another symbol,
-  external notification or any 0021 soak work.
-- External gate: none for the deterministic product slice. Model services,
-  OpenD and real providers are optional degraded-state inputs and never merge
-  gates.
+  `docs/superpowers/plans/2026-09-05-decision-inbox-shadow-portfolio.md`
+- Integration branch: `codex/0028-decision-inbox-shadow-portfolio`
+- Baseline: `origin/main` at
+  `324d51d82ab4eae5e6176f7f91ce0631c5e76c32`; immutable `v0.1.1-rc1`
+  remains `b6b05b9`.
+- Delivery mode: four 24–48 hour vertical slices, at most two review rounds
+  per demonstrable slice, targeted verification during development, one final
+  exact-head CI boundary. One 0028 product track and one independent 0021 soak
+  maintenance track may coexist; neither modifies the other's files or state.
+- Current frontier: commit and push the bounded packetless-live-mark PR
+  correction, run one release gate on that exact head, then require exact-head
+  CI and human approval. PR #130 is open. Task 6 Steps 1–3 are complete;
+  Steps 4–5 remain open. No further product slice is open and the Goal is not
+  complete.
+- Pre-PR evidence at parent `422c88ae73ea70d0873505c6fac1d8b8f8d28d84`:
+  the one full pytest run exited 1 with 3255 passed, 3 failed, 9 skipped and
+  1 warning in 8016.81s. Systematic diagnosis confirmed shared-environment
+  license drift and a test cleanup timeout; the exact isolated license test
+  and corrected SPA pair passed. Full frontend verification passed 197 tests,
+  and isolated Python/npm license closure passed. The active iteration records
+  commands, corrections and retained warnings; no full pytest exit-0 claim or
+  release-gate result is made at this checkpoint.
+- Final review round 1 at `7dd644c7dbbde14a245cdb1fbfc02117fad4af3d`
+  identified exact-packet action-state leakage on browser history navigation,
+  pinned-packet range navigation, missing baseline Inbox wiring, and misleading
+  zh-CN wording for an accepted zero-fill paper order. The bounded correction
+  wave has reproducing tests and keeps all trading and optional-service
+  boundaries unchanged. Only the non-blocking Spec Minor for mark timestamp
+  and reason visibility is deferred; final review acceptance and integration
+  gates are not claimed complete.
+- Correction verification: exact baseline wiring regression 1 passed in 1.32s;
+  related frontend suites 69 passed in 10.45s; API/typecheck/lint/Ruff/diff
+  checks passed. The controller stopped the supplementary Inbox/Workstation
+  combined run to avoid duplicating the final gate; its interrupted exit is
+  not a test-failure result and is not authoritative completion evidence.
+- Final review round 2 confirmed source findings resolved at `e6e3acd`;
+  the remaining mechanical SPA artifact refresh is complete. Canonical build
+  and `tools/build_frontend.py --check` passed (`bundle is current`), with only
+  expected JS bundle hashes/index changed. Three unsupported test-only `exact`
+  options were removed with controller approval; assertions are unchanged.
+  The exact-head release gate, push/PR/CI/human review and Goal audit remain open.
+- Gate RED: candidate `f734ec6d695e99dd3c788ae207dc033d0b15d7fe` failed
+  license closure after its unconstrained fresh install selected anyio 4.15.1
+  and wrapt 2.4.1rc1 instead of the existing 4.15.0/2.4.0 pins. The sole tool
+  correction adds `-c requirements-audit.txt` to release-extras installation.
+  Pins/allowlist are unchanged; the same constrained isolated closure already
+  passed. Syntax/Ruff/diff checks pass, but the changed-HEAD candidate remains
+  pending: run its exact-head gate once after this fix is committed. No gate
+  rerun, new environment, push or PR occurred during this correction.
+- Gate candidate `9d13dfbc8756285343baa85d51476abf34c9637c`: the controller
+  recorded green prerequisite stages through frontend Vitest, then actively
+  interrupted session 2328 because the harness's 5400s full-pytest timeout was
+  below the measured 8016.81s baseline and buffered capture hid live progress.
+  This is incomplete gate evidence, not a pass. All five owned PIDs were
+  confirmed exited by the controller. The harness now uses live merged logs,
+  owned-tree timeout cleanup and a 10800s limit; focused tests passed 7/7.
+  The changed-SHA harness candidate needs its one exact-head gate after commit;
+  no gate/full pytest/detector/push/PR ran in the fix wave.
+- Exact-head `9f52a8c3908d067cd060e02274459f46e33ec32e` subsequently passed the
+  clean release gate (3263 passed, 9 skipped) and PR #130 CI run 33991461840.
+  The PR's automated review then identified one bounded P2: a venue-scoped
+  watchlist row could not use its fresh exact quote before its first saved
+  packet because instrument metadata came only from packet history. A focused
+  RED reproduced the missing type/mark; the connector-contract metadata fix
+  and regression pass, and the full Decision Inbox file passes 23 tests in
+  1470.74s. Ruff and diff checks pass. This post-CI source correction requires
+  a new exact-head gate and CI; the prior green SHA is retained as historical
+  evidence only.
+- External gate: none. Provider/OpenD, real market calls and model services are
+  not required and are prohibited expansion for this iteration.
 
 ## Product-readiness decision
 
@@ -39,13 +95,13 @@ and one explicit action. The durable product artifact is a versioned
 cannot create evidence, waive a blocker or gain order authority.
 
 Iteration 0021's 168-hour soak continues as a maintenance/release-confidence
-track. It does not block 0027 product work, and 0027 must not repair, migrate,
+track. It does not block 0028 product work, and 0028 must not repair, migrate,
 backfill or otherwise modify soak Scheduler, provider or evidence state.
 
 ## Non-negotiable constraints
 
 - Keep external venues read-only and execution paper-only. Live trading,
-  signing, credentials and mainnet authority remain outside iteration 0027.
+  signing, credentials and mainnet authority remain outside iteration 0028.
 - AI is advisory and schema-validated. Missing or failed AI must leave the
   deterministic DecisionPacket usable.
 - Stale, low-quality, leakage-affected or missing evidence must block a paper
@@ -54,7 +110,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   second operator confirmation.
 - Decision, evidence, paper result and review state must survive a clean
   restart and remain replayable.
-- Qlib, Darts and model ranking are internal support or later work, not 0027
+- Qlib, Darts and model ranking are internal support or later work, not 0028
   completion criteria. TradingView extensions, mobile clients, real trading,
   social features and broad pattern-recognition catalogs are out of scope.
 - Each slice must expose user-visible value within 24–48 hours. Side defects
@@ -76,7 +132,12 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   forbidden actions. Daily progress records completed user loops rather than
   test count, code volume or ledger length.
 
-## Slice 1 execution checkpoint — 2026-09-02
+## Historical iteration 0027 completion record
+
+The following checkpoints are retained as immutable delivery context. They are
+not active 0028 work.
+
+### Slice 1 execution checkpoint — 2026-09-02
 
 - Operator approved the tracked design and authorized Slice 1 execution.
 - Planner fixed one user action: save and reopen an NVDA Reject, Watch or
@@ -163,7 +224,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   corrections; blocker taxonomy duplication remains a non-blocking follow-up.
   Slice 1 is complete. Slice 2 requires a separate approved design/plan.
 
-## Slice 2 implementation checkpoint — 2026-09-03
+### Slice 2 implementation checkpoint — 2026-09-03
 
 - The persisted-packet Copilot vertical slice is implemented as a separate,
   immutable, packet-bound advisory record with strict analyst/critic schemas and
@@ -183,7 +244,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   the sole unverified item. This checkpoint is `DONE_WITH_CONCERNS` pending the
   controller's browser verification, review, detector and broad gate.
 
-## Slice 2 completion checkpoint — 2026-09-03
+### Slice 2 completion checkpoint — 2026-09-03
 
 - Commit `60ee6f9` closed the final review's three Important findings: Copilot is
   withheld during range-placeholder drift and late responses bind context plus
@@ -205,7 +266,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
 - Slice 2 is complete. No real model/provider call, OpenD, real trading, another
   symbol, external notification, monitoring, outcome/review or 0021 soak work ran.
 
-## Slice 4 completion checkpoint — 2026-09-03
+### Slice 4 completion checkpoint — 2026-09-03
 
 - The exact persisted NVDA packet now reopens in Instrument Workspace with an
   immutable outcome/review closure. It binds the 30-session local path, exact
@@ -226,7 +287,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   call, real trade, other symbol, external notification or 0021 soak state was
   touched.
 
-## Final license-closure checkpoint — 2026-09-03
+### Final license-closure checkpoint — 2026-09-03
 
 - The direct gate reproduced four missing transitive pins and bound them to their
   installed dependency chain: `cloudpickle==3.1.2`, `formulaic==1.2.2`,
@@ -257,7 +318,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   `0.43s`, with Ruff and diff green. No product behavior changed.
 - The only remaining work is the final fresh-clone release gate and PR boundary.
 
-## Final-gate compatibility checkpoint — 2026-09-04
+### Final-gate compatibility checkpoint — 2026-09-04
 
 - The Node 22.12 fresh-clone gate passed source cleanliness, clone/version,
   fresh Python installation, Ruff, trusted-data tooling, Python and frontend
@@ -281,7 +342,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   the exact release/security selection passes `28` tests in `0.35s`. No
   application dependency or runtime behavior changed.
 
-## Final PR checkpoint — 2026-09-04
+### Final PR checkpoint — 2026-09-04
 
 - The definitive fresh-clone gate passed all 18 steps on
   `e9b4f766e21e157fbdfe4a5cfd4012ea5af5b9f2` with Node 22.12.0.
@@ -903,7 +964,7 @@ bundle and Vitest, full pytest (373.7 s), golden path and clean-checkout proof.
 The final `v0.1.0` tag must point only at the green merged promotion commit;
 all market access remains read-only or paper-only.
 
-## Current frontier
+## Historical v0.1.1 frontier
 
 1. Preserve the immutable accepted candidate and its acceptance evidence.
 2. Await an explicit `promote v0.1.1-rc1 to v0.1.1` command before creating the
@@ -1133,9 +1194,10 @@ labeled and isolated from non-demo operator state.
 ## Resume instruction
 
 Resume from the metadata and active delivery protocol at the top of this file,
-then read `PRODUCT.md`, `docs/product-strategy.md`, the active 0027 iteration,
-its tracked design and executable plan, ADR-0015, the roadmap, issue #122 and
-current Git/PR state. Start from the first incomplete vertical slice; do not
-reopen framework bake-offs unless a DecisionPacket requirement proves the
-native contracts insufficient. Treat 0021 soak as an independent maintenance
-track and never infer real-money, mainnet, credential or AI order authority.
+then read `PRODUCT.md`, `docs/product-strategy.md`, the active 0028 iteration,
+its tracked design and, once approved, its executable plan, ADR-0015, ADR-0019,
+the roadmap, issue #129 and current Git/PR state. Start from the first
+incomplete vertical slice; do not reopen framework bake-offs unless a
+DecisionPacket requirement proves the native contracts insufficient. Treat
+0021 soak as an independent maintenance track and never infer Provider/OpenD,
+real-money, mainnet, credential or AI order authority.

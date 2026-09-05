@@ -29,6 +29,7 @@ import { retainSameInstrument } from './instrument/workspace-query'
 
 const VENUES: readonly HistoricalVenue[] = ['internal', 'moomoo', 'hyperliquid', 'polymarket', 'kalshi']
 const RANGES: readonly HistoryRange[] = ['1d', '5d', '1m', '3m', '6m', '1y']
+const DECISION_PACKET_ID = /^packet-[0-9a-f]{24}$/
 
 function isVenue(value: string): value is HistoricalVenue {
   return VENUES.includes(value as HistoricalVenue)
@@ -55,6 +56,11 @@ export function InstrumentWorkspaceScreen() {
   const { symbol = '', venue = '' } = useParams<{ symbol: string; venue: string }>()
   const [search, setSearch] = useSearchParams()
   const range = historyRange(search.get('range'))
+  const requestedPacketValue = search.get('packet')
+  const requestedPacketId = requestedPacketValue !== null && DECISION_PACKET_ID.test(requestedPacketValue)
+    ? requestedPacketValue
+    : null
+  const invalidRequestedPacketId = requestedPacketValue !== null && requestedPacketId === null
   const horizon = forecastHorizon(search.get('horizon'))
   const compare = search.getAll('compare').filter(Boolean).slice(0, 3)
   const mode = search.get('mode') === 'line' ? 'line' : 'candles'
@@ -107,9 +113,12 @@ export function InstrumentWorkspaceScreen() {
     refetchInterval: 5_000,
     retry: false,
   })
-  const selectedPacketId = packetSelection?.mode === 'persisted' ? packetSelection.packetId : null
+  const selectedPacketId = invalidRequestedPacketId
+    ? null
+    : requestedPacketId
+    ?? (packetSelection?.mode === 'persisted' ? packetSelection.packetId : null)
   const exactPacketQuery = useQuery({
-    enabled: selectedPacketId !== null,
+    enabled: !invalidRequestedPacketId && selectedPacketId !== null,
     queryFn: () => api.decisionPacket(selectedPacketId!),
     queryKey: ['decision-packet', selectedPacketId],
     retry: false,
@@ -120,6 +129,13 @@ export function InstrumentWorkspaceScreen() {
 
   if (!validVenue || symbol.length === 0) {
     return <WorkspaceError error={new Error(t('screen.workspace.invalidRoute'))} symbol={symbol} venue={venue} />
+  }
+  if (invalidRequestedPacketId) {
+    return <WorkspaceError error={new Error(t('screen.workspace.invalidPacketId'))} symbol={symbol} venue={venue} />
+  }
+  if (requestedPacketId !== null && exactPacketQuery.isPending) return <WorkspaceLoading />
+  if (requestedPacketId !== null && exactPacketQuery.isError) {
+    return <WorkspaceError error={exactPacketQuery.error} symbol={symbol} venue={venue} />
   }
   if (query.isPending) return <WorkspaceLoading />
   if (query.isError && query.data === undefined) {
@@ -146,10 +162,30 @@ export function InstrumentWorkspaceScreen() {
     revision: 0,
     snapshot: workspace.decision.latest ?? null,
   }
-  const activeSelection: PacketSelection = packetSelection?.contextKey === decisionContextKey
-    ? packetSelection
-    : defaultSelection
-  if (responseContextReady && (packetSelection === null || packetSelection.contextKey !== decisionContextKey)) {
+  const requestedPacket = requestedPacketId !== null ? exactPacketQuery.data : null
+  const requestedPacketContextKey = requestedPacket === null || requestedPacket === undefined
+    ? null
+    : `${requestedPacket.instrument.venue}:${requestedPacket.instrument.symbol}:${requestedPacket.selected_range}`
+  if (requestedPacketId !== null && requestedPacketContextKey !== decisionContextKey) {
+    return <WorkspaceError
+      error={new Error(t('screen.workspace.exactPacketContextMismatch'))}
+      symbol={symbol}
+      venue={venue}
+    />
+  }
+  const requestedSelection: PacketSelection | null = requestedPacket === null || requestedPacket === undefined
+    ? null
+    : {
+        contextKey: decisionContextKey,
+        mode: 'persisted',
+        packetId: requestedPacket.packet_id,
+        revision: 0,
+        snapshot: requestedPacket,
+      }
+  const activeSelection: PacketSelection = requestedSelection
+    ?? (packetSelection?.contextKey === decisionContextKey ? packetSelection : defaultSelection)
+  if (requestedPacketId === null && responseContextReady
+    && (packetSelection === null || packetSelection.contextKey !== decisionContextKey)) {
     setPacketSelection(defaultSelection)
   }
   const fetchedExactPacket = exactPacketQuery.data?.packet_id === activeSelection.packetId
@@ -212,6 +248,21 @@ export function InstrumentWorkspaceScreen() {
     else next.set(key, value)
     setSearch(next)
   }
+  const updateRange = (nextRange: HistoryRange) => {
+    const next = new URLSearchParams(search)
+    next.set('range', nextRange)
+    if (requestedPacketId !== null && nextRange !== range) {
+      next.delete('packet')
+      setPacketSelection({
+        contextKey: `${venue}:${symbol}:${nextRange}`,
+        mode: 'fresh',
+        packetId: null,
+        revision: activeSelection.revision + 1,
+        snapshot: null,
+      })
+    }
+    setSearch(next)
+  }
   const updateComparisons = (peers: string[]) => {
     const next = new URLSearchParams(search)
     next.delete('compare')
@@ -259,7 +310,7 @@ export function InstrumentWorkspaceScreen() {
             marketState={displayedPacket.market_state}
             mode={mode}
             onModeChange={(next) => updateParam('mode', next === 'candles' ? null : next)}
-            onRangeChange={(next) => updateParam('range', next)}
+            onRangeChange={updateRange}
             onSma20Change={(enabled) => updateParam('sma20', enabled ? '1' : null)}
             onSma50Change={(enabled) => updateParam('sma50', enabled ? '1' : null)}
             onVolumeChange={(enabled) => updateParam('volume', enabled ? '1' : null)}
@@ -344,22 +395,33 @@ export function InstrumentWorkspaceScreen() {
           <DecisionRail
             contextKey={decisionContextKey}
             evidenceUpdating={evidenceUpdating}
-            key={`${decisionContextKey}:${packetSource}:${activeSelection.revision}:${evidenceUpdating ? 'updating' : 'ready'}`}
-            onActionResult={(result) => setPacketSelection({
-              contextKey: decisionContextKey,
-              mode: 'persisted',
-              packetId: result.packet.packet_id,
-              revision: activeSelection.revision + 1,
-              snapshot: result.packet,
-            })}
+            key={`${decisionContextKey}:${packetSource}:${activeSelection.packetId}:${activeSelection.revision}:${evidenceUpdating ? 'updating' : 'ready'}`}
+            onActionResult={(result) => {
+              queryClient.setQueryData(['decision-packet', result.packet.packet_id], result.packet)
+              const next = new URLSearchParams(search)
+              next.set('packet', result.packet.packet_id)
+              setSearch(next)
+              setPacketSelection({
+                contextKey: decisionContextKey,
+                mode: 'persisted',
+                packetId: result.packet.packet_id,
+                revision: activeSelection.revision + 1,
+                snapshot: result.packet,
+              })
+            }}
             onNewAnalysis={packetSource === 'persisted'
-              ? () => setPacketSelection({
-                  contextKey: decisionContextKey,
-                  mode: 'fresh',
-                  packetId: null,
-                  revision: activeSelection.revision + 1,
-                  snapshot: null,
-                })
+              ? () => {
+                  const next = new URLSearchParams(search)
+                  next.delete('packet')
+                  setSearch(next)
+                  setPacketSelection({
+                    contextKey: decisionContextKey,
+                    mode: 'fresh',
+                    packetId: null,
+                    revision: activeSelection.revision + 1,
+                    snapshot: null,
+                  })
+                }
               : undefined}
             packet={displayedPacket}
             packetSource={packetSource}

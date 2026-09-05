@@ -113,7 +113,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Decision Inbox */
+        get: operations["api_decision_inbox"];
         put?: never;
         /** Save Decision Packet */
         post: operations["api_save_decision_packet"];
@@ -697,7 +698,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Decision Inbox */
+        get: operations["decision_inbox_decision_packets_get"];
         put?: never;
         /** Save Decision Packet */
         post: operations["save_decision_packet_decision_packets_post"];
@@ -1608,6 +1610,11 @@ export interface components {
          */
         DataKind: "bars" | "quotes" | "books" | "trades" | "adjustment-factors" | "splits" | "dividends";
         /**
+         * DecisionAttentionState
+         * @enum {string}
+         */
+        DecisionAttentionState: "blocked" | "watch_triggered" | "paper_pending_confirmation" | "review_available" | "paper_open" | "watching" | "reviewed" | "rejected" | "draft" | "not_started" | "unavailable";
+        /**
          * DecisionBlocker
          * @description One ordered, evidence-addressable reason paper action is unavailable.
          */
@@ -1731,6 +1738,114 @@ export interface components {
             validation_end?: string | null;
             /** Validation Start */
             validation_start?: string | null;
+        };
+        /** DecisionInbox */
+        DecisionInbox: {
+            /** Entries */
+            entries: components["schemas"]["DecisionInboxEntry"][];
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+        };
+        /** DecisionInboxEntry */
+        DecisionInboxEntry: {
+            /** Attention Reason */
+            attention_reason: string;
+            attention_state: components["schemas"]["DecisionAttentionState"];
+            disposition?: components["schemas"]["DecisionDisposition"] | null;
+            /** Evidence Status */
+            evidence_status?: ("complete" | "partial" | "pending" | "unavailable") | null;
+            instrument_type?: components["schemas"]["InstrumentType"] | null;
+            mark_context: components["schemas"]["DecisionInboxMarkContext"];
+            monitoring?: components["schemas"]["DecisionInboxMonitoringSummary"] | null;
+            /** Outcome Id */
+            outcome_id?: string | null;
+            /** Packet Id */
+            packet_id?: string | null;
+            paper?: components["schemas"]["DecisionInboxPaperSummary"] | null;
+            /** Parent Packet Id */
+            parent_packet_id?: string | null;
+            position_context?: components["schemas"]["DecisionInboxPositionContext"] | null;
+            review?: components["schemas"]["DecisionInboxReviewSummary"] | null;
+            selected_range?: components["schemas"]["HistoryRange"] | null;
+            /** Symbol */
+            symbol: string;
+            venue: components["schemas"]["Venue"] | null;
+        };
+        /** DecisionInboxError */
+        DecisionInboxError: {
+            /**
+             * Code
+             * @constant
+             */
+            code: "decision_inbox_replay_unavailable";
+            /** Message */
+            message: string;
+        };
+        /** DecisionInboxMarkContext */
+        DecisionInboxMarkContext: {
+            /** Reason */
+            reason?: string | null;
+            /** Received At */
+            received_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "stale" | "unavailable";
+            /** Value */
+            value?: number | null;
+        };
+        /** DecisionInboxMonitoringSummary */
+        DecisionInboxMonitoringSummary: {
+            /**
+             * Event Ids
+             * @default []
+             */
+            event_ids: string[];
+            /** Latest Evaluation Id */
+            latest_evaluation_id?: string | null;
+            /** Registration Id */
+            registration_id: string;
+            /** Triggered */
+            triggered: boolean;
+        };
+        /** DecisionInboxPaperSummary */
+        DecisionInboxPaperSummary: {
+            /** Filled Quantity */
+            filled_quantity?: number | null;
+            /** Order Id */
+            order_id?: string | null;
+            order_status?: components["schemas"]["OrderStatus"] | null;
+            /** Proposal Id */
+            proposal_id: string;
+            status: components["schemas"]["ProposalStatus"];
+        };
+        /** DecisionInboxPositionContext */
+        DecisionInboxPositionContext: {
+            /**
+             * Attribution
+             * @constant
+             */
+            attribution: "current-account-context-only";
+            /** Average Cost */
+            average_cost: number;
+            /** Mark */
+            mark: number;
+            /** Quantity */
+            quantity: number;
+            /** Realized Pnl */
+            realized_pnl: number;
+        };
+        /** DecisionInboxReviewSummary */
+        DecisionInboxReviewSummary: {
+            /** Outcome Id */
+            outcome_id?: string | null;
+            /** Review Id */
+            review_id: string;
+            state: components["schemas"]["ReviewClassification"];
         };
         /**
          * DecisionMarketState
@@ -3294,6 +3409,35 @@ export interface operations {
             };
         };
     };
+    api_decision_inbox: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionInbox"];
+                };
+            };
+            /** @description Decision Inbox replay is unavailable. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionInboxError"];
+                };
+            };
+        };
+    };
     api_save_decision_packet: {
         parameters: {
             query?: never;
@@ -4283,6 +4427,35 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    decision_inbox_decision_packets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionInbox"];
+                };
+            };
+            /** @description Decision Inbox replay is unavailable. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionInboxError"];
+                };
             };
         };
     };

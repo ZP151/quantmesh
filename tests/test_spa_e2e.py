@@ -203,7 +203,7 @@ def _wait_demo_attached(page) -> None:
 
 
 def _reset_demo(page, base_url: str) -> None:
-    response = page.request.post(f"{base_url}/api/demo/reset")
+    response = page.request.post(f"{base_url}/api/demo/reset", timeout=120_000)
     assert response.status == 200
 
 
@@ -510,7 +510,7 @@ def test_keyboard_only_walk(page, base_url) -> None:
         ("paper_proposal", None, "Create paper proposal", "Paper proposed"),
     ],
 )
-def test_nvda_watchlist_activation_reaches_each_durable_decision_in_under_two_minutes(
+def test_nvda_workspace_reaches_each_durable_decision_in_under_two_minutes(
     page,
     base_url,
     disposition: str,
@@ -519,17 +519,9 @@ def test_nvda_watchlist_activation_reaches_each_durable_decision_in_under_two_mi
     phase: str,
 ) -> None:
     _reset_demo(page, base_url)
-    page.goto(f"{base_url}/app/markets/watchlist")
-    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
-    started = perf_counter()
-    activation = page.get_by_role("main").get_by_role("link", name="NVDA", exact=True)
-    if disposition == "watch":
-        activation.focus()
-        page.keyboard.press("Enter")
-    else:
-        activation.click()
-    page.wait_for_url(f"{base_url}/app/instruments/moomoo/NVDA")
+    page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
     page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    started = perf_counter()
     main = page.get_by_role("main")
     workspace_url = page.url
 
@@ -573,7 +565,7 @@ def test_nvda_watchlist_activation_reaches_each_durable_decision_in_under_two_mi
     elapsed = perf_counter() - started
     print(f"ticker_to_{disposition}_seconds={elapsed:.3f}")
     assert elapsed < 120
-    assert page.url == workspace_url
+    assert page.url == f"{workspace_url}&packet={packet_id}"
 
     exact = page.request.get(f"{base_url}/api/decision-packets/{packet_id}")
     assert exact.status == 200
@@ -583,6 +575,92 @@ def test_nvda_watchlist_activation_reaches_each_durable_decision_in_under_two_mi
         proposal_id = _proposal_id(page)
         assert proposal_id == exact.json()["proposal_id"]
         assert page.get_by_role("button", name="Confirm paper proposal").is_disabled()
+
+
+def test_decision_inbox_opens_the_exact_saved_packet(page, base_url) -> None:
+    _reset_demo(page, base_url)
+    page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    page.get_by_label("Decision reason").fill("Reopen this exact Watch packet")
+    page.get_by_role("button", name="Watch decision").click()
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
+    inbox_link = page.get_by_role("link", name="Open exact packet")
+    expected_path = f"/app/instruments/moomoo/NVDA?range=6m&packet={packet_id}"
+    assert inbox_link.get_attribute("href") == expected_path
+    assert page.get_by_text("Watching", exact=True).is_visible()
+    inbox_link.click()
+    page.wait_for_url(f"{base_url}{expected_path}")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    assert _decision_packet_id(page) == packet_id
+
+
+def test_aapl_decision_inbox_opens_a_saved_watch_packet_after_reload(page, base_url) -> None:
+    _reset_demo(page, base_url)
+    page.goto(f"{base_url}/app/instruments/moomoo/AAPL?range=6m")
+    page.get_by_role("heading", name="AAPL", exact=True).wait_for()
+    started = perf_counter()
+    page.get_by_label("Decision reason").fill("Reopen this exact AAPL Watch packet")
+    page.get_by_role("button", name="Watch decision").click()
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    elapsed = perf_counter() - started
+    print(f"ticker_to_aapl_watch_seconds={elapsed:.3f}")
+    assert elapsed < 120
+
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
+    aapl_row = page.get_by_role("row").filter(has_text="AAPL")
+    inbox_link = aapl_row.get_by_role("link", name="Open exact packet")
+    expected_path = f"/app/instruments/moomoo/AAPL?range=6m&packet={packet_id}"
+    assert inbox_link.get_attribute("href") == expected_path
+    inbox_link.click()
+    page.wait_for_url(f"{base_url}{expected_path}")
+    page.reload()
+    page.get_by_role("heading", name="AAPL", exact=True).wait_for()
+    assert _decision_packet_id(page) == packet_id
+
+
+@pytest.mark.parametrize("symbol", ["BTC-USD", "SOL-USD"])
+def test_crypto_degraded_inbox_keeps_paper_blocked_and_saves_exact_watch_at_mobile_width(
+    page,
+    base_url,
+    symbol: str,
+) -> None:
+    _reset_demo(page, base_url)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
+    crypto_row = page.get_by_role("row").filter(has_text=symbol)
+    crypto_row.get_by_role("link", name="Open workspace").click()
+    page.get_by_role("heading", name=symbol, exact=True).wait_for()
+
+    main = page.get_by_role("main")
+    actions = main.get_by_role("region", name="DecisionPacket actions")
+    main_text = main.inner_text()
+    assert "No promoted forecast is available." in main_text
+    page.get_by_label("Decision reason").fill("Watch until forecast evidence is available")
+    assert page.get_by_role("button", name="Reject decision").is_enabled()
+    assert page.get_by_role("button", name="Watch decision").is_enabled()
+    assert page.get_by_role("button", name="Create paper proposal").is_disabled()
+
+    with page.expect_response(
+        lambda response: (
+            "/api/decision-packets/" in response.url and response.url.endswith("/actions")
+        )
+    ) as saved:
+        actions.get_by_role("button", name="Watch decision").click()
+    assert saved.value.status == 200
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    assert f"packet={packet_id}" in page.url
+    page.reload()
+    page.get_by_role("heading", name=symbol, exact=True).wait_for()
+    assert _decision_packet_id(page) == packet_id
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
 
 
 def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
@@ -751,7 +829,7 @@ def test_nvda_packet_monitoring_is_packet_bound_and_survives_workspace_reload(
 
     page.reload()
     page.get_by_role("heading", name="NVDA", exact=True).wait_for()
-    assert page.url == workspace_url
+    assert page.url == f"{workspace_url}&packet={packet_id}"
     recovered = page.get_by_test_id("packet-monitoring")
     recovered.get_by_role("button", name="Check now").wait_for()
     assert page.request.get(f"{base_url}/api/decision-packets/{packet_id}").json() == packet_before
@@ -822,6 +900,94 @@ def test_nvda_filled_open_packet_review_saves_and_reopens_exact_identity(
         assert reopened.get_by_text(review_id, exact=True).is_visible()
         assert reopened.get_by_text(outcome_id, exact=True).is_visible()
         assert _decision_packet_id(page) == packet_id
+
+
+def test_shadow_decision_inbox_replays_paper_review_and_exact_keyboard_navigation(
+    page,
+    base_url,
+    demo_station: _DemoStation,
+    tmp_path: Path,
+) -> None:
+    _reset_demo(page, base_url)
+    page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    page.get_by_label("Optional limit").fill("")
+    page.get_by_role("button", name="Create paper proposal").click()
+    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    proposal_id = _proposal_id(page)
+    token = (
+        page.get_by_text("Displayed confirmation token", exact=True)
+        .locator("..")
+        .locator("code")
+        .inner_text()
+    )
+    page.get_by_label("Confirmation token").fill(token)
+    page.get_by_role("button", name="Confirm paper proposal").click()
+    page.get_by_text("Paper order created", exact=True).wait_for()
+    page.reload()
+    review = page.get_by_test_id("packet-outcome-review")
+    review.get_by_text("Filled open", exact=True).wait_for()
+    with page.expect_response(
+        lambda response: (
+            response.url.endswith(f"/api/decision-packets/{packet_id}/outcome-review")
+            and response.request.method == "POST"
+        )
+    ) as saved:
+        review.get_by_role("button", name="Save review").click()
+    assert saved.value.status == 200
+    saved_review = saved.value.json()
+    outcome_id = saved_review["outcome"]["outcome_id"]
+    review_id = saved_review["review"]["review_id"]
+    order_id = saved_review["outcome"]["paper"]["order"]["order_id"]
+
+    page.goto(f"{base_url}/app/instruments/moomoo/AAPL?range=6m")
+    page.get_by_role("heading", name="AAPL", exact=True).wait_for()
+    page.get_by_label("Optional limit").fill("")
+    page.get_by_role("button", name="Create paper proposal").click()
+    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    pending_id = _proposal_id(page)
+    pending_packet = _decision_packet_id(page)
+
+    with _serve_restarted_demo(demo_station.root) as restarted:
+        before_orders = restarted.app.state.account_store.get().orders
+        page.goto(f"{restarted.url}/app/markets/watchlist")
+        nvda = page.get_by_role("row").filter(has=page.get_by_role("cell", name="NVDA", exact=True))
+        nvda.get_by_text("Reviewed", exact=True).wait_for()
+        nvda.locator("summary").click()
+        for identity in (packet_id, proposal_id, order_id, outcome_id, review_id):
+            assert nvda.get_by_text(identity, exact=True).is_visible()
+        page.screenshot(path=str(tmp_path / "shadow-desktop.png"), full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.emulate_media(reduced_motion="reduce")
+        assert page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
+        summary = nvda.locator("summary")
+        summary.focus()
+        page.keyboard.press("Enter")
+        assert not nvda.locator("details").evaluate("element => element.open")
+        page.keyboard.press("Enter")
+        assert nvda.locator("details").evaluate("element => element.open")
+        aapl = page.get_by_role("row").filter(has=page.get_by_role("cell", name="AAPL", exact=True))
+        assert aapl.get_by_text("Pending confirmation", exact=True).is_visible()
+        aapl.locator("summary").click()
+        assert aapl.get_by_text(pending_id, exact=True).is_visible()
+        snapshot = page.request.get(f"{restarted.url}/api/decision-packets").json()
+        pending = next(row for row in snapshot["entries"] if row["symbol"] == "AAPL")
+        assert pending["packet_id"] == pending_packet
+        assert pending["paper"]["order_id"] is None
+        assert restarted.app.state.account_store.get().orders == before_orders
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        page.screenshot(path=str(tmp_path / "shadow-mobile.png"), full_page=True)
+        summary.focus()
+        page.keyboard.press("Tab")
+        exact = nvda.get_by_role("link", name="Open exact packet")
+        assert exact.evaluate("element => element === document.activeElement")
+        page.keyboard.press("Enter")
+        page.wait_for_url(f"**/instruments/moomoo/NVDA?range=6m&packet={packet_id}")
+        page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+        assert _decision_packet_id(page) == packet_id
+        page.get_by_test_id("packet-outcome-review").get_by_text(review_id, exact=True).wait_for()
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
 def test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order(

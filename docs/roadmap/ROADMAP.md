@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-09-02
+Last updated: 2026-09-06
 
 ## Status legend
 
@@ -343,14 +343,22 @@ Sequence for operator review:
    [issue #110](https://github.com/ZP151/quantmesh/issues/110),
    `docs/iterations/0021-trusted-data-fabric.md` and
    `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`.
-2. **Active as iteration 0027:** Evidence-backed Decision Copilot. Starting
+2. **Done as iteration 0027 (merged PR #128):** Evidence-backed Decision Copilot. Starting
    with NVDA, compose market state, Bull/Base/Bear scenarios, risk, evidence and
    Reject/Watch/Paper actions into a versioned DecisionPacket inside Instrument
    Workspace, then add optional cited Copilot explanation, local watch
    conditions and replayable outcome review.
-3. Expand datasets, baselines or selected Qlib/Darts adapters only where a
+3. **Iteration 0028 implementation and pre-PR verification complete;
+   integration active:** Decision Inbox & Bounded Paper Shadow Portfolio now
+   deep-links watchlist attention to exact packets, proves NVDA/AAPL decisions,
+   exposes evidence-blocked BTC/SOL actions, and derives the bounded paper
+   summary from durable ledgers. The one full backend run recorded 3255 passed
+   and 3 failures; isolated license verification and focused test corrections
+   passed, as did frontend 197 and the other pre-PR checks. No overall full
+   pytest exit-0 claim is made. Final whole-branch review, exact-head release
+   gate, push/PR, CI and human review remain pending; see the
+   [0028 ledger](../iterations/0028-decision-inbox-shadow-portfolio.md).
+4. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
-4. Extend the proven decision loop to a bounded multi-instrument paper shadow
-   portfolio after the single-instrument monitoring and journal loop is usable.
 5. Guarded broker/testnet execution only after a separate authorization.
