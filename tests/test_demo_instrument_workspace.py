@@ -313,6 +313,12 @@ def test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidenc
     root = tmp_path / symbol / disposition / "demo"
     app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
     orders_before = app.state.account_store.get().orders
+    forecasts_before = tuple(app.state.price_forecasts.all())
+    assert not any(
+        forecast.instrument.venue is Venue.HYPERLIQUID
+        and forecast.instrument.symbol == symbol
+        for forecast in forecasts_before
+    )
 
     with TestClient(app) as client:
         workspace_response = client.get(
@@ -321,6 +327,8 @@ def test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidenc
         assert workspace_response.status_code == 200
         draft = workspace_response.json()["decision"]["draft"]
         assert draft["evidence"]["forecast_artifact_id"] is None
+        assert draft["evidence"]["forecast_manifest_id"] is None
+        assert draft["evidence"]["forecast_quality_evaluation_id"] is None
         assert "forecast-missing" in {
             item["code"] for item in draft["paper_capability"]["blockers"]
         }
@@ -361,13 +369,23 @@ def test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidenc
             },
         )
         assert action_response.status_code == 200
-        packet = action_response.json()["packet"]
+        action = action_response.json()
+        packet = action["packet"]
         assert packet["disposition"] == disposition
-        assert action_response.json()["proposal"] is None
+        assert packet["evidence"]["forecast_artifact_id"] is None
+        assert packet["evidence"]["forecast_manifest_id"] is None
+        assert packet["evidence"]["forecast_quality_evaluation_id"] is None
+        assert action["proposal"] is None
         assert client.get(f"/api/decision-packets/{packet['packet_id']}").json() == packet
 
     assert app.state.proposal_service.ledger.all() == ()
     assert app.state.account_store.get().orders == orders_before
+    assert tuple(app.state.price_forecasts.all()) == forecasts_before
+    assert not any(
+        forecast.instrument.venue is Venue.HYPERLIQUID
+        and forecast.instrument.symbol == symbol
+        for forecast in app.state.price_forecasts.all()
+    )
 
     restarted = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
     with TestClient(restarted) as client:

@@ -446,6 +446,12 @@ assert app.state.proposal_service.ledger.all() == ()
 assert app.state.account_store.get().orders == orders_before
 ```
 
+Snapshot the public `app.state.price_forecasts.all()` replay read before and
+after each case. Assert the registry is unchanged and contains no matching
+crypto artifact; assert both draft and action-packet evidence carry null
+`forecast_artifact_id`, `forecast_manifest_id`, and
+`forecast_quality_evaluation_id` fields.
+
 Add one 390px browser walk that opens each crypto Inbox row, reads the Paper
 blocker, confirms Reject/Watch remain enabled, saves Watch, reloads its exact ID,
 and asserts `document.documentElement.scrollWidth <= window.innerWidth`.
