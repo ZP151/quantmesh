@@ -902,6 +902,94 @@ def test_nvda_filled_open_packet_review_saves_and_reopens_exact_identity(
         assert _decision_packet_id(page) == packet_id
 
 
+def test_shadow_decision_inbox_replays_paper_review_and_exact_keyboard_navigation(
+    page,
+    base_url,
+    demo_station: _DemoStation,
+    tmp_path: Path,
+) -> None:
+    _reset_demo(page, base_url)
+    page.goto(f"{base_url}/app/instruments/moomoo/NVDA?range=6m")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    page.get_by_label("Optional limit").fill("")
+    page.get_by_role("button", name="Create paper proposal").click()
+    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    proposal_id = _proposal_id(page)
+    token = (
+        page.get_by_text("Displayed confirmation token", exact=True)
+        .locator("..")
+        .locator("code")
+        .inner_text()
+    )
+    page.get_by_label("Confirmation token").fill(token)
+    page.get_by_role("button", name="Confirm paper proposal").click()
+    page.get_by_text("Paper order created", exact=True).wait_for()
+    page.reload()
+    review = page.get_by_test_id("packet-outcome-review")
+    review.get_by_text("Filled open", exact=True).wait_for()
+    with page.expect_response(
+        lambda response: (
+            response.url.endswith(f"/api/decision-packets/{packet_id}/outcome-review")
+            and response.request.method == "POST"
+        )
+    ) as saved:
+        review.get_by_role("button", name="Save review").click()
+    assert saved.value.status == 200
+    saved_review = saved.value.json()
+    outcome_id = saved_review["outcome"]["outcome_id"]
+    review_id = saved_review["review"]["review_id"]
+    order_id = saved_review["outcome"]["paper"]["order"]["order_id"]
+
+    page.goto(f"{base_url}/app/instruments/moomoo/AAPL?range=6m")
+    page.get_by_role("heading", name="AAPL", exact=True).wait_for()
+    page.get_by_label("Optional limit").fill("")
+    page.get_by_role("button", name="Create paper proposal").click()
+    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    pending_id = _proposal_id(page)
+    pending_packet = _decision_packet_id(page)
+
+    with _serve_restarted_demo(demo_station.root) as restarted:
+        before_orders = restarted.app.state.account_store.get().orders
+        page.goto(f"{restarted.url}/app/markets/watchlist")
+        nvda = page.get_by_role("row").filter(has=page.get_by_role("cell", name="NVDA", exact=True))
+        nvda.get_by_text("Reviewed", exact=True).wait_for()
+        nvda.locator("summary").click()
+        for identity in (packet_id, proposal_id, order_id, outcome_id, review_id):
+            assert nvda.get_by_text(identity, exact=True).is_visible()
+        page.screenshot(path=str(tmp_path / "shadow-desktop.png"), full_page=True)
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.emulate_media(reduced_motion="reduce")
+        assert page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
+        summary = nvda.locator("summary")
+        summary.focus()
+        page.keyboard.press("Enter")
+        assert not nvda.locator("details").evaluate("element => element.open")
+        page.keyboard.press("Enter")
+        assert nvda.locator("details").evaluate("element => element.open")
+        aapl = page.get_by_role("row").filter(has=page.get_by_role("cell", name="AAPL", exact=True))
+        assert aapl.get_by_text("Pending confirmation", exact=True).is_visible()
+        aapl.locator("summary").click()
+        assert aapl.get_by_text(pending_id, exact=True).is_visible()
+        snapshot = page.request.get(f"{restarted.url}/api/decision-packets").json()
+        pending = next(row for row in snapshot["entries"] if row["symbol"] == "AAPL")
+        assert pending["packet_id"] == pending_packet
+        assert pending["paper"]["order_id"] is None
+        assert restarted.app.state.account_store.get().orders == before_orders
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        page.screenshot(path=str(tmp_path / "shadow-mobile.png"), full_page=True)
+        summary.focus()
+        page.keyboard.press("Tab")
+        exact = nvda.get_by_role("link", name="Open exact packet")
+        assert exact.evaluate("element => element === document.activeElement")
+        page.keyboard.press("Enter")
+        page.wait_for_url(f"**/instruments/moomoo/NVDA?range=6m&packet={packet_id}")
+        page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+        assert _decision_packet_id(page) == packet_id
+        page.get_by_test_id("packet-outcome-review").get_by_text(review_id, exact=True).wait_for()
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+
+
 def test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order(
     page,
     base_url,

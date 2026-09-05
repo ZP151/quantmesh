@@ -1760,6 +1760,8 @@ export interface components {
             instrument_type?: components["schemas"]["InstrumentType"] | null;
             mark_context: components["schemas"]["DecisionInboxMarkContext"];
             monitoring?: components["schemas"]["DecisionInboxMonitoringSummary"] | null;
+            /** Outcome Id */
+            outcome_id?: string | null;
             /** Packet Id */
             packet_id?: string | null;
             paper?: components["schemas"]["DecisionInboxPaperSummary"] | null;
@@ -1798,6 +1800,11 @@ export interface components {
         };
         /** DecisionInboxMonitoringSummary */
         DecisionInboxMonitoringSummary: {
+            /**
+             * Event Ids
+             * @default []
+             */
+            event_ids: string[];
             /** Latest Evaluation Id */
             latest_evaluation_id?: string | null;
             /** Registration Id */
@@ -1807,8 +1814,11 @@ export interface components {
         };
         /** DecisionInboxPaperSummary */
         DecisionInboxPaperSummary: {
+            /** Filled Quantity */
+            filled_quantity?: number | null;
             /** Order Id */
             order_id?: string | null;
+            order_status?: components["schemas"]["OrderStatus"] | null;
             /** Proposal Id */
             proposal_id: string;
             status: components["schemas"]["ProposalStatus"];
@@ -1831,6 +1841,8 @@ export interface components {
         };
         /** DecisionInboxReviewSummary */
         DecisionInboxReviewSummary: {
+            /** Outcome Id */
+            outcome_id?: string | null;
             /** Review Id */
             review_id: string;
             state: components["schemas"]["ReviewClassification"];

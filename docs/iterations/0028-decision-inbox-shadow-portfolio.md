@@ -188,3 +188,42 @@ license closure must pass at the final PR boundary.
   `.superpowers/sdd/2026-09-05-decision-inbox-shadow-portfolio/task-4-report.md`.
 - Slice 3 is complete. The active frontier advances to Slice 4 / Task 5,
   bounded paper-shadow summary and clean-restart replay.
+
+### 2026-09-05 — Slice 4 Task 5: bounded paper shadow summary
+
+- Planner: one Watchlist disclosure exposes exact packet/proposal/order/watch/
+  outcome/review records, then opens the same saved packet. Scope remains #129,
+  paper-only, with no new authority or portfolio-performance surface.
+- Quant researcher: filled quantity belongs only to the validated exact order;
+  shared position and P&L remain `current-account-context-only`. Pending is
+  neutral even when current confirmation freshness fails. Review availability
+  requires a valid complete-horizon preview; missing evidence is never zero.
+- Implementer: replaced the lighter proposal projection with
+  `DecisionOutcomeReviewService.preview(packet_id)`, deriving compact IDs,
+  status, fills and trigger events. Missing exact records remain unavailable;
+  invalid linked identities fail closed. Saved-review outcome IDs remain
+  separate from a changed current preview. Watchlist uses a native disclosure,
+  wrapping monospace IDs and paired English/Simplified Chinese copy.
+- Verifier: backend RED recorded six failures/six passes. Focused GREEN covers
+  all seven new cases: six passed in the main selection, and the corrected
+  Watch fixture passed independently. Final frontend group passed 31 tests;
+  API freshness, TypeScript, lint, full Ruff and diff checks passed. Real
+  Chromium clean-restart/390px/reduced-motion/keyboard acceptance passed one
+  case in 209.17s. Desktop/mobile screenshots were inspected together; the
+  required single Impeccable detector run returned `[]`, exit 0.
+- Final targeted groups each ran once after focused GREEN: backend 98 passed,
+  one existing Starlette/httpx deprecation warning in 5432.34s; selected real
+  Chromium browser cases 3 passed, 17 deselected in 302.96s; frontend 31 passed
+  across three files in 8.65s. All exited 0. The generated client and packaged
+  SPA are current; lint retains four existing Fast Refresh warnings and build
+  retains the existing large-chunk warning. No broad repository gate was run.
+- Reviewer: one self-review found no new blocking issue; exact preview binding,
+  read-only restart behavior, attention ordering, en/zh-CN parity and account
+  attribution remain intact. No correction round was needed. A pre-existing
+  edge where live-priced watch observations receive frozen InstrumentSnapshot
+  metadata is recorded for separate monitoring follow-up, not repaired here.
+  Temporary pytest roots are excluded from the commit.
+- Slice 4 / Task 5 is complete. The active frontier is Task 6: license closure,
+  final iteration evidence and integration gates; no Task 6 check ran here.
+- Detailed command/exit evidence and local screenshots:
+  `.superpowers/sdd/2026-09-05-decision-inbox-shadow-portfolio/task-5-report.md`.

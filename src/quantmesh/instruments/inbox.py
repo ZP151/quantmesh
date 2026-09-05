@@ -11,6 +11,7 @@ from pydantic import Field, field_validator
 
 from quantmesh.api.watchlist import WatchlistRecord
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
+from quantmesh.domain.orders import OrderStatus
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.instruments.contracts import (
     DECISION_PACKET_ID_PATTERN,
@@ -18,7 +19,6 @@ from quantmesh.instruments.contracts import (
     DecisionDisposition,
     DecisionPacket,
     HistoryRange,
-    PaperProposal,
     PriceForecastArtifact,
     ProposalStatus,
     StrictContract,
@@ -26,7 +26,11 @@ from quantmesh.instruments.contracts import (
 from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.proposals import PaperDecisionService, forecast_freshness_blocker
-from quantmesh.instruments.reviews import ReviewClassification
+from quantmesh.instruments.reviews import (
+    DecisionOutcomeReviewService,
+    DecisionOutcomeReviewState,
+    ReviewClassification,
+)
 from quantmesh.live.contract import UpdateKind
 from quantmesh.live.feed import ExactUpdateSnapshot, LiveFeed
 from quantmesh.live.fence import QuoteFence
@@ -66,6 +70,8 @@ class DecisionInboxPaperSummary(StrictContract):
     proposal_id: str = Field(pattern=PROPOSAL_ID_PATTERN)
     status: ProposalStatus
     order_id: str | None = None
+    order_status: OrderStatus | None = None
+    filled_quantity: float | None = Field(default=None, ge=0)
 
 
 class DecisionInboxPositionContext(StrictContract):
@@ -83,11 +89,13 @@ class DecisionInboxMonitoringSummary(StrictContract):
         pattern=r"^evaluation-[0-9a-f]{24}$",
     )
     triggered: bool
+    event_ids: tuple[str, ...] = ()
 
 
 class DecisionInboxReviewSummary(StrictContract):
     review_id: str = Field(pattern=r"^review-[0-9a-f]{24}$")
     state: ReviewClassification
+    outcome_id: str | None = Field(default=None, pattern=r"^outcome-[0-9a-f]{24}$")
 
 
 class DecisionInboxEntry(StrictContract):
@@ -101,6 +109,7 @@ class DecisionInboxEntry(StrictContract):
     selected_range: HistoryRange | None = None
     disposition: DecisionDisposition | None = None
     evidence_status: Literal["complete", "partial", "pending", "unavailable"] | None = None
+    outcome_id: str | None = Field(default=None, pattern=r"^outcome-[0-9a-f]{24}$")
     mark_context: DecisionInboxMarkContext
     paper: DecisionInboxPaperSummary | None = None
     position_context: DecisionInboxPositionContext | None = None
@@ -146,7 +155,7 @@ class DecisionInboxService:
         *,
         watchlist_provider: Callable[[], Sequence[WatchlistRecord]],
         packet_store_provider: Callable[[], DecisionPacketStore | None],
-        review_service_provider: Callable[[], object | None],
+        review_service_provider: Callable[[], DecisionOutcomeReviewService | None],
         account_provider: Callable[[], PaperAccount],
         markets_provider: Callable[[], Mapping[str, Mapping[str, float | None]]],
         now: Callable[[], datetime],
@@ -173,11 +182,8 @@ class DecisionInboxService:
         packets = packet_store.all() if packet_store is not None else ()
         account = self._account_provider()
         markets = self._markets_provider()
-        proposals = self._proposals_once()
         forecasts = self._forecasts_once()
-        # The provider is deliberately invoked at the read boundary even though
-        # Slice 1 leaves review enrichment absent. It protects reset semantics.
-        self._review_service_provider()
+        reviews = self._review_service_provider()
         feed = self._live_feed_provider()
 
         by_identity: dict[tuple[Venue, str], list[DecisionPacket]] = {}
@@ -185,14 +191,13 @@ class DecisionInboxService:
             by_identity.setdefault((packet.instrument.venue, packet.instrument.symbol), []).append(
                 packet
             )
-        proposal_by_id = {proposal.id: proposal for proposal in proposals}
         forecast_by_id = {artifact.id: artifact for artifact in forecasts}
 
         entries = tuple(
             self._entry(
                 record,
                 by_identity.get((record.venue, record.symbol), []) if record.venue else [],
-                proposal_by_id,
+                reviews,
                 forecast_by_id,
                 account,
                 markets,
@@ -210,7 +215,7 @@ class DecisionInboxService:
         self,
         record: WatchlistRecord,
         packets: Sequence[DecisionPacket],
-        proposals: Mapping[str, PaperProposal],
+        reviews: DecisionOutcomeReviewService | None,
         forecasts: Mapping[str, object],
         account: PaperAccount,
         markets: Mapping[str, Mapping[str, float | None]],
@@ -246,20 +251,15 @@ class DecisionInboxService:
                 mark_context=mark_context,
             )
 
-        candidates = [
-            self._candidate(packet, proposals, forecasts, now)
-            for packet in packets
-        ]
+        candidates = [self._candidate(packet, reviews, forecasts, now) for packet in packets]
         attention_required = [
             item for item in candidates if item[0] in _ATTENTION_REQUIRED_PRIORITY
         ]
         terminal = [
-            item
-            for item in candidates
-            if item[2].disposition is not DecisionDisposition.DRAFT
+            item for item in candidates if item[2].disposition is not DecisionDisposition.DRAFT
         ]
         if attention_required:
-            state, reason, packet, paper = max(
+            state, reason, packet, preview = max(
                 attention_required,
                 key=lambda item: (
                     -_ATTENTION_REQUIRED_PRIORITY[item[0]],
@@ -267,9 +267,13 @@ class DecisionInboxService:
                 ),
             )
         elif terminal:
-            state, reason, packet, paper = max(terminal, key=self._recency_key)
+            state, reason, packet, preview = max(terminal, key=self._recency_key)
         else:
-            state, reason, packet, paper = max(candidates, key=self._recency_key)
+            state, reason, packet, preview = max(candidates, key=self._recency_key)
+        outcome = preview.outcome if preview is not None else None
+        paper = outcome.paper if outcome is not None else None
+        monitoring = outcome.monitoring if outcome is not None else None
+        review = preview.review if preview is not None else None
         position_context = self._position_context(
             record.venue,
             record.symbol,
@@ -287,71 +291,145 @@ class DecisionInboxService:
             selected_range=packet.selected_range,
             disposition=packet.disposition,
             mark_context=mark_context,
-            paper=paper,
+            evidence_status=outcome.evidence_status if outcome is not None else None,
+            outcome_id=outcome.outcome_id if outcome is not None else None,
+            paper=DecisionInboxPaperSummary(
+                proposal_id=paper.proposal.id,
+                status=paper.proposal.status,
+                order_id=paper.order.order_id if paper.order is not None else None,
+                order_status=paper.order.status if paper.order is not None else None,
+                filled_quantity=(
+                    sum(fill.quantity for fill in paper.order.fills)
+                    if paper.order is not None
+                    else None
+                ),
+            )
+            if paper is not None and paper.proposal is not None
+            else None,
+            monitoring=DecisionInboxMonitoringSummary(
+                registration_id=monitoring.registration.registration_id,
+                latest_evaluation_id=(
+                    monitoring.evaluations[-1].evaluation_id if monitoring.evaluations else None
+                ),
+                triggered=monitoring.status == "triggered",
+                event_ids=monitoring.event_ids,
+            )
+            if monitoring is not None and monitoring.registration is not None
+            else None,
+            review=DecisionInboxReviewSummary(
+                review_id=review.review_id,
+                state=review.classification,
+                outcome_id=review.outcome.outcome_id,
+            )
+            if review is not None
+            else None,
             position_context=position_context,
         )
 
     def _candidate(
         self,
         packet: DecisionPacket,
-        proposals: Mapping[str, PaperProposal],
+        reviews: DecisionOutcomeReviewService | None,
         forecasts: Mapping[str, object],
         now: datetime,
-    ) -> tuple[DecisionAttentionState, str, DecisionPacket, DecisionInboxPaperSummary | None]:
+    ) -> tuple[DecisionAttentionState, str, DecisionPacket, DecisionOutcomeReviewState | None]:
         if packet.disposition is DecisionDisposition.DRAFT:
             return (DecisionAttentionState.DRAFT, "saved decision draft", packet, None)
+        if reviews is None:
+            return (
+                DecisionAttentionState.UNAVAILABLE,
+                "exact decision outcome preview is unavailable",
+                packet,
+                None,
+            )
+        preview = reviews.preview(packet.packet_id)
+        paper = preview.outcome.paper
+        if paper.state == "unavailable":
+            return (
+                DecisionAttentionState.UNAVAILABLE,
+                "exact paper proposal or order binding is unavailable",
+                packet,
+                preview,
+            )
+        if paper.state in {"blocked", "risk_rejected"}:
+            return (
+                DecisionAttentionState.BLOCKED,
+                paper.reason or "paper proposal is blocked",
+                packet,
+                preview,
+            )
+        if paper.state == "pending_no_order":
+            return self._pending_candidate(packet, preview, forecasts, now)
+        if (
+            packet.disposition is DecisionDisposition.WATCH
+            and preview.outcome.monitoring.status == "triggered"
+            and preview.review is None
+        ):
+            return (
+                DecisionAttentionState.WATCH_TRIGGERED,
+                "an exact packet watch condition triggered",
+                packet,
+                preview,
+            )
+        if preview.review is not None:
+            return (
+                DecisionAttentionState.REVIEWED,
+                "operator review is saved for this exact packet",
+                packet,
+                preview,
+            )
+        if preview.outcome.evidence_status == "complete":
+            return (
+                DecisionAttentionState.REVIEW_AVAILABLE,
+                "the pinned outcome horizon is complete and available for review",
+                packet,
+                preview,
+            )
         if packet.disposition is DecisionDisposition.REJECT:
             return (
                 DecisionAttentionState.REJECTED,
                 "operator rejected this decision",
                 packet,
-                None,
+                preview,
             )
         if packet.disposition is DecisionDisposition.WATCH:
             return (
                 DecisionAttentionState.WATCHING,
                 "operator is watching this decision",
                 packet,
-                None,
+                preview,
             )
-
-        proposal = proposals.get(packet.proposal_id or "")
-        if proposal is None:
-            return (
-                DecisionAttentionState.UNAVAILABLE,
-                "paper proposal link is unavailable",
-                packet,
-                None,
-            )
-        if not self._proposal_matches_packet(proposal, packet):
-            raise ValueError("paper proposal does not match immutable decision packet evidence")
-        paper = DecisionInboxPaperSummary(
-            proposal_id=proposal.id,
-            status=proposal.status,
-            order_id=proposal.order_id,
+        return (
+            DecisionAttentionState.PAPER_OPEN,
+            "exact paper order is filled/open"
+            if paper.state == "filled_open"
+            else "exact paper order is accepted/unfilled",
+            packet,
+            preview,
         )
-        if proposal.status is ProposalStatus.BLOCKED:
-            return (DecisionAttentionState.BLOCKED, "paper proposal is blocked", packet, paper)
-        if proposal.status is ProposalStatus.REJECTED:
-            return (DecisionAttentionState.REJECTED, "paper proposal was rejected", packet, paper)
-        if proposal.status is ProposalStatus.CONFIRMED:
-            return (DecisionAttentionState.PAPER_OPEN, "paper proposal is confirmed", packet, paper)
 
+    def _pending_candidate(
+        self,
+        packet: DecisionPacket,
+        preview: DecisionOutcomeReviewState,
+        forecasts: Mapping[str, object],
+        now: datetime,
+    ) -> tuple[DecisionAttentionState, str, DecisionPacket, DecisionOutcomeReviewState]:
         artifact = forecasts.get(packet.evidence.forecast_artifact_id)
         if not isinstance(artifact, PriceForecastArtifact):
             return (
                 DecisionAttentionState.UNAVAILABLE,
                 "forecast linked to the pending paper proposal is unavailable",
                 packet,
-                paper,
+                preview,
             )
         if not self._forecast_matches_packet(artifact, packet):
             raise ValueError("forecast does not match immutable decision packet evidence")
         blocker = forecast_freshness_blocker(artifact, now)
         reason = "paper proposal is pending confirmation"
         if blocker is not None:
-            reason = f"paper proposal is pending confirmation; {blocker}"
-        return (DecisionAttentionState.PAPER_PENDING_CONFIRMATION, reason, packet, paper)
+            reason += f"; confirmation currently fails freshness: {blocker}"
+        return (DecisionAttentionState.PAPER_PENDING_CONFIRMATION, reason, packet, preview)
 
     def _mark_context(
         self,
@@ -423,11 +501,7 @@ class DecisionInboxService:
         mark_context: DecisionInboxMarkContext,
     ) -> DecisionInboxPositionContext | None:
         position = account.positions.get(f"{venue.value}:{symbol}")
-        if (
-            position is None
-            or mark_context.status != "available"
-            or mark_context.value is None
-        ):
+        if position is None or mark_context.status != "available" or mark_context.value is None:
             return None
         return DecisionInboxPositionContext(
             quantity=position.quantity,
@@ -436,10 +510,6 @@ class DecisionInboxService:
             mark=mark_context.value,
             attribution="current-account-context-only",
         )
-
-    def _proposals_once(self) -> tuple[PaperProposal, ...]:
-        decisions = self._paper_decisions_provider()
-        return decisions.ledger.all() if decisions is not None else ()
 
     def _forecasts_once(self) -> tuple[object, ...]:
         registry = self._forecast_registry_provider()
@@ -451,26 +521,11 @@ class DecisionInboxService:
             DecisionAttentionState,
             str,
             DecisionPacket,
-            DecisionInboxPaperSummary | None,
+            DecisionOutcomeReviewState | None,
         ],
     ) -> tuple[datetime, datetime, int, str]:
         packet = candidate[2]
         return (packet.as_of, packet.created_at, packet.version, packet.packet_id)
-
-    @staticmethod
-    def _proposal_matches_packet(proposal: PaperProposal, packet: DecisionPacket) -> bool:
-        evidence = packet.evidence
-        return (
-            proposal.id == packet.proposal_id
-            and proposal.instrument == packet.instrument
-            and proposal.artifact_id == evidence.forecast_artifact_id
-            and proposal.dataset_id == evidence.forecast_dataset_id
-            and proposal.dataset_revision == evidence.forecast_dataset_revision
-            and proposal.forecast_generated_at == evidence.forecast_generated_at
-            and proposal.model_version == evidence.forecast_model_version
-            and proposal.config_digest == evidence.forecast_config_digest
-            and proposal.history_digest == evidence.forecast_history_digest
-        )
 
     @staticmethod
     def _forecast_matches_packet(artifact: PriceForecastArtifact, packet: DecisionPacket) -> bool:

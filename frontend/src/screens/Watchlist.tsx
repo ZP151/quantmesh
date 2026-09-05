@@ -62,6 +62,7 @@ export function WatchlistScreen() {
                           <td className="block px-4 py-1 sm:table-cell sm:py-2.5">
                             <p className="text-xs font-medium">{attentionState(entry.attention_state, t)}</p>
                             <p className="mt-0.5 max-w-sm text-xs text-muted-foreground">{entry.attention_reason}</p>
+                            <ShadowRecords entry={entry} />
                           </td>
                           <td className="block px-4 py-1 sm:table-cell sm:py-2.5">
                             {exactPath !== null ? (
@@ -91,6 +92,77 @@ export function WatchlistScreen() {
       </Surface>
     </Page>
   )
+}
+
+function ShadowRecords({ entry }: { entry: DecisionInbox['entries'][number] }) {
+  const { t } = usePreferences()
+  if (!entry.packet_id) return null
+  const records = [
+    [t('screen.watchlist.record.packet'), entry.packet_id],
+    [t('screen.watchlist.record.proposal'), entry.paper?.proposal_id],
+    [t('screen.watchlist.record.order'), entry.paper?.order_id],
+    [t('screen.watchlist.record.registration'), entry.monitoring?.registration_id],
+    [t('screen.watchlist.record.evaluation'), entry.monitoring?.latest_evaluation_id],
+    ...(entry.monitoring?.event_ids ?? []).map(id => [t('screen.watchlist.record.event'), id]),
+    [t('screen.watchlist.record.outcome'), entry.outcome_id],
+    [t('screen.watchlist.record.review'), entry.review?.review_id],
+    ...(entry.review && entry.review.outcome_id !== entry.outcome_id
+      ? [[t('screen.watchlist.record.reviewOutcome'), entry.review.outcome_id]] : []),
+  ].filter((record): record is [string, string] => typeof record[1] === 'string')
+  return (
+    <details className="mt-2 max-w-sm text-xs">
+      <summary className="cursor-pointer py-1 underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        {t('screen.watchlist.records')}
+      </summary>
+      <dl className="mt-2 space-y-2 border-t border-border pt-2">
+        {entry.paper && <div>
+          <dt className="text-muted-foreground">{t('screen.watchlist.record.proposalStatus')}</dt>
+          <dd>{recordStatus(entry.paper.status, t)}</dd>
+        </div>}
+        {entry.paper?.order_status && <div>
+          <dt className="text-muted-foreground">{t('screen.watchlist.record.orderStatus')}</dt>
+          <dd>{recordStatus(entry.paper.order_status, t)}</dd>
+        </div>}
+        {entry.paper?.filled_quantity != null && <div>
+          <dt className="text-muted-foreground">{t('screen.watchlist.record.filledQuantity')}</dt>
+          <dd className="font-mono tabular-nums">{entry.paper.filled_quantity}</dd>
+        </div>}
+        {entry.monitoring && <div>
+          <dt className="text-muted-foreground">{t('screen.watchlist.record.watchStatus')}</dt>
+          <dd>{entry.monitoring.triggered
+            ? t('screen.workspace.monitoringTriggered')
+            : t('screen.watchlist.record.coverageIncomplete')}</dd>
+        </div>}
+        {entry.review && <div>
+          <dt className="text-muted-foreground">{t('screen.workspace.reviewClassification')}</dt>
+          <dd>{recordStatus(entry.review.state, t)}</dd>
+        </div>}
+        {records.map(([label, id]) => <div key={`${label}:${id}`}>
+          <dt className="text-muted-foreground">{label}</dt>
+          <dd className="font-mono break-all">{id}</dd>
+        </div>)}
+      </dl>
+      <p className="mt-3 text-muted-foreground">{t('screen.watchlist.positionContext')}</p>
+    </details>
+  )
+}
+
+function recordStatus(state: string, t: ReturnType<typeof usePreferences>['t']): string {
+  const keys = {
+    pending: 'screen.watchlist.record.pending',
+    confirmed: 'screen.watchlist.record.confirmed',
+    blocked: 'screen.watchlist.record.blocked',
+    rejected: 'screen.watchlist.record.rejected',
+    accepted: 'screen.watchlist.record.accepted',
+    filled: 'screen.watchlist.record.filled',
+    partially_filled: 'screen.watchlist.record.partiallyFilled',
+    canceled: 'screen.watchlist.record.cancelled',
+    supported: 'screen.workspace.reviewSupported',
+    challenged: 'screen.workspace.reviewChallenged',
+    mixed: 'screen.workspace.reviewMixed',
+    inconclusive: 'screen.workspace.reviewInconclusive',
+  } as const
+  return state in keys ? t(keys[state as keyof typeof keys]) : state
 }
 
 function attentionState(

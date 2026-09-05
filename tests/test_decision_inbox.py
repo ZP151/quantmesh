@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
-from quantmesh.domain.models import Venue
+from quantmesh.domain.models import Instrument, Venue
 from quantmesh.instruments.inbox import (
     DecisionInboxError,
     DecisionInboxMarkContext,
@@ -19,6 +19,7 @@ from quantmesh.instruments.inbox import (
     DecisionInboxReviewSummary,
     DecisionInboxService,
 )
+from quantmesh.instruments.monitoring import DecisionWatchObservation, WatchConditionKind
 from quantmesh.instruments.reviews import ReviewClassification
 
 SCENARIO = DemoScenario()
@@ -80,9 +81,7 @@ def _owned_bytes(root: Path) -> dict[str, bytes]:
 
 def _entry(payload: dict[str, object], venue: str | None, symbol: str) -> dict[str, object]:
     return next(
-        item
-        for item in payload["entries"]
-        if item["venue"] == venue and item["symbol"] == symbol
+        item for item in payload["entries"] if item["venue"] == venue and item["symbol"] == symbol
     )
 
 
@@ -161,6 +160,7 @@ def test_inbox_prefers_newer_passive_terminal_action_over_older_open_paper(
         )
         app.state.instrument_workspace._now = lambda: SCENARIO.anchor + timedelta(minutes=1)
         rejected = _save_and_act(client, "NVDA", disposition="reject")
+        app.state.packet_reviews._now = lambda: SCENARIO.anchor + timedelta(minutes=1)
         response = client.get("/api/decision-packets")
 
     assert confirmation.status_code == 200
@@ -211,17 +211,21 @@ def test_inbox_reports_a_missing_paper_proposal_link_as_unavailable(tmp_path: Pa
     assert _entry(unavailable.json(), "moomoo", "NVDA")["attention_state"] == "unavailable"
 
 
+@pytest.mark.parametrize("field", ["id", "config_digest"])
 def test_inbox_fails_closed_for_packet_proposal_evidence_identity_mismatch(
     tmp_path: Path,
+    field: str,
 ) -> None:
     app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
     with TestClient(app) as client:
         _save_and_act(client, "NVDA", disposition="paper_proposal")
         proposal = app.state.paper_decisions.ledger.all()[0]
-        forged = proposal.model_copy(update={"config_digest": "f" * 64})
-        app.state.decision_inbox._paper_decisions_provider = lambda: SimpleNamespace(  # noqa: SLF001
-            ledger=SimpleNamespace(all=lambda: (forged,))
+        forged = proposal.model_copy(
+            update={
+                field: "proposal-" + "f" * 24 if field == "id" else "f" * 64,
+            }
         )
+        app.state.packet_reviews.proposal_ledger = SimpleNamespace(get=lambda _id: forged)
         response = client.get("/api/decision-packets")
 
     assert response.status_code == 409
@@ -298,3 +302,147 @@ def test_inbox_error_contract_has_only_safe_machine_fields() -> None:
             "Decision Inbox is unavailable because stored decision state cannot be replayed."
         ),
     }
+
+
+@pytest.mark.parametrize("lifecycle", ["pending", "risk_rejected", "filled", "reviewed", "watch"])
+def test_shadow_paper_watch_review_exact_ids_and_restart(tmp_path: Path, lifecycle: str) -> None:
+    root = tmp_path / lifecycle
+    app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        action = _save_and_act(
+            client, "NVDA", disposition="watch" if lifecycle == "watch" else "paper_proposal"
+        )
+        packet_id = action["packet"]["packet_id"]
+        if lifecycle in {"risk_rejected", "filled", "reviewed"}:
+            if lifecycle == "risk_rejected":
+                app.state.account_store.update(
+                    lambda account: account.model_copy(update={"kill_switch": True})
+                )
+            proposal = action["proposal"]
+            confirmation = client.post(
+                f"/api/paper/proposals/{proposal['id']}/confirm",
+                json={"confirmation_token": proposal["confirmation_token"]},
+            )
+            assert confirmation.status_code == (409 if lifecycle == "risk_rejected" else 200)
+        if lifecycle == "watch":
+            packet = app.state.decision_packets.get(packet_id)
+            service = app.state.packet_monitoring
+            registration = service.register(packet_id, (WatchConditionKind.ENTRY_ZONE,))
+            for sequence, price in enumerate(
+                (packet.risk_plan.entry_price * 1.1, packet.risk_plan.entry_price), start=1
+            ):
+                timestamp = SCENARIO.anchor + timedelta(seconds=sequence)
+                service.check(
+                    registration.registration_id,
+                    DecisionWatchObservation(
+                        evaluated_at=timestamp,
+                        instrument=Instrument.model_validate(packet.instrument.model_dump()),
+                        price=price,
+                        source="local-workspace",
+                        provenance="demo-synthetic",
+                        data_time=timestamp,
+                        received_at=timestamp,
+                        sequence=sequence,
+                        sequence_gap=False,
+                    ),
+                )
+            app.state.packet_reviews._now = lambda: SCENARIO.anchor + timedelta(seconds=2)
+        preview = app.state.packet_reviews.preview(packet_id)
+        if lifecycle == "reviewed":
+            preview = app.state.packet_reviews.save(
+                packet_id,
+                expected_outcome_id=preview.outcome.outcome_id,
+                classification="inconclusive",
+                note="Entry only; no attributable exit.",
+            )
+        before = _owned_bytes(root)
+        response = client.get("/api/decision-packets")
+        assert response.status_code == 200
+        row = _entry(response.json(), "moomoo", "NVDA")
+        assert before == _owned_bytes(root)
+        assert row["packet_id"] == packet_id
+        assert (
+            row["attention_state"]
+            == {
+                "pending": "paper_pending_confirmation",
+                "risk_rejected": "blocked",
+                "filled": "paper_open",
+                "reviewed": "reviewed",
+                "watch": "watch_triggered",
+            }[lifecycle]
+        )
+        assert row["outcome_id"] == preview.outcome.outcome_id
+        assert row["evidence_status"] == preview.outcome.evidence_status
+        if lifecycle == "watch":
+            assert row["monitoring"]["registration_id"] == registration.registration_id
+            assert row["monitoring"]["latest_evaluation_id"] == (
+                preview.outcome.monitoring.evaluations[-1].evaluation_id
+            )
+            assert row["monitoring"]["event_ids"] == list(preview.outcome.monitoring.event_ids)
+            assert row["monitoring"]["triggered"] is True
+        else:
+            paper = row["paper"]
+            assert paper["proposal_id"] == action["proposal"]["id"]
+            order = preview.outcome.paper.order
+            assert paper["order_id"] == (order.order_id if order else None)
+            assert paper["order_status"] == (order.status if order else None)
+            assert paper["filled_quantity"] == (
+                sum(fill.quantity for fill in order.fills) if order else None
+            )
+        if lifecycle == "reviewed":
+            assert row["review"]["review_id"] == preview.review.review_id
+            assert row["review"]["outcome_id"] == preview.review.outcome.outcome_id
+        if lifecycle == "filled":
+            journal = app.state.packet_reviews.journal
+            forged_order = preview.outcome.paper.order.model_copy(
+                update={"order_id": "other-order"}
+            )
+            app.state.packet_reviews.journal = SimpleNamespace(get=lambda _id: forged_order)
+            unavailable = client.get("/api/decision-packets")
+            assert unavailable.status_code == 409
+            assert unavailable.json()["code"] == "decision_inbox_replay_unavailable"
+            app.state.packet_reviews.journal = journal
+    restarted = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    if lifecycle == "watch":
+        restarted.state.packet_reviews._now = lambda: SCENARIO.anchor + timedelta(seconds=2)
+    with TestClient(restarted) as client:
+        assert _entry(client.get("/api/decision-packets").json(), "moomoo", "NVDA") == row
+
+
+def test_shadow_pending_paper_stays_neutral_when_confirmation_freshness_fails(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        action = _save_and_act(client, "NVDA", disposition="paper_proposal")
+        app.state.decision_inbox._now = lambda: SCENARIO.anchor + timedelta(days=3)
+        row = _entry(client.get("/api/decision-packets").json(), "moomoo", "NVDA")
+        assert row["attention_state"] == "paper_pending_confirmation"
+        assert "confirmation currently fails freshness" in row["attention_reason"]
+        assert row["paper"]["proposal_id"] == action["proposal"]["id"]
+        assert row["paper"]["order_id"] is None
+
+
+def test_shadow_missing_exact_order_is_unavailable_without_fallback(tmp_path: Path) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        action = _save_and_act(client, "NVDA", disposition="paper_proposal")
+        proposal = action["proposal"]
+        assert (
+            client.post(
+                f"/api/paper/proposals/{proposal['id']}/confirm",
+                json={"confirmation_token": proposal["confirmation_token"]},
+            ).status_code
+            == 200
+        )
+
+        def missing_order(_order_id: str):
+            raise ValueError("missing exact order")
+
+        app.state.packet_reviews.journal = SimpleNamespace(get=missing_order)
+        response = client.get("/api/decision-packets")
+        assert response.status_code == 200
+        row = _entry(response.json(), "moomoo", "NVDA")
+        assert row["attention_state"] == "unavailable"
+        assert row["packet_id"] == action["packet"]["packet_id"]
+        assert row["paper"]["order_id"] is None

@@ -510,7 +510,7 @@ Review once; a second review is final.
 - Produces compact proposal/order/watch/review IDs and status facts. Exact order
   fill quantity is attributable; aggregate position/P&L is context only.
 
-- [ ] **Step 1: Write backend RED exact-binding tests**
+- [x] **Step 1: Write backend RED exact-binding tests**
 
 Use independent roots to pin:
 
@@ -529,7 +529,7 @@ never fallback. Recreate `create_demo_app` over the same root and assert stable
 packet/proposal/order/watch/outcome/review IDs and states. Assert the current
 position label remains `current-account-context-only`.
 
-- [ ] **Step 2: Run backend RED**
+- [x] **Step 2: Run backend RED**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/test_decision_inbox.py -k "paper or watch or review or restart" -q
@@ -537,14 +537,14 @@ position label remains `current-account-context-only`.
 
 Expected: final detail fields or attention mappings are absent from Slice 1.
 
-- [ ] **Step 3: Complete summary derivation**
+- [x] **Step 3: Complete summary derivation**
 
 Reuse the review preview's validated `PaperOutcome` and `MonitoringOutcome`;
 do not create weaker duplicate bindings. Return only compact immutable IDs,
 statuses, fill quantity and trigger event IDs. Current position and unrealized
 P&L stay visibly non-attributable.
 
-- [ ] **Step 4: Write frontend RED, then implement GREEN**
+- [x] **Step 4: Write frontend RED, then implement GREEN**
 
 Test a compact disclosure beneath decision status for proposal ID/status, order
 ID/status, watch evaluation/event, outcome/review IDs and position-context
@@ -560,7 +560,7 @@ npm run build
 Set-Location ..
 ```
 
-- [ ] **Step 5: Prove restart, exact navigation and responsive behavior**
+- [x] **Step 5: Prove restart, exact navigation and responsive behavior**
 
 Add one browser E2E that confirms an NVDA proposal, saves its review, restarts
 from the same root, then checks the same packet/proposal/order/outcome/review IDs
@@ -576,7 +576,7 @@ node C:\Users\15492\Develop\QuantMesh\.codex\skills\impeccable\scripts\detect.mj
 
 Fix only findings inside the changed surfaces.
 
-- [ ] **Step 6: Run GREEN, commit and review Slice 4**
+- [x] **Step 6: Run GREEN, commit and review Slice 4**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/test_decision_inbox.py tests/test_decision_packet_api.py tests/test_packet_monitoring.py tests/test_packet_reviews.py tests/test_demo_instrument_workspace.py -q

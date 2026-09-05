@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
+import userEvent from '@testing-library/user-event'
 
 import { api, type DecisionInbox } from '@/lib/api'
 import { PreferencesProvider } from '@/lib/preferences'
@@ -105,8 +106,8 @@ it('labels an evidence-blocked crypto packet and preserves its exact route', asy
         attention_reason: 'No promoted forecast is available.',
         attention_state: 'blocked',
         disposition: 'watch',
-        evidence_status: 'blocked',
-        instrument_type: 'crypto_perp',
+        evidence_status: 'unavailable',
+        instrument_type: 'perpetual',
         mark_context: { reason: null, status: 'available', value: 65_000 },
         monitoring: null,
         packet_id: 'packet-222222222222222222222222',
@@ -136,4 +137,56 @@ it('labels an evidence-blocked crypto packet and preserves its exact route', asy
     'href',
     '/instruments/hyperliquid/BTC-USD?range=6m&packet=packet-222222222222222222222222',
   )
+})
+
+it('discloses exact paper, watch and review facts with a context-only position warning', async () => {
+  const row = {
+    ...inbox.entries[0],
+    attention_state: 'reviewed',
+    outcome_id: 'outcome-111111111111111111111111',
+    paper: {
+      proposal_id: 'proposal-111111111111111111111111', status: 'confirmed',
+      order_id: 'paper-proposal:proposal-111111111111111111111111',
+      order_status: 'filled', filled_quantity: 1,
+    },
+    monitoring: {
+      registration_id: 'registration-111111111111111111111111',
+      latest_evaluation_id: 'evaluation-111111111111111111111111',
+      triggered: true, event_ids: ['event-111111111111111111111111'],
+    },
+    review: {
+      review_id: 'review-111111111111111111111111', state: 'inconclusive',
+      outcome_id: 'outcome-222222222222222222222222',
+    },
+    position_context: {
+      quantity: 42, average_cost: 100, realized_pnl: 321, mark: 101,
+      attribution: 'current-account-context-only',
+    },
+  } as const
+  mockedDecisionInbox.mockResolvedValue({ ...inbox, entries: [row] })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+  const disclosure = await screen.findByText('Paper & decision records')
+  await userEvent.click(disclosure)
+  for (const id of [
+    row.packet_id, row.paper.proposal_id, row.paper.order_id,
+    row.monitoring.registration_id, row.monitoring.latest_evaluation_id,
+    row.monitoring.event_ids[0], row.outcome_id, row.review.review_id, row.review.outcome_id,
+  ]) {
+    expect(screen.getByText(id)).toHaveClass('font-mono', 'break-all')
+  }
+  expect(screen.getByText('Confirmed')).toBeVisible()
+  expect(screen.getByText('Filled')).toBeVisible()
+  expect(screen.getByText('Filled quantity')).toBeVisible()
+  expect(screen.getByText('Triggered')).toBeVisible()
+  expect(screen.getByText('Inconclusive')).toBeVisible()
+  expect(screen.getByText(/Current account context only/)).toBeVisible()
+  expect(screen.queryByText(/Sharpe|ranking|aggregate return|closed P&L/i)).not.toBeInTheDocument()
+  expect(screen.queryByText('321')).not.toBeInTheDocument()
 })
