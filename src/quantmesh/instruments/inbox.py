@@ -142,6 +142,16 @@ _ATTENTION_REQUIRED_PRIORITY = {
     DecisionAttentionState.REVIEW_AVAILABLE: 4,
 }
 
+# Live connector contracts provide the instrument kind before a decision packet
+# exists.  Keep that metadata independent of packet history so a newly watched
+# instrument can still consume its venue-exact, freshness-validated quote.
+_LIVE_INSTRUMENT_TYPE_BY_VENUE = {
+    Venue.MOOMOO: InstrumentType.EQUITY,
+    Venue.HYPERLIQUID: InstrumentType.PERPETUAL,
+    Venue.POLYMARKET: InstrumentType.EVENT_CONTRACT,
+    Venue.KALSHI: InstrumentType.EVENT_CONTRACT,
+}
+
 
 class DecisionInboxService:
     """Compose a deterministic, side-effect-free watchlist projection.
@@ -233,11 +243,15 @@ class DecisionInboxService:
                 ),
             )
 
-        instrument_type = packets[0].instrument.instrument_type if packets else None
+        instrument = (
+            Instrument.model_validate(packets[0].instrument.model_dump())
+            if packets
+            else self._live_instrument(record.venue, record.symbol)
+        )
         mark_context = self._mark_context(
             record.venue,
             record.symbol,
-            instrument_type,
+            instrument,
             markets,
             feed,
             now,
@@ -246,6 +260,7 @@ class DecisionInboxService:
             return DecisionInboxEntry(
                 venue=record.venue,
                 symbol=record.symbol,
+                instrument_type=(instrument.instrument_type if instrument is not None else None),
                 attention_state=DecisionAttentionState.NOT_STARTED,
                 attention_reason="no saved decision packet",
                 mark_context=mark_context,
@@ -435,19 +450,14 @@ class DecisionInboxService:
         self,
         venue: Venue,
         symbol: str,
-        instrument_type: InstrumentType | None,
+        instrument: Instrument | None,
         markets: Mapping[str, Mapping[str, float | None]],
         feed: LiveFeed | None,
         now: datetime,
     ) -> DecisionInboxMarkContext:
         snapshot = (
             feed.snapshot_exact(venue, symbol, UpdateKind.QUOTE, as_of=now)
-            if feed is not None and instrument_type is not None
-            else None
-        )
-        instrument = (
-            Instrument(venue=venue, symbol=symbol, instrument_type=instrument_type)
-            if instrument_type is not None
+            if feed is not None and instrument is not None
             else None
         )
         live = self._live_mark(snapshot, instrument, now)
@@ -468,6 +478,13 @@ class DecisionInboxService:
             status="unavailable",
             reason="no current mark is configured",
         )
+
+    @staticmethod
+    def _live_instrument(venue: Venue, symbol: str) -> Instrument | None:
+        instrument_type = _LIVE_INSTRUMENT_TYPE_BY_VENUE.get(venue)
+        if instrument_type is None:
+            return None
+        return Instrument(venue=venue, symbol=symbol, instrument_type=instrument_type)
 
     def _live_mark(
         self,

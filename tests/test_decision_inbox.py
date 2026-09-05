@@ -12,7 +12,7 @@ from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.api.workstation import create_workstation_app
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
-from quantmesh.domain.models import Instrument, Venue
+from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.instruments.inbox import (
     DecisionInboxError,
@@ -24,6 +24,8 @@ from quantmesh.instruments.inbox import (
 )
 from quantmesh.instruments.monitoring import DecisionWatchObservation, WatchConditionKind
 from quantmesh.instruments.reviews import ReviewClassification
+from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
+from quantmesh.live.feed import LiveFeed
 
 SCENARIO = DemoScenario()
 
@@ -54,6 +56,56 @@ def test_baseline_inbox_preserves_persisted_watchlist_without_packet_services(
         assert row["paper"] is None
         assert row["monitoring"] is None
         assert row["review"] is None
+
+
+def test_not_started_inbox_uses_fresh_exact_live_mark_before_first_packet(
+    tmp_path: Path,
+) -> None:
+    watchlist = WatchlistStore(tmp_path / "watchlist")
+    watchlist.add("BTC", venue=Venue.HYPERLIQUID, now=SCENARIO.anchor)
+    feed = LiveFeed()
+    feed.ingest(
+        [
+            MarketUpdate(
+                venue=Venue.HYPERLIQUID,
+                instrument="BTC",
+                kind=UpdateKind.QUOTE,
+                provenance=Provenance.REAL,
+                data_time=SCENARIO.anchor,
+                received_at=SCENARIO.anchor,
+                sequence=sequence,
+                payload={
+                    "bid": bid,
+                    "ask": ask,
+                    "bid_size": 2.0,
+                    "ask_size": 3.0,
+                },
+            )
+            for sequence, bid, ask in ((1, 100.0, 101.0), (2, 102.0, 103.0))
+        ]
+    )
+    app = create_workstation_app(
+        account=PaperAccount(cash=100_000),
+        watchlist=watchlist,
+        markets={"hyperliquid": {"BTC": None}},
+        live_feed=feed,
+        workspace_clock=lambda: SCENARIO.anchor,
+        host="127.0.0.1",
+    )
+
+    with TestClient(app) as client:
+        response = client.get("/api/decision-packets")
+
+    assert response.status_code == 200
+    btc = _entry(response.json(), "hyperliquid", "BTC")
+    assert btc["attention_state"] == "not_started"
+    assert btc["instrument_type"] == InstrumentType.PERPETUAL.value
+    assert btc["mark_context"] == {
+        "value": 102.5,
+        "status": "available",
+        "received_at": SCENARIO.anchor.isoformat().replace("+00:00", "Z"),
+        "reason": None,
+    }
 
 
 def _draft(client: TestClient, symbol: str = "NVDA") -> dict[str, object]:

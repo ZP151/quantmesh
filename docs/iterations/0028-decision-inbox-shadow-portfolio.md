@@ -526,3 +526,31 @@ depend on the ignored local report.
   pending candidate is the changed HEAD produced by this harness commit,
   parent `9d13dfb`; its exact-head gate must run once after commit. Step 4 and
   all subsequent CI/human-review/Goal completion gates remain open.
+
+### 2026-09-06 — PR #130 packetless live-mark correction
+
+- Exact-head `9f52a8c3908d067cd060e02274459f46e33ec32e` passed the clean release
+  gate with 3263 passed / 9 skipped and PR CI run 33991461840 passed in
+  41m43s. The automated PR review then reported one P2 at
+  `src/quantmesh/instruments/inbox.py`: a venue-scoped watchlist entry with no
+  saved packet derived no instrument type, skipped `LiveFeed.snapshot_exact`,
+  and therefore hid an otherwise fresh validated mark.
+- Technical verification confirmed the finding. Focused TDD RED:
+  `python -m pytest
+  tests/test_decision_inbox.py::test_not_started_inbox_uses_fresh_exact_live_mark_before_first_packet
+  -q --basetemp .pytest-tmp-review-p2-red` exited 1 because the packetless BTC
+  entry returned `instrument_type=null` instead of `perpetual`.
+- The bounded fix derives pre-packet instrument metadata from the existing
+  venue connector contracts (Moomoo equity, Hyperliquid perpetual,
+  Polymarket/Kalshi event contract), while saved packets remain authoritative
+  for their exact instrument snapshot. The mark path then uses the same
+  venue/symbol-exact feed snapshot and `QuoteFence`; no configured mark is
+  promoted to fresh and no execution authority changes.
+- Focused GREEN exited 0: 1 passed in 1.20s. Complete Decision Inbox regression
+  exited 0: 23 passed in 1470.74s. Targeted Ruff and `git diff --check` exited
+  0. The three owned pytest basetemp directories were removed after exact-path
+  verification. No Provider, OpenD, Scheduler, model service, real trading or
+  0021 soak action ran.
+- This changes the PR head, so the earlier release-gate/CI pass remains valid
+  only for `9f52a8c`. Commit/push, one new exact-head release gate, exact-head
+  CI and human approval remain required before merge or Goal completion.

@@ -1,7 +1,7 @@
 # Active Goal
 
-- Status: active — iteration 0028 implementation and pre-PR verification
-  complete; exact-head integration gates pending.
+- Status: active — iteration 0028 implementation and bounded PR-review
+  correction complete; exact-head integration gates pending.
 - Objective: give a research-minded individual active trader one watchlist-level
   Decision Inbox that identifies the next evidence-backed action, opens the
   exact DecisionPacket, and summarizes its bounded paper proposal, order,
@@ -22,10 +22,11 @@
   per demonstrable slice, targeted verification during development, one final
   exact-head CI boundary. One 0028 product track and one independent 0021 soak
   maintenance track may coexist; neither modifies the other's files or state.
-- Current frontier: one exact-head release gate on the new observable-harness
-  fix candidate, then branch push, milestone PR, exact-head CI and human review.
-  Task 6 Steps 1–3 are complete; Steps 4–5 remain open. No further product
-  slice is open and the Goal is not complete.
+- Current frontier: commit and push the bounded packetless-live-mark PR
+  correction, run one release gate on that exact head, then require exact-head
+  CI and human approval. PR #130 is open. Task 6 Steps 1–3 are complete;
+  Steps 4–5 remain open. No further product slice is open and the Goal is not
+  complete.
 - Pre-PR evidence at parent `422c88ae73ea70d0873505c6fac1d8b8f8d28d84`:
   the one full pytest run exited 1 with 3255 passed, 3 failed, 9 skipped and
   1 warning in 8016.81s. Systematic diagnosis confirmed shared-environment
@@ -70,6 +71,16 @@
   owned-tree timeout cleanup and a 10800s limit; focused tests passed 7/7.
   The changed-SHA harness candidate needs its one exact-head gate after commit;
   no gate/full pytest/detector/push/PR ran in the fix wave.
+- Exact-head `9f52a8c3908d067cd060e02274459f46e33ec32e` subsequently passed the
+  clean release gate (3263 passed, 9 skipped) and PR #130 CI run 33991461840.
+  The PR's automated review then identified one bounded P2: a venue-scoped
+  watchlist row could not use its fresh exact quote before its first saved
+  packet because instrument metadata came only from packet history. A focused
+  RED reproduced the missing type/mark; the connector-contract metadata fix
+  and regression pass, and the full Decision Inbox file passes 23 tests in
+  1470.74s. Ruff and diff checks pass. This post-CI source correction requires
+  a new exact-head gate and CI; the prior green SHA is retained as historical
+  evidence only.
 - External gate: none. Provider/OpenD, real market calls and model services are
   not required and are prohibited expansion for this iteration.
 
