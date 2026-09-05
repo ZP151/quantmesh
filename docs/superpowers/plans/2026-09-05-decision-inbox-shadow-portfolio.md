@@ -610,7 +610,7 @@ Review once with at most one correction round.
 - Modify: `docs/iterations/INDEX.md`
 - Modify: `docs/roadmap/ROADMAP.md`
 
-- [ ] **Step 1: Run and, only if needed, repair license closure**
+- [x] **Step 1: Run and, only if needed, repair license closure**
 
 ```powershell
 .\.venv\Scripts\python.exe tools/license_review.py
@@ -621,7 +621,13 @@ If refused, inspect the installed package metadata and shipped license, then
 update the exact allowlist and `docs/licenses.md` with matching package,
 version, license and justification. Never broadly allow `UNKNOWN`.
 
-- [ ] **Step 2: Run one broad pre-PR verification**
+2026-09-06 evidence: shared environment correctly refused ambient/missing/drifted
+packages; existing constrained isolated release closure passed (70 installed
+Windows members from 76 pins), as did its unchanged focused license test.
+The npm closure passed all 646 packages. No license tool, lock or documentation
+repair was needed; see the active iteration's Task 6 checkpoint.
+
+- [x] **Step 2: Run one broad pre-PR verification**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
@@ -640,15 +646,33 @@ git submodule status
 Read every exit code and final statistic. Diagnose any in-scope regression and
 repair it only after a reproducing RED test.
 
-- [ ] **Step 3: Record evidence and commit the iteration checkpoint**
+Executed once with shared Python and explicit worktree PYTHONPATH: 3255 passed,
+3 failed, 9 skipped, 1 warning in 8016.81s, exit 1. The license failure was
+shared-environment drift; the two SPA failures were cleanup timeout/next-reset
+conflict. Observational RED proved the 30-second request budget exhausted by
+request draining and safe reset work. The one-line test-only 120-second POST
+timeout passed both cases in 165.50s. Frontend legacy fixtures were corrected
+after RED; full Vitest passed 197 tests. Other pre-PR checks passed with the
+recorded warnings. This is not a claim that full pytest exited 0; no full-suite
+rerun was performed.
+
+- [x] **Step 3: Record evidence and commit the iteration checkpoint**
 
 Record command, exit code, test count, duration, exact parent HEAD and retained
 warnings. Mark roadmap/index complete only after behavior and checks are green.
 
+The implementation/pre-PR boundary is verified with the exact original broad
+failure result and focused GREEN recorded in the tracked 0028 ledger. Overall
+integration and Goal completion remain open. Checkpoint parent:
+`422c88ae73ea70d0873505c6fac1d8b8f8d28d84`.
+
 ```powershell
-git add docs/goals/ACTIVE.md docs/iterations/0028-decision-inbox-shadow-portfolio.md docs/iterations/INDEX.md docs/roadmap/ROADMAP.md tools/license_review.py docs/licenses.md
+git add docs/goals/ACTIVE.md docs/iterations/0028-decision-inbox-shadow-portfolio.md docs/iterations/INDEX.md docs/roadmap/ROADMAP.md docs/superpowers/plans/2026-09-05-decision-inbox-shadow-portfolio.md frontend/src/screens/NavigationAndValuation.test.tsx tests/test_spa_e2e.py
 git commit -m "docs: complete iteration 0028 verification"
 ```
+
+The next action is the controller's one final whole-branch review. Only after
+it is clean should Step 4 run on the exact reviewed candidate.
 
 - [ ] **Step 4: Run the single exact-head release gate**
 
@@ -668,3 +692,14 @@ Push `codex/0028-decision-inbox-shadow-portfolio`, open one PR linked to #129,
 and wait for exact-head CI. Do not merge until CI and human review are green.
 Complete the Goal only after an objective-by-objective audit proves every
 requirement and repository evidence agrees.
+
+### Final integration checklist
+
+- [x] Decision Inbox/exact packet route, AAPL, honest crypto degradation, and
+  bounded paper-shadow/restart slices implemented with recorded acceptance.
+- [x] License closure, original broad verification result, focused repairs and
+  retained warnings mirrored into the tracked iteration checkpoint.
+- [ ] Final whole-branch review clean.
+- [ ] Single exact-head release gate passed on the reviewed checkpoint.
+- [ ] Milestone PR pushed/opened; exact-head CI and human review green.
+- [ ] Final objective-by-objective audit and Goal completion.

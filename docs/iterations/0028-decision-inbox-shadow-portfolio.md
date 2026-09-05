@@ -1,7 +1,8 @@
 # Iteration 0028 — Decision Inbox & Bounded Paper Shadow Portfolio
 
-- Status: in progress
+- Status: implementation and pre-PR verification complete; final integration pending
 - Started: 2026-09-05
+- Implementation verified: 2026-09-06
 - Tracking issue: [#129](https://github.com/ZP151/quantmesh/issues/129)
 - Branch: `codex/0028-decision-inbox-shadow-portfolio` from `origin/main` at
   `324d51d82ab4eae5e6176f7f91ce0631c5e76c32`
@@ -227,3 +228,145 @@ license closure must pass at the final PR boundary.
   final iteration evidence and integration gates; no Task 6 check ran here.
 - Detailed command/exit evidence and local screenshots:
   `.superpowers/sdd/2026-09-05-decision-inbox-shadow-portfolio/task-5-report.md`.
+
+### 2026-09-06 — Task 6 Steps 1–3: pre-PR integration checkpoint
+
+- Planner: all four approved product loops are implemented under #129. This
+  checkpoint closes license evidence, the broad verification attempt and its
+  bounded test corrections. Final whole-branch review, the exact-head release
+  gate, push/PR, exact-head CI and human review remain incomplete; the Goal and
+  integration track stay active.
+- Quant researcher: no new data, model, performance attribution or execution
+  authority entered this checkpoint. The prior paper-only, exact-identity,
+  evidence-blocked crypto and account-context boundaries remain the scope.
+- Exact parent HEAD: `422c88ae73ea70d0873505c6fac1d8b8f8d28d84` on
+  `codex/0028-decision-inbox-shadow-portfolio`. Checks ran in
+  `C:/Users/15492/Develop/QuantMesh-iteration-0028`.
+
+#### Verifier: environment and license closure
+
+The shared interpreter is
+`C:/Users/15492/Develop/QuantMesh/.venv/Scripts/python.exe`; Python application
+checks explicitly set `PYTHONPATH` to the worktree's `src` and root, and
+`PYTHONUTF8=1`. The frontend API check also prepended that interpreter's
+`Scripts` directory to `PATH`.
+
+- Shared Python `tools/license_review.py`: exit 1. It classified 66 installed
+  closure members but correctly refused 60 ambient packages, 22 version
+  mismatches and four absent pins (`cloudpickle`, `formulaic`,
+  `interface_meta`, `wrapt`). This is development-environment drift, not a
+  license-policy failure; no installed member was classified `UNKNOWN`.
+- Created an isolated local `license-venv` with the shared Python `-m venv`,
+  then ran its Python `-m pip install -q -c requirements-audit.txt -e
+  '.[dev,research,e2e,moomoo]'`; both exited 0. This reuses the existing release
+  extras and lock, without changing the shared environment.
+- Isolated Python `tools/license_review.py`: exit 0, 70 installed Windows
+  members reviewed from 76 pins, with six documented platform-only absences;
+  2.07s. The unchanged focused test
+  `tests/test_security.py::TestLicenseReview::test_every_installed_closure_member_classifies_allowed`
+  also passed in that environment: 1 passed in 2.14s, exit 0. No license tool,
+  allowlist, lock or `docs/licenses.md` change was justified.
+- Shared Python `tools/npm_license_review.py`: exit 0, all 646 locked npm
+  packages allowed. The isolated install retained only the pip upgrade notice
+  (`25.2` to `26.2.1`); pip was not upgraded.
+
+#### Verifier: one broad backend run and systematic failure classification
+
+The one full repository run used shared Python with the explicit worktree
+environment above:
+
+```powershell
+python -m pytest -q --basetemp=C:/Users/15492/AppData/Local/Temp/quantmesh-0028-task6-prepr-422c88ae-20260905
+```
+
+Session `34786` was retained through final exit 1: **3255 passed, 3 failed,
+9 skipped, 1 warning in 8016.81s (2:13:36)**. It was not restarted or rerun.
+The warning is the existing Starlette/httpx TestClient deprecation. This
+checkpoint does not claim an overall full-pytest exit 0.
+
+The failures were classified and addressed as follows:
+
+1. `test_security.py::TestLicenseReview::test_every_installed_closure_member_classifies_allowed`
+   failed because the shared environment lacked `cloudpickle`. The unchanged
+   isolated test and complete isolated license CLI both passed as recorded
+   above; no policy relaxation or shared-environment mutation was needed.
+2. `test_spa_e2e.py::test_nvda_second_confirmation_refusal_keeps_packet_and_proposal_visible`
+   passed its proposal-refusal, exact-identity and unchanged-order assertions,
+   then timed out after 30000ms in its cleanup reset POST.
+3. `test_spa_e2e.py::test_nvda_decision_safety_copy_keyboard_reduced_motion_and_mobile_boundary`
+   then received HTTP 409 on its initial reset, before reaching UI assertions.
+   The original response body was not retained.
+
+The unchanged two-test SPA pair passed in session `66324`: 2 passed in 138.05s,
+exit 0. One temporary observational rerun (session `85196`) reproduced the
+cleanup timeout: 1 failed, 1 passed in 158.70s, exit 1. The failing reset first
+drained two admitted requests for 6.8285s, then spent 21.7159s restoring/loading
+and validating the root; state rebinding took 0.0062s. At the 30.0096s client
+timeout, active requests were zero but the reset flag and lock were still held
+while response work finished. The lock subsequently released and the next
+focused test passed. The original next-test 409 is consistent with concurrent
+reset refusal; that exact response reason is an inference from the code and
+observed lock state, not a captured body.
+
+- Implementer: the reset runtime and both failing test bodies were unchanged
+  by 0028. The 30-second helper dates to 0027, and the request drain/lock to
+  0020. The observed legitimate reset work exhausted a timing-sensitive test
+  request budget. The sole correction is `timeout=120_000` on `_reset_demo`'s
+  POST, preserving its `status == 200` assertion and all product semantics.
+  There is no retry or swallowed 409. The temporary probe and bytecode were
+  removed before GREEN.
+- Focused GREEN ran the same two test node IDs with shared Python, `-q`,
+  `--durations=2`, and unique basetemp
+  `C:/Users/15492/AppData/Local/Temp/quantmesh-0028-task6-reset-green-20260906-c`.
+  Session `5875`: 2 passed in 165.50s, exit 0; first test call 82.14s and setup
+  43.86s. No warning was printed. Targeted Ruff passed after this correction.
+- The unmodified reproduction and observational runs used distinct temp roots
+  ending `reset-repro-20260906-a` and `reset-probe-20260906-b`. No
+  `.pytest-task*` roots were added. Full output is retained locally in
+  `task-6-pytest-final.md` and `task-6-reset-diagnosis-evidence.md` under the
+  task report directory below.
+
+#### Verifier: frontend and remaining pre-PR checks
+
+| Command | Final observed result |
+| --- | --- |
+| Shared `ruff.exe check src tests tools` | Exit 0, all checks passed |
+| `npm run check:api` | Exit 0, generated client current, 3.79s |
+| `npm run typecheck` | Exit 0; after fixture correction 1.87s |
+| `npm run lint` | Exit 0; after fixture correction 1.94s, four existing warnings |
+| `npm exec vitest -- run` | Corrected run exit 0, 197 passed across 23 files, 16.63s |
+| `npm run build` | Corrected run exit 0; 2083 modules, Vite build 483ms |
+| `git diff --check` | Exit 0 after both bounded corrections |
+| `git submodule status` | Exit 0, 1.49s; nine uninitialized `-` entries, no `+` drift or conflicts |
+
+- Implementer: initial full Vitest RED was 2 failed/195 passed in 16.16s.
+  Two legacy navigation tests still mocked `api.watchlist` and expected former
+  link labels. Their fixtures now use `api.decisionInbox`; assertions retain
+  each row's venue and fail-closed venue selection. Focused GREEN was 13 passed
+  in 4.52s. The first build caught an overly broad fixture venue type; the
+  generated API's exact venue union corrected it before the final build.
+- Retained warnings: Fast Refresh component-export warnings in `state.tsx`,
+  `ui/badge.tsx`, `ui/button.tsx`, and `preferences.tsx`; the existing Vite
+  chunk-size warning above 500 kB. No product source, generated client or
+  packaged SPA changed in Task 6.
+- Reviewer: individual slice reviews remain recorded above. One final
+  whole-branch review is the next gate; it has not run at this checkpoint.
+  The previously noted frozen monitoring-metadata edge remains outside this
+  task and was not implicated by the final verification failures.
+
+#### Completion boundary
+
+- [x] Four approved functional slices implemented and slice evidence recorded.
+- [x] Python and npm license closure verified without changing license policy.
+- [x] One broad pre-PR run captured; failures classified, focused corrections
+  verified, and all other pre-PR checks recorded honestly.
+- [x] Task 6 Steps 1–3: tracked integration evidence and tested checkpoint.
+- [ ] One final whole-branch review.
+- [ ] One exact-head release gate after review.
+- [ ] Push, milestone PR, exact-head CI and human review.
+- [ ] Final objective-by-objective Goal completion audit.
+
+Local command outputs, retained sessions and detailed diagnosis:
+`.superpowers/sdd/2026-09-05-decision-inbox-shadow-portfolio/task-6-report.md`.
+This tracked ledger mirrors the material evidence so resumption does not
+depend on the ignored local report.

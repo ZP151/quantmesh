@@ -203,7 +203,7 @@ def _wait_demo_attached(page) -> None:
 
 
 def _reset_demo(page, base_url: str) -> None:
-    response = page.request.post(f"{base_url}/api/demo/reset")
+    response = page.request.post(f"{base_url}/api/demo/reset", timeout=120_000)
     assert response.status == 200
 
 

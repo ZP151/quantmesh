@@ -1,6 +1,7 @@
 # Active Goal
 
-- Status: active — iteration 0028 Slices 1–4 complete; Task 6 integration pending.
+- Status: active — iteration 0028 implementation and pre-PR verification
+  complete; final review and integration gates pending.
 - Objective: give a research-minded individual active trader one watchlist-level
   Decision Inbox that identifies the next evidence-backed action, opens the
   exact DecisionPacket, and summarizes its bounded paper proposal, order,
@@ -21,9 +22,18 @@
   per demonstrable slice, targeted verification during development, one final
   exact-head CI boundary. One 0028 product track and one independent 0021 soak
   maintenance track may coexist; neither modifies the other's files or state.
-- Current frontier: Task 6 — license closure, iteration evidence and the final
-  integration gate. The bounded paper shadow summary passed its targeted
-  verification and self-review; no further product slice is open.
+- Current frontier: one final whole-branch review, then the single exact-head
+  release gate, branch push, milestone PR, exact-head CI and human review.
+  Task 6 Steps 1–3 are complete; Steps 4–5 remain open. No further product
+  slice is open and the Goal is not complete.
+- Pre-PR evidence at parent `422c88ae73ea70d0873505c6fac1d8b8f8d28d84`:
+  the one full pytest run exited 1 with 3255 passed, 3 failed, 9 skipped and
+  1 warning in 8016.81s. Systematic diagnosis confirmed shared-environment
+  license drift and a test cleanup timeout; the exact isolated license test
+  and corrected SPA pair passed. Full frontend verification passed 197 tests,
+  and isolated Python/npm license closure passed. The active iteration records
+  commands, corrections and retained warnings; no full pytest exit-0 claim or
+  release-gate result is made at this checkpoint.
 - External gate: none. Provider/OpenD, real market calls and model services are
   not required and are prohibited expansion for this iteration.
 
