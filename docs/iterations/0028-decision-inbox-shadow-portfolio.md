@@ -150,3 +150,14 @@ license closure must pass at the final PR boundary.
   installed at `chromium_headless_shell-1234`; no browser was downloaded or
   installed. The AAPL Inbox-to-saved-Watch-reload assertion remains covered in
   the committed test, with API/unit acceptance evidence recorded above.
+
+### 2026-09-05 — Slice 2 Task 3 verification correction
+
+- Review round 1 found two verification gaps, not product defects. With the
+  repository-declared Playwright Chromium installed in the standard cache, the
+  exact AAPL Inbox → saved Watch → exact-packet reload browser acceptance passed
+  (1 passed, 66.27 seconds).
+- The required combined backend/demo check passed with 50 passed and 1 skipped
+  in 711.78 seconds. Targeted Ruff and `git diff --check` passed. Task 3 is now
+  complete; the active frontier advances to Slice 3 / Task 4, honest BTC/SOL
+  Reject/Watch-only degradation.

@@ -395,7 +395,7 @@ for symbol in ("AAPL", "NVDA"):
 Update row-count/provenance assertions only where actual deterministic output
 changes. Never hand-author eligibility or copy NVDA artifacts.
 
-- [ ] **Step 4: Run GREEN, commit and review Slice 2**
+- [x] **Step 4: Run GREEN, commit and review Slice 2**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/test_demo_instrument_workspace.py tests/test_demo.py tests/test_demo_reset_runtime.py -q
