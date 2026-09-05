@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 
 import { ApiError, api, type DecisionPacket, type InstrumentWorkspace } from '@/lib/api'
 import { dateTime } from '@/lib/format'
@@ -239,6 +239,7 @@ function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
       <PreferencesProvider>
         <MemoryRouter initialEntries={[path]}>
           <main data-testid="app-main">
+            <LocationProbe />
             <Routes>
               <Route path="/instruments/:venue/:symbol" element={<InstrumentWorkspaceScreen />} />
             </Routes>
@@ -247,6 +248,23 @@ function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
       </PreferencesProvider>
     </QueryClientProvider>,
   )
+}
+
+function LocationProbe() {
+  const location = useLocation()
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>
+}
+
+function exactPacket(packetId: string, overrides: Partial<DecisionPacket> = {}): DecisionPacket {
+  return {
+    ...workspace.decision.draft,
+    disposition: 'watch',
+    operator_reason: 'Reopen this exact packet.',
+    packet_id: packetId,
+    parent_packet_id: workspace.decision.draft.packet_id,
+    version: 2,
+    ...overrides,
+  }
 }
 
 beforeEach(() => {
@@ -310,6 +328,84 @@ beforeEach(() => {
 })
 
 describe('InstrumentWorkspaceScreen', () => {
+  it('uses an explicit packet query as the displayed packet', async () => {
+    const selected = exactPacket('packet-explicit-111111111111111111111111')
+    mockedDecisionPacket.mockResolvedValue(selected)
+    mockedWorkspace.mockResolvedValue({
+      ...workspace,
+      decision: { draft: workspace.decision.draft, latest: exactPacket('packet-latest-222222222222222222222222') },
+    })
+
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-explicit-111111111111111111111111')
+
+    expect(await screen.findByText(selected.packet_id)).toBeInTheDocument()
+    expect(screen.queryByText('packet-latest-222222222222222222222222')).not.toBeInTheDocument()
+    expect(mockedDecisionPacket).toHaveBeenCalledWith(selected.packet_id)
+  })
+
+  it('refuses a missing or mismatched explicit packet without falling back', async () => {
+    mockedDecisionPacket.mockRejectedValueOnce(new ApiError(404, 'Exact packet is unavailable'))
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-missing-111111111111111111111111')
+    expect(await screen.findByText('Exact packet is unavailable')).toBeInTheDocument()
+    expect(screen.queryByText(workspace.decision.draft.packet_id)).not.toBeInTheDocument()
+  })
+
+  it('refuses an explicit packet whose venue, symbol, or range mismatches the URL', async () => {
+    mockedDecisionPacket.mockResolvedValue(exactPacket('packet-mismatched-111111111111111111111111', {
+      selected_range: '1m',
+    }))
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-mismatched-111111111111111111111111')
+
+    expect(await screen.findByText('The requested DecisionPacket does not match this venue, symbol, and range.')).toBeInTheDocument()
+    expect(screen.queryByText(workspace.decision.draft.packet_id)).not.toBeInTheDocument()
+  })
+
+  it('keeps an explicit packet while workspace data refreshes', async () => {
+    const selected = exactPacket('packet-explicit-333333333333333333333333')
+    mockedDecisionPacket.mockResolvedValue(selected)
+    mockedWorkspace
+      .mockResolvedValueOnce({ ...workspace, decision: { draft: workspace.decision.draft, latest: selected } })
+      .mockResolvedValue({
+        ...workspace,
+        decision: { draft: workspace.decision.draft, latest: exactPacket('packet-newer-444444444444444444444444') },
+      })
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-explicit-333333333333333333333333')
+    expect(await screen.findByText(selected.packet_id)).toBeInTheDocument()
+
+    await act(async () => publishLiveUpdate({
+      data_time: '2026-08-08T12:00:30Z', instrument: 'NVDA', kind: 'quote', payload: { ask: 185, bid: 184 },
+      provenance: 'demo-synthetic', received_at: '2026-08-08T12:00:30Z', sequence: 13,
+      sequence_gap: false, state: 'connected', state_note: null, venue: 'moomoo',
+    }))
+    await waitFor(() => expect(mockedWorkspace).toHaveBeenCalledTimes(2))
+    expect(screen.getByText(selected.packet_id)).toBeInTheDocument()
+    expect(screen.queryByText('packet-newer-444444444444444444444444')).not.toBeInTheDocument()
+  })
+
+  it('replaces the packet query with an action child and removes it for new analysis', async () => {
+    const parent = {
+      ...workspace.decision.draft,
+      packet_id: 'packet-parent-555555555555555555555555',
+    } satisfies DecisionPacket
+    const child = exactPacket('packet-child-666666666666666666666666', {
+      parent_packet_id: parent.packet_id,
+      version: 3,
+    })
+    mockedDecisionPacket.mockResolvedValue(parent)
+    mockedApplyDecisionPacketAction.mockResolvedValue({ packet: child, proposal: null })
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-parent-555555555555555555555555')
+    const user = userEvent.setup()
+
+    await user.type(await screen.findByLabelText('Decision reason'), 'Preserve exact identity')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(
+      '/instruments/moomoo/NVDA?range=6m&packet=packet-child-666666666666666666666666',
+    ))
+
+    await user.click(screen.getByRole('button', { name: 'New analysis' }))
+    expect(screen.getByTestId('location')).toHaveTextContent('/instruments/moomoo/NVDA?range=6m')
+    expect(screen.getByTestId('location')).not.toHaveTextContent('packet=')
+  })
   it('keeps local monitoring save-first for an unsaved DecisionPacket', async () => {
     renderWorkspace()
 

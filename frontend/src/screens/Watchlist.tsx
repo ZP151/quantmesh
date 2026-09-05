@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
-import { api } from '@/lib/api'
-import { instrumentPath } from '@/lib/instrument-route'
+import { api, type DecisionInbox } from '@/lib/api'
+import { decisionPacketPath } from '@/lib/instrument-route'
 import { money } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
@@ -12,7 +10,7 @@ import { usePreferences } from '@/lib/preferences'
  * consumes the identity carried by its own API row; symbols are never
  * resolved by a first-match lookup across venues. */
 export function WatchlistScreen() {
-  const query = useSurface(['watchlist'], api.watchlist)
+  const query = useSurface(['decision-inbox'], api.decisionInbox)
   const { t } = usePreferences()
 
   return (
@@ -23,76 +21,96 @@ export function WatchlistScreen() {
       <Surface
         query={query}
         title={t('screen.watchlist.title')}
-        empty={
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base text-muted-foreground">{t('screen.watchlist.empty')}</CardTitle>
-            </CardHeader>
-          </Card>
-        }
+        empty={<p className="border-y border-border py-6 text-sm text-muted-foreground">{t('screen.watchlist.empty')}</p>}
       >
-        {(watchlist) => (
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
+        {(inbox) => (
+          <div className="border-y border-border">
                 <table className="w-full text-sm">
-                  <thead>
+                  <thead className="hidden sm:table-header-group">
                     <tr className="border-b border-border text-left text-xs text-muted-foreground">
                       <th className="px-4 py-2.5 font-medium">{t('table.symbol')}</th>
                       <th className="px-4 py-2.5 font-medium">{t('table.venue')}</th>
                       <th className="px-4 py-2.5 text-right font-medium">{t('table.mark')}</th>
-                      <th className="px-4 py-2.5 text-right font-medium">{t('table.action')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('screen.watchlist.decision')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('table.action')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {watchlist.entries.map((entry) => {
-                      const venue = typeof entry.venue === 'string' && entry.venue.trim().length > 0
-                        ? entry.venue
+                    {inbox.entries.map((entry) => {
+                      const exactPath = entry.venue !== null
+                        && entry.packet_id !== null
+                        && entry.selected_range !== null
+                        ? decisionPacketPath(entry.venue, entry.symbol, entry.selected_range, entry.packet_id)
                         : null
                       return (
-                        <tr key={`${entry.venue ?? 'unknown'}:${entry.symbol}`} className="border-b border-border/60 last:border-0">
-                          <td className="px-4 py-2.5 font-mono font-medium">
-                            {venue !== null ? (
+                        <tr key={`${entry.venue ?? 'unknown'}:${entry.symbol}`} className="block border-b border-border/60 py-2 last:border-0 sm:table-row sm:py-0">
+                          <td className="block px-4 py-1 font-mono font-medium sm:table-cell sm:py-2.5">
+                            {entry.symbol}
+                          </td>
+                          <td className="block px-4 py-1 font-mono text-xs text-muted-foreground sm:table-cell sm:py-2.5">
+                            {entry.venue ?? '—'}
+                          </td>
+                          <td className="block px-4 py-1 font-mono tabular-nums sm:table-cell sm:py-2.5 sm:text-right">
+                            {money(entry.mark_context.value)}
+                            <span className="ml-2 text-[10px] text-muted-foreground">
+                              {markStatus(entry.mark_context.status, t)}
+                            </span>
+                          </td>
+                          <td className="block px-4 py-1 sm:table-cell sm:py-2.5">
+                            <p className="text-xs font-medium">{attentionState(entry.attention_state, t)}</p>
+                            <p className="mt-0.5 max-w-sm text-xs text-muted-foreground">{entry.attention_reason}</p>
+                          </td>
+                          <td className="block px-4 py-1 sm:table-cell sm:py-2.5">
+                            {exactPath !== null ? (
                               <Link
-                                className="underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                to={instrumentPath(venue, entry.symbol)}
+                                className="font-mono text-xs underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                to={exactPath}
                               >
-                                {entry.symbol}
+                                {t('screen.watchlist.openExactPacket')}
                               </Link>
-                            ) : entry.symbol}
-                          </td>
-                          <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
-                            {venue ?? '—'}
-                          </td>
-                          <td className="px-4 py-2.5 text-right font-mono tabular-nums">{money(entry.mark)}</td>
-                          <td className="px-4 py-2.5 text-right">
-                            {venue !== null ? <Button
-                              nativeButton={false}
-                              size="sm"
-                              variant="ghost"
-                              className="font-mono text-[11px]"
-                              render={
-                                <Link
-                                  to={`/trading/order?venue=${encodeURIComponent(venue)}&symbol=${encodeURIComponent(entry.symbol)}`}
-                                />
-                              }
-                            >
-                              {t('table.trade')}
-                            </Button> : (
-                              <span className="text-xs text-muted-foreground">
-                                {t('screen.watchlist.notInUniverse')}
-                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">{t('screen.watchlist.notInUniverse')}</span>
                             )}
                           </td>
                         </tr>
                       )})}
                   </tbody>
                 </table>
-              </div>
-            </CardContent>
-          </Card>
+          </div>
         )}
       </Surface>
     </Page>
   )
+}
+
+function attentionState(
+  state: DecisionInbox['entries'][number]['attention_state'],
+  t: ReturnType<typeof usePreferences>['t'],
+): string {
+  const keys = {
+    blocked: 'screen.watchlist.state.blocked',
+    draft: 'screen.watchlist.state.draft',
+    not_started: 'screen.watchlist.state.notStarted',
+    paper_open: 'screen.watchlist.state.paperOpen',
+    paper_pending_confirmation: 'screen.watchlist.state.pendingConfirmation',
+    rejected: 'screen.watchlist.state.rejected',
+    review_available: 'screen.watchlist.state.reviewAvailable',
+    reviewed: 'screen.watchlist.state.reviewed',
+    unavailable: 'screen.watchlist.state.unavailable',
+    watch_triggered: 'screen.watchlist.state.watchTriggered',
+    watching: 'screen.watchlist.state.watching',
+  } as const
+  return t(keys[state as keyof typeof keys])
+}
+
+function markStatus(
+  state: 'available' | 'stale' | 'unavailable',
+  t: ReturnType<typeof usePreferences>['t'],
+): string {
+  const keys = {
+    available: 'screen.watchlist.mark.available',
+    stale: 'screen.watchlist.mark.stale',
+    unavailable: 'screen.watchlist.mark.unavailable',
+  } as const
+  return t(keys[state])
 }

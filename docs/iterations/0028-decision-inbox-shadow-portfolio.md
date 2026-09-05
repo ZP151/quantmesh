@@ -92,3 +92,20 @@ license closure must pass at the final PR boundary.
 - The executable plan maps six reviewed tasks across four visible slices, uses
   RED/GREEN cycles, keeps broad verification at coherent boundaries and retains
   one final exact-head release gate. Slice 1 Task 1 is the active frontier.
+
+### 2026-09-05 — Slice 1 Task 2: Watchlist Decision Inbox and exact packet route
+
+- Watchlist now reads the strict Decision Inbox projection and renders one
+  separator-first semantic table with mark context, attention state, safe reason
+  and a single exact-packet deep link when packet identity is available.
+- Instrument Workspace treats `?packet=` as authoritative: it waits for that
+  exact packet, refuses 404 and context mismatch without a latest-packet
+  fallback, preserves the explicit identity across background refreshes, writes
+  action children back to the URL, and removes `packet` for New analysis.
+- The generated OpenAPI client now includes the Inbox GET contract; the
+  packaged SPA bundle was rebuilt from the same sources.
+- Evidence: frontend focused suite 28 passed; API client check, typecheck,
+  lint and build passed; generated-artifact check passed; selected inbox/exact
+  Python suite 13 passed (15 deselected); action URL browser regression 3
+  passed (13 deselected); `git diff --check` passed. The detailed Task 2 record
+  is `.superpowers/sdd/2026-09-05-decision-inbox-shadow-portfolio/task-2-report.md`.
