@@ -122,3 +122,14 @@ license closure must pass at the final PR boundary.
   any exact-packet request or latest-packet fallback.
 - Slice 1 is complete after its allowed correction round. The next frontier is
   Slice 2 / Task 3: AAPL deterministic decision and pending Paper path.
+
+### 2026-09-05 — Slice 1 final selection-rule correction
+
+- The approved design overrides the plan's former flat attention ordering:
+  attention-required terminal states retain stable priority, passive terminal
+  states select solely by descending recency, and drafts are fallback only.
+- A RED regression proved an older confirmed Paper packet previously hid a
+  newer Reject action. The two-tier selector now returns that newer passive
+  action while retaining pending-attention-over-newer-draft behavior.
+- Evidence: named RED failed as expected; named GREEN passed; Inbox suite
+  passed 13 tests; Ruff and `git diff --check` passed. See the Task 1 report.

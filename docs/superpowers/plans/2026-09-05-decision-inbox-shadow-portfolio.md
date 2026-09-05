@@ -152,10 +152,12 @@ must never include filesystem paths or raw record text.
 - [x] **Step 4: Implement deterministic selection and enrichment**
 
 Read stores once, group by `(venue, symbol)`, resolve candidates without
-writes, and rank by fixed attention priority then descending
-`(as_of, created_at, version, packet_id)`. Required priority is unavailable,
-blocked, watch-triggered, pending-Paper, review-available, paper-open, watching,
-reviewed, rejected, draft.
+writes, and select in two tiers. First, terminal actions requiring attention
+win by the fixed priority unavailable, blocked, watch-triggered, pending-Paper,
+review-available, then descending `(as_of, created_at, version, packet_id)`.
+Otherwise, paper-open, watching, reviewed and rejected terminal actions compete
+solely by that descending recency key. Drafts are considered only when no
+terminal action exists.
 
 At the Slice 1 boundary, resolve core packet/proposal states only: draft,
 rejected, watching, pending Paper, blocked/rejected proposal, confirmed/open and

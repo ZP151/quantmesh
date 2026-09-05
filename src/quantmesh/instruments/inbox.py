@@ -125,17 +125,12 @@ class DecisionInboxError(StrictContract):
     message: str = Field(min_length=1, max_length=300)
 
 
-_ATTENTION_PRIORITY = {
+_ATTENTION_REQUIRED_PRIORITY = {
     DecisionAttentionState.UNAVAILABLE: 0,
     DecisionAttentionState.BLOCKED: 1,
     DecisionAttentionState.WATCH_TRIGGERED: 2,
     DecisionAttentionState.PAPER_PENDING_CONFIRMATION: 3,
     DecisionAttentionState.REVIEW_AVAILABLE: 4,
-    DecisionAttentionState.PAPER_OPEN: 5,
-    DecisionAttentionState.WATCHING: 6,
-    DecisionAttentionState.REVIEWED: 7,
-    DecisionAttentionState.REJECTED: 8,
-    DecisionAttentionState.DRAFT: 9,
 }
 
 
@@ -255,16 +250,26 @@ class DecisionInboxService:
             self._candidate(packet, proposals, forecasts, now)
             for packet in packets
         ]
-        state, reason, packet, paper = max(
-            candidates,
-            key=lambda item: (
-                -_ATTENTION_PRIORITY[item[0]],
-                item[2].as_of,
-                item[2].created_at,
-                item[2].version,
-                item[2].packet_id,
-            ),
-        )
+        attention_required = [
+            item for item in candidates if item[0] in _ATTENTION_REQUIRED_PRIORITY
+        ]
+        terminal = [
+            item
+            for item in candidates
+            if item[2].disposition is not DecisionDisposition.DRAFT
+        ]
+        if attention_required:
+            state, reason, packet, paper = max(
+                attention_required,
+                key=lambda item: (
+                    -_ATTENTION_REQUIRED_PRIORITY[item[0]],
+                    *self._recency_key(item),
+                ),
+            )
+        elif terminal:
+            state, reason, packet, paper = max(terminal, key=self._recency_key)
+        else:
+            state, reason, packet, paper = max(candidates, key=self._recency_key)
         position_context = self._position_context(
             record.venue,
             record.symbol,
@@ -439,6 +444,18 @@ class DecisionInboxService:
     def _forecasts_once(self) -> tuple[object, ...]:
         registry = self._forecast_registry_provider()
         return tuple(registry.all()) if registry is not None else ()
+
+    @staticmethod
+    def _recency_key(
+        candidate: tuple[
+            DecisionAttentionState,
+            str,
+            DecisionPacket,
+            DecisionInboxPaperSummary | None,
+        ],
+    ) -> tuple[datetime, datetime, int, str]:
+        packet = candidate[2]
+        return (packet.as_of, packet.created_at, packet.version, packet.packet_id)
 
     @staticmethod
     def _proposal_matches_packet(proposal: PaperProposal, packet: DecisionPacket) -> bool:

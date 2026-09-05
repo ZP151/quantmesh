@@ -148,6 +148,28 @@ def test_inbox_projects_a_saved_draft_when_no_terminal_action_exists(tmp_path: P
     assert nvda["attention_state"] == "draft"
 
 
+def test_inbox_prefers_newer_passive_terminal_action_over_older_open_paper(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        paper = _save_and_act(client, "NVDA", disposition="paper_proposal")
+        proposal = paper["proposal"]
+        confirmation = client.post(
+            f"/api/paper/proposals/{proposal['id']}/confirm",
+            json={"confirmation_token": proposal["confirmation_token"]},
+        )
+        app.state.instrument_workspace._now = lambda: SCENARIO.anchor + timedelta(minutes=1)
+        rejected = _save_and_act(client, "NVDA", disposition="reject")
+        response = client.get("/api/decision-packets")
+
+    assert confirmation.status_code == 200
+    assert response.status_code == 200
+    nvda = _entry(response.json(), "moomoo", "NVDA")
+    assert nvda["packet_id"] == rejected["packet"]["packet_id"]
+    assert nvda["attention_state"] == "rejected"
+
+
 @pytest.mark.parametrize(
     ("advance", "expected_state"),
     [
