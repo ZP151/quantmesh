@@ -278,6 +278,12 @@ def instrument_router() -> APIRouter:
     @router.get(
         "/decision-packets",
         response_model=DecisionInbox,
+        responses={
+            409: {
+                "model": DecisionInboxError,
+                "description": "Decision Inbox replay is unavailable.",
+            },
+        },
         name="decision_inbox",
     )
     def decision_inbox(request: Request) -> DecisionInbox:

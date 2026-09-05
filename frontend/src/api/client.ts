@@ -1772,6 +1772,16 @@ export interface components {
             symbol: string;
             venue: components["schemas"]["Venue"] | null;
         };
+        /** DecisionInboxError */
+        DecisionInboxError: {
+            /**
+             * Code
+             * @constant
+             */
+            code: "decision_inbox_replay_unavailable";
+            /** Message */
+            message: string;
+        };
         /** DecisionInboxMarkContext */
         DecisionInboxMarkContext: {
             /** Reason */
@@ -3405,6 +3415,15 @@ export interface operations {
                     "application/json": components["schemas"]["DecisionInbox"];
                 };
             };
+            /** @description Decision Inbox replay is unavailable. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionInboxError"];
+                };
+            };
         };
     };
     api_save_decision_packet: {
@@ -4415,6 +4434,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DecisionInbox"];
+                };
+            };
+            /** @description Decision Inbox replay is unavailable. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionInboxError"];
                 };
             };
         };

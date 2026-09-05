@@ -627,7 +627,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 const generatedApi = createClient<paths>()
 
-function generatedApiError(response: Response, error: unknown): ApiError {
+export function generatedApiError(response: Response, error: unknown): ApiError {
   let detail = `${response.status} ${response.statusText}`
   if (
     typeof error === 'object'
@@ -646,6 +646,13 @@ function generatedApiError(response: Response, error: unknown): ApiError {
     && typeof error.detail.message === 'string'
   ) {
     detail = error.detail.message
+  } else if (
+    typeof error === 'object'
+    && error !== null
+    && 'message' in error
+    && typeof error.message === 'string'
+  ) {
+    detail = error.message
   }
   return new ApiError(response.status, detail)
 }

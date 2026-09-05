@@ -29,6 +29,7 @@ import { retainSameInstrument } from './instrument/workspace-query'
 
 const VENUES: readonly HistoricalVenue[] = ['internal', 'moomoo', 'hyperliquid', 'polymarket', 'kalshi']
 const RANGES: readonly HistoryRange[] = ['1d', '5d', '1m', '3m', '6m', '1y']
+const DECISION_PACKET_ID = /^packet-[0-9a-f]{24}$/
 
 function isVenue(value: string): value is HistoricalVenue {
   return VENUES.includes(value as HistoricalVenue)
@@ -55,7 +56,11 @@ export function InstrumentWorkspaceScreen() {
   const { symbol = '', venue = '' } = useParams<{ symbol: string; venue: string }>()
   const [search, setSearch] = useSearchParams()
   const range = historyRange(search.get('range'))
-  const requestedPacketId = search.get('packet')
+  const requestedPacketValue = search.get('packet')
+  const requestedPacketId = requestedPacketValue !== null && DECISION_PACKET_ID.test(requestedPacketValue)
+    ? requestedPacketValue
+    : null
+  const invalidRequestedPacketId = requestedPacketValue !== null && requestedPacketId === null
   const horizon = forecastHorizon(search.get('horizon'))
   const compare = search.getAll('compare').filter(Boolean).slice(0, 3)
   const mode = search.get('mode') === 'line' ? 'line' : 'candles'
@@ -108,10 +113,12 @@ export function InstrumentWorkspaceScreen() {
     refetchInterval: 5_000,
     retry: false,
   })
-  const selectedPacketId = requestedPacketId
+  const selectedPacketId = invalidRequestedPacketId
+    ? null
+    : requestedPacketId
     ?? (packetSelection?.mode === 'persisted' ? packetSelection.packetId : null)
   const exactPacketQuery = useQuery({
-    enabled: selectedPacketId !== null,
+    enabled: !invalidRequestedPacketId && selectedPacketId !== null,
     queryFn: () => api.decisionPacket(selectedPacketId!),
     queryKey: ['decision-packet', selectedPacketId],
     retry: false,
@@ -122,6 +129,9 @@ export function InstrumentWorkspaceScreen() {
 
   if (!validVenue || symbol.length === 0) {
     return <WorkspaceError error={new Error(t('screen.workspace.invalidRoute'))} symbol={symbol} venue={venue} />
+  }
+  if (invalidRequestedPacketId) {
+    return <WorkspaceError error={new Error(t('screen.workspace.invalidPacketId'))} symbol={symbol} venue={venue} />
   }
   if (requestedPacketId !== null && exactPacketQuery.isPending) return <WorkspaceLoading />
   if (requestedPacketId !== null && exactPacketQuery.isError) {

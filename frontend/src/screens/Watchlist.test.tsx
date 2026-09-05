@@ -76,7 +76,7 @@ beforeEach(() => {
   mockedDecisionInbox.mockResolvedValue(inbox)
 })
 
-it('opens the exact pending packet and renders non-actionable inbox states', async () => {
+it('opens the exact pending packet and routes recoverable inbox states', async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
@@ -92,5 +92,8 @@ it('opens the exact pending packet and renders non-actionable inbox states', asy
       '/instruments/moomoo/NVDA?range=6m&packet=packet-111111111111111111111111',
     )
   expect(screen.getByText('Pending confirmation')).toBeInTheDocument()
-  expect(screen.getAllByText('Identity unavailable').length).toBeGreaterThan(0)
+  expect(screen.getByRole('link', { name: 'Open workspace' }))
+    .toHaveAttribute('href', '/instruments/moomoo/AAPL')
+  expect(screen.getByRole('link', { name: 'Choose venue' }))
+    .toHaveAttribute('href', '/markets')
 })

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api, type DecisionInbox } from '@/lib/api'
-import { decisionPacketPath } from '@/lib/instrument-route'
+import { decisionPacketPath, instrumentPath } from '@/lib/instrument-route'
 import { money } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
@@ -42,6 +42,9 @@ export function WatchlistScreen() {
                         && entry.selected_range !== null
                         ? decisionPacketPath(entry.venue, entry.symbol, entry.selected_range, entry.packet_id)
                         : null
+                      const recoveryPath = entry.venue === null
+                        ? '/markets'
+                        : instrumentPath(entry.venue, entry.symbol)
                       return (
                         <tr key={`${entry.venue ?? 'unknown'}:${entry.symbol}`} className="block border-b border-border/60 py-2 last:border-0 sm:table-row sm:py-0">
                           <td className="block px-4 py-1 font-mono font-medium sm:table-cell sm:py-2.5">
@@ -69,7 +72,14 @@ export function WatchlistScreen() {
                                 {t('screen.watchlist.openExactPacket')}
                               </Link>
                             ) : (
-                              <span className="text-xs text-muted-foreground">{t('screen.watchlist.notInUniverse')}</span>
+                              <Link
+                                className="font-mono text-xs underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                to={recoveryPath}
+                              >
+                                {entry.venue === null
+                                  ? t('screen.watchlist.chooseVenue')
+                                  : t('screen.watchlist.openWorkspace')}
+                              </Link>
                             )}
                           </td>
                         </tr>

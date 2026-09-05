@@ -109,3 +109,16 @@ license closure must pass at the final PR boundary.
   Python suite 13 passed (15 deselected); action URL browser regression 3
   passed (13 deselected); `git diff --check` passed. The detailed Task 2 record
   is `.superpowers/sdd/2026-09-05-decision-inbox-shadow-portfolio/task-2-report.md`.
+
+### 2026-09-05 — Slice 1 completion correction
+
+- Final Important-finding correction keeps Watchlist recovery actionable without
+  inventing a new surface: venue-scoped rows without a packet open their exact
+  Instrument Workspace without `packet`, while venue-less legacy rows open the
+  existing Markets venue-selection surface.
+- The Inbox GET OpenAPI contract now documents its safe typed 409 replay error;
+  the generated client is current and the frontend preserves its top-level safe
+  message. Empty or malformed `packet` query values are rejected locally before
+  any exact-packet request or latest-packet fallback.
+- Slice 1 is complete after its allowed correction round. The next frontier is
+  Slice 2 / Task 3: AAPL deterministic decision and pending Paper path.

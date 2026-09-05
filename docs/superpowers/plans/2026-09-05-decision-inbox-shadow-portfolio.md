@@ -71,7 +71,7 @@ TypeScript 5.9, TanStack Query, React Router, Vitest, Playwright, Ruff, Oxlint.
 - Adds `GET /decision-packets`; the double mount exposes
   `/api/decision-packets` beside the existing POST.
 
-- [ ] **Step 1: Write RED service and API tests**
+- [x] **Step 1: Write RED service and API tests**
 
 Use real demo stores and API calls. Pin the highest-risk selection rule:
 
@@ -100,7 +100,7 @@ packet JSONL=HTTP 409 with code `decision_inbox_replay_unavailable`, configured
 untimestamped mark=unavailable freshness, and
 `position_context.attribution == "current-account-context-only"`.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/test_decision_inbox.py tests/test_decision_packet_api.py -q
@@ -108,7 +108,7 @@ untimestamped mark=unavailable freshness, and
 
 Expected: import/route failures because the Inbox does not exist.
 
-- [ ] **Step 3: Implement strict contracts**
+- [x] **Step 3: Implement strict contracts**
 
 Use frozen, strict Pydantic models. The core public shape is:
 
@@ -149,7 +149,7 @@ Require safe reasons for blocked/unavailable and canonical IDs everywhere.
 `DecisionInboxError` carries a literal machine code plus a safe message; it
 must never include filesystem paths or raw record text.
 
-- [ ] **Step 4: Implement deterministic selection and enrichment**
+- [x] **Step 4: Implement deterministic selection and enrichment**
 
 Read stores once, group by `(venue, symbol)`, resolve candidates without
 writes, and rank by fixed attention priority then descending
@@ -169,7 +169,7 @@ Configured fallback marks retain their numeric display but say
 `configured mark has no freshness evidence`. Compute current position context
 only from the exact venue/symbol account key and an allowed mark.
 
-- [ ] **Step 5: Wire current app state and GET route**
+- [x] **Step 5: Wire current app state and GET route**
 
 Construct `app.state.decision_inbox` after packet/review services. Pass dynamic
 providers:
@@ -189,7 +189,7 @@ now=clock,
 The route returns 404 when absent and maps replay/identity failures to a 409
 `DecisionInboxError(code="decision_inbox_replay_unavailable", ...)`.
 
-- [ ] **Step 6: Run GREEN and commit**
+- [x] **Step 6: Run GREEN and commit**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/test_decision_inbox.py tests/test_decision_packet_api.py tests/test_demo_reset_runtime.py -q
@@ -226,7 +226,7 @@ git commit -m "feat: add read-only decision inbox projection"
   `decisionPacketPath(venue, symbol, range, packetId)`, and exact URL selection
   through `?range=<range>&packet=<packet_id>`.
 
-- [ ] **Step 1: Write frontend RED tests**
+- [x] **Step 1: Write frontend RED tests**
 
 Use a typed fixture with NVDA pending Paper, AAPL not started and a venue-less
 unavailable row:
@@ -246,7 +246,7 @@ venue/symbol/range mismatch without fallback, keep the exact ID during a
 background refresh, update the URL to an action child, and remove `packet` on
 “New analysis”.
 
-- [ ] **Step 2: Run frontend RED**
+- [x] **Step 2: Run frontend RED**
 
 ```powershell
 Set-Location frontend
@@ -256,7 +256,7 @@ npm exec vitest -- run src/screens/Watchlist.test.tsx src/screens/InstrumentWork
 Expected: failures for missing generated GET type, wrapper, route helper and
 URL-authoritative selection.
 
-- [ ] **Step 3: Generate and wrap the OpenAPI client**
+- [x] **Step 3: Generate and wrap the OpenAPI client**
 
 ```powershell
 Set-Location frontend
@@ -273,7 +273,7 @@ async decisionInbox(): Promise<DecisionInbox> {
 },
 ```
 
-- [ ] **Step 4: Implement the compact Watchlist surface**
+- [x] **Step 4: Implement the compact Watchlist surface**
 
 Use `api.decisionInbox` as the screen source. Keep one semantic desktop table
 and responsive cells below `sm`; add no nested decorative dashboard cards.
@@ -296,7 +296,7 @@ export function decisionPacketPath(
 Teach `generatedApiError` to read either the existing string `detail` or the
 new typed `{code, message}` detail without changing status handling.
 
-- [ ] **Step 5: Make exact URL selection authoritative**
+- [x] **Step 5: Make exact URL selection authoritative**
 
 Parse `requestedPacketId = search.get('packet')`. While its exact query is
 pending, do not render workspace latest. On 404 or context mismatch, render
@@ -305,7 +305,7 @@ the active persisted selection from it. Action results replace the URL packet
 with the child ID; “New analysis” removes it. Background workspace refresh must
 not replace the explicit packet.
 
-- [ ] **Step 6: Run GREEN and Slice 1 E2E**
+- [x] **Step 6: Run GREEN and Slice 1 E2E**
 
 ```powershell
 Set-Location frontend
@@ -319,7 +319,7 @@ Set-Location ..
 git diff --check
 ```
 
-- [ ] **Step 7: Commit and review Slice 1**
+- [x] **Step 7: Commit and review Slice 1**
 
 ```powershell
 git add frontend/src/api/client.ts frontend/src/lib/api.ts frontend/src/lib/instrument-route.ts frontend/src/lib/messages.ts frontend/src/screens/Watchlist.tsx frontend/src/screens/Watchlist.test.tsx frontend/src/screens/InstrumentWorkspace.tsx frontend/src/screens/InstrumentWorkspace.test.tsx src/quantmesh/api/static/app tests/test_spa_e2e.py docs/iterations/0028-decision-inbox-shadow-portfolio.md
