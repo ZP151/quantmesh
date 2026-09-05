@@ -1,7 +1,7 @@
 # Iteration 0027 — Evidence-backed Decision Copilot
 
-- Status: completed (2026-09-04; [PR #128](https://github.com/ZP151/quantmesh/pull/128)
-  open for human review)
+- Status: completed and merged (2026-09-04; [PR #128](https://github.com/ZP151/quantmesh/pull/128),
+  merge commit `324d51d82ab4eae5e6176f7f91ce0631c5e76c32`)
 - Started: 2026-09-02
 - Completed: 2026-09-04
 - Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
@@ -403,13 +403,14 @@ bundle freshness and `git diff --check` all exited `0`. Lint retained four exist
 Fast Refresh warnings; Vite retained the known local Node 22.11 version and chunk-
 size warnings while exiting `0`.
 
-## Current frontier
+## Completion frontier
 
-Slices 1–4 and the bounded Python release-license closure repair are complete.
-The only remaining frontier is the final 0027 PR gate. Do not add another product
-slice or expand into an exit-order lifecycle,
-performance dashboard, AI review, another model framework, Provider/OpenD,
-another symbol, external notification or 0021 soak.
+Slices 1–4, the bounded Python release-license closure repair and the final PR
+gate are complete. PR #128 merged at
+`324d51d82ab4eae5e6176f7f91ce0631c5e76c32`. Any later product work belongs to
+a new iteration; 0027 remains closed and must not absorb an exit-order
+lifecycle, performance dashboard, AI review, another model framework,
+Provider/OpenD, another symbol, external notification or 0021 soak.
 
 ## Slice 4 completion evidence — 2026-09-03
 
@@ -528,9 +529,9 @@ and passed frontend Vitest. The full Python suite reported `3220 passed, 9
 skipped` in `2846.8s`; the integrated golden path passed `60/60` checks in
 `75.9s`. The clone was clean at both boundaries.
 
-[PR #128](https://github.com/ZP151/quantmesh/pull/128) is the single final
-integration and human-review boundary and links issue #122. Iteration 0027 is
-complete at that boundary; merge remains a repository-owner decision. No
+[PR #128](https://github.com/ZP151/quantmesh/pull/128) was the single final
+integration and human-review boundary and links issue #122. It merged as
+`324d51d82ab4eae5e6176f7f91ce0631c5e76c32`; iteration 0027 is complete. No
 Provider/OpenD/model call, real trade, other symbol, external notification or
 0021 soak state was touched.
 

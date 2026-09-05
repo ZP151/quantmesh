@@ -1,32 +1,29 @@
 # Active Goal
 
-- Status: complete — iteration 0027 verified at `e9b4f766` and opened as
-  [PR #128](https://github.com/ZP151/quantmesh/pull/128)
-- Objective: enable a research-minded individual active trader to turn a
-  ticker into a verifiable, risk-first decision package in no more than two
-  minutes, save it as Reject, Watch or Paper proposal, and replay its evidence,
-  risk outcome and review after a clean restart.
-- Started: 2026-09-02
-- Tracking issue: [#122](https://github.com/ZP151/quantmesh/issues/122)
+- Status: active — iteration 0028 design approved; implementation planning.
+- Objective: give a research-minded individual active trader one watchlist-level
+  Decision Inbox that identifies the next evidence-backed action, opens the
+  exact DecisionPacket, and summarizes its bounded paper proposal, order,
+  monitoring and review state without adding execution authority.
+- Started: 2026-09-05
+- Tracking issue: [#129](https://github.com/ZP151/quantmesh/issues/129)
 - Active iteration:
-  `docs/iterations/0027-evidence-backed-decision-copilot.md`
+  `docs/iterations/0028-decision-inbox-shadow-portfolio.md`
 - Design:
-  `docs/superpowers/specs/2026-09-03-packet-outcome-review-design.md`
-- Executable plan:
-  `docs/superpowers/plans/2026-09-03-packet-outcome-review.md`
-- Integration branch: `codex/0027-evidence-backed-decision-copilot`
-- Baseline: `origin/main` at `f77b565`; immutable `v0.1.1-rc1` remains
-  `b6b05b9`
-- Delivery mode: one 0027 product track and one independent 0021 soak
-  maintenance track at most. Each track uses one integration branch and one
-  final PR; neither may opportunistically modify the other's files or state.
-- Current frontier: delivery is complete and awaiting human review in PR #128.
-  Do not add another product slice or expand into exit orders, a performance
-  dashboard, AI review, another model framework, Provider/OpenD, another symbol,
-  external notification or any 0021 soak work.
-- External gate: none for the deterministic product slice. Model services,
-  OpenD and real providers are optional degraded-state inputs and never merge
-  gates.
+  `docs/superpowers/specs/2026-09-05-decision-inbox-shadow-portfolio-design.md`
+- Executable plan: being written from the approved design.
+- Integration branch: `codex/0028-decision-inbox-shadow-portfolio`
+- Baseline: `origin/main` at
+  `324d51d82ab4eae5e6176f7f91ce0631c5e76c32`; immutable `v0.1.1-rc1`
+  remains `b6b05b9`.
+- Delivery mode: four 24–48 hour vertical slices, at most two review rounds
+  per demonstrable slice, targeted verification during development, one final
+  exact-head CI boundary. One 0028 product track and one independent 0021 soak
+  maintenance track may coexist; neither modifies the other's files or state.
+- Current frontier: write and self-review the executable plan, then begin
+  Slice 1 with a test-first exact Decision Inbox read model and deep-link.
+- External gate: none. Provider/OpenD, real market calls and model services are
+  not required and are prohibited expansion for this iteration.
 
 ## Product-readiness decision
 
@@ -39,13 +36,13 @@ and one explicit action. The durable product artifact is a versioned
 cannot create evidence, waive a blocker or gain order authority.
 
 Iteration 0021's 168-hour soak continues as a maintenance/release-confidence
-track. It does not block 0027 product work, and 0027 must not repair, migrate,
+track. It does not block 0028 product work, and 0028 must not repair, migrate,
 backfill or otherwise modify soak Scheduler, provider or evidence state.
 
 ## Non-negotiable constraints
 
 - Keep external venues read-only and execution paper-only. Live trading,
-  signing, credentials and mainnet authority remain outside iteration 0027.
+  signing, credentials and mainnet authority remain outside iteration 0028.
 - AI is advisory and schema-validated. Missing or failed AI must leave the
   deterministic DecisionPacket usable.
 - Stale, low-quality, leakage-affected or missing evidence must block a paper
@@ -54,7 +51,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   second operator confirmation.
 - Decision, evidence, paper result and review state must survive a clean
   restart and remain replayable.
-- Qlib, Darts and model ranking are internal support or later work, not 0027
+- Qlib, Darts and model ranking are internal support or later work, not 0028
   completion criteria. TradingView extensions, mobile clients, real trading,
   social features and broad pattern-recognition catalogs are out of scope.
 - Each slice must expose user-visible value within 24–48 hours. Side defects
@@ -76,7 +73,12 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   forbidden actions. Daily progress records completed user loops rather than
   test count, code volume or ledger length.
 
-## Slice 1 execution checkpoint — 2026-09-02
+## Historical iteration 0027 completion record
+
+The following checkpoints are retained as immutable delivery context. They are
+not active 0028 work.
+
+### Slice 1 execution checkpoint — 2026-09-02
 
 - Operator approved the tracked design and authorized Slice 1 execution.
 - Planner fixed one user action: save and reopen an NVDA Reject, Watch or
@@ -163,7 +165,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   corrections; blocker taxonomy duplication remains a non-blocking follow-up.
   Slice 1 is complete. Slice 2 requires a separate approved design/plan.
 
-## Slice 2 implementation checkpoint — 2026-09-03
+### Slice 2 implementation checkpoint — 2026-09-03
 
 - The persisted-packet Copilot vertical slice is implemented as a separate,
   immutable, packet-bound advisory record with strict analyst/critic schemas and
@@ -183,7 +185,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   the sole unverified item. This checkpoint is `DONE_WITH_CONCERNS` pending the
   controller's browser verification, review, detector and broad gate.
 
-## Slice 2 completion checkpoint — 2026-09-03
+### Slice 2 completion checkpoint — 2026-09-03
 
 - Commit `60ee6f9` closed the final review's three Important findings: Copilot is
   withheld during range-placeholder drift and late responses bind context plus
@@ -205,7 +207,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
 - Slice 2 is complete. No real model/provider call, OpenD, real trading, another
   symbol, external notification, monitoring, outcome/review or 0021 soak work ran.
 
-## Slice 4 completion checkpoint — 2026-09-03
+### Slice 4 completion checkpoint — 2026-09-03
 
 - The exact persisted NVDA packet now reopens in Instrument Workspace with an
   immutable outcome/review closure. It binds the 30-session local path, exact
@@ -226,7 +228,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   call, real trade, other symbol, external notification or 0021 soak state was
   touched.
 
-## Final license-closure checkpoint — 2026-09-03
+### Final license-closure checkpoint — 2026-09-03
 
 - The direct gate reproduced four missing transitive pins and bound them to their
   installed dependency chain: `cloudpickle==3.1.2`, `formulaic==1.2.2`,
@@ -257,7 +259,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   `0.43s`, with Ruff and diff green. No product behavior changed.
 - The only remaining work is the final fresh-clone release gate and PR boundary.
 
-## Final-gate compatibility checkpoint — 2026-09-04
+### Final-gate compatibility checkpoint — 2026-09-04
 
 - The Node 22.12 fresh-clone gate passed source cleanliness, clone/version,
   fresh Python installation, Ruff, trusted-data tooling, Python and frontend
@@ -281,7 +283,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   the exact release/security selection passes `28` tests in `0.35s`. No
   application dependency or runtime behavior changed.
 
-## Final PR checkpoint — 2026-09-04
+### Final PR checkpoint — 2026-09-04
 
 - The definitive fresh-clone gate passed all 18 steps on
   `e9b4f766e21e157fbdfe4a5cfd4012ea5af5b9f2` with Node 22.12.0.
@@ -903,7 +905,7 @@ bundle and Vitest, full pytest (373.7 s), golden path and clean-checkout proof.
 The final `v0.1.0` tag must point only at the green merged promotion commit;
 all market access remains read-only or paper-only.
 
-## Current frontier
+## Historical v0.1.1 frontier
 
 1. Preserve the immutable accepted candidate and its acceptance evidence.
 2. Await an explicit `promote v0.1.1-rc1 to v0.1.1` command before creating the
@@ -1133,9 +1135,10 @@ labeled and isolated from non-demo operator state.
 ## Resume instruction
 
 Resume from the metadata and active delivery protocol at the top of this file,
-then read `PRODUCT.md`, `docs/product-strategy.md`, the active 0027 iteration,
-its tracked design and executable plan, ADR-0015, the roadmap, issue #122 and
-current Git/PR state. Start from the first incomplete vertical slice; do not
-reopen framework bake-offs unless a DecisionPacket requirement proves the
-native contracts insufficient. Treat 0021 soak as an independent maintenance
-track and never infer real-money, mainnet, credential or AI order authority.
+then read `PRODUCT.md`, `docs/product-strategy.md`, the active 0028 iteration,
+its tracked design and, once approved, its executable plan, ADR-0015, ADR-0019,
+the roadmap, issue #129 and current Git/PR state. Start from the first
+incomplete vertical slice; do not reopen framework bake-offs unless a
+DecisionPacket requirement proves the native contracts insufficient. Treat
+0021 soak as an independent maintenance track and never infer Provider/OpenD,
+real-money, mainnet, credential or AI order authority.

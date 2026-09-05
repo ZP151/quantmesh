@@ -343,14 +343,17 @@ Sequence for operator review:
    [issue #110](https://github.com/ZP151/quantmesh/issues/110),
    `docs/iterations/0021-trusted-data-fabric.md` and
    `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`.
-2. **Active as iteration 0027:** Evidence-backed Decision Copilot. Starting
+2. **Done as iteration 0027 (merged PR #128):** Evidence-backed Decision Copilot. Starting
    with NVDA, compose market state, Bull/Base/Bear scenarios, risk, evidence and
    Reject/Watch/Paper actions into a versioned DecisionPacket inside Instrument
    Workspace, then add optional cited Copilot explanation, local watch
    conditions and replayable outcome review.
-3. Expand datasets, baselines or selected Qlib/Darts adapters only where a
+3. **Active as iteration 0028:** Decision Inbox & Bounded Paper Shadow
+   Portfolio. Add a watchlist-level attention surface that always deep-links to
+   an exact packet, prove the deterministic loop for NVDA and AAPL, expose
+   honest evidence-blocked states for BTC and SOL, and derive a bounded
+   paper-proposal/order/outcome summary from existing durable ledgers.
+4. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
-4. Extend the proven decision loop to a bounded multi-instrument paper shadow
-   portfolio after the single-instrument monitoring and journal loop is usable.
 5. Guarded broker/testnet execution only after a separate authorization.
