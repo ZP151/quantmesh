@@ -703,6 +703,14 @@ git status --short
 Preserve the long-command session handle and read its final exit code. Do not
 rerun the release gate unless candidate SHA changes.
 
+2026-09-06: candidate `f734ec6d695e99dd3c788ae207dc033d0b15d7fe` failed once
+at license closure: unconstrained release installation drifted to anyio
+4.15.1/wrapt 2.4.1rc1 instead of locked 4.15.0/2.4.0. The minimal correction
+adds `-c requirements-audit.txt` before editable extras installation; existing
+pins/allowlist remain unchanged. Syntax/Ruff/diff checks pass. Step 4 remains
+open: the changed-HEAD constraint-fix candidate must receive one exact-head
+gate after commit; the failed old SHA is not rerun.
+
 - [ ] **Step 5: Push and open the one milestone PR**
 
 Push `codex/0028-decision-inbox-shadow-portfolio`, open one PR linked to #129,

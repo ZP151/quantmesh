@@ -466,3 +466,26 @@ depend on the ignored local report.
   build's plugin timing notice (27% of 12.0s in hooks); no optimization scope.
 - No detector, additional pytest, release gate, push or PR ran. The single
   exact-head gate is next; CI/human review and Goal completion remain open.
+
+### 2026-09-06 — Task 6 release-gate dependency-closure root cause
+
+- Controller-retained RED: the one gate on candidate
+  `f734ec6d695e99dd3c788ae207dc033d0b15d7fe` failed license closure. Its fresh
+  unconstrained install resolved anyio 4.15.1 and wrapt 2.4.1rc1, while
+  `requirements-audit.txt` pins anyio 4.15.0 and wrapt 2.4.0. The install step
+  did not consume the frozen resolution that the later closure check enforces.
+- Implementer: added only `-c requirements-audit.txt` to the release-extras
+  pip command, after `-q` and before `-e '.[dev,research,e2e,moomoo]'`, with
+  cwd still the cloned checkout. The existing constrained isolated install and
+  license verification above already demonstrate the exact pins work. No pin,
+  allowlist, license documentation, tooling-venv or product change is needed.
+- Lightweight verification with shared Python: `python -m py_compile
+  tools/release_gate.py` exit 0; shared `ruff.exe check tools/release_gate.py`
+  exit 0 (`All checks passed!`); `git diff --check` exit 0. Inspected command
+  ordering and the two-line tool diff. The original failed gate is the RED;
+  these static checks are not an end-to-end release-gate GREEN claim.
+- The new pending candidate is the changed HEAD produced by this constraint
+  fix commit (parent `f734ec6`); record its exact SHA in the handoff and run its
+  gate once. No fresh environment, review round, gate rerun, broad tests,
+  push or PR ran during the correction. Task 6 Step 4, CI/human review and
+  Goal completion remain open.

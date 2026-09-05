@@ -22,8 +22,8 @@
   per demonstrable slice, targeted verification during development, one final
   exact-head CI boundary. One 0028 product track and one independent 0021 soak
   maintenance track may coexist; neither modifies the other's files or state.
-- Current frontier: the single exact-head
-  release gate, branch push, milestone PR, exact-head CI and human review.
+- Current frontier: one exact-head release gate on the new dependency-constraint
+  fix candidate, then branch push, milestone PR, exact-head CI and human review.
   Task 6 Steps 1–3 are complete; Steps 4–5 remain open. No further product
   slice is open and the Goal is not complete.
 - Pre-PR evidence at parent `422c88ae73ea70d0873505c6fac1d8b8f8d28d84`:
@@ -53,6 +53,14 @@
   expected JS bundle hashes/index changed. Three unsupported test-only `exact`
   options were removed with controller approval; assertions are unchanged.
   The exact-head release gate, push/PR/CI/human review and Goal audit remain open.
+- Gate RED: candidate `f734ec6d695e99dd3c788ae207dc033d0b15d7fe` failed
+  license closure after its unconstrained fresh install selected anyio 4.15.1
+  and wrapt 2.4.1rc1 instead of the existing 4.15.0/2.4.0 pins. The sole tool
+  correction adds `-c requirements-audit.txt` to release-extras installation.
+  Pins/allowlist are unchanged; the same constrained isolated closure already
+  passed. Syntax/Ruff/diff checks pass, but the changed-HEAD candidate remains
+  pending: run its exact-head gate once after this fix is committed. No gate
+  rerun, new environment, push or PR occurred during this correction.
 - External gate: none. Provider/OpenD, real market calls and model services are
   not required and are prohibited expansion for this iteration.
 

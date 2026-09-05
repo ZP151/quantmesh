@@ -206,6 +206,8 @@ def main() -> int:
                 "pip",
                 "install",
                 "-q",
+                "-c",
+                "requirements-audit.txt",
                 "-e",
                 ".[dev,research,e2e,moomoo]",
             ],
