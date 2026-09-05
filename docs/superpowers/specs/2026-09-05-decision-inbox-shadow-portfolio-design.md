@@ -76,6 +76,7 @@ DecisionInboxEntry
   disposition | null
   evidence_status | null
   proposal { id, status, order_id } | null
+  position_context { quantity, average_cost, realized_pnl, mark } | null
   monitoring { registration_id, latest_evaluation_id, triggered } | null
   review { state, review_id } | null
 ```
@@ -96,6 +97,11 @@ The query service composes only existing replay-validated stores:
 - existing market snapshot state for a clearly labelled current mark.
 
 No new Inbox file or aggregate JSONL is introduced.
+
+`position_context` is the current venue-scoped paper-account position and is
+labelled `current-account-context-only`. Exact proposal/order fills remain the
+only packet-attributable execution facts; the Inbox never allocates a shared
+position or its P&L back to an unrelated packet.
 
 ## 5. Deterministic attention selection
 

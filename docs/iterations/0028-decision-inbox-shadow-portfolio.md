@@ -7,7 +7,8 @@
   `324d51d82ab4eae5e6176f7f91ce0631c5e76c32`
 - Design:
   `docs/superpowers/specs/2026-09-05-decision-inbox-shadow-portfolio-design.md`
-- Executable plan: being written from the approved design
+- Executable plan:
+  `docs/superpowers/plans/2026-09-05-decision-inbox-shadow-portfolio.md`
 - Ledger: this file
 
 ## Product outcome
@@ -88,3 +89,6 @@ license closure must pass at the final PR boundary.
 - The operator approved the written design on 2026-09-05. The design is now
   frozen for implementation planning; changes to authority, attention
   semantics, symbols or slice boundaries require a new explicit review.
+- The executable plan maps six reviewed tasks across four visible slices, uses
+  RED/GREEN cycles, keeps broad verification at coherent boundaries and retains
+  one final exact-head release gate. Slice 1 Task 1 is the active frontier.

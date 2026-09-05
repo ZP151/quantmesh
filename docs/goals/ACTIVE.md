@@ -1,6 +1,6 @@
 # Active Goal
 
-- Status: active — iteration 0028 design approved; implementation planning.
+- Status: active — iteration 0028 plan complete; Slice 1 ready.
 - Objective: give a research-minded individual active trader one watchlist-level
   Decision Inbox that identifies the next evidence-backed action, opens the
   exact DecisionPacket, and summarizes its bounded paper proposal, order,
@@ -11,7 +11,8 @@
   `docs/iterations/0028-decision-inbox-shadow-portfolio.md`
 - Design:
   `docs/superpowers/specs/2026-09-05-decision-inbox-shadow-portfolio-design.md`
-- Executable plan: being written from the approved design.
+- Executable plan:
+  `docs/superpowers/plans/2026-09-05-decision-inbox-shadow-portfolio.md`
 - Integration branch: `codex/0028-decision-inbox-shadow-portfolio`
 - Baseline: `origin/main` at
   `324d51d82ab4eae5e6176f7f91ce0631c5e76c32`; immutable `v0.1.1-rc1`
@@ -20,8 +21,8 @@
   per demonstrable slice, targeted verification during development, one final
   exact-head CI boundary. One 0028 product track and one independent 0021 soak
   maintenance track may coexist; neither modifies the other's files or state.
-- Current frontier: write and self-review the executable plan, then begin
-  Slice 1 with a test-first exact Decision Inbox read model and deep-link.
+- Current frontier: execute Task 1 of the approved plan with a test-first exact
+  Decision Inbox read model. Slice 1 stops after Task 2 and one boundary review.
 - External gate: none. Provider/OpenD, real market calls and model services are
   not required and are prohibited expansion for this iteration.
 
