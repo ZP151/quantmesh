@@ -2,12 +2,24 @@ from __future__ import annotations
 
 from datetime import timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
+import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
-from quantmesh.instruments.inbox import DecisionInboxError
+from quantmesh.domain.models import Venue
+from quantmesh.instruments.inbox import (
+    DecisionInboxError,
+    DecisionInboxMarkContext,
+    DecisionInboxMonitoringSummary,
+    DecisionInboxPositionContext,
+    DecisionInboxReviewSummary,
+    DecisionInboxService,
+)
+from quantmesh.instruments.reviews import ReviewClassification
 
 SCENARIO = DemoScenario()
 
@@ -79,19 +91,18 @@ def test_inbox_is_read_only_and_pending_action_beats_newer_draft(tmp_path: Path)
     app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
     with TestClient(app) as client:
         pending = _save_and_act(client, "NVDA", disposition="paper_proposal")
-        before = _owned_bytes(root)
         app.state.instrument_workspace._now = lambda: SCENARIO.anchor + timedelta(minutes=1)
         newer = _save_draft(client, "NVDA")
+        before_get = _owned_bytes(root)
         response = client.get("/api/decision-packets")
-        after = _owned_bytes(root)
+        after_get = _owned_bytes(root)
 
     assert response.status_code == 200
     nvda = _entry(response.json(), "moomoo", "NVDA")
     assert nvda["packet_id"] == pending["packet"]["packet_id"]
     assert nvda["packet_id"] != newer["packet_id"]
     assert nvda["attention_state"] == "paper_pending_confirmation"
-    assert before != after  # The newer draft is the only intervening write.
-    assert after == _owned_bytes(root)
+    assert before_get == after_get
 
 
 def test_inbox_reports_not_started_and_venue_less_watchlist_as_unavailable(tmp_path: Path) -> None:
@@ -125,6 +136,46 @@ def test_inbox_projects_terminal_actions_and_missing_proposal_link(tmp_path: Pat
     assert draft["disposition"] == "draft"
 
 
+def test_inbox_projects_a_saved_draft_when_no_terminal_action_exists(tmp_path: Path) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        draft = _save_draft(client, "NVDA")
+        response = client.get("/api/decision-packets")
+
+    assert response.status_code == 200
+    nvda = _entry(response.json(), "moomoo", "NVDA")
+    assert nvda["packet_id"] == draft["packet_id"]
+    assert nvda["attention_state"] == "draft"
+
+
+@pytest.mark.parametrize(
+    ("advance", "expected_state"),
+    [
+        (timedelta(days=3), "blocked"),
+        (timedelta(0), "paper_open"),
+    ],
+)
+def test_inbox_projects_confirmed_and_blocked_paper_lifecycle_states(
+    tmp_path: Path,
+    advance: timedelta,
+    expected_state: str,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        action = _save_and_act(client, "NVDA", disposition="paper_proposal")
+        proposal = action["proposal"]
+        app.state.paper_decisions._now = lambda: SCENARIO.anchor + advance
+        confirmation = client.post(
+            f"/api/paper/proposals/{proposal['id']}/confirm",
+            json={"confirmation_token": proposal["confirmation_token"]},
+        )
+        response = client.get("/api/decision-packets")
+
+    assert confirmation.status_code == (409 if advance else 200)
+    assert response.status_code == 200
+    assert _entry(response.json(), "moomoo", "NVDA")["attention_state"] == expected_state
+
+
 def test_inbox_reports_a_missing_paper_proposal_link_as_unavailable(tmp_path: Path) -> None:
     app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
     with TestClient(app) as client:
@@ -136,6 +187,23 @@ def test_inbox_reports_a_missing_paper_proposal_link_as_unavailable(tmp_path: Pa
     assert linked["proposal"]["id"].startswith("proposal-")
     assert unavailable.status_code == 200
     assert _entry(unavailable.json(), "moomoo", "NVDA")["attention_state"] == "unavailable"
+
+
+def test_inbox_fails_closed_for_packet_proposal_evidence_identity_mismatch(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(app) as client:
+        _save_and_act(client, "NVDA", disposition="paper_proposal")
+        proposal = app.state.paper_decisions.ledger.all()[0]
+        forged = proposal.model_copy(update={"config_digest": "f" * 64})
+        app.state.decision_inbox._paper_decisions_provider = lambda: SimpleNamespace(  # noqa: SLF001
+            ledger=SimpleNamespace(all=lambda: (forged,))
+        )
+        response = client.get("/api/decision-packets")
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "decision_inbox_replay_unavailable"
 
 
 def test_inbox_corrupt_packet_replay_is_safe_409(tmp_path: Path) -> None:
@@ -165,8 +233,36 @@ def test_inbox_configured_mark_is_unavailable_for_freshness_and_position_is_cont
     nvda = _entry(response.json(), "moomoo", "NVDA")
     assert nvda["mark_context"]["status"] == "unavailable"
     assert nvda["mark_context"]["reason"] == "configured mark has no freshness evidence"
-    assert nvda["position_context"] is not None
-    assert nvda["position_context"]["attribution"] == "current-account-context-only"
+    assert nvda["position_context"] is None
+
+    position = app.state.account.positions["moomoo:NVDA"]
+    allowed = DecisionInboxService._position_context(
+        Venue.MOOMOO,
+        "NVDA",
+        app.state.account,
+        DecisionInboxMarkContext(value=100.0, status="available"),
+    )
+    assert allowed == DecisionInboxPositionContext(
+        quantity=position.quantity,
+        average_cost=position.average_cost,
+        realized_pnl=position.realized_pnl,
+        mark=100.0,
+        attribution="current-account-context-only",
+    )
+
+
+def test_inbox_contracts_reject_noncanonical_future_monitoring_and_review_ids() -> None:
+    with pytest.raises(ValidationError):
+        DecisionInboxMonitoringSummary(
+            registration_id="registration-not-canonical",
+            latest_evaluation_id="evaluation-" + "0" * 24,
+            triggered=False,
+        )
+    with pytest.raises(ValidationError):
+        DecisionInboxReviewSummary(
+            review_id="review-not-canonical",
+            state=ReviewClassification.INCONCLUSIVE,
+        )
 
 
 def test_inbox_error_contract_has_only_safe_machine_fields() -> None:

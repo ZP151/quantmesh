@@ -19,12 +19,14 @@ from quantmesh.instruments.contracts import (
     DecisionPacket,
     HistoryRange,
     PaperProposal,
+    PriceForecastArtifact,
     ProposalStatus,
     StrictContract,
 )
 from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.proposals import PaperDecisionService, forecast_freshness_blocker
+from quantmesh.instruments.reviews import ReviewClassification
 from quantmesh.live.contract import UpdateKind
 from quantmesh.live.feed import ExactUpdateSnapshot, LiveFeed
 from quantmesh.live.fence import QuoteFence
@@ -75,14 +77,17 @@ class DecisionInboxPositionContext(StrictContract):
 
 
 class DecisionInboxMonitoringSummary(StrictContract):
-    registration_id: str
-    latest_evaluation_id: str | None = None
+    registration_id: str = Field(pattern=r"^registration-[0-9a-f]{24}$")
+    latest_evaluation_id: str | None = Field(
+        default=None,
+        pattern=r"^evaluation-[0-9a-f]{24}$",
+    )
     triggered: bool
 
 
 class DecisionInboxReviewSummary(StrictContract):
-    review_id: str
-    state: str
+    review_id: str = Field(pattern=r"^review-[0-9a-f]{24}$")
+    state: ReviewClassification
 
 
 class DecisionInboxEntry(StrictContract):
@@ -228,7 +233,15 @@ class DecisionInboxService:
                 ),
             )
 
-        mark_context = self._mark_context(record.venue, record.symbol, markets, feed, now)
+        instrument_type = packets[0].instrument.instrument_type if packets else None
+        mark_context = self._mark_context(
+            record.venue,
+            record.symbol,
+            instrument_type,
+            markets,
+            feed,
+            now,
+        )
         if not packets:
             return DecisionInboxEntry(
                 venue=record.venue,
@@ -305,13 +318,8 @@ class DecisionInboxService:
                 packet,
                 None,
             )
-        if proposal.instrument != packet.instrument:
-            return (
-                DecisionAttentionState.UNAVAILABLE,
-                "paper proposal identity does not match its decision packet",
-                packet,
-                None,
-            )
+        if not self._proposal_matches_packet(proposal, packet):
+            raise ValueError("paper proposal does not match immutable decision packet evidence")
         paper = DecisionInboxPaperSummary(
             proposal_id=proposal.id,
             status=proposal.status,
@@ -325,20 +333,15 @@ class DecisionInboxService:
             return (DecisionAttentionState.PAPER_OPEN, "paper proposal is confirmed", packet, paper)
 
         artifact = forecasts.get(packet.evidence.forecast_artifact_id)
-        if artifact is None:
+        if not isinstance(artifact, PriceForecastArtifact):
             return (
                 DecisionAttentionState.UNAVAILABLE,
                 "forecast linked to the pending paper proposal is unavailable",
                 packet,
                 paper,
             )
-        if getattr(artifact, "id", None) != packet.evidence.forecast_artifact_id:
-            return (
-                DecisionAttentionState.UNAVAILABLE,
-                "forecast linked to the pending paper proposal is unavailable",
-                packet,
-                paper,
-            )
+        if not self._forecast_matches_packet(artifact, packet):
+            raise ValueError("forecast does not match immutable decision packet evidence")
         blocker = forecast_freshness_blocker(artifact, now)
         reason = "paper proposal is pending confirmation"
         if blocker is not None:
@@ -349,16 +352,22 @@ class DecisionInboxService:
         self,
         venue: Venue,
         symbol: str,
+        instrument_type: InstrumentType | None,
         markets: Mapping[str, Mapping[str, float | None]],
         feed: LiveFeed | None,
         now: datetime,
     ) -> DecisionInboxMarkContext:
         snapshot = (
             feed.snapshot_exact(venue, symbol, UpdateKind.QUOTE, as_of=now)
-            if feed is not None
+            if feed is not None and instrument_type is not None
             else None
         )
-        live = self._live_mark(snapshot, venue, symbol, now)
+        instrument = (
+            Instrument(venue=venue, symbol=symbol, instrument_type=instrument_type)
+            if instrument_type is not None
+            else None
+        )
+        live = self._live_mark(snapshot, instrument, now)
         if live is not None:
             return live
         configured = markets.get(venue.value, {}).get(symbol)
@@ -380,29 +389,12 @@ class DecisionInboxService:
     def _live_mark(
         self,
         snapshot: ExactUpdateSnapshot | None,
-        venue: Venue,
-        symbol: str,
+        instrument: Instrument | None,
         now: datetime,
     ) -> DecisionInboxMarkContext | None:
-        if snapshot is None:
+        if snapshot is None or instrument is None:
             return None
-        view = {
-            "kind": snapshot.kind.value,
-            "provenance": snapshot.provenance.value,
-            "sequence_gap": snapshot.sequence_gap,
-            "continuity_proven": snapshot.continuity_proven,
-            "received_at": snapshot.received_at.isoformat(),
-            "payload": dict(snapshot.payload),
-        }
-        decision = self._quote_fence.evaluate(
-            view,
-            instrument=Instrument(
-                venue=venue,
-                symbol=symbol,
-                instrument_type=InstrumentType.EQUITY,
-            ),
-            now=now,
-        )
+        decision = self._quote_fence.resolve(snapshot, instrument=instrument, now=now)
         if decision.allowed and decision.quote is not None and decision.quote.last is not None:
             return DecisionInboxMarkContext(
                 value=decision.quote.last,
@@ -426,7 +418,11 @@ class DecisionInboxService:
         mark_context: DecisionInboxMarkContext,
     ) -> DecisionInboxPositionContext | None:
         position = account.positions.get(f"{venue.value}:{symbol}")
-        if position is None or mark_context.value is None:
+        if (
+            position is None
+            or mark_context.status != "available"
+            or mark_context.value is None
+        ):
             return None
         return DecisionInboxPositionContext(
             quantity=position.quantity,
@@ -443,6 +439,35 @@ class DecisionInboxService:
     def _forecasts_once(self) -> tuple[object, ...]:
         registry = self._forecast_registry_provider()
         return tuple(registry.all()) if registry is not None else ()
+
+    @staticmethod
+    def _proposal_matches_packet(proposal: PaperProposal, packet: DecisionPacket) -> bool:
+        evidence = packet.evidence
+        return (
+            proposal.id == packet.proposal_id
+            and proposal.instrument == packet.instrument
+            and proposal.artifact_id == evidence.forecast_artifact_id
+            and proposal.dataset_id == evidence.forecast_dataset_id
+            and proposal.dataset_revision == evidence.forecast_dataset_revision
+            and proposal.forecast_generated_at == evidence.forecast_generated_at
+            and proposal.model_version == evidence.forecast_model_version
+            and proposal.config_digest == evidence.forecast_config_digest
+            and proposal.history_digest == evidence.forecast_history_digest
+        )
+
+    @staticmethod
+    def _forecast_matches_packet(artifact: PriceForecastArtifact, packet: DecisionPacket) -> bool:
+        evidence = packet.evidence
+        return (
+            artifact.id == evidence.forecast_artifact_id
+            and artifact.instrument == packet.instrument
+            and artifact.dataset_id == evidence.forecast_dataset_id
+            and artifact.dataset_revision == evidence.forecast_dataset_revision
+            and artifact.generated_at == evidence.forecast_generated_at
+            and artifact.model_version == evidence.forecast_model_version
+            and artifact.config_digest == evidence.forecast_config_digest
+            and artifact.history_digest == evidence.forecast_history_digest
+        )
 
     def _timestamp(self) -> datetime:
         value = self._now()
