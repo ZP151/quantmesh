@@ -22,7 +22,7 @@
   per demonstrable slice, targeted verification during development, one final
   exact-head CI boundary. One 0028 product track and one independent 0021 soak
   maintenance track may coexist; neither modifies the other's files or state.
-- Current frontier: one exact-head release gate on the new dependency-constraint
+- Current frontier: one exact-head release gate on the new observable-harness
   fix candidate, then branch push, milestone PR, exact-head CI and human review.
   Task 6 Steps 1–3 are complete; Steps 4–5 remain open. No further product
   slice is open and the Goal is not complete.
@@ -61,6 +61,15 @@
   passed. Syntax/Ruff/diff checks pass, but the changed-HEAD candidate remains
   pending: run its exact-head gate once after this fix is committed. No gate
   rerun, new environment, push or PR occurred during this correction.
+- Gate candidate `9d13dfbc8756285343baa85d51476abf34c9637c`: the controller
+  recorded green prerequisite stages through frontend Vitest, then actively
+  interrupted session 2328 because the harness's 5400s full-pytest timeout was
+  below the measured 8016.81s baseline and buffered capture hid live progress.
+  This is incomplete gate evidence, not a pass. All five owned PIDs were
+  confirmed exited by the controller. The harness now uses live merged logs,
+  owned-tree timeout cleanup and a 10800s limit; focused tests passed 7/7.
+  The changed-SHA harness candidate needs its one exact-head gate after commit;
+  no gate/full pytest/detector/push/PR ran in the fix wave.
 - External gate: none. Provider/OpenD, real market calls and model services are
   not required and are prohibited expansion for this iteration.
 

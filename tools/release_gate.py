@@ -52,6 +52,7 @@ import argparse
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -61,7 +62,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 STEPS: list[tuple[str, str]] = []
-FULL_PYTEST_TIMEOUT_SECONDS = 5400
+FULL_PYTEST_TIMEOUT_SECONDS = 10800
 
 
 def print_console(value: object = "", *, file=None, flush: bool = False) -> None:
@@ -96,6 +97,28 @@ def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8")
 
 
+def _kill_step_process(proc: subprocess.Popen) -> None:
+    """Stop the owned step tree, including Windows venv launcher children."""
+    try:
+        if os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                timeout=30,
+            )
+        else:
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+        proc.wait()
+
+
 def run_step(
     name: str,
     cmd: list[str],
@@ -103,37 +126,44 @@ def run_step(
     logs: Path,
     timeout: int = 1800,
 ) -> tuple[bool, float]:
-    """Run one gate step; stream a header, capture output to the log
+    """Run one gate step; stream a header, write live output to the log
     file, and print the failure tail if it fails. Returns
     ``(ok, seconds)``."""
-    print(f"== {name} ==", flush=True)
+    print_console(f"== {name} ==", flush=True)
     started = time.monotonic()
-    try:
-        proc = subprocess.run(
+    log_path = logs / f"{len(STEPS) + 1:02d}-{name.replace(' ', '-').replace('/', '-')}.log"
+    # Direct unbuffered file output remains observable even without newlines;
+    # no reader pipe/thread can hold up timeout cleanup or buffer pytest dots.
+    with log_path.open("wb", buffering=0) as log:
+        with subprocess.Popen(
             cmd,
             cwd=cwd,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=timeout,
-        )
-        output = proc.stdout + proc.stderr
-        ok = proc.returncode == 0
-    except subprocess.TimeoutExpired as error:
-        output = f"TIMEOUT after {timeout}s\n" + (error.stdout or "") + (error.stderr or "")
-        ok = False
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"},
+            start_new_session=os.name != "nt",
+        ) as proc:
+            try:
+                ok = proc.wait(timeout=timeout) == 0
+            except subprocess.TimeoutExpired:
+                _kill_step_process(proc)
+                log.write(f"\nTIMEOUT after {timeout}s\n".encode())
+                ok = False
+            except BaseException:
+                _kill_step_process(proc)
+                raise
     elapsed = time.monotonic() - started
-    (logs / f"{len(STEPS) + 1:02d}-{name.replace(' ', '-').replace('/', '-')}.log").write_text(
-        output, encoding="utf-8"
-    )
     minutes, seconds = divmod(int(elapsed), 60)
     if ok:
-        print(f"ok — {minutes}:{seconds:02d}", flush=True)
+        print_console(f"ok — {minutes}:{seconds:02d}", flush=True)
     else:
+        output = log_path.read_text(encoding="utf-8", errors="replace")
         tail = "\n".join(output.splitlines()[-60:])
-        print(f"FAILED after {minutes}:{seconds:02d}; last output:", flush=True)
-        print(tail, flush=True)
+        print_console(
+            f"FAILED after {minutes}:{seconds:02d}; exit code {proc.returncode}; last output:",
+            flush=True,
+        )
+        print_console(tail, flush=True)
     STEPS.append((name, f"{minutes}:{seconds:02d}"))
     return ok, elapsed
 
@@ -375,7 +405,8 @@ def main() -> int:
     if pytest_logs:
         pytest_log = pytest_logs[0]
         lines = [
-            line for line in pytest_log.read_text(encoding="utf-8").splitlines() if line.strip()
+            line for line in pytest_log.read_text(encoding="utf-8", errors="replace").splitlines()
+            if line.strip()
         ]
         counts = _counts(lines[-1])
         printed = ", ".join(
@@ -385,7 +416,7 @@ def main() -> int:
     golden_logs = tuple(logs.glob("*-golden-path-*.log"))
     if golden_logs:
         golden_log = golden_logs[0]
-        for line in golden_log.read_text(encoding="utf-8").splitlines():
+        for line in golden_log.read_text(encoding="utf-8", errors="replace").splitlines():
             if "checks" in line and ("PASSED" in line or "FAILED" in line):
                 print_console(f"  golden path: {line.strip()}")
     playwright_cache = Path(os.environ.get("LOCALAPPDATA", "")) / "ms-playwright"

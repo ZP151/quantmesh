@@ -489,3 +489,40 @@ depend on the ignored local report.
   gate once. No fresh environment, review round, gate rerun, broad tests,
   push or PR ran during the correction. Task 6 Step 4, CI/human review and
   Goal completion remain open.
+
+### 2026-09-06 — Task 6 release-gate harness convergence
+
+- Controller evidence: gate candidate
+  `9d13dfbc8756285343baa85d51476abf34c9637c` passed prerequisite supply-chain
+  and frontend stages through Vitest. Session 2328 was then deliberately
+  interrupted: the harness's 5400-second/90-minute full-pytest limit is shorter
+  than the measured 8016.81-second/2:13:36 baseline, and `capture_output` hid
+  step logs until process exit. This interrupted gate is not a pass. The
+  controller confirmed PIDs 44780/54248/18324/5772/20392 exited before this work.
+- TDD RED on the unchanged harness: `tests/test_release_gate.py` reported
+  **2 failed, 4 passed in 7.50s**, exit 1. The failures were `5400 >= 10800`
+  and absence of a step log while a flushed, short-lived child waited for its
+  release event. A further timeout-tree regression failed in 2.45s, exit 1:
+  the owned descendant continued working after its parent was killed.
+- Implementer: `run_step` now directs merged stdout/stderr into an unbuffered
+  log file, with Python children unbuffered/UTF-8, so partial progress is
+  available without streaming all output to the console or retaining a reader
+  pipe. The console keeps stage summaries and a 60-line FAILED tail, including
+  the process exit code. Fail-soft UTF-8 reading and safe Windows console
+  output remain. Timeouts and interruptions terminate/reap the owned tree
+  (`taskkill /PID ... /T /F` on Windows, a separate process group elsewhere).
+  `FULL_PYTEST_TIMEOUT_SECONDS` is now 10800 (3 hours).
+- Final targeted verification, shared Python with explicit worktree PYTHONPATH
+  and PYTHONUTF8: `python -m pytest -q tests/test_release_gate.py
+  --basetemp=C:/Users/15492/AppData/Local/Temp/quantmesh-0028-gate-harness-final-20260906`
+  exited 0: **7 passed in 5.82s**. This covers live-before-exit logs, the measured
+  timeout margin, nonzero return/failure output, partial timeout logs, child
+  and descendant cleanup, and existing console/platform entrypoint behavior.
+  Initial GREEN was 7 passed in 5.86s; three Ruff formatting findings were then
+  corrected. Final `ruff.exe check tools/release_gate.py tests/test_release_gate.py`
+  and `git diff --check` both exited 0, with no warnings.
+- No release gate, full pytest, detector, review round, push or PR ran in this
+  wave. Pins, licensing policy and product semantics are unchanged. The new
+  pending candidate is the changed HEAD produced by this harness commit,
+  parent `9d13dfb`; its exact-head gate must run once after commit. Step 4 and
+  all subsequent CI/human-review/Goal completion gates remain open.

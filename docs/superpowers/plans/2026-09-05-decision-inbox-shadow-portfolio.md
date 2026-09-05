@@ -711,6 +711,16 @@ pins/allowlist remain unchanged. Syntax/Ruff/diff checks pass. Step 4 remains
 open: the changed-HEAD constraint-fix candidate must receive one exact-head
 gate after commit; the failed old SHA is not rerun.
 
+Candidate `9d13dfbc8756285343baa85d51476abf34c9637c` reached green prerequisites
+through Vitest, but session 2328 was actively interrupted: 5400s was below the
+measured 8016.81s full-suite baseline and buffered capture hid progress. This
+is not a gate pass; the controller confirmed every owned process exited.
+The next harness candidate writes merged step logs live and preserves owned
+process-tree cleanup, failure tails and exit codes, with timeout 10800s. TDD
+RED: 2 failed/4 passed plus the descendant-cleanup RED; final related GREEN:
+7 passed in 5.82s, Ruff/diff clean. Run the changed SHA's exact-head gate once
+after commit; do not count this targeted verification as gate completion.
+
 - [ ] **Step 5: Push and open the one milestone PR**
 
 Push `codex/0028-decision-inbox-shadow-portfolio`, open one PR linked to #129,
