@@ -624,6 +624,45 @@ def test_aapl_decision_inbox_opens_a_saved_watch_packet_after_reload(page, base_
     assert _decision_packet_id(page) == packet_id
 
 
+@pytest.mark.parametrize("symbol", ["BTC-USD", "SOL-USD"])
+def test_crypto_degraded_inbox_keeps_paper_blocked_and_saves_exact_watch_at_mobile_width(
+    page,
+    base_url,
+    symbol: str,
+) -> None:
+    _reset_demo(page, base_url)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
+    crypto_row = page.get_by_role("row").filter(has_text=symbol)
+    crypto_row.get_by_role("link", name="Open workspace").click()
+    page.get_by_role("heading", name=symbol, exact=True).wait_for()
+
+    main = page.get_by_role("main")
+    actions = main.get_by_role("region", name="DecisionPacket actions")
+    main_text = main.inner_text()
+    assert "No promoted forecast is available." in main_text
+    page.get_by_label("Decision reason").fill("Watch until forecast evidence is available")
+    assert page.get_by_role("button", name="Reject decision").is_enabled()
+    assert page.get_by_role("button", name="Watch decision").is_enabled()
+    assert page.get_by_role("button", name="Create paper proposal").is_disabled()
+
+    with page.expect_response(
+        lambda response: (
+            "/api/decision-packets/" in response.url and response.url.endswith("/actions")
+        )
+    ) as saved:
+        actions.get_by_role("button", name="Watch decision").click()
+    assert saved.value.status == 200
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_id = _decision_packet_id(page)
+    assert f"packet={packet_id}" in page.url
+    page.reload()
+    page.get_by_role("heading", name=symbol, exact=True).wait_for()
+    assert _decision_packet_id(page) == packet_id
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+
+
 def test_nvda_packet_copilot_valid_reload_and_unavailable_paths(
     page,
     base_url,

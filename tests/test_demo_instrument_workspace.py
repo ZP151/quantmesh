@@ -303,6 +303,77 @@ def test_aapl_decision_packet_action_is_durable_in_under_two_minutes_and_reopens
         assert client.get(f"/api/decision-packets/{packet['packet_id']}").json() == packet
 
 
+@pytest.mark.parametrize("symbol", ["BTC-USD", "SOL-USD"])
+@pytest.mark.parametrize("disposition", ["reject", "watch"])
+def test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders(
+    tmp_path: Path,
+    symbol: str,
+    disposition: str,
+) -> None:
+    root = tmp_path / symbol / disposition / "demo"
+    app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    orders_before = app.state.account_store.get().orders
+
+    with TestClient(app) as client:
+        workspace_response = client.get(
+            f"/api/instruments/hyperliquid/{symbol}/workspace?range=6m"
+        )
+        assert workspace_response.status_code == 200
+        draft = workspace_response.json()["decision"]["draft"]
+        assert draft["evidence"]["forecast_artifact_id"] is None
+        assert "forecast-missing" in {
+            item["code"] for item in draft["paper_capability"]["blockers"]
+        }
+        assert draft["paper_capability"]["allowed"] is False
+
+        saved_response = client.post(
+            "/api/decision-packets",
+            json={
+                "venue": "hyperliquid",
+                "symbol": symbol,
+                "selected_range": "6m",
+                "expected_packet_id": draft["packet_id"],
+            },
+        )
+        assert saved_response.status_code == 200
+        saved = saved_response.json()
+
+        paper_response = client.post(
+            f"/api/decision-packets/{saved['packet_id']}/actions",
+            json={
+                "disposition": "paper_proposal",
+                "operator_reason": None,
+                "side": "buy",
+                "quantity": 1.0,
+                "limit_price": None,
+            },
+        )
+        assert paper_response.status_code == 409
+
+        action_response = client.post(
+            f"/api/decision-packets/{saved['packet_id']}/actions",
+            json={
+                "disposition": disposition,
+                "operator_reason": f"Acceptance {disposition} with missing forecast evidence",
+                "side": None,
+                "quantity": None,
+                "limit_price": None,
+            },
+        )
+        assert action_response.status_code == 200
+        packet = action_response.json()["packet"]
+        assert packet["disposition"] == disposition
+        assert action_response.json()["proposal"] is None
+        assert client.get(f"/api/decision-packets/{packet['packet_id']}").json() == packet
+
+    assert app.state.proposal_service.ledger.all() == ()
+    assert app.state.account_store.get().orders == orders_before
+
+    restarted = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    with TestClient(restarted) as client:
+        assert client.get(f"/api/decision-packets/{packet['packet_id']}").json() == packet
+
+
 @pytest.mark.parametrize("safe_disposition", ["reject", "watch"])
 def test_stale_nvda_blocks_paper_but_keeps_nonpaper_decisions_and_creates_nothing(
     tmp_path: Path,

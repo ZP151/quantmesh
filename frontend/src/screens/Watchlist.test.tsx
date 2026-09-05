@@ -97,3 +97,43 @@ it('opens the exact pending packet and routes recoverable inbox states', async (
   expect(screen.getByRole('link', { name: 'Choose venue' }))
     .toHaveAttribute('href', '/markets')
 })
+
+it('labels an evidence-blocked crypto packet and preserves its exact route', async () => {
+  mockedDecisionInbox.mockResolvedValue({
+    entries: [
+      {
+        attention_reason: 'No promoted forecast is available.',
+        attention_state: 'blocked',
+        disposition: 'watch',
+        evidence_status: 'blocked',
+        instrument_type: 'crypto_perp',
+        mark_context: { reason: null, status: 'available', value: 65_000 },
+        monitoring: null,
+        packet_id: 'packet-222222222222222222222222',
+        paper: null,
+        parent_packet_id: 'packet-111111111111111111111111',
+        position_context: null,
+        review: null,
+        selected_range: '6m',
+        symbol: 'BTC-USD',
+        venue: 'hyperliquid',
+      },
+    ],
+    generated_at: '2026-09-05T12:00:00Z',
+  } satisfies DecisionInbox)
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+
+  expect(await screen.findByText('Evidence blocked')).toBeInTheDocument()
+  expect(screen.getByText('No promoted forecast is available.')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Open exact packet' })).toHaveAttribute(
+    'href',
+    '/instruments/hyperliquid/BTC-USD?range=6m&packet=packet-222222222222222222222222',
+  )
+})

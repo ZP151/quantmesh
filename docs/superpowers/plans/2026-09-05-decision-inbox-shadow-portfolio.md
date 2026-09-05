@@ -430,7 +430,7 @@ Review once against the Slice 1 commit; one correction review is the maximum.
 - Reuses forecast-missing/history-quality blockers and creates no forecast,
   manifest, quality evaluation, proposal or order for BTC-USD/SOL-USD.
 
-- [ ] **Step 1: Write the bounded acceptance matrix**
+- [x] **Step 1: Write the bounded acceptance matrix**
 
 Parameterize BTC-USD/SOL-USD × Reject/Watch across independent demo roots:
 
@@ -450,7 +450,7 @@ Add one 390px browser walk that opens each crypto Inbox row, reads the Paper
 blocker, confirms Reject/Watch remain enabled, saves Watch, reloads its exact ID,
 and asserts `document.documentElement.scrollWidth <= window.innerWidth`.
 
-- [ ] **Step 2: Run the matrix and classify RED honestly**
+- [x] **Step 2: Run the matrix and classify RED honestly**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/test_demo_instrument_workspace.py tests/test_spa_e2e.py -k "BTC or SOL or crypto_degraded" -q
@@ -464,7 +464,7 @@ Slice 1 UI satisfies the requirement and make no production change. Otherwise,
 confirm the failure is the intended missing visible state, then expose existing
 blockers with the smallest UI/copy correction while keeping Paper disabled.
 
-- [ ] **Step 3: Run GREEN, commit and review Slice 3**
+- [x] **Step 3: Run GREEN, commit and review Slice 3**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest tests/test_demo_instrument_workspace.py tests/test_decision_inbox.py tests/test_spa_e2e.py -k "BTC or SOL or crypto_degraded" -q

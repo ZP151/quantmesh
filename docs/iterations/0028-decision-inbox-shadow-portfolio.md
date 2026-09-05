@@ -161,3 +161,26 @@ license closure must pass at the final PR boundary.
   in 711.78 seconds. Targeted Ruff and `git diff --check` passed. Task 3 is now
   complete; the active frontier advances to Slice 3 / Task 4, honest BTC/SOL
   Reject/Watch-only degradation.
+
+### 2026-09-05 — Slice 3 Task 4: honest BTC/SOL Reject/Watch-only degradation
+
+- Added the independent `BTC-USD`/`SOL-USD` × Reject/Watch acceptance matrix.
+  Each case proves no forecast artifact, `forecast-missing`, a disabled Paper
+  capability, a 409 Paper-action refusal, a durable non-Paper action and no
+  proposal or account-order mutation across a fresh demo root and restart.
+- Added an Inbox/unit assertion for an evidence-blocked crypto packet's exact
+  route and a real 390px Chromium walk for each crypto row. The browser reads
+  the missing-forecast explanation, fills the required operator reason, keeps
+  Paper disabled, saves/reloads the exact Watch packet, and proves no document
+  horizontal overflow.
+- The first RED found only test assumptions: a generated-build ARIA selector
+  did not match and safe actions correctly require an operator reason before
+  becoming enabled. The visible Paper blocker and existing controls satisfied
+  the product requirement, so no production or generated SPA artifact changed.
+- Evidence: final selected Python matrix 6 passed, 42 deselected in 449.25s;
+  focused browser walk 2 passed in 78.48s; frontend suite 30 passed; typecheck,
+  lint and targeted Ruff passed. Lint retains four existing Fast Refresh
+  warnings. Detailed commands and red/green evidence:
+  `.superpowers/sdd/2026-09-05-decision-inbox-shadow-portfolio/task-4-report.md`.
+- Slice 3 is complete. The active frontier advances to Slice 4 / Task 5,
+  bounded paper-shadow summary and clean-restart replay.
