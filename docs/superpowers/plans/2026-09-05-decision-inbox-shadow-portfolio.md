@@ -671,8 +671,20 @@ git add docs/goals/ACTIVE.md docs/iterations/0028-decision-inbox-shadow-portfoli
 git commit -m "docs: complete iteration 0028 verification"
 ```
 
-The next action is the controller's one final whole-branch review. Only after
-it is clean should Step 4 run on the exact reviewed candidate.
+The controller's final whole-branch review round 1 at `7dd644c` found four
+bounded correctness issues. Its correction wave covers exact-packet local
+action state on Back/Forward, atomic fresh range navigation from an exact
+packet, baseline Inbox service attachment without optional history/packet
+services, and truthful zh-CN accepted-zero-fill wording. Each has a reproducing
+RED and focused GREEN; the tracked iteration records the related verification.
+Only the non-blocking mark timestamp/reason visibility Spec Minor is deferred.
+Verification: exact baseline wiring regression 1 passed, related frontend
+69 passed, API/typecheck/lint/Ruff/diff passed. The controller stopped the
+supplementary combined Inbox/Workstation run (18 observed passing markers,
+interrupted exit 1, no final pytest summary) to reserve whole-suite work for
+the single exact-head gate. It is not a test-failure result or authoritative
+completion evidence; the already-green exact baseline test was not rerun.
+Only after review acceptance should Step 4 run on the exact reviewed candidate.
 
 - [ ] **Step 4: Run the single exact-head release gate**
 

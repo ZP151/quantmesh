@@ -1171,7 +1171,7 @@ export const messages = {
     'screen.watchlist.state.blocked': '证据受阻',
     'screen.watchlist.state.draft': '草稿',
     'screen.watchlist.state.notStarted': '未开始',
-    'screen.watchlist.state.paperOpen': '模拟仓位已开',
+    'screen.watchlist.state.paperOpen': '模拟订单进行中',
     'screen.watchlist.state.pendingConfirmation': '等待确认',
     'screen.watchlist.state.rejected': '已拒绝',
     'screen.watchlist.state.reviewAvailable': '可复盘',

@@ -184,7 +184,8 @@ export function InstrumentWorkspaceScreen() {
       }
   const activeSelection: PacketSelection = requestedSelection
     ?? (packetSelection?.contextKey === decisionContextKey ? packetSelection : defaultSelection)
-  if (responseContextReady && (packetSelection === null || packetSelection.contextKey !== decisionContextKey)) {
+  if (requestedPacketId === null && responseContextReady
+    && (packetSelection === null || packetSelection.contextKey !== decisionContextKey)) {
     setPacketSelection(defaultSelection)
   }
   const fetchedExactPacket = exactPacketQuery.data?.packet_id === activeSelection.packetId
@@ -247,6 +248,21 @@ export function InstrumentWorkspaceScreen() {
     else next.set(key, value)
     setSearch(next)
   }
+  const updateRange = (nextRange: HistoryRange) => {
+    const next = new URLSearchParams(search)
+    next.set('range', nextRange)
+    if (requestedPacketId !== null && nextRange !== range) {
+      next.delete('packet')
+      setPacketSelection({
+        contextKey: `${venue}:${symbol}:${nextRange}`,
+        mode: 'fresh',
+        packetId: null,
+        revision: activeSelection.revision + 1,
+        snapshot: null,
+      })
+    }
+    setSearch(next)
+  }
   const updateComparisons = (peers: string[]) => {
     const next = new URLSearchParams(search)
     next.delete('compare')
@@ -294,7 +310,7 @@ export function InstrumentWorkspaceScreen() {
             marketState={displayedPacket.market_state}
             mode={mode}
             onModeChange={(next) => updateParam('mode', next === 'candles' ? null : next)}
-            onRangeChange={(next) => updateParam('range', next)}
+            onRangeChange={updateRange}
             onSma20Change={(enabled) => updateParam('sma20', enabled ? '1' : null)}
             onSma50Change={(enabled) => updateParam('sma50', enabled ? '1' : null)}
             onVolumeChange={(enabled) => updateParam('volume', enabled ? '1' : null)}
@@ -379,7 +395,7 @@ export function InstrumentWorkspaceScreen() {
           <DecisionRail
             contextKey={decisionContextKey}
             evidenceUpdating={evidenceUpdating}
-            key={`${decisionContextKey}:${packetSource}:${activeSelection.revision}:${evidenceUpdating ? 'updating' : 'ready'}`}
+            key={`${decisionContextKey}:${packetSource}:${activeSelection.packetId}:${activeSelection.revision}:${evidenceUpdating ? 'updating' : 'ready'}`}
             onActionResult={(result) => {
               queryClient.setQueryData(['decision-packet', result.packet.packet_id], result.packet)
               const next = new URLSearchParams(search)

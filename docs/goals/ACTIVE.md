@@ -22,7 +22,7 @@
   per demonstrable slice, targeted verification during development, one final
   exact-head CI boundary. One 0028 product track and one independent 0021 soak
   maintenance track may coexist; neither modifies the other's files or state.
-- Current frontier: one final whole-branch review, then the single exact-head
+- Current frontier: accept the final review round-1 correction wave, then the single exact-head
   release gate, branch push, milestone PR, exact-head CI and human review.
   Task 6 Steps 1–3 are complete; Steps 4–5 remain open. No further product
   slice is open and the Goal is not complete.
@@ -34,6 +34,19 @@
   and isolated Python/npm license closure passed. The active iteration records
   commands, corrections and retained warnings; no full pytest exit-0 claim or
   release-gate result is made at this checkpoint.
+- Final review round 1 at `7dd644c7dbbde14a245cdb1fbfc02117fad4af3d`
+  identified exact-packet action-state leakage on browser history navigation,
+  pinned-packet range navigation, missing baseline Inbox wiring, and misleading
+  zh-CN wording for an accepted zero-fill paper order. The bounded correction
+  wave has reproducing tests and keeps all trading and optional-service
+  boundaries unchanged. Only the non-blocking Spec Minor for mark timestamp
+  and reason visibility is deferred; final review acceptance and integration
+  gates are not claimed complete.
+- Correction verification: exact baseline wiring regression 1 passed in 1.32s;
+  related frontend suites 69 passed in 10.45s; API/typecheck/lint/Ruff/diff
+  checks passed. The controller stopped the supplementary Inbox/Workstation
+  combined run to avoid duplicating the final gate; its interrupted exit is
+  not a test-failure result and is not authoritative completion evidence.
 - External gate: none. Provider/OpenD, real market calls and model services are
   not required and are prohibited expansion for this iteration.
 

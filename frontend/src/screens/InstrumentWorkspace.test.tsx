@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError, api, type DecisionPacket, type InstrumentWorkspace } from '@/lib/api'
 import { dateTime } from '@/lib/format'
@@ -252,7 +252,12 @@ function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
 
 function LocationProbe() {
   const location = useLocation()
-  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>
+  const navigate = useNavigate()
+  return <>
+    <output data-testid="location">{`${location.pathname}${location.search}`}</output>
+    <button onClick={() => navigate(-1)}>Back</button>
+    <button onClick={() => navigate(1)}>Forward</button>
+  </>
 }
 
 function exactPacket(packetId: string, overrides: Partial<DecisionPacket> = {}): DecisionPacket {
@@ -328,6 +333,65 @@ beforeEach(() => {
 })
 
 describe('InstrumentWorkspaceScreen', () => {
+  it('restores exact packet action state on Back and Forward after creating a child', async () => {
+    const parent = { ...workspace.decision.draft, packet_id: 'packet-aaaaaaaaaaaaaaaaaaaaaaaa' }
+    const child = exactPacket('packet-bbbbbbbbbbbbbbbbbbbbbbbb', {
+      parent_packet_id: parent.packet_id,
+      operator_reason: 'Child-only reason',
+    })
+    mockedDecisionPacket.mockResolvedValue(parent)
+    mockedApplyDecisionPacketAction.mockResolvedValue({ packet: child, proposal: null })
+    renderWorkspace(`/instruments/moomoo/NVDA?range=6m&packet=${parent.packet_id}`)
+    const user = userEvent.setup()
+    await user.type(await screen.findByLabelText('Decision reason'), 'Child-only reason')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+    expect(await screen.findByText(child.packet_id)).toBeInTheDocument()
+
+    for (const [direction, selected, absent] of [
+      ['Back', parent.packet_id, child.packet_id],
+      ['Forward', child.packet_id, parent.packet_id],
+      ['Back', parent.packet_id, child.packet_id],
+    ]) {
+      await user.click(screen.getByRole('button', { name: direction }))
+      expect(screen.getByTestId('location')).toHaveTextContent(`packet=${selected}`)
+      const rail = within(screen.getByRole('complementary', { name: 'Decision rail' }))
+      expect(rail.getByText(selected)).toBeInTheDocument()
+      expect(rail.queryByText(absent)).not.toBeInTheDocument()
+      if (direction === 'Back') {
+        expect(rail.getByLabelText('Decision reason')).toHaveValue('')
+        expect(rail.queryByText('Child-only reason')).not.toBeInTheDocument()
+      }
+    }
+  })
+
+  it('leaves a pinned packet atomically when changing range and keeps fresh controls', async () => {
+    const selected = exactPacket('packet-cccccccccccccccccccccccc')
+    const oneMonth = {
+      ...workspace,
+      history: { ...workspace.history, range: '1m' as const },
+      decision: {
+        draft: { ...workspace.decision.draft, selected_range: '1m' as const },
+        latest: exactPacket('packet-dddddddddddddddddddddddd', { selected_range: '1m' }),
+      },
+    }
+    const pending = deferred<InstrumentWorkspace>()
+    mockedWorkspace.mockImplementation(async (_venue, _symbol, range) => range === '1m' ? pending.promise : workspace)
+    mockedDecisionPacket.mockResolvedValue(selected)
+    renderWorkspace(`/instruments/moomoo/NVDA?range=6m&packet=${selected.packet_id}`)
+    expect(await screen.findByText(selected.packet_id)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '1M', exact: true }))
+
+    expect(screen.getByTestId('location')).toHaveTextContent('range=1m')
+    expect(screen.getByTestId('location')).not.toHaveTextContent('packet=')
+    expect(screen.getByTestId('workspace-grid')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '6M', exact: true })).toBeInTheDocument()
+    await act(async () => pending.resolve(oneMonth))
+    await waitFor(() => expect(screen.getByRole('button', { name: '1M', exact: true })).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.getByLabelText('Decision reason')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'New analysis' })).not.toBeInTheDocument()
+    expect(screen.queryByText(oneMonth.decision.latest.packet_id)).not.toBeInTheDocument()
+  })
+
   it('uses an explicit packet query as the displayed packet', async () => {
     const selected = exactPacket('packet-111111111111111111111111')
     mockedDecisionPacket.mockResolvedValue(selected)

@@ -370,3 +370,75 @@ Local command outputs, retained sessions and detailed diagnosis:
 `.superpowers/sdd/2026-09-05-decision-inbox-shadow-portfolio/task-6-report.md`.
 This tracked ledger mirrors the material evidence so resumption does not
 depend on the ignored local report.
+
+### 2026-09-06 — Final review round 1: bounded correction wave
+
+- Reviewer/controller: reviewed checkpoint
+  `7dd644c7dbbde14a245cdb1fbfc02117fad4af3d`; authorized one focused fix commit
+  for four findings, with TDD and directly related verification only. No broad
+  pytest rerun, release gate, push or PR is part of this wave.
+- Implementer: exact selection is now part of the workspace's DecisionRail
+  state identity. Creating packet B from exact packet A and navigating
+  Back/Forward remounts packet-bound local action state; B's reason/result
+  cannot remain visible under A. Same-context fresh polling remains unchanged.
+- Implementer: changing range from a pinned packet removes the `packet` query
+  and selects fresh analysis for the requested range in the same interaction.
+  Exact-URL rendering does not overwrite that pending fresh selection with a
+  default archive. The loading transition keeps workspace/range controls, and
+  the new range stays fresh even if that workspace also has a saved packet.
+- Implementer: baseline workstation construction now attaches the existing
+  DecisionInboxService outside the history/packet-service condition. Its
+  existing optional providers still supply `None` when absent, while persisted
+  watchlist membership and configured marks remain visible. No packet,
+  proposal, monitoring or review state is fabricated; optional service
+  injection, reset-safe providers and all Provider/OpenD boundaries remain.
+- Quant researcher/UX: zh-CN `paper_open` now says `模拟订单进行中` rather than
+  claiming a position opened. Accepted zero-fill and filled/open orders both
+  fit this neutral workflow label; order status and filled quantity remain
+  explicit in the record disclosure. Impeccable hardening preserved the
+  existing interface and focused only on navigation state and truthful i18n.
+
+#### Verifier: RED and focused GREEN
+
+- Backend regression initially needed its required `PaperAccount.cash` fixture
+  corrected (not a product RED). The valid pre-fix run failed on HTTP 404 versus
+  expected 200: 1 failed, 1 warning in 1.60s, exit 1. After moving only service
+  attachment, the same test passed: 1 passed, 1 warning in 1.32s, exit 0.
+- Frontend RED used the three new regressions in `InstrumentWorkspace.test.tsx`
+  and `Watchlist.test.tsx`. After correcting the test's range-button casing,
+  the valid unchanged-product run was 3 failed / 28 skipped in 3.76s, exit 1:
+  Back selected A in the URL while the rail still held B; range 1m retained
+  `packet=C`; accepted zero-fill displayed `模拟仓位已开`.
+- The first range correction exposed the old exact render's default-selection
+  overwrite; the same regression drove the guard at that source. Focused final
+  GREEN: 3 passed / 28 skipped in 4.24s, exit 0. The wait for the resolved
+  one-month response uses the query's normal asynchronous notification.
+- Relevant frontend suites: `InstrumentWorkspace`, `instrument/DecisionRail`,
+  `Watchlist`, `NavigationAndValuation`, and `lib/preferences`: **69 passed in
+  10.45s**, five files, exit 0. This includes the existing same-context polling,
+  stale-action, confirmation, range-placeholder and exact-route checks.
+- `npm run check:api`, `npm run typecheck`, and `npm run lint` exited 0;
+  generated API client unchanged. Lint retains the same four Fast Refresh
+  warnings recorded above. Targeted Ruff on `src/quantmesh/api/workstation.py`
+  and `tests/test_decision_inbox.py` passed after wrapping the new test's long
+  signature. `git diff --check` passed. The one Impeccable detector invocation
+  for the changed UI sources returned `[]` (exit 0).
+- A supplementary related backend run used session `70427`, shared
+  Python, explicit worktree PYTHONPATH/PYTHONUTF8, and unique basetemp
+  `C:/Users/15492/AppData/Local/Temp/quantmesh-0028-review-related-green-20260906`:
+  `python -m pytest -q tests/test_decision_inbox.py tests/test_workstation.py
+  --basetemp=... --durations=3`. The controller explicitly directed Ctrl+C to
+  avoid repeating full Workstation coverage before the single final gate.
+  Before interruption, 18 passing progress markers and no failures had been
+  observed. The session returned exit 1 with no pytest final summary; no
+  authoritative completed-test count or full-suite pass is inferred. Read-only
+  process inspection confirmed no matching worker remained. This interrupted
+  supplementary run is not classified as a test failure. The exact baseline
+  wiring regression had already passed against the same implementation, so it
+  was not rerun; its 1 passed / 1.32s / exit 0 is the backend fix evidence.
+- Deferred: only the final review's non-blocking Spec Minor, mark timestamp
+  and reason visibility in the Inbox. No performance claims or additional
+  provider/monitoring/0021 work entered this correction.
+- Final review acceptance, exact-head release gate, push/PR/CI/human review
+  and Goal completion remain open. The original broad pytest exit 1 and its
+  systematic classification above remain the historical broad evidence.

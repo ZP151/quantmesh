@@ -74,6 +74,7 @@ const inbox = {
 const mockedDecisionInbox = vi.mocked(api.decisionInbox)
 
 beforeEach(() => {
+  localStorage.clear()
   mockedDecisionInbox.mockResolvedValue(inbox)
 })
 
@@ -97,6 +98,35 @@ it('opens the exact pending packet and routes recoverable inbox states', async (
     .toHaveAttribute('href', '/instruments/moomoo/AAPL')
   expect(screen.getByRole('link', { name: 'Choose venue' }))
     .toHaveAttribute('href', '/markets')
+})
+
+it('does not claim a position opened for an accepted zero-fill paper order in zh-CN', async () => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+  mockedDecisionInbox.mockResolvedValue({
+    ...inbox,
+    entries: [{
+      ...inbox.entries[0],
+      attention_state: 'paper_open',
+      attention_reason: 'Paper order accepted with no fills.',
+      paper: {
+        proposal_id: 'proposal-111', status: 'confirmed',
+        order_id: 'paper-proposal:proposal-111', order_status: 'accepted', filled_quantity: 0,
+      },
+    }],
+  })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+  expect(await screen.findByText('模拟订单进行中')).toBeVisible()
+  expect(screen.queryByText('模拟仓位已开')).not.toBeInTheDocument()
+  await userEvent.click(screen.getByText('模拟与决策记录'))
+  expect(screen.getByText('已接受')).toBeVisible()
+  expect(screen.getByText('成交数量').nextElementSibling).toHaveTextContent('0')
 })
 
 it('labels an evidence-blocked crypto packet and preserves its exact route', async () => {

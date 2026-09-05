@@ -8,9 +8,12 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from quantmesh.api.watchlist import WatchlistStore
+from quantmesh.api.workstation import create_workstation_app
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.domain.models import Instrument, Venue
+from quantmesh.execution.accounting import PaperAccount
 from quantmesh.instruments.inbox import (
     DecisionInboxError,
     DecisionInboxMarkContext,
@@ -23,6 +26,34 @@ from quantmesh.instruments.monitoring import DecisionWatchObservation, WatchCond
 from quantmesh.instruments.reviews import ReviewClassification
 
 SCENARIO = DemoScenario()
+
+
+def test_baseline_inbox_preserves_persisted_watchlist_without_packet_services(
+    tmp_path: Path,
+) -> None:
+    watchlist = WatchlistStore(tmp_path / "watchlist")
+    watchlist.add("NVDA", venue=Venue.MOOMOO, now=SCENARIO.anchor)
+    watchlist.add("UNKNOWN", venue=None, now=SCENARIO.anchor)
+    app = create_workstation_app(
+        account=PaperAccount(cash=100_000),
+        watchlist=WatchlistStore(tmp_path / "watchlist"),
+        markets={"moomoo": {"NVDA": 184.2}},
+        workspace_clock=lambda: SCENARIO.anchor,
+        host="127.0.0.1",
+    )
+    with TestClient(app) as client:
+        response = client.get("/api/decision-packets")
+    assert response.status_code == 200
+    assert len(response.json()["entries"]) == 2
+    nvda = _entry(response.json(), "moomoo", "NVDA")
+    assert nvda["attention_state"] == "not_started"
+    assert nvda["mark_context"]["value"] == 184.2
+    assert _entry(response.json(), None, "UNKNOWN")["attention_state"] == "unavailable"
+    for row in response.json()["entries"]:
+        assert row["packet_id"] is None
+        assert row["paper"] is None
+        assert row["monitoring"] is None
+        assert row["review"] is None
 
 
 def _draft(client: TestClient, symbol: str = "NVDA") -> dict[str, object]:
