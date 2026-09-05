@@ -686,6 +686,11 @@ the single exact-head gate. It is not a test-failure result or authoritative
 completion evidence; the already-green exact baseline test was not rerun.
 Only after review acceptance should Step 4 run on the exact reviewed candidate.
 
+2026-09-06 round 2: source findings resolved at `e6e3acd`; mechanical packaged
+SPA refresh completed with canonical build and `--check` exit 0 (`bundle is
+current`). Three unsupported test-only role-query options were removed with
+controller approval, with assertions unchanged. Step 4 remains pending.
+
 - [ ] **Step 4: Run the single exact-head release gate**
 
 ```powershell
@@ -711,7 +716,7 @@ requirement and repository evidence agrees.
   bounded paper-shadow/restart slices implemented with recorded acceptance.
 - [x] License closure, original broad verification result, focused repairs and
   retained warnings mirrored into the tracked iteration checkpoint.
-- [ ] Final whole-branch review clean.
+- [x] Final whole-branch review source findings resolved; packaged SPA refreshed and checked.
 - [ ] Single exact-head release gate passed on the reviewed checkpoint.
 - [ ] Milestone PR pushed/opened; exact-head CI and human review green.
 - [ ] Final objective-by-objective audit and Goal completion.

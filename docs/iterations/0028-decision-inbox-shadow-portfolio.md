@@ -361,7 +361,7 @@ observed lock state, not a captured body.
 - [x] One broad pre-PR run captured; failures classified, focused corrections
   verified, and all other pre-PR checks recorded honestly.
 - [x] Task 6 Steps 1–3: tracked integration evidence and tested checkpoint.
-- [ ] One final whole-branch review.
+- [x] Final whole-branch review: round-2 source findings resolved; artifact refresh below.
 - [ ] One exact-head release gate after review.
 - [ ] Push, milestone PR, exact-head CI and human review.
 - [ ] Final objective-by-objective Goal completion audit.
@@ -442,3 +442,27 @@ depend on the ignored local report.
 - Final review acceptance, exact-head release gate, push/PR/CI/human review
   and Goal completion remain open. The original broad pytest exit 1 and its
   systematic classification above remain the historical broad evidence.
+
+### 2026-09-06 — Task 6 mechanical SPA artifact completion
+
+- Controller: final review round 2 resolved source findings at
+  `e6e3acd0d633b643c5b13d68be2309894cd23c01`; the committed SPA still required
+  refresh. No further review round or behavior change was authorized.
+- Shared Python `tools/build_frontend.py` initially exited 1: `tsc -b` found
+  three unsupported `getByRole` options in the new range regression. With
+  explicit approval, removed only `exact: true` at those three calls; literal
+  role/name assertions and runtime behavior are unchanged. The prior root
+  `tsc --noEmit` command does not build its referenced TypeScript projects.
+- Canonical `C:/Users/15492/Develop/QuantMesh/.venv/Scripts/python.exe
+  tools/build_frontend.py`, with `PYTHONUTF8=1`, then exited 0: 2083 modules,
+  Vite 11.97s, copied `frontend/dist` to the packaged SPA. The same interpreter
+  with `tools/build_frontend.py --check` exited 0: 2083 modules, Vite 412ms,
+  `bundle is current`. `git diff --check` exited 0.
+- Generated diff: replaced `InstrumentWorkspace-BVCLqqdd.js` with
+  `InstrumentWorkspace-B8WDwIX0.js`, `index-BrHmpXAo.js` with
+  `index-SmewbZoZ.js`, and updated the index script reference. CSS/fonts are
+  unchanged; the builder replaced the owned bundle tree, leaving no stale
+  orphan assets. Retained warnings: existing >500 kB chunk warning and one
+  build's plugin timing notice (27% of 12.0s in hooks); no optimization scope.
+- No detector, additional pytest, release gate, push or PR ran. The single
+  exact-head gate is next; CI/human review and Goal completion remain open.

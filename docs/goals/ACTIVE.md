@@ -1,7 +1,7 @@
 # Active Goal
 
 - Status: active — iteration 0028 implementation and pre-PR verification
-  complete; final review and integration gates pending.
+  complete; exact-head integration gates pending.
 - Objective: give a research-minded individual active trader one watchlist-level
   Decision Inbox that identifies the next evidence-backed action, opens the
   exact DecisionPacket, and summarizes its bounded paper proposal, order,
@@ -22,7 +22,7 @@
   per demonstrable slice, targeted verification during development, one final
   exact-head CI boundary. One 0028 product track and one independent 0021 soak
   maintenance track may coexist; neither modifies the other's files or state.
-- Current frontier: accept the final review round-1 correction wave, then the single exact-head
+- Current frontier: the single exact-head
   release gate, branch push, milestone PR, exact-head CI and human review.
   Task 6 Steps 1–3 are complete; Steps 4–5 remain open. No further product
   slice is open and the Goal is not complete.
@@ -47,6 +47,12 @@
   checks passed. The controller stopped the supplementary Inbox/Workstation
   combined run to avoid duplicating the final gate; its interrupted exit is
   not a test-failure result and is not authoritative completion evidence.
+- Final review round 2 confirmed source findings resolved at `e6e3acd`;
+  the remaining mechanical SPA artifact refresh is complete. Canonical build
+  and `tools/build_frontend.py --check` passed (`bundle is current`), with only
+  expected JS bundle hashes/index changed. Three unsupported test-only `exact`
+  options were removed with controller approval; assertions are unchanged.
+  The exact-head release gate, push/PR/CI/human review and Goal audit remain open.
 - External gate: none. Provider/OpenD, real market calls and model services are
   not required and are prohibited expansion for this iteration.
 
