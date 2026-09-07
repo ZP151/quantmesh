@@ -25,17 +25,17 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: recovery Task 1 (exact forecast evidence clocks and field
-  placement) is approved. Recovery Task 2 backend Inbox/restart proof has
-  focused passing evidence and awaits its scoped Spec review. Recovery Task 3
-  now has exhaustive known-reason localization evidence (23 Inbox/readiness
-  codes, 4 monitoring states and 6 persisted monitoring reason codes); its
-  scoped Standards+Spec review is next. Then run the single Slice 1 recovery
-  integration boundary. The prior combined Task 2 was split after an
-  implementation turn produced no changes or report. Parent Task 2 is not
-  started. No freshness threshold is added:
-  historical packet evidence remains replayable, separate from current
-  local-observation time.
+- Current frontier: parent Task 1 / Slice 1 recovery is complete. Recovery
+  Tasks 1–3 were accepted through `4e9e296`, `88bce75`/`44d95f7`, and
+  `9390456`/`ad2a367`; the final import-order-only integration repair is
+  `be5949a`. The exact recovery-head backend selection passed once (`59
+  passed, 1 inherited Starlette/httpx warning, 1068.63s`), and scoped Ruff,
+  generated-client freshness, targeted Vitest (`91 passed`), typecheck, lint
+  (four inherited Fast Refresh warnings), and `git diff --check` passed. The
+  existing Impeccable detector record remains `[]` and was not rerun. Parent
+  Task 2, explicit local session refresh, is the next and only authorized
+  frontier. No freshness threshold is added: historical packet evidence
+  remains replayable, separate from current local-observation time.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

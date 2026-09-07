@@ -258,6 +258,39 @@ final PR boundaries rather than after every micro-change.
   did not change, so the already-recorded one-pass Impeccable detector was not
   rerun.
 
+### 2026-09-08 — Slice 1 recovery integration: COMPLETE
+
+- Recovery Task 1 is accepted at `4e9e296` (`fix(decisions): preserve exact
+  forecast evidence`): its scoped quant/spec review found no open
+  Critical/Important finding. Recovery Task 2 is accepted at `88bce75`
+  (`test(decisions): prove inbox readiness recovery`) with its reviewed
+  blocked-exact-closure proof pin at `44d95f7`; its scoped Spec review found
+  no open Critical/Important finding. Recovery Task 3 is accepted at
+  `9390456` (`fix(decisions): localize readiness reasons`) with the review-fix
+  at `ad2a367` (`fix(decisions): preserve localized source values`); its scoped
+  Standards+Spec review found no open Critical/Important finding. The final
+  import-order-only recovery fix is `be5949a` (`style: sort decision inbox
+  imports`).
+- The mandated four-file backend selection was run exactly once on the recovery
+  head with this worktree's `src` first on `PYTHONPATH` and the shared virtual
+  environment Scripts directory first on `PATH`: `59 passed, 1 warning in
+  1068.63s (0:17:48)`, exit `0`. The sole warning remains the inherited
+  `StarletteDeprecationWarning` from shared FastAPI TestClient/httpx usage and
+  is recorded, not hidden.
+- The remaining exact-head boundary passed once after the import-order repair:
+  scoped Ruff exit `0`; `npm run generate:api` exit `0` in `12.3s`; `npm run
+  check:api` exit `0` in `4.8s`; targeted Vitest exit `0` with `91 passed` in
+  `3` files in `3.93s` (command wall time `7.0s`); `npm run typecheck` exit
+  `0` in `1.5s`; `npm run lint` exit `0` in `1.9s`; and `git diff --check`
+  exit `0` in `0.4s`. Lint retained the four inherited Fast Refresh warnings
+  in `state.tsx`, `badge.tsx`, `button.tsx`, and `preferences.tsx`.
+- The prior Impeccable detector evidence remains `[]`; it was not rerun because
+  the final localization review-fix changed no layout. No Provider/network,
+  0021, Scheduler, trusted-data, external, or trading state changed.
+- Parent Slice 1 / Task 1 is complete. The parent plan resumes at Task 2:
+  explicit local session refresh; no other slice is authorized by this
+  checkpoint.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
