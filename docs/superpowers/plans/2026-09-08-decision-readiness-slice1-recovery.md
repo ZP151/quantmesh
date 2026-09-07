@@ -41,7 +41,7 @@ Task 2.
   backend selection exactly once after both recovery tasks, not after each
   micro-edit.
 
-## Recovery Task A — Exact forecast evidence projection
+### Task 1: Exact forecast evidence projection
 
 **User-visible invariant:** A failed advertised forecast never appears as
 history evidence and never hides an older forecast-generation clock.
@@ -93,7 +93,7 @@ one scoped quant/spec review has no open Critical/Important finding. Commit:
 fix(decisions): preserve exact forecast evidence
 ```
 
-## Recovery Task B — Inbox recovery proof and complete known-reason copy
+### Task 2: Inbox recovery proof and complete known-reason copy
 
 **User-visible invariant:** The reconstructed Inbox presents exact real and
 blocked evidence plus the persisted monitoring result truthfully in English
@@ -154,7 +154,7 @@ Standards+Spec review has no open Critical/Important finding. Commit:
 test(decisions): prove inbox readiness recovery
 ```
 
-## Slice 1 recovery integration
+### Task 3: Slice 1 recovery integration
 
 After both tasks are reviewed, run the parent plan's exact four-file backend
 selection once on the recovery head, then the targeted frontend/API/type/lint,
