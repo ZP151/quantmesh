@@ -1,7 +1,8 @@
 # Active Goal
 
 - Status: active — iteration 0029 parent Task 2 stopped after review round 2/2;
-  its narrowed recovery plan is active and Task 3 is not authorized.
+  its narrowed recovery plan has approved Tasks 1–3, Recovery Task 4 is next,
+  and parent Task 3 is not authorized.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -107,6 +108,23 @@
   Ruff/format/diff clean. Final independent Task 2 review APPROVED with no
   Critical or Important finding. Recovery Task 3 may start; parent Task 3
   remains frozen.
+- Recovery Task 3 adds test-only explicit-refresh proof: a manually controlled
+  promise proves keyboard Enter, retained focus, pending disable, one refresh
+  request and exactly one Decision Inbox invalidation/refetch. Table tests
+  cover complete, partial, no-registered-watches and rejected outcomes in
+  English and Simplified Chinese; partial preserves the exact failed packet ID,
+  localized known reason and sanitized `title` fallback, while rejection never
+  displays raw server text. The test also proves no interval, automatic second
+  call, packet-monitoring/registration request, localStorage refresh payload
+  or timer text starts while pending. This coverage began GREEN against the
+  existing compact UI; a temporary `disabled={false}` mutation failed the
+  named pending assertion (`1 failed, 51 skipped`) and was restored. Focused
+  Vitest passed `88` tests in `2` files in `3.96s`; typecheck passed; lint
+  exited `0` with the four inherited Fast Refresh warnings. No production
+  TSX/CSS/message change or Impeccable rerun was needed; `git diff --check`
+  passed. The scoped Task 3 Standards+Spec review found no Critical or
+  Important issue and approved the proof. Recovery Task 4 and parent Task 3
+  remain frozen.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

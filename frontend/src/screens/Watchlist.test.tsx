@@ -96,6 +96,27 @@ const inbox = {
 const mockedDecisionInbox = vi.mocked(api.decisionInbox)
 const mockedRefresh = vi.mocked(api.refreshDecisionSession)
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+  return { promise, resolve }
+}
+
+function renderWatchlist(locale: 'en-US' | 'zh-CN' = 'en-US') {
+  if (locale === 'zh-CN') {
+    localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale, theme: 'dark' }))
+  }
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider><MemoryRouter><WatchlistScreen /></MemoryRouter></PreferencesProvider>
+    </QueryClientProvider>,
+  )
+  return client
+}
+
 beforeEach(() => {
   localStorage.clear()
   mockedDecisionInbox.mockResolvedValue(inbox)
@@ -112,24 +133,101 @@ beforeEach(() => {
   })
 })
 
-it('explicitly refreshes the local session, disables pending work, and invalidates the Inbox', async () => {
+it('keeps explicit keyboard refresh focused and pending until its one Inbox refetch completes', async () => {
   const user = userEvent.setup()
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(
-    <QueryClientProvider client={client}>
-      <PreferencesProvider>
-        <MemoryRouter><WatchlistScreen /></MemoryRouter>
-      </PreferencesProvider>
-    </QueryClientProvider>,
-  )
-
+  const refresh = deferred<Awaited<ReturnType<typeof api.refreshDecisionSession>>>()
+  mockedRefresh.mockImplementationOnce(() => refresh.promise)
+  const client = renderWatchlist()
   const button = await screen.findByRole('button', { name: 'Refresh session' })
-  await user.click(button)
+  const invalidate = vi.spyOn(client, 'invalidateQueries')
+  const setInterval = vi.spyOn(globalThis, 'setInterval')
+  const setItem = vi.spyOn(Storage.prototype, 'setItem')
+  const checkPacketMonitoring = vi.spyOn(api, 'checkPacketMonitoring')
+
+  button.focus()
+  expect(button).toHaveFocus()
+  await user.keyboard('{Enter}')
 
   expect(mockedRefresh).toHaveBeenCalledTimes(1)
+  expect(button).toHaveFocus()
+  expect(button).toBeDisabled()
+  expect(invalidate).not.toHaveBeenCalled()
+  expect(mockedDecisionInbox).toHaveBeenCalledTimes(1)
+  expect(setInterval).not.toHaveBeenCalled()
+  expect(checkPacketMonitoring).not.toHaveBeenCalled()
+  expect(setItem).not.toHaveBeenCalled()
+
+  refresh.resolve({
+    started_at: '2026-09-08T12:00:00Z', completed_at: '2026-09-08T12:00:01Z',
+    status: 'complete', registered_count: 2, evaluated_count: 2,
+    items: [
+      { packet_id: 'packet-aaaaaaaaaaaaaaaaaaaaaaaa', registration_id: 'registration-aaaaaaaaaaaaaaaaaaaaaaaa', evaluation_id: 'evaluation-aaaaaaaaaaaaaaaaaaaaaaaa', status: 'evaluated', triggered: true, not_comparable_codes: [], reason_code: null, reason: null },
+      { packet_id: 'packet-bbbbbbbbbbbbbbbbbbbbbbbb', registration_id: 'registration-bbbbbbbbbbbbbbbbbbbbbbbb', evaluation_id: 'evaluation-bbbbbbbbbbbbbbbbbbbbbbbb', status: 'evaluated', triggered: false, not_comparable_codes: [], reason_code: null, reason: null },
+    ],
+  })
+
   expect(await screen.findByText('2 watches checked · 1 triggered')).toBeVisible()
   expect(mockedDecisionInbox).toHaveBeenCalledTimes(2)
+  expect(invalidate).toHaveBeenCalledTimes(1)
+  expect(invalidate).toHaveBeenCalledWith({ queryKey: ['decision-inbox'] })
+  expect(mockedRefresh).toHaveBeenCalledTimes(1)
   expect(screen.queryByText(/automatic refresh|seconds/i)).not.toBeInTheDocument()
+})
+
+it.each([
+  ['en-US', 'complete', '2 watches checked · 1 triggered'],
+  ['zh-CN', 'complete', '已检查 2 个观察 · 已触发 1 个'],
+  ['en-US', 'partial', '1 of 2 watches checked'],
+  ['zh-CN', 'partial', '已检查 1 / 2 个观察'],
+  ['en-US', 'no_registered_watches', 'No local watches are registered.'],
+  ['zh-CN', 'no_registered_watches', '没有已注册的本地观察。'],
+] as const)('renders the %s %s explicit refresh outcome', async (locale, status, feedback) => {
+  mockedRefresh.mockResolvedValue({
+    started_at: '2026-09-08T12:00:00Z', completed_at: '2026-09-08T12:00:01Z',
+    status,
+    registered_count: status === 'no_registered_watches' ? 0 : 2,
+    evaluated_count: status === 'complete' ? 2 : status === 'partial' ? 1 : 0,
+    items: status === 'complete'
+      ? [
+          { packet_id: 'packet-aaaaaaaaaaaaaaaaaaaaaaaa', registration_id: 'registration-aaaaaaaaaaaaaaaaaaaaaaaa', evaluation_id: 'evaluation-aaaaaaaaaaaaaaaaaaaaaaaa', status: 'evaluated', triggered: true, not_comparable_codes: [], reason_code: null, reason: null },
+          { packet_id: 'packet-bbbbbbbbbbbbbbbbbbbbbbbb', registration_id: 'registration-bbbbbbbbbbbbbbbbbbbbbbbb', evaluation_id: 'evaluation-bbbbbbbbbbbbbbbbbbbbbbbb', status: 'evaluated', triggered: false, not_comparable_codes: [], reason_code: null, reason: null },
+        ]
+      : status === 'partial'
+      ? [
+          { packet_id: 'packet-aaaaaaaaaaaaaaaaaaaaaaaa', registration_id: 'registration-aaaaaaaaaaaaaaaaaaaaaaaa', evaluation_id: 'evaluation-aaaaaaaaaaaaaaaaaaaaaaaa', status: 'evaluated', triggered: false, not_comparable_codes: [], reason_code: null, reason: null },
+          { packet_id: 'packet-bbbbbbbbbbbbbbbbbbbbbbbb', registration_id: 'registration-bbbbbbbbbbbbbbbbbbbbbbbb', evaluation_id: null, status: 'failed', triggered: false, not_comparable_codes: [], reason_code: 'packet_unavailable', reason: 'This local watch could not be evaluated.' },
+        ]
+      : [],
+  })
+  const user = userEvent.setup()
+  renderWatchlist(locale)
+
+  await user.click(await screen.findByRole('button', {
+    name: locale === 'zh-CN' ? '刷新会话' : 'Refresh session',
+  }))
+
+  expect(await screen.findByText(feedback)).toBeVisible()
+  if (status === 'partial') {
+    expect(screen.getByText('packet-bbbbbbbbbbbbbbbbbbbbbbbb')).toBeVisible()
+    const reason = screen.getByText(
+      locale === 'zh-CN' ? '已保存的决策包不可用。' : 'Saved packet is unavailable.',
+    )
+    expect(reason).toHaveAttribute('title', 'This local watch could not be evaluated.')
+  }
+})
+
+it.each([
+  ['en-US', 'Refresh session', 'Local session refresh is unavailable.'],
+  ['zh-CN', '刷新会话', '本地会话刷新不可用。'],
+] as const)('renders localized sanitized rejected-refresh feedback for %s', async (locale, buttonName, feedback) => {
+  mockedRefresh.mockRejectedValueOnce(new Error('raw server response must not render'))
+  const user = userEvent.setup()
+  renderWatchlist(locale)
+
+  await user.click(await screen.findByRole('button', { name: buttonName }))
+
+  expect(await screen.findByText(feedback)).toBeVisible()
+  expect(screen.queryByText('raw server response must not render')).not.toBeInTheDocument()
 })
 
 it('lists failed packet-bound partial refresh facts in English and Chinese', async () => {

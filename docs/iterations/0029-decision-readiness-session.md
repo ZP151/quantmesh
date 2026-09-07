@@ -468,6 +468,33 @@ final PR boundaries rather than after every micro-change.
   or Important finding. Recovery Task 3 may start; parent Task 3 remains
   frozen.
 
+### 2026-09-08 — Task 2 recovery Task 3: explicit refresh interaction proof
+
+- Added only load-bearing Watchlist component coverage. A manually controlled
+  refresh Promise proves keyboard Enter from retained button focus creates one
+  request, disables the control while pending, then invalidates/refetches only
+  the Decision Inbox exactly once after resolution. It also proves no interval,
+  packet-monitoring/registration request, localStorage refresh payload, timer
+  text, or automatic second refresh begins while the mutation is pending.
+- Table-driven English and Simplified-Chinese cases cover `complete`,
+  `partial`, and `no_registered_watches`; a failed item preserves its exact
+  packet ID, reviewed localized `packet_unavailable` text, and the sanitized
+  server reason in `title`. Rejected requests show the existing localized
+  transient unavailable line and never render the injected raw error text.
+- This proof correctly began GREEN because the compact control and feedback
+  already met the approved contract. A temporary `disabled={false}` mutation
+  produced `1 failed, 51 skipped` at the pending-disabled assertion; the exact
+  source was restored. Focused Vitest passed `88` tests in `2` files in
+  `3.96s`; TypeScript passed; lint exited `0` with the four inherited Fast
+  Refresh warnings in `button.tsx`, `badge.tsx`, `preferences.tsx`, and
+  `state.tsx`. `git diff --check` exited `0`.
+- No production TSX/CSS or message copy changed, so the Impeccable detector
+  was not rerun. No Provider/OpenD/Scheduler, 0021, evidence-root, proposal,
+  confirmation, order, network, external, polling, persisted refresh state,
+  or trading behavior changed. The scoped Task 3 Standards+Spec review found
+  no Critical or Important issue and approved this proof. Recovery Task 4 and
+  parent Task 3 remain frozen.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
