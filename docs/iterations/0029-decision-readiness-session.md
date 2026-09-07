@@ -521,8 +521,15 @@ final PR boundaries rather than after every micro-change.
 - Restored focused GREEN: Vitest passed `88` tests in `2` files in `3.88s`;
   TypeScript passed; lint exited `0` with the four inherited Fast Refresh
   warnings; `git diff --check` passed. No production UI/copy or detector run
-  is required. Final independent Task 3 review round 2/2 is the only next
-  frontier; Recovery Task 4 and parent Task 3 remain frozen.
+  is required.
+- Final independent Task 3 review round 2/2 returned NOT APPROVED with one
+  residual Important: the last interval assertion precedes terminal success
+  rendering, so a `refresh.isSuccess` effect that starts a 60-second automatic
+  refresh interval survives the named test. The original Task 3 loop is closed.
+- Recovery Task 3B is a single proof-only boundary: assert scheduler/storage/
+  monitoring/refresh counts again after terminal render and effect flush, and
+  prove the exact success-effect interval mutation fails. Recovery Task 4 and
+  parent Task 3 remain frozen.
 
 ### 2026-09-07 — Activation and architecture approval
 

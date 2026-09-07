@@ -281,6 +281,53 @@ issue, or round 2/2.
 
 ---
 
+### Task 3B: Post-success scheduler proof
+
+**User-visible invariant:** Automatic refresh cannot start in a success effect
+after terminal feedback appears.
+
+**Files:**
+
+- Modify: `frontend/src/screens/Watchlist.test.tsx`
+- Modify: `docs/iterations/0029-decision-readiness-session.md`
+- Modify: `docs/goals/ACTIVE.md`
+
+**Interfaces:**
+
+- Consumes: the existing deferred-Promise test and its pre-mount interval,
+  storage, monitoring and refresh spies.
+- Produces: one lifecycle-closed negative proof; no production interface.
+
+- [ ] **Step 1: Write the post-success assertion**
+
+After resolving the mutation, await terminal success feedback and flush the
+committed React effects. Then repeat the zero assertions for `setInterval`,
+`api.checkPacketMonitoring`, non-preference localStorage writes and automatic
+`api.refreshDecisionSession` calls. Keep exact one-call Inbox invalidation and
+refetch assertions.
+
+- [ ] **Step 2: Prove the named mutation RED**
+
+Temporarily add a `useEffect([refresh.isSuccess])` that schedules
+`setInterval(api.refreshDecisionSession, 60_000)` after success. Run only the
+named keyboard/pending test and require it to fail at the new post-success
+scheduler assertion. Restore production exactly; do not retain the mutation.
+
+- [ ] **Step 3: Verify, commit and review**
+
+Run focused Watchlist/messages Vitest, typecheck, lint and `git diff --check`.
+Commit only test/docs with:
+
+```text
+test(decisions): close refresh scheduler proof
+```
+
+One fresh Standards+Spec reviewer must reproduce or inspect the mutation and
+find no Critical/Important issue. Stop at round 2/2; do not begin Task 4 before
+approval.
+
+---
+
 ### Task 4: Recovery integration and parent-frontier decision
 
 **Files:**

@@ -1,8 +1,9 @@
 # Active Goal
 
 - Status: active — iteration 0029 parent Task 2 stopped after review round 2/2;
-  its narrowed recovery plan has approved Tasks 1–2, Recovery Task 3 round 1
-  is NOT APPROVED, and parent Task 3 is not authorized.
+  its narrowed recovery plan has approved Tasks 1–2, while Recovery Task 3
+  exhausted review round 2/2 with one post-success proof gap. Task 3B is active;
+  parent Task 3 is not authorized.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -138,8 +139,11 @@
   assertion (`1 failed, 51 skipped`, `1.97s`). Production source was restored.
   Focused GREEN is `88` Vitest tests in `2` files in `3.88s`; typecheck passed
   and lint exited `0` with four inherited Fast Refresh warnings. Final
-  independent review round 2/2 remains required; Task 4 and parent Task 3
-  remain frozen.
+  independent review round 2/2 still found one Important: the last scheduler
+  assertion precedes terminal success rendering, so a success-effect interval
+  mutation survives. The original Task 3 loop is closed. Recovery Task 3B adds
+  only a post-success effect-flush scheduler assertion and mutation proof;
+  Task 4 and parent Task 3 remain frozen.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release
