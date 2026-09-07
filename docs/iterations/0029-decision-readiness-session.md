@@ -374,6 +374,39 @@ final PR boundaries rather than after every micro-change.
 - No Provider/OpenD/Scheduler, 0021, evidence-root, proposal, confirmation,
   order, external, or real/paper trading state changed.
 
+### 2026-09-08 — Task 2 recovery Task 1: fail-closed watch-ledger replay
+
+- Added read-only `DecisionWatchStore.validate_replay()` and its
+  `DecisionWatchService` delegate. Under the existing root transaction it
+  reads registration, activation, and ordinary-evaluation ledgers once,
+  rejects duplicate registrations and orphan evaluations, and replays each
+  activation plus ordinary evaluation chain through the existing canonical
+  identity, chronology, terminal-event, and price-cursor validators. It
+  appends nothing.
+- Session refresh now invokes that service-level replay closure before selecting
+  Inbox rows. Thus an empty Inbox with corrupt evaluation bytes raises the
+  existing sanitized `DecisionSessionError` before any workspace render or
+  evaluation write; it cannot return `no_registered_watches` as healthy.
+- RED: the prescribed selector exited `1` with the expected empty-Inbox corrupt
+  evaluation failure (`1 failed, 38 deselected`, `1.19s`). The required
+  regression mutation then removed only the new closure and produced
+  `5 failed, 34 deselected` in `1.41s` (command wall `2.08s`): malformed
+  registration, activation, and evaluation JSON, semantic orphan evaluation,
+  and empty-Inbox corrupt evaluation replay each failed for the intended absent
+  validator/bypass reason.
+- GREEN: after restoration, the combined focused selection passed `5`, with
+  `34 deselected`, in `1.14s` (command wall `1.78s`), exit `0`. Scoped Ruff
+  check (`0.03s`), Ruff format check (`0.04s`), and `git diff --check`
+  (`0.06s`) each exited `0`. The test formatter also made two pre-existing
+  scoped line-wrap adjustments; no behavior changed there.
+- Fresh Task 1 Standards+Spec review found no Critical or Important issue: the
+  closure is read-only, validates activation and ordinary evaluation records in
+  one registration chain, preserves the existing sanitized session error, and
+  does not expand product or operational authority. Recovery Task 2 and parent
+  Task 3 remain frozen. No Provider/OpenD/Scheduler, 0021,
+  evidence-root, proposal, confirmation, order, network, external, or trading
+  state changed.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

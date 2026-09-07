@@ -69,6 +69,19 @@
   0021, Scheduler, trusted-data, external, or trading effect occurred; no
   freshness threshold is added, and historical packet evidence remains
   replayable separate from current local-observation time.
+- Recovery Task 1 is implemented at the current frontier: a read-only,
+  transaction-bound complete decision-watch replay now validates registrations,
+  activations, ordinary evaluations, orphan bindings, canonical identities and
+  each combined evaluation chain before session selection. The empty-Inbox
+  corrupt-evaluation regression proves `DecisionSessionError`, zero workspace
+  render calls and unchanged corrupt bytes. Mutation RED was `5 failed, 34
+  deselected` in `1.41s` (`2.08s` wall); GREEN was `5 passed, 34 deselected` in
+  `1.14s` (`1.78s` wall), exit `0`; scoped Ruff check, Ruff format check and
+  diff check all exited `0` (`0.03s`, `0.04s`, `0.06s`). A fresh Task 1
+  Standards+Spec review found no Critical or Important issue. Recovery Task 2
+  and parent Task 3 remain frozen; no Provider/OpenD/Scheduler, 0021,
+  evidence-root, proposal, confirmation, order, network, external or trading
+  state changed.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

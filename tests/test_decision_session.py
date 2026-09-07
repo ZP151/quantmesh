@@ -7,6 +7,8 @@ import pytest
 
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.instruments.contracts import HistoryRange
+from quantmesh.instruments.decision_packets import DecisionPacketStore
+from quantmesh.instruments.monitoring import DecisionWatchService, DecisionWatchStore
 from quantmesh.instruments.session import DecisionSessionError, DecisionSessionService
 
 NOW = datetime(2026, 9, 8, 12, 0, tzinfo=UTC)
@@ -28,6 +30,9 @@ class _Watches:
 
     def state(self, packet_id: str):
         return self._registrations.get(packet_id), None
+
+    def validate_replay(self) -> None:
+        self.store.registrations()
 
     def check(self, registration_id: str, observation: object):
         self.checked.append((registration_id, observation))
@@ -87,9 +92,7 @@ def _entry(packet: object) -> object:
 
 def _registration(packet: object) -> object:
     identities = {"AAPL": "c" * 24, "NVDA": "d" * 24}
-    return SimpleNamespace(
-        registration_id=f"registration-{identities[packet.instrument.symbol]}"
-    )
+    return SimpleNamespace(registration_id=f"registration-{identities[packet.instrument.symbol]}")
 
 
 def test_refresh_evaluates_registered_packets_in_deterministic_identity_order() -> None:
@@ -157,6 +160,33 @@ def test_refresh_refuses_corrupt_registration_replay_before_an_empty_selection()
         service.refresh()
 
     assert watches.checked == []
+
+
+def test_refresh_refuses_corrupt_evaluation_replay_before_empty_selection(tmp_path) -> None:
+    """Catch an empty Inbox result that skips the independent evaluation ledger."""
+    root = tmp_path / "monitoring"
+    root.mkdir()
+    corrupt = "{corrupt-evaluation}\n"
+    evaluation_path = root / "watch-evaluations.jsonl"
+    evaluation_path.write_text(corrupt, encoding="utf-8")
+    renderer = _Renderer()
+    watches = DecisionWatchService(
+        packet_store=DecisionPacketStore(tmp_path / "packets"),
+        store=DecisionWatchStore(root),
+    )
+    service = DecisionSessionService(
+        inbox=_Inbox(()),
+        packets=_Packets({}),
+        watches=watches,
+        workspace=renderer,
+        now=lambda: NOW,
+    )
+
+    with pytest.raises(DecisionSessionError, match="registrations cannot be replayed"):
+        service.refresh()
+
+    assert renderer.calls == []
+    assert evaluation_path.read_text(encoding="utf-8") == corrupt
 
 
 def test_refresh_marks_missing_packet_as_a_sanitized_partial_failure() -> None:

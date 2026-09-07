@@ -424,6 +424,31 @@ class DecisionWatchStore:
             raise ValueError("duplicate decision watch registration for packet")
         return records
 
+    def validate_replay(self) -> None:
+        """Fail closed unless every durable registration and evaluation replays."""
+        with self.transaction():
+            registrations = tuple(self._registrations.read())
+            activations = tuple(self._activations.read())
+            evaluations = tuple(self._evaluations.read())
+            records = registrations + tuple(activation.registration for activation in activations)
+            if len({record.packet_id for record in records}) != len(records) or len(
+                {record.registration_id for record in records}
+            ) != len(records):
+                raise ValueError("duplicate decision watch registration for packet")
+            known = {record.registration_id: record for record in records}
+            replayed: dict[str, list[DecisionWatchEvaluation]] = {
+                registration_id: [] for registration_id in known
+            }
+            for evaluation in (
+                *(activation.evaluation for activation in activations),
+                *evaluations,
+            ):
+                if evaluation.registration_id not in known:
+                    raise ValueError("watch evaluation has no recorded registration")
+                replayed[evaluation.registration_id].append(evaluation)
+            for registration_id, registration in known.items():
+                self._validate_evaluation_chain(registration, tuple(replayed[registration_id]))
+
     def evaluations(self, registration_id: str) -> tuple[DecisionWatchEvaluation, ...]:
         registrations = {record.registration_id: record for record in self.registrations()}
         activated = tuple(
@@ -670,6 +695,9 @@ class DecisionWatchService:
         with self.store.transaction():
             packet = self.packet_store.get(packet_id)
             return self.store.record_registration(self._registration(packet, kinds))
+
+    def validate_replay(self) -> None:
+        self.store.validate_replay()
 
     def _registration(
         self, packet, kinds: tuple[WatchConditionKind, ...]
