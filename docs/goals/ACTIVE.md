@@ -1,7 +1,7 @@
 # Active Goal
 
-- Status: active — iteration 0029 Slice 1 is NOT APPROVED after its capped
-  review round 2/2 and must be re-scoped before further implementation.
+- Status: active — iteration 0029 Slice 1 recovery is executable under the
+  approved smaller-boundary plan; parent Task 2 remains frozen.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -14,6 +14,8 @@
   `docs/superpowers/specs/2026-09-07-decision-readiness-session-design.md`
 - Executable plan:
   `docs/superpowers/plans/2026-09-08-decision-readiness-session.md`
+- Active recovery plan:
+  `docs/superpowers/plans/2026-09-08-decision-readiness-slice1-recovery.md`
 - Integration branch: `codex/0029-decision-readiness-session`
 - Baseline: merged `origin/main` at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; immutable `v0.1.1-rc1`
@@ -23,14 +25,10 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: Task 1 / Slice 1 is blocked at review round 2/2. Re-scope
-  the slice for four load-bearing findings before a fresh implementation and
-  review cycle: preserve `forecast_generated_at` in limiting evidence on a
-  failed forecast closure; prevent demo+real-forecast blocked evidence from
-  entering `history`; complete exact-real/corrupt Inbox, session
-  reconstruction, and monitoring status/reason behavioral evidence; and map
-  all reachable known reason codes in Simplified Chinese. Task 2 is not
-  started; do not begin a third review loop. No freshness threshold was added:
+- Current frontier: execute recovery Task A (exact forecast evidence clocks
+  and field placement), then recovery Task B (Inbox/restart proof and complete
+  known-reason localization). Each smaller task gets its own bounded TDD and
+  review cycle. Parent Task 2 is not started. No freshness threshold is added:
   historical packet evidence remains replayable, separate from current
   local-observation time.
 - Iteration 0028 closure: PR #130 squash-merged at

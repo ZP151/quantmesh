@@ -153,6 +153,19 @@ final PR boundaries rather than after every micro-change.
   outbox, testnet, live-trading or other execution state changed during this
   documentation-only closeout.
 
+### 2026-09-08 — Slice 1 recovery re-scope
+
+- The approved recommendation is to shrink the four residual findings into
+  two independent recovery tasks rather than open a third broad review loop.
+- Recovery Task A owns only exact forecast limiting clocks and evidence-field
+  placement. Recovery Task B owns only Inbox/restart behavioral proof and the
+  exhaustive known-reason localization map.
+- The executable recovery plan is
+  `docs/superpowers/plans/2026-09-08-decision-readiness-slice1-recovery.md`.
+  It preserves the approved design and 0021 authority boundary. Parent Task 2
+  remains frozen until both recovery tasks and the single Slice 1 integration
+  boundary pass.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
