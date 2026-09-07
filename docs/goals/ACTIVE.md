@@ -83,6 +83,18 @@
   and parent Task 3 remain frozen; no Provider/OpenD/Scheduler, 0021,
   evidence-root, proposal, confirmation, order, network, external or trading
   state changed.
+- Recovery Task 2 is implemented at this recovery frontier: real durable
+  packet/watch/session proof covers canonical evaluation IDs, idempotent replay,
+  reconstruction cursor advance, stale-only and partial outcomes, clock
+  refusals, and no new registration. Real HTTP/OpenAPI/current-app-state proof
+  covers bodyless same-origin refresh, pre-write foreign-Origin refusal,
+  replacement/reset state, sanitized corrupt-evaluation 409, and unattached
+  404. The focused two-file backend selection passed `48` tests with two
+  inherited warnings in `5.43s`; scoped Ruff check/format and diff check
+  passed. A narrow observation-mapper correction converts immutable packet
+  metadata to serializable base-instrument metadata before JSONL persistence.
+  Recovery Task 3 and parent Task 3 remain frozen; no prohibited operational,
+  external, or trading state changed.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

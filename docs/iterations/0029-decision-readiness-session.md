@@ -408,6 +408,36 @@ final PR boundaries rather than after every micro-change.
   evidence-root, proposal, confirmation, order, network, external, or trading
   state changed.
 
+### 2026-09-08 — Task 2 recovery Task 2: durable coordinator and HTTP proof
+
+- Added the required real-store proof for an explicit session refresh. It seeds
+  only approved NVDA/AAPL action-packet fixtures and fixed registrations, then
+  proves canonical persisted evaluation identity, byte-equivalent replay with
+  no append, strictly newer cursor advancement after reconstruction, stale-only
+  no-quote evaluation, mixed missing-packet partial success, invalid initial
+  and backwards completion clocks, and zero registration creation.
+- Added real `TestClient(create_workstation_app(...))` proof that refresh has no
+  OpenAPI request body, accepts a bodyless same-origin POST, rejects a foreign
+  Origin before an evaluation write, follows replacement app-state
+  packet/watch/workspace/Inbox services, returns a sanitized 409 for corrupt
+  evaluation bytes without appending or exposing those bytes, and remains 404
+  when unattached. An actual deterministic demo reset also proves the next
+  refresh reads the reset monitoring store.
+- The durable test exposed one production defect: an immutable packet
+  instrument's `mappingproxy` metadata reached JSONL evaluation serialization.
+  `build_watch_observation()` now copies that snapshot into the base
+  `Instrument` contract with ordinary metadata before it is persisted. This is
+  the common single-packet/session observation boundary; no product interface
+  or authority changed.
+- Focused GREEN on the recovery worktree: `pytest
+  tests/test_decision_session.py tests/test_packet_monitoring.py -q --basetemp
+  %TEMP%\quantmesh-0029-task2-recovery-real` exited `0` with `48 passed` and
+  two inherited serializer/TestClient warnings in `5.43s`. Scoped Ruff check
+  and format check exited `0`; `git diff --check` exited `0`. No Provider,
+  OpenD, Scheduler, 0021, evidence-root, proposal, confirmation, order,
+  network, external, or trading action occurred. Recovery Task 3 and parent
+  Task 3 remain frozen.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
