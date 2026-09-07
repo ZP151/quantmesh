@@ -117,6 +117,24 @@ final PR boundaries rather than after every micro-change.
   returned wrong manifest identity. The remaining frontier is the controller's
   one final stable combined backend selection at this exact head.
 
+### 2026-09-08 — Task 1 controller final verification
+
+- Controller-owned stable selection passed with the worktree `src` first on
+  `PYTHONPATH` and the reviewed shared virtualenv Scripts directory first on
+  `PATH`:
+
+  ```text
+  python -m pytest tests/test_decision_readiness.py tests/test_decision_inbox.py tests/test_data_catalog.py tests/test_data_catalog_api.py -q --basetemp %TEMP%\quantmesh-0029-task1-controller-final
+  exit 0; 47 passed, 1 warning in 930.56s (0:15:30)
+  ```
+
+- The sole warning was `StarletteDeprecationWarning` from the shared
+  `.venv\Lib\site-packages\fastapi\testclient.py:1`, concerning
+  `httpx`/`starlette.testclient` and httpx 2. It is an inherited dependency
+  warning, recorded rather than hidden; it is not a Task 1 product defect.
+- The exact-head combined boundary is now evidenced. Task 1 is at scoped
+  re-review; do not advance the next slice until that review resolves.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
