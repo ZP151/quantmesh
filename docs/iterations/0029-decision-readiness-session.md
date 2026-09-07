@@ -452,7 +452,7 @@ final PR boundaries rather than after every micro-change.
   asserting serialized observation sequences.
 - The current-state test now makes the original renderer fail if selected and
   supplies a replacement renderer with distinct `99.0` price, sequence `17`,
-  source, and timestamp. It asserts the exact persisted observation/facts and
+  and source. It asserts the exact persisted observation/facts and
   renderer calls. The actual demo-reset test instruments the replaced real
   watch store and observes `validate_replay()` from the subsequent refresh.
 - Targeted mutation RED: forcing `_price_result()` to always return
@@ -460,11 +460,13 @@ final PR boundaries rather than after every micro-change.
   `1.60s`); replacing the app-state renderer with the captured failing
   original failed the current-state test (`1 failed, 18 deselected`, `2.54s`).
   After restoring both mutations, the three named cases passed (`3 passed, 16
-  deselected`, `3.62s`, one inherited TestClient warning). Scoped Ruff check,
+  deselected`, pytest `3.62s`, command wall `3.76s`, one inherited TestClient
+  warning). Scoped Ruff check,
   Ruff format check, and `git diff --check` exited `0`.
 - No production behavior or authority changed in this review fix. Recovery
-  Task 3 and parent Task 3 remain frozen pending the final independent Task 2
-  review.
+  The final independent Task 2 review APPROVED the boundary with no Critical
+  or Important finding. Recovery Task 3 may start; parent Task 3 remains
+  frozen.
 
 ### 2026-09-07 — Activation and architecture approval
 
