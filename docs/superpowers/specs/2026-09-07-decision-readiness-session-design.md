@@ -1,7 +1,6 @@
 # Decision Readiness Session — Design
 
-- Status: architecture approved in chat on 2026-09-07; written specification
-  pending operator review
+- Status: approved by operator on 2026-09-08
 - Date: 2026-09-07
 - Iteration: 0029
 - Issue: [#131](https://github.com/ZP151/quantmesh/issues/131)

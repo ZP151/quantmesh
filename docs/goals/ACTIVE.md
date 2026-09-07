@@ -1,6 +1,7 @@
 # Active Goal
 
-- Status: active — iteration 0029 written design pending operator review.
+- Status: active — iteration 0029 written design approved; executable plan
+  prepared and pending execution approach selection.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -11,7 +12,8 @@
 - Active iteration: `docs/iterations/0029-decision-readiness-session.md`
 - Design:
   `docs/superpowers/specs/2026-09-07-decision-readiness-session-design.md`
-- Executable plan: pending written-spec approval.
+- Executable plan:
+  `docs/superpowers/plans/2026-09-08-decision-readiness-session.md`
 - Integration branch: `codex/0029-decision-readiness-session`
 - Baseline: merged `origin/main` at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; immutable `v0.1.1-rc1`
@@ -21,8 +23,8 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: operator review of the written 0029 specification. After
-  approval, create the executable plan; implementation has not started.
+- Current frontier: choose subagent-driven or inline plan execution, then begin
+  Task 1 / Slice 1 readiness truth with TDD. Implementation has not started.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

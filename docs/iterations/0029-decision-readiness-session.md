@@ -1,13 +1,14 @@
 # Iteration 0029 — Decision Readiness Session
 
-- Status: design review
+- Status: executable plan review
 - Started: 2026-09-07
 - Tracking issue: [#131](https://github.com/ZP151/quantmesh/issues/131)
 - Integration branch: `codex/0029-decision-readiness-session`
 - Baseline: `origin/main@4fb810e1268f5f0e13599d7198aee4fa78cc4717`
 - Design:
   `docs/superpowers/specs/2026-09-07-decision-readiness-session-design.md`
-- Executable plan: pending written-spec approval
+- Executable plan:
+  `docs/superpowers/plans/2026-09-08-decision-readiness-session.md`
 
 ## Outcome
 
@@ -72,6 +73,19 @@ final PR boundaries rather than after every micro-change.
 - Issue #131 records the user outcome, acceptance criteria and prohibitions.
 - A fresh worktree and branch were created from merged
   `origin/main@4fb810e1268f5f0e13599d7198aee4fa78cc4717`.
-- The written design is pending operator review. No implementation plan or
-  product code has started, and no 0021, Provider/OpenD, Scheduler, evidence,
-  trading or external-notification state changed.
+- At this checkpoint the written design was pending operator review. No product
+  code had started, and no 0021, Provider/OpenD, Scheduler, evidence, trading or
+  external-notification state changed.
+
+### 2026-09-08 — Written design approval and executable plan
+
+- Operator approved the written specification at commit `1e4cce6`.
+- The executable plan maps the approved design into four 24–48 hour vertical
+  slices plus one exact-head integration/PR closeout task. Every slice names one
+  user action, one stop condition, precise files/interfaces, TDD commands and a
+  two-round review ceiling.
+- The plan reuses `DecisionInboxService`, `DecisionWatchService.check()` and
+  exact `TrustedDataCatalog.lineage(manifest_id)`; it creates no second Inbox,
+  monitoring or session ledger and gives 0029 no 0021 operational authority.
+- Execution approach selection is the next frontier. Product code remains
+  unchanged at this checkpoint.
