@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import timedelta
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,6 +11,8 @@ from pydantic import ValidationError
 
 from quantmesh.api.watchlist import WatchlistStore
 from quantmesh.api.workstation import create_workstation_app
+from quantmesh.data.catalog import CatalogIntegrityError
+from quantmesh.data.quality import QualityStatus
 from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
@@ -22,10 +25,13 @@ from quantmesh.instruments.inbox import (
     DecisionInboxReviewSummary,
     DecisionInboxService,
 )
+from quantmesh.instruments.decision_packets import decision_packet_id
 from quantmesh.instruments.monitoring import DecisionWatchObservation, WatchConditionKind
 from quantmesh.instruments.reviews import ReviewClassification
 from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
 from quantmesh.live.feed import LiveFeed
+from tests.test_decision_packets import NOW, packet, watch_child
+from tests.test_decision_readiness import EVALUATION, MANIFEST, REPORT, ExactCatalog, _lineage
 
 SCENARIO = DemoScenario()
 
@@ -166,6 +172,202 @@ def _entry(payload: dict[str, object], venue: str | None, symbol: str) -> dict[s
     return next(
         item for item in payload["entries"] if item["venue"] == venue and item["symbol"] == symbol
     )
+
+
+class _CorruptExactCatalog(ExactCatalog):
+    """Exact-ID fake whose named closure cannot be replayed."""
+
+    def lineage(self, manifest_id: str):
+        self.requested.append(manifest_id)
+        raise CatalogIntegrityError("fixture catalog closure is corrupt")
+
+
+def _record_real_watched_packet(app, *, checked_at):
+    """Use real packet/monitoring stores with a packet-bound trusted closure."""
+    original = packet()
+    evidence = original.evidence.model_copy(
+        update={
+            "history_manifest_id": MANIFEST,
+            "history_quality_evaluation_id": EVALUATION,
+            "history_source": "trusted-provider",
+        }
+    )
+    provisional = original.model_copy(
+        update={"packet_id": "packet-" + "0" * 24, "evidence": evidence}
+    )
+    root_packet = provisional.model_copy(update={"packet_id": decision_packet_id(provisional)})
+    watched_packet = watch_child(root_packet)
+    app.state.decision_packets.record(root_packet)
+    app.state.decision_packets.record(watched_packet)
+    registration = app.state.packet_monitoring.register(
+        watched_packet.packet_id, (WatchConditionKind.ENTRY_ZONE,)
+    )
+    evaluation = app.state.packet_monitoring.check(
+        registration.registration_id,
+        DecisionWatchObservation(evaluated_at=checked_at),
+    )
+    app.state.decision_inbox._now = lambda: checked_at
+    app.state.packet_reviews._now = lambda: checked_at
+    return watched_packet, registration, evaluation
+
+
+def _inbox_store_bytes(root: Path, marks: dict[str, float]) -> dict[str, bytes]:
+    """Capture every Inbox input that must remain unchanged by a read projection."""
+    return {
+        "packet_store": (root / "decisions/packets/decision-packets.jsonl").read_bytes(),
+        # Marks are an injected in-memory map, not a durable JsonlStore.  Its
+        # canonical bytes make the read-only assertion equally exact.
+        "mark_source": json.dumps(marks, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+        "registration_store": (
+            root / "decisions/monitoring/watch-registrations.jsonl"
+        ).read_bytes(),
+        "evaluation_store": (root / "decisions/monitoring/watch-evaluations.jsonl").read_bytes(),
+    }
+
+
+def test_inbox_projects_exact_real_evidence_and_persisted_monitoring_session(
+    tmp_path: Path,
+) -> None:
+    """Pins the real exact-ID projection against a demo or unqualified fallback mutation."""
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+    checked_at = NOW + timedelta(seconds=1)
+    watched_packet, registration, evaluation = _record_real_watched_packet(
+        app, checked_at=checked_at
+    )
+    catalog = ExactCatalog({MANIFEST: _lineage()})
+    app.state.data_catalog = catalog
+
+    snapshot = app.state.decision_inbox.snapshot()
+    row = next(
+        entry
+        for entry in snapshot.entries
+        if entry.venue is Venue.MOOMOO and entry.symbol == "NVDA"
+    )
+
+    assert row.packet_id == watched_packet.packet_id
+    assert row.readiness.status == "ready"
+    assert row.readiness.history is not None
+    assert row.readiness.history.manifest_id == MANIFEST
+    assert row.readiness.history.evaluation_id == EVALUATION
+    assert row.readiness.history.report_id == REPORT
+    assert row.readiness.history.evaluated_at == NOW
+    assert catalog.requested == [MANIFEST]
+    assert row.monitoring is not None
+    assert row.monitoring.registration_id == registration.registration_id
+    assert row.monitoring.latest_evaluation_id == evaluation.evaluation_id
+    assert row.monitoring.last_checked_at == checked_at
+    assert row.monitoring.latest_status == "not_comparable"
+    assert row.monitoring.latest_reason == "unusable_price_evidence"
+    assert snapshot.session.last_checked_at == checked_at
+    assert snapshot.session.registered_count == 1
+    assert snapshot.session.triggered_count == 0
+
+
+@pytest.mark.parametrize(
+    ("catalog", "expected_status", "expected_reason", "history_present"),
+    [
+        (
+            ExactCatalog({MANIFEST: _lineage(manifest_id="9" * 64)}),
+            "unavailable",
+            "history_manifest_mismatch",
+            False,
+        ),
+        (
+            _CorruptExactCatalog({}),
+            "unavailable",
+            "history_catalog_unavailable",
+            False,
+        ),
+        (
+            ExactCatalog({MANIFEST: _lineage(status=QualityStatus.FAIL)}),
+            "blocked",
+            "history_not_trusted",
+            True,
+        ),
+    ],
+    ids=("mismatched-manifest", "corrupt-closure", "untrusted-exact-closure"),
+)
+def test_inbox_sanitizes_corrupt_or_mismatched_exact_closures_without_catalog_fallback(
+    tmp_path: Path,
+    catalog: ExactCatalog,
+    expected_status: str,
+    expected_reason: str,
+    history_present: bool,
+) -> None:
+    """Pins fail-closed exact-ID behavior against an alternate-manifest substitution."""
+    app = create_demo_app(root=tmp_path / expected_reason, seed=SCENARIO.seed, host="127.0.0.1")
+    _record_real_watched_packet(app, checked_at=NOW + timedelta(seconds=1))
+    app.state.data_catalog = catalog
+
+    with TestClient(app) as client:
+        response = client.get("/api/decision-packets")
+
+    assert response.status_code == 200
+    row = _entry(response.json(), "moomoo", "NVDA")
+    assert row["readiness"]["status"] == expected_status
+    assert row["readiness"]["reason_code"] == expected_reason
+    assert (row["readiness"]["history"] is not None) is history_present
+    assert row["readiness"]["forecast"] is None
+    assert catalog.requested == [MANIFEST]
+
+
+def test_inbox_snapshot_and_get_leave_packet_mark_and_monitoring_inputs_byte_equivalent(
+    tmp_path: Path,
+) -> None:
+    """Pins the projection against accidental packet, mark, registration, or evaluation writes."""
+    root = tmp_path / "demo"
+    app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    _record_real_watched_packet(app, checked_at=NOW + timedelta(seconds=1))
+    app.state.data_catalog = ExactCatalog({MANIFEST: _lineage()})
+    before = _inbox_store_bytes(root, app.state.marks)
+
+    snapshot = app.state.decision_inbox.snapshot()
+    with TestClient(app) as client:
+        response = client.get("/api/decision-packets")
+
+    assert snapshot.entries
+    assert response.status_code == 200
+    assert before == _inbox_store_bytes(root, app.state.marks)
+
+
+def test_reconstructed_inbox_preserves_exact_row_and_session_monitoring_facts(
+    tmp_path: Path,
+) -> None:
+    """Pins restart recovery against in-memory monitoring or readiness-session state."""
+    root = tmp_path / "demo"
+    checked_at = NOW + timedelta(seconds=1)
+    app = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    watched_packet, registration, evaluation = _record_real_watched_packet(
+        app, checked_at=checked_at
+    )
+    app.state.data_catalog = ExactCatalog({MANIFEST: _lineage()})
+    before = app.state.decision_inbox.snapshot()
+    before_row = next(
+        entry
+        for entry in before.entries
+        if entry.venue is Venue.MOOMOO and entry.symbol == "NVDA"
+    )
+
+    restarted = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
+    restarted.state.decision_inbox._now = lambda: checked_at
+    restarted.state.packet_reviews._now = lambda: checked_at
+    restarted.state.data_catalog = ExactCatalog({MANIFEST: _lineage()})
+    after = restarted.state.decision_inbox.snapshot()
+    after_row = next(
+        entry
+        for entry in after.entries
+        if entry.venue is Venue.MOOMOO and entry.symbol == "NVDA"
+    )
+
+    assert after_row == before_row
+    assert after.session == before.session
+    assert after_row.packet_id == watched_packet.packet_id
+    assert after_row.monitoring is not None
+    assert after_row.monitoring.registration_id == registration.registration_id
+    assert after_row.monitoring.latest_evaluation_id == evaluation.evaluation_id
+    assert after_row.monitoring.last_checked_at == checked_at
+    assert after_row.monitoring.latest_status == "not_comparable"
+    assert after_row.monitoring.latest_reason == "unusable_price_evidence"
 
 
 def test_inbox_is_read_only_and_pending_action_beats_newer_draft(tmp_path: Path) -> None:

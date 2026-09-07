@@ -26,9 +26,10 @@
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
 - Current frontier: recovery Task 1 (exact forecast evidence clocks and field
-  placement) is approved. Execute recovery Task 2 (Inbox/restart proof), then
-  Task 3 (known-reason localization); the prior combined Task 2 was split after
-  an implementation turn produced no changes or report. Parent Task 2 is not
+  placement) is approved. Recovery Task 2 backend Inbox/restart proof has
+  focused passing evidence and awaits its scoped Spec review; then execute Task
+  3 (known-reason localization). The prior combined Task 2 was split after an
+  implementation turn produced no changes or report. Parent Task 2 is not
   started. No freshness threshold is added:
   historical packet evidence remains replayable, separate from current
   local-observation time.

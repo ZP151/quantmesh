@@ -184,6 +184,33 @@ final PR boundaries rather than after every micro-change.
   Scheduler, 0021, trading or unrelated state changed. Task B remains frozen
   pending the scoped recovery review.
 
+### 2026-09-08 — Recovery Task 2 backend Inbox/restart proof
+
+- Added only Inbox behavior coverage: a real packet now proves its exact
+  manifest/evaluation/report projection and persisted monitoring/session facts;
+  mismatched, corrupt and untrusted exact closures prove fail-closed sanitized
+  output without a catalog fallback; both direct snapshot and HTTP GET prove
+  packet, marks, registration and evaluation inputs remain byte-equivalent;
+  and a fresh application reconstruction proves equal Inbox row and
+  `DecisionSessionSummary` facts, including `last_checked_at`,
+  `latest_status` and `latest_reason`.
+- No production file changed. The tests use the real `DecisionInboxService`,
+  packet/watch stores and `DecisionWatchService`, with the existing exact-ID
+  catalog fake; no catalog enumeration, Provider/network, Scheduler, 0021,
+  refresh, UI or trading scope was introduced.
+- Focused new-case selection: `6 passed, 23 deselected, 1 warning` in
+  `188.97s`. Required target:
+  `pytest tests/test_decision_inbox.py -q --basetemp
+  %TEMP%\quantmesh-0029-slice1-recovery-b-full-20260908` exited 0 with
+  `29 passed, 1 warning` in `985.24s (0:16:25)`. The sole warning is the
+  inherited `StarletteDeprecationWarning` from the shared FastAPI TestClient
+  dependency. `git diff --check` is recorded with the task commit.
+- This coverage may pass initially by recovery ruling: the mutation rationale
+  is recorded in
+  `.superpowers/sdd/2026-09-08-decision-readiness-slice1-recovery/task-2-report.md`.
+  The scoped Spec review remains the stop-condition frontier; Task 3 has not
+  started.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
