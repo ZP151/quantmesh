@@ -17,6 +17,7 @@ from quantmesh.demo.manifest import DemoScenario
 from quantmesh.demo.runtime import create_demo_app
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.execution.accounting import PaperAccount
+from quantmesh.instruments.decision_packets import decision_packet_id
 from quantmesh.instruments.inbox import (
     DecisionInboxError,
     DecisionInboxMarkContext,
@@ -25,7 +26,6 @@ from quantmesh.instruments.inbox import (
     DecisionInboxReviewSummary,
     DecisionInboxService,
 )
-from quantmesh.instruments.decision_packets import decision_packet_id
 from quantmesh.instruments.monitoring import DecisionWatchObservation, WatchConditionKind
 from quantmesh.instruments.reviews import ReviewClassification
 from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
