@@ -354,6 +354,26 @@ final PR boundaries rather than after every micro-change.
   0021, evidence-root, proposal, confirmation, order, network, external, or
   trading state changed.
 
+### 2026-09-08 — Slice 2 review cap and recovery scope
+
+- Parent Task 2 review round 2/2 returned NOT APPROVED. The registration and
+  activation replay bypass and packet-bound bilingual partial feedback are
+  fixed, but real durable store/service evaluation IDs, cursor chronology,
+  bodyless same-origin HTTP, current app state after reset, sanitized corrupt
+  evaluation replay, and pending/keyboard/empty/error UI states remain
+  unproved. Empty Inbox refresh also skips the independent evaluation ledger.
+- The original Task 2 patch loop is closed. The narrowed recovery plan is
+  `docs/superpowers/plans/2026-09-08-decision-session-task2-recovery.md`:
+  fail-closed whole-ledger replay, real durable/API proof, explicit frontend
+  state proof, then one coherent integration/review. Each boundary has its own
+  maximum-two-round review budget; Task 3 stays frozen until the whole recovery
+  is approved.
+- Controller evidence at `85d5456` remains valid only for that head: 62 passed,
+  2 warnings in 985.34s, exit 0, retained session 32412. It is not used to
+  certify `bafec72` or substitute for the missing session tests.
+- No Provider/OpenD/Scheduler, 0021, evidence-root, proposal, confirmation,
+  order, external, or real/paper trading state changed.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

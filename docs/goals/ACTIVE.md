@@ -1,7 +1,7 @@
 # Active Goal
 
-- Status: active — iteration 0029 Slice 1 recovery is complete; parent Task 2
-  implementation is awaiting its scoped review and Task 3 is not authorized.
+- Status: active — iteration 0029 parent Task 2 stopped after review round 2/2;
+  its narrowed recovery plan is active and Task 3 is not authorized.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -15,7 +15,7 @@
 - Executable plan:
   `docs/superpowers/plans/2026-09-08-decision-readiness-session.md`
 - Active recovery plan:
-  `docs/superpowers/plans/2026-09-08-decision-readiness-slice1-recovery.md`
+  `docs/superpowers/plans/2026-09-08-decision-session-task2-recovery.md`
 - Integration branch: `codex/0029-decision-readiness-session`
 - Baseline: merged `origin/main` at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; immutable `v0.1.1-rc1`
@@ -26,10 +26,10 @@
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
 - Current frontier: parent Task 2 explicit local session refresh is implemented
-  and awaits scoped review. It adds one same-origin refresh command over the
-  existing Inbox/packet/watch/workspace boundaries, a shared local observation
-  mapper, and a single Watchlist mutation with transient bilingual feedback and
-  Decision Inbox invalidation only. TDD RED recorded missing backend modules
+  but NOT APPROVED after review round 2/2. It adds one same-origin refresh
+  command over the existing Inbox/packet/watch/workspace boundaries, a shared
+  local observation mapper, and a single Watchlist mutation with transient
+  bilingual feedback and Decision Inbox invalidation only. TDD RED recorded missing backend modules
   (exit 1, 1.22s) and a missing refresh control (42 pass/1 expected failure,
   4.63s); focused GREEN records 33 Python tests in 1.94s (one fixture serializer
   warning), 43 Vitest tests in 3.43s, TypeScript/OpenAPI checks, scoped Ruff,
@@ -42,8 +42,14 @@
   evidence: 9 session tests in 0.78s; 44 Watchlist tests in 3.35s; TypeScript
   passed. Controller-owned retained coherent evidence at `85d5456` is 62
   passed, 2 warnings in 985.34s (0:16:25), exit 0, session 32412; it was not
-  duplicated during this focused review-fix. Task 2 remains at review, with no
-  Provider/OpenD/Scheduler, 0021, trusted-data, proposal, confirmation, order,
+  duplicated during this focused review-fix. The final review accepted the
+  registration/activation replay fix and packet-bound bilingual partial
+  feedback, but found that real store/service/API/reset and pending/keyboard/
+  empty/error interaction proof remains absent, and an empty Inbox can still
+  skip corrupt evaluation-ledger replay. The original patch loop is closed.
+  Recovery is split into fail-closed whole-ledger validation, real durable/API
+  proof, frontend state proof and one integration review; Task 3 stays frozen.
+  No Provider/OpenD/Scheduler, 0021, trusted-data, proposal, confirmation, order,
   external, or trading state changed. Recovery
   Tasks 1–4 are recorded through Task 1 `4e9e296`; Task 2 `88bce75`,
   report-hygiene `1609335`, and assertion fix `44d95f7`; Task 3 `9390456` and
