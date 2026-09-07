@@ -531,6 +531,19 @@ final PR boundaries rather than after every micro-change.
   prove the exact success-effect interval mutation fails. Recovery Task 4 and
   parent Task 3 remain frozen.
 
+### 2026-09-08 — Task 2 recovery Task 3B approval
+
+- Commit `290d0e8` adds only the post-success lifecycle assertion. The exact
+  temporary `refresh.isSuccess` 60-second interval mutation failed the named
+  test (`1 failed, 51 skipped`, `2.02s`); restored focused Vitest passed 88 in
+  3.93s, with typecheck, lint (four inherited warnings) and diff check green.
+- A fresh independent Reviewer reproduced the mutation failure (`1 failed, 51
+  skipped`, `2.06s`) and the unmodified named GREEN (`1 passed, 51 skipped`,
+  `2.07s`). Standards and Spec both returned zero findings. Recovery Task 4 may
+  start; parent Task 3 remains frozen until the whole-recovery decision.
+- No production UI, Provider/OpenD/Scheduler, 0021, evidence-root, proposal,
+  order, external or trading state changed.
+
 ### 2026-09-08 — Task 2 recovery Task 3B: post-success scheduler proof
 
 - The existing deferred keyboard refresh now awaits its terminal success

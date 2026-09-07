@@ -1,9 +1,8 @@
 # Active Goal
 
-- Status: active — iteration 0029 parent Task 2 stopped after review round 2/2;
-  its narrowed recovery plan has approved Tasks 1–2, while Recovery Task 3
-  exhausted review round 2/2 with one post-success proof gap. Task 3B is active;
-  parent Task 3 is not authorized.
+- Status: active — iteration 0029 parent Task 2 recovery Tasks 1–3B are
+  independently approved; the single Task 4 integration/review gate is active,
+  and parent Task 3 is not yet authorized.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -143,7 +142,8 @@
   assertion precedes terminal success rendering, so a success-effect interval
   mutation survives. The original Task 3 loop is closed. Recovery Task 3B adds
   only a post-success effect-flush scheduler assertion and mutation proof;
-  Task 4 and parent Task 3 remain frozen.
+  its independent review reproduced the mutation failure and APPROVED with no
+  Standards or Spec finding. Task 4 may start; parent Task 3 remains frozen.
 - Task 3B now awaits terminal success feedback, flushes committed React
   effects, and rechecks the product 60-second scheduler, packet-monitoring
   POST seam, non-preference localStorage writes, and automatic refresh count.
