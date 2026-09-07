@@ -438,6 +438,34 @@ final PR boundaries rather than after every micro-change.
   network, external, or trading action occurred. Recovery Task 3 and parent
   Task 3 remain frozen.
 
+### 2026-09-08 — Task 2 recovery Task 2 review-fix round 1/2
+
+- The first scoped Task 2 review returned **NOT APPROVED** with two Important
+  proof gaps and no production finding: persisted observation sequences did
+  not prove an accepted price cursor, and the replacement workspace renderer
+  was indistinguishable from the original. The actual reset assertion also did
+  not observe the refresh command reading its reset store.
+- The reconstruction test now requires a first accepted `armed` price fact at
+  `101.0`, followed after service/store reconstruction by a sequence-2
+  `triggered` fact with `previous_price=101.0` and `current_price=99.0`.
+  This makes loss of the accepted durable cursor observable rather than merely
+  asserting serialized observation sequences.
+- The current-state test now makes the original renderer fail if selected and
+  supplies a replacement renderer with distinct `99.0` price, sequence `17`,
+  source, and timestamp. It asserts the exact persisted observation/facts and
+  renderer calls. The actual demo-reset test instruments the replaced real
+  watch store and observes `validate_replay()` from the subsequent refresh.
+- Targeted mutation RED: forcing `_price_result()` to always return
+  `not_comparable` failed the reconstruction test (`1 failed, 18 deselected`,
+  `1.60s`); replacing the app-state renderer with the captured failing
+  original failed the current-state test (`1 failed, 18 deselected`, `2.54s`).
+  After restoring both mutations, the three named cases passed (`3 passed, 16
+  deselected`, `3.62s`, one inherited TestClient warning). Scoped Ruff check,
+  Ruff format check, and `git diff --check` exited `0`.
+- No production behavior or authority changed in this review fix. Recovery
+  Task 3 and parent Task 3 remain frozen pending the final independent Task 2
+  review.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

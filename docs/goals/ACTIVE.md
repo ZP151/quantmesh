@@ -95,6 +95,17 @@
   metadata to serializable base-instrument metadata before JSONL persistence.
   Recovery Task 3 and parent Task 3 remain frozen; no prohibited operational,
   external, or trading state changed.
+- Recovery Task 2 review round 1/2 was NOT APPROVED for two proof-only gaps:
+  accepted price-cursor semantics and load-bearing replacement workspace/reset
+  reads. The bounded test-only follow-up now proves first `armed` and
+  reconstructed `triggered` `PriceFacts` across a changed 101-to-99 price,
+  rejects a captured stale renderer, persists distinguishable replacement
+  facts, and observes replay validation through the real reset store. Targeted
+  price and stale-renderer mutations each failed one named test (`1 failed, 18
+  deselected` in `1.60s` and `2.54s`); restored GREEN was `3 passed, 16
+  deselected` in `3.62s`, with scoped Ruff/format/diff clean. Final Task 2
+  review round 2/2 is required; Recovery Task 3 and parent Task 3 remain
+  frozen.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

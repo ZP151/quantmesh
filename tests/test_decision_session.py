@@ -26,6 +26,7 @@ from quantmesh.instruments.decision_packets import DecisionPacketStore, decision
 from quantmesh.instruments.monitoring import (
     DecisionWatchService,
     DecisionWatchStore,
+    PriceFacts,
     WatchConditionKind,
 )
 from quantmesh.instruments.session import DecisionSessionError, DecisionSessionService
@@ -222,16 +223,30 @@ class _RealInbox:
 
 
 class _DurableRenderer:
-    def __init__(self, *, at: datetime, sequence: int, quote: float | None = 101.0) -> None:
+    def __init__(
+        self,
+        *,
+        at: datetime,
+        sequence: int,
+        quote: float | None = 101.0,
+        source: str = "local-workspace",
+        fail_message: str | None = None,
+    ) -> None:
         self.at = at
         self.sequence = sequence
         self.quote = quote
+        self.source = source
+        self.fail_message = fail_message
+        self.calls: list[tuple[Venue, str, HistoryRange]] = []
 
-    def render(self, _venue: Venue, _symbol: str, _selected_range: HistoryRange):
+    def render(self, venue: Venue, symbol: str, selected_range: HistoryRange):
+        self.calls.append((venue, symbol, selected_range))
+        if self.fail_message is not None:
+            raise AssertionError(self.fail_message)
         return SimpleNamespace(
             live=SimpleNamespace(
                 last=self.quote,
-                source="local-workspace" if self.quote is not None else None,
+                source=self.source if self.quote is not None else None,
                 provenance="demo-synthetic" if self.quote is not None else None,
                 data_time=self.at - timedelta(minutes=1) if self.quote is not None else None,
                 received_at=self.at if self.quote is not None else None,
@@ -393,7 +408,7 @@ def test_refresh_persists_canonical_replay_and_cursor_across_reconstruction(tmp_
         inbox=inbox,
         packets=packets,
         watches=watches,
-        workspace=_DurableRenderer(at=NOW, sequence=1),
+        workspace=_DurableRenderer(at=NOW, sequence=1, quote=101.0),
         now=lambda: NOW,
     ).refresh()
     [first_item] = first.items
@@ -402,6 +417,11 @@ def test_refresh_persists_canonical_replay_and_cursor_across_reconstruction(tmp_
 
     assert first_item.evaluation_id == persisted[-1].evaluation_id
     assert len(persisted) == 1
+    first_facts = persisted[-1].results[0].facts
+    assert persisted[-1].results[0].state == "armed"
+    assert isinstance(first_facts, PriceFacts)
+    assert first_facts.previous_price is None
+    assert first_facts.current_price == 101.0
 
     replay = DecisionSessionService(
         inbox=inbox,
@@ -423,7 +443,7 @@ def test_refresh_persists_canonical_replay_and_cursor_across_reconstruction(tmp_
         inbox=inbox,
         packets=restarted_packets,
         watches=restarted_watches,
-        workspace=_DurableRenderer(at=later, sequence=2),
+        workspace=_DurableRenderer(at=later, sequence=2, quote=99.0),
         now=lambda: later,
     ).refresh()
 
@@ -431,6 +451,11 @@ def test_refresh_persists_canonical_replay_and_cursor_across_reconstruction(tmp_
     durable_evaluations = restarted_watches.store.evaluations(registration.registration_id)
     assert advanced.items[0].evaluation_id == durable_evaluations[-1].evaluation_id
     assert [item.observation.sequence for item in durable_evaluations] == [1, 2]
+    advanced_facts = durable_evaluations[-1].results[0].facts
+    assert durable_evaluations[-1].results[0].state == "triggered"
+    assert isinstance(advanced_facts, PriceFacts)
+    assert advanced_facts.previous_price == 101.0
+    assert advanced_facts.current_price == 99.0
 
 
 def test_refresh_persists_a_stale_only_evaluation_without_a_quote(tmp_path) -> None:
@@ -567,6 +592,8 @@ def test_refresh_route_is_bodyless_same_origin_and_foreign_origin_writes_nothing
 def test_refresh_route_resolves_replaced_current_app_state_services(tmp_path) -> None:
     """Catch construction-time capture of packet/watch/workspace objects after a reset swap."""
     app, original_packet, original_watches, original_registration = _session_app(tmp_path / "first")
+    original_renderer = app.state.instrument_workspace
+    original_renderer.fail_message = "stale workspace renderer was used"
     replacement_root = tmp_path / "replacement"
     replacement_packets = DecisionPacketStore(replacement_root / "packets")
     replacement_packet = _record_action_packet(replacement_packets, symbol="AAPL")
@@ -580,7 +607,13 @@ def test_refresh_route_resolves_replaced_current_app_state_services(tmp_path) ->
     )
     app.state.decision_packets = replacement_packets
     app.state.packet_monitoring = replacement_watches
-    app.state.instrument_workspace = _DurableRenderer(at=NOW, sequence=1)
+    replacement_renderer = _DurableRenderer(
+        at=NOW,
+        sequence=17,
+        quote=99.0,
+        source="replacement-workspace",
+    )
+    app.state.instrument_workspace = replacement_renderer
     app.state.decision_inbox = _RealInbox((_entry(replacement_packet),))
 
     with TestClient(app) as client:
@@ -597,6 +630,18 @@ def test_refresh_route_resolves_replaced_current_app_state_services(tmp_path) ->
     )
     assert original_watches.store.evaluations(original_registration.registration_id) == ()
     assert original_packet.packet_id != replacement_packet.packet_id
+    persisted = replacement_watches.store.evaluations(replacement_registration.registration_id)[-1]
+    assert replacement_renderer.calls == [
+        (Venue.MOOMOO, "AAPL", HistoryRange.SIX_MONTHS),
+    ]
+    assert original_renderer.calls == []
+    assert persisted.observation.price == 99.0
+    assert persisted.observation.sequence == 17
+    assert persisted.observation.source == "replacement-workspace"
+    assert persisted.observation.data_time == NOW - timedelta(minutes=1)
+    assert persisted.results[0].state == "armed"
+    assert isinstance(persisted.results[0].facts, PriceFacts)
+    assert persisted.results[0].facts.current_price == 99.0
 
 
 def test_refresh_route_sanitizes_real_corrupt_evaluation_ledger_without_appending(tmp_path) -> None:
@@ -640,7 +685,9 @@ def test_refresh_route_is_404_when_the_session_service_is_unattached() -> None:
     assert response.json()["detail"] == "no decision session service is attached"
 
 
-def test_refresh_after_demo_reset_reads_the_replaced_monitoring_store(tmp_path) -> None:
+def test_refresh_after_demo_reset_reads_the_replaced_monitoring_store(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Catch reset wiring that leaves the long-lived refresh command on old durable state."""
     app = create_demo_app(
         root=tmp_path / "demo",
@@ -652,11 +699,21 @@ def test_refresh_after_demo_reset_reads_the_replaced_monitoring_store(tmp_path) 
 
     with TestClient(app) as client:
         reset = client.post("/api/demo/reset")
+        reset_store = app.state.packet_monitoring.store
+        observed: list[DecisionWatchStore] = []
+        original_validate_replay = reset_store.validate_replay
+
+        def observe_reset_store() -> None:
+            observed.append(reset_store)
+            original_validate_replay()
+
+        monkeypatch.setattr(reset_store, "validate_replay", observe_reset_store)
         refreshed = client.post("/api/decision-session/refresh")
 
     assert reset.status_code == 200
     assert app.state.packet_monitoring.store is app.state.packet_monitoring_store
     assert app.state.packet_monitoring.store is not previous_store
+    assert observed == [reset_store]
     assert refreshed.status_code == 200
     assert refreshed.json()["status"] == "no_registered_watches"
 
