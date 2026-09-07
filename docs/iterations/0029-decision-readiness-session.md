@@ -531,6 +531,28 @@ final PR boundaries rather than after every micro-change.
   prove the exact success-effect interval mutation fails. Recovery Task 4 and
   parent Task 3 remain frozen.
 
+### 2026-09-08 — Task 2 recovery Task 3B: post-success scheduler proof
+
+- The existing deferred keyboard refresh now awaits its terminal success
+  feedback, flushes committed React effects, and then repeats the negative
+  boundary checks. It preserves exactly one explicit refresh and one Decision
+  Inbox invalidation/refetch, while proving zero product 60-second interval,
+  packet-monitoring POST, non-preference localStorage write, and automatic
+  refresh call after success. Testing Library's own 50ms `findByText` polling
+  interval is deliberately excluded from the product scheduler assertion.
+- Mutation RED: temporarily adding the exact `useEffect([refresh.isSuccess])`
+  60-second `api.refreshDecisionSession()` interval caused the named keyboard
+  test to fail at the new post-success scheduler assertion (`1 failed, 51
+  skipped`, `2.02s`). Production source was restored exactly; no production
+  interface changed.
+- Restored focused verification: `npx vitest run
+  src/screens/Watchlist.test.tsx src/lib/messages.test.ts` passed `88` tests in
+  `2` files in `3.93s`; `npm run typecheck` passed; `npm run lint` exited `0`
+  with the four inherited Fast Refresh warnings; and `git diff --check` passed.
+  No Impeccable detector run is needed for
+  this test-only change. Recovery Task 4 and parent Task 3 remain frozen
+  pending one fresh Task 3B Standards+Spec review.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

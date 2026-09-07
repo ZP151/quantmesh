@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
@@ -190,10 +190,16 @@ it('keeps explicit keyboard refresh focused through resolution and triggers one 
   expect(setItem).not.toHaveBeenCalled()
 
   expect(await screen.findByText('2 watches checked · 1 triggered')).toBeVisible()
+  await act(async () => {
+    await Promise.resolve()
+  })
   expect(mockedDecisionInbox).toHaveBeenCalledTimes(2)
   expect(invalidate).toHaveBeenCalledTimes(1)
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ['decision-inbox'] })
   expect(mockedRefresh).toHaveBeenCalledTimes(1)
+  // `findByText` polls through Testing Library's 50ms interval. The product
+  // scheduler boundary is the prohibited 60-second automatic refresh.
+  expect(setInterval).not.toHaveBeenCalledWith(expect.any(Function), 60_000)
   expect(checkPacketMonitoring).not.toHaveBeenCalled()
   expect(setItem).not.toHaveBeenCalled()
   expect(screen.queryByText(/automatic refresh|seconds/i)).not.toBeInTheDocument()

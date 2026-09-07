@@ -144,6 +144,16 @@
   mutation survives. The original Task 3 loop is closed. Recovery Task 3B adds
   only a post-success effect-flush scheduler assertion and mutation proof;
   Task 4 and parent Task 3 remain frozen.
+- Task 3B now awaits terminal success feedback, flushes committed React
+  effects, and rechecks the product 60-second scheduler, packet-monitoring
+  POST seam, non-preference localStorage writes, and automatic refresh count.
+  It retains exactly one explicit refresh and one Inbox invalidation/refetch.
+  The named temporary `useEffect([refresh.isSuccess])` 60-second interval
+  mutation failed at the new assertion (`1 failed, 51 skipped`, `2.02s`) and
+  production was restored exactly. Focused Watchlist/messages Vitest passed
+  `88` tests in `3.93s`; typecheck passed; lint exited `0` with the four
+  inherited Fast Refresh warnings. Task 3B awaits its fresh Standards+Spec
+  review; Task 4 and parent Task 3 remain frozen.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release
