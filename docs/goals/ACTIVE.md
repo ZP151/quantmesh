@@ -77,8 +77,9 @@
   render calls and unchanged corrupt bytes. Mutation RED was `5 failed, 34
   deselected` in `1.41s` (`2.08s` wall); GREEN was `5 passed, 34 deselected` in
   `1.14s` (`1.78s` wall), exit `0`; scoped Ruff check, Ruff format check and
-  diff check all exited `0` (`0.03s`, `0.04s`, `0.06s`). A fresh Task 1
-  Standards+Spec review found no Critical or Important issue. Recovery Task 2
+  diff check all exited `0` (`0.03s`, `0.04s`, `0.06s`). The
+  controller-dispatched independent review of exact commit `4b4e5af` found no
+  Critical or Important issue. Recovery Task 2
   and parent Task 3 remain frozen; no Provider/OpenD/Scheduler, 0021,
   evidence-root, proposal, confirmation, order, network, external or trading
   state changed.

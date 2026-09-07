@@ -399,7 +399,8 @@ final PR boundaries rather than after every micro-change.
   check (`0.03s`), Ruff format check (`0.04s`), and `git diff --check`
   (`0.06s`) each exited `0`. The test formatter also made two pre-existing
   scoped line-wrap adjustments; no behavior changed there.
-- Fresh Task 1 Standards+Spec review found no Critical or Important issue: the
+- The controller-dispatched independent review of exact commit `4b4e5af`
+  found no Critical or Important issue: the
   closure is read-only, validates activation and ordinary evaluation records in
   one registration chain, preserves the existing sanitized session error, and
   does not expand product or operational authority. Recovery Task 2 and parent
