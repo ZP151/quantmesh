@@ -165,6 +165,10 @@ final PR boundaries rather than after every micro-change.
   It preserves the approved design and 0021 authority boundary. Parent Task 2
   remains frozen until both recovery tasks and the single Slice 1 integration
   boundary pass.
+- Recovery Task 1 passed its scoped quant/spec review at `4e9e296`. The
+  original combined Recovery Task 2 was interrupted without changes after it
+  produced no implementation evidence; it is now split into independent
+  backend Inbox/restart proof and frontend known-reason localization tasks.
 
 ### 2026-09-08 — Recovery Task A implementation
 

@@ -93,22 +93,18 @@ one scoped quant/spec review has no open Critical/Important finding. Commit:
 fix(decisions): preserve exact forecast evidence
 ```
 
-### Task 2: Inbox recovery proof and complete known-reason copy
+### Task 2: Inbox and restart recovery proof
 
 **User-visible invariant:** The reconstructed Inbox presents exact real and
-blocked evidence plus the persisted monitoring result truthfully in English
-and Simplified Chinese.
+blocked evidence plus the persisted monitoring result from durable stores.
 
 **Files:**
 
 - Modify: `tests/test_decision_inbox.py`
-- Modify: `frontend/src/screens/Watchlist.tsx`
-- Modify: `frontend/src/screens/Watchlist.test.tsx`
-- Modify: `frontend/src/lib/messages.ts`
 - Modify: `docs/iterations/0029-decision-readiness-session.md`
 - Modify: `docs/goals/ACTIVE.md`
 
-**RED:** Add focused behavior tests proving:
+**Proof:** Add focused behavior tests proving:
 
 1. An exact real packet projects its qualified manifest/evaluation/report and
    session facts through the Inbox.
@@ -118,16 +114,10 @@ and Simplified Chinese.
    byte-equivalent.
 4. A reconstructed app produces equal row and `DecisionSessionSummary` facts,
    including persisted `last_checked_at`, `latest_status` and `latest_reason`.
-5. Every reachable stable readiness and monitoring reason code has reviewed
-   English and zh-CN copy; known localized reasons retain original server text
-   in `title`, while an unknown reason remains verbatim.
-
-Observe the current missing assertions/mappings fail before editing the UI.
-
-**GREEN:** Complete only the behavior evidence and known-reason mapping. Prefer
-one explicit exhaustive typed map derived from the server's stable codes over
-fallback heuristics. Preserve the separator-first one-link row, existing
-`dateTime` formatter, wrapping and keyboard behavior. Add no new action.
+These are coverage additions for behavior that should already exist. Record a
+named mutation each assertion would catch; do not manufacture a production
+change merely to force RED. If a test exposes missing behavior, stop and report
+the exact contract gap rather than expanding the file list.
 
 **Verify:**
 
@@ -136,6 +126,45 @@ $env:PYTHONPATH = (Resolve-Path .\src).Path
 & 'C:\Users\15492\Develop\QuantMesh\.venv\Scripts\python.exe' -m pytest `
   tests/test_decision_inbox.py -q `
   --basetemp "$env:TEMP\quantmesh-0029-slice1-recovery-b"
+git diff --check
+```
+
+**Stop condition:** Focused backend evidence passes and one scoped Spec review
+has no open Critical/Important finding. Commit:
+
+```text
+test(decisions): prove inbox readiness recovery
+```
+
+### Task 3: Complete known-reason localization
+
+**User-visible invariant:** Every reachable stable readiness and persisted
+monitoring reason is readable in English and Simplified Chinese without
+discarding the original server text.
+
+**Files:**
+
+- Modify: `frontend/src/screens/Watchlist.tsx`
+- Modify: `frontend/src/screens/Watchlist.test.tsx`
+- Modify: `frontend/src/lib/messages.ts`
+- Modify: `docs/iterations/0029-decision-readiness-session.md`
+- Modify: `docs/goals/ACTIVE.md`
+
+**RED:** Enumerate the stable readiness reason codes emitted by
+`readiness.py` and the persisted monitoring status/reason families rendered by
+the Inbox. Add table-driven component/message tests proving every reachable
+known code has reviewed English and zh-CN copy, the original server reason is
+retained in `title`, and an unknown reason remains verbatim. Observe the
+currently missing mappings fail.
+
+**GREEN:** Complete one explicit exhaustive mapping. Do not infer text from a
+code or silently translate unknown server content. Preserve the separator-first
+one-link row, `dateTime`, `usePreferences`, wrapping and keyboard behavior. Add
+no new action, card, polling or time helper.
+
+**Verify:**
+
+```powershell
 Push-Location frontend
 npx vitest run src/screens/Watchlist.test.tsx `
   src/screens/NavigationAndValuation.test.tsx src/lib/messages.test.ts
@@ -145,16 +174,16 @@ Pop-Location
 git diff --check
 ```
 
-Run the Impeccable detector once over the changed UI after it is complete.
+Run the Impeccable detector once over the completed UI diff.
 
-**Stop condition:** Focused backend/frontend evidence passes and one scoped
-Standards+Spec review has no open Critical/Important finding. Commit:
+**Stop condition:** Frontend evidence passes and one scoped Standards+Spec
+review has no open Critical/Important finding. Commit:
 
 ```text
-test(decisions): prove inbox readiness recovery
+fix(decisions): localize readiness reasons
 ```
 
-### Task 3: Slice 1 recovery integration
+### Task 4: Slice 1 recovery integration
 
 After both tasks are reviewed, run the parent plan's exact four-file backend
 selection once on the recovery head, then the targeted frontend/API/type/lint,

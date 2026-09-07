@@ -25,10 +25,11 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: recovery Task A implementation is complete and awaiting its
-  scoped review; then execute recovery Task B (Inbox/restart proof and complete
-  known-reason localization). Each smaller task gets its own bounded TDD and
-  review cycle. Parent Task 2 is not started. No freshness threshold is added:
+- Current frontier: recovery Task 1 (exact forecast evidence clocks and field
+  placement) is approved. Execute recovery Task 2 (Inbox/restart proof), then
+  Task 3 (known-reason localization); the prior combined Task 2 was split after
+  an implementation turn produced no changes or report. Parent Task 2 is not
+  started. No freshness threshold is added:
   historical packet evidence remains replayable, separate from current
   local-observation time.
 - Iteration 0028 closure: PR #130 squash-merged at
