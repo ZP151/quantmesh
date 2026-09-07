@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 
 ## Status legend
 
@@ -348,17 +348,21 @@ Sequence for operator review:
    Reject/Watch/Paper actions into a versioned DecisionPacket inside Instrument
    Workspace, then add optional cited Copilot explanation, local watch
    conditions and replayable outcome review.
-3. **Iteration 0028 implementation and pre-PR verification complete;
-   integration active:** Decision Inbox & Bounded Paper Shadow Portfolio now
-   deep-links watchlist attention to exact packets, proves NVDA/AAPL decisions,
-   exposes evidence-blocked BTC/SOL actions, and derives the bounded paper
-   summary from durable ledgers. The one full backend run recorded 3255 passed
-   and 3 failures; isolated license verification and focused test corrections
-   passed, as did frontend 197 and the other pre-PR checks. No overall full
-   pytest exit-0 claim is made. Final whole-branch review, exact-head release
-   gate, push/PR, CI and human review remain pending; see the
+3. **Done as iteration 0028 (merged PR #130):** Decision Inbox & Bounded Paper
+   Shadow Portfolio deep-links watchlist attention to exact packets, proves
+   NVDA/AAPL decisions, exposes evidence-blocked BTC/SOL actions, and derives
+   the bounded paper summary from durable ledgers. The exact PR head passed the
+   18-step release gate with 3264 passed and 9 skipped; exact-head and
+   post-merge main CI passed. See the
    [0028 ledger](../iterations/0028-decision-inbox-shadow-portfolio.md).
-4. Expand datasets, baselines or selected Qlib/Darts adapters only where a
+4. **Active as iteration 0029:** Decision Readiness Session unifies the daily
+   operator entry in Decision Inbox, displays exact trusted-data readiness,
+   explicitly refreshes registered local watches and opens triggered, blocked
+   or review-due packets. It composes with iteration 0021 through a narrow
+   exact-ID read-only boundary; Scheduler, Provider/OpenD, evidence roots and
+   witnesses remain an independent maintenance failure domain. See
+   [issue #131](https://github.com/ZP151/quantmesh/issues/131).
+5. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
-5. Guarded broker/testnet execution only after a separate authorization.
+6. Guarded broker/testnet execution only after a separate authorization.

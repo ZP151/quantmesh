@@ -108,6 +108,14 @@ sourced historical/live prices, scenarios, probabilistic forecast evidence and
 risk, then saves Reject, Watch or Paper proposal without changing pages or
 re-entering context.
 
+Iteration-0029 activation metric: from opening Decision Inbox to completing an
+explicit local refresh and opening one exact triggered, blocked or review-due
+DecisionPacket takes no more than two minutes on the deterministic NVDA/AAPL
+acceptance station. Data collection time is outside the session: trusted-data
+readiness is consumed through an exact-ID read-only boundary, and missing data
+must block honestly rather than cause the product to operate Scheduler or a
+provider.
+
 ## 7. Competitive lesson and scope discipline
 
 [KairoTrend](https://kairotrend.com/) demonstrates the value of compressing
