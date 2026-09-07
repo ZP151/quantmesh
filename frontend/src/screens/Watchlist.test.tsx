@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
-import { beforeEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 
@@ -118,6 +118,8 @@ function renderWatchlist(locale: 'en-US' | 'zh-CN' = 'en-US') {
 }
 
 beforeEach(() => {
+  vi.restoreAllMocks()
+  vi.clearAllMocks()
   localStorage.clear()
   mockedDecisionInbox.mockResolvedValue(inbox)
   mockedRefresh.mockResolvedValue({
@@ -133,16 +135,31 @@ beforeEach(() => {
   })
 })
 
-it('keeps explicit keyboard refresh focused and pending until its one Inbox refetch completes', async () => {
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+it('keeps explicit keyboard refresh focused through resolution and triggers one Inbox refetch', async () => {
   const user = userEvent.setup()
   const refresh = deferred<Awaited<ReturnType<typeof api.refreshDecisionSession>>>()
   mockedRefresh.mockImplementationOnce(() => refresh.promise)
-  const client = renderWatchlist()
-  const button = await screen.findByRole('button', { name: 'Refresh session' })
-  const invalidate = vi.spyOn(client, 'invalidateQueries')
   const setInterval = vi.spyOn(globalThis, 'setInterval')
   const setItem = vi.spyOn(Storage.prototype, 'setItem')
   const checkPacketMonitoring = vi.spyOn(api, 'checkPacketMonitoring')
+    .mockImplementation(() => { throw new Error('per-packet monitoring must not run') })
+  const client = renderWatchlist()
+
+  // A 60-second automatic refresh must schedule at mount; observing that
+  // boundary catches it without waiting a real minute in the component test.
+  expect(setInterval).not.toHaveBeenCalled()
+  const button = await screen.findByRole('button', { name: 'Refresh session' })
+  const invalidate = vi.spyOn(client, 'invalidateQueries')
+  expect(setItem.mock.calls).toEqual([[
+    'quantmesh.preferences',
+    JSON.stringify({ locale: 'en', theme: 'dark' }),
+  ]])
+  setInterval.mockClear()
+  setItem.mockClear()
 
   button.focus()
   expect(button).toHaveFocus()
@@ -156,6 +173,7 @@ it('keeps explicit keyboard refresh focused and pending until its one Inbox refe
   expect(setInterval).not.toHaveBeenCalled()
   expect(checkPacketMonitoring).not.toHaveBeenCalled()
   expect(setItem).not.toHaveBeenCalled()
+  expect(screen.queryByText(/automatic refresh|seconds/i)).not.toBeInTheDocument()
 
   refresh.resolve({
     started_at: '2026-09-08T12:00:00Z', completed_at: '2026-09-08T12:00:01Z',
@@ -165,12 +183,19 @@ it('keeps explicit keyboard refresh focused and pending until its one Inbox refe
       { packet_id: 'packet-bbbbbbbbbbbbbbbbbbbbbbbb', registration_id: 'registration-bbbbbbbbbbbbbbbbbbbbbbbb', evaluation_id: 'evaluation-bbbbbbbbbbbbbbbbbbbbbbbb', status: 'evaluated', triggered: false, not_comparable_codes: [], reason_code: null, reason: null },
     ],
   })
+  await Promise.resolve()
+  await Promise.resolve()
+  expect(setInterval).not.toHaveBeenCalled()
+  expect(checkPacketMonitoring).not.toHaveBeenCalled()
+  expect(setItem).not.toHaveBeenCalled()
 
   expect(await screen.findByText('2 watches checked · 1 triggered')).toBeVisible()
   expect(mockedDecisionInbox).toHaveBeenCalledTimes(2)
   expect(invalidate).toHaveBeenCalledTimes(1)
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ['decision-inbox'] })
   expect(mockedRefresh).toHaveBeenCalledTimes(1)
+  expect(checkPacketMonitoring).not.toHaveBeenCalled()
+  expect(setItem).not.toHaveBeenCalled()
   expect(screen.queryByText(/automatic refresh|seconds/i)).not.toBeInTheDocument()
 })
 

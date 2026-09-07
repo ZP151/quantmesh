@@ -491,9 +491,38 @@ final PR boundaries rather than after every micro-change.
 - No production TSX/CSS or message copy changed, so the Impeccable detector
   was not rerun. No Provider/OpenD/Scheduler, 0021, evidence-root, proposal,
   confirmation, order, network, external, polling, persisted refresh state,
-  or trading behavior changed. The scoped Task 3 Standards+Spec review found
-  no Critical or Important issue and approved this proof. Recovery Task 4 and
-  parent Task 3 remain frozen.
+  or trading behavior changed. The independent Task 3 Standards+Spec review
+  round 1/2 returned **NOT APPROVED** with one Important proof gap: spies were
+  installed after mount and timer/storage effects were not checked through the
+  resolved boundary, allowing mount-time automatic work or pending-only output
+  to evade the proof. The bounded test-only review fix and final round 2/2 are
+  required. Recovery Task 4 and parent Task 3 remain frozen.
+
+### 2026-09-08 — Task 2 recovery Task 3 review-fix round 1/2
+
+- The bounded test-only correction installs `setInterval`, `localStorage`, and
+  the packet-monitoring POST seam observations before mount; it stubs the POST
+  seam, validates and then clears only the existing
+  `quantmesh.preferences` `{locale:"en",theme:"dark"}` write, and resets all
+  spy history through per-test setup/teardown. The renamed test no longer
+  overclaims pending through a delayed refetch.
+- It proves the scheduler boundary at mount (a 60-second automatic refresh must
+  schedule an interval immediately), then asserts no interval, monitoring
+  request, session persistence, timer text, or second refresh during both the
+  pending and resolved boundaries. The same packet-monitoring stub remains
+  zero-call at both boundaries.
+- Reviewer-required RED evidence: temporary mount-time
+  `setInterval(..., 60_000)` failed `1` named test with `51` skipped in
+  `1.92s`; a temporary pending `Automatic refresh in 5 seconds` plus
+  success-localStorage mutation failed `1` named test with `51` skipped in
+  `1.96s`; the persistence-only variant independently failed the resolved
+  storage assertion (`1 failed, 51 skipped`, `1.97s`). All production source
+  was restored.
+- Restored focused GREEN: Vitest passed `88` tests in `2` files in `3.88s`;
+  TypeScript passed; lint exited `0` with the four inherited Fast Refresh
+  warnings; `git diff --check` passed. No production UI/copy or detector run
+  is required. Final independent Task 3 review round 2/2 is the only next
+  frontier; Recovery Task 4 and parent Task 3 remain frozen.
 
 ### 2026-09-07 — Activation and architecture approval
 

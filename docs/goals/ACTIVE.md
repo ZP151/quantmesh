@@ -1,8 +1,8 @@
 # Active Goal
 
 - Status: active — iteration 0029 parent Task 2 stopped after review round 2/2;
-  its narrowed recovery plan has approved Tasks 1–3, Recovery Task 4 is next,
-  and parent Task 3 is not authorized.
+  its narrowed recovery plan has approved Tasks 1–2, Recovery Task 3 round 1
+  is NOT APPROVED, and parent Task 3 is not authorized.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -122,8 +122,23 @@
   Vitest passed `88` tests in `2` files in `3.96s`; typecheck passed; lint
   exited `0` with the four inherited Fast Refresh warnings. No production
   TSX/CSS/message change or Impeccable rerun was needed; `git diff --check`
-  passed. The scoped Task 3 Standards+Spec review found no Critical or
-  Important issue and approved the proof. Recovery Task 4 and parent Task 3
+  passed. The independent Task 3 Standards+Spec review round 1/2 found one
+  Important proof gap: the initial test installed interval, storage and
+  packet-monitoring spies after mount, then skipped post-success timer and
+  persistence checks, so mount-time automatic work and pending-only UI state
+  could survive. The bounded fix installs/stubs all observations before mount,
+  allows only the exact preferences key/payload, resets histories, and checks
+  pending plus resolved boundaries. It remains pending final independent round
+  2/2; Recovery Task 4 and parent Task 3 remain frozen.
+- The Task 3 review-fix now observes the scheduler and persistence lifecycle
+  from mount through resolution. The mount-time 60-second interval mutation
+  failed (`1 failed, 51 skipped`, `1.92s`); a pending timer plus success
+  persistence mutation failed (`1 failed, 51 skipped`, `1.96s`), and the
+  persistence-only variant independently failed the post-success storage
+  assertion (`1 failed, 51 skipped`, `1.97s`). Production source was restored.
+  Focused GREEN is `88` Vitest tests in `2` files in `3.88s`; typecheck passed
+  and lint exited `0` with four inherited Fast Refresh warnings. Final
+  independent review round 2/2 remains required; Task 4 and parent Task 3
   remain frozen.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
