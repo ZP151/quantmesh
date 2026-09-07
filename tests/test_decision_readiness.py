@@ -41,6 +41,7 @@ def _lineage(
     evaluation_id: str = EVALUATION,
     status: QualityStatus = QualityStatus.PASS,
     rights_known: bool = True,
+    evaluated_at: datetime = NOW,
 ) -> CatalogLineage:
     quality = CatalogQuality(
         report_id=REPORT,
@@ -48,7 +49,7 @@ def _lineage(
         policy_id="d" * 64,
         status=status,
         issue_codes=() if status is QualityStatus.PASS else ("unexplained-gap",),
-        evaluated_at=NOW,
+        evaluated_at=evaluated_at,
         expected_count=1,
         observed_count=1,
         duplicate_count=0,
@@ -95,7 +96,7 @@ def _lineage(
                 attempt=1,
                 provider_cursor="terminal",
                 last_complete_source_event="BTC:2026-09-02T20:00:00+00:00",
-                updated_at=NOW,
+                updated_at=evaluated_at,
                 quality_report_id=REPORT,
             ),
         ),
@@ -103,7 +104,12 @@ def _lineage(
     )
 
 
-def _real_packet(*, forecast: bool = False):
+def _real_packet(
+    *,
+    forecast: bool = False,
+    history_generated_at: datetime = NOW,
+    forecast_generated_at: datetime = NOW,
+):
     original = packet()
     evidence = original.evidence.model_copy(
         update={
@@ -122,7 +128,8 @@ def _real_packet(*, forecast: bool = False):
             "forecast_config_digest": "1" * 64 if forecast else None,
             "forecast_history_digest": "2" * 64 if forecast else None,
             "forecast_benchmark_name": "baseline" if forecast else None,
-            "forecast_generated_at": NOW if forecast else None,
+            "forecast_generated_at": forecast_generated_at if forecast else None,
+            "history_generated_at": history_generated_at,
         }
     )
     return original.model_copy(update={"evidence": evidence})
@@ -177,7 +184,11 @@ def test_demo_history_with_real_forecast_requires_exact_forecast_closure() -> No
 
 
 def test_demo_history_with_unavailable_real_forecast_fails_closed() -> None:
-    forecast_packet = _real_packet(forecast=True)
+    forecast_packet = _real_packet(
+        forecast=True,
+        history_generated_at=NOW - timedelta(days=1),
+        forecast_generated_at=NOW - timedelta(days=2),
+    )
     demo_packet = forecast_packet.model_copy(
         update={
             "evidence": forecast_packet.evidence.model_copy(
@@ -193,6 +204,8 @@ def test_demo_history_with_unavailable_real_forecast_fails_closed() -> None:
 
     assert result.status == "unavailable"
     assert result.reason_code == "forecast_catalog_unavailable"
+    assert result.limiting_evidence_at == NOW - timedelta(days=2)
+    assert result.history is None
     assert result.forecast is None
     assert catalog.requested == ["f" * 64]
 
@@ -225,6 +238,132 @@ def test_failed_exact_closure_keeps_packet_generation_as_limiting_evidence() -> 
 
     assert result.status == "unavailable"
     assert result.limiting_evidence_at == NOW - timedelta(days=1)
+
+
+def test_failed_forecast_closure_keeps_older_forecast_generation_as_limiting_evidence() -> None:
+    forecast_generated_at = NOW - timedelta(days=2)
+    real_packet = _real_packet(
+        forecast=True,
+        history_generated_at=NOW - timedelta(days=1),
+        forecast_generated_at=forecast_generated_at,
+    )
+    catalog = ExactCatalog(
+        {
+            MANIFEST: _lineage(),
+            "f" * 64: _lineage(
+                manifest_id="f" * 64,
+                evaluation_id="e" * 64,
+                status=QualityStatus.FAIL,
+            ),
+        }
+    )
+
+    result = DecisionReadinessService(catalog_provider=lambda: catalog).evaluate(
+        real_packet, checked_at=NOW
+    )
+
+    assert result.status == "blocked"
+    assert result.reason_code == "forecast_not_trusted"
+    assert result.limiting_evidence_at == forecast_generated_at
+
+
+@pytest.mark.parametrize(
+    ("lineage", "reason_code"),
+    [
+        (
+            _lineage(manifest_id="f" * 64, evaluation_id="9" * 64),
+            "forecast_evaluation_mismatch",
+        ),
+        (
+            _lineage(manifest_id="f" * 64, evaluation_id="e" * 64, rights_known=False),
+            "forecast_rights_unknown",
+        ),
+        (
+            _lineage(manifest_id="f" * 64, evaluation_id="e" * 64, status=QualityStatus.FAIL),
+            "forecast_not_trusted",
+        ),
+    ],
+)
+def test_demo_real_forecast_blockers_place_exact_evidence_in_forecast(
+    lineage: CatalogLineage, reason_code: str
+) -> None:
+    forecast_packet = _real_packet(forecast=True)
+    demo_packet = forecast_packet.model_copy(
+        update={
+            "evidence": forecast_packet.evidence.model_copy(
+                update={"history_source": "demo-synthetic"}
+            )
+        }
+    )
+    catalog = ExactCatalog({"f" * 64: lineage})
+
+    result = DecisionReadinessService(catalog_provider=lambda: catalog).evaluate(
+        demo_packet, checked_at=NOW
+    )
+
+    assert result.status == "blocked"
+    assert result.reason_code == reason_code
+    assert result.history is None
+    assert result.forecast is not None
+    assert result.forecast.manifest_id == "f" * 64
+
+
+def test_demo_real_forecast_checkpoint_failure_places_exact_evidence_in_forecast() -> None:
+    base = _lineage(manifest_id="f" * 64, evaluation_id="e" * 64)
+    broken_checkpoint = base.entry.latest_checkpoint.model_copy(
+        update={"quality_report_id": "9" * 64}
+    )
+    broken_lineage = base.model_copy(
+        update={"entry": base.entry.model_copy(update={"latest_checkpoint": broken_checkpoint})}
+    )
+    forecast_packet = _real_packet(forecast=True)
+    demo_packet = forecast_packet.model_copy(
+        update={
+            "evidence": forecast_packet.evidence.model_copy(
+                update={"history_source": "demo-synthetic"}
+            )
+        }
+    )
+
+    result = DecisionReadinessService(
+        catalog_provider=lambda: ExactCatalog({"f" * 64: broken_lineage})
+    ).evaluate(demo_packet, checked_at=NOW)
+
+    assert result.status == "blocked"
+    assert result.reason_code == "forecast_checkpoint_mismatch"
+    assert result.history is None
+    assert result.forecast is not None
+
+
+@pytest.mark.parametrize("wrong_entry_manifest", ["9" * 64])
+def test_demo_real_forecast_identity_failure_has_no_fabricated_evidence(
+    wrong_entry_manifest: str,
+) -> None:
+    forecast_packet = _real_packet(forecast=True)
+    demo_packet = forecast_packet.model_copy(
+        update={
+            "evidence": forecast_packet.evidence.model_copy(
+                update={"history_source": "demo-synthetic"}
+            )
+        }
+    )
+    catalog = ExactCatalog(
+        {
+            "f" * 64: _lineage(
+                manifest_id=wrong_entry_manifest,
+                evaluation_id="e" * 64,
+            )
+        }
+    )
+
+    result = DecisionReadinessService(catalog_provider=lambda: catalog).evaluate(
+        demo_packet, checked_at=NOW
+    )
+
+    assert result.status == "unavailable"
+    assert result.reason_code == "forecast_manifest_mismatch"
+    assert result.history is None
+    assert result.forecast is None
 
 
 def test_missing_history_binding_is_blocked() -> None:

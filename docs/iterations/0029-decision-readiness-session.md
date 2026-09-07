@@ -166,6 +166,20 @@ final PR boundaries rather than after every micro-change.
   remains frozen until both recovery tasks and the single Slice 1 integration
   boundary pass.
 
+### 2026-09-08 — Recovery Task A implementation
+
+- `fix(decisions): preserve exact forecast evidence` is implemented on the
+  recovery branch; exact forecast qualification failures now retain the
+  packet-bound `forecast_generated_at` clock and place any returned reference
+  in `forecast`, leaving `history` reserved for history qualification.
+- Focused RED: `pytest tests/test_decision_readiness.py -q` exited 1 with
+  `6 failed, 15 passed` in 1.76s after the new clock/placement assertions.
+  GREEN: the same selection exited 0 with `21 passed` in 0.83s.
+- Scoped Ruff check, Ruff format check and `git diff --check` exited 0 after
+  formatting. No wall-clock ageing, catalog traversal, provider/network,
+  Scheduler, 0021, trading or unrelated state changed. Task B remains frozen
+  pending the scoped recovery review.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

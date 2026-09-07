@@ -89,11 +89,13 @@ class DecisionReadinessService:
                         checked_at,
                         "catalog_unavailable",
                         "Trusted evidence catalog is unavailable.",
-                        evidence.history_generated_at,
+                        packet,
                     )
                 forecast = _qualify_packet_forecast(catalog, packet)
                 if forecast.status != "ready":
-                    return _from_qualification(checked_at, forecast, evidence.history_generated_at)
+                    return _from_qualification(
+                        checked_at, forecast, packet, evidence_field="forecast"
+                    )
                 return _demo_readiness(packet, checked_at, forecast.evidence)
             return _demo_readiness(packet, checked_at)
         if evidence.history_manifest_id is None or evidence.history_quality_evaluation_id is None:
@@ -101,7 +103,7 @@ class DecisionReadinessService:
                 checked_at,
                 "missing_history_binding",
                 "Exact history manifest and quality evaluation are required.",
-                evidence.history_generated_at,
+                packet,
             )
         catalog = self._catalog_provider()
         if catalog is None:
@@ -109,7 +111,7 @@ class DecisionReadinessService:
                 checked_at,
                 "catalog_unavailable",
                 "Trusted evidence catalog is unavailable.",
-                evidence.history_generated_at,
+                packet,
             )
         history = _qualify_exact(
             catalog,
@@ -118,23 +120,22 @@ class DecisionReadinessService:
             label="history",
         )
         if history.status != "ready":
-            return _from_qualification(checked_at, history, evidence.history_generated_at)
+            return _from_qualification(checked_at, history, packet, evidence_field="history")
         forecast = _qualify_packet_forecast(catalog, packet)
         if forecast.status != "ready":
             return _from_qualification(
-                checked_at, forecast, evidence.history_generated_at, history=history.evidence
+                checked_at,
+                forecast,
+                packet,
+                evidence_field="forecast",
+                history=history.evidence,
             )
-        timestamps = [evidence.history_generated_at]
-        if history.evidence is not None:
-            timestamps.append(history.evidence.evaluated_at)
-        if evidence.forecast_generated_at is not None:
-            timestamps.append(evidence.forecast_generated_at)
-        if forecast.evidence is not None:
-            timestamps.append(forecast.evidence.evaluated_at)
         return DecisionReadiness(
             status="ready",
             checked_at=checked_at,
-            limiting_evidence_at=min(timestamps),
+            limiting_evidence_at=_packet_limiting_evidence_at(
+                packet, history.evidence, forecast.evidence
+            ),
             reason_code="trusted_evidence",
             reason="Exact packet evidence is trusted for research.",
             history=history.evidence,
@@ -234,44 +235,45 @@ def _qualify_exact(
 def _from_qualification(
     checked_at: datetime,
     qualification: _Qualification,
-    packet_generated_at: datetime,
+    packet: DecisionPacket,
     *,
+    evidence_field: Literal["history", "forecast"],
     history: DecisionReadinessEvidenceRef | None = None,
 ) -> DecisionReadiness:
-    timestamps = [packet_generated_at]
-    timestamps.extend(
-        item.evaluated_at for item in (history, qualification.evidence) if item is not None
-    )
+    history_evidence = qualification.evidence if evidence_field == "history" else history
+    forecast_evidence = qualification.evidence if evidence_field == "forecast" else None
     return DecisionReadiness(
         status=qualification.status,
         checked_at=checked_at,
-        limiting_evidence_at=min(timestamps),
+        limiting_evidence_at=_packet_limiting_evidence_at(
+            packet, history_evidence, forecast_evidence
+        ),
         reason_code=qualification.reason_code,
         reason=qualification.reason,
-        history=history if history is not None else qualification.evidence,
-        forecast=qualification.evidence if history is not None else None,
+        history=history_evidence,
+        forecast=forecast_evidence,
     )
 
 
 def _blocked(
-    checked_at: datetime, reason_code: str, reason: str, limiting_evidence_at: datetime
+    checked_at: datetime, reason_code: str, reason: str, packet: DecisionPacket
 ) -> DecisionReadiness:
     return DecisionReadiness(
         status="blocked",
         checked_at=checked_at,
-        limiting_evidence_at=limiting_evidence_at,
+        limiting_evidence_at=_packet_limiting_evidence_at(packet),
         reason_code=reason_code,
         reason=reason,
     )
 
 
 def _unavailable(
-    checked_at: datetime, reason_code: str, reason: str, limiting_evidence_at: datetime
+    checked_at: datetime, reason_code: str, reason: str, packet: DecisionPacket
 ) -> DecisionReadiness:
     return DecisionReadiness(
         status="unavailable",
         checked_at=checked_at,
-        limiting_evidence_at=limiting_evidence_at,
+        limiting_evidence_at=_packet_limiting_evidence_at(packet),
         reason_code=reason_code,
         reason=reason,
     )
@@ -296,19 +298,25 @@ def _demo_readiness(
     checked_at: datetime,
     forecast: DecisionReadinessEvidenceRef | None = None,
 ) -> DecisionReadiness:
-    timestamps = [packet.evidence.history_generated_at]
-    if packet.evidence.forecast_generated_at is not None:
-        timestamps.append(packet.evidence.forecast_generated_at)
-    if forecast is not None:
-        timestamps.append(forecast.evaluated_at)
     return DecisionReadiness(
         status="demo",
         checked_at=checked_at,
-        limiting_evidence_at=min(timestamps),
+        limiting_evidence_at=_packet_limiting_evidence_at(packet, forecast),
         reason_code="demo_evidence",
         reason="This packet uses demo-synthetic evidence.",
         forecast=forecast,
     )
+
+
+def _packet_limiting_evidence_at(
+    packet: DecisionPacket,
+    *references: DecisionReadinessEvidenceRef | None,
+) -> datetime:
+    timestamps = [packet.evidence.history_generated_at]
+    if packet.evidence.forecast_generated_at is not None:
+        timestamps.append(packet.evidence.forecast_generated_at)
+    timestamps.extend(item.evaluated_at for item in references if item is not None)
+    return min(timestamps)
 
 
 def _utc(value: datetime, field: str) -> datetime:
