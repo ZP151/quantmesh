@@ -29,6 +29,7 @@ from quantmesh.instruments.monitoring import (
     DecisionWatchStore,
     WatchConditionKind,
 )
+from quantmesh.instruments.watch_observations import build_watch_observation
 
 NOW = datetime(2026, 9, 2, 20, 0, tzinfo=UTC)
 NVDA = Instrument(
@@ -197,6 +198,40 @@ def _price_observation(*, price: float, sequence: int, minutes: int) -> Decision
         sequence=sequence,
         sequence_gap=False,
     )
+
+
+def test_shared_observation_builder_preserves_the_packet_watch_mapping() -> None:
+    packet = _packet()
+    workspace = SimpleNamespace(
+        live=SimpleNamespace(
+            last=101.0,
+            source="local-workspace",
+            provenance="demo-synthetic",
+            data_time=NOW + timedelta(minutes=1),
+            received_at=NOW + timedelta(minutes=2),
+            sequence=1,
+            sequence_gap=False,
+        ),
+        forecast=None,
+    )
+
+    observation = build_watch_observation(
+        packet=packet,
+        workspace=workspace,
+        evaluated_at=NOW + timedelta(minutes=3),
+    )
+
+    assert observation.model_dump() == DecisionWatchObservation(
+        evaluated_at=NOW + timedelta(minutes=3),
+        price=101.0,
+        instrument=packet.instrument,
+        source="local-workspace",
+        provenance="demo-synthetic",
+        data_time=NOW + timedelta(minutes=1),
+        received_at=NOW + timedelta(minutes=2),
+        sequence=1,
+        sequence_gap=False,
+    ).model_dump()
 
 
 def test_registration_refuses_a_draft_packet(tmp_path: Path) -> None:

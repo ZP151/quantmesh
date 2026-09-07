@@ -9,7 +9,10 @@ import { PreferencesProvider } from '@/lib/preferences'
 
 vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/api')>()
-  return { ...actual, api: { ...actual.api, decisionInbox: vi.fn() } }
+  return {
+    ...actual,
+    api: { ...actual.api, decisionInbox: vi.fn(), refreshDecisionSession: vi.fn() },
+  }
 })
 
 import { WatchlistScreen } from './Watchlist'
@@ -91,10 +94,42 @@ const inbox = {
 } satisfies DecisionInbox
 
 const mockedDecisionInbox = vi.mocked(api.decisionInbox)
+const mockedRefresh = vi.mocked(api.refreshDecisionSession)
 
 beforeEach(() => {
   localStorage.clear()
   mockedDecisionInbox.mockResolvedValue(inbox)
+  mockedRefresh.mockResolvedValue({
+    started_at: '2026-09-08T12:00:00Z',
+    completed_at: '2026-09-08T12:00:01Z',
+    status: 'complete',
+    registered_count: 2,
+    evaluated_count: 2,
+    items: [
+      { packet_id: 'packet-aaaaaaaaaaaaaaaaaaaaaaaa', registration_id: 'registration-aaaaaaaaaaaaaaaaaaaaaaaa', evaluation_id: 'evaluation-aaaaaaaaaaaaaaaaaaaaaaaa', status: 'evaluated', triggered: true, not_comparable_codes: [], reason_code: null, reason: null },
+      { packet_id: 'packet-bbbbbbbbbbbbbbbbbbbbbbbb', registration_id: 'registration-bbbbbbbbbbbbbbbbbbbbbbbb', evaluation_id: 'evaluation-bbbbbbbbbbbbbbbbbbbbbbbb', status: 'evaluated', triggered: false, not_comparable_codes: [], reason_code: null, reason: null },
+    ],
+  })
+})
+
+it('explicitly refreshes the local session, disables pending work, and invalidates the Inbox', async () => {
+  const user = userEvent.setup()
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+
+  const button = await screen.findByRole('button', { name: 'Refresh session' })
+  await user.click(button)
+
+  expect(mockedRefresh).toHaveBeenCalledTimes(1)
+  expect(await screen.findByText('2 watches checked · 1 triggered')).toBeVisible()
+  expect(mockedDecisionInbox).toHaveBeenCalledTimes(2)
+  expect(screen.queryByText(/automatic refresh|seconds/i)).not.toBeInTheDocument()
 })
 
 it('opens the exact pending packet and routes recoverable inbox states', async () => {

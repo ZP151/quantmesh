@@ -78,6 +78,12 @@ from quantmesh.instruments.readiness import (
     DecisionSessionSummary,
     ExactCatalogReader,
 )
+from quantmesh.instruments.session import (
+    DecisionSessionError,
+    DecisionSessionRefreshItem,
+    DecisionSessionRefreshResult,
+    DecisionSessionService,
+)
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
 from quantmesh.instruments.reviews import (
     DecisionOutcomeReviewService,
@@ -112,6 +118,10 @@ __all__ = [
     "DecisionReadinessEvidenceRef",
     "DecisionReadinessService",
     "DecisionSessionSummary",
+    "DecisionSessionError",
+    "DecisionSessionRefreshItem",
+    "DecisionSessionRefreshResult",
+    "DecisionSessionService",
     "DecisionForecastChronology",
     "DecisionMarketState",
     "DecisionPacket",

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api, type DecisionInbox } from '@/lib/api'
@@ -13,12 +14,37 @@ import { usePreferences } from '@/lib/preferences'
 export function WatchlistScreen() {
   const query = useSurface(['decision-inbox'], api.decisionInbox)
   const { locale, t } = usePreferences()
+  const queryClient = useQueryClient()
+  const refresh = useMutation({
+    mutationFn: api.refreshDecisionSession,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['decision-inbox'] })
+    },
+  })
 
   return (
     <Page
       title={t('screen.watchlist.title')}
       description={t('screen.watchlist.description')}
     >
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          disabled={refresh.isPending}
+          onClick={() => refresh.mutate()}
+          type="button"
+        >
+          {refresh.isPending
+            ? t('screen.watchlist.refreshingSession')
+            : t('screen.watchlist.refreshSession')}
+        </button>
+        {refresh.data && <p aria-live="polite" className="text-sm text-muted-foreground">
+          {refreshFeedback(refresh.data, t)}
+        </p>}
+        {refresh.isError && <p aria-live="polite" className="text-sm text-destructive">
+          {t('screen.watchlist.refreshUnavailable')}
+        </p>}
+      </div>
       <Surface
         query={query}
         title={t('screen.watchlist.title')}
@@ -94,6 +120,26 @@ export function WatchlistScreen() {
       </Surface>
     </Page>
   )
+}
+
+function refreshFeedback(
+  result: Awaited<ReturnType<typeof api.refreshDecisionSession>>,
+  t: ReturnType<typeof usePreferences>['t'],
+): string {
+  if (result.status === 'no_registered_watches') {
+    return t('screen.watchlist.refreshNoRegistered')
+  }
+  const triggered = result.items.filter(item => item.triggered).length
+  if (result.status === 'partial') {
+    return t('screen.watchlist.refreshPartial', {
+      evaluated: result.evaluated_count,
+      registered: result.registered_count,
+    })
+  }
+  return t('screen.watchlist.refreshComplete', {
+    count: result.evaluated_count,
+    triggered,
+  })
 }
 
 function ReadinessFacts({

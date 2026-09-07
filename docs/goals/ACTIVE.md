@@ -1,7 +1,7 @@
 # Active Goal
 
 - Status: active — iteration 0029 Slice 1 recovery is complete; parent Task 2
-  is the active next frontier and is not yet implemented.
+  implementation is awaiting its scoped review and Task 3 is not authorized.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -25,7 +25,17 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: parent Task 1 / Slice 1 recovery is complete. Recovery
+- Current frontier: parent Task 2 explicit local session refresh is implemented
+  and awaits scoped review. It adds one same-origin refresh command over the
+  existing Inbox/packet/watch/workspace boundaries, a shared local observation
+  mapper, and a single Watchlist mutation with transient bilingual feedback and
+  Decision Inbox invalidation only. TDD RED recorded missing backend modules
+  (exit 1, 1.22s) and a missing refresh control (42 pass/1 expected failure,
+  4.63s); focused GREEN records 33 Python tests in 1.94s (one fixture serializer
+  warning), 43 Vitest tests in 3.43s, TypeScript/OpenAPI checks, scoped Ruff,
+  diff check and an Impeccable detector `[]`. No Provider/OpenD/Scheduler,
+  0021, trusted-data, external, proposal/confirmation/order, or trading state
+  changed. Parent Task 1 / Slice 1 recovery is complete. Recovery
   Tasks 1–4 are recorded through Task 1 `4e9e296`; Task 2 `88bce75`,
   report-hygiene `1609335`, and assertion fix `44d95f7`; Task 3 `9390456` and
   review-fix `ad2a367`; and Task 4 import-only repair `be5949a` plus closeout

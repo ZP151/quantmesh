@@ -40,7 +40,6 @@ from quantmesh.instruments.history import HistoryService, HistoryUnavailableErro
 from quantmesh.instruments.inbox import DecisionInbox, DecisionInboxError, DecisionInboxService
 from quantmesh.instruments.live_history import LiveHistoryService
 from quantmesh.instruments.monitoring import (
-    DecisionWatchObservation,
     DecisionWatchService,
     DecisionWatchState,
     WatchConditionKind,
@@ -51,6 +50,12 @@ from quantmesh.instruments.reviews import (
     DecisionOutcomeReviewState,
     ReviewClassification,
 )
+from quantmesh.instruments.session import (
+    DecisionSessionError,
+    DecisionSessionRefreshResult,
+    DecisionSessionService,
+)
+from quantmesh.instruments.watch_observations import build_watch_observation
 from quantmesh.live.feed import LiveFeed
 
 _MAX_COMPARE_INSTRUMENTS = 3
@@ -302,6 +307,24 @@ def instrument_router() -> APIRouter:
             )
             return JSONResponse(status_code=409, content=jsonable_encoder(error))
 
+    @router.post(
+        "/decision-session/refresh",
+        response_model=DecisionSessionRefreshResult,
+        name="refresh_decision_session",
+    )
+    def refresh_decision_session(request: Request) -> DecisionSessionRefreshResult:
+        _guard_json_origin(request, "decision session refresh")
+        service = getattr(request.app.state, "decision_session", None)
+        if not isinstance(service, DecisionSessionService):
+            raise HTTPException(status_code=404, detail="no decision session service is attached")
+        try:
+            return service.refresh()
+        except DecisionSessionError as error:
+            raise HTTPException(
+                status_code=409,
+                detail="decision session refresh is unavailable",
+            ) from error
+
     @router.get(
         "/decision-packets/{packet_id}",
         response_model=DecisionPacket,
@@ -407,20 +430,10 @@ def instrument_router() -> APIRouter:
             workspace = workspace_service.render(
                 packet.instrument.venue, packet.instrument.symbol, packet.selected_range
             )
-            live = workspace.live
-            observation = DecisionWatchObservation(
-                evaluated_at=now.astimezone(UTC),
-                price=live.last,
-                instrument=packet.instrument if live.last is not None else None,
-                source=live.source,
-                provenance=live.provenance,
-                data_time=live.data_time,
-                received_at=live.received_at,
-                sequence=live.sequence,
-                sequence_gap=live.sequence_gap,
-                candidate_forecast_artifact_id=(
-                    workspace.forecast.artifact_id if workspace.forecast else None
-                ),
+            observation = build_watch_observation(
+                packet=packet,
+                workspace=workspace,
+                evaluated_at=now,
             )
             registration, evaluation = watches.register_and_check(
                 packet_id, body.kinds, observation

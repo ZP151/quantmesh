@@ -301,6 +301,37 @@ final PR boundaries rather than after every micro-change.
   `ad2a367`; Task 4 import repair `be5949a` and documentation closeout
   `a89679f`.
 
+### 2026-09-08 — Slice 2 explicit local session refresh implementation
+
+- Added the same-origin `POST /api/decision-session/refresh` command. It reads
+  one frozen Inbox snapshot, considers only existing exact registrations,
+  orders packet work by venue/symbol/packet ID, and calls
+  `DecisionWatchService.check()` as its only writer. The shared observation
+  builder now makes the single-packet and session paths use identical
+  server-owned workspace facts.
+- The refresh result reports complete, partial, or no-registered-watches
+  truthfully. Per-packet storage/workspace failures are sanitized partial
+  results; corrupt Inbox/registration replay becomes a sanitized request-level
+  conflict. The session accepts no Provider, OpenD, Scheduler, proposal,
+  confirmation, or order collaborator.
+- Watchlist adds one keyboard-accessible `Refresh session` control with
+  temporary bilingual result feedback. It disables while pending and invalidates
+  only the Decision Inbox query after a successful response. It creates no
+  polling, registration, localStorage, external, trusted-data, or trading
+  state.
+- TDD RED: the prescribed backend collection exited `1` in `1.22s` with the
+  expected missing `session`/`watch_observations` module collection errors.
+  Frontend RED: `npx vitest run src/screens/Watchlist.test.tsx` exited `1` in
+  `4.63s`, with 42 passing tests and the expected absent Refresh session
+  control. GREEN: focused Python refresh/monitoring selection passed `33` in
+  `1.94s` with one Pydantic fixture serializer warning; focused Vitest passed
+  `43` in `3.43s`; TypeScript passed; OpenAPI generation and check passed;
+  lint exited `0` with the four inherited Fast Refresh warnings; scoped Ruff,
+  `git diff --check`, and the Impeccable detector (`[]`) passed.
+- No Provider/OpenD/Scheduler, 0021, evidence-root, proposal, confirmation,
+  order, provider, network, external, or real/paper trading state changed.
+  The next authorized frontier is the parent Task 2 review, not Task 3.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

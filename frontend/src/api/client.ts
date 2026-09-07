@@ -212,6 +212,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decision-session/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh Decision Session */
+        post: operations["api_refresh_decision_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/enablement": {
         parameters: {
             query?: never;
@@ -791,6 +808,23 @@ export interface paths {
         put?: never;
         /** Check Decision Packet Watch Conditions */
         post: operations["check_decision_packet_watch_conditions_decision_packets__packet_id__watch_conditions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decision-session/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh Decision Session */
+        post: operations["refresh_decision_session_decision_session_refresh_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2143,6 +2177,58 @@ export interface components {
             thesis: string;
             /** Trigger */
             trigger: string;
+        };
+        /** DecisionSessionRefreshItem */
+        DecisionSessionRefreshItem: {
+            /** Evaluation Id */
+            evaluation_id?: string | null;
+            /**
+             * Not Comparable Codes
+             * @default []
+             */
+            not_comparable_codes: string[];
+            /** Packet Id */
+            packet_id: string;
+            /** Reason */
+            reason?: string | null;
+            /** Reason Code */
+            reason_code?: string | null;
+            /** Registration Id */
+            registration_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "evaluated" | "failed";
+            /**
+             * Triggered
+             * @default false
+             */
+            triggered: boolean;
+        };
+        /** DecisionSessionRefreshResult */
+        DecisionSessionRefreshResult: {
+            /**
+             * Completed At
+             * Format: date-time
+             */
+            completed_at: string;
+            /** Evaluated Count */
+            evaluated_count: number;
+            /** Items */
+            items: components["schemas"]["DecisionSessionRefreshItem"][];
+            /** Registered Count */
+            registered_count: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "complete" | "partial" | "no_registered_watches";
         };
         /** DecisionSessionSummary */
         DecisionSessionSummary: {
@@ -3790,6 +3876,26 @@ export interface operations {
             };
         };
     };
+    api_refresh_decision_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionSessionRefreshResult"];
+                };
+            };
+        };
+    };
     api_enablement: {
         parameters: {
             query?: never;
@@ -4807,6 +4913,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_decision_session_decision_session_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionSessionRefreshResult"];
                 };
             };
         };

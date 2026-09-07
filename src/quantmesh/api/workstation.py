@@ -95,6 +95,7 @@ from quantmesh.instruments.monitoring import DecisionWatchService, DecisionWatch
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
 from quantmesh.instruments.readiness import DecisionReadinessService
 from quantmesh.instruments.reviews import DecisionOutcomeReviewService, DecisionReviewStore
+from quantmesh.instruments.session import DecisionSessionService
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.api import live_router
 from quantmesh.live.contract import UpdateKind
@@ -1244,6 +1245,13 @@ def create_workstation_app(
         readiness_service=DecisionReadinessService(
             catalog_provider=lambda: getattr(app.state, "data_catalog", None)
         ),
+        now=clock,
+    )
+    app.state.decision_session = DecisionSessionService(
+        inbox=lambda: app.state.decision_inbox,
+        packets=lambda: getattr(app.state, "decision_packets", None),
+        watches=lambda: getattr(app.state, "packet_monitoring", None),
+        workspace=lambda: getattr(app.state, "instrument_workspace", None),
         now=clock,
     )
 
