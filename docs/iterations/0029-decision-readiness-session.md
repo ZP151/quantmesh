@@ -211,6 +211,37 @@ final PR boundaries rather than after every micro-change.
   The scoped Spec review remains the stop-condition frontier; Task 3 has not
   started.
 
+### 2026-09-08 — Recovery Task 3 known-reason localization
+
+- Completed one explicit frontend map for all 22 reachable Inbox/readiness
+  codes: `demo_evidence`, `catalog_unavailable`,
+  `missing_history_binding`, `trusted_evidence`,
+  `missing_forecast_binding`, the eight `history_*` exact-closure results,
+  the eight `forecast_*` exact-closure results, `no_saved_packet`, and
+  `venue_unavailable`. It also covers the four persisted monitoring states
+  (`armed`, `not_triggered`, `triggered`, `not_comparable`) and all six
+  persisted unavailable-fact reasons (`unusable_price_evidence`,
+  `future_reference`, `calendar_unavailable`, `missing_forecast`,
+  `candidate_not_comparable`, `candidate_incompatible`).
+- Table-driven message tests pin reviewed English and Simplified-Chinese copy
+  for all 32 stable values. Component tests prove each known reason is
+  localized while the original server text remains in `title`; unknown
+  readiness, monitoring status, and monitoring reason values remain verbatim.
+  The existing separator-first row, one link per row, `dateTime`,
+  `usePreferences`, wrapping, and focus classes are unchanged.
+- TDD RED: `npx vitest run src/screens/Watchlist.test.tsx
+  src/lib/messages.test.ts --reporter=verbose` exited 1 with `36 failed,
+  25 passed` in `22.33s`; every failure was an expected missing reviewed
+  message or the corresponding known-code fallback. GREEN: the required
+  three-file frontend target passed `88` tests in `3` files in `6.26s`.
+  `npm run typecheck` passed. `npm run lint` exited 0 with the pre-existing
+  four Fast Refresh warnings in `state.tsx`, `badge.tsx`, `button.tsx`, and
+  `preferences.tsx`.
+- No backend, Provider/network, Scheduler, 0021, trading, new-symbol, action,
+  polling, refresh, card, time-helper, or layout change was introduced. The
+  next frontier is the required scoped Standards+Spec review, then the single
+  Slice 1 recovery integration boundary; parent Task 2 remains frozen.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

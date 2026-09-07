@@ -4,6 +4,7 @@ import { Surface, useSurface } from '@/components/state'
 import { api, type DecisionInbox } from '@/lib/api'
 import { decisionPacketPath, instrumentPath } from '@/lib/instrument-route'
 import { dateTime, money } from '@/lib/format'
+import type { MessageKey } from '@/lib/messages'
 import { usePreferences } from '@/lib/preferences'
 
 /** The watchlist: venue-scoped favorites with their marks. Every action
@@ -233,28 +234,61 @@ function readinessReason(code: string, fallback: string, t: ReturnType<typeof us
   const keys = {
     demo_evidence: 'screen.watchlist.reason.demoEvidence',
     catalog_unavailable: 'screen.watchlist.reason.catalogUnavailable',
+    missing_history_binding: 'screen.watchlist.reason.missingHistoryBinding',
+    trusted_evidence: 'screen.watchlist.reason.trustedEvidence',
+    missing_forecast_binding: 'screen.watchlist.reason.missingForecastBinding',
+    history_manifest_unavailable: 'screen.watchlist.reason.historyManifestUnavailable',
+    history_catalog_unavailable: 'screen.watchlist.reason.historyCatalogUnavailable',
     history_manifest_mismatch: 'screen.watchlist.reason.historyManifestMismatch',
     history_quality_unavailable: 'screen.watchlist.reason.historyQualityUnavailable',
     history_evaluation_mismatch: 'screen.watchlist.reason.historyEvaluationMismatch',
     history_checkpoint_mismatch: 'screen.watchlist.reason.historyCheckpointMismatch',
     history_rights_unknown: 'screen.watchlist.reason.historyRightsUnknown',
     history_not_trusted: 'screen.watchlist.reason.historyNotTrusted',
+    forecast_manifest_unavailable: 'screen.watchlist.reason.forecastManifestUnavailable',
+    forecast_catalog_unavailable: 'screen.watchlist.reason.forecastCatalogUnavailable',
     forecast_manifest_mismatch: 'screen.watchlist.reason.forecastManifestMismatch',
     forecast_quality_unavailable: 'screen.watchlist.reason.forecastQualityUnavailable',
     forecast_evaluation_mismatch: 'screen.watchlist.reason.forecastEvaluationMismatch',
     forecast_checkpoint_mismatch: 'screen.watchlist.reason.forecastCheckpointMismatch',
     forecast_rights_unknown: 'screen.watchlist.reason.forecastRightsUnknown',
     forecast_not_trusted: 'screen.watchlist.reason.forecastNotTrusted',
+    no_saved_packet: 'screen.watchlist.reason.noSavedPacket',
+    venue_unavailable: 'screen.watchlist.reason.venueUnavailable',
   } as const
   return code in keys ? t(keys[code as keyof typeof keys]) : fallback
 }
 
 function monitoringStatus(state: string, t: ReturnType<typeof usePreferences>['t']): string {
-  return state === 'triggered' ? t('screen.workspace.monitoringTriggered') : state
+  const keys = {
+    armed: 'screen.watchlist.monitoring.armed',
+    not_triggered: 'screen.watchlist.monitoring.notTriggered',
+    triggered: 'screen.workspace.monitoringTriggered',
+    not_comparable: 'screen.watchlist.monitoring.notComparable',
+  } as const
+  return localizeKnownCodes(state, keys, t, ', ')
 }
 
 function monitoringReason(code: string, t: ReturnType<typeof usePreferences>['t']): string {
-  return code === 'quote_missing' ? t('screen.watchlist.reason.quoteMissing') : code
+  const keys = {
+    unusable_price_evidence: 'screen.watchlist.reason.unusablePriceEvidence',
+    future_reference: 'screen.watchlist.reason.futureReference',
+    calendar_unavailable: 'screen.watchlist.reason.calendarUnavailable',
+    missing_forecast: 'screen.watchlist.reason.missingForecast',
+    candidate_not_comparable: 'screen.watchlist.reason.candidateNotComparable',
+    candidate_incompatible: 'screen.watchlist.reason.candidateIncompatible',
+    quote_missing: 'screen.watchlist.reason.quoteMissing',
+  } as const
+  return localizeKnownCodes(code, keys, t, '; ')
+}
+
+function localizeKnownCodes(
+  value: string,
+  keys: Record<string, MessageKey>,
+  t: ReturnType<typeof usePreferences>['t'],
+  separator: string,
+): string {
+  return value.split(separator).map(code => code in keys ? t(keys[code]) : code).join(separator)
 }
 
 function markStatus(

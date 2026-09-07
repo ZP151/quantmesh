@@ -27,8 +27,11 @@
   or operational state.
 - Current frontier: recovery Task 1 (exact forecast evidence clocks and field
   placement) is approved. Recovery Task 2 backend Inbox/restart proof has
-  focused passing evidence and awaits its scoped Spec review; then execute Task
-  3 (known-reason localization). The prior combined Task 2 was split after an
+  focused passing evidence and awaits its scoped Spec review. Recovery Task 3
+  now has exhaustive known-reason localization evidence (22 Inbox/readiness
+  codes, 4 monitoring states and 6 persisted monitoring reason codes); its
+  scoped Standards+Spec review is next. Then run the single Slice 1 recovery
+  integration boundary. The prior combined Task 2 was split after an
   implementation turn produced no changes or report. Parent Task 2 is not
   started. No freshness threshold is added:
   historical packet evidence remains replayable, separate from current

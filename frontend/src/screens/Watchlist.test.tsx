@@ -153,6 +153,137 @@ it('renders exact readiness reason in zh-CN without adding a second row action',
   expect(screen.getAllByRole('link')).toHaveLength(1)
 })
 
+it.each([
+  ['demo_evidence', 'This packet uses demo-synthetic evidence.', '此决策包使用演示合成证据。'],
+  ['catalog_unavailable', 'Trusted evidence catalog is unavailable.', '可信证据目录不可用。'],
+  ['missing_history_binding', 'Exact history manifest and quality evaluation are required.', '需要精确的历史清单和质量评估。'],
+  ['trusted_evidence', 'Exact packet evidence is trusted for research.', '精确决策包证据可用于研究。'],
+  ['missing_forecast_binding', 'Exact forecast manifest and quality evaluation are required.', '需要精确的预测清单和质量评估。'],
+  ['history_manifest_unavailable', 'Exact history manifest is unavailable.', '精确历史清单不可用。'],
+  ['history_catalog_unavailable', 'Exact history catalog closure is unavailable.', '精确历史目录闭包不可用。'],
+  ['history_manifest_mismatch', 'Exact history manifest identity does not match this packet.', '精确历史清单身份与此决策包不匹配。'],
+  ['history_quality_unavailable', 'Exact history quality evidence is unavailable.', '精确历史质量证据不可用。'],
+  ['history_evaluation_mismatch', 'Exact quality evaluation does not match this packet.', '精确质量评估与此决策包不匹配。'],
+  ['history_checkpoint_mismatch', 'Exact history quality report does not match its checkpoint.', '精确历史质量报告与其检查点不匹配。'],
+  ['history_rights_unknown', 'Exact history source rights are unknown.', '精确历史来源权利未知。'],
+  ['history_not_trusted', 'Exact history evidence is not trusted for research.', '精确历史证据不受研究信任。'],
+  ['forecast_manifest_unavailable', 'Exact forecast manifest is unavailable.', '精确预测清单不可用。'],
+  ['forecast_catalog_unavailable', 'Exact forecast catalog closure is unavailable.', '精确预测目录闭包不可用。'],
+  ['forecast_manifest_mismatch', 'Exact forecast manifest identity does not match this packet.', '精确预测清单身份与此决策包不匹配。'],
+  ['forecast_quality_unavailable', 'Exact forecast quality evidence is unavailable.', '精确预测质量证据不可用。'],
+  ['forecast_evaluation_mismatch', 'Exact quality evaluation does not match this packet.', '精确质量评估与此决策包不匹配。'],
+  ['forecast_checkpoint_mismatch', 'Exact forecast quality report does not match its checkpoint.', '精确预测质量报告与其检查点不匹配。'],
+  ['forecast_rights_unknown', 'Exact forecast source rights are unknown.', '精确预测来源权利未知。'],
+  ['forecast_not_trusted', 'Exact forecast evidence is not trusted for research.', '精确预测证据不受研究信任。'],
+  ['no_saved_packet', 'No saved DecisionPacket exists yet.', '尚无已保存的决策包。'],
+  ['venue_unavailable', 'A venue is required to resolve exact packet evidence.', '解析精确决策包证据需要市场。'],
+])('localizes the known readiness reason %s and retains its server reason in title', async (code, serverReason, localized) => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+  mockedDecisionInbox.mockResolvedValue({
+    ...inbox,
+    entries: [{
+      ...inbox.entries[0],
+      readiness: { ...inbox.entries[0].readiness, reason_code: code, reason: serverReason },
+    }],
+  })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+
+  expect(await screen.findByText(localized)).toHaveAttribute('title', serverReason)
+})
+
+it.each([
+  ['armed', 'Armed', '已布防'],
+  ['not_triggered', 'Not triggered', '未触发'],
+  ['triggered', 'Triggered', '已触发'],
+  ['not_comparable', 'Not comparable', '无法比较'],
+])('localizes the persisted monitoring status %s', async (status, _english, localized) => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+  mockedDecisionInbox.mockResolvedValue({
+    ...inbox,
+    entries: [{
+      ...inbox.entries[0],
+      monitoring: {
+        registration_id: 'registration-111', latest_evaluation_id: 'evaluation-111', triggered: false,
+        event_ids: [], last_checked_at: '2026-09-05T12:05:00Z', latest_status: status, latest_reason: null,
+      },
+    }],
+  })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+
+  expect(await screen.findByText(localized)).toBeVisible()
+})
+
+it.each([
+  ['unusable_price_evidence', 'Price evidence cannot be used for this watch.', '价格证据不能用于此观察。'],
+  ['future_reference', 'Watch reference time is in the future.', '观察参考时间在未来。'],
+  ['calendar_unavailable', 'Watch calendar is unavailable.', '观察日历不可用。'],
+  ['missing_forecast', 'Required forecast is unavailable.', '所需预测不可用。'],
+  ['candidate_not_comparable', 'Candidate forecast cannot be compared.', '候选预测无法比较。'],
+  ['candidate_incompatible', 'Candidate forecast is incompatible.', '候选预测不兼容。'],
+])('localizes the persisted monitoring reason %s and retains it in title', async (code, serverReason, localized) => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+  mockedDecisionInbox.mockResolvedValue({
+    ...inbox,
+    entries: [{
+      ...inbox.entries[0],
+      monitoring: {
+        registration_id: 'registration-111', latest_evaluation_id: 'evaluation-111', triggered: false,
+        event_ids: [], last_checked_at: '2026-09-05T12:05:00Z', latest_status: null, latest_reason: code,
+      },
+    }],
+  })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+
+  expect(await screen.findByText(localized)).toHaveAttribute('title', code)
+})
+
+it('keeps an unknown readiness and monitoring reason verbatim', async () => {
+  mockedDecisionInbox.mockResolvedValue({
+    ...inbox,
+    entries: [{
+      ...inbox.entries[0],
+      readiness: { ...inbox.entries[0].readiness, reason_code: 'server_reason_v2', reason: 'Server reason v2.' },
+      monitoring: {
+        registration_id: 'registration-111', latest_evaluation_id: 'evaluation-111', triggered: false,
+        event_ids: [], last_checked_at: '2026-09-05T12:05:00Z', latest_status: 'server_status_v2', latest_reason: 'server_reason_v2',
+      },
+    }],
+  })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+
+  expect(await screen.findByText('Server reason v2.')).toHaveAttribute('title', 'Server reason v2.')
+  expect(screen.getByText('server_status_v2')).toBeVisible()
+  expect(screen.getByText('server_reason_v2')).toHaveAttribute('title', 'server_reason_v2')
+})
+
 it('does not claim a position opened for an accepted zero-fill paper order in zh-CN', async () => {
   localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
   mockedDecisionInbox.mockResolvedValue({
