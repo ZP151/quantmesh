@@ -350,9 +350,7 @@ def test_reconstructed_inbox_preserves_exact_row_and_session_monitoring_facts(
     app.state.data_catalog = ExactCatalog({MANIFEST: _lineage()})
     before = app.state.decision_inbox.snapshot()
     before_row = next(
-        entry
-        for entry in before.entries
-        if entry.venue is Venue.MOOMOO and entry.symbol == "NVDA"
+        entry for entry in before.entries if entry.venue is Venue.MOOMOO and entry.symbol == "NVDA"
     )
 
     restarted = create_demo_app(root=root, seed=SCENARIO.seed, host="127.0.0.1")
@@ -361,9 +359,7 @@ def test_reconstructed_inbox_preserves_exact_row_and_session_monitoring_facts(
     restarted.state.data_catalog = ExactCatalog({MANIFEST: _lineage()})
     after = restarted.state.decision_inbox.snapshot()
     after_row = next(
-        entry
-        for entry in after.entries
-        if entry.venue is Venue.MOOMOO and entry.symbol == "NVDA"
+        entry for entry in after.entries if entry.venue is Venue.MOOMOO and entry.symbol == "NVDA"
     )
 
     assert after_row == before_row

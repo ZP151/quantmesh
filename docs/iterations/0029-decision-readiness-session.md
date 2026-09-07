@@ -544,6 +544,23 @@ final PR boundaries rather than after every micro-change.
 - No production UI, Provider/OpenD/Scheduler, 0021, evidence-root, proposal,
   order, external or trading state changed.
 
+### 2026-09-08 — Task 2 recovery integration gate
+
+- Exact pre-documentation HEAD `592a094` passed the one authorized coherent
+  backend selection: 77 passed, two warnings, 1027.77s (17:07), exit 0. Session
+  76244 was retained from launch through summary and no duplicate run started.
+- Watchlist/messages Vitest passed 88 in 4.41s; API generation and freshness,
+  TypeScript, lint (four inherited Fast Refresh warnings), scoped Ruff check
+  and `git diff --check` exited 0.
+- Scoped Ruff format initially exited 1 only for two generator-expression
+  wraps in `tests/test_decision_inbox.py`. The formatter changed those wraps;
+  scoped Ruff check, format check and diff check then exited 0. This
+  semantics-free test formatting did not justify repeating the 17:07 backend
+  selection.
+- No Provider/OpenD/Scheduler, 0021, evidence-root, proposal, confirmation,
+  order, external or trading state changed. Whole-recovery review is pending;
+  parent Task 3 remains frozen.
+
 ### 2026-09-08 — Task 2 recovery Task 3B: post-success scheduler proof
 
 - The existing deferred keyboard refresh now awaits its terminal success

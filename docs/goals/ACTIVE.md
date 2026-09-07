@@ -1,8 +1,8 @@
 # Active Goal
 
-- Status: active — iteration 0029 parent Task 2 recovery Tasks 1–3B are
-  independently approved; the single Task 4 integration/review gate is active,
-  and parent Task 3 is not yet authorized.
+- Status: active — iteration 0029 parent Task 2 recovery integration gates are
+  green at `592a094`; whole-recovery review is pending and parent Task 3 is not
+  yet authorized.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -144,6 +144,15 @@
   only a post-success effect-flush scheduler assertion and mutation proof;
   its independent review reproduced the mutation failure and APPROVED with no
   Standards or Spec finding. Task 4 may start; parent Task 3 remains frozen.
+- Recovery Task 4 controller gate at exact pre-documentation HEAD `592a094`
+  passed: coherent backend 77 tests with two warnings in 1027.77s (17:07),
+  exit 0, retained session 76244 and no duplicate run; Watchlist/messages
+  Vitest 88 passed in 4.41s; API generation/freshness, typecheck, lint (four
+  inherited warnings), Ruff check and diff check passed. Initial Ruff format
+  found only two generator-expression wraps in `test_decision_inbox.py`; the
+  formatter made that semantics-free change and scoped Ruff/format/diff then
+  passed. The 17:07 backend was not repeated after formatting. Whole-recovery
+  review is the next and only frontier; parent Task 3 remains frozen.
 - Task 3B now awaits terminal success feedback, flushes committed React
   effects, and rechecks the product 60-second scheduler, packet-monitoring
   POST seam, non-preference localStorage writes, and automatic refresh count.
