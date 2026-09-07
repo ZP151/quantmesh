@@ -7,7 +7,7 @@ import pytest
 
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.instruments.contracts import HistoryRange
-from quantmesh.instruments.session import DecisionSessionService
+from quantmesh.instruments.session import DecisionSessionError, DecisionSessionService
 
 NOW = datetime(2026, 9, 8, 12, 0, tzinfo=UTC)
 
@@ -24,6 +24,7 @@ class _Watches:
     def __init__(self, registrations: dict[str, object]) -> None:
         self._registrations = registrations
         self.checked: list[tuple[str, object]] = []
+        self.store = SimpleNamespace(registrations=lambda: tuple(registrations.values()))
 
     def state(self, packet_id: str):
         return self._registrations.get(packet_id), None
@@ -137,6 +138,25 @@ def test_refresh_reports_no_registered_watches_without_rendering() -> None:
     assert result.evaluated_count == 0
     assert result.items == ()
     assert renderer.calls == []
+
+
+def test_refresh_refuses_corrupt_registration_replay_before_an_empty_selection() -> None:
+    watches = _Watches({})
+    watches.store = SimpleNamespace(
+        registrations=lambda: (_ for _ in ()).throw(ValueError("corrupt registration"))
+    )
+    service = DecisionSessionService(
+        inbox=_Inbox(()),
+        packets=_Packets({}),
+        watches=watches,
+        workspace=_Renderer(),
+        now=lambda: NOW,
+    )
+
+    with pytest.raises(DecisionSessionError, match="registrations cannot be replayed"):
+        service.refresh()
+
+    assert watches.checked == []
 
 
 def test_refresh_marks_missing_packet_as_a_sanitized_partial_failure() -> None:

@@ -132,6 +132,45 @@ it('explicitly refreshes the local session, disables pending work, and invalidat
   expect(screen.queryByText(/automatic refresh|seconds/i)).not.toBeInTheDocument()
 })
 
+it('lists failed packet-bound partial refresh facts in English and Chinese', async () => {
+  const user = userEvent.setup()
+  mockedRefresh.mockResolvedValue({
+    started_at: '2026-09-08T12:00:00Z', completed_at: '2026-09-08T12:00:01Z',
+    status: 'partial', registered_count: 2, evaluated_count: 1,
+    items: [
+      { packet_id: 'packet-aaaaaaaaaaaaaaaaaaaaaaaa', registration_id: 'registration-aaaaaaaaaaaaaaaaaaaaaaaa', evaluation_id: 'evaluation-aaaaaaaaaaaaaaaaaaaaaaaa', status: 'evaluated', triggered: false, not_comparable_codes: [], reason_code: null, reason: null },
+      { packet_id: 'packet-bbbbbbbbbbbbbbbbbbbbbbbb', registration_id: 'registration-bbbbbbbbbbbbbbbbbbbbbbbb', evaluation_id: null, status: 'failed', triggered: false, not_comparable_codes: [], reason_code: 'packet_unavailable', reason: 'This local watch could not be evaluated.' },
+    ],
+  })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider><MemoryRouter><WatchlistScreen /></MemoryRouter></PreferencesProvider>
+    </QueryClientProvider>,
+  )
+
+  await user.click(await screen.findByRole('button', { name: 'Refresh session' }))
+
+  expect(await screen.findByText('1 of 2 watches checked')).toBeVisible()
+  expect(screen.getByText('packet-bbbbbbbbbbbbbbbbbbbbbbbb')).toBeVisible()
+  const reason = screen.getByText('Saved packet is unavailable.')
+  expect(reason).toHaveAttribute('title', 'This local watch could not be evaluated.')
+
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+  const chineseClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={chineseClient}>
+      <PreferencesProvider><MemoryRouter><WatchlistScreen /></MemoryRouter></PreferencesProvider>
+    </QueryClientProvider>,
+  )
+  await user.click((await screen.findAllByRole('button', { name: '刷新会话' }))[0])
+  expect(await screen.findByText('已检查 1 / 2 个观察')).toBeVisible()
+  expect(screen.getByText('已保存的决策包不可用。')).toHaveAttribute(
+    'title',
+    'This local watch could not be evaluated.',
+  )
+})
+
 it('opens the exact pending packet and routes recoverable inbox states', async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(

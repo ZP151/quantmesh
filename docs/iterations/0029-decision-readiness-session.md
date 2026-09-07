@@ -332,6 +332,28 @@ final PR boundaries rather than after every micro-change.
   order, provider, network, external, or real/paper trading state changed.
   The next authorized frontier is the parent Task 2 review, not Task 3.
 
+### 2026-09-08 — Slice 2 review-fix round 1/2
+
+- The coordinator now replays the durable registration ledger before deriving
+  any empty selection result. An empty Inbox with corrupt registrations raises
+  the existing typed session failure, preserving the route's sanitized 409;
+  it cannot claim `no_registered_watches` by skipping local replay.
+- Partial Watchlist feedback now lists each failed exact packet ID with a
+  localized stable reason framing and retains the sanitized server reason in
+  `title`. English and zh-CN share the same compact, keyboard-safe surface;
+  no new action, polling, registration, or persisted client state was added.
+- Review-required RED: the empty-selection corrupt-ledger assertion failed as
+  expected and the partial feedback test failed because the packet/reason was
+  not rendered. GREEN: `tests/test_decision_session.py` passed 9 in 0.78s;
+  Watchlist Vitest passed 44 in 3.35s; TypeScript passed. The controller-owned
+  coherent selection at `85d5456` is retained evidence, not rerun here:
+  `tests/test_decision_session.py tests/test_packet_monitoring.py
+  tests/test_decision_inbox.py` passed 62 with 2 warnings in 985.34s
+  (0:16:25), retained session 32412, exit 0.
+- Parent Task 2 remains in review round 1/2. No Provider/OpenD/Scheduler,
+  0021, evidence-root, proposal, confirmation, order, network, external, or
+  trading state changed.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

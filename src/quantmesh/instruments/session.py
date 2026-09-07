@@ -96,6 +96,9 @@ class DecisionSessionService:
         workspace = self._current(self._workspace)
         selected: list[tuple[object, object]] = []
         try:
+            # Replay the durable registration ledger even if Inbox selects no
+            # packet.  An empty projection cannot make corrupt local state true.
+            watches.store.registrations()
             for entry in entries:
                 packet_id = entry.packet_id
                 if packet_id is None:

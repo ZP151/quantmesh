@@ -36,6 +36,15 @@
   diff check and an Impeccable detector `[]`. No Provider/OpenD/Scheduler,
   0021, trusted-data, external, proposal/confirmation/order, or trading state
   changed. Parent Task 1 / Slice 1 recovery is complete. Recovery
+  Task 2 review-fix round 1/2 closes the empty-Inbox corrupt-watch-ledger
+  bypass and makes partial refresh feedback identify each failed exact packet
+  with localized framing and its server reason retained in title. Fresh focused
+  evidence: 9 session tests in 0.78s; 44 Watchlist tests in 3.35s; TypeScript
+  passed. Controller-owned retained coherent evidence at `85d5456` is 62
+  passed, 2 warnings in 985.34s (0:16:25), exit 0, session 32412; it was not
+  duplicated during this focused review-fix. Task 2 remains at review, with no
+  Provider/OpenD/Scheduler, 0021, trusted-data, proposal, confirmation, order,
+  external, or trading state changed. Recovery
   Tasks 1–4 are recorded through Task 1 `4e9e296`; Task 2 `88bce75`,
   report-hygiene `1609335`, and assertion fix `44d95f7`; Task 3 `9390456` and
   review-fix `ad2a367`; and Task 4 import-only repair `be5949a` plus closeout

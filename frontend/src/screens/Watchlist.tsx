@@ -41,6 +41,7 @@ export function WatchlistScreen() {
         {refresh.data && <p aria-live="polite" className="text-sm text-muted-foreground">
           {refreshFeedback(refresh.data, t)}
         </p>}
+        {refresh.data?.status === 'partial' && <RefreshFailures result={refresh.data} />}
         {refresh.isError && <p aria-live="polite" className="text-sm text-destructive">
           {t('screen.watchlist.refreshUnavailable')}
         </p>}
@@ -122,6 +123,24 @@ export function WatchlistScreen() {
   )
 }
 
+function RefreshFailures({
+  result,
+}: {
+  result: Awaited<ReturnType<typeof api.refreshDecisionSession>>
+}) {
+  const { t } = usePreferences()
+  const failed = result.items.filter(item => item.status === 'failed')
+  if (failed.length === 0) return null
+  return <ul aria-label={t('screen.watchlist.refreshFailures')} className="w-full space-y-1 text-xs text-muted-foreground">
+    {failed.map(item => <li key={item.packet_id} className="break-words">
+      <span className="font-mono text-foreground">{item.packet_id}</span>{' '}
+      <span title={item.reason ?? undefined}>
+        {refreshFailureReason(item.reason_code, item.reason, t)}
+      </span>
+    </li>)}
+  </ul>
+}
+
 function refreshFeedback(
   result: Awaited<ReturnType<typeof api.refreshDecisionSession>>,
   t: ReturnType<typeof usePreferences>['t'],
@@ -140,6 +159,19 @@ function refreshFeedback(
     count: result.evaluated_count,
     triggered,
   })
+}
+
+function refreshFailureReason(
+  code: string | null,
+  fallback: string | null,
+  t: ReturnType<typeof usePreferences>['t'],
+): string {
+  const keys = {
+    packet_unavailable: 'screen.watchlist.refreshReason.packetUnavailable',
+    local_workspace_unavailable: 'screen.watchlist.refreshReason.workspaceUnavailable',
+    local_evaluation_unavailable: 'screen.watchlist.refreshReason.evaluationUnavailable',
+  } as const
+  return code !== null && hasOwnKey(keys, code) ? t(keys[code]) : fallback ?? code ?? ''
 }
 
 function ReadinessFacts({
