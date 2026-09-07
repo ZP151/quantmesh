@@ -107,11 +107,16 @@ function ReadinessFacts({
   return (
     <div className="mt-2 min-w-0 space-y-0.5 text-xs text-muted-foreground">
       <p className="font-medium text-foreground">{readinessState(readiness.status, t)}</p>
-      <p className="max-w-sm break-words">{readiness.reason}</p>
+      <p className="max-w-sm break-words" title={readiness.reason}>{readinessReason(readiness.reason_code, readiness.reason, t)}</p>
       {readiness.limiting_evidence_at && (
         <p>{t('screen.watchlist.evidenceAt', { time: dateTime(readiness.limiting_evidence_at, locale) })}</p>
       )}
-      <p>{t('screen.watchlist.lastChecked', { time: dateTime(readiness.checked_at, locale) })}</p>
+      <p>{t('screen.watchlist.readinessEvaluated', { time: dateTime(readiness.checked_at, locale) })}</p>
+      {entry.monitoring?.last_checked_at && <>
+        <p>{t('screen.watchlist.lastLocalCheck', { time: dateTime(entry.monitoring.last_checked_at, locale) })}</p>
+        {entry.monitoring.latest_status && <p>{monitoringStatus(entry.monitoring.latest_status, t)}</p>}
+        {entry.monitoring.latest_reason && <p title={entry.monitoring.latest_reason}>{monitoringReason(entry.monitoring.latest_reason, t)}</p>}
+      </>}
       {entry.mark_context.received_at && (
         <p>{t('screen.watchlist.markReceived', { time: dateTime(entry.mark_context.received_at, locale) })}</p>
       )}
@@ -222,6 +227,34 @@ function readinessState(
     unavailable: 'screen.watchlist.readiness.unavailable',
   } as const
   return t(keys[state])
+}
+
+function readinessReason(code: string, fallback: string, t: ReturnType<typeof usePreferences>['t']): string {
+  const keys = {
+    demo_evidence: 'screen.watchlist.reason.demoEvidence',
+    catalog_unavailable: 'screen.watchlist.reason.catalogUnavailable',
+    history_manifest_mismatch: 'screen.watchlist.reason.historyManifestMismatch',
+    history_quality_unavailable: 'screen.watchlist.reason.historyQualityUnavailable',
+    history_evaluation_mismatch: 'screen.watchlist.reason.historyEvaluationMismatch',
+    history_checkpoint_mismatch: 'screen.watchlist.reason.historyCheckpointMismatch',
+    history_rights_unknown: 'screen.watchlist.reason.historyRightsUnknown',
+    history_not_trusted: 'screen.watchlist.reason.historyNotTrusted',
+    forecast_manifest_mismatch: 'screen.watchlist.reason.forecastManifestMismatch',
+    forecast_quality_unavailable: 'screen.watchlist.reason.forecastQualityUnavailable',
+    forecast_evaluation_mismatch: 'screen.watchlist.reason.forecastEvaluationMismatch',
+    forecast_checkpoint_mismatch: 'screen.watchlist.reason.forecastCheckpointMismatch',
+    forecast_rights_unknown: 'screen.watchlist.reason.forecastRightsUnknown',
+    forecast_not_trusted: 'screen.watchlist.reason.forecastNotTrusted',
+  } as const
+  return code in keys ? t(keys[code as keyof typeof keys]) : fallback
+}
+
+function monitoringStatus(state: string, t: ReturnType<typeof usePreferences>['t']): string {
+  return state === 'triggered' ? t('screen.workspace.monitoringTriggered') : state
+}
+
+function monitoringReason(code: string, t: ReturnType<typeof usePreferences>['t']): string {
+  return code === 'quote_missing' ? t('screen.watchlist.reason.quoteMissing') : code
 }
 
 function markStatus(

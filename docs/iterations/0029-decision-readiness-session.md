@@ -82,6 +82,41 @@ final PR boundaries rather than after every micro-change.
 - TDD evidence and targeted verification are recorded in
   `.superpowers/sdd/2026-09-08-decision-readiness-session/task-1-report.md`.
 
+### 2026-09-08 — Task 1 review-fix evidence
+
+- Review findings fixed: a readiness evaluation timestamp was incorrectly
+  presented as a local check; demo history returned early despite an advertised
+  real forecast; failure paths could omit packet generation time; and reviewed
+  reason codes were not fully localized. The Inbox now labels the two clocks
+  distinctly, presents persisted monitoring status/reason only when present,
+  validates every advertised real forecast by its exact packet IDs, and
+  computes the oldest packet-bound generation/evaluation time for ready,
+  blocked and unavailable states. Valid historical packet evidence is not
+  wall-clock-aged.
+- TDD RED: `python -m pytest tests/test_decision_readiness.py -q --basetemp
+  ...task1-fix-red` produced 2 expected failures and 11 passes (demo+real
+  forecast fail-open; missing limiter). `npx vitest run
+  src/screens/Watchlist.test.tsx` produced 2 expected assertion failures and
+  3 passes (the old evidence/local-check conflation and English zh-CN reason).
+- GREEN: `C:\Users\15492\Develop\QuantMesh\.venv\Scripts\python.exe -m
+  pytest tests/test_decision_readiness.py -q --basetemp
+  ...task1-fix-final` passed 15 in 1.34s. `npx vitest run
+  src/screens/Watchlist.test.tsx src/screens/NavigationAndValuation.test.tsx
+  src/lib/messages.test.ts` passed 21 in 3 files in 3.68s. `npm run typecheck`
+  passed; `npm run lint` exited 0 with the pre-existing four Fast Refresh
+  warnings. `npm run generate:api` regenerated the client and `npm run
+  check:api` confirmed it current. Targeted Ruff check/format and `git diff
+  --check` passed.
+- UI detector: `node C:\Users\15492\Develop\QuantMesh\.codex\skills\impeccable\scripts\detect.mjs
+  --json frontend/src/screens/Watchlist.tsx frontend/src/lib/messages.ts`
+  returned `[]`.
+- Self-review: all catalog reads remain `lineage(exact_manifest_id)`; no
+  entries traversal, provider/network call, state write, refresh affordance,
+  polling, clock formatter, Scheduler or trading change was introduced.
+  Focused tests additionally cover unavailable demo forecast closure and a
+  returned wrong manifest identity. The remaining frontier is the controller's
+  one final stable combined backend selection at this exact head.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

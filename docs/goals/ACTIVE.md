@@ -1,7 +1,8 @@
 # Active Goal
 
-- Status: active — iteration 0029 written design approved; executable plan
-  prepared and pending execution approach selection.
+- Status: active — iteration 0029 is executing the selected bounded vertical
+  slice plan; Slice 1 review-fix evidence awaits the controller's final
+  exact-head boundary.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -23,9 +24,11 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: Task 1 / Slice 1 readiness truth is implemented and
-  awaiting its recorded targeted verification and commit; continue with Task 2
-  only after the exact-ID readiness boundary is reviewed.
+- Current frontier: Task 1 / Slice 1 readiness truth has its first review-fix
+  commit and focused verification. The controller owns one final stable
+  combined backend boundary at the exact head; continue with Task 2 only after
+  that review closes. No freshness threshold was added: historical packet
+  evidence remains replayable, separate from current local-observation time.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

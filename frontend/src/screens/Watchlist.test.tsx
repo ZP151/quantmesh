@@ -119,6 +119,8 @@ it('opens the exact pending packet and routes recoverable inbox states', async (
     .toHaveAttribute('href', '/markets')
   expect(screen.getByText('Demo evidence')).toBeVisible()
   expect(screen.getAllByText('Trusted evidence unavailable')).toHaveLength(2)
+  expect(screen.getAllByText('Readiness evaluated Sep 5, 08:04 PM')).toHaveLength(3)
+  expect(screen.queryByText(/Last local check/)).not.toBeInTheDocument()
   expect(screen.getByText('configured mark is stale')).toBeVisible()
 })
 
@@ -146,7 +148,8 @@ it('renders exact readiness reason in zh-CN without adding a second row action',
   )
 
   expect(await screen.findByText('可信证据受阻')).toBeVisible()
-  expect(screen.getByText('Exact quality evaluation does not match this packet.')).toBeVisible()
+  const localizedReason = screen.getByText('精确质量评估与此决策包不匹配。')
+  expect(localizedReason).toHaveAttribute('title', 'Exact quality evaluation does not match this packet.')
   expect(screen.getAllByRole('link')).toHaveLength(1)
 })
 
@@ -238,6 +241,7 @@ it('discloses exact paper, watch and review facts with a context-only position w
       registration_id: 'registration-111111111111111111111111',
       latest_evaluation_id: 'evaluation-111111111111111111111111',
       triggered: true, event_ids: ['event-111111111111111111111111'],
+      last_checked_at: '2026-09-05T12:05:00Z', latest_status: 'triggered', latest_reason: 'quote_missing',
     },
     review: {
       review_id: 'review-111111111111111111111111', state: 'inconclusive',
@@ -269,7 +273,9 @@ it('discloses exact paper, watch and review facts with a context-only position w
   expect(screen.getByText('Confirmed')).toBeVisible()
   expect(screen.getByText('Filled')).toBeVisible()
   expect(screen.getByText('Filled quantity')).toBeVisible()
-  expect(screen.getByText('Triggered')).toBeVisible()
+  expect(screen.getAllByText('Triggered')).toHaveLength(2)
+  expect(screen.getByText('Last local check Sep 5, 08:05 PM')).toBeVisible()
+  expect(screen.getByText('Monitoring data is unavailable.')).toBeVisible()
   expect(screen.getByText('Inconclusive')).toBeVisible()
   expect(screen.getByText(/Current account context only/)).toBeVisible()
   expect(screen.queryByText(/Sharpe|ranking|aggregate return|closed P&L/i)).not.toBeInTheDocument()

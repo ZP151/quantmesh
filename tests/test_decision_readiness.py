@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -155,6 +155,76 @@ def test_demo_history_returns_demo_without_catalog_call() -> None:
     assert result.status == "demo"
     assert result.reason_code == "demo_evidence"
     assert catalog.requested == []
+
+
+def test_demo_history_with_real_forecast_requires_exact_forecast_closure() -> None:
+    demo_packet = _real_packet(forecast=True).model_copy(
+        update={
+            "evidence": _real_packet(forecast=True).evidence.model_copy(
+                update={"history_source": "demo-synthetic"}
+            )
+        }
+    )
+    catalog = ExactCatalog({"f" * 64: _lineage(manifest_id="f" * 64, evaluation_id="e" * 64)})
+
+    result = DecisionReadinessService(catalog_provider=lambda: catalog).evaluate(
+        demo_packet, checked_at=NOW
+    )
+
+    assert result.status == "demo"
+    assert result.forecast is not None
+    assert catalog.requested == ["f" * 64]
+
+
+def test_demo_history_with_unavailable_real_forecast_fails_closed() -> None:
+    forecast_packet = _real_packet(forecast=True)
+    demo_packet = forecast_packet.model_copy(
+        update={
+            "evidence": forecast_packet.evidence.model_copy(
+                update={"history_source": "demo-synthetic"}
+            )
+        }
+    )
+    catalog = ExactCatalog({})
+
+    result = DecisionReadinessService(catalog_provider=lambda: catalog).evaluate(
+        demo_packet, checked_at=NOW
+    )
+
+    assert result.status == "unavailable"
+    assert result.reason_code == "forecast_catalog_unavailable"
+    assert result.forecast is None
+    assert catalog.requested == ["f" * 64]
+
+
+def test_returned_wrong_manifest_identity_is_sanitized() -> None:
+    catalog = ExactCatalog({MANIFEST: _lineage(manifest_id="9" * 64)})
+
+    result = DecisionReadinessService(catalog_provider=lambda: catalog).evaluate(
+        _real_packet(), checked_at=NOW
+    )
+
+    assert result.status == "unavailable"
+    assert result.reason_code == "history_manifest_mismatch"
+    assert result.history is None
+    assert catalog.requested == [MANIFEST]
+
+
+def test_failed_exact_closure_keeps_packet_generation_as_limiting_evidence() -> None:
+    real_packet = _real_packet().model_copy(
+        update={
+            "evidence": _real_packet().evidence.model_copy(
+                update={"history_generated_at": NOW - timedelta(days=1)}
+            )
+        }
+    )
+
+    result = DecisionReadinessService(catalog_provider=lambda: None).evaluate(
+        real_packet, checked_at=NOW
+    )
+
+    assert result.status == "unavailable"
+    assert result.limiting_evidence_at == NOW - timedelta(days=1)
 
 
 def test_missing_history_binding_is_blocked() -> None:
