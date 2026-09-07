@@ -66,6 +66,22 @@ final PR boundaries rather than after every micro-change.
 
 ## Checkpoints
 
+### 2026-09-08 — Slice 1 readiness truth in Decision Inbox
+
+- Added `DecisionReadinessService`, which reads only exact packet manifest IDs
+  through `lineage(manifest_id)` and validates quality/evaluation/checkpoint,
+  rights and trusted-for-research closure. Demo evidence remains explicitly
+  labelled and missing/corrupt closures fail closed as blocked or unavailable.
+- Inbox now projects non-null readiness plus session and local-monitoring
+  timestamps without writing state. The workstation passes a reset-safe
+  `app.state.data_catalog` provider; no Scheduler, Provider/OpenD, trusted-data
+  root, soak, witness, outbox, network or trading behavior changed.
+- The Watchlist preserves its separator-first table and one row action while
+  rendering readiness, evidence time, received mark/reason and last check in
+  the existing decision cell, in English and Simplified Chinese.
+- TDD evidence and targeted verification are recorded in
+  `.superpowers/sdd/2026-09-08-decision-readiness-session/task-1-report.md`.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

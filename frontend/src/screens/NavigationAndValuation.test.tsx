@@ -91,6 +91,15 @@ function inboxEntry(
     parent_packet_id: null,
     position_context: null,
     review: null,
+    readiness: {
+      checked_at: '2026-09-05T12:00:00Z', forecast: null, history: null,
+      limiting_evidence_at: null,
+      reason: venue === null
+        ? 'A venue is required to resolve exact packet evidence.'
+        : 'No saved DecisionPacket exists yet.',
+      reason_code: venue === null ? 'venue_unavailable' : 'no_saved_packet',
+      status: 'unavailable',
+    },
     selected_range: null,
     symbol: 'BTC-USD',
     venue,
@@ -219,6 +228,10 @@ describe('canonical instrument workspace navigation', () => {
         inboxEntry('hyperliquid', 110),
       ],
       generated_at: '2026-09-05T12:00:00Z',
+      session: {
+        blocked_count: 2, generated_at: '2026-09-05T12:00:00Z', last_checked_at: null,
+        registered_count: 0, triggered_count: 0,
+      },
     })
     mocked.overview.mockResolvedValue({
       account: { cash: 100_000, equity: 100_000, kill_switch: false, starting_cash: 100_000 },
@@ -244,6 +257,10 @@ describe('canonical instrument workspace navigation', () => {
     mocked.decisionInbox.mockResolvedValue({
       entries: [inboxEntry(null, null)],
       generated_at: '2026-09-05T12:00:00Z',
+      session: {
+        blocked_count: 1, generated_at: '2026-09-05T12:00:00Z', last_checked_at: null,
+        registered_count: 0, triggered_count: 0,
+      },
     })
     mocked.overview.mockResolvedValue({
       account: { cash: 100_000, equity: 100_000, kill_switch: false, starting_cash: 100_000 },

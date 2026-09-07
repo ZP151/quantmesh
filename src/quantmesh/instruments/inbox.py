@@ -26,6 +26,11 @@ from quantmesh.instruments.contracts import (
 from quantmesh.instruments.decision_packets import DecisionPacketStore
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.proposals import PaperDecisionService, forecast_freshness_blocker
+from quantmesh.instruments.readiness import (
+    DecisionReadiness,
+    DecisionReadinessService,
+    DecisionSessionSummary,
+)
 from quantmesh.instruments.reviews import (
     DecisionOutcomeReviewService,
     DecisionOutcomeReviewState,
@@ -90,6 +95,14 @@ class DecisionInboxMonitoringSummary(StrictContract):
     )
     triggered: bool
     event_ids: tuple[str, ...] = ()
+    last_checked_at: datetime | None = None
+    latest_status: str | None = None
+    latest_reason: str | None = None
+
+    @field_validator("last_checked_at")
+    @classmethod
+    def last_checked_at_is_utc(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else _utc(value, "last_checked_at")
 
 
 class DecisionInboxReviewSummary(StrictContract):
@@ -111,6 +124,7 @@ class DecisionInboxEntry(StrictContract):
     evidence_status: Literal["complete", "partial", "pending", "unavailable"] | None = None
     outcome_id: str | None = Field(default=None, pattern=r"^outcome-[0-9a-f]{24}$")
     mark_context: DecisionInboxMarkContext
+    readiness: DecisionReadiness
     paper: DecisionInboxPaperSummary | None = None
     position_context: DecisionInboxPositionContext | None = None
     monitoring: DecisionInboxMonitoringSummary | None = None
@@ -120,6 +134,7 @@ class DecisionInboxEntry(StrictContract):
 class DecisionInbox(StrictContract):
     generated_at: datetime
     entries: tuple[DecisionInboxEntry, ...]
+    session: DecisionSessionSummary
 
     @field_validator("generated_at")
     @classmethod
@@ -172,6 +187,7 @@ class DecisionInboxService:
         paper_decisions_provider: Callable[[], PaperDecisionService | None] = lambda: None,
         forecast_registry_provider: Callable[[], PriceForecastRegistry | None] = lambda: None,
         live_feed_provider: Callable[[], LiveFeed | None] = lambda: None,
+        readiness_service: DecisionReadinessService | None = None,
     ) -> None:
         self._watchlist_provider = watchlist_provider
         self._packet_store_provider = packet_store_provider
@@ -181,12 +197,15 @@ class DecisionInboxService:
         self._paper_decisions_provider = paper_decisions_provider
         self._forecast_registry_provider = forecast_registry_provider
         self._live_feed_provider = live_feed_provider
+        self._readiness = readiness_service or DecisionReadinessService(
+            catalog_provider=lambda: None
+        )
         self._now = now
         self._quote_fence = QuoteFence()
 
-    def snapshot(self) -> DecisionInbox:
+    def snapshot(self, *, at: datetime | None = None) -> DecisionInbox:
         """Read all participating state once and derive the immutable view."""
-        generated_at = self._timestamp()
+        generated_at = self._timestamp() if at is None else _utc(at, "snapshot at")
         watchlist = tuple(self._watchlist_provider())
         packet_store = self._packet_store_provider()
         packets = packet_store.all() if packet_store is not None else ()
@@ -219,7 +238,27 @@ class DecisionInboxService:
                 key=lambda item: (item.symbol, item.venue.value if item.venue is not None else ""),
             )
         )
-        return DecisionInbox(generated_at=generated_at, entries=entries)
+        checked_times = tuple(
+            entry.monitoring.last_checked_at
+            for entry in entries
+            if entry.monitoring is not None and entry.monitoring.last_checked_at is not None
+        )
+        return DecisionInbox(
+            generated_at=generated_at,
+            entries=entries,
+            session=DecisionSessionSummary(
+                generated_at=generated_at,
+                last_checked_at=max(checked_times, default=None),
+                registered_count=sum(entry.monitoring is not None for entry in entries),
+                triggered_count=sum(
+                    entry.attention_state is DecisionAttentionState.WATCH_TRIGGERED
+                    for entry in entries
+                ),
+                blocked_count=sum(
+                    entry.readiness.status in {"blocked", "unavailable"} for entry in entries
+                ),
+            ),
+        )
 
     def _entry(
         self,
@@ -240,6 +279,11 @@ class DecisionInboxService:
                 attention_reason="watchlist entry has no venue",
                 mark_context=DecisionInboxMarkContext(
                     status="unavailable", reason="a venue is required to resolve a mark"
+                ),
+                readiness=_unavailable_readiness(
+                    now,
+                    "venue_unavailable",
+                    "A venue is required to resolve exact packet evidence.",
                 ),
             )
 
@@ -264,6 +308,11 @@ class DecisionInboxService:
                 attention_state=DecisionAttentionState.NOT_STARTED,
                 attention_reason="no saved decision packet",
                 mark_context=mark_context,
+                readiness=_unavailable_readiness(
+                    now,
+                    "no_saved_packet",
+                    "No saved DecisionPacket exists yet.",
+                ),
             )
 
         candidates = [self._candidate(packet, reviews, forecasts, now) for packet in packets]
@@ -295,6 +344,12 @@ class DecisionInboxService:
             account,
             mark_context,
         )
+        readiness = self._readiness.evaluate(packet, checked_at=now)
+        evaluation = (
+            monitoring.evaluations[-1]
+            if monitoring is not None and monitoring.evaluations
+            else None
+        )
         return DecisionInboxEntry(
             venue=record.venue,
             symbol=record.symbol,
@@ -306,6 +361,7 @@ class DecisionInboxService:
             selected_range=packet.selected_range,
             disposition=packet.disposition,
             mark_context=mark_context,
+            readiness=readiness,
             evidence_status=outcome.evidence_status if outcome is not None else None,
             outcome_id=outcome.outcome_id if outcome is not None else None,
             paper=DecisionInboxPaperSummary(
@@ -328,6 +384,24 @@ class DecisionInboxService:
                 ),
                 triggered=monitoring.status == "triggered",
                 event_ids=monitoring.event_ids,
+                last_checked_at=(
+                    evaluation.observation.evaluated_at if evaluation is not None else None
+                ),
+                latest_status=(
+                    ", ".join(result.state for result in evaluation.results)
+                    if evaluation is not None
+                    else None
+                ),
+                latest_reason=(
+                    "; ".join(
+                        result.facts.code
+                        for result in evaluation.results
+                        if hasattr(result.facts, "code")
+                    )
+                    or None
+                    if evaluation is not None
+                    else None
+                ),
             )
             if monitoring is not None and monitoring.registration is not None
             else None,
@@ -563,3 +637,23 @@ class DecisionInboxService:
         if not isinstance(value, datetime) or value.tzinfo is None:
             raise ValueError("decision inbox clock must return a timezone-aware datetime")
         return value.astimezone(UTC)
+
+
+def _unavailable_readiness(
+    checked_at: datetime,
+    reason_code: str,
+    reason: str,
+) -> DecisionReadiness:
+    return DecisionReadiness(
+        status="unavailable",
+        checked_at=checked_at,
+        limiting_evidence_at=None,
+        reason_code=reason_code,
+        reason=reason,
+    )
+
+
+def _utc(value: datetime, field: str) -> datetime:
+    if value.tzinfo is None:
+        raise ValueError(f"{field} must be timezone-aware")
+    return value.astimezone(UTC)

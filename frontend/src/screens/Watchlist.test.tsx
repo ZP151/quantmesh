@@ -22,13 +22,18 @@ const inbox = {
       disposition: 'paper_proposal',
       evidence_status: 'complete',
       instrument_type: 'equity',
-      mark_context: { reason: null, status: 'available', value: 184.2 },
+      mark_context: { reason: 'configured mark is stale', received_at: '2026-09-05T12:03:00Z', status: 'stale', value: 184.2 },
       monitoring: null,
       packet_id: 'packet-111111111111111111111111',
       paper: { proposal_id: 'proposal-111', status: 'pending' },
       parent_packet_id: 'packet-000000000000000000000000',
       position_context: null,
       review: null,
+      readiness: {
+        checked_at: '2026-09-05T12:04:00Z', forecast: null, history: null,
+        limiting_evidence_at: '2026-09-05T12:00:00Z', reason: 'This packet uses demo-synthetic evidence.',
+        reason_code: 'demo_evidence', status: 'demo',
+      },
       selected_range: '6m',
       symbol: 'NVDA',
       venue: 'moomoo',
@@ -46,6 +51,11 @@ const inbox = {
       parent_packet_id: null,
       position_context: null,
       review: null,
+      readiness: {
+        checked_at: '2026-09-05T12:04:00Z', forecast: null, history: null,
+        limiting_evidence_at: null, reason: 'No saved DecisionPacket exists yet.',
+        reason_code: 'no_saved_packet', status: 'unavailable',
+      },
       selected_range: null,
       symbol: 'AAPL',
       venue: 'moomoo',
@@ -63,12 +73,21 @@ const inbox = {
       parent_packet_id: null,
       position_context: null,
       review: null,
+      readiness: {
+        checked_at: '2026-09-05T12:04:00Z', forecast: null, history: null,
+        limiting_evidence_at: null, reason: 'A venue is required to resolve exact packet evidence.',
+        reason_code: 'venue_unavailable', status: 'unavailable',
+      },
       selected_range: null,
       symbol: 'UNKNOWN',
       venue: null,
     },
   ],
   generated_at: '2026-09-05T12:00:00Z',
+  session: {
+    blocked_count: 2, generated_at: '2026-09-05T12:00:00Z', last_checked_at: null,
+    registered_count: 0, triggered_count: 0,
+  },
 } satisfies DecisionInbox
 
 const mockedDecisionInbox = vi.mocked(api.decisionInbox)
@@ -98,6 +117,37 @@ it('opens the exact pending packet and routes recoverable inbox states', async (
     .toHaveAttribute('href', '/instruments/moomoo/AAPL')
   expect(screen.getByRole('link', { name: 'Choose venue' }))
     .toHaveAttribute('href', '/markets')
+  expect(screen.getByText('Demo evidence')).toBeVisible()
+  expect(screen.getAllByText('Trusted evidence unavailable')).toHaveLength(2)
+  expect(screen.getByText('configured mark is stale')).toBeVisible()
+})
+
+it('renders exact readiness reason in zh-CN without adding a second row action', async () => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+  mockedDecisionInbox.mockResolvedValue({
+    ...inbox,
+    entries: [{
+      ...inbox.entries[0],
+      readiness: {
+        ...inbox.entries[0].readiness,
+        reason: 'Exact quality evaluation does not match this packet.',
+        reason_code: 'history_evaluation_mismatch',
+        status: 'blocked',
+      },
+    }],
+  })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+
+  expect(await screen.findByText('可信证据受阻')).toBeVisible()
+  expect(screen.getByText('Exact quality evaluation does not match this packet.')).toBeVisible()
+  expect(screen.getAllByRole('link')).toHaveLength(1)
 })
 
 it('does not claim a position opened for an accepted zero-fill paper order in zh-CN', async () => {
@@ -145,6 +195,11 @@ it('labels an evidence-blocked crypto packet and preserves its exact route', asy
         parent_packet_id: 'packet-111111111111111111111111',
         position_context: null,
         review: null,
+        readiness: {
+          checked_at: '2026-09-05T12:04:00Z', forecast: null, history: null,
+          limiting_evidence_at: null, reason: 'No promoted forecast is available.',
+          reason_code: 'forecast_unavailable', status: 'blocked',
+        },
         selected_range: '6m',
         symbol: 'BTC-USD',
         venue: 'hyperliquid',
@@ -162,7 +217,7 @@ it('labels an evidence-blocked crypto packet and preserves its exact route', asy
   )
 
   expect(await screen.findByText('Evidence blocked')).toBeInTheDocument()
-  expect(screen.getByText('No promoted forecast is available.')).toBeInTheDocument()
+  expect(screen.getAllByText('No promoted forecast is available.')).toHaveLength(2)
   expect(screen.getByRole('link', { name: 'Open exact packet' })).toHaveAttribute(
     'href',
     '/instruments/hyperliquid/BTC-USD?range=6m&packet=packet-222222222222222222222222',

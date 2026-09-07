@@ -200,6 +200,23 @@ def test_inbox_reports_not_started_and_venue_less_watchlist_as_unavailable(tmp_p
     assert nvda["attention_state"] == "not_started"
     assert qqq["attention_state"] == "unavailable"
     assert "venue" in qqq["attention_reason"].lower()
+    assert nvda["readiness"] == {
+        "status": "unavailable",
+        "reason_code": "no_saved_packet",
+        "reason": "No saved DecisionPacket exists yet.",
+        "checked_at": response.json()["generated_at"],
+        "limiting_evidence_at": None,
+        "history": None,
+        "forecast": None,
+    }
+    assert qqq["readiness"]["reason_code"] == "venue_unavailable"
+    assert response.json()["session"] == {
+        "generated_at": response.json()["generated_at"],
+        "last_checked_at": None,
+        "registered_count": 0,
+        "triggered_count": 0,
+        "blocked_count": 5,
+    }
 
 
 def test_inbox_projects_terminal_actions_and_missing_proposal_link(tmp_path: Path) -> None:
@@ -461,6 +478,9 @@ def test_shadow_paper_watch_review_exact_ids_and_restart(tmp_path: Path, lifecyc
             assert row["monitoring"]["latest_evaluation_id"] == (
                 preview.outcome.monitoring.evaluations[-1].evaluation_id
             )
+            assert row["monitoring"]["last_checked_at"] == (
+                SCENARIO.anchor + timedelta(seconds=2)
+            ).isoformat().replace("+00:00", "Z")
             assert row["monitoring"]["event_ids"] == list(preview.outcome.monitoring.event_ids)
             assert row["monitoring"]["triggered"] is True
         else:

@@ -1748,6 +1748,7 @@ export interface components {
              * Format: date-time
              */
             generated_at: string;
+            session: components["schemas"]["DecisionSessionSummary"];
         };
         /** DecisionInboxEntry */
         DecisionInboxEntry: {
@@ -1768,6 +1769,7 @@ export interface components {
             /** Parent Packet Id */
             parent_packet_id?: string | null;
             position_context?: components["schemas"]["DecisionInboxPositionContext"] | null;
+            readiness: components["schemas"]["DecisionReadiness"];
             review?: components["schemas"]["DecisionInboxReviewSummary"] | null;
             selected_range?: components["schemas"]["HistoryRange"] | null;
             /** Symbol */
@@ -1805,8 +1807,14 @@ export interface components {
              * @default []
              */
             event_ids: string[];
+            /** Last Checked At */
+            last_checked_at?: string | null;
             /** Latest Evaluation Id */
             latest_evaluation_id?: string | null;
+            /** Latest Reason */
+            latest_reason?: string | null;
+            /** Latest Status */
+            latest_status?: string | null;
             /** Registration Id */
             registration_id: string;
             /** Triggered */
@@ -2028,6 +2036,41 @@ export interface components {
             /** Blockers */
             blockers?: components["schemas"]["DecisionBlocker"][];
         };
+        /** DecisionReadiness */
+        DecisionReadiness: {
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            forecast?: components["schemas"]["DecisionReadinessEvidenceRef"] | null;
+            history?: components["schemas"]["DecisionReadinessEvidenceRef"] | null;
+            /** Limiting Evidence At */
+            limiting_evidence_at?: string | null;
+            /** Reason */
+            reason: string;
+            /** Reason Code */
+            reason_code: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ready" | "demo" | "blocked" | "unavailable";
+        };
+        /** DecisionReadinessEvidenceRef */
+        DecisionReadinessEvidenceRef: {
+            /**
+             * Evaluated At
+             * Format: date-time
+             */
+            evaluated_at: string;
+            /** Evaluation Id */
+            evaluation_id: string;
+            /** Manifest Id */
+            manifest_id: string;
+            /** Report Id */
+            report_id: string;
+        };
         /** DecisionReviewRecord */
         DecisionReviewRecord: {
             classification: components["schemas"]["ReviewClassification"];
@@ -2100,6 +2143,22 @@ export interface components {
             thesis: string;
             /** Trigger */
             trigger: string;
+        };
+        /** DecisionSessionSummary */
+        DecisionSessionSummary: {
+            /** Blocked Count */
+            blocked_count: number;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Last Checked At */
+            last_checked_at: string | null;
+            /** Registered Count */
+            registered_count: number;
+            /** Triggered Count */
+            triggered_count: number;
         };
         /** DecisionWatchCondition */
         DecisionWatchCondition: {

@@ -93,6 +93,7 @@ from quantmesh.instruments.inbox import DecisionInboxService
 from quantmesh.instruments.live_history import LiveHistoryService
 from quantmesh.instruments.monitoring import DecisionWatchService, DecisionWatchStore
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
+from quantmesh.instruments.readiness import DecisionReadinessService
 from quantmesh.instruments.reviews import DecisionOutcomeReviewService, DecisionReviewStore
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
 from quantmesh.live.api import live_router
@@ -1240,6 +1241,9 @@ def create_workstation_app(
         paper_decisions_provider=lambda: getattr(app.state, "paper_decisions", None),
         forecast_registry_provider=lambda: getattr(app.state, "price_forecasts", None),
         live_feed_provider=lambda: live_feed,
+        readiness_service=DecisionReadinessService(
+            catalog_provider=lambda: getattr(app.state, "data_catalog", None)
+        ),
         now=clock,
     )
 

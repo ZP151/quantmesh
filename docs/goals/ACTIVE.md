@@ -23,8 +23,9 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: choose subagent-driven or inline plan execution, then begin
-  Task 1 / Slice 1 readiness truth with TDD. Implementation has not started.
+- Current frontier: Task 1 / Slice 1 readiness truth is implemented and
+  awaiting its recorded targeted verification and commit; continue with Task 2
+  only after the exact-ID readiness boundary is reviewed.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

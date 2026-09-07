@@ -3,7 +3,7 @@ import { Page } from '@/components/page'
 import { Surface, useSurface } from '@/components/state'
 import { api, type DecisionInbox } from '@/lib/api'
 import { decisionPacketPath, instrumentPath } from '@/lib/instrument-route'
-import { money } from '@/lib/format'
+import { dateTime, money } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 
 /** The watchlist: venue-scoped favorites with their marks. Every action
@@ -11,7 +11,7 @@ import { usePreferences } from '@/lib/preferences'
  * resolved by a first-match lookup across venues. */
 export function WatchlistScreen() {
   const query = useSurface(['decision-inbox'], api.decisionInbox)
-  const { t } = usePreferences()
+  const { locale, t } = usePreferences()
 
   return (
     <Page
@@ -62,6 +62,7 @@ export function WatchlistScreen() {
                           <td className="block px-4 py-1 sm:table-cell sm:py-2.5">
                             <p className="text-xs font-medium">{attentionState(entry.attention_state, t)}</p>
                             <p className="mt-0.5 max-w-sm text-xs text-muted-foreground">{entry.attention_reason}</p>
+                            <ReadinessFacts entry={entry} locale={locale} />
                             <ShadowRecords entry={entry} />
                           </td>
                           <td className="block px-4 py-1 sm:table-cell sm:py-2.5">
@@ -91,6 +92,31 @@ export function WatchlistScreen() {
         )}
       </Surface>
     </Page>
+  )
+}
+
+function ReadinessFacts({
+  entry,
+  locale,
+}: {
+  entry: DecisionInbox['entries'][number]
+  locale: ReturnType<typeof usePreferences>['locale']
+}) {
+  const { t } = usePreferences()
+  const readiness = entry.readiness
+  return (
+    <div className="mt-2 min-w-0 space-y-0.5 text-xs text-muted-foreground">
+      <p className="font-medium text-foreground">{readinessState(readiness.status, t)}</p>
+      <p className="max-w-sm break-words">{readiness.reason}</p>
+      {readiness.limiting_evidence_at && (
+        <p>{t('screen.watchlist.evidenceAt', { time: dateTime(readiness.limiting_evidence_at, locale) })}</p>
+      )}
+      <p>{t('screen.watchlist.lastChecked', { time: dateTime(readiness.checked_at, locale) })}</p>
+      {entry.mark_context.received_at && (
+        <p>{t('screen.watchlist.markReceived', { time: dateTime(entry.mark_context.received_at, locale) })}</p>
+      )}
+      {entry.mark_context.reason && <p className="max-w-sm break-words">{entry.mark_context.reason}</p>}
+    </div>
   )
 }
 
@@ -183,6 +209,19 @@ function attentionState(
     watching: 'screen.watchlist.state.watching',
   } as const
   return t(keys[state as keyof typeof keys])
+}
+
+function readinessState(
+  state: DecisionInbox['entries'][number]['readiness']['status'],
+  t: ReturnType<typeof usePreferences>['t'],
+): string {
+  const keys = {
+    blocked: 'screen.watchlist.readiness.blocked',
+    demo: 'screen.watchlist.readiness.demo',
+    ready: 'screen.watchlist.readiness.ready',
+    unavailable: 'screen.watchlist.readiness.unavailable',
+  } as const
+  return t(keys[state])
 }
 
 function markStatus(
