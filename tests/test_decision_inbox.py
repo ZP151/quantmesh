@@ -307,6 +307,13 @@ def test_inbox_sanitizes_corrupt_or_mismatched_exact_closures_without_catalog_fa
     assert row["readiness"]["status"] == expected_status
     assert row["readiness"]["reason_code"] == expected_reason
     assert (row["readiness"]["history"] is not None) is history_present
+    if history_present:
+        assert row["readiness"]["history"] == {
+            "manifest_id": MANIFEST,
+            "evaluation_id": EVALUATION,
+            "report_id": REPORT,
+            "evaluated_at": NOW.isoformat().replace("+00:00", "Z"),
+        }
     assert row["readiness"]["forecast"] is None
     assert catalog.requested == [MANIFEST]
 
