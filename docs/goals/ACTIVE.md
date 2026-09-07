@@ -1,8 +1,7 @@
 # Active Goal
 
-- Status: active — iteration 0029 is executing the selected bounded vertical
-  slice plan; Slice 1 has passed its controller-owned final exact-head
-  selection and is at scoped re-review.
+- Status: active — iteration 0029 Slice 1 is NOT APPROVED after its capped
+  review round 2/2 and must be re-scoped before further implementation.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -24,11 +23,16 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: Task 1 / Slice 1 readiness truth has passed the controller
-  stable combined backend selection (47 passed, 1 inherited dependency warning
-  in 930.56s) and is at scoped re-review. Continue with Task 2 only after that
-  review closes. No freshness threshold was added: historical packet evidence
-  remains replayable, separate from current local-observation time.
+- Current frontier: Task 1 / Slice 1 is blocked at review round 2/2. Re-scope
+  the slice for four load-bearing findings before a fresh implementation and
+  review cycle: preserve `forecast_generated_at` in limiting evidence on a
+  failed forecast closure; prevent demo+real-forecast blocked evidence from
+  entering `history`; complete exact-real/corrupt Inbox, session
+  reconstruction, and monitoring status/reason behavioral evidence; and map
+  all reachable known reason codes in Simplified Chinese. Task 2 is not
+  started; do not begin a third review loop. No freshness threshold was added:
+  historical packet evidence remains replayable, separate from current
+  local-observation time.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

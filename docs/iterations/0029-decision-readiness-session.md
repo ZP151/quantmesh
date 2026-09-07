@@ -135,6 +135,24 @@ final PR boundaries rather than after every micro-change.
 - The exact-head combined boundary is now evidenced. Task 1 is at scoped
   re-review; do not advance the next slice until that review resolves.
 
+### 2026-09-08 — Task 1 review round 2/2: NOT APPROVED
+
+- The capped second review found four remaining load-bearing defects:
+  1. Forecast-closure failure omits `forecast_generated_at` from
+     `limiting_evidence_at`.
+  2. A demo packet with a real forecast can place blocked forecast
+     qualification evidence in the `history` field.
+  3. Exact-real and corrupt Inbox rows, session reconstruction, and persisted
+     monitoring status/reason still lack complete behavioral evidence.
+  4. Reachable known readiness/monitoring reason codes remain unmapped for
+     Simplified Chinese.
+- Task 1 is **NOT APPROVED** after review round 2/2. Task 2 has not started.
+  The next action is to re-scope Slice 1 against these findings, not to open a
+  third review loop.
+- No 0021, Scheduler, Provider/OpenD, external, trusted-data, soak/witness,
+  outbox, testnet, live-trading or other execution state changed during this
+  documentation-only closeout.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
