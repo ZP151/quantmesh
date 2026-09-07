@@ -89,6 +89,7 @@ from quantmesh.instruments.decision_packets import (
 )
 from quantmesh.instruments.forecast import PriceForecastRegistry
 from quantmesh.instruments.history import HistoryService
+from quantmesh.instruments.inbox import DecisionInboxService
 from quantmesh.instruments.live_history import LiveHistoryService
 from quantmesh.instruments.monitoring import DecisionWatchService, DecisionWatchStore
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
@@ -1226,6 +1227,21 @@ def create_workstation_app(
                     monitoring=packet_monitoring,
                     now=clock,
                 )
+    app.state.decision_inbox = DecisionInboxService(
+        watchlist_provider=lambda: (
+            app.state.page_context.watchlist.all()
+            if app.state.page_context.watchlist is not None
+            else []
+        ),
+        packet_store_provider=lambda: getattr(app.state, "decision_packets", None),
+        review_service_provider=lambda: getattr(app.state, "packet_reviews", None),
+        account_provider=account_store.get,
+        markets_provider=lambda: app.state.page_context.markets,
+        paper_decisions_provider=lambda: getattr(app.state, "paper_decisions", None),
+        forecast_registry_provider=lambda: getattr(app.state, "price_forecasts", None),
+        live_feed_provider=lambda: live_feed,
+        now=clock,
+    )
 
     # The SPA JSON surface (Phase C) in both modes: a strict superset
     # of the M1 API, so a client that wants JSON has one source of

@@ -48,7 +48,7 @@ from quantmesh.data.manifest import (
 from quantmesh.data.providers.hyperliquid import HyperliquidFixtureProvider
 from quantmesh.data.providers.moomoo import MoomooFixtureProvider
 from quantmesh.demo import generators
-from quantmesh.demo.manifest import MARKER_NAME, DemoScenario
+from quantmesh.demo.manifest import HISTORICAL_DAILY_SESSIONS, MARKER_NAME, DemoScenario
 from quantmesh.domain.market_data import Bar, OrderBook, TradeEvent
 from quantmesh.domain.models import (
     Instrument,
@@ -959,8 +959,6 @@ def _seed_lake(
                 spec,
                 target_close=closes[-1],
             )
-            if spec.symbol == "AAPL":
-                rows_by_interval = {"1d": rows_by_interval["1d"][-420:]}
         else:
             rows_by_interval = {
                 "1d": [
@@ -1113,12 +1111,12 @@ def _seed_price_forecasts(
         lake_root=lake_root,
         bindings=bindings,
     )
-    for symbol, sessions in (("AAPL", 420), ("NVDA", 650)):
+    for symbol in ("AAPL", "NVDA"):
         series = _forecast_series(
             lake_root,
             scenario=scenario,
             symbol=symbol,
-            sessions=sessions,
+            sessions=HISTORICAL_DAILY_SESSIONS,
         )
         artifact = run_price_forecast(
             series,

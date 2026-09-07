@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError, api, type DecisionPacket, type InstrumentWorkspace } from '@/lib/api'
 import { dateTime } from '@/lib/format'
@@ -239,6 +239,7 @@ function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
       <PreferencesProvider>
         <MemoryRouter initialEntries={[path]}>
           <main data-testid="app-main">
+            <LocationProbe />
             <Routes>
               <Route path="/instruments/:venue/:symbol" element={<InstrumentWorkspaceScreen />} />
             </Routes>
@@ -247,6 +248,28 @@ function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
       </PreferencesProvider>
     </QueryClientProvider>,
   )
+}
+
+function LocationProbe() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  return <>
+    <output data-testid="location">{`${location.pathname}${location.search}`}</output>
+    <button onClick={() => navigate(-1)}>Back</button>
+    <button onClick={() => navigate(1)}>Forward</button>
+  </>
+}
+
+function exactPacket(packetId: string, overrides: Partial<DecisionPacket> = {}): DecisionPacket {
+  return {
+    ...workspace.decision.draft,
+    disposition: 'watch',
+    operator_reason: 'Reopen this exact packet.',
+    packet_id: packetId,
+    parent_packet_id: workspace.decision.draft.packet_id,
+    version: 2,
+    ...overrides,
+  }
 }
 
 beforeEach(() => {
@@ -310,6 +333,151 @@ beforeEach(() => {
 })
 
 describe('InstrumentWorkspaceScreen', () => {
+  it('restores exact packet action state on Back and Forward after creating a child', async () => {
+    const parent = { ...workspace.decision.draft, packet_id: 'packet-aaaaaaaaaaaaaaaaaaaaaaaa' }
+    const child = exactPacket('packet-bbbbbbbbbbbbbbbbbbbbbbbb', {
+      parent_packet_id: parent.packet_id,
+      operator_reason: 'Child-only reason',
+    })
+    mockedDecisionPacket.mockResolvedValue(parent)
+    mockedApplyDecisionPacketAction.mockResolvedValue({ packet: child, proposal: null })
+    renderWorkspace(`/instruments/moomoo/NVDA?range=6m&packet=${parent.packet_id}`)
+    const user = userEvent.setup()
+    await user.type(await screen.findByLabelText('Decision reason'), 'Child-only reason')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+    expect(await screen.findByText(child.packet_id)).toBeInTheDocument()
+
+    for (const [direction, selected, absent] of [
+      ['Back', parent.packet_id, child.packet_id],
+      ['Forward', child.packet_id, parent.packet_id],
+      ['Back', parent.packet_id, child.packet_id],
+    ]) {
+      await user.click(screen.getByRole('button', { name: direction }))
+      expect(screen.getByTestId('location')).toHaveTextContent(`packet=${selected}`)
+      const rail = within(screen.getByRole('complementary', { name: 'Decision rail' }))
+      expect(rail.getByText(selected)).toBeInTheDocument()
+      expect(rail.queryByText(absent)).not.toBeInTheDocument()
+      if (direction === 'Back') {
+        expect(rail.getByLabelText('Decision reason')).toHaveValue('')
+        expect(rail.queryByText('Child-only reason')).not.toBeInTheDocument()
+      }
+    }
+  })
+
+  it('leaves a pinned packet atomically when changing range and keeps fresh controls', async () => {
+    const selected = exactPacket('packet-cccccccccccccccccccccccc')
+    const oneMonth = {
+      ...workspace,
+      history: { ...workspace.history, range: '1m' as const },
+      decision: {
+        draft: { ...workspace.decision.draft, selected_range: '1m' as const },
+        latest: exactPacket('packet-dddddddddddddddddddddddd', { selected_range: '1m' }),
+      },
+    }
+    const pending = deferred<InstrumentWorkspace>()
+    mockedWorkspace.mockImplementation(async (_venue, _symbol, range) => range === '1m' ? pending.promise : workspace)
+    mockedDecisionPacket.mockResolvedValue(selected)
+    renderWorkspace(`/instruments/moomoo/NVDA?range=6m&packet=${selected.packet_id}`)
+    expect(await screen.findByText(selected.packet_id)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '1M' }))
+
+    expect(screen.getByTestId('location')).toHaveTextContent('range=1m')
+    expect(screen.getByTestId('location')).not.toHaveTextContent('packet=')
+    expect(screen.getByTestId('workspace-grid')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '6M' })).toBeInTheDocument()
+    await act(async () => pending.resolve(oneMonth))
+    await waitFor(() => expect(screen.getByRole('button', { name: '1M' })).toHaveAttribute('aria-pressed', 'true'))
+    expect(screen.getByLabelText('Decision reason')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'New analysis' })).not.toBeInTheDocument()
+    expect(screen.queryByText(oneMonth.decision.latest.packet_id)).not.toBeInTheDocument()
+  })
+
+  it('uses an explicit packet query as the displayed packet', async () => {
+    const selected = exactPacket('packet-111111111111111111111111')
+    mockedDecisionPacket.mockResolvedValue(selected)
+    mockedWorkspace.mockResolvedValue({
+      ...workspace,
+      decision: { draft: workspace.decision.draft, latest: exactPacket('packet-latest-222222222222222222222222') },
+    })
+
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-111111111111111111111111')
+
+    expect(await screen.findByText(selected.packet_id)).toBeInTheDocument()
+    expect(screen.queryByText('packet-latest-222222222222222222222222')).not.toBeInTheDocument()
+    expect(mockedDecisionPacket).toHaveBeenCalledWith(selected.packet_id)
+  })
+
+  it('refuses a missing or mismatched explicit packet without falling back', async () => {
+    mockedDecisionPacket.mockRejectedValueOnce(new ApiError(404, 'Exact packet is unavailable'))
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-999999999999999999999999')
+    expect(await screen.findByText('Exact packet is unavailable')).toBeInTheDocument()
+    expect(screen.queryByText(workspace.decision.draft.packet_id)).not.toBeInTheDocument()
+  })
+
+  it('refuses an empty explicit packet ID locally without requesting or falling back', async () => {
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=')
+
+    expect(await screen.findByText('The requested DecisionPacket ID is invalid.')).toBeInTheDocument()
+    expect(mockedDecisionPacket).not.toHaveBeenCalled()
+    expect(screen.queryByText(workspace.decision.draft.packet_id)).not.toBeInTheDocument()
+  })
+
+  it('refuses an explicit packet whose venue, symbol, or range mismatches the URL', async () => {
+    mockedDecisionPacket.mockResolvedValue(exactPacket('packet-aaaaaaaaaaaaaaaaaaaaaaaa', {
+      selected_range: '1m',
+    }))
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-aaaaaaaaaaaaaaaaaaaaaaaa')
+
+    expect(await screen.findByText('The requested DecisionPacket does not match this venue, symbol, and range.')).toBeInTheDocument()
+    expect(screen.queryByText(workspace.decision.draft.packet_id)).not.toBeInTheDocument()
+  })
+
+  it('keeps an explicit packet while workspace data refreshes', async () => {
+    const selected = exactPacket('packet-333333333333333333333333')
+    mockedDecisionPacket.mockResolvedValue(selected)
+    mockedWorkspace
+      .mockResolvedValueOnce({ ...workspace, decision: { draft: workspace.decision.draft, latest: selected } })
+      .mockResolvedValue({
+        ...workspace,
+        decision: { draft: workspace.decision.draft, latest: exactPacket('packet-newer-444444444444444444444444') },
+      })
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-333333333333333333333333')
+    expect(await screen.findByText(selected.packet_id)).toBeInTheDocument()
+
+    await act(async () => publishLiveUpdate({
+      data_time: '2026-08-08T12:00:30Z', instrument: 'NVDA', kind: 'quote', payload: { ask: 185, bid: 184 },
+      provenance: 'demo-synthetic', received_at: '2026-08-08T12:00:30Z', sequence: 13,
+      sequence_gap: false, state: 'connected', state_note: null, venue: 'moomoo',
+    }))
+    await waitFor(() => expect(mockedWorkspace).toHaveBeenCalledTimes(2))
+    expect(screen.getByText(selected.packet_id)).toBeInTheDocument()
+    expect(screen.queryByText('packet-newer-444444444444444444444444')).not.toBeInTheDocument()
+  })
+
+  it('replaces the packet query with an action child and removes it for new analysis', async () => {
+    const parent = {
+      ...workspace.decision.draft,
+      packet_id: 'packet-555555555555555555555555',
+    } satisfies DecisionPacket
+    const child = exactPacket('packet-666666666666666666666666', {
+      parent_packet_id: parent.packet_id,
+      version: 3,
+    })
+    mockedDecisionPacket.mockResolvedValue(parent)
+    mockedApplyDecisionPacketAction.mockResolvedValue({ packet: child, proposal: null })
+    renderWorkspace('/instruments/moomoo/NVDA?range=6m&packet=packet-555555555555555555555555')
+    const user = userEvent.setup()
+
+    await user.type(await screen.findByLabelText('Decision reason'), 'Preserve exact identity')
+    await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(
+      '/instruments/moomoo/NVDA?range=6m&packet=packet-666666666666666666666666',
+    ))
+
+    await user.click(screen.getByRole('button', { name: 'New analysis' }))
+    expect(screen.getByTestId('location')).toHaveTextContent('/instruments/moomoo/NVDA?range=6m')
+    expect(screen.getByTestId('location')).not.toHaveTextContent('packet=')
+  })
   it('keeps local monitoring save-first for an unsaved DecisionPacket', async () => {
     renderWorkspace()
 
@@ -343,7 +511,7 @@ describe('InstrumentWorkspaceScreen', () => {
       ...parent,
       disposition: 'watch' as const,
       operator_reason: 'Keep the action lineage',
-      packet_id: 'packet-action-watch-0002',
+      packet_id: 'packet-222222222222222222222222',
       parent_packet_id: parent.packet_id,
       version: 2,
     } satisfies DecisionPacket
@@ -371,6 +539,7 @@ describe('InstrumentWorkspaceScreen', () => {
     mockedWorkspace.mockResolvedValueOnce(initial).mockResolvedValue(refreshed)
     mockedSaveDecisionPacket.mockResolvedValue(parent)
     mockedApplyDecisionPacketAction.mockResolvedValue({ packet: child, proposal: null })
+    mockedDecisionPacket.mockResolvedValue(child)
     renderWorkspace()
 
     await user.type(await screen.findByLabelText('Decision reason'), 'Keep the action lineage')

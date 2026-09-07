@@ -565,6 +565,7 @@ export type PaperProposal = DeepReadonly<components['schemas']['PaperProposal']>
 export type ProposalConfirmation = DeepReadonly<components['schemas']['ProposalConfirmation']>
 export type ProposalCreateInput = components['schemas']['ProposalCreateBody']
 export type DecisionPacket = DeepReadonly<components['schemas']['DecisionPacket']>
+export type DecisionInbox = DeepReadonly<components['schemas']['DecisionInbox']>
 export type DecisionPacketActionResult = DeepReadonly<
   components['schemas']['DecisionPacketActionResult']
 >
@@ -626,7 +627,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 const generatedApi = createClient<paths>()
 
-function generatedApiError(response: Response, error: unknown): ApiError {
+export function generatedApiError(response: Response, error: unknown): ApiError {
   let detail = `${response.status} ${response.statusText}`
   if (
     typeof error === 'object'
@@ -635,6 +636,23 @@ function generatedApiError(response: Response, error: unknown): ApiError {
     && typeof error.detail === 'string'
   ) {
     detail = error.detail
+  } else if (
+    typeof error === 'object'
+    && error !== null
+    && 'detail' in error
+    && typeof error.detail === 'object'
+    && error.detail !== null
+    && 'message' in error.detail
+    && typeof error.detail.message === 'string'
+  ) {
+    detail = error.detail.message
+  } else if (
+    typeof error === 'object'
+    && error !== null
+    && 'message' in error
+    && typeof error.message === 'string'
+  ) {
+    detail = error.message
   }
   return new ApiError(response.status, detail)
 }
@@ -665,6 +683,12 @@ export const api = {
   enablement: () => request<Enablement>('/api/enablement'),
   killSwitch: () => request<KillSwitch>('/api/kill-switch'),
   demoStatus: () => request<DemoStatus>('/api/demo/status'),
+
+  async decisionInbox(): Promise<DecisionInbox> {
+    const { data, error, response } = await generatedApi.GET('/api/decision-packets')
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
 
   async dataCatalog(): Promise<readonly CatalogEntry[]> {
     const { data, error, response } = await generatedApi.GET('/api/data/catalog')

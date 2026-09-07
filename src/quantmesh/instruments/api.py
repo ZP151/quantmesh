@@ -37,6 +37,7 @@ from quantmesh.instruments.decision_packets import (
     DecisionPacketStore,
 )
 from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
+from quantmesh.instruments.inbox import DecisionInbox, DecisionInboxError, DecisionInboxService
 from quantmesh.instruments.live_history import LiveHistoryService
 from quantmesh.instruments.monitoring import (
     DecisionWatchObservation,
@@ -273,6 +274,33 @@ def instrument_router() -> APIRouter:
                 status_code=404,
                 detail=f"instrument workspace unavailable: {error}",
             ) from error
+
+    @router.get(
+        "/decision-packets",
+        response_model=DecisionInbox,
+        responses={
+            409: {
+                "model": DecisionInboxError,
+                "description": "Decision Inbox replay is unavailable.",
+            },
+        },
+        name="decision_inbox",
+    )
+    def decision_inbox(request: Request) -> DecisionInbox:
+        service = getattr(request.app.state, "decision_inbox", None)
+        if not isinstance(service, DecisionInboxService):
+            raise HTTPException(status_code=404, detail="no decision inbox service is attached")
+        try:
+            return service.snapshot()
+        except (OSError, ValueError):
+            error = DecisionInboxError(
+                code="decision_inbox_replay_unavailable",
+                message=(
+                    "Decision Inbox is unavailable because stored decision state "
+                    "cannot be replayed."
+                ),
+            )
+            return JSONResponse(status_code=409, content=jsonable_encoder(error))
 
     @router.get(
         "/decision-packets/{packet_id}",

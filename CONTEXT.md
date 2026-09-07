@@ -15,12 +15,12 @@ controls.
 
 Iteration 0021, Trusted Data Fabric, is merged; its real 168-hour soak continues
 as an independent maintenance and release-confidence track. Iteration 0027,
-Evidence-backed Decision Copilot, is the active product track under issue #122.
-It turns the existing Instrument Workspace into a two-minute ticker-to-decision
-loop whose versioned DecisionPacket binds market state, scenarios, risk,
-evidence, operator action, paper outcome and review. AI remains optional and
-advisory. Final `v0.1.1` promotion and real-money execution remain outside this
-iteration.
+Evidence-backed Decision Copilot, is merged through PR #128. Iteration 0028,
+Decision Inbox & Bounded Paper Shadow Portfolio, is the active product track
+under issue #129. It extends the proven two-minute DecisionPacket loop from one
+instrument to a watchlist-level attention surface and an exact, paper-only
+decision-to-order/outcome summary. AI remains optional and advisory. Final
+`v0.1.1` promotion and real-money execution remain outside this iteration.
 
 ## Bounded context
 

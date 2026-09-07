@@ -4,7 +4,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from '@/App'
-import { api, type PnL, type Position, type Watchlist } from '@/lib/api'
+import { api, type DecisionInbox, type PnL, type Position } from '@/lib/api'
 import { PreferencesProvider } from '@/lib/preferences'
 import { MarketsScreen } from './Markets'
 import { PnLScreen, PositionsScreen } from './Trading'
@@ -23,7 +23,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
       overview: vi.fn(),
       pnl: vi.fn(),
       positions: vi.fn(),
-      watchlist: vi.fn(),
+      decisionInbox: vi.fn(),
     },
   }
 })
@@ -70,9 +70,32 @@ const completePnl: PnL = {
   valuation_reason: null,
 }
 
-const unavailableWatchlist = {
-  entries: [{ mark: null, symbol: 'BTC-USD', venue: null }],
-} satisfies Watchlist
+function inboxEntry(
+  venue: DecisionInbox['entries'][number]['venue'],
+  mark: number | null,
+): DecisionInbox['entries'][number] {
+  return {
+    attention_reason: venue === null ? 'The watchlist row has no venue identity.' : 'No saved DecisionPacket exists yet.',
+    attention_state: venue === null ? 'unavailable' : 'not_started',
+    disposition: null,
+    evidence_status: venue === null ? 'unavailable' : null,
+    instrument_type: venue === null ? null : 'perpetual',
+    mark_context: {
+      reason: venue === null ? 'No venue identity.' : null,
+      status: venue === null ? 'unavailable' : 'available',
+      value: mark,
+    },
+    monitoring: null,
+    packet_id: null,
+    paper: null,
+    parent_packet_id: null,
+    position_context: null,
+    review: null,
+    selected_range: null,
+    symbol: 'BTC-USD',
+    venue,
+  }
+}
 
 function Providers({ children, initialEntries = ['/'] }: {
   children: React.ReactNode
@@ -190,11 +213,12 @@ describe('canonical instrument workspace navigation', () => {
   })
 
   it('uses each Watchlist entry venue instead of resolving the first symbol match', async () => {
-    mocked.watchlist.mockResolvedValue({
+    mocked.decisionInbox.mockResolvedValue({
       entries: [
-        { mark: 201, symbol: 'BTC-USD', venue: 'moomoo' },
-        { mark: 110, symbol: 'BTC-USD', venue: 'hyperliquid' },
+        inboxEntry('moomoo', 201),
+        inboxEntry('hyperliquid', 110),
       ],
+      generated_at: '2026-09-05T12:00:00Z',
     })
     mocked.overview.mockResolvedValue({
       account: { cash: 100_000, equity: 100_000, kill_switch: false, starting_cash: 100_000 },
@@ -209,7 +233,7 @@ describe('canonical instrument workspace navigation', () => {
 
     render(<WatchlistScreen />, { wrapper: Providers })
 
-    const links = await screen.findAllByRole('link', { name: 'BTC-USD' })
+    const links = await screen.findAllByRole('link', { name: 'Open workspace' })
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/instruments/moomoo/BTC-USD',
       '/instruments/hyperliquid/BTC-USD',
@@ -217,7 +241,10 @@ describe('canonical instrument workspace navigation', () => {
   })
 
   it('fails closed when a legacy Watchlist row has no venue identity', async () => {
-    mocked.watchlist.mockResolvedValue(unavailableWatchlist)
+    mocked.decisionInbox.mockResolvedValue({
+      entries: [inboxEntry(null, null)],
+      generated_at: '2026-09-05T12:00:00Z',
+    })
     mocked.overview.mockResolvedValue({
       account: { cash: 100_000, equity: 100_000, kill_switch: false, starting_cash: 100_000 },
       marks: {},
@@ -228,8 +255,11 @@ describe('canonical instrument workspace navigation', () => {
 
     render(<WatchlistScreen />, { wrapper: Providers })
 
-    expect(await screen.findByText('Identity unavailable')).toBeInTheDocument()
+    expect(await screen.findByText('The watchlist row has no venue identity.')).toBeInTheDocument()
     expect(screen.getAllByText('—')).toHaveLength(2)
+    expect(screen.getByRole('link', { name: 'Choose venue' })).toHaveAttribute('href', '/markets')
+    expect(screen.queryByRole('link', { name: 'Open workspace' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Open exact packet' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'BTC-USD' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Trade' })).not.toBeInTheDocument()
   })

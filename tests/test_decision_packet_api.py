@@ -968,3 +968,16 @@ def test_exact_packet_get_distinguishes_missing_from_corrupt_store(tmp_path: Pat
     assert missing.status_code == 404
     assert corrupt.status_code == 409
     assert "invalid" in corrupt.json()["detail"].lower()
+
+
+def test_decision_inbox_openapi_publishes_the_safe_typed_replay_conflict(
+    tmp_path: Path,
+) -> None:
+    app = create_demo_app(root=tmp_path / "demo", seed=SCENARIO.seed, host="127.0.0.1")
+
+    response = app.openapi()["paths"]["/api/decision-packets"]["get"]["responses"]["409"]
+
+    assert response["description"] == "Decision Inbox replay is unavailable."
+    assert response["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/DecisionInboxError"
+    }
