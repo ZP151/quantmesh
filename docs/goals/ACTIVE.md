@@ -26,16 +26,24 @@
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
 - Current frontier: parent Task 1 / Slice 1 recovery is complete. Recovery
-  Tasks 1–3 were accepted through `4e9e296`, `88bce75`/`44d95f7`, and
-  `9390456`/`ad2a367`; the final import-order-only integration repair is
-  `be5949a`. The exact recovery-head backend selection passed once (`59
-  passed, 1 inherited Starlette/httpx warning, 1068.63s`), and scoped Ruff,
-  generated-client freshness, targeted Vitest (`91 passed`), typecheck, lint
-  (four inherited Fast Refresh warnings), and `git diff --check` passed. The
-  existing Impeccable detector record remains `[]` and was not rerun. Parent
-  Task 2, explicit local session refresh, is the next and only authorized
-  frontier. No freshness threshold is added: historical packet evidence
-  remains replayable, separate from current local-observation time.
+  Tasks 1–4 are recorded through Task 1 `4e9e296`; Task 2 `88bce75`,
+  report-hygiene `1609335`, and assertion fix `44d95f7`; Task 3 `9390456` and
+  review-fix `ad2a367`; and Task 4 import-only repair `be5949a` plus closeout
+  `a89679f`. The exact recovery-head backend selection was run once and passed
+  exit `0`: `59 passed, 1 inherited Starlette/httpx warning, 1068.63s`.
+  Initial scoped Ruff then exited `1` in approximately `0.6s` with `I001`
+  unsorted imports at `tests/test_decision_inbox.py:1`; `be5949a` corrected
+  only that ordering, so the green backend selection was explicitly not
+  rerun. Resumed scoped Ruff passed exit `0` in `1.1s`; `generate:api` passed
+  exit `0` in `12.3s`; `check:api` exit `0` in `4.8s`; targeted Vitest `91/91`
+  in `3` files in `3.93s` (`7.0s` wall); typecheck exit `0` in `1.5s`; lint
+  exit `0` in `1.9s` with four inherited Fast Refresh warnings; and
+  `git diff --check` exit `0` in `0.4s`. The existing Impeccable detector
+  record remains `[]` and was not rerun. Parent Task 2, explicit local session
+  refresh, is the next and only authorized frontier. No Provider/network,
+  0021, Scheduler, trusted-data, external, or trading effect occurred; no
+  freshness threshold is added, and historical packet evidence remains
+  replayable separate from current local-observation time.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release

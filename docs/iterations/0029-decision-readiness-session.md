@@ -277,6 +277,11 @@ final PR boundaries rather than after every micro-change.
   1068.63s (0:17:48)`, exit `0`. The sole warning remains the inherited
   `StarletteDeprecationWarning` from shared FastAPI TestClient/httpx usage and
   is recorded, not hidden.
+- The first integration Ruff attempt then exited `1` in approximately `0.6s`:
+  `I001` at `tests/test_decision_inbox.py:1` identified the unsorted
+  `decision_packet_id` import. The import-only root-cause repair is `be5949a`;
+  the already-green slow backend selection was explicitly not rerun. Resumed
+  scoped Ruff exited `0` in `1.1s`.
 - The remaining exact-head boundary passed once after the import-order repair:
   scoped Ruff exit `0`; `npm run generate:api` exit `0` in `12.3s`; `npm run
   check:api` exit `0` in `4.8s`; targeted Vitest exit `0` with `91 passed` in
@@ -290,6 +295,11 @@ final PR boundaries rather than after every micro-change.
 - Parent Slice 1 / Task 1 is complete. The parent plan resumes at Task 2:
   explicit local session refresh; no other slice is authorized by this
   checkpoint.
+
+  Recovery Task commits: Task 1 `4e9e296`; Task 2 `88bce75`, report-hygiene
+  `1609335`, and assertion fix `44d95f7`; Task 3 `9390456` and review-fix
+  `ad2a367`; Task 4 import repair `be5949a` and documentation closeout
+  `a89679f`.
 
 ### 2026-09-07 — Activation and architecture approval
 
