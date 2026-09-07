@@ -495,8 +495,9 @@ final PR boundaries rather than after every micro-change.
   round 1/2 returned **NOT APPROVED** with one Important proof gap: spies were
   installed after mount and timer/storage effects were not checked through the
   resolved boundary, allowing mount-time automatic work or pending-only output
-  to evade the proof. The bounded test-only review fix and final round 2/2 are
-  required. Recovery Task 4 and parent Task 3 remain frozen.
+  to evade the proof. At that historical checkpoint the bounded test-only
+  review fix and final round 2/2 were required, with later work isolated into
+  Task 3B before recovery integration.
 
 ### 2026-09-08 — Task 2 recovery Task 3 review-fix round 1/2
 
@@ -558,8 +559,8 @@ final PR boundaries rather than after every micro-change.
   semantics-free test formatting did not justify repeating the 17:07 backend
   selection.
 - No Provider/OpenD/Scheduler, 0021, evidence-root, proposal, confirmation,
-  order, external or trading state changed. Whole-recovery review is pending;
-  parent Task 3 remains frozen.
+  order, external or trading state changed. At that historical checkpoint the
+  whole-recovery review was pending and parent Task 3 remained frozen.
 
 ### 2026-09-08 — Task 2 recovery Task 3B: post-success scheduler proof
 
@@ -579,9 +580,21 @@ final PR boundaries rather than after every micro-change.
   src/screens/Watchlist.test.tsx src/lib/messages.test.ts` passed `88` tests in
   `2` files in `3.93s`; `npm run typecheck` passed; `npm run lint` exited `0`
   with the four inherited Fast Refresh warnings; and `git diff --check` passed.
-  No Impeccable detector run is needed for
-  this test-only change. Recovery Task 4 and parent Task 3 remain frozen
+  No Impeccable detector run is needed for this test-only change. At that
+  historical checkpoint Recovery Task 4 and parent Task 3 remained frozen
   pending one fresh Task 3B Standards+Spec review.
+
+### 2026-09-08 — Parent Task 2 recovery approval
+
+- A fresh whole-recovery review of exact range `bafec72..e10c544` returned
+  `SAFE TO RESUME PARENT TASK 3`, with no Critical or Important finding. The
+  reviewer also confirmed that the formatter-only change in
+  `tests/test_decision_inbox.py` is AST-equivalent, so the 17:07 coherent
+  backend selection was not repeated.
+- Parent Task 2 is approved and complete. Parent Task 3, compact action queue
+  and exact navigation, is the next and only authorized frontier. No
+  Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external or
+  trading authority changed.
 
 ### 2026-09-07 — Activation and architecture approval
 

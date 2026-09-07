@@ -1,8 +1,7 @@
 # Active Goal
 
-- Status: active — iteration 0029 parent Task 2 recovery integration gates are
-  green at `592a094`; whole-recovery review is pending and parent Task 3 is not
-  yet authorized.
+- Status: active — iteration 0029 parent Task 2 recovery is approved and
+  complete; parent Task 3 compact action queue is the next authorized frontier.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -26,50 +25,12 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: parent Task 2 explicit local session refresh is implemented
-  but NOT APPROVED after review round 2/2. It adds one same-origin refresh
-  command over the existing Inbox/packet/watch/workspace boundaries, a shared
-  local observation mapper, and a single Watchlist mutation with transient
-  bilingual feedback and Decision Inbox invalidation only. TDD RED recorded missing backend modules
-  (exit 1, 1.22s) and a missing refresh control (42 pass/1 expected failure,
-  4.63s); focused GREEN records 33 Python tests in 1.94s (one fixture serializer
-  warning), 43 Vitest tests in 3.43s, TypeScript/OpenAPI checks, scoped Ruff,
-  diff check and an Impeccable detector `[]`. No Provider/OpenD/Scheduler,
-  0021, trusted-data, external, proposal/confirmation/order, or trading state
-  changed. Parent Task 1 / Slice 1 recovery is complete. Recovery
-  Task 2 review-fix round 1/2 closes the empty-Inbox corrupt-watch-ledger
-  bypass and makes partial refresh feedback identify each failed exact packet
-  with localized framing and its server reason retained in title. Fresh focused
-  evidence: 9 session tests in 0.78s; 44 Watchlist tests in 3.35s; TypeScript
-  passed. Controller-owned retained coherent evidence at `85d5456` is 62
-  passed, 2 warnings in 985.34s (0:16:25), exit 0, session 32412; it was not
-  duplicated during this focused review-fix. The final review accepted the
-  registration/activation replay fix and packet-bound bilingual partial
-  feedback, but found that real store/service/API/reset and pending/keyboard/
-  empty/error interaction proof remains absent, and an empty Inbox can still
-  skip corrupt evaluation-ledger replay. The original patch loop is closed.
-  Recovery is split into fail-closed whole-ledger validation, real durable/API
-  proof, frontend state proof and one integration review; Task 3 stays frozen.
-  No Provider/OpenD/Scheduler, 0021, trusted-data, proposal, confirmation, order,
-  external, or trading state changed. Recovery
-  Tasks 1–4 are recorded through Task 1 `4e9e296`; Task 2 `88bce75`,
-  report-hygiene `1609335`, and assertion fix `44d95f7`; Task 3 `9390456` and
-  review-fix `ad2a367`; and Task 4 import-only repair `be5949a` plus closeout
-  `a89679f`. The exact recovery-head backend selection was run once and passed
-  exit `0`: `59 passed, 1 inherited Starlette/httpx warning, 1068.63s`.
-  Initial scoped Ruff then exited `1` in approximately `0.6s` with `I001`
-  unsorted imports at `tests/test_decision_inbox.py:1`; `be5949a` corrected
-  only that ordering, so the green backend selection was explicitly not
-  rerun. Resumed scoped Ruff passed exit `0` in `1.1s`; `generate:api` passed
-  exit `0` in `12.3s`; `check:api` exit `0` in `4.8s`; targeted Vitest `91/91`
-  in `3` files in `3.93s` (`7.0s` wall); typecheck exit `0` in `1.5s`; lint
-  exit `0` in `1.9s` with four inherited Fast Refresh warnings; and
-  `git diff --check` exit `0` in `0.4s`. The existing Impeccable detector
-  record remains `[]` and was not rerun. Parent Task 2, explicit local session
-  refresh, is the next and only authorized frontier. No Provider/network,
-  0021, Scheduler, trusted-data, external, or trading effect occurred; no
-  freshness threshold is added, and historical packet evidence remains
-  replayable separate from current local-observation time.
+- Current frontier: parent Task 2 explicit local session refresh is approved
+  and complete through whole-recovery review of `bafec72..e10c544`. The next
+  and only authorized slice is parent Task 3: derive the compact action queue
+  from existing readiness/session facts and preserve exact packet navigation.
+  No Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external,
+  or trading authority is introduced.
 - Recovery Task 1 is implemented at the current frontier: a read-only,
   transaction-bound complete decision-watch replay now validates registrations,
   activations, ordinary evaluations, orphan bindings, canonical identities and
@@ -128,8 +89,8 @@
   persistence checks, so mount-time automatic work and pending-only UI state
   could survive. The bounded fix installs/stubs all observations before mount,
   allows only the exact preferences key/payload, resets histories, and checks
-  pending plus resolved boundaries. It remains pending final independent round
-  2/2; Recovery Task 4 and parent Task 3 remain frozen.
+  pending plus resolved boundaries. At that historical checkpoint it remained
+  pending final independent round 2/2 and later required Task 3B.
 - The Task 3 review-fix now observes the scheduler and persistence lifecycle
   from mount through resolution. The mount-time 60-second interval mutation
   failed (`1 failed, 51 skipped`, `1.92s`); a pending timer plus success
@@ -143,7 +104,8 @@
   mutation survives. The original Task 3 loop is closed. Recovery Task 3B adds
   only a post-success effect-flush scheduler assertion and mutation proof;
   its independent review reproduced the mutation failure and APPROVED with no
-  Standards or Spec finding. Task 4 may start; parent Task 3 remains frozen.
+  Standards or Spec finding. At that historical checkpoint Task 4 could start;
+  parent Task 3 remained frozen pending whole-recovery review.
 - Recovery Task 4 controller gate at exact pre-documentation HEAD `592a094`
   passed: coherent backend 77 tests with two warnings in 1027.77s (17:07),
   exit 0, retained session 76244 and no duplicate run; Watchlist/messages
@@ -151,8 +113,8 @@
   inherited warnings), Ruff check and diff check passed. Initial Ruff format
   found only two generator-expression wraps in `test_decision_inbox.py`; the
   formatter made that semantics-free change and scoped Ruff/format/diff then
-  passed. The 17:07 backend was not repeated after formatting. Whole-recovery
-  review is the next and only frontier; parent Task 3 remains frozen.
+  passed. The 17:07 backend was not repeated after formatting. At that
+  historical checkpoint whole-recovery review was the only remaining frontier.
 - Task 3B now awaits terminal success feedback, flushes committed React
   effects, and rechecks the product 60-second scheduler, packet-monitoring
   POST seam, non-preference localStorage writes, and automatic refresh count.
@@ -161,8 +123,13 @@
   mutation failed at the new assertion (`1 failed, 51 skipped`, `2.02s`) and
   production was restored exactly. Focused Watchlist/messages Vitest passed
   `88` tests in `3.93s`; typecheck passed; lint exited `0` with the four
-  inherited Fast Refresh warnings. Task 3B awaits its fresh Standards+Spec
-  review; Task 4 and parent Task 3 remain frozen.
+  inherited Fast Refresh warnings. At that historical checkpoint Task 3B
+  awaited its fresh Standards+Spec review.
+- Whole-recovery review of exact range `bafec72..e10c544` returned
+  `SAFE TO RESUME PARENT TASK 3`, with no Critical/Important finding. Parent
+  Task 2 is complete; the next scope is only the compact action queue and exact
+  navigation in parent Task 3. Provider/OpenD/Scheduler, 0021, evidence-root,
+  proposal/order, external and trading authority remain excluded.
 - Iteration 0028 closure: PR #130 squash-merged at
   `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
   PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release
