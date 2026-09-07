@@ -115,7 +115,7 @@ function ReadinessFacts({
       <p>{t('screen.watchlist.readinessEvaluated', { time: dateTime(readiness.checked_at, locale) })}</p>
       {entry.monitoring?.last_checked_at && <>
         <p>{t('screen.watchlist.lastLocalCheck', { time: dateTime(entry.monitoring.last_checked_at, locale) })}</p>
-        {entry.monitoring.latest_status && <p>{monitoringStatus(entry.monitoring.latest_status, t)}</p>}
+        {entry.monitoring.latest_status && <p title={entry.monitoring.latest_status}>{monitoringStatus(entry.monitoring.latest_status, t)}</p>}
         {entry.monitoring.latest_reason && <p title={entry.monitoring.latest_reason}>{monitoringReason(entry.monitoring.latest_reason, t)}</p>}
       </>}
       {entry.mark_context.received_at && (
@@ -256,7 +256,7 @@ function readinessReason(code: string, fallback: string, t: ReturnType<typeof us
     no_saved_packet: 'screen.watchlist.reason.noSavedPacket',
     venue_unavailable: 'screen.watchlist.reason.venueUnavailable',
   } as const
-  return code in keys ? t(keys[code as keyof typeof keys]) : fallback
+  return hasOwnKey(keys, code) ? t(keys[code]) : fallback
 }
 
 function monitoringStatus(state: string, t: ReturnType<typeof usePreferences>['t']): string {
@@ -288,7 +288,11 @@ function localizeKnownCodes(
   t: ReturnType<typeof usePreferences>['t'],
   separator: string,
 ): string {
-  return value.split(separator).map(code => code in keys ? t(keys[code]) : code).join(separator)
+  return value.split(separator).map(code => hasOwnKey(keys, code) ? t(keys[code]) : code).join(separator)
+}
+
+function hasOwnKey(keys: Record<string, MessageKey>, code: string): code is keyof typeof keys {
+  return Object.prototype.hasOwnProperty.call(keys, code)
 }
 
 function markStatus(

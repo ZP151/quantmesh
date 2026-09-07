@@ -28,7 +28,7 @@
 - Current frontier: recovery Task 1 (exact forecast evidence clocks and field
   placement) is approved. Recovery Task 2 backend Inbox/restart proof has
   focused passing evidence and awaits its scoped Spec review. Recovery Task 3
-  now has exhaustive known-reason localization evidence (22 Inbox/readiness
+  now has exhaustive known-reason localization evidence (23 Inbox/readiness
   codes, 4 monitoring states and 6 persisted monitoring reason codes); its
   scoped Standards+Spec review is next. Then run the single Slice 1 recovery
   integration boundary. The prior combined Task 2 was split after an

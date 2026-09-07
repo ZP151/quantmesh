@@ -224,7 +224,7 @@ it.each([
     </QueryClientProvider>,
   )
 
-  expect(await screen.findByText(localized)).toBeVisible()
+  expect(await screen.findByText(localized)).toHaveAttribute('title', status)
 })
 
 it.each([
@@ -282,6 +282,36 @@ it('keeps an unknown readiness and monitoring reason verbatim', async () => {
   expect(await screen.findByText('Server reason v2.')).toHaveAttribute('title', 'Server reason v2.')
   expect(screen.getByText('server_status_v2')).toBeVisible()
   expect(screen.getByText('server_reason_v2')).toHaveAttribute('title', 'server_reason_v2')
+})
+
+it.each(['constructor', 'toString', '__proto__'])('keeps adversarial unknown code %s verbatim', async (code) => {
+  const readinessReason = `Unknown readiness ${code}.`
+  mockedDecisionInbox.mockResolvedValue({
+    ...inbox,
+    entries: [{
+      ...inbox.entries[0],
+      readiness: { ...inbox.entries[0].readiness, reason_code: code, reason: readinessReason },
+      monitoring: {
+        registration_id: 'registration-111', latest_evaluation_id: 'evaluation-111', triggered: false,
+        event_ids: [], last_checked_at: '2026-09-05T12:05:00Z', latest_status: code, latest_reason: code,
+      },
+    }],
+  })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <MemoryRouter><WatchlistScreen /></MemoryRouter>
+      </PreferencesProvider>
+    </QueryClientProvider>,
+  )
+
+  expect(await screen.findByText(readinessReason)).toHaveAttribute('title', readinessReason)
+  const renderedCodes = screen.getAllByText(code)
+  expect(renderedCodes).toHaveLength(2)
+  for (const element of renderedCodes) {
+    expect(element).toHaveAttribute('title', code)
+  }
 })
 
 it('does not claim a position opened for an accepted zero-fill paper order in zh-CN', async () => {
