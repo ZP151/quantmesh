@@ -1,7 +1,7 @@
 # Active Goal
 
-- Status: active — iteration 0029 Slice 1 recovery is executable under the
-  approved smaller-boundary plan; parent Task 2 remains frozen.
+- Status: active — iteration 0029 Slice 1 recovery is complete; parent Task 2
+  is the active next frontier and is not yet implemented.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
