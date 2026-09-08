@@ -13,6 +13,7 @@ import re
 import socket
 import threading
 import time
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -39,6 +40,53 @@ def _wait_for_server(server: uvicorn.Server) -> None:
     raise AssertionError("uvicorn never started on its reserved loopback socket")
 
 
+class _MutableClock:
+    def __init__(self, current) -> None:
+        self.current = current
+
+    def __call__(self):
+        return self.current
+
+    def advance(self) -> object:
+        self.current += timedelta(minutes=1)
+        return self.current
+
+
+class _ControlledWorkspace:
+    """Delegate every workspace fact except a bounded local quote cursor."""
+
+    def __init__(self, delegate) -> None:
+        self.delegate = delegate
+        self.quotes = {}
+
+    def set_quote(self, symbol: str, *, at, sequence: int, price: float) -> None:
+        self.quotes[symbol] = (at, sequence, price)
+
+    def render(self, venue, symbol, selected_range, *, peers=()):
+        workspace = self.delegate.render(venue, symbol, selected_range, peers=peers)
+        quote = self.quotes.get(symbol)
+        if quote is None:
+            return workspace
+        at, sequence, price = quote
+        live = workspace.live.model_copy(
+            update={
+                "age_ms": 0,
+                "ask": price,
+                "bid": price,
+                "data_time": at,
+                "last": price,
+                "provenance": "packaged-browser-controlled-quote",
+                "reason": None,
+                "received_at": at,
+                "sequence": sequence,
+                "sequence_gap": False,
+                "source": "deterministic-local-fixture",
+                "status": "available",
+            }
+        )
+        return workspace.model_copy(update={"live": live})
+
+
 class _PackagedDemo:
     """One packaged-app socket that can be rebuilt over the same durable root."""
 
@@ -49,6 +97,10 @@ class _PackagedDemo:
         self.server = None
         self.thread = None
         self.listener = None
+        self.clock = None
+        self.current_at = None
+        self.workspace = None
+        self.watch_prices = {}
         self._start()
 
     def __str__(self) -> str:
@@ -61,6 +113,13 @@ class _PackagedDemo:
         listener.listen(128)
         self.port = listener.getsockname()[1]
         app = create_demo_app(root=self.root, host=HOST)
+        clock = _MutableClock(self.current_at or app.state.demo.scenario.anchor)
+        workspace = _ControlledWorkspace(app.state.instrument_workspace)
+        app.state.instrument_clock = clock
+        app.state.instrument_workspace = workspace
+        app.state.decision_inbox._now = clock
+        app.state.decision_session._now = clock
+        app.state.packet_reviews._now = clock
         server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=self.port, log_level="warning"))
         thread = threading.Thread(
             target=server.run,
@@ -71,14 +130,36 @@ class _PackagedDemo:
         self.server = server
         self.thread = thread
         self.listener = listener
+        self.clock = clock
+        self.workspace = workspace
         thread.start()
         _wait_for_server(server)
+
+    def arm_watch(self, packet_id: str, symbol: str) -> None:
+        packet = self.app.state.decision_packets.get(packet_id)
+        at = self.clock.advance()
+        upper = max(packet.market_state.support, packet.risk_plan.entry_price)
+        lower = min(packet.market_state.support, packet.risk_plan.entry_price)
+        outside = upper + max(1.0, abs(upper) * 0.05)
+        inside = (lower + upper) / 2
+        self.watch_prices[symbol] = (outside, inside)
+        self.workspace.set_quote(symbol, at=at, sequence=1, price=outside)
+
+    def prepare_actionable_refresh(self) -> None:
+        at = self.clock.advance()
+        for symbol, (outside, inside) in self.watch_prices.items():
+            price = inside if symbol == "NVDA" else outside
+            self.workspace.set_quote(symbol, at=at, sequence=2, price=price)
+
+    def advance_clock(self) -> None:
+        self.clock.advance()
 
     def close(self) -> None:
         if self.server is None or self.thread is None or self.listener is None:
             return
         self.server.should_exit = True
         self.thread.join(timeout=15)
+        self.current_at = self.clock()
         self.listener.close()
         self.server = None
         self.thread = None
@@ -182,6 +263,7 @@ def _save_registered_watch(
     packet_match = re.search(r"[?&]packet=([^&]+)", page.url)
     assert packet_match is not None
     packet_id = packet_match.group(1)
+    base_url.arm_watch(packet_id, symbol)
     with page.expect_response(
         lambda response: (
             response.request.method == "POST" and response.url.endswith("/watch-conditions")
@@ -293,6 +375,7 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
     packet_ids = {
         symbol: _save_registered_watch(page, base_url, symbol) for symbol in ("NVDA", "AAPL")
     }
+    base_url.prepare_actionable_refresh()
 
     started = time.perf_counter()
     page.goto(f"{base_url}/app/markets/watchlist")
@@ -315,13 +398,14 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
     ) as response:
         page.keyboard.press("Enter")
     assert response.value.status == 200
-    page.get_by_text("2 watches checked · 0 triggered", exact=True).wait_for()
+    page.get_by_text("2 watches checked · 1 triggered", exact=True).wait_for()
     playwright_expect(refresh).to_be_focused()
+    assert page.get_by_role("button", name="No action 1", exact=True).is_visible()
 
-    no_action = page.get_by_role("button", name="No action 2", exact=True)
-    no_action.focus()
+    triggered = page.get_by_role("button", name="Triggered 1", exact=True)
+    triggered.focus()
     page.keyboard.press("Enter")
-    assert no_action.get_attribute("aria-pressed") == "true"
+    assert triggered.get_attribute("aria-pressed") == "true"
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
 
     row = page.get_by_role("row").filter(has_text="NVDA")
@@ -346,6 +430,7 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
         )
         == expected_path
     )
+    assert page.get_by_role("button", name="Triggered 1", exact=True).is_visible()
     assert page.get_by_text(re.compile(r"Last local check")).first.is_visible()
 
     restarted_workspace = base_url.app.state.instrument_workspace
@@ -353,6 +438,7 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
         restarted_workspace,
         "AAPL",
     )
+    base_url.advance_clock()
     with page.expect_response(
         lambda response: (
             response.request.method == "POST"
@@ -368,6 +454,7 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
     assert failures.get_by_text("Local workspace is unavailable.", exact=True).is_visible()
 
     base_url.app.state.instrument_workspace = restarted_workspace
+    base_url.advance_clock()
     page.goto(f"{base_url}/app/settings")
     page.get_by_label("Interface language").select_option("zh-CN")
     page.get_by_role("heading", name="全局设置", exact=True).first.wait_for()
@@ -384,8 +471,9 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
     ) as chinese_response:
         page.keyboard.press("Enter")
     assert chinese_response.value.status == 200
-    page.get_by_text("已检查 2 个观察 · 已触发 0 个", exact=True).wait_for()
+    page.get_by_text("已检查 2 个观察 · 已触发 1 个", exact=True).wait_for()
     assert chinese_refresh.evaluate("element => element === document.activeElement")
+    assert page.get_by_role("button", name="已触发 1", exact=True).is_visible()
     assert page.get_by_role("button", name="受阻 2", exact=True).is_visible()
     assert page.get_by_text(re.compile(r"上次本地检查")).first.is_visible()
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
