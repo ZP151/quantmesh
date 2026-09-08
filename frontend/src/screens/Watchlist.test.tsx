@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 
 import { api, type DecisionInbox } from '@/lib/api'
+import { dateTime } from '@/lib/format'
 import { PreferencesProvider } from '@/lib/preferences'
 
 vi.mock('@/lib/api', async (importOriginal) => {
@@ -482,7 +483,9 @@ it('opens the exact pending packet and routes recoverable inbox states', async (
     .toHaveAttribute('href', '/markets')
   expect(screen.getByText('Demo evidence')).toBeVisible()
   expect(screen.getAllByText('Trusted evidence unavailable')).toHaveLength(2)
-  expect(screen.getAllByText('Readiness evaluated Sep 5, 08:04 PM')).toHaveLength(3)
+  expect(
+    screen.getAllByText(`Readiness evaluated ${dateTime('2026-09-05T12:04:00Z')}`),
+  ).toHaveLength(3)
   expect(screen.queryByText(/Last local check/)).not.toBeInTheDocument()
   expect(screen.getByText('configured mark is stale')).toBeVisible()
 })
@@ -799,7 +802,9 @@ it('discloses exact paper, watch and review facts with a context-only position w
   expect(screen.getByText('Filled')).toBeVisible()
   expect(screen.getByText('Filled quantity')).toBeVisible()
   expect(screen.getAllByText('Triggered')).toHaveLength(2)
-  expect(screen.getByText('Last local check Sep 5, 08:05 PM')).toBeVisible()
+  expect(
+    screen.getByText(`Last local check ${dateTime('2026-09-05T12:05:00Z')}`),
+  ).toBeVisible()
   expect(screen.getByText('Monitoring data is unavailable.')).toBeVisible()
   expect(screen.getByText('Inconclusive')).toBeVisible()
   expect(screen.getByText(/Current account context only/)).toBeVisible()

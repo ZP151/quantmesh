@@ -1,12 +1,11 @@
 # Active Goal
 
 - Status: active — iteration 0029 Tasks 1–4 are implemented and independently
-  approved. The first exact-head release gate passed every dependency,
-  license, audit, Ruff and frontend step, then exposed one existing browser
-  timeout after 3318 passing tests. The timeout did not reproduce alone; a
-  bounded test-only response-stage probe and its related group are green.
-  Final review and one new exact-head gate are next before PR CI, merge and
-  post-merge verification.
+  approved. Candidate `0338252` passed the complete 18-step release gate with
+  3319 tests passed and 9 skipped, then PR #133 CI exposed two timezone-bound
+  Watchlist assertions. The bounded repair is test-only and passes all 56
+  Watchlist tests under CI's UTC timezone. One new exact-head release gate and
+  PR CI rerun are next before merge and post-merge verification.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the

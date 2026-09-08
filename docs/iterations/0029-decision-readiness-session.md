@@ -1,6 +1,6 @@
 # Iteration 0029 — Decision Readiness Session
 
-- Status: integration repair candidate — Tasks 1–4 approved; release retry/PR/CI pending
+- Status: PR integration repair — Tasks 1–4 approved; PR #133 exact-head CI repair pending
 - Started: 2026-09-07
 - Tracking issue: [#131](https://github.com/ZP151/quantmesh/issues/131)
 - Integration branch: `codex/0029-decision-readiness-session`
@@ -760,6 +760,30 @@ final PR boundaries rather than after every micro-change.
   external, proposal/order authority or real-trading state changed. A fresh
   bounded review and one new exact-head release gate are next; the failed gate
   is not treated as success evidence.
+
+### 2026-09-08 — Exact-head gate 2 and PR #133 CI portability repair
+
+- Reviewed candidate `033825244dcd86a0574857f9e81318fdd3030cf7` passed the
+  complete 18-step clean release gate with exit 0: full pytest reported `3319
+  passed, 9 skipped` in 9206.6s, the golden path passed 60 checks, and the
+  fresh clone remained clean. The branch was pushed and PR #133 opened against
+  `main` at that exact SHA.
+- PR CI run 34209451765 failed only in frontend Vitest: two Watchlist tests
+  hard-coded Singapore-local renderings for UTC fixture timestamps. Ubuntu CI
+  correctly rendered the same instants in UTC (`12:04 PM` / `12:05 PM`), while
+  the Windows release runner rendered `08:04 PM` / `08:05 PM`. Production
+  `dateTime()` intentionally uses the operator runtime timezone; this was a
+  test portability defect, not a readiness or trading behavior defect.
+- The bounded test-only repair composes each label with the shared
+  `dateTime()` display contract, matching the established workspace-test
+  pattern without changing production code or timezone semantics. The exact
+  CI failure is reproducible under `TZ=UTC`; the repaired Watchlist module
+  passes all 56 tests under `TZ=UTC`. The full UTC frontend boundary also
+  passes type-check, lint (four unchanged Fast Refresh advisories) and all 285
+  Vitest tests.
+- No Provider/OpenD/Scheduler, 0021, evidence root, external action,
+  proposal/order authority or real-trading state changed. A final exact-head
+  gate and PR CI rerun are required before merge.
 
 ### 2026-09-07 — Activation and architecture approval
 
