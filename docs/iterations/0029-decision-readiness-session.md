@@ -638,9 +638,10 @@ final PR boundaries rather than after every micro-change.
 
 ### 2026-09-08 — Parent Task 4 execution split
 
-- The first broad Task 4 implementer run was stopped before edits or commands
-  because it had not produced a bounded RED. To keep the approved acceptance
-  semantics while improving throughput, implementation is split into Task 4A
+- The first broad Task 4 implementer run was stopped after drafting the first
+  bounded restart/API test but before executing it or reporting RED. To keep
+  the approved acceptance semantics while improving throughput,
+  implementation is split into Task 4A
   durable API/restart and fail-closed proof, then Task 4B packaged-browser flow
   plus one coherent 0029 gate.
 - This is an execution split, not a product redesign: no API, model, symbol,
