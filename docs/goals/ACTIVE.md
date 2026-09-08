@@ -1,10 +1,8 @@
 # Active Goal
 
-- Status: active — iteration 0029 parent Task 4A and Task 4B are implemented.
-  The packaged-browser acceptance and coherent 0029 selection are green;
-  Task 4B is `DONE_WITH_CONCERNS` only because the full Ruff gate exposes one
-  import-order defect inherited from the pre-Task-4B integration branch. The
-  isolated gate repair and single combined parent Task 4 review are next.
+- Status: active — iteration 0029 Tasks 1–4 are implemented and independently
+  approved. The exact integration candidate is being prepared for the one
+  final release gate, PR CI, merge and post-merge verification.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -34,10 +32,11 @@
   no-quote and newer-sequence monitoring, stale evaluation, partial success,
   and honest BTC/SOL demo/Paper-blocked degradation. Task 4B now proves the
   packaged-browser journey, clean reconstruction, bounded partial feedback,
-  bilingual keyboard/mobile behavior and a 33.023-second operator path. The
-  exact coherent selection passed 131 tests. Only the pre-existing
-  `src/quantmesh/instruments/__init__.py` Ruff I001 gate defect remains before
-  the parent slice gets one combined review. No
+  bilingual keyboard/mobile behavior and a 65.224-second actionable path that
+  filters `Triggered 1` and opens the exact NVDA packet. The exact coherent
+  selection passed 131 tests; full Ruff and diff checks are clean. Parent Task
+  4 review round 2/2 approved the exact range through `852287c` with zero
+  Critical, Important or Minor findings. No
   Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external, or
   trading authority is introduced.
 - Recovery Task 1 is implemented at the current frontier: a read-only,

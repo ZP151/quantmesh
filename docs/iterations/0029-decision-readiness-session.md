@@ -1,6 +1,6 @@
 # Iteration 0029 — Decision Readiness Session
 
-- Status: executable plan review
+- Status: integration candidate — Tasks 1–4 approved; release/PR/CI pending
 - Started: 2026-09-07
 - Tracking issue: [#131](https://github.com/ZP151/quantmesh/issues/131)
 - Integration branch: `codex/0029-decision-readiness-session`
@@ -26,17 +26,17 @@ roots, soak evidence, outbox or GitHub witness state.
 
 ## Success criteria
 
-- [ ] Decision Inbox shows exact readiness, evidence time, mark time/reason and
+- [x] Decision Inbox shows exact readiness, evidence time, mark time/reason and
   last local check for every scoped identity.
-- [ ] Real readiness is qualified only through the packet's exact manifest and
+- [x] Real readiness is qualified only through the packet's exact manifest and
   evaluation bindings; demo remains explicitly labelled.
-- [ ] One explicit action evaluates all and only registered local watches from
+- [x] One explicit action evaluates all and only registered local watches from
   server-owned facts without provider or order calls.
-- [ ] Complete, partial and no-registration refresh outcomes are honest and
+- [x] Complete, partial and no-registration refresh outcomes are honest and
   deterministic.
-- [ ] Triggered, blocked and review-due entries open the exact packet.
-- [ ] Refreshed evaluations and exact links survive clean application restart.
-- [ ] NVDA/AAPL complete the session in under two minutes; BTC/SOL remain
+- [x] Triggered, blocked and review-due entries open the exact packet.
+- [x] Refreshed evaluations and exact links survive clean application restart.
+- [x] NVDA/AAPL complete the session in under two minutes; BTC/SOL remain
   evidence-blocked where required.
 - [ ] Targeted, browser, restart, final release and CI checks pass.
 
@@ -713,6 +713,27 @@ final PR boundaries rather than after every micro-change.
 - No Provider/OpenD/Scheduler, 0021, production evidence root, notification,
   proposal/order, external or real-trading state changed. Task 5 and parent
   review did not start.
+
+### 2026-09-08 — Parent Task 4 review and actionable-path correction
+
+- Full Ruff initially exposed only the integration-branch import ordering in
+  `src/quantmesh/instruments/__init__.py`; the isolated ordering-only commit
+  `4f820a0` passed full Ruff, module import and `git diff --check`.
+- Review round 1/2 found one Important specification gap: the measured browser
+  path opened a `No action` row rather than an actionable Triggered, Blocked or
+  Review due row. No Standards, quant or trading-safety finding accompanied it.
+- The fixture-only correction at `852287c` derives an outside/inside price from
+  each packet's own support/entry range, advances one causal UTC clock and a
+  strict 1→2 quote sequence, then proves `Triggered 1` by keyboard and opens
+  the exact NVDA packet. The final retained Chromium run passed 1/1 in 367.10s;
+  the measured user path was 65.224s. Clean restart, AAPL partial failure,
+  zh-CN, 390px and focus assertions remained green. Scoped Ruff and diff checks
+  exited 0.
+- Review round 2/2 approved exact parent range `1cab20d..852287c` with zero
+  Critical, Important or Minor findings. Tasks 1–4 are complete; Task 5's one
+  exact-head release gate, PR, merge and post-merge verification are next.
+- No Provider/OpenD/Scheduler, 0021, evidence-root, external, proposal/order or
+  real-trading state changed.
 
 ### 2026-09-07 — Activation and architecture approval
 
