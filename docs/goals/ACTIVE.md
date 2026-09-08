@@ -1,8 +1,9 @@
 # Active Goal
 
-- Status: active — iteration 0029 parent Task 3 compact action queue is
-  approved and complete; parent Task 4 restart-safe two-minute acceptance is
-  the next authorized frontier.
+- Status: active — iteration 0029 parent Task 4A durable API/restart acceptance
+  is implemented and focused-green; Task 4B packaged-browser acceptance and
+  the one coherent 0029 gate are the next authorized frontier before the
+  single combined parent Task 4 review.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -26,12 +27,13 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: parent Task 3 derives the compact Triggered, Blocked,
-  Review due and No action queue from existing Inbox facts, preserves `all` as
-  the default, and opens the exact owning packet. Focused component, packaged
-  SPA 390 px/keyboard, build, static freshness and mechanical UI checks are
-  green. Fresh review round 1/2 approved the exact slice with zero findings.
-  Parent Task 4 restart-safe two-minute acceptance is next. No
+- Current frontier: parent Task 4A proves exact NVDA/AAPL refresh persistence,
+  byte-read-only Inbox GET, evaluation-only refresh writes, causal UTC
+  ordering, exact-ID reconstruction, catalog absence/mismatch refusal,
+  no-quote and newer-sequence monitoring, stale evaluation, partial success,
+  and honest BTC/SOL demo/Paper-blocked degradation. Task 4B owns only the
+  packaged-browser journey and coherent 0029 gate; the parent slice then gets
+  one combined review. No
   Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external, or
   trading authority is introduced.
 - Recovery Task 1 is implemented at the current frontier: a read-only,

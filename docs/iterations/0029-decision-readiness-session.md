@@ -649,6 +649,33 @@ final PR boundaries rather than after every micro-change.
   authority is added. Parent Task 4 still receives one review at the combined
   demonstrable boundary.
 
+### 2026-09-08 — Parent Task 4A durable API and restart acceptance
+
+- Added one acceptance module over the existing public contracts. A single
+  deterministic root records exact NVDA/AAPL Watch packets and registrations,
+  proves Inbox GET is byte-read-only, proves refresh POST changes only the
+  watch-evaluation ledger, and compares packet, registration, evaluation,
+  terminal-event, outcome and review identities after clean application
+  reconstruction. Refresh start/completion and stored observations use the
+  same causal UTC clock.
+- The same boundary keeps BTC/SOL explicitly demo-labelled while proving their
+  missing-forecast Paper blockers and exact packet identities survive restart.
+  Separate fast cases reject an absent or mismatched exact real catalog without
+  fallback, and combine no-quote non-comparability, sequence-1 arming,
+  sequence-2 triggering, terminal event replay, stale evaluation without a
+  fabricated quote, and one-item partial failure without rolling back the
+  successful append.
+- The preserved first draft passed 1/1 in 117.84s because Tasks 1–3 already
+  supplied its contract. A deliberate partial-count mutation then made the new
+  combined test fail (`1 failed`, 1.71s, exit 1); production was restored and
+  the fast selection passed 2/2 in 1.53s. The complete Task 4A file passed
+  `3` tests with one inherited Starlette/httpx TestClient warning in 95.79s,
+  exit 0. No production source changed.
+- Task 4B packaged-browser acceptance and the one coherent 0029 gate are next;
+  parent Task 4 review remains deferred to that combined demonstrable boundary.
+  No Provider/OpenD/Scheduler, 0021, evidence-root, network, notification,
+  proposal/order, external or trading authority changed.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
