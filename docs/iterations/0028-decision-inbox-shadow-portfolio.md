@@ -1,8 +1,9 @@
 # Iteration 0028 — Decision Inbox & Bounded Paper Shadow Portfolio
 
-- Status: implementation and pre-PR verification complete; final integration pending
+- Status: complete — merged through PR #130 at `4fb810e`
 - Started: 2026-09-05
 - Implementation verified: 2026-09-06
+- Merged: 2026-09-07
 - Tracking issue: [#129](https://github.com/ZP151/quantmesh/issues/129)
 - Branch: `codex/0028-decision-inbox-shadow-portfolio` from `origin/main` at
   `324d51d82ab4eae5e6176f7f91ce0631c5e76c32`
@@ -554,3 +555,19 @@ depend on the ignored local report.
 - This changes the PR head, so the earlier release-gate/CI pass remains valid
   only for `9f52a8c`. Commit/push, one new exact-head release gate, exact-head
   CI and human approval remain required before merge or Goal completion.
+
+### 2026-09-07 — Final exact-head gate and merge
+
+- The bounded review correction produced exact PR head
+  `b6526669da54ed94f65da816120937974920ac1d` with a clean worktree.
+- The exact-head 18-step release gate passed: 3264 tests passed, 9 skipped, the
+  full pytest stage completed in 8083.3 seconds, all 60 golden-path checks
+  passed, and the clean-checkout start/end invariants held.
+- PR #130 exact-head CI passed. The final resolved review thread had no
+  remaining actionable finding, and the operator approved merge.
+- PR #130 squash-merged to `main` at
+  `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 closed. Post-merge
+  main CI run 34135799652 passed in 41m19s.
+- Existing Node action v20 deprecation and four Fast Refresh warnings remain
+  non-blocking. No Provider/OpenD, Scheduler, real trading, external
+  notification or 0021 soak state changed. Iteration 0028 is complete.

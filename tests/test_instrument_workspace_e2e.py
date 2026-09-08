@@ -12,6 +12,8 @@ from __future__ import annotations
 import re
 import socket
 import threading
+import time
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -20,10 +22,11 @@ import uvicorn
 from quantmesh.api import workstation
 from quantmesh.demo.runtime import create_demo_app
 
-pytest.importorskip(
+playwright = pytest.importorskip(
     "playwright.sync_api",
     reason="playwright is not installed (install the e2e extra)",
 )
+playwright_expect = playwright.expect
 
 HOST = "127.0.0.1"
 WORKSPACE_PATH = "/app/instruments/moomoo/NVDA?range=6m"
@@ -37,6 +40,147 @@ def _wait_for_server(server: uvicorn.Server) -> None:
     raise AssertionError("uvicorn never started on its reserved loopback socket")
 
 
+class _MutableClock:
+    def __init__(self, current) -> None:
+        self.current = current
+
+    def __call__(self):
+        return self.current
+
+    def advance(self) -> object:
+        self.current += timedelta(minutes=1)
+        return self.current
+
+
+class _ControlledWorkspace:
+    """Delegate every workspace fact except a bounded local quote cursor."""
+
+    def __init__(self, delegate) -> None:
+        self.delegate = delegate
+        self.quotes = {}
+
+    def set_quote(self, symbol: str, *, at, sequence: int, price: float) -> None:
+        self.quotes[symbol] = (at, sequence, price)
+
+    def render(self, venue, symbol, selected_range, *, peers=()):
+        workspace = self.delegate.render(venue, symbol, selected_range, peers=peers)
+        quote = self.quotes.get(symbol)
+        if quote is None:
+            return workspace
+        at, sequence, price = quote
+        live = workspace.live.model_copy(
+            update={
+                "age_ms": 0,
+                "ask": price,
+                "bid": price,
+                "data_time": at,
+                "last": price,
+                "provenance": "packaged-browser-controlled-quote",
+                "reason": None,
+                "received_at": at,
+                "sequence": sequence,
+                "sequence_gap": False,
+                "source": "deterministic-local-fixture",
+                "status": "available",
+            }
+        )
+        return workspace.model_copy(update={"live": live})
+
+
+class _PackagedDemo:
+    """One packaged-app socket that can be rebuilt over the same durable root."""
+
+    def __init__(self, root: Path) -> None:
+        self.root = root
+        self.port = 0
+        self.app = None
+        self.server = None
+        self.thread = None
+        self.listener = None
+        self.clock = None
+        self.current_at = None
+        self.workspace = None
+        self.watch_prices = {}
+        self._start()
+
+    def __str__(self) -> str:
+        return f"http://{HOST}:{self.port}"
+
+    def _start(self) -> None:
+        listener = socket.socket()
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener.bind((HOST, self.port))
+        listener.listen(128)
+        self.port = listener.getsockname()[1]
+        app = create_demo_app(root=self.root, host=HOST)
+        clock = _MutableClock(self.current_at or app.state.demo.scenario.anchor)
+        workspace = _ControlledWorkspace(app.state.instrument_workspace)
+        app.state.instrument_clock = clock
+        app.state.instrument_workspace = workspace
+        app.state.decision_inbox._now = clock
+        app.state.decision_session._now = clock
+        app.state.packet_reviews._now = clock
+        server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=self.port, log_level="warning"))
+        thread = threading.Thread(
+            target=server.run,
+            kwargs={"sockets": [listener]},
+            daemon=True,
+        )
+        self.app = app
+        self.server = server
+        self.thread = thread
+        self.listener = listener
+        self.clock = clock
+        self.workspace = workspace
+        thread.start()
+        _wait_for_server(server)
+
+    def arm_watch(self, packet_id: str, symbol: str) -> None:
+        packet = self.app.state.decision_packets.get(packet_id)
+        at = self.clock.advance()
+        upper = max(packet.market_state.support, packet.risk_plan.entry_price)
+        lower = min(packet.market_state.support, packet.risk_plan.entry_price)
+        outside = upper + max(1.0, abs(upper) * 0.05)
+        inside = (lower + upper) / 2
+        self.watch_prices[symbol] = (outside, inside)
+        self.workspace.set_quote(symbol, at=at, sequence=1, price=outside)
+
+    def prepare_actionable_refresh(self) -> None:
+        at = self.clock.advance()
+        for symbol, (outside, inside) in self.watch_prices.items():
+            price = inside if symbol == "NVDA" else outside
+            self.workspace.set_quote(symbol, at=at, sequence=2, price=price)
+
+    def advance_clock(self) -> None:
+        self.clock.advance()
+
+    def close(self) -> None:
+        if self.server is None or self.thread is None or self.listener is None:
+            return
+        self.server.should_exit = True
+        self.thread.join(timeout=15)
+        self.current_at = self.clock()
+        self.listener.close()
+        self.server = None
+        self.thread = None
+        self.listener = None
+
+    def restart(self) -> None:
+        self.close()
+        self._start()
+
+
+class _OneSymbolFailureWorkspace:
+    def __init__(self, delegate, symbol: str) -> None:
+        self.delegate = delegate
+        self.symbol = symbol
+
+    def render(self, venue, symbol, selected_range, *, peers=()):
+        if symbol == self.symbol:
+            raise OSError("bounded local acceptance failure")
+        return self.delegate.render(venue, symbol, selected_range, peers=peers)
+
+
 @pytest.fixture(scope="module", autouse=True)
 def _spa_surface() -> None:
     prior = workstation.settings.legacy_ui
@@ -46,28 +190,13 @@ def _spa_surface() -> None:
 
 
 @pytest.fixture(scope="module")
-def base_url(tmp_path_factory) -> str:
-    listener = socket.socket()
-    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    listener.bind((HOST, 0))
-    listener.listen(128)
-    port = listener.getsockname()[1]
+def base_url(tmp_path_factory):
     root = Path(tmp_path_factory.mktemp("instrument-workspace-e2e")) / "demo"
-    app = create_demo_app(root=root, host=HOST)
-    server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=port, log_level="warning"))
-    thread = threading.Thread(
-        target=server.run,
-        kwargs={"sockets": [listener]},
-        daemon=True,
-    )
-    thread.start()
+    runtime = _PackagedDemo(root)
     try:
-        _wait_for_server(server)
-        yield f"http://{HOST}:{port}"
+        yield runtime
     finally:
-        server.should_exit = True
-        thread.join(timeout=15)
-        listener.close()
+        runtime.close()
 
 
 @pytest.fixture(scope="module")
@@ -101,16 +230,64 @@ def _proposal_token(page) -> str:
     return token
 
 
+def _create_paper_proposal(page) -> None:
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST"
+            and "/api/decision-packets/" in response.url
+            and response.url.endswith("/actions")
+        ),
+        timeout=90_000,
+    ) as response:
+        page.get_by_role("button", name="Create paper proposal").click()
+    assert response.value.status == 200
+    page.get_by_text("Immutable proposal preview", exact=True).wait_for(timeout=90_000)
+
+
 def _reset_from_shell(page) -> None:
-    reset = page.get_by_role("button", name="Reset demo session")
+    reset = page.get_by_role(
+        "button",
+        name=re.compile(r"^(?:Reset demo session|重置演示会话)$"),
+    )
     reset.click()
-    page.get_by_text("Confirm reset", exact=True).wait_for()
+    # The confirmation copy remains mounted but is visually hidden below the
+    # shell's ``sm`` breakpoint; attachment still proves the armed state was
+    # committed before the second activation.
+    page.get_by_text(
+        re.compile(r"^(?:Confirm reset|确认重置)$"),
+    ).wait_for(state="attached")
     with page.expect_response(
         lambda response: response.url.endswith("/api/demo/reset"),
         timeout=90_000,
     ) as response:
         reset.click()
     assert response.value.status == 200
+
+
+def _save_registered_watch(
+    page,
+    base_url: _PackagedDemo,
+    symbol: str,
+) -> str:
+    page.goto(f"{base_url}/app/instruments/moomoo/{symbol}?range=6m")
+    page.get_by_role("heading", name=symbol, exact=True).wait_for()
+    page.get_by_label("Decision reason").fill(f"Keep this exact {symbol} packet under watch")
+    page.get_by_role("button", name="Watch decision").click()
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_match = re.search(r"[?&]packet=([^&]+)", page.url)
+    assert packet_match is not None
+    packet_id = packet_match.group(1)
+    base_url.arm_watch(packet_id, symbol)
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST" and response.url.endswith("/watch-conditions")
+        ),
+        timeout=90_000,
+    ) as response:
+        page.get_by_role("button", name="Save & check", exact=True).click()
+    assert response.value.status == 200
+    page.get_by_role("button", name="Check now", exact=True).wait_for()
+    return packet_id
 
 
 def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
@@ -148,8 +325,7 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
 
     # Stage one creates only a preview; stage two requires the exact token.
     page.get_by_label("Quantity", exact=True).fill("10")
-    page.get_by_role("button", name="Create paper proposal").click()
-    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    _create_paper_proposal(page)
     assert "moomoo" in main.inner_text()
     assert "NVDA" in main.inner_text()
     token = _proposal_token(page)
@@ -172,8 +348,7 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
     assert "Unavailable" not in page.get_by_text("Unrealized P&L").locator("..").inner_text()
     assert "Disarmed" in page.get_by_text("Global kill switch").locator("..").inner_text()
     page.get_by_label("Quantity", exact=True).fill("11")
-    page.get_by_role("button", name="Create paper proposal").click()
-    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    _create_paper_proposal(page)
     race_token = _proposal_token(page)
 
     # Engage after preview: confirmation is re-evaluated by the kernel and
@@ -200,6 +375,124 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
     page.get_by_role("button", name="Engage global kill switch").wait_for()
     page.goto(f"{base_url}{WORKSPACE_PATH}")
     page.get_by_role("button", name="Create paper proposal").wait_for()
+
+
+def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
+    page,
+    base_url: _PackagedDemo,
+) -> None:
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(f"{base_url}/app/settings")
+    _reset_from_shell(page)
+    packet_ids = {
+        symbol: _save_registered_watch(page, base_url, symbol) for symbol in ("NVDA", "AAPL")
+    }
+    base_url.prepare_actionable_refresh()
+
+    started = time.perf_counter()
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
+    page.get_by_role("button", name="All 4", exact=True).wait_for()
+    assert page.get_by_text(re.compile(r"Readiness evaluated")).first.is_visible()
+    assert page.get_by_text(re.compile(r"Last local check")).first.is_visible()
+    assert page.get_by_text("unavailable", exact=True).first.is_visible()
+    main_text = page.get_by_role("main").inner_text()
+    assert re.search(r"\b(provider|OpenD|automatic|real(?:-money)?)\b", main_text, re.I) is None
+
+    refresh = page.get_by_role("button", name="Refresh session", exact=True)
+    refresh.focus()
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST"
+            and response.url.endswith("/api/decision-session/refresh")
+        ),
+        timeout=90_000,
+    ) as response:
+        page.keyboard.press("Enter")
+    assert response.value.status == 200
+    page.get_by_text("2 watches checked · 1 triggered", exact=True).wait_for()
+    playwright_expect(refresh).to_be_focused()
+    assert page.get_by_role("button", name="No action 1", exact=True).is_visible()
+
+    triggered = page.get_by_role("button", name="Triggered 1", exact=True)
+    triggered.focus()
+    page.keyboard.press("Enter")
+    assert triggered.get_attribute("aria-pressed") == "true"
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+
+    row = page.get_by_role("row").filter(has_text="NVDA")
+    exact_link = row.get_by_role("link", name="Open exact packet", exact=True)
+    expected_path = f"/app/instruments/moomoo/NVDA?range=6m&packet={packet_ids['NVDA']}"
+    assert exact_link.get_attribute("href") == expected_path
+    exact_link.focus()
+    page.keyboard.press("Enter")
+    page.wait_for_url(f"{base_url}{expected_path}")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    elapsed = time.perf_counter() - started
+    assert elapsed < 120
+    print(f"TASK4B_USER_FLOW_SECONDS={elapsed:.3f}")
+
+    base_url.restart()
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
+    restarted_row = page.get_by_role("row").filter(has_text="NVDA")
+    assert (
+        restarted_row.get_by_role("link", name="Open exact packet", exact=True).get_attribute(
+            "href"
+        )
+        == expected_path
+    )
+    assert page.get_by_role("button", name="Triggered 1", exact=True).is_visible()
+    assert page.get_by_text(re.compile(r"Last local check")).first.is_visible()
+
+    restarted_workspace = base_url.app.state.instrument_workspace
+    base_url.app.state.instrument_workspace = _OneSymbolFailureWorkspace(
+        restarted_workspace,
+        "AAPL",
+    )
+    base_url.advance_clock()
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST"
+            and response.url.endswith("/api/decision-session/refresh")
+        ),
+        timeout=90_000,
+    ) as partial_response:
+        page.get_by_role("button", name="Refresh session", exact=True).click()
+    assert partial_response.value.status == 200
+    page.get_by_text("1 of 2 watches checked", exact=True).wait_for()
+    failures = page.get_by_label("Watches not evaluated")
+    assert failures.get_by_text(packet_ids["AAPL"], exact=True).is_visible()
+    assert failures.get_by_text("Local workspace is unavailable.", exact=True).is_visible()
+
+    base_url.app.state.instrument_workspace = restarted_workspace
+    base_url.advance_clock()
+    page.goto(f"{base_url}/app/settings")
+    page.get_by_label("Interface language").select_option("zh-CN")
+    page.get_by_role("heading", name="全局设置", exact=True).first.wait_for()
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="自选", exact=True).first.wait_for()
+    chinese_refresh = page.get_by_role("button", name="刷新会话", exact=True)
+    chinese_refresh.focus()
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST"
+            and response.url.endswith("/api/decision-session/refresh")
+        ),
+        timeout=90_000,
+    ) as chinese_response:
+        page.keyboard.press("Enter")
+    assert chinese_response.value.status == 200
+    page.get_by_text("已检查 2 个观察 · 已触发 1 个", exact=True).wait_for()
+    assert chinese_refresh.evaluate("element => element === document.activeElement")
+    assert page.get_by_role("button", name="已触发 1", exact=True).is_visible()
+    assert page.get_by_role("button", name="受阻 2", exact=True).is_visible()
+    assert page.get_by_text(re.compile(r"上次本地检查")).first.is_visible()
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    chinese_text = page.get_by_role("main").inner_text()
+    assert re.search(r"\b(provider|OpenD|automatic|real(?:-money)?)\b", chinese_text, re.I) is None
+
+    _reset_from_shell(page)
 
 
 def test_keyboard_locale_reduced_motion_and_mobile_boundary(browser, base_url) -> None:

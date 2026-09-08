@@ -1,0 +1,846 @@
+# Iteration 0029 — Decision Readiness Session
+
+- Status: PR integration repair — Tasks 1–4 approved; PR #133 exact-head CI repair pending
+- Started: 2026-09-07
+- Tracking issue: [#131](https://github.com/ZP151/quantmesh/issues/131)
+- Integration branch: `codex/0029-decision-readiness-session`
+- Baseline: `origin/main@4fb810e1268f5f0e13599d7198aee4fa78cc4717`
+- Design:
+  `docs/superpowers/specs/2026-09-07-decision-readiness-session-design.md`
+- Executable plan:
+  `docs/superpowers/plans/2026-09-08-decision-readiness-session.md`
+
+## Outcome
+
+Give a research-minded individual active trader one explicit session in the
+existing Decision Inbox that shows whether watched decisions have usable data,
+refreshes all registered local conditions, and opens the exact triggered,
+blocked or review-due DecisionPacket within two minutes.
+
+## Product boundary
+
+Iteration 0029 unifies the user experience but does not merge iteration 0021's
+data-plane authority. It may consume exact trusted-data readiness through a
+read-only adapter. It cannot operate Scheduler, Provider/OpenD, trusted-data
+roots, soak evidence, outbox or GitHub witness state.
+
+## Success criteria
+
+- [x] Decision Inbox shows exact readiness, evidence time, mark time/reason and
+  last local check for every scoped identity.
+- [x] Real readiness is qualified only through the packet's exact manifest and
+  evaluation bindings; demo remains explicitly labelled.
+- [x] One explicit action evaluates all and only registered local watches from
+  server-owned facts without provider or order calls.
+- [x] Complete, partial and no-registration refresh outcomes are honest and
+  deterministic.
+- [x] Triggered, blocked and review-due entries open the exact packet.
+- [x] Refreshed evaluations and exact links survive clean application restart.
+- [x] NVDA/AAPL complete the session in under two minutes; BTC/SOL remain
+  evidence-blocked where required.
+- [ ] Targeted, browser, restart, final release and CI checks pass.
+
+## Delivery slices
+
+1. Readiness truth in Decision Inbox.
+2. Explicit local session refresh.
+3. Action queue and exact navigation.
+4. Restart and two-minute acceptance.
+
+Each slice must produce visible user value within 24–48 hours, has one bounded
+deliverable and stop condition, and receives at most two review rounds.
+Targeted verification is normal; broad gates occur at meaningful slice and
+final PR boundaries rather than after every micro-change.
+
+## Prohibited expansion
+
+- Provider/OpenD or real market calls
+- Scheduler, automation, external notifications or GitHub witness changes
+- trusted-data writes, new roots, overlap resolution or soak migration
+- proposal confirmation, new order authority, testnet or real trading
+- AI priority/readiness authority
+- symbols beyond NVDA, AAPL, BTC and SOL
+- Qlib/Darts/model-ranking work
+- 0021 source, evidence or operational-state modification
+- unrelated cleanup or frontend sidecar maintenance
+
+## Checkpoints
+
+### 2026-09-08 — Slice 1 readiness truth in Decision Inbox
+
+- Added `DecisionReadinessService`, which reads only exact packet manifest IDs
+  through `lineage(manifest_id)` and validates quality/evaluation/checkpoint,
+  rights and trusted-for-research closure. Demo evidence remains explicitly
+  labelled and missing/corrupt closures fail closed as blocked or unavailable.
+- Inbox now projects non-null readiness plus session and local-monitoring
+  timestamps without writing state. The workstation passes a reset-safe
+  `app.state.data_catalog` provider; no Scheduler, Provider/OpenD, trusted-data
+  root, soak, witness, outbox, network or trading behavior changed.
+- The Watchlist preserves its separator-first table and one row action while
+  rendering readiness, evidence time, received mark/reason and last check in
+  the existing decision cell, in English and Simplified Chinese.
+- TDD evidence and targeted verification are recorded in
+  `.superpowers/sdd/2026-09-08-decision-readiness-session/task-1-report.md`.
+
+### 2026-09-08 — Task 1 review-fix evidence
+
+- Review findings fixed: a readiness evaluation timestamp was incorrectly
+  presented as a local check; demo history returned early despite an advertised
+  real forecast; failure paths could omit packet generation time; and reviewed
+  reason codes were not fully localized. The Inbox now labels the two clocks
+  distinctly, presents persisted monitoring status/reason only when present,
+  validates every advertised real forecast by its exact packet IDs, and
+  computes the oldest packet-bound generation/evaluation time for ready,
+  blocked and unavailable states. Valid historical packet evidence is not
+  wall-clock-aged.
+- TDD RED: `python -m pytest tests/test_decision_readiness.py -q --basetemp
+  ...task1-fix-red` produced 2 expected failures and 11 passes (demo+real
+  forecast fail-open; missing limiter). `npx vitest run
+  src/screens/Watchlist.test.tsx` produced 2 expected assertion failures and
+  3 passes (the old evidence/local-check conflation and English zh-CN reason).
+- GREEN: `C:\Users\15492\Develop\QuantMesh\.venv\Scripts\python.exe -m
+  pytest tests/test_decision_readiness.py -q --basetemp
+  ...task1-fix-final` passed 15 in 1.34s. `npx vitest run
+  src/screens/Watchlist.test.tsx src/screens/NavigationAndValuation.test.tsx
+  src/lib/messages.test.ts` passed 21 in 3 files in 3.68s. `npm run typecheck`
+  passed; `npm run lint` exited 0 with the pre-existing four Fast Refresh
+  warnings. `npm run generate:api` regenerated the client and `npm run
+  check:api` confirmed it current. Targeted Ruff check/format and `git diff
+  --check` passed.
+- UI detector: `node C:\Users\15492\Develop\QuantMesh\.codex\skills\impeccable\scripts\detect.mjs
+  --json frontend/src/screens/Watchlist.tsx frontend/src/lib/messages.ts`
+  returned `[]`.
+- Self-review: all catalog reads remain `lineage(exact_manifest_id)`; no
+  entries traversal, provider/network call, state write, refresh affordance,
+  polling, clock formatter, Scheduler or trading change was introduced.
+  Focused tests additionally cover unavailable demo forecast closure and a
+  returned wrong manifest identity. The remaining frontier is the controller's
+  one final stable combined backend selection at this exact head.
+
+### 2026-09-08 — Task 1 controller final verification
+
+- Controller-owned stable selection passed with the worktree `src` first on
+  `PYTHONPATH` and the reviewed shared virtualenv Scripts directory first on
+  `PATH`:
+
+  ```text
+  python -m pytest tests/test_decision_readiness.py tests/test_decision_inbox.py tests/test_data_catalog.py tests/test_data_catalog_api.py -q --basetemp %TEMP%\quantmesh-0029-task1-controller-final
+  exit 0; 47 passed, 1 warning in 930.56s (0:15:30)
+  ```
+
+- The sole warning was `StarletteDeprecationWarning` from the shared
+  `.venv\Lib\site-packages\fastapi\testclient.py:1`, concerning
+  `httpx`/`starlette.testclient` and httpx 2. It is an inherited dependency
+  warning, recorded rather than hidden; it is not a Task 1 product defect.
+- The exact-head combined boundary is now evidenced. Task 1 is at scoped
+  re-review; do not advance the next slice until that review resolves.
+
+### 2026-09-08 — Task 1 review round 2/2: NOT APPROVED
+
+- The capped second review found four remaining load-bearing defects:
+  1. Forecast-closure failure omits `forecast_generated_at` from
+     `limiting_evidence_at`.
+  2. A demo packet with a real forecast can place blocked forecast
+     qualification evidence in the `history` field.
+  3. Exact-real and corrupt Inbox rows, session reconstruction, and persisted
+     monitoring status/reason still lack complete behavioral evidence.
+  4. Reachable known readiness/monitoring reason codes remain unmapped for
+     Simplified Chinese.
+- Task 1 is **NOT APPROVED** after review round 2/2. Task 2 has not started.
+  The next action is to re-scope Slice 1 against these findings, not to open a
+  third review loop.
+- No 0021, Scheduler, Provider/OpenD, external, trusted-data, soak/witness,
+  outbox, testnet, live-trading or other execution state changed during this
+  documentation-only closeout.
+
+### 2026-09-08 — Slice 1 recovery re-scope
+
+- The approved recommendation is to shrink the four residual findings into
+  two independent recovery tasks rather than open a third broad review loop.
+- Recovery Task A owns only exact forecast limiting clocks and evidence-field
+  placement. Recovery Task B owns only Inbox/restart behavioral proof and the
+  exhaustive known-reason localization map.
+- The executable recovery plan is
+  `docs/superpowers/plans/2026-09-08-decision-readiness-slice1-recovery.md`.
+  It preserves the approved design and 0021 authority boundary. Parent Task 2
+  remains frozen until both recovery tasks and the single Slice 1 integration
+  boundary pass.
+- Recovery Task 1 passed its scoped quant/spec review at `4e9e296`. The
+  original combined Recovery Task 2 was interrupted without changes after it
+  produced no implementation evidence; it is now split into independent
+  backend Inbox/restart proof and frontend known-reason localization tasks.
+
+### 2026-09-08 — Recovery Task A implementation
+
+- `fix(decisions): preserve exact forecast evidence` is implemented on the
+  recovery branch; exact forecast qualification failures now retain the
+  packet-bound `forecast_generated_at` clock and place any returned reference
+  in `forecast`, leaving `history` reserved for history qualification.
+- Focused RED: `pytest tests/test_decision_readiness.py -q` exited 1 with
+  `6 failed, 15 passed` in 1.76s after the new clock/placement assertions.
+  GREEN: the same selection exited 0 with `21 passed` in 0.83s.
+- Scoped Ruff check, Ruff format check and `git diff --check` exited 0 after
+  formatting. No wall-clock ageing, catalog traversal, provider/network,
+  Scheduler, 0021, trading or unrelated state changed. Task B remains frozen
+  pending the scoped recovery review.
+
+### 2026-09-08 — Recovery Task 2 backend Inbox/restart proof
+
+- Added only Inbox behavior coverage: a real packet now proves its exact
+  manifest/evaluation/report projection and persisted monitoring/session facts;
+  mismatched, corrupt and untrusted exact closures prove fail-closed sanitized
+  output without a catalog fallback; both direct snapshot and HTTP GET prove
+  packet, marks, registration and evaluation inputs remain byte-equivalent;
+  and a fresh application reconstruction proves equal Inbox row and
+  `DecisionSessionSummary` facts, including `last_checked_at`,
+  `latest_status` and `latest_reason`.
+- No production file changed. The tests use the real `DecisionInboxService`,
+  packet/watch stores and `DecisionWatchService`, with the existing exact-ID
+  catalog fake; no catalog enumeration, Provider/network, Scheduler, 0021,
+  refresh, UI or trading scope was introduced.
+- Focused new-case selection: `6 passed, 23 deselected, 1 warning` in
+  `188.97s`. Required target:
+  `pytest tests/test_decision_inbox.py -q --basetemp
+  %TEMP%\quantmesh-0029-slice1-recovery-b-full-20260908` exited 0 with
+  `29 passed, 1 warning` in `985.24s (0:16:25)`. The sole warning is the
+  inherited `StarletteDeprecationWarning` from the shared FastAPI TestClient
+  dependency. `git diff --check` is recorded with the task commit.
+- This coverage may pass initially by recovery ruling: the mutation rationale
+  is recorded in
+  `.superpowers/sdd/2026-09-08-decision-readiness-slice1-recovery/task-2-report.md`.
+  The scoped Spec review remains the stop-condition frontier; Task 3 has not
+  started.
+
+### 2026-09-08 — Recovery Task 3 known-reason localization
+
+- Completed one explicit frontend map for all 23 reachable Inbox/readiness
+  codes: `demo_evidence`, `catalog_unavailable`,
+  `missing_history_binding`, `trusted_evidence`,
+  `missing_forecast_binding`, the eight `history_*` exact-closure results,
+  the eight `forecast_*` exact-closure results, `no_saved_packet`, and
+  `venue_unavailable`. It also covers the four persisted monitoring states
+  (`armed`, `not_triggered`, `triggered`, `not_comparable`) and all six
+  persisted unavailable-fact reasons (`unusable_price_evidence`,
+  `future_reference`, `calendar_unavailable`, `missing_forecast`,
+  `candidate_not_comparable`, `candidate_incompatible`).
+- Table-driven message tests pin reviewed English and Simplified-Chinese copy
+  for all 33 stable values. Component tests prove each known reason is
+  localized while the original server text remains in `title`; unknown
+  readiness, monitoring status, and monitoring reason values remain verbatim.
+  The existing separator-first row, one link per row, `dateTime`,
+  `usePreferences`, wrapping, and focus classes are unchanged.
+- TDD RED: `npx vitest run src/screens/Watchlist.test.tsx
+  src/lib/messages.test.ts --reporter=verbose` exited 1 with `36 failed,
+  25 passed` in `22.33s`; every failure was an expected missing reviewed
+  message or the corresponding known-code fallback. GREEN: the required
+  three-file frontend target passed `88` tests in `3` files in `6.26s`.
+  `npm run typecheck` passed. `npm run lint` exited 0 with the pre-existing
+  four Fast Refresh warnings in `state.tsx`, `badge.tsx`, `button.tsx`, and
+  `preferences.tsx`.
+- No backend, Provider/network, Scheduler, 0021, trading, new-symbol, action,
+  polling, refresh, card, time-helper, or layout change was introduced. The
+  next frontier is the required scoped Standards+Spec review, then the single
+  Slice 1 recovery integration boundary; parent Task 2 remains frozen.
+
+### 2026-09-08 — Recovery Task 3 review-fix round 1/2
+
+- Localized persisted monitoring status now retains its original server value
+  in `title`, matching the existing known-reason disclosure. All code-map
+  lookups now use an own-property check, so inherited names are never treated
+  as supported values.
+- Focused RED: `npx vitest run src/screens/Watchlist.test.tsx
+  src/lib/messages.test.ts --reporter=verbose` exited 1 with `7 failed,
+  71 passed` in `5.99s`: four missing status-title assertions and the three
+  inherited-property values `constructor`, `toString`, and `__proto__`.
+  GREEN: the same focused selection passed `78` tests in `2` files in `3.04s`.
+  `npm run typecheck` passed; `npm run lint` exited 0 with the same four
+  inherited Fast Refresh warnings; `git diff --check` passed. The UI layout
+  did not change, so the already-recorded one-pass Impeccable detector was not
+  rerun.
+
+### 2026-09-08 — Slice 1 recovery integration: COMPLETE
+
+- Recovery Task 1 is accepted at `4e9e296` (`fix(decisions): preserve exact
+  forecast evidence`): its scoped quant/spec review found no open
+  Critical/Important finding. Recovery Task 2 is accepted at `88bce75`
+  (`test(decisions): prove inbox readiness recovery`) with its reviewed
+  blocked-exact-closure proof pin at `44d95f7`; its scoped Spec review found
+  no open Critical/Important finding. Recovery Task 3 is accepted at
+  `9390456` (`fix(decisions): localize readiness reasons`) with the review-fix
+  at `ad2a367` (`fix(decisions): preserve localized source values`); its scoped
+  Standards+Spec review found no open Critical/Important finding. The final
+  import-order-only recovery fix is `be5949a` (`style: sort decision inbox
+  imports`).
+- The mandated four-file backend selection was run exactly once on the recovery
+  head with this worktree's `src` first on `PYTHONPATH` and the shared virtual
+  environment Scripts directory first on `PATH`: `59 passed, 1 warning in
+  1068.63s (0:17:48)`, exit `0`. The sole warning remains the inherited
+  `StarletteDeprecationWarning` from shared FastAPI TestClient/httpx usage and
+  is recorded, not hidden.
+- The first integration Ruff attempt then exited `1` in approximately `0.6s`:
+  `I001` at `tests/test_decision_inbox.py:1` identified the unsorted
+  `decision_packet_id` import. The import-only root-cause repair is `be5949a`;
+  the already-green slow backend selection was explicitly not rerun. Resumed
+  scoped Ruff exited `0` in `1.1s`.
+- The remaining exact-head boundary passed once after the import-order repair:
+  scoped Ruff exit `0`; `npm run generate:api` exit `0` in `12.3s`; `npm run
+  check:api` exit `0` in `4.8s`; targeted Vitest exit `0` with `91 passed` in
+  `3` files in `3.93s` (command wall time `7.0s`); `npm run typecheck` exit
+  `0` in `1.5s`; `npm run lint` exit `0` in `1.9s`; and `git diff --check`
+  exit `0` in `0.4s`. Lint retained the four inherited Fast Refresh warnings
+  in `state.tsx`, `badge.tsx`, `button.tsx`, and `preferences.tsx`.
+- The prior Impeccable detector evidence remains `[]`; it was not rerun because
+  the final localization review-fix changed no layout. No Provider/network,
+  0021, Scheduler, trusted-data, external, or trading state changed.
+- Parent Slice 1 / Task 1 is complete. The parent plan resumes at Task 2:
+  explicit local session refresh; no other slice is authorized by this
+  checkpoint.
+
+  Recovery Task commits: Task 1 `4e9e296`; Task 2 `88bce75`, report-hygiene
+  `1609335`, and assertion fix `44d95f7`; Task 3 `9390456` and review-fix
+  `ad2a367`; Task 4 import repair `be5949a` and documentation closeout
+  `a89679f`.
+
+### 2026-09-08 — Slice 2 explicit local session refresh implementation
+
+- Added the same-origin `POST /api/decision-session/refresh` command. It reads
+  one frozen Inbox snapshot, considers only existing exact registrations,
+  orders packet work by venue/symbol/packet ID, and calls
+  `DecisionWatchService.check()` as its only writer. The shared observation
+  builder now makes the single-packet and session paths use identical
+  server-owned workspace facts.
+- The refresh result reports complete, partial, or no-registered-watches
+  truthfully. Per-packet storage/workspace failures are sanitized partial
+  results; corrupt Inbox/registration replay becomes a sanitized request-level
+  conflict. The session accepts no Provider, OpenD, Scheduler, proposal,
+  confirmation, or order collaborator.
+- Watchlist adds one keyboard-accessible `Refresh session` control with
+  temporary bilingual result feedback. It disables while pending and invalidates
+  only the Decision Inbox query after a successful response. It creates no
+  polling, registration, localStorage, external, trusted-data, or trading
+  state.
+- TDD RED: the prescribed backend collection exited `1` in `1.22s` with the
+  expected missing `session`/`watch_observations` module collection errors.
+  Frontend RED: `npx vitest run src/screens/Watchlist.test.tsx` exited `1` in
+  `4.63s`, with 42 passing tests and the expected absent Refresh session
+  control. GREEN: focused Python refresh/monitoring selection passed `33` in
+  `1.94s` with one Pydantic fixture serializer warning; focused Vitest passed
+  `43` in `3.43s`; TypeScript passed; OpenAPI generation and check passed;
+  lint exited `0` with the four inherited Fast Refresh warnings; scoped Ruff,
+  `git diff --check`, and the Impeccable detector (`[]`) passed.
+- No Provider/OpenD/Scheduler, 0021, evidence-root, proposal, confirmation,
+  order, provider, network, external, or real/paper trading state changed.
+  The next authorized frontier is the parent Task 2 review, not Task 3.
+
+### 2026-09-08 — Slice 2 review-fix round 1/2
+
+- The coordinator now replays the durable registration ledger before deriving
+  any empty selection result. An empty Inbox with corrupt registrations raises
+  the existing typed session failure, preserving the route's sanitized 409;
+  it cannot claim `no_registered_watches` by skipping local replay.
+- Partial Watchlist feedback now lists each failed exact packet ID with a
+  localized stable reason framing and retains the sanitized server reason in
+  `title`. English and zh-CN share the same compact, keyboard-safe surface;
+  no new action, polling, registration, or persisted client state was added.
+- Review-required RED: the empty-selection corrupt-ledger assertion failed as
+  expected and the partial feedback test failed because the packet/reason was
+  not rendered. GREEN: `tests/test_decision_session.py` passed 9 in 0.78s;
+  Watchlist Vitest passed 44 in 3.35s; TypeScript passed. The controller-owned
+  coherent selection at `85d5456` is retained evidence, not rerun here:
+  `tests/test_decision_session.py tests/test_packet_monitoring.py
+  tests/test_decision_inbox.py` passed 62 with 2 warnings in 985.34s
+  (0:16:25), retained session 32412, exit 0.
+- Parent Task 2 remains in review round 1/2. No Provider/OpenD/Scheduler,
+  0021, evidence-root, proposal, confirmation, order, network, external, or
+  trading state changed.
+
+### 2026-09-08 — Slice 2 review cap and recovery scope
+
+- Parent Task 2 review round 2/2 returned NOT APPROVED. The registration and
+  activation replay bypass and packet-bound bilingual partial feedback are
+  fixed, but real durable store/service evaluation IDs, cursor chronology,
+  bodyless same-origin HTTP, current app state after reset, sanitized corrupt
+  evaluation replay, and pending/keyboard/empty/error UI states remain
+  unproved. Empty Inbox refresh also skips the independent evaluation ledger.
+- The original Task 2 patch loop is closed. The narrowed recovery plan is
+  `docs/superpowers/plans/2026-09-08-decision-session-task2-recovery.md`:
+  fail-closed whole-ledger replay, real durable/API proof, explicit frontend
+  state proof, then one coherent integration/review. Each boundary has its own
+  maximum-two-round review budget; Task 3 stays frozen until the whole recovery
+  is approved.
+- Controller evidence at `85d5456` remains valid only for that head: 62 passed,
+  2 warnings in 985.34s, exit 0, retained session 32412. It is not used to
+  certify `bafec72` or substitute for the missing session tests.
+- No Provider/OpenD/Scheduler, 0021, evidence-root, proposal, confirmation,
+  order, external, or real/paper trading state changed.
+
+### 2026-09-08 — Task 2 recovery Task 1: fail-closed watch-ledger replay
+
+- Added read-only `DecisionWatchStore.validate_replay()` and its
+  `DecisionWatchService` delegate. Under the existing root transaction it
+  reads registration, activation, and ordinary-evaluation ledgers once,
+  rejects duplicate registrations and orphan evaluations, and replays each
+  activation plus ordinary evaluation chain through the existing canonical
+  identity, chronology, terminal-event, and price-cursor validators. It
+  appends nothing.
+- Session refresh now invokes that service-level replay closure before selecting
+  Inbox rows. Thus an empty Inbox with corrupt evaluation bytes raises the
+  existing sanitized `DecisionSessionError` before any workspace render or
+  evaluation write; it cannot return `no_registered_watches` as healthy.
+- RED: the prescribed selector exited `1` with the expected empty-Inbox corrupt
+  evaluation failure (`1 failed, 38 deselected`, `1.19s`). The required
+  regression mutation then removed only the new closure and produced
+  `5 failed, 34 deselected` in `1.41s` (command wall `2.08s`): malformed
+  registration, activation, and evaluation JSON, semantic orphan evaluation,
+  and empty-Inbox corrupt evaluation replay each failed for the intended absent
+  validator/bypass reason.
+- GREEN: after restoration, the combined focused selection passed `5`, with
+  `34 deselected`, in `1.14s` (command wall `1.78s`), exit `0`. Scoped Ruff
+  check (`0.03s`), Ruff format check (`0.04s`), and `git diff --check`
+  (`0.06s`) each exited `0`. The test formatter also made two pre-existing
+  scoped line-wrap adjustments; no behavior changed there.
+- The controller-dispatched independent review of exact commit `4b4e5af`
+  found no Critical or Important issue: the
+  closure is read-only, validates activation and ordinary evaluation records in
+  one registration chain, preserves the existing sanitized session error, and
+  does not expand product or operational authority. Recovery Task 2 and parent
+  Task 3 remain frozen. No Provider/OpenD/Scheduler, 0021,
+  evidence-root, proposal, confirmation, order, network, external, or trading
+  state changed.
+
+### 2026-09-08 — Task 2 recovery Task 2: durable coordinator and HTTP proof
+
+- Added the required real-store proof for an explicit session refresh. It seeds
+  only approved NVDA/AAPL action-packet fixtures and fixed registrations, then
+  proves canonical persisted evaluation identity, byte-equivalent replay with
+  no append, strictly newer cursor advancement after reconstruction, stale-only
+  no-quote evaluation, mixed missing-packet partial success, invalid initial
+  and backwards completion clocks, and zero registration creation.
+- Added real `TestClient(create_workstation_app(...))` proof that refresh has no
+  OpenAPI request body, accepts a bodyless same-origin POST, rejects a foreign
+  Origin before an evaluation write, follows replacement app-state
+  packet/watch/workspace/Inbox services, returns a sanitized 409 for corrupt
+  evaluation bytes without appending or exposing those bytes, and remains 404
+  when unattached. An actual deterministic demo reset also proves the next
+  refresh reads the reset monitoring store.
+- The durable test exposed one production defect: an immutable packet
+  instrument's `mappingproxy` metadata reached JSONL evaluation serialization.
+  `build_watch_observation()` now copies that snapshot into the base
+  `Instrument` contract with ordinary metadata before it is persisted. This is
+  the common single-packet/session observation boundary; no product interface
+  or authority changed.
+- Focused GREEN on the recovery worktree: `pytest
+  tests/test_decision_session.py tests/test_packet_monitoring.py -q --basetemp
+  %TEMP%\quantmesh-0029-task2-recovery-real` exited `0` with `48 passed` and
+  two inherited serializer/TestClient warnings in `5.43s`. Scoped Ruff check
+  and format check exited `0`; `git diff --check` exited `0`. No Provider,
+  OpenD, Scheduler, 0021, evidence-root, proposal, confirmation, order,
+  network, external, or trading action occurred. Recovery Task 3 and parent
+  Task 3 remain frozen.
+
+### 2026-09-08 — Task 2 recovery Task 2 review-fix round 1/2
+
+- The first scoped Task 2 review returned **NOT APPROVED** with two Important
+  proof gaps and no production finding: persisted observation sequences did
+  not prove an accepted price cursor, and the replacement workspace renderer
+  was indistinguishable from the original. The actual reset assertion also did
+  not observe the refresh command reading its reset store.
+- The reconstruction test now requires a first accepted `armed` price fact at
+  `101.0`, followed after service/store reconstruction by a sequence-2
+  `triggered` fact with `previous_price=101.0` and `current_price=99.0`.
+  This makes loss of the accepted durable cursor observable rather than merely
+  asserting serialized observation sequences.
+- The current-state test now makes the original renderer fail if selected and
+  supplies a replacement renderer with distinct `99.0` price, sequence `17`,
+  and source. It asserts the exact persisted observation/facts and
+  renderer calls. The actual demo-reset test instruments the replaced real
+  watch store and observes `validate_replay()` from the subsequent refresh.
+- Targeted mutation RED: forcing `_price_result()` to always return
+  `not_comparable` failed the reconstruction test (`1 failed, 18 deselected`,
+  `1.60s`); replacing the app-state renderer with the captured failing
+  original failed the current-state test (`1 failed, 18 deselected`, `2.54s`).
+  After restoring both mutations, the three named cases passed (`3 passed, 16
+  deselected`, pytest `3.62s`, command wall `3.76s`, one inherited TestClient
+  warning). Scoped Ruff check,
+  Ruff format check, and `git diff --check` exited `0`.
+- No production behavior or authority changed in this review fix. Recovery
+  The final independent Task 2 review APPROVED the boundary with no Critical
+  or Important finding. Recovery Task 3 may start; parent Task 3 remains
+  frozen.
+
+### 2026-09-08 — Task 2 recovery Task 3: explicit refresh interaction proof
+
+- Added only load-bearing Watchlist component coverage. A manually controlled
+  refresh Promise proves keyboard Enter from retained button focus creates one
+  request, disables the control while pending, then invalidates/refetches only
+  the Decision Inbox exactly once after resolution. It also proves no interval,
+  packet-monitoring/registration request, localStorage refresh payload, timer
+  text, or automatic second refresh begins while the mutation is pending.
+- Table-driven English and Simplified-Chinese cases cover `complete`,
+  `partial`, and `no_registered_watches`; a failed item preserves its exact
+  packet ID, reviewed localized `packet_unavailable` text, and the sanitized
+  server reason in `title`. Rejected requests show the existing localized
+  transient unavailable line and never render the injected raw error text.
+- This proof correctly began GREEN because the compact control and feedback
+  already met the approved contract. A temporary `disabled={false}` mutation
+  produced `1 failed, 51 skipped` at the pending-disabled assertion; the exact
+  source was restored. Focused Vitest passed `88` tests in `2` files in
+  `3.96s`; TypeScript passed; lint exited `0` with the four inherited Fast
+  Refresh warnings in `button.tsx`, `badge.tsx`, `preferences.tsx`, and
+  `state.tsx`. `git diff --check` exited `0`.
+- No production TSX/CSS or message copy changed, so the Impeccable detector
+  was not rerun. No Provider/OpenD/Scheduler, 0021, evidence-root, proposal,
+  confirmation, order, network, external, polling, persisted refresh state,
+  or trading behavior changed. The independent Task 3 Standards+Spec review
+  round 1/2 returned **NOT APPROVED** with one Important proof gap: spies were
+  installed after mount and timer/storage effects were not checked through the
+  resolved boundary, allowing mount-time automatic work or pending-only output
+  to evade the proof. At that historical checkpoint the bounded test-only
+  review fix and final round 2/2 were required, with later work isolated into
+  Task 3B before recovery integration.
+
+### 2026-09-08 — Task 2 recovery Task 3 review-fix round 1/2
+
+- The bounded test-only correction installs `setInterval`, `localStorage`, and
+  the packet-monitoring POST seam observations before mount; it stubs the POST
+  seam, validates and then clears only the existing
+  `quantmesh.preferences` `{locale:"en",theme:"dark"}` write, and resets all
+  spy history through per-test setup/teardown. The renamed test no longer
+  overclaims pending through a delayed refetch.
+- It proves the scheduler boundary at mount (a 60-second automatic refresh must
+  schedule an interval immediately), then asserts no interval, monitoring
+  request, session persistence, timer text, or second refresh during both the
+  pending and resolved boundaries. The same packet-monitoring stub remains
+  zero-call at both boundaries.
+- Reviewer-required RED evidence: temporary mount-time
+  `setInterval(..., 60_000)` failed `1` named test with `51` skipped in
+  `1.92s`; a temporary pending `Automatic refresh in 5 seconds` plus
+  success-localStorage mutation failed `1` named test with `51` skipped in
+  `1.96s`; the persistence-only variant independently failed the resolved
+  storage assertion (`1 failed, 51 skipped`, `1.97s`). All production source
+  was restored.
+- Restored focused GREEN: Vitest passed `88` tests in `2` files in `3.88s`;
+  TypeScript passed; lint exited `0` with the four inherited Fast Refresh
+  warnings; `git diff --check` passed. No production UI/copy or detector run
+  is required.
+- Final independent Task 3 review round 2/2 returned NOT APPROVED with one
+  residual Important: the last interval assertion precedes terminal success
+  rendering, so a `refresh.isSuccess` effect that starts a 60-second automatic
+  refresh interval survives the named test. The original Task 3 loop is closed.
+- Recovery Task 3B is a single proof-only boundary: assert scheduler/storage/
+  monitoring/refresh counts again after terminal render and effect flush, and
+  prove the exact success-effect interval mutation fails. Recovery Task 4 and
+  parent Task 3 remain frozen.
+
+### 2026-09-08 — Task 2 recovery Task 3B approval
+
+- Commit `290d0e8` adds only the post-success lifecycle assertion. The exact
+  temporary `refresh.isSuccess` 60-second interval mutation failed the named
+  test (`1 failed, 51 skipped`, `2.02s`); restored focused Vitest passed 88 in
+  3.93s, with typecheck, lint (four inherited warnings) and diff check green.
+- A fresh independent Reviewer reproduced the mutation failure (`1 failed, 51
+  skipped`, `2.06s`) and the unmodified named GREEN (`1 passed, 51 skipped`,
+  `2.07s`). Standards and Spec both returned zero findings. Recovery Task 4 may
+  start; parent Task 3 remains frozen until the whole-recovery decision.
+- No production UI, Provider/OpenD/Scheduler, 0021, evidence-root, proposal,
+  order, external or trading state changed.
+
+### 2026-09-08 — Task 2 recovery integration gate
+
+- Exact pre-documentation HEAD `592a094` passed the one authorized coherent
+  backend selection: 77 passed, two warnings, 1027.77s (17:07), exit 0. Session
+  76244 was retained from launch through summary and no duplicate run started.
+- Watchlist/messages Vitest passed 88 in 4.41s; API generation and freshness,
+  TypeScript, lint (four inherited Fast Refresh warnings), scoped Ruff check
+  and `git diff --check` exited 0.
+- Scoped Ruff format initially exited 1 only for two generator-expression
+  wraps in `tests/test_decision_inbox.py`. The formatter changed those wraps;
+  scoped Ruff check, format check and diff check then exited 0. This
+  semantics-free test formatting did not justify repeating the 17:07 backend
+  selection.
+- No Provider/OpenD/Scheduler, 0021, evidence-root, proposal, confirmation,
+  order, external or trading state changed. At that historical checkpoint the
+  whole-recovery review was pending and parent Task 3 remained frozen.
+
+### 2026-09-08 — Task 2 recovery Task 3B: post-success scheduler proof
+
+- The existing deferred keyboard refresh now awaits its terminal success
+  feedback, flushes committed React effects, and then repeats the negative
+  boundary checks. It preserves exactly one explicit refresh and one Decision
+  Inbox invalidation/refetch, while proving zero product 60-second interval,
+  packet-monitoring POST, non-preference localStorage write, and automatic
+  refresh call after success. Testing Library's own 50ms `findByText` polling
+  interval is deliberately excluded from the product scheduler assertion.
+- Mutation RED: temporarily adding the exact `useEffect([refresh.isSuccess])`
+  60-second `api.refreshDecisionSession()` interval caused the named keyboard
+  test to fail at the new post-success scheduler assertion (`1 failed, 51
+  skipped`, `2.02s`). Production source was restored exactly; no production
+  interface changed.
+- Restored focused verification: `npx vitest run
+  src/screens/Watchlist.test.tsx src/lib/messages.test.ts` passed `88` tests in
+  `2` files in `3.93s`; `npm run typecheck` passed; `npm run lint` exited `0`
+  with the four inherited Fast Refresh warnings; and `git diff --check` passed.
+  No Impeccable detector run is needed for this test-only change. At that
+  historical checkpoint Recovery Task 4 and parent Task 3 remained frozen
+  pending one fresh Task 3B Standards+Spec review.
+
+### 2026-09-08 — Parent Task 2 recovery approval
+
+- A fresh whole-recovery review of exact range `bafec72..e10c544` returned
+  `SAFE TO RESUME PARENT TASK 3`, with no Critical or Important finding. The
+  reviewer also confirmed that the formatter-only change in
+  `tests/test_decision_inbox.py` is AST-equivalent, so the 17:07 coherent
+  backend selection was not repeated.
+- Parent Task 2 is approved and complete. Parent Task 3, compact action queue
+  and exact navigation, is the next and only authorized frontier. No
+  Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external or
+  trading authority changed.
+
+### 2026-09-08 — Parent Task 3 compact action queue implementation
+
+- The existing Decision Inbox now exposes one compact, wrapping, native-button
+  filter row for All, Triggered, Blocked, Review due and No action. All remains
+  the initial view; the four derived buckets use only persisted attention and
+  readiness facts, retain API order, and do not create a second dashboard.
+- Mapping precedence is explicit: `watch_triggered` is Triggered; blocked or
+  unavailable readiness/attention is Blocked; `review_available` is Review
+  due; every other state is No action. Each visible row retains its one exact
+  packet or recovery link and its progressive record disclosure.
+- TDD RED was three missing-control failures with the pre-existing 88 tests
+  green. On resumed base `1ddba52`, the focused Watchlist, navigation and
+  message selection passed 104/104. Production build, typecheck, static bundle
+  freshness, Ruff check and diff check exit cleanly; lint reports only the four
+  inherited Fast Refresh warnings. The project-scoped Impeccable detector
+  returned no finding.
+- The packaged-SPA mobile selection passed 1/1 in 78.06s, proving 390 px has no
+  document overflow and that Enter activates No action and opens the exact
+  packet URL. Two preceding RED runs corrected only E2E synchronization: the
+  shell confirmation text is intentionally hidden below `sm`, and the Inbox
+  result must be awaited after its heading.
+- Task 3 is ready for its fresh bounded review. Task 4 remains frozen. No
+  notification, timer/background refresh, Provider/OpenD/Scheduler, 0021,
+  evidence-root, backend mutable state, proposal/order or trading behavior was
+  added.
+
+### 2026-09-08 — Parent Task 3 review approval
+
+- Fresh review round 1/2 approved exact range `1ddba52a..df67a6e` with zero
+  Critical, Important or Minor finding across Standards and Spec. The reviewer
+  confirmed the exact mapping precedence, all-default order/count behavior,
+  filter stability after Inbox invalidation, row-owned packet URLs, native
+  keyboard semantics, bilingual textual state and 390 px no-overflow evidence.
+- Fresh review verification passed 104/104 targeted Vitest tests in 4.84s;
+  production build, packaged-static freshness and diff check exited 0. No
+  notification, background polling, Provider/OpenD, recommendation, order or
+  0021 authority was added.
+- Parent Task 3 is approved and complete. Parent Task 4 restart-safe
+  two-minute acceptance is the next and only product frontier.
+
+### 2026-09-08 — Parent Task 4 execution split
+
+- The first broad Task 4 implementer run was stopped after drafting the first
+  bounded restart/API test but before executing it or reporting RED. To keep
+  the approved acceptance semantics while improving throughput,
+  implementation is split into Task 4A
+  durable API/restart and fail-closed proof, then Task 4B packaged-browser flow
+  plus one coherent 0029 gate.
+- This is an execution split, not a product redesign: no API, model, symbol,
+  Provider/OpenD/Scheduler, 0021, evidence-root, notification, order or trading
+  authority is added. Parent Task 4 still receives one review at the combined
+  demonstrable boundary.
+
+### 2026-09-08 — Parent Task 4A durable API and restart acceptance
+
+- Added one acceptance module over the existing public contracts. A single
+  deterministic root records exact NVDA/AAPL Watch packets and registrations,
+  proves Inbox GET is byte-read-only, proves refresh POST changes only the
+  watch-evaluation ledger, and compares packet, registration, evaluation,
+  terminal-event, outcome and review identities after clean application
+  reconstruction. Refresh start/completion and stored observations use the
+  same causal UTC clock.
+- The same boundary keeps BTC/SOL explicitly demo-labelled while proving their
+  missing-forecast Paper blockers and exact packet identities survive restart.
+  Separate fast cases reject an absent or mismatched exact real catalog without
+  fallback, and combine no-quote non-comparability, sequence-1 arming,
+  sequence-2 triggering, terminal event replay, stale evaluation without a
+  fabricated quote, and one-item partial failure without rolling back the
+  successful append.
+- The preserved first draft passed 1/1 in 117.84s because Tasks 1–3 already
+  supplied its contract. A deliberate partial-count mutation then made the new
+  combined test fail (`1 failed`, 1.71s, exit 1); production was restored and
+  the fast selection passed 2/2 in 1.53s. The complete Task 4A file passed
+  `3` tests with one inherited Starlette/httpx TestClient warning in 95.79s,
+  exit 0. No production source changed.
+- Task 4B packaged-browser acceptance and the one coherent 0029 gate are next;
+  parent Task 4 review remains deferred to that combined demonstrable boundary.
+  No Provider/OpenD/Scheduler, 0021, evidence-root, network, notification,
+  proposal/order, external or trading authority changed.
+
+### 2026-09-08 — Parent Task 4B packaged-browser acceptance
+
+- The packaged application now proves the full daily-session path from two
+  exact NVDA/AAPL Watch packets through explicit refresh, the truthful
+  `No action 2` bucket and the exact NVDA packet URL. The measured path was
+  `33.023s` against the `<120s` budget. Clean application reconstruction over
+  the same durable root preserves the exact packet link without re-registering
+  watches.
+- The same real Chromium case proves an isolated AAPL workspace failure yields
+  partial `1 of 2` feedback with the exact packet ID and localized bounded
+  reason, then restores the workspace and proves zh-CN keyboard refresh,
+  `受阻 2`, local-check disclosure, 390px no-overflow and absence of Provider,
+  OpenD, automatic-refresh or real-trading wording. The final named run passed
+  `1/1` in `188.02s`; the user path was `33.023s`.
+- Chromium exposed that disabling the focused refresh button drops focus. A
+  focused RED reproduced the keydown/blur/click order (`1 failed`, `55
+  skipped`, `2.06s`). The bounded fix arms restoration only for focused
+  Enter/Space activation, restores after the mutation settles, and never
+  steals focus for a programmatic click. Focused GREEN passed `2` tests with
+  `54` skipped in `2.10s`. The package-served static bundle was rebuilt and
+  freshness reports `bundle is current`.
+- The one retained coherent seven-file gate (session `10816`) passed `131`
+  tests with two inherited TestClient/Pydantic warnings in `1371.24s`
+  (`22:51`), exit `0`. Full canonical Vitest passed `285` tests in `23` files
+  in `11.37s`; API client freshness, TypeScript, production build, static
+  freshness and `git diff --check` exited `0`; lint exited `0` with four
+  inherited Fast Refresh warnings.
+- Task4B status is `DONE_WITH_CONCERNS`: scoped Ruff check for the changed E2E
+  file exits `0`, but full Ruff exits `1` on the earlier integration-branch
+  import order in `src/quantmesh/instruments/__init__.py`. Task4B has zero diff
+  to that file from base `776c887`; it is intentionally left for an isolated
+  gate repair before the combined parent Task 4 review. Ruff format also sees
+  one inherited proposal-confirm lambda in the E2E file; it was not reformatted
+  because Task4B was instructed to avoid unrelated churn.
+- No Provider/OpenD/Scheduler, 0021, production evidence root, notification,
+  proposal/order, external or real-trading state changed. Task 5 and parent
+  review did not start.
+
+### 2026-09-08 — Parent Task 4 review and actionable-path correction
+
+- Full Ruff initially exposed only the integration-branch import ordering in
+  `src/quantmesh/instruments/__init__.py`; the isolated ordering-only commit
+  `4f820a0` passed full Ruff, module import and `git diff --check`.
+- Review round 1/2 found one Important specification gap: the measured browser
+  path opened a `No action` row rather than an actionable Triggered, Blocked or
+  Review due row. No Standards, quant or trading-safety finding accompanied it.
+- The fixture-only correction at `852287c` derives an outside/inside price from
+  each packet's own support/entry range, advances one causal UTC clock and a
+  strict 1→2 quote sequence, then proves `Triggered 1` by keyboard and opens
+  the exact NVDA packet. The final retained Chromium run passed 1/1 in 367.10s;
+  the measured user path was 65.224s. Clean restart, AAPL partial failure,
+  zh-CN, 390px and focus assertions remained green. Scoped Ruff and diff checks
+  exited 0.
+- Review round 2/2 approved exact parent range `1cab20d..852287c` with zero
+  Critical, Important or Minor findings. Tasks 1–4 are complete; Task 5's one
+  exact-head release gate, PR, merge and post-merge verification are next.
+- No Provider/OpenD/Scheduler, 0021, evidence-root, external, proposal/order or
+  real-trading state changed.
+
+### 2026-09-08 — Exact-head gate 1 and bounded browser synchronization repair
+
+- Candidate `e124a273e0241f12741356bec2278a29b14fb03a` passed clone/version,
+  fresh install, Ruff, trusted-data tooling, Python and frontend license
+  closures, pip/npm audits, static-bundle freshness and full Vitest. Full
+  pytest then returned `1 failed, 3318 passed, 9 skipped, 9 warnings` in
+  9038.26s; release gate exit was 1 and the clean clone remained clean.
+- The only failure was the pre-existing
+  `test_nvda_inspect_to_paper_loop_and_race_refusal`: after clicking Create
+  paper proposal it waited 30 seconds for the immutable preview without
+  observing the underlying action request. The same node independently passed
+  in 145.81s, so the failure did not reproduce independently; the failed run
+  did not observe the action request, and its exact stage therefore remains
+  unproven.
+- The bounded test-only probe now waits for the decision-packet action
+  POST with a 90-second ceiling, asserts HTTP 200, then waits for the preview
+  under the same ceiling. A future failure will therefore distinguish absent
+  requests, HTTP failures and post-response UI failures without weakening the
+  product assertion.
+  The repaired node passed in 132.52s; the related three-test browser module
+  passed in 342.58s. Scoped Ruff and diff checks exited 0.
+- No production source, Provider/OpenD/Scheduler, 0021, evidence root,
+  external, proposal/order authority or real-trading state changed. A fresh
+  bounded review and one new exact-head release gate are next; the failed gate
+  is not treated as success evidence.
+
+### 2026-09-08 — Exact-head gate 2 and PR #133 CI portability repair
+
+- Reviewed candidate `033825244dcd86a0574857f9e81318fdd3030cf7` passed the
+  complete 18-step clean release gate with exit 0: full pytest reported `3319
+  passed, 9 skipped` in 9206.6s, the golden path passed 60 checks, and the
+  fresh clone remained clean. The branch was pushed and PR #133 opened against
+  `main` at that exact SHA.
+- PR CI run 34209451765 failed only in frontend Vitest: two Watchlist tests
+  hard-coded Singapore-local renderings for UTC fixture timestamps. Ubuntu CI
+  correctly rendered the same instants in UTC (`12:04 PM` / `12:05 PM`), while
+  the Windows release runner rendered `08:04 PM` / `08:05 PM`. Production
+  `dateTime()` intentionally uses the operator runtime timezone; this was a
+  test portability defect, not a readiness or trading behavior defect.
+- The bounded test-only repair composes each label with the shared
+  `dateTime()` display contract, matching the established workspace-test
+  pattern without changing production code or timezone semantics. The exact
+  CI failure is reproducible under `TZ=UTC`; the repaired Watchlist module
+  passes all 56 tests under `TZ=UTC`. The full UTC frontend boundary also
+  passes type-check, lint (four unchanged Fast Refresh advisories) and all 285
+  Vitest tests.
+- No Provider/OpenD/Scheduler, 0021, evidence root, external action,
+  proposal/order authority or real-trading state changed. A final exact-head
+  gate and PR CI rerun are required before merge.
+
+### 2026-09-09 — Bounded PR #133 review corrections
+
+- Planner/Reviewer: verified all four unresolved GitHub review findings against
+  ADR-0020 and the approved session design. Scope is these corrections only;
+  the operator authorized short checks, push and protected squash integration,
+  with no new full/domain/E2E/release gate or environment installation.
+- Implementer: exact manifest/quality integrity exceptions now return sanitized
+  item-level unavailable readiness. An absent monitoring service returns
+  `no_registered_watches`; an attached corrupt ledger still fails closed.
+  Watchlist now displays generated time, durable last check (including never
+  checked), registered/triggered counts and blocked/unavailable evidence count
+  on initial load, in both locales and for an empty Inbox. Not-started entries
+  belong to No action, while venue-unavailable rows remain Blocked.
+- Quant/safety review: no evidence substitution, registration, provider call,
+  order authority or trusted-data write was added. Summary counts come from
+  the read-only API projection, not transient mutation feedback; zero blocked
+  evidence does not assert real-data qualification or release certification.
+- Verifier RED: exact catalog exceptions `2 failed` in 11.42s; empty-workstation
+  HTTP refresh `1 failed` (409 instead of 200) in 3.87s; missing summary
+  `3 failed` in 36.04s command duration (3.18s tests); not-started bucket
+  `1 failed` in 3.23s command duration. A mistaken new link label was corrected
+  to the existing Open workspace label; an old no-row-check assertion was
+  narrowed to its table now that the header explicitly says Never checked.
+- Verifier GREEN: `pytest tests/test_decision_readiness.py
+  tests/test_decision_session.py -k "not refresh_after_demo_reset" -q`
+  passed 42 tests, 1 deselected, in 3.28s with one inherited TestClient warning.
+  Each test invocation used a 110s subprocess ceiling; Python used the existing
+  environment and local `PYTHONPATH=src`, with unique basetemp for file fixtures.
+  `TZ=UTC vitest run src/screens/Watchlist.test.tsx` passed 60 tests in 5.06s
+  command duration. Scoped Ruff check/format, scoped frontend lint and
+  TypeScript build passed; Vite built in 10.93s with its bundle-size advisory.
+  The generated dist was copied to the package and compared byte-for-byte.
+- Integration remains pending remote push and review-thread resolution. No
+  broad suite or browser E2E was rerun. The prior exact-head release record is
+  historical evidence only; this checkpoint does not certify a release.
+
+### 2026-09-07 — Activation and architecture approval
+
+- Operator approved the Decision Readiness Session boundary: one unified
+  product entry with separate 0021 and 0029 engines.
+- Issue #131 records the user outcome, acceptance criteria and prohibitions.
+- A fresh worktree and branch were created from merged
+  `origin/main@4fb810e1268f5f0e13599d7198aee4fa78cc4717`.
+- At this checkpoint the written design was pending operator review. No product
+  code had started, and no 0021, Provider/OpenD, Scheduler, evidence, trading or
+  external-notification state changed.
+
+### 2026-09-08 — Written design approval and executable plan
+
+- Operator approved the written specification at commit `1e4cce6`.
+- The executable plan maps the approved design into four 24–48 hour vertical
+  slices plus one exact-head integration/PR closeout task. Every slice names one
+  user action, one stop condition, precise files/interfaces, TDD commands and a
+  two-round review ceiling.
+- The plan reuses `DecisionInboxService`, `DecisionWatchService.check()` and
+  exact `TrustedDataCatalog.lineage(manifest_id)`; it creates no second Inbox,
+  monitoring or session ledger and gives 0029 no 0021 operational authority.
+- Execution approach selection is the next frontier. Product code remains
+  unchanged at this checkpoint.

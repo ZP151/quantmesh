@@ -1,88 +1,156 @@
 # Active Goal
 
-- Status: active — iteration 0028 implementation and bounded PR-review
-  correction complete; exact-head integration gates pending.
-- Objective: give a research-minded individual active trader one watchlist-level
-  Decision Inbox that identifies the next evidence-backed action, opens the
-  exact DecisionPacket, and summarizes its bounded paper proposal, order,
-  monitoring and review state without adding execution authority.
-- Started: 2026-09-05
-- Tracking issue: [#129](https://github.com/ZP151/quantmesh/issues/129)
-- Active iteration:
-  `docs/iterations/0028-decision-inbox-shadow-portfolio.md`
+- Status: active — PR #133 has four bounded review corrections verified locally
+  (2026-09-09): corrupt exact catalog isolation, absent monitoring refresh,
+  durable session header and not-started queue classification. Next: push,
+  resolve the four review threads and squash-merge when GitHub permits.
+  Operator explicitly authorized lightweight integration without another local
+  full/domain/E2E/release gate or environment rebuild. Historical `0338252`
+  release evidence is not an exact-head release certification of this repair.
+- Objective: give a research-minded individual active trader one Decision
+  Readiness Session in the existing Decision Inbox that shows exact data
+  readiness, explicitly refreshes registered local watches, and opens the
+  exact triggered, blocked or review-due DecisionPacket without merging 0021
+  operational authority into the product.
+- Started: 2026-09-07
+- Tracking issue: [#131](https://github.com/ZP151/quantmesh/issues/131)
+- Active iteration: `docs/iterations/0029-decision-readiness-session.md`
 - Design:
-  `docs/superpowers/specs/2026-09-05-decision-inbox-shadow-portfolio-design.md`
+  `docs/superpowers/specs/2026-09-07-decision-readiness-session-design.md`
 - Executable plan:
-  `docs/superpowers/plans/2026-09-05-decision-inbox-shadow-portfolio.md`
-- Integration branch: `codex/0028-decision-inbox-shadow-portfolio`
-- Baseline: `origin/main` at
-  `324d51d82ab4eae5e6176f7f91ce0631c5e76c32`; immutable `v0.1.1-rc1`
+  `docs/superpowers/plans/2026-09-08-decision-readiness-session.md`
+- Completed Task 2 recovery plan:
+  `docs/superpowers/plans/2026-09-08-decision-session-task2-recovery.md`
+- Integration branch: `codex/0029-decision-readiness-session`
+- Baseline: merged `origin/main` at
+  `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; immutable `v0.1.1-rc1`
   remains `b6b05b9`.
-- Delivery mode: four 24–48 hour vertical slices, at most two review rounds
-  per demonstrable slice, targeted verification during development, one final
-  exact-head CI boundary. One 0028 product track and one independent 0021 soak
-  maintenance track may coexist; neither modifies the other's files or state.
-- Current frontier: commit and push the bounded packetless-live-mark PR
-  correction, run one release gate on that exact head, then require exact-head
-  CI and human approval. PR #130 is open. Task 6 Steps 1–3 are complete;
-  Steps 4–5 remain open. No further product slice is open and the Goal is not
-  complete.
-- Pre-PR evidence at parent `422c88ae73ea70d0873505c6fac1d8b8f8d28d84`:
-  the one full pytest run exited 1 with 3255 passed, 3 failed, 9 skipped and
-  1 warning in 8016.81s. Systematic diagnosis confirmed shared-environment
-  license drift and a test cleanup timeout; the exact isolated license test
-  and corrected SPA pair passed. Full frontend verification passed 197 tests,
-  and isolated Python/npm license closure passed. The active iteration records
-  commands, corrections and retained warnings; no full pytest exit-0 claim or
-  release-gate result is made at this checkpoint.
-- Final review round 1 at `7dd644c7dbbde14a245cdb1fbfc02117fad4af3d`
-  identified exact-packet action-state leakage on browser history navigation,
-  pinned-packet range navigation, missing baseline Inbox wiring, and misleading
-  zh-CN wording for an accepted zero-fill paper order. The bounded correction
-  wave has reproducing tests and keeps all trading and optional-service
-  boundaries unchanged. Only the non-blocking Spec Minor for mark timestamp
-  and reason visibility is deferred; final review acceptance and integration
-  gates are not claimed complete.
-- Correction verification: exact baseline wiring regression 1 passed in 1.32s;
-  related frontend suites 69 passed in 10.45s; API/typecheck/lint/Ruff/diff
-  checks passed. The controller stopped the supplementary Inbox/Workstation
-  combined run to avoid duplicating the final gate; its interrupted exit is
-  not a test-failure result and is not authoritative completion evidence.
-- Final review round 2 confirmed source findings resolved at `e6e3acd`;
-  the remaining mechanical SPA artifact refresh is complete. Canonical build
-  and `tools/build_frontend.py --check` passed (`bundle is current`), with only
-  expected JS bundle hashes/index changed. Three unsupported test-only `exact`
-  options were removed with controller approval; assertions are unchanged.
-  The exact-head release gate, push/PR/CI/human review and Goal audit remain open.
-- Gate RED: candidate `f734ec6d695e99dd3c788ae207dc033d0b15d7fe` failed
-  license closure after its unconstrained fresh install selected anyio 4.15.1
-  and wrapt 2.4.1rc1 instead of the existing 4.15.0/2.4.0 pins. The sole tool
-  correction adds `-c requirements-audit.txt` to release-extras installation.
-  Pins/allowlist are unchanged; the same constrained isolated closure already
-  passed. Syntax/Ruff/diff checks pass, but the changed-HEAD candidate remains
-  pending: run its exact-head gate once after this fix is committed. No gate
-  rerun, new environment, push or PR occurred during this correction.
-- Gate candidate `9d13dfbc8756285343baa85d51476abf34c9637c`: the controller
-  recorded green prerequisite stages through frontend Vitest, then actively
-  interrupted session 2328 because the harness's 5400s full-pytest timeout was
-  below the measured 8016.81s baseline and buffered capture hid live progress.
-  This is incomplete gate evidence, not a pass. All five owned PIDs were
-  confirmed exited by the controller. The harness now uses live merged logs,
-  owned-tree timeout cleanup and a 10800s limit; focused tests passed 7/7.
-  The changed-SHA harness candidate needs its one exact-head gate after commit;
-  no gate/full pytest/detector/push/PR ran in the fix wave.
-- Exact-head `9f52a8c3908d067cd060e02274459f46e33ec32e` subsequently passed the
-  clean release gate (3263 passed, 9 skipped) and PR #130 CI run 33991461840.
-  The PR's automated review then identified one bounded P2: a venue-scoped
-  watchlist row could not use its fresh exact quote before its first saved
-  packet because instrument metadata came only from packet history. A focused
-  RED reproduced the missing type/mark; the connector-contract metadata fix
-  and regression pass, and the full Decision Inbox file passes 23 tests in
-  1470.74s. Ruff and diff checks pass. This post-CI source correction requires
-  a new exact-head gate and CI; the prior green SHA is retained as historical
-  evidence only.
-- External gate: none. Provider/OpenD, real market calls and model services are
-  not required and are prohibited expansion for this iteration.
+- Delivery mode: at most four 24–48 hour vertical slices, at most two review
+  rounds per demonstrable slice, targeted development checks and one final
+  exact-head integration boundary. One 0029 product track and one independent
+  0021 soak maintenance track may coexist; neither modifies the other's files
+  or operational state.
+- Current frontier: parent Task 4A proves exact NVDA/AAPL refresh persistence,
+  byte-read-only Inbox GET, evaluation-only refresh writes, causal UTC
+  ordering, exact-ID reconstruction, catalog absence/mismatch refusal,
+  no-quote and newer-sequence monitoring, stale evaluation, partial success,
+  and honest BTC/SOL demo/Paper-blocked degradation. Task 4B now proves the
+  packaged-browser journey, clean reconstruction, bounded partial feedback,
+  bilingual keyboard/mobile behavior and a 65.224-second actionable path that
+  filters `Triggered 1` and opens the exact NVDA packet. The exact coherent
+  selection passed 131 tests; full Ruff and diff checks are clean. Parent Task
+  4 review round 2/2 approved the exact range through `852287c` with zero
+  Critical, Important or Minor findings. No
+  Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external, or
+  trading authority is introduced.
+- Recovery Task 1 is implemented at the current frontier: a read-only,
+  transaction-bound complete decision-watch replay now validates registrations,
+  activations, ordinary evaluations, orphan bindings, canonical identities and
+  each combined evaluation chain before session selection. The empty-Inbox
+  corrupt-evaluation regression proves `DecisionSessionError`, zero workspace
+  render calls and unchanged corrupt bytes. Mutation RED was `5 failed, 34
+  deselected` in `1.41s` (`2.08s` wall); GREEN was `5 passed, 34 deselected` in
+  `1.14s` (`1.78s` wall), exit `0`; scoped Ruff check, Ruff format check and
+  diff check all exited `0` (`0.03s`, `0.04s`, `0.06s`). The
+  controller-dispatched independent review of exact commit `4b4e5af` found no
+  Critical or Important issue. Recovery Task 2
+  and parent Task 3 remain frozen; no Provider/OpenD/Scheduler, 0021,
+  evidence-root, proposal, confirmation, order, network, external or trading
+  state changed.
+- Recovery Task 2 is implemented at this recovery frontier: real durable
+  packet/watch/session proof covers canonical evaluation IDs, idempotent replay,
+  reconstruction cursor advance, stale-only and partial outcomes, clock
+  refusals, and no new registration. Real HTTP/OpenAPI/current-app-state proof
+  covers bodyless same-origin refresh, pre-write foreign-Origin refusal,
+  replacement/reset state, sanitized corrupt-evaluation 409, and unattached
+  404. The focused two-file backend selection passed `48` tests with two
+  inherited warnings in `5.43s`; scoped Ruff check/format and diff check
+  passed. A narrow observation-mapper correction converts immutable packet
+  metadata to serializable base-instrument metadata before JSONL persistence.
+  Recovery Task 3 and parent Task 3 remain frozen; no prohibited operational,
+  external, or trading state changed.
+- Recovery Task 2 review round 1/2 was NOT APPROVED for two proof-only gaps:
+  accepted price-cursor semantics and load-bearing replacement workspace/reset
+  reads. The bounded test-only follow-up now proves first `armed` and
+  reconstructed `triggered` `PriceFacts` across a changed 101-to-99 price,
+  rejects a captured stale renderer, persists distinguishable replacement
+  facts, and observes replay validation through the real reset store. Targeted
+  price and stale-renderer mutations each failed one named test (`1 failed, 18
+  deselected` in `1.60s` and `2.54s`); restored GREEN was `3 passed, 16
+  deselected` in pytest `3.62s` (`3.76s` command wall), with scoped
+  Ruff/format/diff clean. Final independent Task 2 review APPROVED with no
+  Critical or Important finding. Recovery Task 3 may start; parent Task 3
+  remains frozen.
+- Recovery Task 3 adds test-only explicit-refresh proof: a manually controlled
+  promise proves keyboard Enter, retained focus, pending disable, one refresh
+  request and exactly one Decision Inbox invalidation/refetch. Table tests
+  cover complete, partial, no-registered-watches and rejected outcomes in
+  English and Simplified Chinese; partial preserves the exact failed packet ID,
+  localized known reason and sanitized `title` fallback, while rejection never
+  displays raw server text. The test also proves no interval, automatic second
+  call, packet-monitoring/registration request, localStorage refresh payload
+  or timer text starts while pending. This coverage began GREEN against the
+  existing compact UI; a temporary `disabled={false}` mutation failed the
+  named pending assertion (`1 failed, 51 skipped`) and was restored. Focused
+  Vitest passed `88` tests in `2` files in `3.96s`; typecheck passed; lint
+  exited `0` with the four inherited Fast Refresh warnings. No production
+  TSX/CSS/message change or Impeccable rerun was needed; `git diff --check`
+  passed. The independent Task 3 Standards+Spec review round 1/2 found one
+  Important proof gap: the initial test installed interval, storage and
+  packet-monitoring spies after mount, then skipped post-success timer and
+  persistence checks, so mount-time automatic work and pending-only UI state
+  could survive. The bounded fix installs/stubs all observations before mount,
+  allows only the exact preferences key/payload, resets histories, and checks
+  pending plus resolved boundaries. At that historical checkpoint it remained
+  pending final independent round 2/2 and later required Task 3B.
+- The Task 3 review-fix now observes the scheduler and persistence lifecycle
+  from mount through resolution. The mount-time 60-second interval mutation
+  failed (`1 failed, 51 skipped`, `1.92s`); a pending timer plus success
+  persistence mutation failed (`1 failed, 51 skipped`, `1.96s`), and the
+  persistence-only variant independently failed the post-success storage
+  assertion (`1 failed, 51 skipped`, `1.97s`). Production source was restored.
+  Focused GREEN is `88` Vitest tests in `2` files in `3.88s`; typecheck passed
+  and lint exited `0` with four inherited Fast Refresh warnings. Final
+  independent review round 2/2 still found one Important: the last scheduler
+  assertion precedes terminal success rendering, so a success-effect interval
+  mutation survives. The original Task 3 loop is closed. Recovery Task 3B adds
+  only a post-success effect-flush scheduler assertion and mutation proof;
+  its independent review reproduced the mutation failure and APPROVED with no
+  Standards or Spec finding. At that historical checkpoint Task 4 could start;
+  parent Task 3 remained frozen pending whole-recovery review.
+- Recovery Task 4 controller gate at exact pre-documentation HEAD `592a094`
+  passed: coherent backend 77 tests with two warnings in 1027.77s (17:07),
+  exit 0, retained session 76244 and no duplicate run; Watchlist/messages
+  Vitest 88 passed in 4.41s; API generation/freshness, typecheck, lint (four
+  inherited warnings), Ruff check and diff check passed. Initial Ruff format
+  found only two generator-expression wraps in `test_decision_inbox.py`; the
+  formatter made that semantics-free change and scoped Ruff/format/diff then
+  passed. The 17:07 backend was not repeated after formatting. At that
+  historical checkpoint whole-recovery review was the only remaining frontier.
+- Task 3B now awaits terminal success feedback, flushes committed React
+  effects, and rechecks the product 60-second scheduler, packet-monitoring
+  POST seam, non-preference localStorage writes, and automatic refresh count.
+  It retains exactly one explicit refresh and one Inbox invalidation/refetch.
+  The named temporary `useEffect([refresh.isSuccess])` 60-second interval
+  mutation failed at the new assertion (`1 failed, 51 skipped`, `2.02s`) and
+  production was restored exactly. Focused Watchlist/messages Vitest passed
+  `88` tests in `3.93s`; typecheck passed; lint exited `0` with the four
+  inherited Fast Refresh warnings. At that historical checkpoint Task 3B
+  awaited its fresh Standards+Spec review.
+- Whole-recovery review of exact range `bafec72..e10c544` returned
+  `SAFE TO RESUME PARENT TASK 3`, with no Critical/Important finding. Parent
+  Task 2 is complete; the next scope is only the compact action queue and exact
+  navigation in parent Task 3. Provider/OpenD/Scheduler, 0021, evidence-root,
+  proposal/order, external and trading authority remain excluded.
+- Iteration 0028 closure: PR #130 squash-merged at
+  `4fb810e1268f5f0e13599d7198aee4fa78cc4717`; issue #129 is closed. The exact
+  PR head `b6526669da54ed94f65da816120937974920ac1d` passed the 18-step release
+  gate with 3264 passed and 9 skipped, and exact-head CI passed. Post-merge main
+  CI run 34135799652 also passed. Existing Node-action deprecation and four
+  Fast Refresh warnings remain non-blocking.
+- External gate: none for design or deterministic implementation. Missing
+  trusted-data state must render unavailable; it never authorizes Provider,
+  OpenD, Scheduler, alternate-root discovery or 0021 repair.
 
 ## Product-readiness decision
 
@@ -95,13 +163,14 @@ and one explicit action. The durable product artifact is a versioned
 cannot create evidence, waive a blocker or gain order authority.
 
 Iteration 0021's 168-hour soak continues as a maintenance/release-confidence
-track. It does not block 0028 product work, and 0028 must not repair, migrate,
-backfill or otherwise modify soak Scheduler, provider or evidence state.
+data-plane track. Iteration 0029 consumes only an optional, exact-ID, read-only
+readiness view. It must not repair, migrate, backfill or otherwise modify soak
+Scheduler, provider, evidence or witness state.
 
 ## Non-negotiable constraints
 
 - Keep external venues read-only and execution paper-only. Live trading,
-  signing, credentials and mainnet authority remain outside iteration 0028.
+  signing, credentials and mainnet authority remain outside iteration 0029.
 - AI is advisory and schema-validated. Missing or failed AI must leave the
   deterministic DecisionPacket usable.
 - Stale, low-quality, leakage-affected or missing evidence must block a paper
@@ -110,7 +179,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
   second operator confirmation.
 - Decision, evidence, paper result and review state must survive a clean
   restart and remain replayable.
-- Qlib, Darts and model ranking are internal support or later work, not 0028
+- Qlib, Darts and model ranking are internal support or later work, not 0029
   completion criteria. TradingView extensions, mobile clients, real trading,
   social features and broad pattern-recognition catalogs are out of scope.
 - Each slice must expose user-visible value within 24–48 hours. Side defects
@@ -135,7 +204,7 @@ backfill or otherwise modify soak Scheduler, provider or evidence state.
 ## Historical iteration 0027 completion record
 
 The following checkpoints are retained as immutable delivery context. They are
-not active 0028 work.
+not active 0029 work.
 
 ### Slice 1 execution checkpoint — 2026-09-02
 

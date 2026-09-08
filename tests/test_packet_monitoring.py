@@ -29,6 +29,7 @@ from quantmesh.instruments.monitoring import (
     DecisionWatchStore,
     WatchConditionKind,
 )
+from quantmesh.instruments.watch_observations import build_watch_observation
 
 NOW = datetime(2026, 9, 2, 20, 0, tzinfo=UTC)
 NVDA = Instrument(
@@ -196,6 +197,43 @@ def _price_observation(*, price: float, sequence: int, minutes: int) -> Decision
         received_at=NOW + timedelta(minutes=minutes + 1),
         sequence=sequence,
         sequence_gap=False,
+    )
+
+
+def test_shared_observation_builder_preserves_the_packet_watch_mapping() -> None:
+    packet = _packet()
+    workspace = SimpleNamespace(
+        live=SimpleNamespace(
+            last=101.0,
+            source="local-workspace",
+            provenance="demo-synthetic",
+            data_time=NOW + timedelta(minutes=1),
+            received_at=NOW + timedelta(minutes=2),
+            sequence=1,
+            sequence_gap=False,
+        ),
+        forecast=None,
+    )
+
+    observation = build_watch_observation(
+        packet=packet,
+        workspace=workspace,
+        evaluated_at=NOW + timedelta(minutes=3),
+    )
+
+    assert (
+        observation.model_dump()
+        == DecisionWatchObservation(
+            evaluated_at=NOW + timedelta(minutes=3),
+            price=101.0,
+            instrument=packet.instrument,
+            source="local-workspace",
+            provenance="demo-synthetic",
+            data_time=NOW + timedelta(minutes=1),
+            received_at=NOW + timedelta(minutes=2),
+            sequence=1,
+            sequence_gap=False,
+        ).model_dump()
     )
 
 
@@ -445,6 +483,43 @@ def test_registration_conflict_and_corrupt_replay_fail_closed(tmp_path: Path) ->
     (root / "watch-registrations.jsonl").write_text("{not-json}\n", encoding="utf-8")
     with pytest.raises(ValueError):
         DecisionWatchStore(root).registrations()
+
+
+@pytest.mark.parametrize(
+    "filename",
+    (
+        "watch-registrations.jsonl",
+        "watch-activations.jsonl",
+        "watch-evaluations.jsonl",
+    ),
+)
+def test_validate_replay_refuses_malformed_durable_ledger_bytes(
+    tmp_path: Path, filename: str
+) -> None:
+    """Catch a validator that skips one durable watch ledger during replay."""
+    root = tmp_path / "monitoring"
+    root.mkdir()
+    (root / filename).write_text("{not-json}\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="decision watch"):
+        DecisionWatchStore(root).validate_replay()
+
+
+def test_validate_replay_refuses_evaluation_without_a_recorded_registration(tmp_path: Path) -> None:
+    """Catch a validator that silently ignores an orphan evaluation record."""
+    root = tmp_path / "monitoring"
+    packets = DecisionPacketStore(tmp_path / "packets")
+    packet = _record_action_packet(packets)
+    service = DecisionWatchService(packet_store=packets, store=DecisionWatchStore(root))
+    registration = service.register(packet.packet_id, (WatchConditionKind.ENTRY_ZONE,))
+    service.check(
+        registration.registration_id,
+        _price_observation(price=101.0, sequence=1, minutes=1),
+    )
+    (root / "watch-registrations.jsonl").write_text("", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="no recorded registration"):
+        DecisionWatchStore(root).validate_replay()
 
 
 def _packet_with_history_generated_at(value: datetime) -> DecisionPacket:

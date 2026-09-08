@@ -566,6 +566,9 @@ export type ProposalConfirmation = DeepReadonly<components['schemas']['ProposalC
 export type ProposalCreateInput = components['schemas']['ProposalCreateBody']
 export type DecisionPacket = DeepReadonly<components['schemas']['DecisionPacket']>
 export type DecisionInbox = DeepReadonly<components['schemas']['DecisionInbox']>
+export type DecisionSessionRefreshResult = DeepReadonly<
+  components['schemas']['DecisionSessionRefreshResult']
+>
 export type DecisionPacketActionResult = DeepReadonly<
   components['schemas']['DecisionPacketActionResult']
 >
@@ -686,6 +689,12 @@ export const api = {
 
   async decisionInbox(): Promise<DecisionInbox> {
     const { data, error, response } = await generatedApi.GET('/api/decision-packets')
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+
+  async refreshDecisionSession(): Promise<DecisionSessionRefreshResult> {
+    const { data, error, response } = await generatedApi.POST('/api/decision-session/refresh')
     if (!response.ok || data === undefined) throw generatedApiError(response, error)
     return data
   },

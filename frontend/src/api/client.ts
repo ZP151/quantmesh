@@ -212,6 +212,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decision-session/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh Decision Session */
+        post: operations["api_refresh_decision_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/enablement": {
         parameters: {
             query?: never;
@@ -791,6 +808,23 @@ export interface paths {
         put?: never;
         /** Check Decision Packet Watch Conditions */
         post: operations["check_decision_packet_watch_conditions_decision_packets__packet_id__watch_conditions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decision-session/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh Decision Session */
+        post: operations["refresh_decision_session_decision_session_refresh_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1748,6 +1782,7 @@ export interface components {
              * Format: date-time
              */
             generated_at: string;
+            session: components["schemas"]["DecisionSessionSummary"];
         };
         /** DecisionInboxEntry */
         DecisionInboxEntry: {
@@ -1768,6 +1803,7 @@ export interface components {
             /** Parent Packet Id */
             parent_packet_id?: string | null;
             position_context?: components["schemas"]["DecisionInboxPositionContext"] | null;
+            readiness: components["schemas"]["DecisionReadiness"];
             review?: components["schemas"]["DecisionInboxReviewSummary"] | null;
             selected_range?: components["schemas"]["HistoryRange"] | null;
             /** Symbol */
@@ -1805,8 +1841,14 @@ export interface components {
              * @default []
              */
             event_ids: string[];
+            /** Last Checked At */
+            last_checked_at?: string | null;
             /** Latest Evaluation Id */
             latest_evaluation_id?: string | null;
+            /** Latest Reason */
+            latest_reason?: string | null;
+            /** Latest Status */
+            latest_status?: string | null;
             /** Registration Id */
             registration_id: string;
             /** Triggered */
@@ -2028,6 +2070,41 @@ export interface components {
             /** Blockers */
             blockers?: components["schemas"]["DecisionBlocker"][];
         };
+        /** DecisionReadiness */
+        DecisionReadiness: {
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            forecast?: components["schemas"]["DecisionReadinessEvidenceRef"] | null;
+            history?: components["schemas"]["DecisionReadinessEvidenceRef"] | null;
+            /** Limiting Evidence At */
+            limiting_evidence_at?: string | null;
+            /** Reason */
+            reason: string;
+            /** Reason Code */
+            reason_code: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ready" | "demo" | "blocked" | "unavailable";
+        };
+        /** DecisionReadinessEvidenceRef */
+        DecisionReadinessEvidenceRef: {
+            /**
+             * Evaluated At
+             * Format: date-time
+             */
+            evaluated_at: string;
+            /** Evaluation Id */
+            evaluation_id: string;
+            /** Manifest Id */
+            manifest_id: string;
+            /** Report Id */
+            report_id: string;
+        };
         /** DecisionReviewRecord */
         DecisionReviewRecord: {
             classification: components["schemas"]["ReviewClassification"];
@@ -2100,6 +2177,74 @@ export interface components {
             thesis: string;
             /** Trigger */
             trigger: string;
+        };
+        /** DecisionSessionRefreshItem */
+        DecisionSessionRefreshItem: {
+            /** Evaluation Id */
+            evaluation_id?: string | null;
+            /**
+             * Not Comparable Codes
+             * @default []
+             */
+            not_comparable_codes: string[];
+            /** Packet Id */
+            packet_id: string;
+            /** Reason */
+            reason?: string | null;
+            /** Reason Code */
+            reason_code?: string | null;
+            /** Registration Id */
+            registration_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "evaluated" | "failed";
+            /**
+             * Triggered
+             * @default false
+             */
+            triggered: boolean;
+        };
+        /** DecisionSessionRefreshResult */
+        DecisionSessionRefreshResult: {
+            /**
+             * Completed At
+             * Format: date-time
+             */
+            completed_at: string;
+            /** Evaluated Count */
+            evaluated_count: number;
+            /** Items */
+            items: components["schemas"]["DecisionSessionRefreshItem"][];
+            /** Registered Count */
+            registered_count: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "complete" | "partial" | "no_registered_watches";
+        };
+        /** DecisionSessionSummary */
+        DecisionSessionSummary: {
+            /** Blocked Count */
+            blocked_count: number;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Last Checked At */
+            last_checked_at: string | null;
+            /** Registered Count */
+            registered_count: number;
+            /** Triggered Count */
+            triggered_count: number;
         };
         /** DecisionWatchCondition */
         DecisionWatchCondition: {
@@ -3731,6 +3876,26 @@ export interface operations {
             };
         };
     };
+    api_refresh_decision_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionSessionRefreshResult"];
+                };
+            };
+        };
+    };
     api_enablement: {
         parameters: {
             query?: never;
@@ -4748,6 +4913,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_decision_session_decision_session_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionSessionRefreshResult"];
                 };
             };
         };
