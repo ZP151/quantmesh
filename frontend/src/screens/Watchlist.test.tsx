@@ -93,6 +93,58 @@ const inbox = {
   },
 } satisfies DecisionInbox
 
+const actionInbox = {
+  ...inbox,
+  entries: [
+    {
+      ...inbox.entries[0],
+      attention_reason: 'A local watch condition triggered.',
+      attention_state: 'watch_triggered',
+      readiness: { ...inbox.entries[0].readiness, status: 'blocked' },
+    },
+    {
+      ...inbox.entries[0],
+      attention_reason: 'Trusted evidence is blocked.',
+      attention_state: 'review_available',
+      evidence_status: 'unavailable',
+      instrument_type: 'perpetual',
+      mark_context: { reason: null, status: 'available', value: 65_000 },
+      packet_id: 'packet-222222222222222222222222',
+      parent_packet_id: null,
+      readiness: {
+        ...inbox.entries[0].readiness,
+        limiting_evidence_at: null,
+        reason: 'No promoted forecast is available.',
+        reason_code: 'forecast_unavailable',
+        status: 'blocked',
+      },
+      symbol: 'BTC-USD',
+      venue: 'hyperliquid',
+    },
+    {
+      ...inbox.entries[0],
+      attention_reason: 'A saved outcome is ready for review.',
+      attention_state: 'review_available',
+      packet_id: 'packet-333333333333333333333333',
+      readiness: {
+        ...inbox.entries[0].readiness,
+        reason: 'Exact packet evidence is trusted for research.',
+        reason_code: 'trusted_evidence',
+        status: 'ready',
+      },
+      symbol: 'AAPL',
+    },
+    {
+      ...inbox.entries[0],
+      attention_reason: 'The saved watch remains active.',
+      attention_state: 'watching',
+      packet_id: 'packet-444444444444444444444444',
+      symbol: 'SOL-USD',
+      venue: 'hyperliquid',
+    },
+  ],
+} satisfies DecisionInbox
+
 const mockedDecisionInbox = vi.mocked(api.decisionInbox)
 const mockedRefresh = vi.mocked(api.refreshDecisionSession)
 
@@ -136,7 +188,87 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.unstubAllGlobals()
   vi.restoreAllMocks()
+})
+
+it('filters the four textual attention buckets while preserving exact packet identity', async () => {
+  mockedDecisionInbox.mockResolvedValue(actionInbox)
+  const user = userEvent.setup()
+  renderWatchlist()
+
+  const all = await screen.findByRole('button', { name: 'All 4' })
+  expect(all).toHaveAttribute('aria-pressed', 'true')
+  for (const name of ['Triggered 1', 'Blocked 1', 'Review due 1', 'No action 1']) {
+    expect(screen.getByRole('button', { name })).toBeVisible()
+  }
+  for (const symbol of ['NVDA', 'BTC-USD', 'AAPL', 'SOL-USD']) {
+    expect(screen.getByText(symbol)).toBeVisible()
+  }
+
+  await user.click(screen.getByRole('button', { name: 'Blocked 1' }))
+
+  expect(screen.getByRole('button', { name: 'Blocked 1' })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByText('BTC-USD')).toBeVisible()
+  expect(screen.getByText('Trusted evidence blocked')).toBeVisible()
+  expect(screen.queryByText('NVDA')).not.toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Open exact packet' })).toHaveAttribute(
+    'href',
+    '/instruments/hyperliquid/BTC-USD?range=6m&packet=packet-222222222222222222222222',
+  )
+
+  for (const [name, symbol, packet] of [
+    ['Triggered 1', 'NVDA', 'packet-111111111111111111111111'],
+    ['Review due 1', 'AAPL', 'packet-333333333333333333333333'],
+    ['No action 1', 'SOL-USD', 'packet-444444444444444444444444'],
+  ] as const) {
+    await user.click(screen.getByRole('button', { name }))
+    expect(screen.getByText(symbol)).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Open exact packet' })).toHaveAttribute(
+      'href',
+      expect.stringContaining(`packet=${packet}`),
+    )
+  }
+})
+
+it('keeps a keyboard-selected bucket stable through explicit Inbox invalidation only', async () => {
+  mockedDecisionInbox.mockResolvedValue(actionInbox)
+  const requestPermission = vi.fn()
+  vi.stubGlobal('Notification', { requestPermission })
+  const setInterval = vi.spyOn(globalThis, 'setInterval')
+  const user = userEvent.setup()
+  renderWatchlist()
+
+  const triggered = await screen.findByRole('button', { name: 'Triggered 1' })
+  await user.tab()
+  expect(screen.getByRole('button', { name: 'Refresh session' })).toHaveFocus()
+  await user.tab()
+  expect(screen.getByRole('button', { name: 'All 4' })).toHaveFocus()
+  await user.tab()
+  expect(triggered).toHaveFocus()
+  await user.keyboard('{Enter}')
+  expect(triggered).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByText('NVDA')).toBeVisible()
+  expect(screen.queryByText('BTC-USD')).not.toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'Refresh session' }))
+
+  expect(await screen.findByText('2 watches checked · 1 triggered')).toBeVisible()
+  expect(mockedDecisionInbox).toHaveBeenCalledTimes(2)
+  expect(screen.getByRole('button', { name: 'Triggered 1' })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByText('NVDA')).toBeVisible()
+  expect(setInterval.mock.calls.some(([, delay]) => delay === 60_000)).toBe(false)
+  expect(requestPermission).not.toHaveBeenCalled()
+  expect(screen.queryByText(/notification|provider|OpenD/i)).not.toBeInTheDocument()
+})
+
+it('offers the complete compact action queue in Simplified Chinese', async () => {
+  mockedDecisionInbox.mockResolvedValue(actionInbox)
+  renderWatchlist('zh-CN')
+
+  for (const name of ['全部 4', '已触发 1', '受阻 1', '待复盘 1', '无需操作 1']) {
+    expect(await screen.findByRole('button', { name })).toBeVisible()
+  }
 })
 
 it('keeps explicit keyboard refresh focused through resolution and triggers one Inbox refetch', async () => {

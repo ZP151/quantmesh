@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Page } from '@/components/page'
@@ -14,6 +15,7 @@ import { usePreferences } from '@/lib/preferences'
 export function WatchlistScreen() {
   const query = useSurface(['decision-inbox'], api.decisionInbox)
   const { locale, t } = usePreferences()
+  const [filter, setFilter] = useState<ActionFilter>('all')
   const queryClient = useQueryClient()
   const refresh = useMutation({
     mutationFn: api.refreshDecisionSession,
@@ -51,8 +53,44 @@ export function WatchlistScreen() {
         title={t('screen.watchlist.title')}
         empty={<p className="border-y border-border py-6 text-sm text-muted-foreground">{t('screen.watchlist.empty')}</p>}
       >
-        {(inbox) => (
-          <div className="border-y border-border">
+        {(inbox) => {
+          const filters: { bucket: ActionFilter; label: MessageKey }[] = [
+            { bucket: 'all', label: 'screen.watchlist.filter.all' },
+            { bucket: 'triggered', label: 'screen.watchlist.filter.triggered' },
+            { bucket: 'blocked', label: 'screen.watchlist.filter.blocked' },
+            { bucket: 'review_due', label: 'screen.watchlist.filter.reviewDue' },
+            { bucket: 'no_action', label: 'screen.watchlist.filter.noAction' },
+          ]
+          const counts = inbox.entries.reduce<Record<AttentionBucket, number>>(
+            (current, entry) => {
+              const entryBucket = attentionBucket(entry)
+              return { ...current, [entryBucket]: current[entryBucket] + 1 }
+            },
+            { triggered: 0, blocked: 0, review_due: 0, no_action: 0 },
+          )
+          const visible = filter === 'all'
+            ? inbox.entries
+            : inbox.entries.filter(entry => attentionBucket(entry) === filter)
+          return (
+            <div className="min-w-0 space-y-3">
+              <div
+                aria-label={t('screen.watchlist.filter.label')}
+                className="flex min-w-0 flex-wrap gap-2"
+                role="group"
+              >
+                {filters.map(({ bucket, label }) => (
+                  <button
+                    aria-pressed={filter === bucket}
+                    className="rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+                    key={bucket}
+                    onClick={() => setFilter(bucket)}
+                    type="button"
+                  >
+                    {t(label, { count: String(bucket === 'all' ? inbox.entries.length : counts[bucket]) })}
+                  </button>
+                ))}
+              </div>
+              <div className="min-w-0 border-y border-border">
                 <table className="w-full text-sm">
                   <thead className="hidden sm:table-header-group">
                     <tr className="border-b border-border text-left text-xs text-muted-foreground">
@@ -64,7 +102,7 @@ export function WatchlistScreen() {
                     </tr>
                   </thead>
                   <tbody>
-                    {inbox.entries.map((entry) => {
+                    {visible.map((entry) => {
                       const exactPath = entry.venue !== null
                         && entry.packet_id !== null
                         && entry.selected_range !== null
@@ -116,11 +154,28 @@ export function WatchlistScreen() {
                       )})}
                   </tbody>
                 </table>
-          </div>
-        )}
+              </div>
+            </div>
+          )
+        }}
       </Surface>
     </Page>
   )
+}
+
+type AttentionBucket = 'triggered' | 'blocked' | 'review_due' | 'no_action'
+type ActionFilter = AttentionBucket | 'all'
+
+function attentionBucket(entry: DecisionInbox['entries'][number]): AttentionBucket {
+  if (entry.attention_state === 'watch_triggered') return 'triggered'
+  if (
+    entry.readiness.status === 'blocked'
+    || entry.readiness.status === 'unavailable'
+    || entry.attention_state === 'blocked'
+    || entry.attention_state === 'unavailable'
+  ) return 'blocked'
+  if (entry.attention_state === 'review_available') return 'review_due'
+  return 'no_action'
 }
 
 function RefreshFailures({

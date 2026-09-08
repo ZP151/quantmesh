@@ -1,7 +1,8 @@
 # Active Goal
 
-- Status: active — iteration 0029 parent Task 2 recovery is approved and
-  complete; parent Task 3 compact action queue is the next authorized frontier.
+- Status: active — iteration 0029 parent Task 3 compact action queue is
+  implemented and locally green; its fresh bounded review is the next
+  authorized frontier.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -25,12 +26,13 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: parent Task 2 explicit local session refresh is approved
-  and complete through whole-recovery review of `bafec72..e10c544`. The next
-  and only authorized slice is parent Task 3: derive the compact action queue
-  from existing readiness/session facts and preserve exact packet navigation.
-  No Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external,
-  or trading authority is introduced.
+- Current frontier: parent Task 3 derives the compact Triggered, Blocked,
+  Review due and No action queue from existing Inbox facts, preserves `all` as
+  the default, and opens the exact owning packet. Focused component, packaged
+  SPA 390 px/keyboard, build, static freshness and mechanical UI checks are
+  green. A fresh maximum-two-round review is next; Task 4 remains frozen. No
+  Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external, or
+  trading authority is introduced.
 - Recovery Task 1 is implemented at the current frontier: a read-only,
   transaction-bound complete decision-watch replay now validates registrations,
   activations, ordinary evaluations, orphan bindings, canonical identities and

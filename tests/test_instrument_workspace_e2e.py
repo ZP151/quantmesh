@@ -104,7 +104,10 @@ def _proposal_token(page) -> str:
 def _reset_from_shell(page) -> None:
     reset = page.get_by_role("button", name="Reset demo session")
     reset.click()
-    page.get_by_text("Confirm reset", exact=True).wait_for()
+    # The confirmation copy remains mounted but is visually hidden below the
+    # shell's ``sm`` breakpoint; attachment still proves the armed state was
+    # committed before the second activation.
+    page.get_by_text("Confirm reset", exact=True).wait_for(state="attached")
     with page.expect_response(
         lambda response: response.url.endswith("/api/demo/reset"),
         timeout=90_000,
@@ -200,6 +203,42 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
     page.get_by_role("button", name="Engage global kill switch").wait_for()
     page.goto(f"{base_url}{WORKSPACE_PATH}")
     page.get_by_role("button", name="Create paper proposal").wait_for()
+
+
+def test_mobile_action_queue_filters_and_opens_the_exact_packet(page, base_url) -> None:
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(f"{base_url}/app/settings")
+    _reset_from_shell(page)
+    page.goto(f"{base_url}{WORKSPACE_PATH}")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    page.get_by_label("Decision reason").fill("Keep this exact packet under watch")
+    page.get_by_role("button", name="Watch decision").click()
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_match = re.search(r"[?&]packet=([^&]+)", page.url)
+    assert packet_match is not None
+    packet_id = packet_match.group(1)
+
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
+    page.get_by_role("button", name="All 4", exact=True).wait_for()
+    for label in ("All 4", "Triggered 0", "Blocked 3", "Review due 0", "No action 1"):
+        assert page.get_by_role("button", name=label, exact=True).is_visible()
+
+    no_action = page.get_by_role("button", name="No action 1", exact=True)
+    no_action.focus()
+    page.keyboard.press("Enter")
+    assert no_action.get_attribute("aria-pressed") == "true"
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+
+    exact_link = page.get_by_role("link", name="Open exact packet", exact=True)
+    expected_path = f"/app/instruments/moomoo/NVDA?range=6m&packet={packet_id}"
+    assert exact_link.get_attribute("href") == expected_path
+    exact_link.focus()
+    page.keyboard.press("Enter")
+    page.wait_for_url(f"{base_url}{expected_path}")
+    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+
+    _reset_from_shell(page)
 
 
 def test_keyboard_locale_reduced_motion_and_mobile_boundary(browser, base_url) -> None:

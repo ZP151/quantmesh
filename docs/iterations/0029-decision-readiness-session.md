@@ -596,6 +596,32 @@ final PR boundaries rather than after every micro-change.
   Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external or
   trading authority changed.
 
+### 2026-09-08 — Parent Task 3 compact action queue implementation
+
+- The existing Decision Inbox now exposes one compact, wrapping, native-button
+  filter row for All, Triggered, Blocked, Review due and No action. All remains
+  the initial view; the four derived buckets use only persisted attention and
+  readiness facts, retain API order, and do not create a second dashboard.
+- Mapping precedence is explicit: `watch_triggered` is Triggered; blocked or
+  unavailable readiness/attention is Blocked; `review_available` is Review
+  due; every other state is No action. Each visible row retains its one exact
+  packet or recovery link and its progressive record disclosure.
+- TDD RED was three missing-control failures with the pre-existing 88 tests
+  green. On resumed base `1ddba52`, the focused Watchlist, navigation and
+  message selection passed 104/104. Production build, typecheck, static bundle
+  freshness, Ruff check and diff check exit cleanly; lint reports only the four
+  inherited Fast Refresh warnings. The project-scoped Impeccable detector
+  returned no finding.
+- The packaged-SPA mobile selection passed 1/1 in 78.06s, proving 390 px has no
+  document overflow and that Enter activates No action and opens the exact
+  packet URL. Two preceding RED runs corrected only E2E synchronization: the
+  shell confirmation text is intentionally hidden below `sm`, and the Inbox
+  result must be awaited after its heading.
+- Task 3 is ready for its fresh bounded review. Task 4 remains frozen. No
+  notification, timer/background refresh, Provider/OpenD/Scheduler, 0021,
+  evidence-root, backend mutable state, proposal/order or trading behavior was
+  added.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
