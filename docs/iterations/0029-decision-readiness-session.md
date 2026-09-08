@@ -844,6 +844,22 @@ final PR boundaries rather than after every micro-change.
   external action, proposal/order authority or real-trading state changed
   during closeout.
 
+### 2026-09-09 — Docs-only closeout review
+
+- PR #134 review found two record-integrity gaps: the operator-approved
+  bounded correction exception was present in the ledger but not the governing
+  design/plan, and the completed Goal had not been archived/reset as required
+  by `docs/goals/README.md`.
+- The design and Task 5 now preserve exact-head release verification as the
+  default while recording the narrow PR #133 exception and its required
+  focused, final-head CI and post-merge CI evidence. This does not retroactively
+  claim a final-head release run.
+- The completed Goal snapshot is archived at
+  `docs/goals/archive/2026-09-09-decision-readiness-session.md`; `ACTIVE.md` is
+  reset so a future `/goal` cannot redispatch Iteration 0029.
+- This correction changes documentation only. `git diff --check` is the scoped
+  local gate; PR #134 protected CI remains the integration gate.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

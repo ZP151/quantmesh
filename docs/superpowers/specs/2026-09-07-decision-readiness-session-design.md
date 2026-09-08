@@ -278,6 +278,15 @@ gate. Full repository and release checks run only at slice commit boundaries
 where risk warrants them and once on the final exact PR head; test count and
 ledger length are not product progress measures.
 
+The default final boundary remains an exact-head release gate. After review,
+the operator may explicitly approve a bounded correction exception when the
+change does not expand product or trading authority, focused RED/GREEN and
+static/build checks cover the correction, the earlier release-gate result is
+kept only as historical evidence, and both the corrected PR head and merged
+`main` pass protected CI. PR #133 received that explicit exception on
+2026-09-09 for four review corrections; no exact-head release certification is
+claimed for its final `3e239c6` head.
+
 Required final evidence includes:
 
 - exact-ID readiness qualification and mismatch/corruption refusals;
@@ -286,7 +295,8 @@ Required final evidence includes:
 - NVDA/AAPL completed session and BTC/SOL honest degradation;
 - English/zh-CN, keyboard and compact browser acceptance;
 - API schema/client freshness, Ruff, TypeScript/lint/build, dependency/license
-  closure, `git diff --check`, full pytest and exact-head CI.
+  closure, `git diff --check`, full pytest and exact-head CI, subject only to
+  the explicit bounded-correction exception above.
 
 ## 11. Explicit non-goals
 
