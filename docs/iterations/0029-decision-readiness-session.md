@@ -1,6 +1,6 @@
 # Iteration 0029 — Decision Readiness Session
 
-- Status: PR integration repair — Tasks 1–4 approved; PR #133 exact-head CI repair pending
+- Status: complete — PR #133 merged; final-head and post-merge CI green
 - Started: 2026-09-07
 - Tracking issue: [#131](https://github.com/ZP151/quantmesh/issues/131)
 - Integration branch: `codex/0029-decision-readiness-session`
@@ -38,7 +38,8 @@ roots, soak evidence, outbox or GitHub witness state.
 - [x] Refreshed evaluations and exact links survive clean application restart.
 - [x] NVDA/AAPL complete the session in under two minutes; BTC/SOL remain
   evidence-blocked where required.
-- [ ] Targeted, browser, restart, final release and CI checks pass.
+- [x] Targeted, browser, restart and release evidence plus final-head and
+  post-merge CI satisfy the operator-approved integration boundary.
 
 ## Delivery slices
 
@@ -820,6 +821,44 @@ final PR boundaries rather than after every micro-change.
 - Integration remains pending remote push and review-thread resolution. No
   broad suite or browser E2E was rerun. The prior exact-head release record is
   historical evidence only; this checkpoint does not certify a release.
+
+### 2026-09-09 — Merge and CI closeout
+
+- The bounded review corrections were pushed as final PR head
+  `3e239c674d60749d3701973ade54fea1e2fd6949`. Its GitHub Actions CI run
+  [34251739368](https://github.com/ZP151/quantmesh/actions/runs/34251739368)
+  completed successfully.
+- PR [#133](https://github.com/ZP151/quantmesh/pull/133) squash-merged as
+  `d14fa63568efdd3fd2e39868508999b7df16afbe`; issue
+  [#131](https://github.com/ZP151/quantmesh/issues/131) closed with the merge.
+  Remote `main` was read back at that exact merge commit, and post-merge CI run
+  [34251838651](https://github.com/ZP151/quantmesh/actions/runs/34251838651)
+  completed successfully.
+- The earlier candidate `5efefe092183c95c963652dfeb6773523b3f8ec6`
+  retains its 18-step release-gate evidence (`3319 passed, 9 skipped`, golden
+  path 60 checks, clean clone). Per the recorded operator authorization, the
+  final bounded review corrections used their focused local checks plus
+  final-head and post-merge CI; no later full/domain/browser/release rerun is
+  claimed.
+- Iteration 0029 is complete. No Provider/OpenD/Scheduler, 0021 evidence root,
+  external action, proposal/order authority or real-trading state changed
+  during closeout.
+
+### 2026-09-09 — Docs-only closeout review
+
+- PR #134 review found two record-integrity gaps: the operator-approved
+  bounded correction exception was present in the ledger but not the governing
+  design/plan, and the completed Goal had not been archived/reset as required
+  by `docs/goals/README.md`.
+- The design and Task 5 now preserve exact-head release verification as the
+  default while recording the narrow PR #133 exception and its required
+  focused, final-head CI and post-merge CI evidence. This does not retroactively
+  claim a final-head release run.
+- The completed Goal snapshot is archived at
+  `docs/goals/archive/2026-09-09-decision-readiness-session.md`; `ACTIVE.md` is
+  reset so a future `/goal` cannot redispatch Iteration 0029.
+- This correction changes documentation only. `git diff --check` is the scoped
+  local gate; PR #134 protected CI remains the integration gate.
 
 ### 2026-09-07 — Activation and architecture approval
 

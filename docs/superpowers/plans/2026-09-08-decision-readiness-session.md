@@ -923,9 +923,11 @@ git commit -m "test(decisions): prove restart-safe daily session"
 **User action:** Receive one reviewed, reproducible merged iteration rather
 than an unverified local branch.
 
-**Stop condition:** The final exact head passes release gate and CI, the
-implementation PR is merged, issue #131 closes, main CI is green, and the
-iteration/Goal state agrees. Do not mark complete before all evidence exists.
+**Stop condition:** The final exact head passes release gate and CI, or an
+operator-authorized bounded review correction passes its recorded focused
+checks plus final-head and post-merge CI. The implementation PR is merged,
+issue #131 closes, main CI is green, and the iteration/Goal state agrees. Do
+not mark complete before the applicable evidence exists.
 
 **Files:**
 
@@ -987,6 +989,12 @@ closure, PowerShell parse, frontend, full pytest, golden path and clean-checkout
 invariants. Record exact test totals, duration and exit code. If it fails, stop
 and preserve the precise evidence; diagnose before proposing a bounded repair.
 
+Recorded exception: after PR #133 review, the operator explicitly authorized
+four bounded corrections to use focused RED/GREEN, Ruff, frontend
+lint/type/build and bundle comparison plus corrected-head and post-merge CI,
+without another full/domain/browser/release run. The earlier release gate
+remains historical evidence and does not certify final head `3e239c6`.
+
 - [ ] **Step 4: Push and open the implementation PR**
 
 ```powershell
@@ -1000,7 +1008,9 @@ gh pr create --repo ZP151/quantmesh `
 
 Wait for exact-head CI and inspect every check. Address only bounded findings,
 with at most two final review rounds; any code change creates a new exact head
-and requires the final relevant gate/CI evidence for that head.
+and requires the final relevant gate/CI evidence for that head. The relevant
+gate may be the recorded focused boundary only when the operator has explicitly
+approved the bounded-correction exception described above.
 
 - [ ] **Step 5: Merge and verify main**
 

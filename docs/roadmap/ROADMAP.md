@@ -355,13 +355,14 @@ Sequence for operator review:
    18-step release gate with 3264 passed and 9 skipped; exact-head and
    post-merge main CI passed. See the
    [0028 ledger](../iterations/0028-decision-inbox-shadow-portfolio.md).
-4. **Active as iteration 0029:** Decision Readiness Session unifies the daily
+4. **Done as iteration 0029 (merged PR #133):** Decision Readiness Session unifies the daily
    operator entry in Decision Inbox, displays exact trusted-data readiness,
    explicitly refreshes registered local watches and opens triggered, blocked
    or review-due packets. It composes with iteration 0021 through a narrow
    exact-ID read-only boundary; Scheduler, Provider/OpenD, evidence roots and
-   witnesses remain an independent maintenance failure domain. See
-   [issue #131](https://github.com/ZP151/quantmesh/issues/131).
+   witnesses remain an independent maintenance failure domain. Final-head and
+   post-merge main CI passed. See the
+   [0029 ledger](../iterations/0029-decision-readiness-session.md).
 5. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
