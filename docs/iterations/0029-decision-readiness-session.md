@@ -636,6 +636,18 @@ final PR boundaries rather than after every micro-change.
 - Parent Task 3 is approved and complete. Parent Task 4 restart-safe
   two-minute acceptance is the next and only product frontier.
 
+### 2026-09-08 — Parent Task 4 execution split
+
+- The first broad Task 4 implementer run was stopped before edits or commands
+  because it had not produced a bounded RED. To keep the approved acceptance
+  semantics while improving throughput, implementation is split into Task 4A
+  durable API/restart and fail-closed proof, then Task 4B packaged-browser flow
+  plus one coherent 0029 gate.
+- This is an execution split, not a product redesign: no API, model, symbol,
+  Provider/OpenD/Scheduler, 0021, evidence-root, notification, order or trading
+  authority is added. Parent Task 4 still receives one review at the combined
+  demonstrable boundary.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

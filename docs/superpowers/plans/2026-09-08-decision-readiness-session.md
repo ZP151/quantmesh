@@ -793,6 +793,14 @@ git commit -m "feat(ui): focus the daily decision queue"
 
 ### Task 4: Restart-safe two-minute acceptance
 
+**Execution amendment (2026-09-08):** Deliver this parent slice in two bounded
+implementation steps without changing its interfaces or acceptance semantics.
+Task 4A owns durable API/restart, read-only snapshots, chronology and
+fail-closed degradation tests. Task 4B owns the packaged-browser journey and
+the one coherent 0029 gate. The parent Task 4 receives one review at the
+combined demonstrable boundary; neither step opens a new product scope or a
+separate broad review loop.
+
 **User action:** Complete the entire deterministic NVDA/AAPL daily session and
 reopen its exact results after a clean application reconstruction.
 
