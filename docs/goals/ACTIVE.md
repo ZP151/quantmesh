@@ -1,12 +1,11 @@
 # Active Goal
 
-- Status: active — PR #133 has four bounded review corrections verified locally
-  (2026-09-09): corrupt exact catalog isolation, absent monitoring refresh,
-  durable session header and not-started queue classification. Next: push,
-  resolve the four review threads and squash-merge when GitHub permits.
-  Operator explicitly authorized lightweight integration without another local
-  full/domain/E2E/release gate or environment rebuild. Historical `0338252`
-  release evidence is not an exact-head release certification of this repair.
+- Status: complete — Iteration 0029 merged through PR #133 at
+  `d14fa63568efdd3fd2e39868508999b7df16afbe`; issue #131 is closed and both
+  final-head CI run 34251739368 and post-merge main CI run 34251838651 are
+  green. The final review corrections followed the operator-approved focused
+  verification boundary; no additional full/domain/browser/release rerun is
+  claimed for `3e239c6`.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -30,19 +29,13 @@
   exact-head integration boundary. One 0029 product track and one independent
   0021 soak maintenance track may coexist; neither modifies the other's files
   or operational state.
-- Current frontier: parent Task 4A proves exact NVDA/AAPL refresh persistence,
-  byte-read-only Inbox GET, evaluation-only refresh writes, causal UTC
-  ordering, exact-ID reconstruction, catalog absence/mismatch refusal,
-  no-quote and newer-sequence monitoring, stale evaluation, partial success,
-  and honest BTC/SOL demo/Paper-blocked degradation. Task 4B now proves the
-  packaged-browser journey, clean reconstruction, bounded partial feedback,
-  bilingual keyboard/mobile behavior and a 65.224-second actionable path that
-  filters `Triggered 1` and opens the exact NVDA packet. The exact coherent
-  selection passed 131 tests; full Ruff and diff checks are clean. Parent Task
-  4 review round 2/2 approved the exact range through `852287c` with zero
-  Critical, Important or Minor findings. No
-  Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external, or
-  trading authority is introduced.
+- Completed frontier: the merged Decision Inbox exposes exact readiness,
+  explicit local refresh, durable session summary, deterministic attention
+  buckets and exact packet navigation. NVDA/AAPL complete the actionable
+  session path while BTC/SOL remain honestly evidence-blocked. The bounded PR
+  corrections fail closed on corrupt exact catalog state and absent monitoring
+  without adding Provider/OpenD/Scheduler, 0021, evidence-root,
+  proposal/order, external or trading authority.
 - Recovery Task 1 is implemented at the current frontier: a read-only,
   transaction-bound complete decision-watch replay now validates registrations,
   activations, ordinary evaluations, orphan bindings, canonical identities and
