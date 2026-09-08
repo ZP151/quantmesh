@@ -151,13 +151,13 @@ function refreshFeedback(
   const triggered = result.items.filter(item => item.triggered).length
   if (result.status === 'partial') {
     return t('screen.watchlist.refreshPartial', {
-      evaluated: result.evaluated_count,
-      registered: result.registered_count,
+      evaluated: String(result.evaluated_count),
+      registered: String(result.registered_count),
     })
   }
   return t('screen.watchlist.refreshComplete', {
-    count: result.evaluated_count,
-    triggered,
+    count: String(result.evaluated_count),
+    triggered: String(triggered),
   })
 }
 

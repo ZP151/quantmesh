@@ -437,7 +437,7 @@ it.each([
   ['missing_forecast', 'Required forecast is unavailable.', '所需预测不可用。'],
   ['candidate_not_comparable', 'Candidate forecast cannot be compared.', '候选预测无法比较。'],
   ['candidate_incompatible', 'Candidate forecast is incompatible.', '候选预测不兼容。'],
-])('localizes the persisted monitoring reason %s and retains it in title', async (code, serverReason, localized) => {
+])('localizes the persisted monitoring reason %s and retains it in title', async (code, _serverReason, localized) => {
   localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
   mockedDecisionInbox.mockResolvedValue({
     ...inbox,
@@ -548,6 +548,7 @@ it('does not claim a position opened for an accepted zero-fill paper order in zh
 
 it('labels an evidence-blocked crypto packet and preserves its exact route', async () => {
   mockedDecisionInbox.mockResolvedValue({
+    session: inbox.session,
     entries: [
       {
         attention_reason: 'No promoted forecast is available.',
