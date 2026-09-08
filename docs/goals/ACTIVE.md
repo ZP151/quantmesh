@@ -1,8 +1,8 @@
 # Active Goal
 
 - Status: active — iteration 0029 parent Task 3 compact action queue is
-  implemented and locally green; its fresh bounded review is the next
-  authorized frontier.
+  approved and complete; parent Task 4 restart-safe two-minute acceptance is
+  the next authorized frontier.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -15,7 +15,7 @@
   `docs/superpowers/specs/2026-09-07-decision-readiness-session-design.md`
 - Executable plan:
   `docs/superpowers/plans/2026-09-08-decision-readiness-session.md`
-- Active recovery plan:
+- Completed Task 2 recovery plan:
   `docs/superpowers/plans/2026-09-08-decision-session-task2-recovery.md`
 - Integration branch: `codex/0029-decision-readiness-session`
 - Baseline: merged `origin/main` at
@@ -30,7 +30,8 @@
   Review due and No action queue from existing Inbox facts, preserves `all` as
   the default, and opens the exact owning packet. Focused component, packaged
   SPA 390 px/keyboard, build, static freshness and mechanical UI checks are
-  green. A fresh maximum-two-round review is next; Task 4 remains frozen. No
+  green. Fresh review round 1/2 approved the exact slice with zero findings.
+  Parent Task 4 restart-safe two-minute acceptance is next. No
   Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external, or
   trading authority is introduced.
 - Recovery Task 1 is implemented at the current frontier: a read-only,

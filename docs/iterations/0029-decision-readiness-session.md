@@ -622,6 +622,20 @@ final PR boundaries rather than after every micro-change.
   evidence-root, backend mutable state, proposal/order or trading behavior was
   added.
 
+### 2026-09-08 — Parent Task 3 review approval
+
+- Fresh review round 1/2 approved exact range `1ddba52a..df67a6e` with zero
+  Critical, Important or Minor finding across Standards and Spec. The reviewer
+  confirmed the exact mapping precedence, all-default order/count behavior,
+  filter stability after Inbox invalidation, row-owned packet URLs, native
+  keyboard semantics, bilingual textual state and 390 px no-overflow evidence.
+- Fresh review verification passed 104/104 targeted Vitest tests in 4.84s;
+  production build, packaged-static freshness and diff check exited 0. No
+  notification, background polling, Provider/OpenD, recommendation, order or
+  0021 authority was added.
+- Parent Task 3 is approved and complete. Parent Task 4 restart-safe
+  two-minute acceptance is the next and only product frontier.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
