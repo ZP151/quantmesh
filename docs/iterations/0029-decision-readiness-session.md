@@ -746,12 +746,14 @@ final PR boundaries rather than after every micro-change.
   `test_nvda_inspect_to_paper_loop_and_race_refusal`: after clicking Create
   paper proposal it waited 30 seconds for the immutable preview without
   observing the underlying action request. The same node independently passed
-  in 145.81s, isolating an intermittent full-suite synchronization weakness
-  rather than a reproducible product failure.
-- The bounded test-only repair now waits for the exact decision-packet action
+  in 145.81s, so the failure did not reproduce independently; the failed run
+  did not observe the action request, and its exact stage therefore remains
+  unproven.
+- The bounded test-only probe now waits for the decision-packet action
   POST with a 90-second ceiling, asserts HTTP 200, then waits for the preview
-  under the same ceiling. This distinguishes absent requests, HTTP failures
-  and post-response UI failures without weakening the product assertion.
+  under the same ceiling. A future failure will therefore distinguish absent
+  requests, HTTP failures and post-response UI failures without weakening the
+  product assertion.
   The repaired node passed in 132.52s; the related three-test browser module
   passed in 342.58s. Scoped Ruff and diff checks exited 0.
 - No production source, Provider/OpenD/Scheduler, 0021, evidence root,

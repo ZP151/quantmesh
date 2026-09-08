@@ -3,9 +3,10 @@
 - Status: active — iteration 0029 Tasks 1–4 are implemented and independently
   approved. The first exact-head release gate passed every dependency,
   license, audit, Ruff and frontend step, then exposed one existing browser
-  synchronization race after 3318 passing tests. Its bounded test-only repair
-  and related group are green; final review and one new exact-head gate are
-  next before PR CI, merge and post-merge verification.
+  timeout after 3318 passing tests. The timeout did not reproduce alone; a
+  bounded test-only response-stage probe and its related group are green.
+  Final review and one new exact-head gate are next before PR CI, merge and
+  post-merge verification.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
