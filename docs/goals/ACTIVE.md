@@ -1,8 +1,11 @@
 # Active Goal
 
 - Status: active — iteration 0029 Tasks 1–4 are implemented and independently
-  approved. The exact integration candidate is being prepared for the one
-  final release gate, PR CI, merge and post-merge verification.
+  approved. The first exact-head release gate passed every dependency,
+  license, audit, Ruff and frontend step, then exposed one existing browser
+  synchronization race after 3318 passing tests. Its bounded test-only repair
+  and related group are green; final review and one new exact-head gate are
+  next before PR CI, merge and post-merge verification.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the

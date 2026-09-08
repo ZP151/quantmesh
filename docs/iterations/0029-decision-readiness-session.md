@@ -1,6 +1,6 @@
 # Iteration 0029 — Decision Readiness Session
 
-- Status: integration candidate — Tasks 1–4 approved; release/PR/CI pending
+- Status: integration repair candidate — Tasks 1–4 approved; release retry/PR/CI pending
 - Started: 2026-09-07
 - Tracking issue: [#131](https://github.com/ZP151/quantmesh/issues/131)
 - Integration branch: `codex/0029-decision-readiness-session`
@@ -734,6 +734,30 @@ final PR boundaries rather than after every micro-change.
   exact-head release gate, PR, merge and post-merge verification are next.
 - No Provider/OpenD/Scheduler, 0021, evidence-root, external, proposal/order or
   real-trading state changed.
+
+### 2026-09-08 — Exact-head gate 1 and bounded browser synchronization repair
+
+- Candidate `e124a273e0241f12741356bec2278a29b14fb03a` passed clone/version,
+  fresh install, Ruff, trusted-data tooling, Python and frontend license
+  closures, pip/npm audits, static-bundle freshness and full Vitest. Full
+  pytest then returned `1 failed, 3318 passed, 9 skipped, 9 warnings` in
+  9038.26s; release gate exit was 1 and the clean clone remained clean.
+- The only failure was the pre-existing
+  `test_nvda_inspect_to_paper_loop_and_race_refusal`: after clicking Create
+  paper proposal it waited 30 seconds for the immutable preview without
+  observing the underlying action request. The same node independently passed
+  in 145.81s, isolating an intermittent full-suite synchronization weakness
+  rather than a reproducible product failure.
+- The bounded test-only repair now waits for the exact decision-packet action
+  POST with a 90-second ceiling, asserts HTTP 200, then waits for the preview
+  under the same ceiling. This distinguishes absent requests, HTTP failures
+  and post-response UI failures without weakening the product assertion.
+  The repaired node passed in 132.52s; the related three-test browser module
+  passed in 342.58s. Scoped Ruff and diff checks exited 0.
+- No production source, Provider/OpenD/Scheduler, 0021, evidence root,
+  external, proposal/order authority or real-trading state changed. A fresh
+  bounded review and one new exact-head release gate are next; the failed gate
+  is not treated as success evidence.
 
 ### 2026-09-07 — Activation and architecture approval
 

@@ -230,6 +230,20 @@ def _proposal_token(page) -> str:
     return token
 
 
+def _create_paper_proposal(page) -> None:
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST"
+            and "/api/decision-packets/" in response.url
+            and response.url.endswith("/actions")
+        ),
+        timeout=90_000,
+    ) as response:
+        page.get_by_role("button", name="Create paper proposal").click()
+    assert response.value.status == 200
+    page.get_by_text("Immutable proposal preview", exact=True).wait_for(timeout=90_000)
+
+
 def _reset_from_shell(page) -> None:
     reset = page.get_by_role(
         "button",
@@ -311,8 +325,7 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
 
     # Stage one creates only a preview; stage two requires the exact token.
     page.get_by_label("Quantity", exact=True).fill("10")
-    page.get_by_role("button", name="Create paper proposal").click()
-    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    _create_paper_proposal(page)
     assert "moomoo" in main.inner_text()
     assert "NVDA" in main.inner_text()
     token = _proposal_token(page)
@@ -335,8 +348,7 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
     assert "Unavailable" not in page.get_by_text("Unrealized P&L").locator("..").inner_text()
     assert "Disarmed" in page.get_by_text("Global kill switch").locator("..").inner_text()
     page.get_by_label("Quantity", exact=True).fill("11")
-    page.get_by_role("button", name="Create paper proposal").click()
-    page.get_by_text("Immutable proposal preview", exact=True).wait_for()
+    _create_paper_proposal(page)
     race_token = _proposal_token(page)
 
     # Engage after preview: confirmation is re-evaluated by the kernel and
