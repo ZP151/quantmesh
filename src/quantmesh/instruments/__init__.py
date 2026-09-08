@@ -71,6 +71,7 @@ from quantmesh.instruments.monitoring import (
     DecisionWatchStore,
     WatchConditionKind,
 )
+from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
 from quantmesh.instruments.readiness import (
     DecisionReadiness,
     DecisionReadinessEvidenceRef,
@@ -78,13 +79,6 @@ from quantmesh.instruments.readiness import (
     DecisionSessionSummary,
     ExactCatalogReader,
 )
-from quantmesh.instruments.session import (
-    DecisionSessionError,
-    DecisionSessionRefreshItem,
-    DecisionSessionRefreshResult,
-    DecisionSessionService,
-)
-from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
 from quantmesh.instruments.reviews import (
     DecisionOutcomeReviewService,
     DecisionOutcomeReviewState,
@@ -92,6 +86,12 @@ from quantmesh.instruments.reviews import (
     DecisionReviewRecord,
     DecisionReviewStore,
     ReviewClassification,
+)
+from quantmesh.instruments.session import (
+    DecisionSessionError,
+    DecisionSessionRefreshItem,
+    DecisionSessionRefreshResult,
+    DecisionSessionService,
 )
 from quantmesh.instruments.workspace import InstrumentWorkspaceService
 
