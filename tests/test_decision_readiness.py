@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from quantmesh.data.artifacts import ArtifactLayer
+from quantmesh.data.artifacts import ArtifactLayer, ManifestIntegrityError
 from quantmesh.data.calendars import CONTINUOUS_UTC_VERSION, SessionPolicy
 from quantmesh.data.capabilities import DataKind, EntitlementState, ProviderAccess
 from quantmesh.data.catalog import (
@@ -13,13 +13,27 @@ from quantmesh.data.catalog import (
     CatalogLineage,
     CatalogQuality,
 )
-from quantmesh.data.quality import QualityStatus
+from quantmesh.data.quality import QualityIntegrityError, QualityStatus
 from quantmesh.instruments.readiness import DecisionReadinessService
 from tests.test_decision_packets import NOW, packet
 
 MANIFEST = "a" * 64
 EVALUATION = "b" * 64
 REPORT = "c" * 64
+
+
+@pytest.mark.parametrize("error_type", [ManifestIntegrityError, QualityIntegrityError])
+def test_corrupt_exact_catalog_is_unavailable_without_poisoning_other_packets(error_type):
+    class CorruptCatalog:
+        def lineage(self, manifest_id):
+            raise error_type("private damaged path")
+
+    service = DecisionReadinessService(catalog_provider=lambda: CorruptCatalog())
+    result = service.evaluate(_real_packet(), checked_at=NOW)
+    assert result.status == "unavailable"
+    assert result.reason_code == "history_catalog_unavailable"
+    assert "private" not in result.reason
+    assert service.evaluate(packet(), checked_at=NOW).status == "demo"
 
 
 class ExactCatalog:

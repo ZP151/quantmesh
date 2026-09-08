@@ -69,6 +69,21 @@ export function WatchlistScreen() {
           {t('screen.watchlist.refreshUnavailable')}
         </p>}
       </div>
+      {query.data && !query.isError && (
+        <section aria-label={t('screen.watchlist.sessionSummary')} className="flex min-w-0 flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <p>{t('screen.watchlist.sessionGenerated', { time: dateTime(query.data.generated_at, locale) })}</p>
+          <p>{t('screen.watchlist.sessionLastChecked', {
+            time: query.data.session.last_checked_at
+              ? dateTime(query.data.session.last_checked_at, locale)
+              : t('screen.watchlist.sessionNeverChecked'),
+          })}</p>
+          <p>{t('screen.watchlist.sessionCounts', {
+            registered: String(query.data.session.registered_count),
+            triggered: String(query.data.session.triggered_count),
+            blocked: String(query.data.session.blocked_count),
+          })}</p>
+        </section>
+      )}
       <Surface
         query={query}
         title={t('screen.watchlist.title')}
@@ -188,6 +203,7 @@ type AttentionBucket = 'triggered' | 'blocked' | 'review_due' | 'no_action'
 type ActionFilter = AttentionBucket | 'all'
 
 function attentionBucket(entry: DecisionInbox['entries'][number]): AttentionBucket {
+  if (entry.attention_state === 'not_started') return 'no_action'
   if (entry.attention_state === 'watch_triggered') return 'triggered'
   if (
     entry.readiness.status === 'blocked'

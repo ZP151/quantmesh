@@ -8,11 +8,13 @@ from typing import Literal, Protocol
 
 from pydantic import Field, field_validator
 
+from quantmesh.data.artifacts import ManifestIntegrityError
 from quantmesh.data.catalog import (
     CatalogIntegrityError,
     CatalogLineage,
     CatalogNotFoundError,
 )
+from quantmesh.data.quality import QualityIntegrityError
 from quantmesh.instruments.contracts import DecisionPacket, StrictContract
 
 
@@ -181,7 +183,13 @@ def _qualify_exact(
         return _unavailable_qualification(
             f"{label}_manifest_unavailable", f"Exact {label} manifest is unavailable."
         )
-    except (CatalogIntegrityError, KeyError, OSError):
+    except (
+        CatalogIntegrityError,
+        ManifestIntegrityError,
+        QualityIntegrityError,
+        KeyError,
+        OSError,
+    ):
         return _unavailable_qualification(
             f"{label}_catalog_unavailable", f"Exact {label} catalog closure is unavailable."
         )

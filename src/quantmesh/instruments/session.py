@@ -98,8 +98,11 @@ class DecisionSessionService:
         try:
             # Replay the durable registration ledger even if Inbox selects no
             # packet.  An empty projection cannot make corrupt local state true.
-            watches.validate_replay()
-            for entry in entries:
+            # No attached monitoring service means there are no registrations.
+            # An attached service still validates its entire durable ledger.
+            if watches is not None:
+                watches.validate_replay()
+            for entry in entries if watches is not None else ():
                 packet_id = entry.packet_id
                 if packet_id is None:
                     continue

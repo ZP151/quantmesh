@@ -785,6 +785,42 @@ final PR boundaries rather than after every micro-change.
   proposal/order authority or real-trading state changed. A final exact-head
   gate and PR CI rerun are required before merge.
 
+### 2026-09-09 — Bounded PR #133 review corrections
+
+- Planner/Reviewer: verified all four unresolved GitHub review findings against
+  ADR-0020 and the approved session design. Scope is these corrections only;
+  the operator authorized short checks, push and protected squash integration,
+  with no new full/domain/E2E/release gate or environment installation.
+- Implementer: exact manifest/quality integrity exceptions now return sanitized
+  item-level unavailable readiness. An absent monitoring service returns
+  `no_registered_watches`; an attached corrupt ledger still fails closed.
+  Watchlist now displays generated time, durable last check (including never
+  checked), registered/triggered counts and blocked/unavailable evidence count
+  on initial load, in both locales and for an empty Inbox. Not-started entries
+  belong to No action, while venue-unavailable rows remain Blocked.
+- Quant/safety review: no evidence substitution, registration, provider call,
+  order authority or trusted-data write was added. Summary counts come from
+  the read-only API projection, not transient mutation feedback; zero blocked
+  evidence does not assert real-data qualification or release certification.
+- Verifier RED: exact catalog exceptions `2 failed` in 11.42s; empty-workstation
+  HTTP refresh `1 failed` (409 instead of 200) in 3.87s; missing summary
+  `3 failed` in 36.04s command duration (3.18s tests); not-started bucket
+  `1 failed` in 3.23s command duration. A mistaken new link label was corrected
+  to the existing Open workspace label; an old no-row-check assertion was
+  narrowed to its table now that the header explicitly says Never checked.
+- Verifier GREEN: `pytest tests/test_decision_readiness.py
+  tests/test_decision_session.py -k "not refresh_after_demo_reset" -q`
+  passed 42 tests, 1 deselected, in 3.28s with one inherited TestClient warning.
+  Each test invocation used a 110s subprocess ceiling; Python used the existing
+  environment and local `PYTHONPATH=src`, with unique basetemp for file fixtures.
+  `TZ=UTC vitest run src/screens/Watchlist.test.tsx` passed 60 tests in 5.06s
+  command duration. Scoped Ruff check/format, scoped frontend lint and
+  TypeScript build passed; Vite built in 10.93s with its bundle-size advisory.
+  The generated dist was copied to the package and compared byte-for-byte.
+- Integration remains pending remote push and review-thread resolution. No
+  broad suite or browser E2E was rerun. The prior exact-head release record is
+  historical evidence only; this checkpoint does not certify a release.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified

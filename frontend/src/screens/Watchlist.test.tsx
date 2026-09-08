@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
@@ -191,6 +191,44 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
+})
+
+it.each(['en-US', 'zh-CN'] as const)('shows durable session summary on initial load in %s without refresh', async (locale) => {
+  mockedDecisionInbox.mockResolvedValue({
+    ...inbox,
+    session: { ...inbox.session, last_checked_at: '2026-09-05T11:59:00Z', registered_count: 3, triggered_count: 1 },
+  })
+  renderWatchlist(locale)
+  const summary = within(await screen.findByRole('region', {
+    name: locale === 'en-US' ? 'Session summary' : '会话摘要',
+  }))
+  const displayLocale = locale === 'en-US' ? 'en' : locale
+  const generated = dateTime(inbox.generated_at, displayLocale)
+  const checked = dateTime('2026-09-05T11:59:00Z', displayLocale)
+  expect(summary.getByText(locale === 'en-US' ? `View generated ${generated}` : `视图生成于 ${generated}`)).toBeVisible()
+  expect(summary.getByText(locale === 'en-US' ? `Last local check: ${checked}` : `上次本地检查：${checked}`)).toBeVisible()
+  expect(summary.getByText(locale === 'en-US' ? 'Registered watches 3 · Triggered 1 · Evidence blocked or unavailable 2' : '已注册观察 3 · 已触发 1 · 证据受阻或不可用 2')).toBeVisible()
+  expect(mockedRefresh).not.toHaveBeenCalled()
+})
+
+it('shows an explicit never-checked session summary for an empty inbox', async () => {
+  mockedDecisionInbox.mockResolvedValue({ ...inbox, entries: [] })
+  renderWatchlist()
+  const summary = within(await screen.findByRole('region', { name: 'Session summary' }))
+  expect(summary.getByText('Last local check: Never checked')).toBeVisible()
+  expect(mockedRefresh).not.toHaveBeenCalled()
+})
+
+it('keeps not-started entries in No action while unavailable venue entries stay Blocked', async () => {
+  const user = userEvent.setup()
+  renderWatchlist()
+  await user.click(await screen.findByRole('button', { name: 'No action 2' }))
+  expect(screen.getByText('AAPL')).toBeVisible()
+  expect(screen.getByRole('link', { name: 'Open workspace' })).toHaveAttribute('href', '/instruments/moomoo/AAPL')
+  expect(screen.queryByText('UNKNOWN')).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Blocked 1' }))
+  expect(screen.getByText('UNKNOWN')).toBeVisible()
+  expect(screen.queryByText('AAPL')).not.toBeInTheDocument()
 })
 
 it('filters the four textual attention buckets while preserving exact packet identity', async () => {
@@ -486,7 +524,7 @@ it('opens the exact pending packet and routes recoverable inbox states', async (
   expect(
     screen.getAllByText(`Readiness evaluated ${dateTime('2026-09-05T12:04:00Z')}`),
   ).toHaveLength(3)
-  expect(screen.queryByText(/Last local check/)).not.toBeInTheDocument()
+  expect(within(screen.getByRole('table')).queryByText(/Last local check/)).not.toBeInTheDocument()
   expect(screen.getByText('configured mark is stale')).toBeVisible()
 })
 

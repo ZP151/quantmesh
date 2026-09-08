@@ -1,11 +1,12 @@
 # Active Goal
 
-- Status: active — iteration 0029 Tasks 1–4 are implemented and independently
-  approved. Candidate `0338252` passed the complete 18-step release gate with
-  3319 tests passed and 9 skipped, then PR #133 CI exposed two timezone-bound
-  Watchlist assertions. The bounded repair is test-only and passes all 56
-  Watchlist tests under CI's UTC timezone. One new exact-head release gate and
-  PR CI rerun are next before merge and post-merge verification.
+- Status: active — PR #133 has four bounded review corrections verified locally
+  (2026-09-09): corrupt exact catalog isolation, absent monitoring refresh,
+  durable session header and not-started queue classification. Next: push,
+  resolve the four review threads and squash-merge when GitHub permits.
+  Operator explicitly authorized lightweight integration without another local
+  full/domain/E2E/release gate or environment rebuild. Historical `0338252`
+  release evidence is not an exact-head release certification of this repair.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the

@@ -308,6 +308,25 @@ def test_refresh_evaluates_registered_packets_in_deterministic_identity_order() 
     assert inbox.snapshot_at == NOW
 
 
+def test_refresh_empty_workstation_without_monitoring_returns_no_registered_watches() -> None:
+    app = create_workstation_app(
+        account=PaperAccount(cash=100_000.0), host="127.0.0.1", workspace_clock=lambda: NOW
+    )
+    assert getattr(app.state, "packet_monitoring", None) is None
+    with TestClient(app) as client:
+        response = client.post("/api/decision-session/refresh")
+    assert response.status_code == 200
+    assert response.json() == {
+        "started_at": NOW.isoformat().replace("+00:00", "Z"),
+        "completed_at": NOW.isoformat().replace("+00:00", "Z"),
+        "status": "no_registered_watches",
+        "registered_count": 0,
+        "evaluated_count": 0,
+        "items": [],
+    }
+    assert getattr(app.state, "packet_monitoring", None) is None
+
+
 def test_refresh_reports_no_registered_watches_without_rendering() -> None:
     packet = _packet("NVDA")
     renderer = _Renderer()
