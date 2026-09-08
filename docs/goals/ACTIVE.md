@@ -1,9 +1,10 @@
 # Active Goal
 
-- Status: active — iteration 0029 parent Task 4A durable API/restart acceptance
-  is implemented and focused-green; Task 4B packaged-browser acceptance and
-  the one coherent 0029 gate are the next authorized frontier before the
-  single combined parent Task 4 review.
+- Status: active — iteration 0029 parent Task 4A and Task 4B are implemented.
+  The packaged-browser acceptance and coherent 0029 selection are green;
+  Task 4B is `DONE_WITH_CONCERNS` only because the full Ruff gate exposes one
+  import-order defect inherited from the pre-Task-4B integration branch. The
+  isolated gate repair and single combined parent Task 4 review are next.
 - Objective: give a research-minded individual active trader one Decision
   Readiness Session in the existing Decision Inbox that shows exact data
   readiness, explicitly refreshes registered local watches, and opens the
@@ -31,9 +32,12 @@
   byte-read-only Inbox GET, evaluation-only refresh writes, causal UTC
   ordering, exact-ID reconstruction, catalog absence/mismatch refusal,
   no-quote and newer-sequence monitoring, stale evaluation, partial success,
-  and honest BTC/SOL demo/Paper-blocked degradation. Task 4B owns only the
-  packaged-browser journey and coherent 0029 gate; the parent slice then gets
-  one combined review. No
+  and honest BTC/SOL demo/Paper-blocked degradation. Task 4B now proves the
+  packaged-browser journey, clean reconstruction, bounded partial feedback,
+  bilingual keyboard/mobile behavior and a 33.023-second operator path. The
+  exact coherent selection passed 131 tests. Only the pre-existing
+  `src/quantmesh/instruments/__init__.py` Ruff I001 gate defect remains before
+  the parent slice gets one combined review. No
   Provider/OpenD/Scheduler, 0021, evidence-root, proposal/order, external, or
   trading authority is introduced.
 - Recovery Task 1 is implemented at the current frontier: a read-only,

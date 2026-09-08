@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
@@ -271,8 +271,7 @@ it('offers the complete compact action queue in Simplified Chinese', async () =>
   }
 })
 
-it('keeps explicit keyboard refresh focused through resolution and triggers one Inbox refetch', async () => {
-  const user = userEvent.setup()
+it('restores explicit keyboard refresh focus after Chromium blurs the disabled pending button', async () => {
   const refresh = deferred<Awaited<ReturnType<typeof api.refreshDecisionSession>>>()
   mockedRefresh.mockImplementationOnce(() => refresh.promise)
   const setInterval = vi.spyOn(globalThis, 'setInterval')
@@ -284,7 +283,8 @@ it('keeps explicit keyboard refresh focused through resolution and triggers one 
   // A 60-second automatic refresh must schedule at mount; observing that
   // boundary catches it without waiting a real minute in the component test.
   expect(setInterval).not.toHaveBeenCalled()
-  const button = await screen.findByRole('button', { name: 'Refresh session' })
+  const all = await screen.findByRole('button', { name: 'All 3' })
+  const button = screen.getByRole('button', { name: 'Refresh session' })
   const invalidate = vi.spyOn(client, 'invalidateQueries')
   expect(setItem.mock.calls).toEqual([[
     'quantmesh.preferences',
@@ -295,14 +295,17 @@ it('keeps explicit keyboard refresh focused through resolution and triggers one 
 
   button.focus()
   expect(button).toHaveFocus()
-  await user.keyboard('{Enter}')
+  fireEvent.keyDown(button, { key: 'Enter' })
+  button.blur()
+  all.focus()
+  fireEvent.click(button)
 
+  await waitFor(() => expect(button).toBeDisabled())
   expect(mockedRefresh).toHaveBeenCalledTimes(1)
-  expect(button).toHaveFocus()
-  expect(button).toBeDisabled()
+  expect(button).not.toHaveFocus()
   expect(invalidate).not.toHaveBeenCalled()
   expect(mockedDecisionInbox).toHaveBeenCalledTimes(1)
-  expect(setInterval).not.toHaveBeenCalled()
+  expect(setInterval).not.toHaveBeenCalledWith(expect.any(Function), 60_000)
   expect(checkPacketMonitoring).not.toHaveBeenCalled()
   expect(setItem).not.toHaveBeenCalled()
   expect(screen.queryByText(/automatic refresh|seconds/i)).not.toBeInTheDocument()
@@ -317,7 +320,7 @@ it('keeps explicit keyboard refresh focused through resolution and triggers one 
   })
   await Promise.resolve()
   await Promise.resolve()
-  expect(setInterval).not.toHaveBeenCalled()
+  expect(setInterval).not.toHaveBeenCalledWith(expect.any(Function), 60_000)
   expect(checkPacketMonitoring).not.toHaveBeenCalled()
   expect(setItem).not.toHaveBeenCalled()
 
@@ -329,12 +332,37 @@ it('keeps explicit keyboard refresh focused through resolution and triggers one 
   expect(invalidate).toHaveBeenCalledTimes(1)
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ['decision-inbox'] })
   expect(mockedRefresh).toHaveBeenCalledTimes(1)
+  expect(button).toHaveFocus()
   // `findByText` polls through Testing Library's 50ms interval. The product
   // scheduler boundary is the prohibited 60-second automatic refresh.
   expect(setInterval).not.toHaveBeenCalledWith(expect.any(Function), 60_000)
   expect(checkPacketMonitoring).not.toHaveBeenCalled()
   expect(setItem).not.toHaveBeenCalled()
   expect(screen.queryByText(/automatic refresh|seconds/i)).not.toBeInTheDocument()
+})
+
+it('does not steal focus when refresh activation did not own it', async () => {
+  const refresh = deferred<Awaited<ReturnType<typeof api.refreshDecisionSession>>>()
+  mockedRefresh.mockImplementationOnce(() => refresh.promise)
+  renderWatchlist()
+
+  const button = await screen.findByRole('button', { name: 'Refresh session' })
+  const all = await screen.findByRole('button', { name: 'All 3' })
+  all.focus()
+  expect(all).toHaveFocus()
+  fireEvent.click(button)
+  await waitFor(() => expect(button).toBeDisabled())
+
+  refresh.resolve({
+    started_at: '2026-09-08T12:00:00Z', completed_at: '2026-09-08T12:00:01Z',
+    status: 'no_registered_watches', registered_count: 0, evaluated_count: 0, items: [],
+  })
+  expect(await screen.findByText('No local watches are registered.')).toBeVisible()
+  await act(async () => {
+    await Promise.resolve()
+  })
+
+  expect(all).toHaveFocus()
 })
 
 it.each([

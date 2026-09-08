@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Page } from '@/components/page'
@@ -17,12 +17,24 @@ export function WatchlistScreen() {
   const { locale, t } = usePreferences()
   const [filter, setFilter] = useState<ActionFilter>('all')
   const queryClient = useQueryClient()
+  const refreshButton = useRef<HTMLButtonElement>(null)
+  const restoreRefreshFocus = useRef(false)
   const refresh = useMutation({
     mutationFn: api.refreshDecisionSession,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['decision-inbox'] })
     },
   })
+  useEffect(() => {
+    if (refresh.isPending || !restoreRefreshFocus.current) return
+    restoreRefreshFocus.current = false
+    refreshButton.current?.focus()
+  }, [refresh.isPending])
+
+  const refreshSession = () => {
+    restoreRefreshFocus.current ||= document.activeElement === refreshButton.current
+    refresh.mutate()
+  }
 
   return (
     <Page
@@ -33,7 +45,16 @@ export function WatchlistScreen() {
         <button
           className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           disabled={refresh.isPending}
-          onClick={() => refresh.mutate()}
+          onClick={refreshSession}
+          onKeyDown={(event) => {
+            if (
+              (event.key === 'Enter' || event.key === ' ')
+              && document.activeElement === event.currentTarget
+            ) {
+              restoreRefreshFocus.current = true
+            }
+          }}
+          ref={refreshButton}
           type="button"
         >
           {refresh.isPending

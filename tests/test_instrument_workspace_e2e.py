@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 import socket
 import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -20,10 +21,11 @@ import uvicorn
 from quantmesh.api import workstation
 from quantmesh.demo.runtime import create_demo_app
 
-pytest.importorskip(
+playwright = pytest.importorskip(
     "playwright.sync_api",
     reason="playwright is not installed (install the e2e extra)",
 )
+playwright_expect = playwright.expect
 
 HOST = "127.0.0.1"
 WORKSPACE_PATH = "/app/instruments/moomoo/NVDA?range=6m"
@@ -37,6 +39,67 @@ def _wait_for_server(server: uvicorn.Server) -> None:
     raise AssertionError("uvicorn never started on its reserved loopback socket")
 
 
+class _PackagedDemo:
+    """One packaged-app socket that can be rebuilt over the same durable root."""
+
+    def __init__(self, root: Path) -> None:
+        self.root = root
+        self.port = 0
+        self.app = None
+        self.server = None
+        self.thread = None
+        self.listener = None
+        self._start()
+
+    def __str__(self) -> str:
+        return f"http://{HOST}:{self.port}"
+
+    def _start(self) -> None:
+        listener = socket.socket()
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener.bind((HOST, self.port))
+        listener.listen(128)
+        self.port = listener.getsockname()[1]
+        app = create_demo_app(root=self.root, host=HOST)
+        server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=self.port, log_level="warning"))
+        thread = threading.Thread(
+            target=server.run,
+            kwargs={"sockets": [listener]},
+            daemon=True,
+        )
+        self.app = app
+        self.server = server
+        self.thread = thread
+        self.listener = listener
+        thread.start()
+        _wait_for_server(server)
+
+    def close(self) -> None:
+        if self.server is None or self.thread is None or self.listener is None:
+            return
+        self.server.should_exit = True
+        self.thread.join(timeout=15)
+        self.listener.close()
+        self.server = None
+        self.thread = None
+        self.listener = None
+
+    def restart(self) -> None:
+        self.close()
+        self._start()
+
+
+class _OneSymbolFailureWorkspace:
+    def __init__(self, delegate, symbol: str) -> None:
+        self.delegate = delegate
+        self.symbol = symbol
+
+    def render(self, venue, symbol, selected_range, *, peers=()):
+        if symbol == self.symbol:
+            raise OSError("bounded local acceptance failure")
+        return self.delegate.render(venue, symbol, selected_range, peers=peers)
+
+
 @pytest.fixture(scope="module", autouse=True)
 def _spa_surface() -> None:
     prior = workstation.settings.legacy_ui
@@ -46,28 +109,13 @@ def _spa_surface() -> None:
 
 
 @pytest.fixture(scope="module")
-def base_url(tmp_path_factory) -> str:
-    listener = socket.socket()
-    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    listener.bind((HOST, 0))
-    listener.listen(128)
-    port = listener.getsockname()[1]
+def base_url(tmp_path_factory):
     root = Path(tmp_path_factory.mktemp("instrument-workspace-e2e")) / "demo"
-    app = create_demo_app(root=root, host=HOST)
-    server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=port, log_level="warning"))
-    thread = threading.Thread(
-        target=server.run,
-        kwargs={"sockets": [listener]},
-        daemon=True,
-    )
-    thread.start()
+    runtime = _PackagedDemo(root)
     try:
-        _wait_for_server(server)
-        yield f"http://{HOST}:{port}"
+        yield runtime
     finally:
-        server.should_exit = True
-        thread.join(timeout=15)
-        listener.close()
+        runtime.close()
 
 
 @pytest.fixture(scope="module")
@@ -102,18 +150,48 @@ def _proposal_token(page) -> str:
 
 
 def _reset_from_shell(page) -> None:
-    reset = page.get_by_role("button", name="Reset demo session")
+    reset = page.get_by_role(
+        "button",
+        name=re.compile(r"^(?:Reset demo session|重置演示会话)$"),
+    )
     reset.click()
     # The confirmation copy remains mounted but is visually hidden below the
     # shell's ``sm`` breakpoint; attachment still proves the armed state was
     # committed before the second activation.
-    page.get_by_text("Confirm reset", exact=True).wait_for(state="attached")
+    page.get_by_text(
+        re.compile(r"^(?:Confirm reset|确认重置)$"),
+    ).wait_for(state="attached")
     with page.expect_response(
         lambda response: response.url.endswith("/api/demo/reset"),
         timeout=90_000,
     ) as response:
         reset.click()
     assert response.value.status == 200
+
+
+def _save_registered_watch(
+    page,
+    base_url: _PackagedDemo,
+    symbol: str,
+) -> str:
+    page.goto(f"{base_url}/app/instruments/moomoo/{symbol}?range=6m")
+    page.get_by_role("heading", name=symbol, exact=True).wait_for()
+    page.get_by_label("Decision reason").fill(f"Keep this exact {symbol} packet under watch")
+    page.get_by_role("button", name="Watch decision").click()
+    page.get_by_text("Watching", exact=True).wait_for()
+    packet_match = re.search(r"[?&]packet=([^&]+)", page.url)
+    assert packet_match is not None
+    packet_id = packet_match.group(1)
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST" and response.url.endswith("/watch-conditions")
+        ),
+        timeout=90_000,
+    ) as response:
+        page.get_by_role("button", name="Save & check", exact=True).click()
+    assert response.value.status == 200
+    page.get_by_role("button", name="Check now", exact=True).wait_for()
+    return packet_id
 
 
 def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
@@ -205,38 +283,114 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
     page.get_by_role("button", name="Create paper proposal").wait_for()
 
 
-def test_mobile_action_queue_filters_and_opens_the_exact_packet(page, base_url) -> None:
+def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
+    page,
+    base_url: _PackagedDemo,
+) -> None:
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(f"{base_url}/app/settings")
     _reset_from_shell(page)
-    page.goto(f"{base_url}{WORKSPACE_PATH}")
-    page.get_by_role("heading", name="NVDA", exact=True).wait_for()
-    page.get_by_label("Decision reason").fill("Keep this exact packet under watch")
-    page.get_by_role("button", name="Watch decision").click()
-    page.get_by_text("Watching", exact=True).wait_for()
-    packet_match = re.search(r"[?&]packet=([^&]+)", page.url)
-    assert packet_match is not None
-    packet_id = packet_match.group(1)
+    packet_ids = {
+        symbol: _save_registered_watch(page, base_url, symbol) for symbol in ("NVDA", "AAPL")
+    }
 
+    started = time.perf_counter()
     page.goto(f"{base_url}/app/markets/watchlist")
     page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
     page.get_by_role("button", name="All 4", exact=True).wait_for()
-    for label in ("All 4", "Triggered 0", "Blocked 3", "Review due 0", "No action 1"):
-        assert page.get_by_role("button", name=label, exact=True).is_visible()
+    assert page.get_by_text(re.compile(r"Readiness evaluated")).first.is_visible()
+    assert page.get_by_text(re.compile(r"Last local check")).first.is_visible()
+    assert page.get_by_text("unavailable", exact=True).first.is_visible()
+    main_text = page.get_by_role("main").inner_text()
+    assert re.search(r"\b(provider|OpenD|automatic|real(?:-money)?)\b", main_text, re.I) is None
 
-    no_action = page.get_by_role("button", name="No action 1", exact=True)
+    refresh = page.get_by_role("button", name="Refresh session", exact=True)
+    refresh.focus()
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST"
+            and response.url.endswith("/api/decision-session/refresh")
+        ),
+        timeout=90_000,
+    ) as response:
+        page.keyboard.press("Enter")
+    assert response.value.status == 200
+    page.get_by_text("2 watches checked · 0 triggered", exact=True).wait_for()
+    playwright_expect(refresh).to_be_focused()
+
+    no_action = page.get_by_role("button", name="No action 2", exact=True)
     no_action.focus()
     page.keyboard.press("Enter")
     assert no_action.get_attribute("aria-pressed") == "true"
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
 
-    exact_link = page.get_by_role("link", name="Open exact packet", exact=True)
-    expected_path = f"/app/instruments/moomoo/NVDA?range=6m&packet={packet_id}"
+    row = page.get_by_role("row").filter(has_text="NVDA")
+    exact_link = row.get_by_role("link", name="Open exact packet", exact=True)
+    expected_path = f"/app/instruments/moomoo/NVDA?range=6m&packet={packet_ids['NVDA']}"
     assert exact_link.get_attribute("href") == expected_path
     exact_link.focus()
     page.keyboard.press("Enter")
     page.wait_for_url(f"{base_url}{expected_path}")
     page.get_by_role("heading", name="NVDA", exact=True).wait_for()
+    elapsed = time.perf_counter() - started
+    assert elapsed < 120
+    print(f"TASK4B_USER_FLOW_SECONDS={elapsed:.3f}")
+
+    base_url.restart()
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="Watchlist", exact=True).first.wait_for()
+    restarted_row = page.get_by_role("row").filter(has_text="NVDA")
+    assert (
+        restarted_row.get_by_role("link", name="Open exact packet", exact=True).get_attribute(
+            "href"
+        )
+        == expected_path
+    )
+    assert page.get_by_text(re.compile(r"Last local check")).first.is_visible()
+
+    restarted_workspace = base_url.app.state.instrument_workspace
+    base_url.app.state.instrument_workspace = _OneSymbolFailureWorkspace(
+        restarted_workspace,
+        "AAPL",
+    )
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST"
+            and response.url.endswith("/api/decision-session/refresh")
+        ),
+        timeout=90_000,
+    ) as partial_response:
+        page.get_by_role("button", name="Refresh session", exact=True).click()
+    assert partial_response.value.status == 200
+    page.get_by_text("1 of 2 watches checked", exact=True).wait_for()
+    failures = page.get_by_label("Watches not evaluated")
+    assert failures.get_by_text(packet_ids["AAPL"], exact=True).is_visible()
+    assert failures.get_by_text("Local workspace is unavailable.", exact=True).is_visible()
+
+    base_url.app.state.instrument_workspace = restarted_workspace
+    page.goto(f"{base_url}/app/settings")
+    page.get_by_label("Interface language").select_option("zh-CN")
+    page.get_by_role("heading", name="全局设置", exact=True).first.wait_for()
+    page.goto(f"{base_url}/app/markets/watchlist")
+    page.get_by_role("heading", name="自选", exact=True).first.wait_for()
+    chinese_refresh = page.get_by_role("button", name="刷新会话", exact=True)
+    chinese_refresh.focus()
+    with page.expect_response(
+        lambda response: (
+            response.request.method == "POST"
+            and response.url.endswith("/api/decision-session/refresh")
+        ),
+        timeout=90_000,
+    ) as chinese_response:
+        page.keyboard.press("Enter")
+    assert chinese_response.value.status == 200
+    page.get_by_text("已检查 2 个观察 · 已触发 0 个", exact=True).wait_for()
+    assert chinese_refresh.evaluate("element => element === document.activeElement")
+    assert page.get_by_role("button", name="受阻 2", exact=True).is_visible()
+    assert page.get_by_text(re.compile(r"上次本地检查")).first.is_visible()
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    chinese_text = page.get_by_role("main").inner_text()
+    assert re.search(r"\b(provider|OpenD|automatic|real(?:-money)?)\b", chinese_text, re.I) is None
 
     _reset_from_shell(page)
 

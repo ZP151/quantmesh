@@ -676,6 +676,44 @@ final PR boundaries rather than after every micro-change.
   No Provider/OpenD/Scheduler, 0021, evidence-root, network, notification,
   proposal/order, external or trading authority changed.
 
+### 2026-09-08 — Parent Task 4B packaged-browser acceptance
+
+- The packaged application now proves the full daily-session path from two
+  exact NVDA/AAPL Watch packets through explicit refresh, the truthful
+  `No action 2` bucket and the exact NVDA packet URL. The measured path was
+  `33.023s` against the `<120s` budget. Clean application reconstruction over
+  the same durable root preserves the exact packet link without re-registering
+  watches.
+- The same real Chromium case proves an isolated AAPL workspace failure yields
+  partial `1 of 2` feedback with the exact packet ID and localized bounded
+  reason, then restores the workspace and proves zh-CN keyboard refresh,
+  `受阻 2`, local-check disclosure, 390px no-overflow and absence of Provider,
+  OpenD, automatic-refresh or real-trading wording. The final named run passed
+  `1/1` in `188.02s`; the user path was `33.023s`.
+- Chromium exposed that disabling the focused refresh button drops focus. A
+  focused RED reproduced the keydown/blur/click order (`1 failed`, `55
+  skipped`, `2.06s`). The bounded fix arms restoration only for focused
+  Enter/Space activation, restores after the mutation settles, and never
+  steals focus for a programmatic click. Focused GREEN passed `2` tests with
+  `54` skipped in `2.10s`. The package-served static bundle was rebuilt and
+  freshness reports `bundle is current`.
+- The one retained coherent seven-file gate (session `10816`) passed `131`
+  tests with two inherited TestClient/Pydantic warnings in `1371.24s`
+  (`22:51`), exit `0`. Full canonical Vitest passed `285` tests in `23` files
+  in `11.37s`; API client freshness, TypeScript, production build, static
+  freshness and `git diff --check` exited `0`; lint exited `0` with four
+  inherited Fast Refresh warnings.
+- Task4B status is `DONE_WITH_CONCERNS`: scoped Ruff check for the changed E2E
+  file exits `0`, but full Ruff exits `1` on the earlier integration-branch
+  import order in `src/quantmesh/instruments/__init__.py`. Task4B has zero diff
+  to that file from base `776c887`; it is intentionally left for an isolated
+  gate repair before the combined parent Task 4 review. Ruff format also sees
+  one inherited proposal-confirm lambda in the E2E file; it was not reformatted
+  because Task4B was instructed to avoid unrelated churn.
+- No Provider/OpenD/Scheduler, 0021, production evidence root, notification,
+  proposal/order, external or real-trading state changed. Task 5 and parent
+  review did not start.
+
 ### 2026-09-07 — Activation and architecture approval
 
 - Operator approved the Decision Readiness Session boundary: one unified
