@@ -9,6 +9,7 @@ User=quantmesh
 Group=quantmesh
 WorkingDirectory=/opt/quantmesh/current
 Environment=HOME=/var/lib/quantmesh
+Environment=QUANTMESH_WORKSTATION_HOST=127.0.0.1
 Environment=QUANTMESH_DEFAULT_PAPER_MODE=true
 Environment=QUANTMESH_ALLOW_LIVE_TRADING=false
 EnvironmentFile=/opt/quantmesh/current/.staging.env
@@ -27,4 +28,3 @@ ReadWritePaths=/var/lib/quantmesh
 
 [Install]
 WantedBy=multi-user.target
-

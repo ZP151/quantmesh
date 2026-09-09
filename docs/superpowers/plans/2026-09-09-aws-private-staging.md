@@ -223,7 +223,7 @@
 ### Task 3: Durable operator handoff and bounded verification
 
 **Files:**
-- Create: `docs/adr/0019-private-staging-boundary.md`
+- Create: `docs/adr/0021-private-staging-boundary.md`
 - Create: `docs/runbooks/aws-private-staging.md`
 - Create: `docs/iterations/0031-private-aws-staging-workstation.md`
 - Modify: `docs/iterations/INDEX.md`
@@ -262,9 +262,9 @@
 
   ```powershell
   $env:PYTHONPATH='src;.'
-  C:\Users\15492\Develop\QuantMesh\.venv\Scripts\python.exe -m pytest tests/test_deployment_identity.py tests/test_aws_staging_assets.py tests/test_api.py -q
-  C:\Users\15492\Develop\QuantMesh\.venv\Scripts\ruff.exe check src/quantmesh/settings.py src/quantmesh/api/app.py tests/test_deployment_identity.py tests/test_aws_staging_assets.py
-  C:\Users\15492\Develop\QuantMesh\.venv\Scripts\ruff.exe format --check src/quantmesh/settings.py src/quantmesh/api/app.py tests/test_deployment_identity.py tests/test_aws_staging_assets.py
+  C:\Users\15492\Develop\QuantMesh\.venv\Scripts\python.exe -m pytest tests/test_deployment_identity.py tests/test_aws_staging_assets.py tests/test_api.py tests/test_workstation.py::TestWriteSurfaceOriginGuard -q
+  C:\Users\15492\Develop\QuantMesh\.venv\Scripts\ruff.exe check src/quantmesh/settings.py src/quantmesh/api/app.py src/quantmesh/api/workstation.py deploy/aws/lightsail/deploy_release.py tests/test_deployment_identity.py tests/test_aws_staging_assets.py
+  C:\Users\15492\Develop\QuantMesh\.venv\Scripts\ruff.exe format --check src/quantmesh/settings.py src/quantmesh/api/app.py src/quantmesh/api/workstation.py deploy/aws/lightsail/deploy_release.py tests/test_deployment_identity.py tests/test_aws_staging_assets.py
   Set-Location frontend
   npm.cmd exec vitest run src/screens/NavigationAndValuation.test.tsx src/lib/messages.test.ts
   npm.cmd run typecheck

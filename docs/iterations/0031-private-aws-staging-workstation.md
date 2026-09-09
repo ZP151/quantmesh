@@ -1,6 +1,6 @@
 # Iteration 0031 — Private AWS staging workstation
 
-- Status: implementation active
+- Status: repository-ready; external provisioning awaits operator confirmation
 - Started: 2026-09-09
 - Tracking issue: [#135](https://github.com/ZP151/quantmesh/issues/135)
 - Integration branch: `codex/0031-aws-private-staging`
@@ -32,12 +32,26 @@ roll back to the previously activated release after a failed health check.
   assets, rollback, and a Windows-first operator runbook.
 - **Quant researcher:** confirmed that the staging surface adds no new data,
   model, provider, strategy, or order authority.
-- **Implementer:** Task 1 is complete; deployment assets remain in progress.
-- **Reviewer:** self-review currently covers Task 1's local/staging separation.
-- **Verifier:** focused evidence is recorded below; final verification is
-  pending and will not expand into the long-test gates.
+- **Implementer:** deployment identity, packaged UI, exact-release tooling,
+  checked rollback and the operator handoff are complete in the repository.
+- **Reviewer:** mapped issue #135 to the final diff and checked loopback,
+  exact-origin, demo/paper, secret and public-ingress boundaries.
+- **Verifier:** ran the bounded final gate below; live-server smoke remains the
+  post-confirmation acceptance step.
 
 ## Checkpoints
+
+### 2026-09-09 — Adjacent work inventory
+
+- GitHub has no open pull request. The only open issues are #135 (this
+  iteration), #132 (tiered validation gates), #127 (two-hour connection
+  witness) and #124 (human-owned 168-hour soak witness).
+- Issue #132 remains isolated in `QuantMesh-gate-efficiency` with committed and
+  uncommitted work. The 0021 finalization worktree contains uncommitted #127
+  witness files. Both are preserved and excluded from this branch.
+- Other attached legacy worktrees are clean historical/squash-divergent
+  checkouts, not evidence of an open integration request. They are retained;
+  workspace cleanup requires a separate explicit decision.
 
 ### 2026-09-09 — Task 1 deployment identity
 
@@ -92,3 +106,26 @@ roll back to the previously activated release after a failed health check.
   applies the same loopback health check, and restores the current release if
   reactivation fails. RED was `2 failed, 10 passed`; GREEN was `12 passed` in
   0.12s, followed by clean Ruff, Bash syntax and Python compilation checks.
+
+### 2026-09-09 — Repository-ready operator handoff
+
+- Added ADR-0021 and a Windows-first runbook covering the exact Lightsail
+  selection, both firewall families, Tailscale authorization/Serve, initial
+  bootstrap, private health identity, updates, checked rollback, bounded
+  diagnosis, cost alerts and deletion. AWS/Tailscale commands and pricing were
+  checked against current primary documentation.
+- Corrected stale durable state for merged iterations 0028/0029, recorded 0031
+  without modifying 0030's branch-owned ledger, added Tailscale to the reuse
+  matrix as an external host adapter and made this goal resumable.
+- Final backend/asset selection: `50 passed, 1 warning` in 2.21s. The sole
+  warning is the inherited FastAPI/Starlette TestClient deprecation warning.
+  Ruff check and format, Bash syntax, Python compilation and
+  `git diff --check` passed.
+- Final frontend selection: `51 passed` in 4.24s. Typecheck passed; lint exited
+  0 with the four inherited Fast Refresh warnings. OpenAPI client freshness
+  passed and the production bundle rebuilt byte-equivalent in 8.86s; the
+  existing >500 kB chunk advisory remains unchanged.
+- No full pytest, domain sweep, browser E2E or release gate ran. No AWS
+  resource, budget, Tailscale account/device, public ingress or execution state
+  changed. The remaining acceptance evidence is the bounded server smoke after
+  the operator separately confirms the external actions.

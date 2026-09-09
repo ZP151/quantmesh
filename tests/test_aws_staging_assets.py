@@ -321,6 +321,7 @@ def test_systemd_unit_is_loopback_demo_paper_and_hardened() -> None:
     assert service["WorkingDirectory"] == ["/opt/quantmesh/current"]
     assert service["EnvironmentFile"] == ["/opt/quantmesh/current/.staging.env"]
     assert "HOME=/var/lib/quantmesh" in environment
+    assert "QUANTMESH_WORKSTATION_HOST=127.0.0.1" in environment
     assert "QUANTMESH_DEFAULT_PAPER_MODE=true" in environment
     assert "QUANTMESH_ALLOW_LIVE_TRADING=false" in environment
     assert exec_start.startswith("/opt/quantmesh/current/.venv/bin/quantmesh-workstation ")

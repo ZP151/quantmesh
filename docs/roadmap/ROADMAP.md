@@ -363,7 +363,11 @@ Sequence for operator review:
    witnesses remain an independent maintenance failure domain. Final-head and
    post-merge main CI passed. See the
    [0029 ledger](../iterations/0029-decision-readiness-session.md).
-5. Expand datasets, baselines or selected Qlib/Darts adapters only where a
+5. **Active as iteration 0031 (issue #135):** Private AWS staging workstation
+   packages an exact Git commit as a loopback-only, demo/paper systemd service
+   and exposes it only through Tailscale Serve. It gives the operator an early
+   persistent acceptance station without public ingress or execution authority.
+6. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
-6. Guarded broker/testnet execution only after a separate authorization.
+7. Guarded broker/testnet execution only after a separate authorization.

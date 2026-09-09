@@ -31,6 +31,8 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0025 | completed | 2026-08-15 | 2026-08-15 | Execution numeric policy | [Issue #116](https://github.com/ZP151/quantmesh/issues/116) / [PR #117](https://github.com/ZP151/quantmesh/pull/117) / [Ledger](0025-execution-numeric-policy.md) |
 | 0026 | completed | 2026-08-15 | 2026-08-16 | Local runtime assembly | [Issue #118](https://github.com/ZP151/quantmesh/issues/118) / [PR #119](https://github.com/ZP151/quantmesh/pull/119) / [Ledger](0026-local-runtime-assembly.md) |
 | 0027 | completed | 2026-09-02 | 2026-09-04 | Evidence-backed Decision Copilot | [Issue #122](https://github.com/ZP151/quantmesh/issues/122) / [PR #128](https://github.com/ZP151/quantmesh/pull/128) / [Ledger](0027-evidence-backed-decision-copilot.md) |
-| 0028 | implementation/pre-PR verified; integration pending | 2026-09-05 | — | Decision Inbox & Bounded Paper Shadow Portfolio | [Issue #129](https://github.com/ZP151/quantmesh/issues/129) / [Ledger](0028-decision-inbox-shadow-portfolio.md) (verified 2026-09-06; final review/gate/PR pending) |
+| 0028 | completed | 2026-09-05 | 2026-09-06 | Decision Inbox & Bounded Paper Shadow Portfolio | [Issue #129](https://github.com/ZP151/quantmesh/issues/129) / [PR #130](https://github.com/ZP151/quantmesh/pull/130) / [Ledger](0028-decision-inbox-shadow-portfolio.md) |
+| 0029 | completed | 2026-09-07 | 2026-09-09 | Decision Readiness Session | [Issue #131](https://github.com/ZP151/quantmesh/issues/131) / [PR #133](https://github.com/ZP151/quantmesh/pull/133) / [Ledger](0029-decision-readiness-session.md) |
+| 0031 | active | 2026-09-09 | — | Private AWS staging workstation | [Issue #135](https://github.com/ZP151/quantmesh/issues/135) / [Ledger](0031-private-aws-staging-workstation.md) |
 
 <!-- quantmesh-iterations:append-above -->
