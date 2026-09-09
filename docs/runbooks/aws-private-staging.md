@@ -224,4 +224,3 @@ To stop using the station, first preserve only evidence you deliberately need,
 then delete the instance in Lightsail. Verify that no snapshot, static IP,
 attached disk, load balancer, database or CDN remains. Merely stopping the
 instance does not stop billing.
-
