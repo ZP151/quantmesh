@@ -129,3 +129,8 @@ roll back to the previously activated release after a failed health check.
   resource, budget, Tailscale account/device, public ingress or execution state
   changed. The remaining acceptance evidence is the bounded server smoke after
   the operator separately confirms the external actions.
+- The live Lightsail form was prefilled without submission and rechecked as:
+  Singapore Zone A, Linux operating system, Ubuntu 24.04 LTS, General Purpose,
+  Dual-stack, USD 12/month, 2 GB/2 vCPU/60 GB, one `quantmesh-staging`
+  instance, automatic snapshots off. The form remains stopped at
+  **Create instance**.

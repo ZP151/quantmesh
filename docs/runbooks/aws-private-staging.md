@@ -12,11 +12,12 @@ The create page offered the first instance free for 90 days. Recheck that offer
 immediately before creation; the repository cannot guarantee account-specific
 eligibility.
 
-Select the Linux public-IPv4 2 vCPU / 2 GB / 60 GB plan. AWS currently lists
-it at USD 12/month and includes the $12 Linux bundle in the three-month Free
-Tier offer. Billing is hourly up to the monthly price. A stopped Lightsail
-instance still accrues charges; deletion stops instance charges, while any
-retained snapshot, static IP, disk or load balancer may continue charging.
+Select the Linux **Dual-stack** (public IPv4 + IPv6) 2 vCPU / 2 GB / 60 GB
+plan. AWS currently lists it at USD 12/month and includes the $12 Linux bundle
+in the three-month Free Tier offer. Billing is hourly up to the monthly price.
+A stopped Lightsail instance still accrues charges; deletion stops instance
+charges, while any retained snapshot, static IP, disk or load balancer may
+continue charging.
 
 Official references:
 
@@ -44,7 +45,7 @@ On the Lightsail create page select exactly:
 - Region: **Asia Pacific (Singapore), ap-southeast-1**
 - Platform: **Linux/Unix**
 - Blueprint: **OS Only — Ubuntu 24.04 LTS**
-- Networking: **public IPv4 bundle**
+- Networking: **Dual-stack (public IPv4 + IPv6), Recommended**
 - Plan: **2 vCPU, 2 GB RAM, 60 GB SSD, USD 12/month after trial**
 - Name: `quantmesh-staging`
 - Quantity: one

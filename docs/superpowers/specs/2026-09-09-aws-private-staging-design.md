@@ -23,9 +23,10 @@ The operator's AWS Billing console showed on 2026-09-09:
 
 The Lightsail console offered the account one instance free for 90 days. The
 design therefore treats the Lightsail trial as the only confirmed subsidy. It
-does not assume the generic USD 100 AWS sign-up credit. The selected public
-IPv4 Linux bundle is 2 vCPU, 2 GB RAM and 60 GB SSD at USD 12/month after the
-trial. Snapshots, domains and other services are excluded from that amount.
+does not assume the generic USD 100 AWS sign-up credit. The selected Dual-stack
+Linux bundle (public IPv4 + IPv6) is 2 vCPU, 2 GB RAM and 60 GB SSD at USD
+12/month after the trial. Snapshots, domains and other services are excluded
+from that amount.
 
 ## Architecture
 
