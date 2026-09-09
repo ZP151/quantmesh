@@ -18,7 +18,9 @@ roll back to the previously activated release after a failed health check.
 ## Safety boundary
 
 - Paper/demo mode remains mandatory; live execution is not enabled.
-- The application port, HTTP and HTTPS are not opened to the public Internet.
+- The target boundary exposes no application port, HTTP or HTTPS to the public
+  Internet. A newly created Lightsail instance starts with a default public
+  HTTP rule; remove it before installing or accepting the service.
 - Tailscale Serve is allowed; Funnel is prohibited.
 - Secrets and Tailscale auth material never enter the repository or logs.
 - Creating paid-capable AWS resources, budgets, or authorizing a device needs
@@ -134,3 +136,18 @@ roll back to the previously activated release after a failed health check.
   Dual-stack, USD 12/month, 2 GB/2 vCPU/60 GB, one `quantmesh-staging`
   instance, automatic snapshots off. The form remains stopped at
   **Create instance**.
+
+### 2026-09-09 — Lightsail instance created
+
+- After an action-time operator confirmation, created exactly one
+  `quantmesh-staging` instance in Singapore Zone A from the reviewed form.
+  Lightsail reports `Running` with Ubuntu, General Purpose, Dual-stack and
+  2 GB RAM / 2 vCPU / 60 GB SSD. Automatic snapshots remain disabled; no
+  static IP, load balancer, distribution or budget was created.
+- Read-only networking inspection found the image defaults: public HTTP 80
+  and SSH 22 accept IPv4 or IPv6 traffic; browser SSH is enabled. No firewall
+  change was made because modifying security rules requires a separate
+  action-time confirmation.
+- The application has not been installed or exposed. Next acceptance work is
+  to close the default HTTP rule, narrow temporary SSH access, authorize the
+  Tailscale device, deploy the exact commit, and run the bounded private smoke.
