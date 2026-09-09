@@ -172,6 +172,46 @@ def _wait_for_health(
     raise DeploymentError(f"health check failed for {commit}: {last_problem}")
 
 
+def _environment_text(commit: str, staging_origin: str) -> str:
+    return (
+        f"QUANTMESH_ENVIRONMENT=staging\nQUANTMESH_BUILD_REF={commit}\n"
+        f"QUANTMESH_STAGING_ORIGIN={staging_origin}\n"
+    )
+
+
+def _activate_and_verify(
+    commit: str,
+    release: Path,
+    *,
+    service: ServiceControl,
+    previous: Path | None,
+    activate: Activate,
+    read_health: ReadHealth,
+    health_attempts: int,
+    sleep: Callable[[float], None],
+) -> DeploymentResult:
+    activate(release)
+    try:
+        service.restart()
+        health = _wait_for_health(
+            commit,
+            read=read_health,
+            attempts=health_attempts,
+            sleep=sleep,
+        )
+    except Exception as exc:
+        if previous is None:
+            activate(None)
+            service.stop()
+        else:
+            activate(previous)
+            service.restart()
+        if isinstance(exc, DeploymentError):
+            raise
+        raise DeploymentError(f"health check failed for {commit}") from exc
+    return DeploymentResult(commit=commit, release=release, health=health)
+
+
 def deploy(
     commit: str,
     *,
@@ -250,33 +290,59 @@ def deploy(
         None,
     )
     (release / ".staging.env").write_text(
-        f"QUANTMESH_ENVIRONMENT=staging\nQUANTMESH_BUILD_REF={commit}\n"
-        f"QUANTMESH_STAGING_ORIGIN={staging_origin}\n",
-        encoding="utf-8",
+        _environment_text(commit, staging_origin), encoding="utf-8"
     )
 
     previous = read_active()
-    activate(release)
-    try:
-        service.restart()
-        health = _wait_for_health(
-            commit,
-            read=read_health,
-            attempts=health_attempts,
-            sleep=sleep,
-        )
-    except Exception as exc:
-        if previous is None:
-            activate(None)
-            service.stop()
-        else:
-            activate(previous)
-            service.restart()
-        if isinstance(exc, DeploymentError):
-            raise
-        raise DeploymentError(f"health check failed for {commit}") from exc
+    return _activate_and_verify(
+        commit,
+        release,
+        service=service,
+        previous=previous,
+        activate=activate,
+        read_health=read_health,
+        health_attempts=health_attempts,
+        sleep=sleep,
+    )
 
-    return DeploymentResult(commit=commit, release=release, health=health)
+
+def activate_existing(
+    commit: str,
+    *,
+    staging_origin: str,
+    layout: Layout = Layout(),
+    service: ServiceControl | None = None,
+    read_active: ReadActive | None = None,
+    activate: Activate | None = None,
+    read_health: ReadHealth = read_health,
+    health_attempts: int = 30,
+    sleep: Callable[[float], None] = time.sleep,
+) -> DeploymentResult:
+    commit = validate_commit(commit)
+    staging_origin = validate_staging_origin(staging_origin)
+    service = service or SystemdService()
+    read_active = read_active or (lambda: read_active_release(layout.current))
+    activate = activate or (lambda target: activate_release(layout.current, target))
+
+    release = layout.releases / commit
+    if not release.is_dir():
+        raise DeploymentError(f"release does not exist: {release}")
+    environment_file = release / ".staging.env"
+    if not environment_file.is_file() or environment_file.read_text(
+        encoding="utf-8"
+    ) != _environment_text(commit, staging_origin):
+        raise DeploymentError(f"release identity does not match: {release}")
+
+    return _activate_and_verify(
+        commit,
+        release,
+        service=service,
+        previous=read_active(),
+        activate=activate,
+        read_health=read_health,
+        health_attempts=health_attempts,
+        sleep=sleep,
+    )
 
 
 def main() -> int:
@@ -285,9 +351,15 @@ def main() -> int:
     parser.add_argument(
         "--origin", required=True, help="canonical https://<device>.<tailnet>.ts.net origin"
     )
+    parser.add_argument(
+        "--activate-existing",
+        action="store_true",
+        help="reactivate a retained release instead of preparing a new one",
+    )
     args = parser.parse_args()
     try:
-        result = deploy(args.commit, staging_origin=args.origin)
+        operation = activate_existing if args.activate_existing else deploy
+        result = operation(args.commit, staging_origin=args.origin)
     except (DeploymentError, OSError, subprocess.SubprocessError) as exc:
         parser.exit(1, f"deployment failed: {exc}\n")
     print(f"activated {result.commit} at {result.release}")

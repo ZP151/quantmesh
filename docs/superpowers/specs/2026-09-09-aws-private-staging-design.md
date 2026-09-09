@@ -99,6 +99,10 @@ without requiring a live AWS host. The deployment program:
 8. restarts the service and checks loopback `/api/health`; and
 9. restores the previous symlink and restarts it if the new health check fails.
 
+A retained release can be deliberately reactivated by exact commit. It must
+match its recorded build/origin environment and pass the same health identity
+check; a failed reactivation restores the release that was current beforehand.
+
 The program refuses an existing or dirty target release, never deletes the
 previous release and never writes credentials. Git, systemd restart and health
 I/O are narrow injectable boundaries in tests; the real path uses subprocess,

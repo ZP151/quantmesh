@@ -223,6 +223,77 @@ def test_first_deployment_health_failure_deactivates_and_stops(tmp_path: Path) -
     assert service.actions == ["restart", "stop"]
 
 
+def test_existing_release_can_be_health_checked_and_reactivated(tmp_path: Path) -> None:
+    deploy = _load_deploy_program()
+    layout = deploy.Layout(root=tmp_path / "quantmesh")
+    target = layout.releases / OLD_REF
+    target.mkdir(parents=True)
+    (target / ".staging.env").write_text(
+        f"QUANTMESH_ENVIRONMENT=staging\nQUANTMESH_BUILD_REF={OLD_REF}\n"
+        f"QUANTMESH_STAGING_ORIGIN={STAGING_ORIGIN}\n",
+        encoding="utf-8",
+    )
+    current = layout.releases / GOOD_REF
+    service = FakeService()
+    state, history, read_active, activate = _activation(current)
+
+    result = deploy.activate_existing(
+        OLD_REF,
+        staging_origin=STAGING_ORIGIN,
+        layout=layout,
+        service=service,
+        read_active=read_active,
+        activate=activate,
+        read_health=lambda: {
+            "status": "ok",
+            "deployment": {"environment": "staging", "build_ref": OLD_REF},
+        },
+        health_attempts=1,
+        sleep=lambda _: None,
+    )
+
+    assert result.commit == OLD_REF
+    assert result.release == target
+    assert state["active"] == target
+    assert history == [target]
+    assert service.actions == ["restart"]
+
+
+def test_failed_existing_release_reactivation_restores_current(tmp_path: Path) -> None:
+    deploy = _load_deploy_program()
+    layout = deploy.Layout(root=tmp_path / "quantmesh")
+    target = layout.releases / OLD_REF
+    target.mkdir(parents=True)
+    (target / ".staging.env").write_text(
+        f"QUANTMESH_ENVIRONMENT=staging\nQUANTMESH_BUILD_REF={OLD_REF}\n"
+        f"QUANTMESH_STAGING_ORIGIN={STAGING_ORIGIN}\n",
+        encoding="utf-8",
+    )
+    current = layout.releases / GOOD_REF
+    service = FakeService()
+    state, history, read_active, activate = _activation(current)
+
+    with pytest.raises(deploy.DeploymentError, match="health check"):
+        deploy.activate_existing(
+            OLD_REF,
+            staging_origin=STAGING_ORIGIN,
+            layout=layout,
+            service=service,
+            read_active=read_active,
+            activate=activate,
+            read_health=lambda: {
+                "status": "ok",
+                "deployment": {"environment": "staging", "build_ref": GOOD_REF},
+            },
+            health_attempts=1,
+            sleep=lambda _: None,
+        )
+
+    assert state["active"] == current
+    assert history == [target, current]
+    assert service.actions == ["restart", "restart"]
+
+
 def _parse_unit(path: Path) -> dict[str, dict[str, list[str]]]:
     sections: dict[str, dict[str, list[str]]] = {}
     current: dict[str, list[str]] | None = None

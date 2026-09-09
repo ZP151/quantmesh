@@ -86,3 +86,9 @@ roll back to the previously activated release after a failed health check.
   produced `18 failed, 11 passed`; the corrected exact-origin selection passed
   `43` tests in 1.60s, and the existing origin-guard regression class passed
   `5` tests in 1.97s. Arbitrary origins remain denied.
+- Operator handoff review found that failed updates rolled back automatically,
+  but a deliberate rollback had no guarded command. The deployment program
+  now supports `--activate-existing`, validates the retained release identity,
+  applies the same loopback health check, and restores the current release if
+  reactivation fails. RED was `2 failed, 10 passed`; GREEN was `12 passed` in
+  0.12s, followed by clean Ruff, Bash syntax and Python compilation checks.

@@ -195,6 +195,8 @@
   verifies the commit, creates a Git worktree and venv, installs core QuantMesh,
   writes the non-secret per-release environment, changes the symlink atomically,
   checks `deployment.build_ref`, and rolls back on any post-switch failure.
+  A deliberate `--activate-existing` operation applies the same identity and
+  rollback checks to a retained release.
   External command execution, service control, activation and health reads are
   narrow injectable callables so tests exercise the real orchestration.
 
