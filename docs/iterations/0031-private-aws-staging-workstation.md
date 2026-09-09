@@ -151,3 +151,32 @@ roll back to the previously activated release after a failed health check.
 - The application has not been installed or exposed. Next acceptance work is
   to close the default HTTP rule, narrow temporary SSH access, authorize the
   Tailscale device, deploy the exact commit, and run the bounded private smoke.
+
+### 2026-09-09 — Private staging release activated
+
+- Installed Tailscale 1.102.3 after operator confirmation, authorized
+  `quantmesh-staging` in the personal tailnet and enabled Tailscale SSH. The
+  node is connected with no advertised subnet routes or exit-node role.
+- Activated exact commit
+  `402294248406fa865d601633f4e5ba3bd3521b5b` under
+  `/opt/quantmesh/releases/` and enabled the systemd unit. The independent
+  loopback health probe reported `status=ok`, `environment=staging`, the exact
+  build ref, `runtime_mode=demo`, `paper_mode=true` and
+  `live_trading=false`.
+- Enabled tailnet HTTPS/Serve only; the console's default optional Funnel was
+  explicitly cleared before confirmation. Serve proxies private HTTPS to the
+  loopback-only application on `127.0.0.1:8765`.
+- A transposed character in the initially copied MagicDNS suffix was caught by
+  a Windows DNS probe. The deployed origin was corrected from the node's
+  authoritative Tailscale status, then the retained release was reactivated
+  through the checked deployment command. The correct private hostname
+  resolves over the Windows Tailscale adapter and TCP 443 succeeds.
+- Bounded external smoke passed: private `/api/health` returned the exact
+  identity, the workstation rendered the visible `STAGING · 4022942` badge,
+  the correct private origin reached request validation (`422` for a deliberate
+  invalid venue), a foreign origin was rejected (`403`), and kill-switch state
+  remained false before and after the probes.
+- No full pytest, domain sweep, browser E2E or release gate ran. The operator
+  chose to retain the default public HTTP 80 and SSH 22 Lightsail rules for
+  now; the application itself remains loopback-only, but removing those rules
+  after multi-device Tailscale verification remains a hardening follow-up.
