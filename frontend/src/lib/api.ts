@@ -252,6 +252,10 @@ export interface Health {
   paper_mode: boolean
   live_trading: boolean
   runtime_mode: 'demo' | 'live' | 'operator'
+  deployment?: {
+    environment: 'staging'
+    build_ref: string
+  }
 }
 
 export interface DemoSurfaceRow {

@@ -3978,7 +3978,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        [key: string]: string | boolean;
+                        [key: string]: unknown;
                     };
                 };
             };
@@ -5007,7 +5007,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        [key: string]: string | boolean;
+                        [key: string]: unknown;
                     };
                 };
             };

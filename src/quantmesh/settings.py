@@ -1,12 +1,14 @@
 from pathlib import Path
+from typing import Literal, Self
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     app_name: str = "QuantMesh"
-    environment: str = "local"
+    environment: Literal["local", "staging"] = "local"
+    build_ref: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
     allow_live_trading: bool = False
     default_paper_mode: bool = True
     lake_root: Path = Path.home() / ".quantmesh" / "data"
@@ -118,6 +120,12 @@ class Settings(BaseSettings):
         env_prefix="QUANTMESH_",
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def require_exact_staging_build_ref(self) -> Self:
+        if self.environment == "staging" and self.build_ref is None:
+            raise ValueError("staging requires an exact 40-character lowercase Git build_ref")
+        return self
 
 
 settings = Settings()
