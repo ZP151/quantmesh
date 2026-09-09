@@ -1,0 +1,30 @@
+[Unit]
+Description=QuantMesh private staging workstation
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=quantmesh
+Group=quantmesh
+WorkingDirectory=/opt/quantmesh/current
+Environment=HOME=/var/lib/quantmesh
+Environment=QUANTMESH_DEFAULT_PAPER_MODE=true
+Environment=QUANTMESH_ALLOW_LIVE_TRADING=false
+EnvironmentFile=/opt/quantmesh/current/.staging.env
+ExecStart=/opt/quantmesh/current/.venv/bin/quantmesh-workstation --demo --demo-root /var/lib/quantmesh/demo --port 8765
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ReadWritePaths=/var/lib/quantmesh
+
+[Install]
+WantedBy=multi-user.target
+

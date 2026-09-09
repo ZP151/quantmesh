@@ -15,6 +15,8 @@
 - Branch and worktree start at `origin/main@a78ff0a`; issue #135 is authoritative.
 - QuantMesh must continue to refuse every non-loopback workstation host.
 - Staging runs `--demo` only with paper mode true and live trading false.
+- Browser writes allow only loopback or one exact configured Tailscale HTTPS
+  origin; staging refuses to start without that origin.
 - Tailscale Funnel and public application ports 80, 443 and 8765 are prohibited.
 - A build reference is exactly 40 lowercase hexadecimal characters.
 - Local health JSON and local shell rendering remain unchanged when deployment metadata is absent.
@@ -29,6 +31,7 @@
 **Files:**
 - Modify: `src/quantmesh/settings.py`
 - Modify: `src/quantmesh/api/app.py`
+- Modify: `src/quantmesh/api/workstation.py`
 - Create: `tests/test_deployment_identity.py`
 - Modify: `frontend/src/lib/api.ts`
 - Modify: `frontend/src/components/shell/AppShell.tsx`
@@ -39,7 +42,7 @@
 
 **Interfaces:**
 - Consumes: `Settings.environment`, `_health()`, `Health`, `AppShell`.
-- Produces: `Settings.build_ref: str | None`; optional health field
+- Produces: `Settings.build_ref: str | None`, `Settings.staging_origin`; optional health field
   `deployment: {environment: "staging", build_ref: str}`; visible staging badge.
 
 - [ ] **Step 1: Write failing backend settings and health tests**
@@ -65,9 +68,12 @@
 - [ ] **Step 3: Implement the minimal validated settings and health projection**
 
   Close `environment` to `Literal["local", "staging"]`, add an optional exact
-  ref field, and use a Pydantic model validator to require it for staging.
+  ref field and one canonical Tailscale HTTPS origin, and use Pydantic
+  validators to require both only for staging.
   Add a helper that returns no extra health key for local and the exact nested
-  object for staging. Do not change runtime-mode detection or host validation.
+  object for staging. Permit browser writes only from the exact configured
+  staging origin or existing loopback origins. Do not change runtime-mode
+  detection or host validation.
 
 - [ ] **Step 4: Run backend GREEN and adjacent health tests**
 
@@ -141,7 +147,7 @@
 **Interfaces:**
 - Consumes: canonical repository `https://github.com/ZP151/quantmesh.git`,
   systemd, Python 3.12, urllib and an exact commit argument.
-- Produces: `/opt/quantmesh/current`, `/etc/quantmesh/staging.env`,
+- Produces: `/opt/quantmesh/current`, `/opt/quantmesh/current/.staging.env`,
   `quantmesh-staging.service`, and health-checked rollback behavior.
 
 - [ ] **Step 1: Write failing deployment behavior and unit-semantics tests**
@@ -178,14 +184,14 @@
 
   Use `User=quantmesh`, `Group=quantmesh`, `WorkingDirectory=/opt/quantmesh/current`,
   the current release venv entry point, explicit demo/paper/live settings,
-  `EnvironmentFile=/etc/quantmesh/staging.env`, restart-on-failure and systemd
+  `EnvironmentFile=/opt/quantmesh/current/.staging.env`, restart-on-failure and systemd
   hardening compatible with writes only beneath `/var/lib/quantmesh`.
 
 - [ ] **Step 4: Implement idempotent bootstrap and the testable release program**
 
   `bootstrap_host.sh` installs only `git`, `curl`, `python3` and `python3-venv`,
   creates the service account/directories, installs the unit and delegates the
-  exact commit to `deploy_release.py`. The Python program validates, fetches and
+  exact commit plus Tailscale HTTPS origin to `deploy_release.py`. The Python program validates, fetches and
   verifies the commit, creates a Git worktree and venv, installs core QuantMesh,
   writes the non-secret per-release environment, changes the symlink atomically,
   checks `deployment.build_ref`, and rolls back on any post-switch failure.

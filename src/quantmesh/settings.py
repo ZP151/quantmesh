@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Literal, Self
+from urllib.parse import urlsplit
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +10,7 @@ class Settings(BaseSettings):
     app_name: str = "QuantMesh"
     environment: Literal["local", "staging"] = "local"
     build_ref: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
+    staging_origin: str | None = None
     allow_live_trading: bool = False
     default_paper_mode: bool = True
     lake_root: Path = Path.home() / ".quantmesh" / "data"
@@ -121,10 +123,37 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @field_validator("staging_origin")
+    @classmethod
+    def require_private_https_staging_origin(cls, origin: str | None) -> str | None:
+        if origin is None:
+            return None
+        try:
+            parsed = urlsplit(origin)
+            port = parsed.port
+        except ValueError as exc:
+            raise ValueError("staging_origin must be one canonical Tailscale HTTPS origin") from exc
+        hostname = parsed.hostname
+        if (
+            parsed.scheme != "https"
+            or hostname is None
+            or hostname == "ts.net"
+            or not hostname.endswith(".ts.net")
+            or port is not None
+            or origin != f"https://{hostname}"
+        ):
+            raise ValueError("staging_origin must be one canonical Tailscale HTTPS origin")
+        return origin
+
     @model_validator(mode="after")
     def require_exact_staging_build_ref(self) -> Self:
-        if self.environment == "staging" and self.build_ref is None:
-            raise ValueError("staging requires an exact 40-character lowercase Git build_ref")
+        if self.environment == "staging":
+            if self.build_ref is None:
+                raise ValueError("staging requires an exact 40-character lowercase Git build_ref")
+            if self.staging_origin is None:
+                raise ValueError("staging requires one canonical Tailscale HTTPS origin")
+        elif self.build_ref is not None or self.staging_origin is not None:
+            raise ValueError("local mode cannot carry staging deployment identity")
         return self
 
 

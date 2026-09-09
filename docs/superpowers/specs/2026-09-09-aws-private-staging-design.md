@@ -50,6 +50,11 @@ Tailscale runs as a host service and joins the operator's personal tailnet.
 tailnet name and proxies to the loopback application. Tailscale Funnel is
 prohibited. Lightsail exposes no application port (80, 443 or 8765) publicly.
 
+Browser writes retain the workstation's CSRF boundary. Staging requires one
+canonical `https://<device>.<tailnet>.ts.net` origin discovered after the host
+joins the operator's tailnet. Only that exact configured origin and existing
+loopback origins pass the write guard; arbitrary public origins remain denied.
+
 Port 22 may be temporarily restricted to the operator's current public IP for
 bootstrap. After Tailscale SSH/private access is verified, the public SSH rule
 is removed. Device authorization and any Tailscale account action remain an
@@ -59,8 +64,9 @@ operator handoff.
 
 The existing `QUANTMESH_ENVIRONMENT` setting becomes a closed `local` or
 `staging` value. A new `QUANTMESH_BUILD_REF` accepts either no value in local
-mode or exactly 40 lowercase hexadecimal characters. Staging refuses to start
-without an exact build reference.
+mode or exactly 40 lowercase hexadecimal characters. A new
+`QUANTMESH_STAGING_ORIGIN` accepts only one canonical Tailscale HTTPS origin.
+Staging refuses to start without both values, while local mode refuses both.
 
 `/health` and `/api/health` add a `deployment` object only in staging:
 
@@ -83,13 +89,13 @@ Linux bootstrap script and a systemd unit. Keeping release orchestration in
 Python makes success and rollback behavior executable under focused tests
 without requiring a live AWS host. The deployment program:
 
-1. accepts only an exact 40-character commit;
+1. accepts only an exact 40-character commit and canonical Tailscale origin;
 2. fetches that commit from the canonical public GitHub repository;
 3. verifies the checked-out object resolves to the requested commit;
 4. creates a fresh release directory and virtual environment;
 5. installs the package without research, Moomoo or E2E extras;
 6. atomically changes `/opt/quantmesh/current`;
-7. writes only the non-secret environment/build reference;
+7. writes only the non-secret environment/build reference and private origin;
 8. restarts the service and checks loopback `/api/health`; and
 9. restores the previous symlink and restarts it if the new health check fails.
 
