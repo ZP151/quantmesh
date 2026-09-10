@@ -11,7 +11,8 @@ within 120 seconds, with exact 7/30-session evidence and restart-safe replay.
 - Ledger: `docs/iterations/0032-probabilistic-scenario-lab.md`
 - Spec: `docs/superpowers/specs/2026-09-10-probabilistic-scenario-lab-design.md`
 - Plan: `docs/superpowers/plans/2026-09-10-probabilistic-scenario-lab.md`
-- Frontier: Task 1 entry, Task 2 exact packet evidence, Task 3 calendar compatibility.
+- Frontier: implementation and bounded acceptance complete; publish the reviewable
+  architecture PR and record its remote check state. No new product slice authorized here.
 - Authority: implement, targeted tests, commit/push feature branch and one final
   reviewable PR. Architecture merge remains outside routine merge allowance.
 - Limits: no cloud/deployment/#124/#127/#132/#135/0021 operations, providers,
@@ -19,4 +20,8 @@ within 120 seconds, with exact 7/30-session evidence and restart-safe replay.
   release gate or soak. Commands <=300s; coherent verification targets <=600s.
   One final Standards/Spec review plus one batched UI check, at most one fix and
   confirmation. Do not repair the Impeccable sidecar.
-- Evidence: approved design/spec self-review; implementation and tests pending.
+- Evidence: 80 targeted backend and 153 frontend tests; correction selections 35
+  backend/77 frontend; real same-origin NVDA-to-Watch 52.865s, identical saved-chart
+  reload, Chinese 390px acceptance, packaged build/freshness, one Standards/Spec
+  review and correction/confirmation. See ledger for the controller-verified
+  staged-refusal edge found during confirmation; no second review claimed.

@@ -165,7 +165,7 @@ class InstrumentWorkspaceService:
         self._decision_packets = decision_packets
         self._now = now
         self._draft_lock = threading.RLock()
-        self._staged_drafts: OrderedDict[str, DecisionPacket] = OrderedDict()
+        self._staged_drafts: OrderedDict[str, tuple[DecisionPacket, str | None]] = OrderedDict()
 
     def staged_draft(
         self,
@@ -179,23 +179,28 @@ class InstrumentWorkspaceService:
     ) -> DecisionPacket | None:
         """Return an exact draft previously exposed by this workspace process."""
         with self._draft_lock:
-            draft = self._staged_drafts.get(packet_id)
-            if draft is None:
+            staged = self._staged_drafts.get(packet_id)
+            if staged is None:
                 return None
+            draft, selected_forecast_id = staged
             if (
                 draft.instrument.venue is not venue
                 or draft.instrument.symbol != symbol
                 or draft.selected_range is not selected_range
                 or (draft.scenario_lab.selected_horizon if draft.scenario_lab else None) != horizon
-                or (forecast_id is not None and draft.evidence.forecast_artifact_id != forecast_id)
+                or (forecast_id is not None and selected_forecast_id != forecast_id)
             ):
                 raise ValueError("staged decision packet does not match the requested scope")
             self._staged_drafts.move_to_end(packet_id)
             return draft
 
-    def _stage_draft(self, draft: DecisionPacket) -> None:
+    def _stage_draft(self, draft: DecisionPacket, forecast_id: str | None = None) -> None:
         with self._draft_lock:
-            self._staged_drafts[draft.packet_id] = draft
+            # Preserve a refused requested pin without claiming it as forecast evidence.
+            self._staged_drafts[draft.packet_id] = (
+                draft,
+                forecast_id or draft.evidence.forecast_artifact_id,
+            )
             self._staged_drafts.move_to_end(draft.packet_id)
             while len(self._staged_drafts) > 256:
                 self._staged_drafts.popitem(last=False)
@@ -505,7 +510,7 @@ class InstrumentWorkspaceService:
             as_of=generated_at,
             horizon=horizon,
         )
-        self._stage_draft(draft)
+        self._stage_draft(draft, forecast_id)
 
         return InstrumentWorkspace(
             generated_at=generated_at,

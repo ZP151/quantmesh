@@ -247,6 +247,33 @@ def test_exact_forecast_never_falls_back_or_accepts_misbound_chart(
     assert result.forecast_unavailable_reason
     assert result.decision.draft.scenario_lab.confidence == "abstain"
     assert not result.decision.draft.paper_capability.allowed
+    from quantmesh.instruments.decision_packets import DecisionPacketService
+
+    refused_id = "forecast-" + "f" * 24 if mismatch == "missing" else artifact.id
+    service = DecisionPacketService(
+        store=DecisionPacketStore(tmp_path), workspace_provider=lambda: workspace, proposals=None
+    )
+    with pytest.raises(ValueError, match="scope"):
+        workspace.staged_draft(
+            result.decision.draft.packet_id,
+            venue=Venue.MOOMOO,
+            symbol="NVDA",
+            selected_range=HistoryRange.SIX_MONTHS,
+            horizon=7,
+            forecast_id="forecast-wrong",
+        )
+    saved = service.save_draft(
+        Venue.MOOMOO,
+        "NVDA",
+        HistoryRange.SIX_MONTHS,
+        expected_packet_id=result.decision.draft.packet_id,
+        horizon=7,
+        forecast_id=refused_id,
+    )
+    assert saved == result.decision.draft
+    assert (
+        DecisionPacketStore(tmp_path).record(watch_child(saved)).scenario_lab == saved.scenario_lab
+    )
 
 
 def test_monitor_and_review_choose_seven_but_legacy_keeps_thirty(tmp_path, pinned_forecast):

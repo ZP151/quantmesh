@@ -14,6 +14,16 @@
  */
 export const messages = {
   en: {
+    'lab.reason.valuation': 'paper valuation or mark is incomplete',
+    'lab.reason.kill': 'a paper kill switch is enabled',
+    'lab.reason.noFeedKill': 'no live feed is attached; kill switch enabled',
+    'lab.reason.bullThesis': 'observed trend and upper forecast quantile support continuation',
+    'lab.reason.baseThesis': 'observed structure and median forecast path remain intact',
+    'lab.reason.bearThesis': 'support failure invalidates the observed structure',
+    'lab.reason.bullTrigger': 'observed close holds above resistance',
+    'lab.reason.baseTrigger': 'observed close holds above support',
+    'lab.reason.bearTrigger': 'observed close falls below support',
+    'lab.reason.qualitative': 'forecast quantiles are qualitative and not calibrated probabilities',
     'lab.modelConfig': 'Baseline configuration: median of 252 daily log returns; 650-session history cap; chronological residual intervals and last-price random walk. Dates use XNYS regular sessions at New York midnight. Intermediate bands use square-root scaling, without separate calibration at each time point.',
     'lab.reason.dailyQuality': 'daily history is unavailable or has quality limitations',
     'lab.reason.futureHistory': 'history contains future knowledge or a live tail',
@@ -1116,6 +1126,16 @@ export const messages = {
     'screen.workspace.openAuditLineage': 'Open audit lineage',
   },
   'zh-CN': {
+    'lab.reason.valuation': '模拟账户估值或价格标记不完整。',
+    'lab.reason.kill': '模拟交易熔断开关已开启。',
+    'lab.reason.noFeedKill': '未接入实时行情；熔断开关已开启。',
+    'lab.reason.bullThesis': '已观测趋势与预测上分位支持延续情景。',
+    'lab.reason.baseThesis': '已观测结构与预测中位路径保持完整。',
+    'lab.reason.bearThesis': '跌破支撑使已观测结构失效。',
+    'lab.reason.bullTrigger': '已观测收盘价维持在阻力位上方。',
+    'lab.reason.baseTrigger': '已观测收盘价维持在支撑位上方。',
+    'lab.reason.bearTrigger': '已观测收盘价跌破支撑位。',
+    'lab.reason.qualitative': '预测分位数仅供定性判断，不是已校准的概率。',
     'lab.modelConfig': '基线配置：252 个日收益率对数的中位数；最多 650 个交易日历史；按时间顺序计算残差区间，以最新价随机游走为基准。日期采用 XNYS 常规交易日的纽约午夜。中间区间使用平方根缩放，未逐时点独立校准。',
     'lab.reason.dailyQuality': '日线历史不可用或存在质量限制。',
     'lab.reason.futureHistory': '历史数据含有未来信息或实时尾部。',

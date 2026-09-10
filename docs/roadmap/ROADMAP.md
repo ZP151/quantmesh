@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-09-07
+Last updated: 2026-09-11
 
 ## Status legend
 
@@ -363,7 +363,7 @@ Sequence for operator review:
    witnesses remain an independent maintenance failure domain. Final-head and
    post-merge main CI passed. See the
    [0029 ledger](../iterations/0029-decision-readiness-session.md).
-5. **Active as iteration 0032 (issue #136):** Probabilistic Scenario Lab brings
+5. **Implemented; architecture integration pending — iteration 0032 (issue #136):** Probabilistic Scenario Lab brings
    large daily observed charts, exact 7/30-session forecast evidence,
    deterministic confidence refusal and saved chart replay to the existing
    AAPL/NVDA Instrument Workspace. Reuse current models and adapters; no new

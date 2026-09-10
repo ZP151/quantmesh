@@ -21,6 +21,7 @@ import type { Locale } from '@/lib/preferences'
 import { ForecastBand } from './ForecastBand'
 
 export interface InstrumentChartProps {
+  compactLabels?: boolean
   appearance?: 'dark' | 'light'
   comparisons?: ComparisonSeries | null
   forecast?: ForecastPath | null
@@ -241,6 +242,7 @@ function chartTimeFormatters(locale: Locale) {
 }
 
 export function InstrumentChart({
+  compactLabels = false,
   appearance = 'dark',
   comparisons = null,
   forecast = null,
@@ -344,7 +346,7 @@ export function InstrumentChart({
           ...forecastStyle(appearance, key),
           lastValueVisible: key === 'p50',
           priceLineVisible: false,
-          title: forecastLabel(chartLabels, key),
+          title: compactLabels ? (key === 'p50' ? 'P50' : '') : forecastLabel(chartLabels, key),
           visible: false,
         }),
       ]),
@@ -389,7 +391,7 @@ export function InstrumentChart({
       forecastSeries.p50.detachPrimitive(band)
       chart.remove()
     }
-  }, [appearance, chartLabels, palette, priceFormatter, timeFormatters])
+  }, [appearance, chartLabels, compactLabels, palette, priceFormatter, timeFormatters])
 
   useEffect(() => {
     const current = refs.current
@@ -469,7 +471,8 @@ export function InstrumentChart({
           color: indicator.color,
           lineWidth: 1,
           priceLineVisible: false,
-          title: indicator.label,
+          lastValueVisible: !compactLabels,
+          title: compactLabels ? '' : indicator.label,
         })
         indicatorRefs.current.set(indicator.key, series)
       }
@@ -499,7 +502,7 @@ export function InstrumentChart({
     } else if (visibleRange !== null && primary.bars.some((bar) => bar.is_live_tail)) {
       chart.timeScale().setVisibleRange(visibleRange)
     }
-  }, [chartLabels, comparisons, forecast, indicators, mode, palette, priceFormatter, primary, timeFormatters, volume])
+  }, [chartLabels, compactLabels, comparisons, forecast, indicators, mode, palette, priceFormatter, primary, timeFormatters, volume])
 
   const accessibleObserved = primary.bars
   return (

@@ -4,6 +4,16 @@ import type { Locale } from '@/lib/preferences'
 type Translate = (key: MessageKey, vars?: Record<string, string>) => string
 
 const EXACT: Record<string, MessageKey> = {
+  'paper valuation or mark is incomplete': 'lab.reason.valuation',
+  'a paper kill switch is enabled': 'lab.reason.kill',
+  'no live feed is attached; kill switch enabled': 'lab.reason.noFeedKill',
+  'observed trend and upper forecast quantile support continuation': 'lab.reason.bullThesis',
+  'observed structure and median forecast path remain intact': 'lab.reason.baseThesis',
+  'support failure invalidates the observed structure': 'lab.reason.bearThesis',
+  'observed close holds above resistance': 'lab.reason.bullTrigger',
+  'observed close holds above support': 'lab.reason.baseTrigger',
+  'observed close falls below support': 'lab.reason.bearTrigger',
+  'forecast quantiles are qualitative and not calibrated probabilities': 'lab.reason.qualitative',
   'daily history is unavailable or has quality limitations': 'lab.reason.dailyQuality',
   'history contains future knowledge or a live tail': 'lab.reason.futureHistory',
   'history generation violates as-of chronology': 'lab.reason.historyChronology',

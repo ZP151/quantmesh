@@ -182,6 +182,7 @@ export function MarketCanvas(props: MarketCanvasProps) {
         </p>
       )}
       <InstrumentChart
+        compactLabels={props.chartFirst}
         appearance={resolvedTheme}
         comparisons={props.comparison}
         forecast={props.forecast}

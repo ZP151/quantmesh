@@ -20,6 +20,7 @@ function errorText(error: unknown): string {
 }
 
 interface DecisionRailProps {
+  forecastId?: string
   contextKey?: string
   evidenceUpdating?: boolean
   onNewAnalysis?: () => void
@@ -50,6 +51,7 @@ export function DecisionRail(props: DecisionRailProps) {
 function DecisionRailContext({
   contextKey: contextKeyOverride,
   evidenceUpdating = false,
+  forecastId,
   onActionResult,
   onNewAnalysis,
   packet: packetOverride,
@@ -58,6 +60,7 @@ function DecisionRailContext({
 }: {
   contextKey: string
   evidenceUpdating?: boolean
+  forecastId?: string
   onActionResult?: (result: DecisionPacketActionResult) => void
   onNewAnalysis?: () => void
   packet: DecisionPacket
@@ -116,6 +119,8 @@ function DecisionRailContext({
   const reasonReady = operatorReason.trim().length > 0
   const paperAllowed = isDraft
     && !evidenceUpdating
+    && workspace !== undefined
+    && (displayedPacket.scenario_lab == null || valuationComplete)
     && displayedPacket.paper_capability.allowed
     && validPaperInput
 
@@ -127,7 +132,7 @@ function DecisionRailContext({
             expected_packet_id: submission.packet.packet_id,
             ...(submission.packet.scenario_lab ? {
               horizon: submission.packet.scenario_lab.selected_horizon,
-              forecast_id: submission.packet.evidence.forecast_artifact_id ?? undefined,
+              forecast_id: submission.forecastId ?? submission.packet.evidence.forecast_artifact_id ?? undefined,
             } : {}),
             selected_range: submission.identity.range,
             symbol: submission.identity.symbol,
@@ -166,6 +171,7 @@ function DecisionRailContext({
     if (evidenceUpdating) return
     action.mutate({
       disposition,
+      forecastId,
       identity: viewIdentity,
       limitPrice: numericLimit,
       operatorReason: operatorReason.trim(),
@@ -359,6 +365,7 @@ interface ViewIdentity {
 }
 
 interface ActionSubmission {
+  forecastId?: string
   disposition: ActionDisposition
   identity: ViewIdentity
   limitPrice: number | null

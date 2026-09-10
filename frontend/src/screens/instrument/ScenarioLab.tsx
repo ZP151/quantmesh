@@ -66,7 +66,7 @@ export function ScenarioLabWorkspace() {
     next.delete('packet')
     next.set('analysis', 'fresh')
     next.set('horizon', String(nextHorizon))
-    if (retainArtifact && savedArtifact) next.set('forecast', savedArtifact)
+    if (retainArtifact && (artifact ?? savedArtifact)) next.set('forecast', (artifact ?? savedArtifact)!)
     else next.delete('forecast')
     if (!retainArtifact) client.removeQueries({ queryKey: workspaceKey(symbol, nextHorizon) })
     setSearch(next)
@@ -85,9 +85,12 @@ export function ScenarioLabWorkspace() {
     onNewAnalysis={() => newAnalysis(selectedHorizon, false)} onHorizon={(value) => value !== selectedHorizon && newAnalysis(value, true)} />
   if ((requestedPacket !== null ? saved.isPending : fresh.isPending)) return <div className="mx-auto max-w-[1600px] space-y-5 pb-12" data-testid="scenario-lab">{heading}<WorkspaceLoading /></div>
   if ((requestedPacket !== null ? saved.isError : fresh.isError) || !packet || !snapshot) return <LabError text={t('lab.unavailable')} />
+  const refusedPin = snapshot.confidence === 'abstain'
+    && packet.evidence.forecast_artifact_id == null
+    && (packet.evidence.forecast_paths?.length ?? 0) === 0
   if (packet.instrument.venue !== venue || packet.instrument.symbol !== symbol || snapshot.history.instrument.symbol !== symbol
     || (requestedPacket !== null && packet.packet_id !== requestedPacket)
-    || (requestedPacket === null && (snapshot.selected_horizon !== horizon || (artifact && packet.evidence.forecast_artifact_id !== artifact)))) {
+    || (requestedPacket === null && (snapshot.selected_horizon !== horizon || (artifact && packet.evidence.forecast_artifact_id !== artifact && !refusedPin)))) {
     return <LabError text={t('lab.mismatch')} />
   }
   const forecast = packet.evidence.forecast_paths?.find((path) => path.sessions === selectedHorizon) ?? null
@@ -112,7 +115,7 @@ export function ScenarioLabWorkspace() {
       <summary className="cursor-pointer font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t('lab.decision')}</summary>
       {riskOpen && <div className="mt-4 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <ScenarioEvidence packet={packet} />
-        <DecisionRail workspace={riskWorkspace} packet={packet} packetSource={requestedPacket !== null ? 'persisted' : 'fresh'} contextKey={contextKey} onActionResult={saveResult} onNewAnalysis={() => newAnalysis(selectedHorizon, false)} />
+        <DecisionRail workspace={riskWorkspace} forecastId={artifact} packet={packet} packetSource={requestedPacket !== null ? 'persisted' : 'fresh'} contextKey={contextKey} onActionResult={saveResult} onNewAnalysis={() => newAnalysis(selectedHorizon, false)} />
       </div>}
     </details>
     {requestedPacket !== null && <>
@@ -156,6 +159,10 @@ function LabEvidence({ packet }: { packet: DecisionPacket }) {
       <p className="font-medium">{t(`lab.${lab.confidence}`)}</p>
       <ul className="mt-1 space-y-1 text-xs text-muted-foreground">{lab.reasons.map((reason) => <li key={reason}>{evidenceText(reason, locale, t)}</li>)}</ul>
     </div>
+    {packet.paper_capability.blockers.length > 0 && <div className="border-l-2 border-destructive pl-3 text-sm" role="note">
+      <p className="font-medium">{t('screen.workspace.paperBlockers')}</p>
+      <ul className="mt-1 space-y-1 text-xs text-muted-foreground">{packet.paper_capability.blockers.map((blocker) => <li key={blocker.code}>{evidenceText(blocker.message, locale, t)}</li>)}</ul>
+    </div>}
   </section>
 }
 function Fact({ label, value }: { label: string; value: string }) {

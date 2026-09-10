@@ -30,7 +30,7 @@ Reuse `C:/Users/15492/Develop/QuantMesh/.venv/Scripts/python.exe` with `PYTHONPA
 
 **Interfaces:** `scenarioLabPath(symbol: 'AAPL' | 'NVDA', horizon: 7 | 30 = 30): string` returns the existing instrument route with explicit horizon and fresh-analysis intent. `InstrumentEntry` normalizes supported tickers and renders one keyboard-submittable action; localized copy uses preferences. Existing `decisionPacketPath` stays an exact replay link.
 
-- [ ] Write behavior tests for lowercase NVDA submission, unsupported ticker feedback, home stock route, command-palette ticker activation and preserved exact Inbox replay.
+- [x] Write behavior tests for lowercase NVDA submission, unsupported ticker feedback, home stock route, command-palette ticker activation and preserved exact Inbox replay.
 
 ```tsx
 await user.type(screen.getByRole('textbox', { name: 'Ticker' }), 'nvda')
@@ -38,9 +38,9 @@ await user.click(screen.getByRole('button', { name: 'Open chart' }))
 expect(screen.getByTestId('location')).toHaveTextContent('/instruments/moomoo/NVDA?horizon=30&analysis=fresh')
 ```
 
-- [ ] Run new named Vitest cases and retain expected navigation/control RED.
-- [ ] Implement the route helper and shared entry; change Home's instrument links; add ticker options to existing palette; preserve separate order actions and exact Inbox decision links.
-- [ ] Re-run affected files; record GREEN and TypeScript result. This entry becomes usable against the existing chart while Tasks 2–4 complete the same slice.
+- [x] Run new named Vitest cases and retain expected navigation/control RED.
+- [x] Implement the route helper and shared entry; change Home's instrument links; add ticker options to existing palette; preserve separate order actions and exact Inbox decision links.
+- [x] Re-run affected files; record GREEN and TypeScript result. This entry becomes usable against the existing chart while Tasks 2–4 complete the same slice.
 
 ## Task 2: Persist and qualify exact selected-horizon evidence
 
@@ -48,7 +48,7 @@ expect(screen.getByTestId('location')).toHaveTextContent('/instruments/moomoo/NV
 
 **Interfaces:** Add optional `DecisionPacket.scenario_lab` with format version, `selected_horizon: Literal[7,30]`, immutable `history: HistoricalSeries`, `confidence: Literal['qualified','low-confidence','abstain']`, reasons and policy version. Add `effective_horizon(packet) -> int` with legacy 30. Extend workspace render/HTTP query with optional `horizon: Literal[7,30]` and `forecast_id: str | None`; extend save body/service with horizon for exact staged-draft fallback. Existing calls without these parameters retain legacy behavior.
 
-- [ ] Write tests for absent extension preserving pre-extension JSON/hash, new horizon identity, two same-as-of roots, selected path targets, strict MAE equality/loss, insufficient residual/interval count, stale/missing paths and immutable child analysis.
+- [x] Write tests for absent extension preserving pre-extension JSON/hash, new horizon identity, two same-as-of roots, selected path targets, strict MAE equality/loss, insufficient residual/interval count, stale/missing paths and immutable child analysis.
 
 ```python
 assert decision_packet_id(DecisionPacket.model_validate_json(legacy_json)) == legacy_id
@@ -58,11 +58,11 @@ assert not non_improving.paper_capability.allowed
 assert all(item.probability is None for item in seven.scenarios)
 ```
 
-- [ ] Run `pytest tests/test_scenario_lab.py -q` for RED.
-- [ ] Implement a pure evidence assessor; persist bounded chart snapshot and selected horizon. Omit only the absent extension from legacy serialization. Carry new extension through scope, staged save and child comparisons. Derive confidence and paper refusal server-side; never trust browser facts.
-- [ ] Resolve requested forecast by exact ID. Bind history to its dataset/revision/manifest/as-of; missing or mismatched exact closure refuses forecast without latest fallback. Ensure saved replay can render independently of current history.
-- [ ] Parameterize only new packet horizon consumption in scenario/risk, monitoring baseline and outcome target/length validation. Old records retain 30 and their bytes/IDs. Keep existing quote/risk/second-confirmation path intact.
-- [ ] Prove fast real-store save/reconstruction, tampered history/selection refusal, exact artifact non-substitution, selected 7-session monitoring/review and legacy 30 compatibility. Run the new file plus named adjacent regressions within command ceilings.
+- [x] Run `pytest tests/test_scenario_lab.py -q` for RED.
+- [x] Implement a pure evidence assessor; persist bounded chart snapshot and selected horizon. Omit only the absent extension from legacy serialization. Carry new extension through scope, staged save and child comparisons. Derive confidence and paper refusal server-side; never trust browser facts.
+- [x] Resolve requested forecast by exact ID. Bind history to its dataset/revision/manifest/as-of; missing or mismatched exact closure refuses forecast without latest fallback. Ensure saved replay can render independently of current history.
+- [x] Parameterize only new packet horizon consumption in scenario/risk, monitoring baseline and outcome target/length validation. Old records retain 30 and their bytes/IDs. Keep existing quote/risk/second-confirmation path intact.
+- [x] Prove fast real-store save/reconstruction, tampered history/selection refusal, exact artifact non-substitution, selected 7-session monitoring/review and legacy 30 compatibility. Run the new file plus named adjacent regressions within command ceilings.
 
 ## Task 3: Admit XNYS forecast dates without invalidating legacy artifacts
 
@@ -70,7 +70,7 @@ assert all(item.probability is None for item in seven.scenarios)
 
 **Interfaces:** `run_price_forecast(..., session_calendar: Literal['legacy','XNYS'] = 'legacy')` adds explicit new config selection, with config digest and limitations owning version identity. Existing calls and existing artifact validators preserve legacy calculations. Registry dispatches recomputation from the admitted config digest, never arbitrary model text. New scoped demo forecasts opt into XNYS; no provider calls.
 
-- [ ] Pin legacy artifact bytes and ID; write holiday/DST tests using CalendarService and new forecast configuration.
+- [x] Pin legacy artifact bytes and ID; write holiday/DST tests using CalendarService and new forecast configuration.
 
 ```python
 assert legacy.id == old_id
@@ -78,10 +78,10 @@ assert new.config_digest != legacy.config_digest
 assert all(point.timestamp.date() != date(2026, 12, 25) for point in new.paths[0].points)
 ```
 
-- [ ] Run `pytest tests/test_scenario_calendar.py -q` for RED.
-- [ ] Implement version-dispatched date/gap/age/config/limit validation and exact registry reconstruction. Use pinned CalendarService; unsupported calendars fail closed. Preserve the baseline drift/residual algorithm and old eligibility; Task 2 supplies stricter lab qualification.
-- [ ] Generate coherent synthetic equity daily sessions for the new path as needed; retain explicit demo labelling and bounded 650-row history. Do not modify trusted-data collectors or data roots.
-- [ ] Run new tests and named legacy registry/reproducibility regressions once; record exact results.
+- [x] Run `pytest tests/test_scenario_calendar.py -q` for RED.
+- [x] Implement version-dispatched date/gap/age/config/limit validation and exact registry reconstruction. Use pinned CalendarService; unsupported calendars fail closed. Preserve the baseline drift/residual algorithm and old eligibility; Task 2 supplies stricter lab qualification.
+- [x] Generate coherent synthetic equity daily sessions for the new path as needed; retain explicit demo labelling and bounded 650-row history. Do not modify trusted-data collectors or data roots.
+- [x] Run new tests and named legacy registry/reproducibility regressions once; record exact results.
 
 ## Task 4: Deliver the chart-first saved analysis loop
 
@@ -89,7 +89,7 @@ assert all(point.timestamp.date() != date(2026, 12, 25) for point in new.paths[0
 
 **Interfaces:** `api.instrumentWorkspace(venue,symbol,range,compare=[],horizon?,forecastId?)`; use generated Python contracts. `ScenarioLab` renders packet evidence and selected horizon with callbacks; no data generation in chart components. `InstrumentChart` adds a filled P10/P90 band and observed/forecast separator behind the existing props.
 
-- [ ] Write tests showing chart before detail rails, 7/30 exact packet binding across refresh, persisted history rather than current history, no missing-horizon fallback, literal metric/sample windows and blocked Paper.
+- [x] Write tests showing chart before detail rails, 7/30 exact packet binding across refresh, persisted history rather than current history, no missing-horizon fallback, literal metric/sample windows and blocked Paper.
 
 ```tsx
 expect(chartProps.primary).toEqual(saved.scenario_lab.history)
@@ -97,19 +97,19 @@ expect(chartProps.forecast).toEqual(saved.evidence.forecast_paths.find(p => p.se
 expect(screen.getByRole('button', { name: '7 sessions' })).toHaveAttribute('aria-pressed', 'true')
 ```
 
-- [ ] Retain RED; implement URL selection/pinned artifact, chart-first composition and disclosures. Polling must not replace displayed exact evidence. Explicit New analysis changes the pinned analysis; Back/Forward and saved replay restore it.
-- [ ] Add full-width chart, volume/SMA controls, textual split/line patterns/band, accessible data table and bilingual confidence/evidence copy. Reveal risk/action in place and preserve visible blockers and action results.
-- [ ] Generate OpenAPI once after Python contract completion; run selected Vitest, `tsc -b`, scoped Oxlint, and package build/freshness.
+- [x] Retain RED; implement URL selection/pinned artifact, chart-first composition and disclosures. Polling must not replace displayed exact evidence. Explicit New analysis changes the pinned analysis; Back/Forward and saved replay restore it.
+- [x] Add full-width chart, volume/SMA controls, textual split/line patterns/band, accessible data table and bilingual confidence/evidence copy. Reveal risk/action in place and preserve visible blockers and action results.
+- [x] Generate OpenAPI once after Python contract completion; run selected Vitest, `tsc -b`, scoped Oxlint, and package build/freshness.
 
 ## Task 5: Bounded acceptance and integration
 
 **Files:** `tests/test_scenario_lab_acceptance.py` (new lightweight API/restart fixture), optional isolated browser acceptance file, iteration/ADR/DESIGN/PRODUCT/roadmap/ACTIVE records and generated SPA.
 
-- [ ] Prove NVDA entry → 7/30 → saved Watch → exact reload, AAPL demo labelling, and missing/stale/non-improving evidence rejection. Assert no order from Watch and unchanged explicit confirmation flow.
-- [ ] Inspect desktop and 390px in one batched browser pass, with keyboard, reduced motion, locale and visible observed/forecast split. Record elapsed entry-to-save time and screenshots.
-- [ ] Run scoped Python/Vitest checks, Ruff/Oxlint, TypeScript project build, OpenAPI and bundle freshness; stop any over-budget command and isolate the fixture. No broad historical gate.
-- [ ] Run one fresh Standards/Spec review and the Impeccable detector once. Apply at most one bounded correction batch and one confirmation. Record residual findings honestly.
-- [ ] Update durable visual decisions only from implementation evidence; record packet/calendar compatibility in an ADR. Commit/push the coherent slice; open one PR referencing #136 with exact validation and limits. Do not merge this architecture iteration under the routine non-architectural merge allowance.
+- [x] Prove NVDA entry → 7/30 → saved Watch → exact reload, AAPL demo labelling, and missing/stale/non-improving evidence rejection. Assert no order from Watch and unchanged explicit confirmation flow.
+- [x] Inspect desktop and 390px in one batched browser pass, with keyboard, reduced motion, locale and visible observed/forecast split. Record elapsed entry-to-save time and screenshots.
+- [x] Run scoped Python/Vitest checks, Ruff/Oxlint, TypeScript project build, OpenAPI and bundle freshness; stop any over-budget command and isolate the fixture. No broad historical gate.
+- [x] Run one fresh Standards/Spec review and the Impeccable detector once. Apply at most one bounded correction batch and one confirmation. Record residual findings honestly.
+- [x] Update durable visual decisions only from implementation evidence; record packet/calendar compatibility in an ADR. Commit/push the coherent slice; open one PR referencing #136 with exact validation and limits. Do not merge this architecture iteration under the routine non-architectural merge allowance.
 - [ ] Update ACTIVE and iteration with PR/CI state and next action. Mark the tool Goal complete only when the authorized deliverable is actually achieved.
 
 ## Plan self-review

@@ -101,7 +101,8 @@ it('saves Watch with the displayed horizon and then replays the child snapshot',
 
 it('keeps safe Watch available on saved evidence when current risk data is unavailable', async () => {
   const user = userEvent.setup()
-  const saved = packet(7)
+  const base = packet(7)
+  const saved = { ...base, scenario_lab: { ...base.scenario_lab!, confidence: 'qualified' as const, reasons: [] }, paper_capability: { allowed: true, blockers: [] } }
   vi.mocked(api.decisionPacket).mockResolvedValue(saved)
   vi.mocked(api.instrumentWorkspace).mockRejectedValue(new Error('offline'))
   show(`packet=${saved.packet_id}`)
@@ -111,6 +112,50 @@ it('keeps safe Watch available on saved evidence when current risk data is unava
   expect(screen.getByRole('button', { name: 'Watch decision' })).toBeEnabled()
   expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeDisabled()
   expect(screen.getByTestId('chart')).toHaveTextContent('184 observed')
+})
+
+it('retains the abstaining chart and safe actions when the pinned artifact is unavailable', async () => {
+  const user = userEvent.setup()
+  const draft = packet(30)
+  vi.mocked(api.saveDecisionPacket).mockResolvedValue(draft)
+  vi.mocked(api.applyDecisionPacketAction).mockResolvedValue({ packet: { ...draft, packet_id: `packet-${'e'.repeat(24)}`, parent_packet_id: draft.packet_id, disposition: 'watch', version: 2 }, proposal: null })
+  show('horizon=30&analysis=fresh&forecast=forecast-missing')
+  expect(await screen.findByTestId('chart')).toHaveTextContent('none forecast')
+  await user.click(screen.getByText('Risk & decision'))
+  await user.type(await screen.findByLabelText('Decision reason'), 'Await exact evidence')
+  expect(screen.getByRole('button', { name: 'Watch decision' })).toBeEnabled()
+  await user.click(screen.getByRole('button', { name: 'Watch decision' }))
+  await waitFor(() => expect(api.saveDecisionPacket).toHaveBeenCalledWith(expect.objectContaining({ forecast_id: 'forecast-missing', horizon: 30 })))
+})
+
+it('continues to reject substitution with a different available artifact', async () => {
+  const draft = packet(30)
+  vi.mocked(api.instrumentWorkspace).mockResolvedValue({ ...workspace, decision: { draft: { ...draft, evidence: { ...draft.evidence, forecast_artifact_id: 'forecast-other' } }, latest: null } })
+  show('horizon=30&analysis=fresh&forecast=forecast-exact')
+  expect(await screen.findByRole('alert')).toHaveTextContent('does not match')
+  expect(screen.queryByTestId('chart')).not.toBeInTheDocument()
+})
+
+it('shows material Paper blockers before opening risk details', async () => {
+  show()
+  await screen.findByTestId('chart')
+  expect(screen.getByText('No promoted artifact for this range.')).toBeVisible()
+})
+
+it('shows unavailable metrics in all zero-sample disclosure rows', async () => {
+  const user = userEvent.setup()
+  const draft = packet(7)
+  const metrics = ([7, 30] as const).map((sessions) => ({ sessions, mae: 12345, rmse: 23456, benchmark_mae: 34567,
+    coverage_50: 0.5, coverage_80: 0.8, coverage_95: 0.95, residual_count: 0, interval_test_count: 0,
+    validation_start: null, validation_end: null, test_start: null, test_end: null }))
+  vi.mocked(api.instrumentWorkspace).mockResolvedValue({ ...workspace, decision: { draft: { ...draft, evidence: { ...draft.evidence, forecast_metrics: metrics } }, latest: null } })
+  show('horizon=7&analysis=fresh')
+  await screen.findByTestId('chart')
+  await user.click(screen.getByText('Model & evidence details'))
+  expect(screen.queryByText('12,345')).not.toBeInTheDocument()
+  expect(screen.queryByText('23,456')).not.toBeInTheDocument()
+  expect(screen.queryByText('34,567')).not.toBeInTheDocument()
+  expect(screen.queryByText('50% / 80% / 95%')).not.toBeInTheDocument()
 })
 
 it('renders Chinese horizon controls and confidence semantics', async () => {
