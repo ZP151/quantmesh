@@ -1,6 +1,6 @@
 # Iteration 0032 — Probabilistic Scenario Lab
 
-- Status: implemented and verified; reviewable architecture PR pending publication
+- Status: implemented and verified; [PR #137](https://github.com/ZP151/quantmesh/pull/137) open for architecture integration
 - Started: 2026-09-11
 - Issue: [#136](https://github.com/ZP151/quantmesh/issues/136)
 - Branch: `codex/0032-probabilistic-scenario-lab`
@@ -56,3 +56,10 @@ Only Moomoo AAPL/NVDA daily bars and 7/30 sessions. No new model/provider, cloud
 - **Scope:** no broad pytest/domain/release/soak run, new dependency environment, provider/cloud/operational change, live order or notification. The first Vite-proxy save correctly failed the origin guard; acceptance then used the packaged same-origin app. Neither proxy configuration nor origin protection was weakened.
 - **Plan refinement:** acceptance lives in the lightweight `test_scenario_lab.py` real-store/API tests plus an OS-temp real-service harness, rather than duplicating it in a new acceptance module. Draft staging retains refused request context only; immutable packet evidence never claims that unavailable artifact.
 - **Final HTTP closure:** restarted only the owned temporary server, then missing canonical forecast ID + selected 7-session NVDA analysis → exact save with the same refused ID → Watch replay all passed in 2.32s. Paper returned 409 and orders remained empty. Harness evidence is in OS-temp `qm0032-ui-f832b22ac2dc4f1696b22902d75cfd09/http-evidence.json`; no operator roots were used.
+
+## Integration handoff
+
+- PR: [#137](https://github.com/ZP151/quantmesh/pull/137), open and reviewable; closes #136 on merge.
+- Product commits: `1ac8204` and `ba8eb5e`; spec/plan checkpoint `18de45f`.
+- At publication GitHub's automatic `python` check was in progress on `ba8eb5e`. No manual broad CI/release/soak run or architecture merge was requested. Local bounded acceptance is recorded above; remote CI success is not claimed.
+- Authorized deliverable is complete. Next action is review/integration at the architecture boundary, not an unapproved follow-on product or operational iteration.

@@ -1,18 +1,21 @@
 # Active Goal
 
-Status: active — operator-approved continuous goal, 2026-09-11.
+Status: authorized implementation goal delivered — architecture integration pending, 2026-09-11.
 
 Deliver Iteration 0032 Probabilistic Scenario Lab using the approved chart-first
 Instrument Workspace design. One measurable loop: NVDA ticker to saved Watch
 within 120 seconds, with exact 7/30-session evidence and restart-safe replay.
 
 - Issue: https://github.com/ZP151/quantmesh/issues/136
+- Reviewable PR: https://github.com/ZP151/quantmesh/pull/137 (open, not merged).
 - Branch: `codex/0032-probabilistic-scenario-lab`, baseline `origin/main@a78ff0a`
 - Ledger: `docs/iterations/0032-probabilistic-scenario-lab.md`
 - Spec: `docs/superpowers/specs/2026-09-10-probabilistic-scenario-lab-design.md`
 - Plan: `docs/superpowers/plans/2026-09-10-probabilistic-scenario-lab.md`
-- Frontier: implementation and bounded acceptance complete; publish the reviewable
-  architecture PR and record its remote check state. No new product slice authorized here.
+- Frontier: PR #137 is open with implementation, tests, packaged artifacts and
+  durable evidence. GitHub's automatic `python` check was in progress on product
+  head `ba8eb5e` at publication. No manual broad gate was dispatched. Next action
+  is architecture PR review/integration; no new product slice authorized here.
 - Authority: implement, targeted tests, commit/push feature branch and one final
   reviewable PR. Architecture merge remains outside routine merge allowance.
 - Limits: no cloud/deployment/#124/#127/#132/#135/0021 operations, providers,

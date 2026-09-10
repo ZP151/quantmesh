@@ -33,6 +33,6 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0027 | completed | 2026-09-02 | 2026-09-04 | Evidence-backed Decision Copilot | [Issue #122](https://github.com/ZP151/quantmesh/issues/122) / [PR #128](https://github.com/ZP151/quantmesh/pull/128) / [Ledger](0027-evidence-backed-decision-copilot.md) |
 | 0028 | implementation/pre-PR verified; integration pending | 2026-09-05 | — | Decision Inbox & Bounded Paper Shadow Portfolio | [Issue #129](https://github.com/ZP151/quantmesh/issues/129) / [Ledger](0028-decision-inbox-shadow-portfolio.md) (verified 2026-09-06; final review/gate/PR pending) |
 
-| 0032 | active | 2026-09-11 | — | Probabilistic Scenario Lab | [Issue #136](https://github.com/ZP151/quantmesh/issues/136) / [Ledger](0032-probabilistic-scenario-lab.md) |
+| 0032 | review | 2026-09-11 | — | Probabilistic Scenario Lab | [Issue #136](https://github.com/ZP151/quantmesh/issues/136) / [PR #137](https://github.com/ZP151/quantmesh/pull/137) / [Ledger](0032-probabilistic-scenario-lab.md) |
 
 <!-- quantmesh-iterations:append-above -->

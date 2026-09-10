@@ -110,7 +110,7 @@ expect(screen.getByRole('button', { name: '7 sessions' })).toHaveAttribute('aria
 - [x] Run scoped Python/Vitest checks, Ruff/Oxlint, TypeScript project build, OpenAPI and bundle freshness; stop any over-budget command and isolate the fixture. No broad historical gate.
 - [x] Run one fresh Standards/Spec review and the Impeccable detector once. Apply at most one bounded correction batch and one confirmation. Record residual findings honestly.
 - [x] Update durable visual decisions only from implementation evidence; record packet/calendar compatibility in an ADR. Commit/push the coherent slice; open one PR referencing #136 with exact validation and limits. Do not merge this architecture iteration under the routine non-architectural merge allowance.
-- [ ] Update ACTIVE and iteration with PR/CI state and next action. Mark the tool Goal complete only when the authorized deliverable is actually achieved.
+- [x] Update ACTIVE and iteration with PR/CI state and next action. Mark the tool Goal complete only when the authorized deliverable is actually achieved.
 
 ## Plan self-review
 
