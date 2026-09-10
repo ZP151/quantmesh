@@ -4,10 +4,12 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Page } from '@/components/page'
+import { InstrumentEntry } from '@/components/instrument-entry'
 import { Surface, useSurface } from '@/components/state'
 import { api } from '@/lib/api'
 import { money, venueLabel } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
+import { chartEntryPath } from '@/lib/instrument-route'
 
 function StatRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -32,6 +34,7 @@ export function OverviewScreen() {
         liveMode ? t('screen.overview.description.live') : t('screen.overview.description.demo')
       }
     >
+      <InstrumentEntry />
       <Surface query={query} title={t('screen.overview.title')}>
         {(overview) => {
           const valuationComplete = overview.valuation_complete
@@ -104,7 +107,7 @@ export function OverviewScreen() {
                       {entry.instruments.map((instrument) => (
                         <Link
                           key={instrument.symbol}
-                          to={`/trading/order?venue=${encodeURIComponent(entry.venue)}&symbol=${encodeURIComponent(instrument.symbol)}`}
+                          to={chartEntryPath(entry.venue, instrument.symbol)}
                           className="flex items-center gap-2 rounded-lg border border-border px-2.5 py-1.5 text-xs hover:bg-muted"
                         >
                           <span className="font-mono font-medium">{instrument.symbol}</span>

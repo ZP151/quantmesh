@@ -4,7 +4,7 @@ import { type Locale, usePreferences } from '@/lib/preferences'
 
 const scenarioOrder = ['bull', 'base', 'bear'] as const
 
-export function PacketEvidenceSummary({ packet }: { packet: DecisionPacket }) {
+export function PacketEvidenceSummary({ packet, archived = true }: { packet: DecisionPacket; archived?: boolean }) {
   const { locale, t } = usePreferences()
   const evidence = packet.evidence
   const chronology = evidence.forecast_chronology
@@ -22,9 +22,9 @@ export function PacketEvidenceSummary({ packet }: { packet: DecisionPacket }) {
     <section className="min-w-0 space-y-3 px-3" aria-label={t('screen.workspace.packetEvidence')}>
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          {t('screen.workspace.archivedEvidence')}
+          {t(archived ? 'screen.workspace.archivedEvidence' : 'lab.evidence')}
         </h2>
-        <p className="mt-1 text-xs text-muted-foreground">{t('screen.workspace.archivedEvidenceNote')}</p>
+        {archived && <p className="mt-1 text-xs text-muted-foreground">{t('screen.workspace.archivedEvidenceNote')}</p>}
       </div>
       <dl className="space-y-1 border-y border-border py-3 text-xs">
         <EvidenceFact label={t('screen.workspace.historyDataset')} value={evidence.history_dataset_id} />

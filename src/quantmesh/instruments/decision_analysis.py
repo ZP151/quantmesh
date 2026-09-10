@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 
 from quantmesh.execution.accounting import PaperAccount, position_key
 from quantmesh.instruments.contracts import (
@@ -25,14 +26,24 @@ from quantmesh.instruments.contracts import (
     WorkspaceRisk,
 )
 from quantmesh.instruments.decision_packets import decision_packet_id
+from quantmesh.instruments.scenario_lab import assess_scenario_lab, evidence_is_stale
 
 _KEY_LEVEL_LOOKBACK = 20
 _FORECAST_FRESHNESS = timedelta(days=1)
 _HISTORY_FRESHNESS = timedelta(days=1)
 _BLOCKER_ORDER = (
-    "history-quality", "history-lineage", "history-freshness", "forecast-missing",
-    "forecast-ineligible", "forecast-freshness", "leakage", "chronology",
-    "cost-evidence", "valuation", "kill-switch", "proposal-service",
+    "history-quality",
+    "history-lineage",
+    "history-freshness",
+    "forecast-missing",
+    "forecast-ineligible",
+    "forecast-freshness",
+    "leakage",
+    "chronology",
+    "cost-evidence",
+    "valuation",
+    "kill-switch",
+    "proposal-service",
 )
 
 
@@ -49,9 +60,7 @@ def _mean(values: tuple[float, ...]) -> float:
 def _observed_volatility(closes: tuple[float, ...]) -> float:
     if len(closes) < 2:
         return 0.0
-    returns = tuple(
-        closes[index] / closes[index - 1] - 1.0 for index in range(1, len(closes))
-    )
+    returns = tuple(closes[index] / closes[index - 1] - 1.0 for index in range(1, len(closes)))
     average = _mean(returns)
     return math.sqrt(sum((value - average) ** 2 for value in returns) / len(returns))
 
@@ -115,6 +124,7 @@ def compose_decision_packet(
     account: PaperAccount,
     selected_range: HistoryRange,
     as_of: datetime,
+    horizon: Literal[7, 30] | None = None,
 ) -> DecisionPacket:
     """Compose one analysis from pinned inputs only; it never calls a provider or executor."""
     selected_as_of = _utc(as_of, "as_of")
@@ -125,9 +135,7 @@ def compose_decision_packet(
     observed = tuple(bar for bar in history.bars if bar.timestamp <= selected_as_of)
     if not observed:
         raise ValueError("decision packet requires observed bars at or before as_of")
-    if tuple(bar.timestamp for bar in observed) != tuple(
-        sorted(bar.timestamp for bar in observed)
-    ):
+    if tuple(bar.timestamp for bar in observed) != tuple(sorted(bar.timestamp for bar in observed)):
         raise ValueError("decision packet observed bars must be chronological")
 
     closes = tuple(bar.close for bar in observed)
@@ -178,7 +186,11 @@ def compose_decision_packet(
                 f"history:{history.dataset_id}",
             )
         )
-    elif selected_as_of - history.generated_at > _HISTORY_FRESHNESS:
+    elif (
+        evidence_is_stale(history, history.generated_at, selected_as_of)
+        if horizon is not None
+        else selected_as_of - history.generated_at > _HISTORY_FRESHNESS
+    ):
         blockers.append(
             _blocker(
                 "history-freshness",
@@ -186,7 +198,11 @@ def compose_decision_packet(
                 f"history:{history.dataset_id}",
             )
         )
-    if selected_as_of - observed[-1].timestamp > _HISTORY_FRESHNESS:
+    if (
+        evidence_is_stale(history, observed[-1].timestamp, selected_as_of)
+        if horizon is not None
+        else selected_as_of - observed[-1].timestamp > _HISTORY_FRESHNESS
+    ):
         blockers.append(
             _blocker(
                 "history-freshness",
@@ -195,13 +211,24 @@ def compose_decision_packet(
             )
         )
 
+    scenario_lab = (
+        assess_scenario_lab(history, forecast, horizon=horizon, as_of=selected_as_of)
+        if horizon is not None
+        else None
+    )
+    if scenario_lab is not None and scenario_lab.confidence != "qualified":
+        blockers.append(
+            _blocker(
+                "forecast-ineligible",
+                "; ".join(scenario_lab.reasons),
+                "scenario-lab:qualification",
+            )
+        )
     final_quantiles: tuple[float, float, float] | None = None
     forecast_chronology: DecisionForecastChronology | None = None
     bound_forecast = forecast
     if forecast is None:
-        blockers.append(
-            _blocker("forecast-missing", "no forecast is attached", "forecast:missing")
-        )
+        blockers.append(_blocker("forecast-missing", "no forecast is attached", "forecast:missing"))
     else:
         if not forecast.eligible:
             blockers.append(
@@ -219,7 +246,11 @@ def compose_decision_packet(
                     f"forecast:{forecast.artifact_id}",
                 )
             )
-        elif selected_as_of - forecast.generated_at > _FORECAST_FRESHNESS:
+        elif (
+            evidence_is_stale(history, forecast.generated_at, selected_as_of)
+            if horizon is not None
+            else selected_as_of - forecast.generated_at > _FORECAST_FRESHNESS
+        ):
             blockers.append(
                 _blocker(
                     "forecast-freshness",
@@ -227,7 +258,7 @@ def compose_decision_packet(
                     f"forecast:{forecast.artifact_id}",
                 )
             )
-        path30 = next((path for path in forecast.paths if path.sessions == 30), None)
+        path30 = next((path for path in forecast.paths if path.sessions == (horizon or 30)), None)
         if path30 is None or any(
             point.timestamp <= forecast.train_end
             for path in forecast.paths
@@ -275,6 +306,8 @@ def compose_decision_packet(
             bound_forecast = None
             final_quantiles = None
             forecast_chronology = None
+    if scenario_lab is not None and scenario_lab.confidence == "abstain":
+        final_quantiles = None
     if any(bar.timestamp > selected_as_of for bar in history.bars):
         blockers.append(
             _blocker(
@@ -375,27 +408,19 @@ def compose_decision_packet(
         history_gaps=history.gaps,
         history_duplicates=history.duplicates,
         history_limitations=history.limitations,
-        forecast_artifact_id=(
-            bound_forecast.artifact_id if bound_forecast is not None else None
-        ),
-        forecast_dataset_id=(
-            bound_forecast.dataset_id if bound_forecast is not None else None
-        ),
+        forecast_artifact_id=(bound_forecast.artifact_id if bound_forecast is not None else None),
+        forecast_dataset_id=(bound_forecast.dataset_id if bound_forecast is not None else None),
         forecast_dataset_revision=(
             bound_forecast.dataset_revision if bound_forecast is not None else None
         ),
-        forecast_manifest_id=(
-            bound_forecast.manifest_id if bound_forecast is not None else None
-        ),
+        forecast_manifest_id=(bound_forecast.manifest_id if bound_forecast is not None else None),
         forecast_quality_evaluation_id=(
             bound_forecast.quality_evaluation_id if bound_forecast is not None else None
         ),
         forecast_synthetic=(bound_forecast.synthetic if bound_forecast is not None else None),
         forecast_eligible=(bound_forecast.eligible if bound_forecast is not None else None),
         forecast_blockers=(bound_forecast.blockers if bound_forecast is not None else ()),
-        forecast_limitations=(
-            bound_forecast.limitations if bound_forecast is not None else ()
-        ),
+        forecast_limitations=(bound_forecast.limitations if bound_forecast is not None else ()),
         forecast_model_name=(bound_forecast.model_name if bound_forecast is not None else None),
         forecast_model_version=(
             bound_forecast.model_version if bound_forecast is not None else None
@@ -409,9 +434,7 @@ def compose_decision_packet(
         forecast_benchmark_name=(
             bound_forecast.benchmark_name if bound_forecast is not None else None
         ),
-        forecast_generated_at=(
-            bound_forecast.generated_at if bound_forecast is not None else None
-        ),
+        forecast_generated_at=(bound_forecast.generated_at if bound_forecast is not None else None),
         forecast_chronology=forecast_chronology,
         forecast_paths=bound_forecast.paths if bound_forecast is not None else (),
         forecast_metrics=bound_forecast.metrics if bound_forecast is not None else (),
@@ -434,6 +457,7 @@ def compose_decision_packet(
         scenarios=scenarios,
         risk_plan=risk_plan,
         evidence=evidence,
+        scenario_lab=scenario_lab,
         paper_capability=DecisionPaperCapability(
             allowed=not _normalized_blockers(blockers),
             blockers=_normalized_blockers(blockers),

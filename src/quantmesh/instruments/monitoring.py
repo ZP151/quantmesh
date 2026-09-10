@@ -25,6 +25,7 @@ from quantmesh.data.calendars import (
 from quantmesh.domain.models import Instrument
 from quantmesh.instruments.contracts import DecisionDisposition
 from quantmesh.instruments.decision_packets import DecisionPacketStore
+from quantmesh.instruments.scenario_lab import effective_horizon
 from quantmesh.persistence.jsonl import JsonlStore
 
 
@@ -612,7 +613,9 @@ class DecisionWatchService:
         evidence = packet.evidence
         try:
             baseline = next(
-                path.points[-1] for path in evidence.forecast_paths if path.sessions == 30
+                path.points[-1]
+                for path in evidence.forecast_paths
+                if path.sessions == effective_horizon(packet)
             )
         except StopIteration:
             baseline = None

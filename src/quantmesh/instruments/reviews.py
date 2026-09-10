@@ -43,6 +43,7 @@ from quantmesh.instruments.monitoring import (
     validate_watch_replay,
 )
 from quantmesh.instruments.proposals import ProposalLedger, validate_proposal_replay
+from quantmesh.instruments.scenario_lab import effective_horizon
 from quantmesh.persistence.jsonl import JsonlStore
 
 _LOCKS: dict[str, threading.RLock] = {}
@@ -226,10 +227,10 @@ class OutcomePath(_Contract):
             raise ValueError("empty outcome path cannot carry fabricated provenance")
         if self.target_at is not None:
             if (
-                len(self.expected_session_times) != 30
+                len(self.expected_session_times) not in (7, 30)
                 or self.expected_session_times[-1] != self.target_at
             ):
-                raise ValueError("outcome path requires the exact 30-session forecast timestamps")
+                raise ValueError("outcome path requires exact 7/30-session forecast timestamps")
         elif self.expected_session_times:
             raise ValueError("outcome sessions require a pinned target")
         actual = tuple(bar.timestamp for bar in self.bars)
@@ -239,7 +240,7 @@ class OutcomePath(_Contract):
         if self.status in {"complete", "pending"} and actual != expected_by_cutoff:
             raise ValueError("outcome path does not match expected completed sessions")
         if self.status == "complete" and actual != self.expected_session_times:
-            raise ValueError("complete outcome path must contain all 30 expected sessions")
+            raise ValueError("complete outcome path must contain all expected sessions")
         if (self.manifest_id is None) != (self.quality_evaluation_id is None):
             raise ValueError("outcome manifest and quality IDs must be present together")
         if self.status in {"partial", "unavailable"}:
@@ -415,6 +416,19 @@ class DecisionOutcomeSnapshot(_Contract):
             raise ValueError("outcome evidence status must match its path")
         if self.horizon_target_at != self.path.target_at:
             raise ValueError("outcome horizon must match its exact path target")
+        if self.path.expected_session_times:
+            selected_path = next(
+                (
+                    path
+                    for path in self.root_packet.evidence.forecast_paths
+                    if path.sessions == effective_horizon(self.root_packet)
+                ),
+                None,
+            )
+            if selected_path is None or self.path.expected_session_times != tuple(
+                point.timestamp for point in selected_path.points
+            ):
+                raise ValueError("outcome path must preserve the selected forecast timestamps")
         if self.path.cutoff_at > self.evaluated_at:
             raise ValueError("outcome path cutoff exceeds its evaluation boundary")
         if self.path.generated_at is not None and self.path.generated_at > self.evaluated_at:
@@ -706,16 +720,17 @@ class DecisionOutcomeReviewService:
         self, root: DecisionPacket
     ) -> tuple[PriceForecastArtifact | None, tuple[datetime, ...], str | None]:
         artifact_id = root.evidence.forecast_artifact_id
+        horizon = effective_horizon(root)
         if artifact_id is None or self.forecast_registry is None:
-            return None, (), "exact 30-session forecast binding is unavailable"
+            return None, (), f"exact {horizon}-session forecast binding is unavailable"
         try:
             artifact = self.forecast_registry.get(artifact_id)
             self._validate_forecast_binding(root, artifact)
         except (ValueError, OSError) as error:
             return None, (), f"exact forecast evidence is unavailable: {error}"
-        path = next((item for item in artifact.paths if item.sessions == 30), None)
-        if path is None or len(path.points) != 30:
-            return artifact, (), "exact 30-session forecast horizon is unavailable"
+        path = next((item for item in artifact.paths if item.sessions == horizon), None)
+        if path is None or len(path.points) != horizon:
+            return artifact, (), f"exact {horizon}-session forecast horizon is unavailable"
         return artifact, tuple(point.timestamp for point in path.points), None
 
     @staticmethod
@@ -844,7 +859,7 @@ class DecisionOutcomeReviewService:
         )
         if actual_times != expected_completed:
             status = "partial"
-            reason = "local daily outcome path is missing an expected 30-session timestamp"
+            reason = "local daily outcome path is missing an expected forecast-session timestamp"
         elif relevant_gaps or series.duplicates:
             status = "partial"
             reason = "local daily outcome path has a gap or duplicate"

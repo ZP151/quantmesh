@@ -26,15 +26,16 @@ interface DecisionRailProps {
   onActionResult?: (result: DecisionPacketActionResult) => void
   packet?: DecisionPacket
   packetSource?: 'fresh' | 'persisted'
-  workspace: InstrumentWorkspace
+  workspace?: InstrumentWorkspace
 }
 
 export function DecisionRail(props: DecisionRailProps) {
-  const packet = props.packet ?? props.workspace.decision.latest ?? props.workspace.decision.draft
+  const packet = props.packet ?? props.workspace?.decision.latest ?? props.workspace?.decision.draft
+  if (!packet) return null
   const contextKey = props.contextKey
     ?? `${packet.instrument.venue}:${packet.instrument.symbol}:${packet.selected_range}`
   const packetSource = props.packetSource
-    ?? (props.workspace.decision.latest?.packet_id === packet.packet_id ? 'persisted' : 'fresh')
+    ?? (props.workspace?.decision.latest?.packet_id === packet.packet_id ? 'persisted' : 'fresh')
   return (
     <DecisionRailContext
       {...props}
@@ -61,7 +62,7 @@ function DecisionRailContext({
   onNewAnalysis?: () => void
   packet: DecisionPacket
   packetSource: 'fresh' | 'persisted'
-  workspace: InstrumentWorkspace
+  workspace?: InstrumentWorkspace
 }) {
   const { locale, t } = usePreferences()
   const packet = packetOverride
@@ -74,20 +75,20 @@ function DecisionRailContext({
   const [limitPrice, setLimitPrice] = useState(String(packet.risk_plan.entry_price))
   const [operatorReason, setOperatorReason] = useState('')
   const [dismissedProposalIds, setDismissedProposalIds] = useState<readonly string[]>([])
-  const heldPosition = workspace.position !== null && workspace.position !== undefined
+  const heldPosition = workspace?.position !== null && workspace?.position !== undefined
     && workspace.position.quantity !== 0
   const positionMarkAvailable = !heldPosition || (
-    workspace.position?.mark_status?.status === 'available'
-    && typeof workspace.position.mark === 'number'
+    workspace?.position?.mark_status?.status === 'available'
+    && typeof workspace?.position.mark === 'number'
     && Number.isFinite(workspace.position.mark)
   )
-  const valuationComplete = workspace.risk.valuation_complete === false
+  const valuationComplete = !workspace || workspace.risk.valuation_complete === false
     ? false
     : workspace.risk.valuation_complete === true
       ? positionMarkAvailable
       : !heldPosition
-  const valuationReason = workspace.risk.valuation_reason
-    ?? workspace.position?.mark_status?.reason
+  const valuationReason = workspace?.risk.valuation_reason
+    ?? workspace?.position?.mark_status?.reason
   const viewIdentity = {
     contextKey,
     packetId: packet.packet_id,
@@ -124,6 +125,10 @@ function DecisionRailContext({
         ? submission.packet
         : await api.saveDecisionPacket({
             expected_packet_id: submission.packet.packet_id,
+            ...(submission.packet.scenario_lab ? {
+              horizon: submission.packet.scenario_lab.selected_horizon,
+              forecast_id: submission.packet.evidence.forecast_artifact_id ?? undefined,
+            } : {}),
             selected_range: submission.identity.range,
             symbol: submission.identity.symbol,
             venue: submission.identity.venue,
@@ -170,7 +175,7 @@ function DecisionRailContext({
     })
   }
 
-  const persistedProposals = [...workspace.proposal.proposals]
+  const persistedProposals = [...(workspace?.proposal.proposals ?? [])]
     .reverse()
     .filter((candidate) => !dismissedProposalIds.includes(candidate.id)
       && candidate.instrument.venue === displayedPacket.instrument.venue
@@ -222,7 +227,7 @@ function DecisionRailContext({
         <p className="text-[10px] text-muted-foreground">{t('screen.workspace.spreadAtConfirmation')}</p>
       </section>
 
-      <section className="space-y-2 px-4" aria-label={t('screen.workspace.portfolioRisk')}>
+      {workspace ? <section className="space-y-2 px-4" aria-label={t('screen.workspace.portfolioRisk')}>
         <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('screen.workspace.portfolioRisk')}</h3>
         <dl className="space-y-1 text-xs">
           <Fact label={t('screen.workspace.accountEquity')} value={valuationComplete ? money(workspace.risk.equity, locale) : t('screen.workspace.valueUnavailable')} />
@@ -241,7 +246,7 @@ function DecisionRailContext({
             )}
           </div>
         )}
-      </section>
+      </section> : <p role="status" className="px-4 text-xs text-muted-foreground">{t('lab.riskUnavailable')}</p>}
 
       {displayedPacket.paper_capability.blockers.length > 0 && (
         <section className="space-y-2 px-4" aria-label={t('screen.workspace.paperBlockers')}>

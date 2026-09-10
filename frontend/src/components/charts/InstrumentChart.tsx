@@ -18,6 +18,8 @@ import {
 import type { ComparisonSeries, ForecastPath, HistoricalSeries } from '@/lib/api'
 import type { Locale } from '@/lib/preferences'
 
+import { ForecastBand } from './ForecastBand'
+
 export interface InstrumentChartProps {
   appearance?: 'dark' | 'light'
   comparisons?: ComparisonSeries | null
@@ -40,6 +42,7 @@ export interface ChartLine {
 type LineApi = ISeriesApi<'Line'>
 
 interface ChartRefs {
+  band: ForecastBand
   candles: ISeriesApi<'Candlestick'>
   chart: IChartApi
   close: LineApi
@@ -76,6 +79,9 @@ export interface InstrumentChartLabels {
   caption: string
   chart: string
   dataTable: string
+  empiricalBand: string
+  forecastBoundary: string
+  forecastMedianLine: string
   forecast: string
   forecastP025: string
   forecastP10: string
@@ -99,6 +105,9 @@ const DEFAULT_LABELS: InstrumentChartLabels = {
   caption: 'Latest observed OHLCV, comparisons, indicators, and the selected probabilistic forecast path. Forecast values are not observations.',
   chart: 'market chart',
   dataTable: 'chart data',
+  empiricalBand: 'P10–P90 · empirical 80% interval · dashed edges',
+  forecastBoundary: 'Observed | Forecast',
+  forecastMedianLine: 'P50 · median · solid line',
   forecast: 'Forecast median',
   forecastP025: 'Forecast 2.5%',
   forecastP10: 'Forecast 10%',
@@ -248,7 +257,15 @@ export function InstrumentChart({
   const comparisonRefs = useRef(new Map<string, LineApi>())
   const indicatorRefs = useRef(new Map<string, LineApi>())
   const contextRef = useRef<string | null>(null)
-  const chartLabels = useMemo(() => ({ ...DEFAULT_LABELS, ...labels }), [labels])
+  const chartLabels = useMemo(() => ({
+    ...DEFAULT_LABELS,
+    ...(locale === 'zh-CN' ? {
+      empiricalBand: 'P10–P90 · 经验 80% 区间 · 虚线边界',
+      forecastBoundary: '观测 | 预测',
+      forecastMedianLine: 'P50 · 中位数 · 实线',
+    } : {}),
+    ...labels,
+  }), [labels, locale])
   const palette = PALETTES[appearance]
   const timeFormatters = useMemo(() => chartTimeFormatters(locale), [locale])
 
@@ -332,6 +349,12 @@ export function InstrumentChart({
         }),
       ]),
     ) as Record<ForecastKey, LineApi>
+    const band = new ForecastBand({
+      boundary: palette.axis,
+      boundaryLabel: chartLabels.forecastBoundary,
+      fill: appearance === 'light' ? 'rgba(15, 118, 110, 0.14)' : 'rgba(94, 234, 212, 0.14)',
+    })
+    forecastSeries.p50.attachPrimitive(band)
 
     const onCrosshairMove = (event: MouseEventParams<Time>) => {
       const tooltip = tooltipRef.current
@@ -356,13 +379,14 @@ export function InstrumentChart({
     }
     chart.subscribeCrosshairMove(onCrosshairMove)
 
-    refs.current = { candles, chart, close, forecast: forecastSeries, volume: volumeSeries }
+    refs.current = { band, candles, chart, close, forecast: forecastSeries, volume: volumeSeries }
     return () => {
       ownedComparisons.clear()
       ownedIndicators.clear()
       contextRef.current = null
       refs.current = null
       chart.unsubscribeCrosshairMove(onCrosshairMove)
+      forecastSeries.p50.detachPrimitive(band)
       chart.remove()
     }
   }, [appearance, chartLabels, palette, priceFormatter, timeFormatters])
@@ -370,7 +394,7 @@ export function InstrumentChart({
   useEffect(() => {
     const current = refs.current
     if (current === null) return
-    const { candles, chart, close, forecast: forecastSeries, volume: volumeSeries } = current
+    const { band, candles, chart, close, forecast: forecastSeries, volume: volumeSeries } = current
     const nextContext = chartContext(primary)
     const sameContext = contextRef.current === nextContext
     const visibleRange = sameContext ? chart.timeScale().getVisibleRange() : null
@@ -464,6 +488,10 @@ export function InstrumentChart({
       forecastSeries[key].setData(data)
       forecastSeries[key].applyOptions({ visible: data.length > 0 })
     }
+    band.setData((forecast?.points ?? []).flatMap((point) => {
+      const time = utcTimestamp(point.timestamp)
+      return time === null ? [] : [{ time, low: point.p10, high: point.p90 }]
+    }), closeData.at(-1)?.time ?? null)
 
     if (!sameContext) {
       contextRef.current = nextContext
@@ -471,11 +499,18 @@ export function InstrumentChart({
     } else if (visibleRange !== null && primary.bars.some((bar) => bar.is_live_tail)) {
       chart.timeScale().setVisibleRange(visibleRange)
     }
-  }, [comparisons, forecast, indicators, mode, palette, primary, volume])
+  }, [chartLabels, comparisons, forecast, indicators, mode, palette, priceFormatter, primary, timeFormatters, volume])
 
   const accessibleObserved = primary.bars
   return (
     <figure className="relative min-h-80 w-full" aria-label={`${primary.instrument.symbol} ${chartLabels.chart}`}>
+      {(forecast?.points.length ?? 0) > 0 && (
+        <figcaption className="flex flex-wrap gap-x-5 gap-y-1 border-b border-border px-2 py-2 text-xs text-muted-foreground">
+          <span>{chartLabels.forecastBoundary}</span>
+          <span>{chartLabels.forecastMedianLine}</span>
+          <span>{chartLabels.empiricalBand}</span>
+        </figcaption>
+      )}
       <div
         ref={containerRef}
         className="h-[30rem] w-full"

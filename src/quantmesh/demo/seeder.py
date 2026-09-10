@@ -958,6 +958,7 @@ def _seed_lake(
                 scenario,
                 spec,
                 target_close=closes[-1],
+                session_calendar="XNYS",
             )
         else:
             rows_by_interval = {
@@ -1121,7 +1122,8 @@ def _seed_price_forecasts(
         artifact = run_price_forecast(
             series,
             generated_at=scenario.anchor,
-            model_version="demo-drift-conformal-v1",
+            model_version="demo-drift-conformal-xnys-v2",
+            session_calendar="XNYS",
         )
         registry.record(artifact)
     return registry

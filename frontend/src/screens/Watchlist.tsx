@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Page } from '@/components/page'
+import { InstrumentEntry } from '@/components/instrument-entry'
 import { Surface, useSurface } from '@/components/state'
 import { api, type DecisionInbox } from '@/lib/api'
-import { decisionPacketPath, instrumentPath } from '@/lib/instrument-route'
+import { chartEntryPath, decisionPacketPath, instrumentPath, supportedLabTicker } from '@/lib/instrument-route'
 import { dateTime, money } from '@/lib/format'
 import type { MessageKey } from '@/lib/messages'
 import { usePreferences } from '@/lib/preferences'
@@ -41,6 +42,7 @@ export function WatchlistScreen() {
       title={t('screen.watchlist.title')}
       description={t('screen.watchlist.description')}
     >
+      <InstrumentEntry />
       <div className="flex flex-wrap items-center gap-3">
         <button
           className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -150,7 +152,13 @@ export function WatchlistScreen() {
                       return (
                         <tr key={`${entry.venue ?? 'unknown'}:${entry.symbol}`} className="block border-b border-border/60 py-2 last:border-0 sm:table-row sm:py-0">
                           <td className="block px-4 py-1 font-mono font-medium sm:table-cell sm:py-2.5">
-                            {entry.symbol}
+                            {entry.venue === 'moomoo' && supportedLabTicker(entry.symbol) !== null ? (
+                              <Link
+                                aria-label={`${t('lab.openChart')} ${entry.symbol}`}
+                                className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                to={chartEntryPath(entry.venue, entry.symbol)}
+                              >{entry.symbol}</Link>
+                            ) : entry.symbol}
                           </td>
                           <td className="block px-4 py-1 font-mono text-xs text-muted-foreground sm:table-cell sm:py-2.5">
                             {entry.venue ?? '—'}

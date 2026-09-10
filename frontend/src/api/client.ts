@@ -2022,6 +2022,7 @@ export interface components {
             /** Proposal Id */
             proposal_id?: string | null;
             risk_plan: components["schemas"]["DecisionRiskPlan"];
+            scenario_lab?: components["schemas"]["ScenarioLabSnapshot"] | null;
             /** Scenarios */
             scenarios: [
                 components["schemas"]["DecisionScenario"],
@@ -2055,6 +2056,10 @@ export interface components {
         DecisionPacketSaveBody: {
             /** Expected Packet Id */
             expected_packet_id: string;
+            /** Forecast Id */
+            forecast_id?: string | null;
+            /** Horizon */
+            horizon?: (7 | 30) | null;
             selected_range: components["schemas"]["HistoryRange"];
             /** Symbol */
             symbol: string;
@@ -3129,6 +3134,37 @@ export interface components {
          * @enum {string}
          */
         ReviewClassification: "supported" | "challenged" | "mixed" | "inconclusive";
+        /**
+         * ScenarioLabSnapshot
+         * @description Frozen chart evidence and selected-horizon qualification, never order authority.
+         */
+        ScenarioLabSnapshot: {
+            /**
+             * Confidence
+             * @enum {string}
+             */
+            confidence: "qualified" | "low-confidence" | "abstain";
+            /**
+             * Format Version
+             * @default 1
+             * @constant
+             */
+            format_version: "1";
+            history: components["schemas"]["HistoricalSeries"];
+            /**
+             * Policy Version
+             * @default scenario-lab-v1
+             * @constant
+             */
+            policy_version: "scenario-lab-v1";
+            /** Reasons */
+            reasons: string[];
+            /**
+             * Selected Horizon
+             * @enum {integer}
+             */
+            selected_horizon: 7 | 30;
+        };
         /** ScenarioObservation */
         ScenarioObservation: {
             /** Invalidation At */
@@ -4024,6 +4060,8 @@ export interface operations {
             query: {
                 range: components["schemas"]["HistoryRange"];
                 compare?: string[] | null;
+                horizon?: (7 | 30) | null;
+                forecast_id?: string | null;
             };
             header?: never;
             path: {
@@ -5071,6 +5109,8 @@ export interface operations {
             query: {
                 range: components["schemas"]["HistoryRange"];
                 compare?: string[] | null;
+                horizon?: (7 | 30) | null;
+                forecast_id?: string | null;
             };
             header?: never;
             path: {
