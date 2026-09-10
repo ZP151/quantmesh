@@ -17,10 +17,11 @@ Iteration 0021, Trusted Data Fabric, is merged; its real 168-hour soak continues
 as an independent maintenance and release-confidence track. Iteration 0027,
 Evidence-backed Decision Copilot, is merged through PR #128. Iteration 0028,
 Decision Inbox & Bounded Paper Shadow Portfolio, is merged through PR #130.
-Iteration 0029, Decision Readiness Session, is the active product track under
-issue #131. It unifies the daily operator entry while keeping the 0021
-Scheduler/Provider/evidence data plane separate: the product reads exact
-readiness and explicitly refreshes only local watch conditions. AI remains
+Iteration 0029, Decision Readiness Session, is merged through PR #133.
+Iteration 0032, Probabilistic Scenario Lab, is the active product track under
+issue #136. It brings a chart-first AAPL/NVDA daily workspace, exact 7/30-session
+forecast evidence and saved analysis replay to the existing DecisionPacket
+loop. The 0021 Scheduler/Provider/evidence data plane stays separate. AI remains
 optional and advisory. Final `v0.1.1` promotion and real-money execution remain
 outside this iteration.
 
