@@ -17,6 +17,8 @@ Resolve a URL-selected forecast ID through the exact registry and verify its dat
 
 Add an admitted XNYS configuration digest backed by the existing pinned CalendarService, regular sessions and daily New York midnight timestamps. Dispatch recomputation and freshness by admitted configuration, preserving the legacy algorithm, bytes and IDs. Only the scoped AAPL/NVDA demo generator opts in. No provider or data-plane ownership changes.
 
+Freshness dispatch also follows that admitted forecast configuration when a caller uses the legacy request shape without a selected horizon. Request shape controls the packet extension, not the time grid of a newly generated artifact; otherwise valid Friday daily bars would be rejected over weekends. Old forecast configurations retain their original elapsed-time composition rule.
+
 Qualification is deterministic research evidence, never a probability: require at least 30 resolved residual rows and 30 evaluated intervals, strict MAE improvement over last-price random walk, valid chronology/binding and the existing coverage gate. Artifact-wide blockers remain additional constraints. Zero-sample metrics display unavailable. Overlapping residual rows and intermediate square-root band scaling remain disclosed limitations. Reuse existing risk, action freshness and second confirmation; safe Watch/Reject remain possible when Paper is blocked.
 
 The chart uses an owned Lightweight Charts primitive for the empirical P10/P90 fill and observed/forecast separator. It uses actual scale coordinates and lifecycle detach, retaining quantile lines, accessible data and attribution. Evidence and risk are disclosures below the full-width canvas in the established workstation design system.

@@ -859,7 +859,10 @@ class DecisionOutcomeReviewService:
         )
         if actual_times != expected_completed:
             status = "partial"
-            reason = "local daily outcome path is missing an expected forecast-session timestamp"
+            reason = (
+                f"local daily outcome path is missing an expected {effective_horizon(root)}-session"
+                " timestamp"
+            )
         elif relevant_gaps or series.duplicates:
             status = "partial"
             reason = "local daily outcome path has a gap or duplicate"

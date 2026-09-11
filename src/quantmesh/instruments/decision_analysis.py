@@ -26,6 +26,7 @@ from quantmesh.instruments.contracts import (
     WorkspaceRisk,
 )
 from quantmesh.instruments.decision_packets import decision_packet_id
+from quantmesh.instruments.forecast import is_xnys_config
 from quantmesh.instruments.scenario_lab import assess_scenario_lab, evidence_is_stale
 
 _KEY_LEVEL_LOOKBACK = 20
@@ -128,6 +129,11 @@ def compose_decision_packet(
 ) -> DecisionPacket:
     """Compose one analysis from pinned inputs only; it never calls a provider or executor."""
     selected_as_of = _utc(as_of, "as_of")
+    calendar_freshness = horizon is not None or (
+        history.calendar == "XNYS"
+        and forecast is not None
+        and is_xnys_config(forecast.config_digest)
+    )
     if selected_range is not history.range:
         raise ValueError("selected_range must match historical series range")
     if history.as_of != selected_as_of:
@@ -188,7 +194,7 @@ def compose_decision_packet(
         )
     elif (
         evidence_is_stale(history, history.generated_at, selected_as_of)
-        if horizon is not None
+        if calendar_freshness
         else selected_as_of - history.generated_at > _HISTORY_FRESHNESS
     ):
         blockers.append(
@@ -200,7 +206,7 @@ def compose_decision_packet(
         )
     if (
         evidence_is_stale(history, observed[-1].timestamp, selected_as_of)
-        if horizon is not None
+        if calendar_freshness
         else selected_as_of - observed[-1].timestamp > _HISTORY_FRESHNESS
     ):
         blockers.append(
@@ -248,7 +254,7 @@ def compose_decision_packet(
             )
         elif (
             evidence_is_stale(history, forecast.generated_at, selected_as_of)
-            if horizon is not None
+            if calendar_freshness
             else selected_as_of - forecast.generated_at > _FORECAST_FRESHNESS
         ):
             blockers.append(

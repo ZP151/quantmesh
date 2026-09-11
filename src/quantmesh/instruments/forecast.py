@@ -427,6 +427,11 @@ def _config(session_calendar: SessionCalendar = "legacy") -> dict[str, object]:
     return config
 
 
+def is_xnys_config(config_digest: str) -> bool:
+    """Recognize the admitted daily-session algorithm without changing legacy evidence."""
+    return config_digest == _sha256(_canonical_json(_config("XNYS")))
+
+
 def _artifact_calendar(artifact: PriceForecastArtifact) -> SessionCalendar:
     for selection in ("legacy", "XNYS"):
         if artifact.config_digest == _sha256(_canonical_json(_config(selection))):

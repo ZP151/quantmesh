@@ -69,6 +69,62 @@ def test_legacy_serialization_preserves_pre_extension_canonical_id():
     assert DecisionPacket.model_validate_json(legacy.model_dump_json()) == legacy
 
 
+@pytest.mark.parametrize(
+    "calendar,elapsed_days,allowed",
+    [("XNYS", 5, True), ("legacy", 5, False), ("XNYS", 7, False)],
+)
+def test_legacy_route_dispatches_daily_freshness_by_forecast_version(
+    calendar, elapsed_days, allowed
+):
+    from quantmesh.instruments.forecast import _canonical_json, _config, _sha256
+
+    # Friday September 4 at New York midnight; Monday September 7 is Labor Day.
+    base = _history_for_composition()
+    offset = timedelta(days=1, hours=8)
+    as_of = NOW + timedelta(days=elapsed_days)
+    bars = tuple(bar.model_copy(update={"timestamp": bar.timestamp + offset}) for bar in base.bars)
+    history = base.model_copy(
+        update={
+            "calendar": "XNYS",
+            "as_of": as_of,
+            "generated_at": as_of,
+            "bars": bars,
+            "coverage": base.coverage.model_copy(
+                update={"start": bars[0].timestamp, "end": bars[-1].timestamp}
+            ),
+        }
+    )
+    forecast = _workspace_forecast()
+    forecast = forecast.model_copy(
+        update={
+            "config_digest": _sha256(_canonical_json(_config(calendar))),
+            "generated_at": as_of,
+            "train_start": bars[0].timestamp,
+            "train_end": bars[-1].timestamp,
+            "paths": tuple(
+                path.model_copy(
+                    update={
+                        "points": tuple(
+                            point.model_copy(
+                                update={"timestamp": point.timestamp + timedelta(days=8)}
+                            )
+                            for point in path.points
+                        )
+                    }
+                )
+                for path in forecast.paths
+            ),
+        }
+    )
+    result = compose(None, history=history, forecast=forecast, as_of=as_of)
+    assert result.scenario_lab is None
+    assert result.paper_capability.allowed is allowed, result.paper_capability.blockers
+    assert (
+        any(blocker.code == "history-freshness" for blocker in result.paper_capability.blockers)
+        is not allowed
+    )
+
+
 def test_selected_horizon_changes_targets_and_survives_store_restart(tmp_path):
     seven, thirty = compose(7), compose(30)
     assert seven.scenario_lab.selected_horizon == 7
