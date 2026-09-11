@@ -12,11 +12,14 @@ within 120 seconds, with exact 7/30-session evidence and restart-safe replay.
 - Ledger: `docs/iterations/0032-probabilistic-scenario-lab.md`
 - Spec: `docs/superpowers/specs/2026-09-10-probabilistic-scenario-lab-design.md`
 - Plan: `docs/superpowers/plans/2026-09-10-probabilistic-scenario-lab.md`
-- Frontier: operator resumed continuous goal-driven work. Close the observed
-  `npm audit` high-severity js-yaml blocker in run 34504822559 and external
-  review 3981553959 (current proposal capability must gate saved-draft Paper).
-  Use regression-first corrections, scoped verification and the existing PR;
-  architecture integration remains a separate boundary.
+- Frontier: correction `517702f` is pushed to PR #137. It closes external
+  review 3981553959 and the js-yaml audit blocker with 66 passing affected
+  frontend tests plus build/type/lint/OpenAPI/lock-license evidence. Automatic
+  run 34604897018 has passed fresh install, audit, frontend tests, bundle and
+  lint; Python tests are still running. Recent main CI runs take 41–42 minutes.
+  On resume inspect the latest PR head/checks and diagnose only actual failures;
+  do not rerun already-passing local gates or start another product slice.
+  Architecture integration remains a separate boundary.
 - Authority: implement, targeted tests, commit/push feature branch and one final
   reviewable PR. Architecture merge remains outside routine merge allowance.
 - Limits: no cloud/deployment/#124/#127/#132/#135/0021 operations, providers,
