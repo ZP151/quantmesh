@@ -1,6 +1,6 @@
 # Iteration 0033 — Exact Forecast Outcome Scorecard
 
-- Status: implemented, reviewed and locally verified; publication checkpoint follows
+- Status: implemented, reviewed and locally verified; [PR #139](https://github.com/ZP151/quantmesh/pull/139) open, automatic CI pending
 - Started: 2026-09-12
 - Issue: [#138](https://github.com/ZP151/quantmesh/issues/138)
 - Branch: `codex/0033-forecast-outcome-scorecard`
@@ -109,3 +109,11 @@ classification than the existing service allows.
 中文：打开已保存的决策 →「监控与复盘」→「预测与实际对照」。检查交易日数、
 逐日价格和误差，保存分类与备注后重新打开。已保存曲线不应随最新行情变化；
 缺失或未完成周期的汇总评分保持不可用。默认模拟模式与二次确认不变。
+
+## Publication checkpoint
+
+Implementation `bb4d978` is pushed and published in non-draft PR #139, closing
+issue #138 on integration. This final documentation checkpoint records the
+reviewable deliverable; automatic final-head CI is pending, not claimed green.
+Next resume inspects that exact head and any review feedback before routine
+squash integration. #137 was already merged under explicit operator authority.

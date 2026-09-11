@@ -64,7 +64,7 @@ for an explicit overlay/whitespace mode with its adapter regression test.
   unchanged identities, API/UI alignment and trading safety. Maximum two rounds.
 - [x] Controller verifies targeted Python/Vitest, Ruff/format, TypeScript,
   OpenAPI, packaged freshness and `git diff --check`; records exits and counts.
-- [ ] Commit coherent reviewed slice, push, open one PR linking its issue. Do
+- [x] Commit coherent reviewed slice, push, open one PR linking its issue. Do
   not dispatch release/soak. Record automatic CI state truthfully at handoff.
 
 Plan self-review: every spec requirement maps to Tasks 1–3. No architecture
