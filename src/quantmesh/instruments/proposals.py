@@ -34,6 +34,7 @@ from quantmesh.instruments.contracts import (
     ProposalEvent,
     ProposalStatus,
 )
+from quantmesh.instruments.forecast import _artifact_calendar, _session_age
 from quantmesh.live.feed import ExactUpdateSnapshot
 from quantmesh.live.fence import QuoteFence
 from quantmesh.settings import settings
@@ -182,6 +183,8 @@ def _validate_artifact_binding(
 
 
 def _forecast_age_sessions(artifact: PriceForecastArtifact, now: datetime) -> int:
+    if _artifact_calendar(artifact) == "XNYS":
+        return _session_age(artifact.train_end, now, continuous=False, session_calendar="XNYS")
     continuous = artifact.instrument.instrument_type in {
         InstrumentType.SPOT,
         InstrumentType.PERPETUAL,

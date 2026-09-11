@@ -26,6 +26,7 @@ import { PacketOutcomeReview } from './instrument/PacketOutcomeReview'
 import { PacketEvidenceSummary, ScenarioEvidence } from './instrument/ScenarioEvidence'
 import { WorkspaceDegraded, WorkspaceError, WorkspaceRefreshWarning } from './instrument/WorkspaceStates'
 import { retainSameInstrument } from './instrument/workspace-query'
+import { ScenarioLabWorkspace } from './instrument/ScenarioLab'
 
 const VENUES: readonly HistoricalVenue[] = ['internal', 'moomoo', 'hyperliquid', 'polymarket', 'kalshi']
 const RANGES: readonly HistoryRange[] = ['1d', '5d', '1m', '3m', '6m', '1y']
@@ -52,6 +53,23 @@ interface PacketSelection {
 }
 
 export function InstrumentWorkspaceScreen() {
+  const { symbol = '', venue = '' } = useParams()
+  const [search] = useSearchParams()
+  const packetId = search.get('packet')
+  const supported = venue === 'moomoo' && ['AAPL', 'NVDA'].includes(symbol)
+  const packet = useQuery({
+    queryKey: ['decision-packet', packetId],
+    queryFn: () => api.decisionPacket(packetId!),
+    enabled: supported && packetId !== null && DECISION_PACKET_ID.test(packetId),
+    retry: false, staleTime: Infinity,
+  })
+  if (supported && packetId !== null && DECISION_PACKET_ID.test(packetId) && packet.isPending) return <WorkspaceLoading />
+  if (supported && packetId !== null && packet.isError) return <WorkspaceError error={packet.error} symbol={symbol} venue={venue} />
+  const lab = supported && (packetId !== null ? packet.data?.scenario_lab != null : search.get('analysis') === 'fresh' && search.get('horizon') !== '126')
+  return lab ? <ScenarioLabWorkspace /> : <LegacyInstrumentWorkspaceScreen />
+}
+
+function LegacyInstrumentWorkspaceScreen() {
   const { locale, t } = usePreferences()
   const { symbol = '', venue = '' } = useParams<{ symbol: string; venue: string }>()
   const [search, setSearch] = useSearchParams()

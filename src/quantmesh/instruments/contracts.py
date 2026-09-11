@@ -366,9 +366,7 @@ class HistoricalSeries(StrictContract):
     @model_validator(mode="after")
     def observed_series_is_self_consistent(self) -> "HistoricalSeries":
         if (self.manifest_id is None) != (self.quality_evaluation_id is None):
-            raise ValueError(
-                "manifest_id and quality_evaluation_id must be present together"
-            )
+            raise ValueError("manifest_id and quality_evaluation_id must be present together")
         identity = (self.instrument.venue, self.instrument.symbol)
         live_indices = [index for index, item in enumerate(self.bars) if item.is_live_tail]
         if len(live_indices) > 1:
@@ -750,9 +748,7 @@ class PriceForecastArtifact(StrictContract):
     @model_validator(mode="after")
     def artifact_is_self_consistent(self) -> "PriceForecastArtifact":
         if (self.manifest_id is None) != (self.quality_evaluation_id is None):
-            raise ValueError(
-                "manifest_id and quality_evaluation_id must be present together"
-            )
+            raise ValueError("manifest_id and quality_evaluation_id must be present together")
         if (
             self.history_start > self.train_start
             or self.train_start > self.train_end
@@ -1125,9 +1121,7 @@ class WorkspaceForecast(StrictContract):
     @model_validator(mode="after")
     def eligibility_is_explicit(self) -> "WorkspaceForecast":
         if (self.manifest_id is None) != (self.quality_evaluation_id is None):
-            raise ValueError(
-                "manifest_id and quality_evaluation_id must be present together"
-            )
+            raise ValueError("manifest_id and quality_evaluation_id must be present together")
         if self.eligible != (not self.blockers):
             raise ValueError("workspace forecast eligibility must match blockers")
         return self
@@ -1346,9 +1340,7 @@ class DecisionEvidence(StrictContract):
     history_dataset_id: str = Field(min_length=1)
     history_dataset_revision: int = Field(ge=1)
     history_manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    history_quality_evaluation_id: str | None = Field(
-        default=None, pattern=r"^[0-9a-f]{64}$"
-    )
+    history_quality_evaluation_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     history_source: str = Field(min_length=1)
     history_generated_at: datetime
     history_gaps: tuple[datetime, ...] = Field(default_factory=tuple)
@@ -1358,9 +1350,7 @@ class DecisionEvidence(StrictContract):
     forecast_dataset_id: str | None = None
     forecast_dataset_revision: int | None = Field(default=None, ge=1)
     forecast_manifest_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    forecast_quality_evaluation_id: str | None = Field(
-        default=None, pattern=r"^[0-9a-f]{64}$"
-    )
+    forecast_quality_evaluation_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     forecast_synthetic: bool | None = None
     forecast_eligible: bool | None = None
     forecast_blockers: tuple[str, ...] = Field(default_factory=tuple)
@@ -1430,13 +1420,10 @@ class DecisionEvidence(StrictContract):
             or self.forecast_limitations
         ):
             raise ValueError("forecast detail requires a forecast artifact")
-        if (self.forecast_manifest_id is None) != (
-            self.forecast_quality_evaluation_id is None
-        ):
+        if (self.forecast_manifest_id is None) != (self.forecast_quality_evaluation_id is None):
             raise ValueError("forecast manifest and quality IDs must be present together")
         if self.forecast_synthetic is False and (
-            self.forecast_manifest_id is None
-            or self.forecast_quality_evaluation_id is None
+            self.forecast_manifest_id is None or self.forecast_quality_evaluation_id is None
         ):
             raise ValueError("real forecast requires manifest and quality evidence")
         return self
@@ -1465,6 +1452,17 @@ class DecisionPaperCapability(StrictContract):
         return self
 
 
+class ScenarioLabSnapshot(StrictContract):
+    """Frozen chart evidence and selected-horizon qualification, never order authority."""
+
+    format_version: Literal["1"] = "1"
+    selected_horizon: Literal[7, 30]
+    history: HistoricalSeries
+    confidence: Literal["qualified", "low-confidence", "abstain"]
+    reasons: tuple[str, ...]
+    policy_version: Literal["scenario-lab-v1"] = "scenario-lab-v1"
+
+
 class DecisionPacket(StrictContract):
     """Frozen, versioned, content-addressed decision analysis and disposition."""
 
@@ -1483,6 +1481,10 @@ class DecisionPacket(StrictContract):
     disposition: DecisionDisposition
     operator_reason: str | None = None
     proposal_id: str | None = None
+    scenario_lab: ScenarioLabSnapshot | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
     @field_validator("packet_id", "parent_packet_id")
     @classmethod
@@ -1512,6 +1514,23 @@ class DecisionPacket(StrictContract):
 
     @model_validator(mode="after")
     def version_and_disposition_are_consistent(self) -> "DecisionPacket":
+        if self.scenario_lab is not None:
+            history = self.scenario_lab.history
+            evidence = self.evidence
+            if (
+                history.instrument != self.instrument
+                or history.range != self.selected_range
+                or history.as_of != self.as_of
+                or history.dataset_id != evidence.history_dataset_id
+                or history.dataset_revision != evidence.history_dataset_revision
+                or history.manifest_id != evidence.history_manifest_id
+                or history.quality_evaluation_id != evidence.history_quality_evaluation_id
+                or history.source != evidence.history_source
+                or history.generated_at != evidence.history_generated_at
+            ):
+                raise ValueError("scenario lab history must match immutable packet evidence")
+            if self.scenario_lab.confidence != "qualified" and self.paper_capability.allowed:
+                raise ValueError("unqualified scenario lab evidence must block paper")
         if self.version == 1:
             if (
                 self.parent_packet_id is not None

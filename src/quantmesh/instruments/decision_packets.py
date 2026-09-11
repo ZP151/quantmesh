@@ -11,6 +11,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager, nullcontext
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -192,7 +193,7 @@ class DecisionPacketStore:
     def _validate_collection(cls, packets: list[DecisionPacket]) -> None:
         by_id: dict[str, DecisionPacket] = {}
         child_by_parent: dict[str, str] = {}
-        root_scopes: set[tuple[str, str, str, str]] = set()
+        root_scopes: set[tuple[object, ...]] = set()
         for packet in packets:
             cls._validate_identity(packet)
             if packet.packet_id in by_id:
@@ -207,6 +208,8 @@ class DecisionPacketStore:
                     packet.instrument.symbol,
                     packet.selected_range.value,
                     packet.as_of.isoformat(),
+                    packet.scenario_lab.selected_horizon if packet.scenario_lab else None,
+                    packet.evidence.forecast_artifact_id if packet.scenario_lab else None,
                 )
                 if scope in root_scopes:
                     raise ValueError("decision packet lineage scope already has a root")
@@ -325,7 +328,13 @@ class DecisionPacketStore:
         return tuple(reversed(result))
 
     def latest(
-        self, venue: Venue, symbol: str, selected_range: HistoryRange
+        self,
+        venue: Venue,
+        symbol: str,
+        selected_range: HistoryRange,
+        *,
+        horizon: Literal[7, 30] | None = None,
+        forecast_id: str | None = None,
     ) -> DecisionPacket | None:
         packets = [
             packet
@@ -333,6 +342,8 @@ class DecisionPacketStore:
             if packet.instrument.venue is venue
             and packet.instrument.symbol == symbol
             and packet.selected_range is selected_range
+            and (packet.scenario_lab.selected_horizon if packet.scenario_lab else None) == horizon
+            and (forecast_id is None or packet.evidence.forecast_artifact_id == forecast_id)
         ]
         if not packets:
             return None
@@ -375,8 +386,15 @@ class DecisionPacketService:
         selected_range: HistoryRange,
         *,
         expected_packet_id: str,
+        horizon: Literal[7, 30] | None = None,
+        forecast_id: str | None = None,
     ) -> DecisionPacket:
         workspace_service = self._workspace()
+        selection = {}
+        if horizon is not None:
+            selection["horizon"] = horizon
+        if forecast_id is not None:
+            selection["forecast_id"] = forecast_id
         staged = getattr(workspace_service, "staged_draft", None)
         draft = (
             staged(
@@ -384,6 +402,7 @@ class DecisionPacketService:
                 venue=venue,
                 symbol=symbol,
                 selected_range=selected_range,
+                **selection,
             )
             if callable(staged)
             else None
@@ -393,6 +412,7 @@ class DecisionPacketService:
                 venue,
                 symbol,
                 selected_range,
+                **selection,
             )
             draft = workspace.decision.draft
         if draft.packet_id != expected_packet_id:
@@ -538,11 +558,7 @@ class DecisionPacketService:
         limit_price: float | None,
     ) -> DecisionPacketActionResult | None:
         existing = next(
-            (
-                packet
-                for packet in self.store.all()
-                if packet.parent_packet_id == parent.packet_id
-            ),
+            (packet for packet in self.store.all() if packet.parent_packet_id == parent.packet_id),
             None,
         )
         if existing is None:
@@ -550,6 +566,8 @@ class DecisionPacketService:
                 parent.instrument.venue,
                 parent.instrument.symbol,
                 parent.selected_range,
+                horizon=parent.scenario_lab.selected_horizon if parent.scenario_lab else None,
+                forecast_id=parent.evidence.forecast_artifact_id if parent.scenario_lab else None,
             )
             if latest is not None and latest.packet_id != parent.packet_id:
                 raise ValueError("decision packet is not the latest actionable version")

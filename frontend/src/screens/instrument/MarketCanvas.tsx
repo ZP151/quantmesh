@@ -24,6 +24,7 @@ const RANGES: readonly { label: string; value: HistoryRange }[] = [
 ]
 
 export interface MarketCanvasProps {
+  chartFirst?: boolean
   archivedPacket?: boolean
   archivedPacketAsOf?: string
   comparison: ComparisonSeries | null
@@ -103,7 +104,7 @@ export function MarketCanvas(props: MarketCanvasProps) {
       )}
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <div className="flex flex-wrap gap-1" aria-label={t('screen.workspace.ranges')}>
-          {RANGES.map((item) => (
+          {(props.chartFirst ? [] : RANGES).map((item) => (
             <Button
               aria-pressed={props.range === item.value}
               className="h-7 px-2 font-mono text-[10px]"
@@ -181,6 +182,7 @@ export function MarketCanvas(props: MarketCanvasProps) {
         </p>
       )}
       <InstrumentChart
+        compactLabels={props.chartFirst}
         appearance={resolvedTheme}
         comparisons={props.comparison}
         forecast={props.forecast}

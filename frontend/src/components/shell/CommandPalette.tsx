@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import { NAV_ITEMS } from '@/lib/nav'
 import { usePreferences } from '@/lib/preferences'
 import { cn } from '@/lib/utils'
+import { scenarioLabPath } from '@/lib/instrument-route'
 
 interface PaletteItem {
   key: string
@@ -62,8 +63,14 @@ export function CommandPalette({
         : []),
     ]
     const needle = query.trim().toLowerCase()
-    if (!needle) return [...screens, ...actions]
-    return [...screens, ...actions].filter(
+    const instruments: PaletteItem[] = (['AAPL', 'NVDA'] as const).map((symbol) => ({
+      key: `chart:${symbol}`,
+      label: `${t('lab.openChart')} ${symbol}`,
+      hint: 'Moomoo',
+      run: () => navigate(scenarioLabPath(symbol)),
+    }))
+    if (!needle) return [...instruments, ...screens, ...actions]
+    return [...instruments, ...screens, ...actions].filter(
       (item) => item.label.toLowerCase().includes(needle) || item.hint.toLowerCase().includes(needle),
     )
   }, [query, navigate, killSwitch, resetDemo, demoAttached, t])

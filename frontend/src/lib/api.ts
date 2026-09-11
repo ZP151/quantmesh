@@ -811,6 +811,8 @@ export const api = {
     symbol: string,
     range: HistoryRange,
     compare: readonly string[] = [],
+    horizon?: 7 | 30,
+    forecastId?: string,
   ): Promise<InstrumentWorkspace> {
     const { data, error, response } = await generatedApi.GET(
       '/api/instruments/{venue}/{symbol}/workspace',
@@ -820,6 +822,8 @@ export const api = {
           query: {
             range,
             compare: compare.length > 0 ? [...compare] : undefined,
+            horizon,
+            forecast_id: forecastId,
           },
         },
       },

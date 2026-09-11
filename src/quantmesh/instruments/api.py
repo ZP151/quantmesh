@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
 from quantmesh.data.layout import validate_symbol
 from quantmesh.domain.models import Side, Venue
@@ -101,6 +101,8 @@ class DecisionPacketSaveBody(BaseModel):
     symbol: str
     selected_range: HistoryRange
     expected_packet_id: str = Field(pattern=r"^packet-[0-9a-f]{24}$")
+    horizon: Literal[7, 30] | None = None
+    forecast_id: str | None = Field(default=None, pattern=r"^forecast-[0-9a-f]{24}$")
 
 
 class DecisionPacketActionBody(BaseModel):
@@ -263,6 +265,11 @@ def instrument_router() -> APIRouter:
         symbol: str,
         selected_range: Annotated[HistoryRange, Query(alias="range")],
         compare: Annotated[list[str] | None, Query()] = None,
+        horizon: Annotated[
+            Literal[7, 30] | None,
+            BeforeValidator(lambda value: int(value) if value in ("7", "30") else value),
+        ] = None,
+        forecast_id: Annotated[str | None, Query(pattern=r"^forecast-[0-9a-f]{24}$")] = None,
     ) -> InstrumentWorkspace:
         _validate_api_symbol(symbol, field="symbol")
         peers = _parse_compare(compare, primary=(venue, symbol))
@@ -273,12 +280,22 @@ def instrument_router() -> APIRouter:
                 detail="no instrument workspace service is attached",
             )
         try:
-            return service.render(venue, symbol, selected_range, peers=peers)
+            return service.render(
+                venue,
+                symbol,
+                selected_range,
+                peers=peers,
+                horizon=horizon,
+                forecast_id=forecast_id,
+            )
         except HistoryUnavailableError as error:
             raise HTTPException(
                 status_code=404,
                 detail=f"instrument workspace unavailable: {error}",
             ) from error
+
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
 
     @router.get(
         "/decision-packets",
@@ -540,6 +557,8 @@ def instrument_router() -> APIRouter:
                 body.symbol,
                 body.selected_range,
                 expected_packet_id=body.expected_packet_id,
+                horizon=body.horizon,
+                forecast_id=body.forecast_id,
             )
         except (ValueError, OSError) as error:
             raise HTTPException(status_code=409, detail=str(error)) from error

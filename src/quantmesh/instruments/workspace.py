@@ -7,6 +7,7 @@ import threading
 from collections import OrderedDict
 from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
+from typing import Literal
 
 from quantmesh.domain.models import Venue
 from quantmesh.execution.accounting import PaperAccount, position_key
@@ -14,6 +15,7 @@ from quantmesh.instruments.contracts import (
     ComparisonSeries,
     DecisionPacket,
     DecisionWorkspaceState,
+    HistoricalSeries,
     HistoryRange,
     InstrumentWorkspace,
     PaperProposal,
@@ -163,7 +165,7 @@ class InstrumentWorkspaceService:
         self._decision_packets = decision_packets
         self._now = now
         self._draft_lock = threading.RLock()
-        self._staged_drafts: OrderedDict[str, DecisionPacket] = OrderedDict()
+        self._staged_drafts: OrderedDict[str, tuple[DecisionPacket, str | None]] = OrderedDict()
 
     def staged_draft(
         self,
@@ -172,24 +174,33 @@ class InstrumentWorkspaceService:
         venue: Venue,
         symbol: str,
         selected_range: HistoryRange,
+        horizon: Literal[7, 30] | None = None,
+        forecast_id: str | None = None,
     ) -> DecisionPacket | None:
         """Return an exact draft previously exposed by this workspace process."""
         with self._draft_lock:
-            draft = self._staged_drafts.get(packet_id)
-            if draft is None:
+            staged = self._staged_drafts.get(packet_id)
+            if staged is None:
                 return None
+            draft, selected_forecast_id = staged
             if (
                 draft.instrument.venue is not venue
                 or draft.instrument.symbol != symbol
                 or draft.selected_range is not selected_range
+                or (draft.scenario_lab.selected_horizon if draft.scenario_lab else None) != horizon
+                or (forecast_id is not None and selected_forecast_id != forecast_id)
             ):
                 raise ValueError("staged decision packet does not match the requested scope")
             self._staged_drafts.move_to_end(packet_id)
             return draft
 
-    def _stage_draft(self, draft: DecisionPacket) -> None:
+    def _stage_draft(self, draft: DecisionPacket, forecast_id: str | None = None) -> None:
         with self._draft_lock:
-            self._staged_drafts[draft.packet_id] = draft
+            # Preserve a refused requested pin without claiming it as forecast evidence.
+            self._staged_drafts[draft.packet_id] = (
+                draft,
+                forecast_id or draft.evidence.forecast_artifact_id,
+            )
             self._staged_drafts.move_to_end(draft.packet_id)
             while len(self._staged_drafts) > 256:
                 self._staged_drafts.popitem(last=False)
@@ -220,6 +231,72 @@ class InstrumentWorkspaceService:
                 f"for {venue.value}:{symbol}"
             )
         return max(matches, key=lambda item: (item.generated_at, item.id)), None
+
+    def _exact_forecast(
+        self,
+        forecast_id: str,
+        venue: Venue,
+        symbol: str,
+        *,
+        as_of: datetime,
+    ) -> tuple[PriceForecastArtifact | None, str | None]:
+        if self._forecasts is None:
+            return None, "no price forecast registry is attached"
+        try:
+            artifact = self._forecasts.get(forecast_id)
+            if (
+                artifact.instrument.venue is not venue
+                or artifact.instrument.symbol != symbol
+                or artifact.generated_at > as_of
+            ):
+                raise ValueError("exact forecast does not match the instrument or decision clock")
+        except (OSError, ValueError) as error:
+            return None, f"exact forecast is unavailable: {error}"
+        return artifact, None
+
+    def _validate_chart_pin(
+        self,
+        history: HistoricalSeries,
+        artifact: PriceForecastArtifact,
+    ) -> None:
+        """Check chart bytes against the registry's verified dataset, not current/latest data."""
+        if (
+            history.instrument != artifact.instrument
+            or history.dataset_id != artifact.dataset_id
+            or history.dataset_revision != artifact.dataset_revision
+            or history.manifest_id != artifact.manifest_id
+            or history.quality_evaluation_id != artifact.quality_evaluation_id
+            or history.source != artifact.source
+            or history.license != artifact.license
+            or history.generated_at != artifact.dataset_generated_at
+            or history.interval != "1d"
+            or history.calendar != artifact.calendar
+            or history.adjustment != artifact.adjustment
+            or history.coverage != artifact.coverage
+            or history.bars[-1].timestamp != artifact.train_end
+            or any(bar.timestamp > artifact.train_end or bar.is_live_tail for bar in history.bars)
+        ):
+            raise ValueError("chart history does not match exact forecast provenance or as-of cut")
+        dataset = self._forecasts.resolve_pin(artifact)
+        if artifact.manifest_id is not None:
+            rows = dataset.read_bars()
+        else:
+            rows = dataset.read_bars(
+                interval="1d",
+                venue=artifact.instrument.venue,
+                symbol=artifact.instrument.symbol,
+                start=history.bars[0].timestamp,
+                end=artifact.train_end,
+            )
+        pinned = tuple(
+            row for row in rows if history.bars[0].timestamp <= row.timestamp <= artifact.train_end
+        )
+
+        def values(bar):
+            return (bar.timestamp, bar.open, bar.high, bar.low, bar.close, bar.volume)
+
+        if tuple(map(values, pinned)) != tuple(map(values, history.bars)):
+            raise ValueError("chart history bytes do not match the exact forecast dataset")
 
     def _valuation_and_proposals(
         self,
@@ -269,13 +346,25 @@ class InstrumentWorkspaceService:
         selected_range: HistoryRange,
         *,
         peers: Sequence[tuple[Venue, str]] = (),
+        horizon: Literal[7, 30] | None = None,
+        forecast_id: str | None = None,
     ) -> InstrumentWorkspace:
         generated_at = self._now()
         if generated_at.tzinfo is None:
             raise ValueError("workspace clock must be timezone-aware")
         generated_at = generated_at.astimezone(UTC)
+        if horizon is not None and (
+            horizon not in (7, 30) or venue is not Venue.MOOMOO or symbol not in {"AAPL", "NVDA"}
+        ):
+            raise ValueError("scenario lab supports Moomoo AAPL/NVDA and 7/30 sessions only")
         latest = (
-            self._decision_packets.latest(venue, symbol, selected_range)
+            self._decision_packets.latest(
+                venue,
+                symbol,
+                selected_range,
+                horizon=horizon,
+                forecast_id=forecast_id,
+            )
             if self._decision_packets is not None
             else None
         )
@@ -284,12 +373,30 @@ class InstrumentWorkspaceService:
             symbol,
             as_of=generated_at,
         )
+        artifact, forecast_error = (
+            self._exact_forecast(forecast_id, venue, symbol, as_of=generated_at)
+            if forecast_id is not None
+            else self._latest_forecast(venue, symbol, as_of=generated_at)
+        )
         history = self._history.history(
             venue,
             symbol,
             selected_range,
-            as_of=generated_at,
+            as_of=artifact.generated_at
+            if horizon is not None and artifact is not None
+            else generated_at,
         )
+        if horizon is not None and artifact is not None:
+            observed = tuple(bar for bar in history.bars if bar.timestamp <= artifact.train_end)
+            history = history.model_copy(update={"as_of": generated_at})
+            try:
+                if not observed:
+                    raise ValueError("exact forecast chart history is unavailable")
+                history = history.model_copy(update={"bars": observed})
+                self._validate_chart_pin(history, artifact)
+            except (OSError, ValueError) as error:
+                forecast_error = f"exact forecast chart binding is unavailable: {error}"
+                artifact = None
         comparison: ComparisonSeries | None = None
         if peers:
             comparison = self._history.compare(
@@ -302,11 +409,6 @@ class InstrumentWorkspaceService:
             self._live_feed,
             venue=venue,
             symbol=symbol,
-            as_of=generated_at,
-        )
-        artifact, forecast_error = self._latest_forecast(
-            venue,
-            symbol,
             as_of=generated_at,
         )
         forecast = _forecast_summary(artifact) if artifact is not None else None
@@ -326,7 +428,9 @@ class InstrumentWorkspaceService:
             status = (
                 raw_status
                 if raw_status in {"available", "stale", "unavailable"}
-                else "available" if mark is not None else "unavailable"
+                else "available"
+                if mark is not None
+                else "unavailable"
             )
             mark_status = WorkspaceMarkStatus.model_validate(
                 {
@@ -404,8 +508,9 @@ class InstrumentWorkspaceService:
             account=account,
             selected_range=selected_range,
             as_of=generated_at,
+            horizon=horizon,
         )
-        self._stage_draft(draft)
+        self._stage_draft(draft, forecast_id)
 
         return InstrumentWorkspace(
             generated_at=generated_at,

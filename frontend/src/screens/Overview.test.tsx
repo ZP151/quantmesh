@@ -97,4 +97,18 @@ describe('overview valuation honesty', () => {
     expect(equity).toHaveTextContent('$10,000.00')
     expect(equity).not.toHaveTextContent('Unavailable')
   })
+
+  it('opens NVDA into fresh chart analysis from the home market board', async () => {
+    mocked.overview.mockResolvedValue({
+      account: { cash: 10_000, equity: 10_000, kill_switch: false, starting_cash: 10_000 },
+      marks: {}, missing_marks: [], valuation_complete: true, valuation_reason: null,
+      venues: [{ venue: 'moomoo', instruments: [{ symbol: 'NVDA', mark: 120 }] }],
+      watchlist: [],
+    } as Overview)
+    renderScreen()
+    expect(await screen.findByRole('link', { name: /NVDA/ })).toHaveAttribute(
+      'href', '/instruments/moomoo/NVDA?horizon=30&analysis=fresh',
+    )
+    expect(screen.getByRole('textbox', { name: 'Ticker' })).toBeInTheDocument()
+  })
 })

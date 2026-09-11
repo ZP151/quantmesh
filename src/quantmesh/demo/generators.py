@@ -21,7 +21,9 @@ from __future__ import annotations
 import math
 import random
 from datetime import datetime, timedelta
+from typing import Literal
 
+from quantmesh.data.calendars import CalendarService, SessionPolicy
 from quantmesh.demo.manifest import (
     HISTORICAL_DAILY_SESSIONS,
     SESSIONS,
@@ -275,7 +277,28 @@ def latest_marks(series: dict[str, dict[str, list[float]]]) -> dict[str, dict[st
     }
 
 
-def _recent_equity_sessions(scenario: DemoScenario, count: int) -> list[datetime]:
+def _recent_equity_sessions(
+    scenario: DemoScenario, count: int, *, session_calendar: Literal["legacy", "XNYS"] = "legacy"
+) -> list[datetime]:
+    if session_calendar == "XNYS":
+        calendar = CalendarService()
+        start = scenario.anchor - timedelta(days=count * 2 + 14)
+        completed = tuple(
+            window
+            for window in calendar.sessions(
+                "XNYS", start.date(), scenario.anchor.date(), policy=SessionPolicy.REGULAR
+            )
+            if window.close_at <= scenario.anchor
+        )
+        if len(completed) < count:
+            raise ValueError("not enough completed XNYS sessions for demo history")
+        return list(
+            calendar.expected_bar_opens(
+                "XNYS", start, completed[-1].close_at, interval="1d", policy=SessionPolicy.REGULAR
+            )[-count:]
+        )
+    if session_calendar != "legacy":
+        raise ValueError("unsupported demo session calendar")
     candidate = scenario.anchor.replace(hour=20, minute=0, second=0, microsecond=0)
     if candidate > scenario.anchor:
         candidate -= timedelta(days=1)
@@ -312,9 +335,13 @@ def analytical_history(
     spec: InstrumentSpec,
     *,
     target_close: float | None = None,
+    session_calendar: Literal["legacy", "XNYS"] = "legacy",
 ) -> dict[str, list[dict[str, object]]]:
     """Deep deterministic equity history, independent of the live fixture RNG."""
-    sessions = _recent_equity_sessions(scenario, HISTORICAL_DAILY_SESSIONS)
+    sessions = _recent_equity_sessions(
+        scenario, HISTORICAL_DAILY_SESSIONS, session_calendar=session_calendar
+    )
+    calendar = CalendarService() if session_calendar == "XNYS" else None
     phase = (scenario.seed % 997) / 997 + sum(ord(char) for char in spec.symbol) / 100
     closes = [
         spec.base_price
@@ -352,11 +379,25 @@ def analytical_history(
         selected_sessions = sessions[-session_count:]
         for session_index, session_end in enumerate(selected_sessions):
             session_open = session_end.replace(hour=13, minute=30)
+            timestamps = tuple(
+                session_open + timedelta(minutes=step_minutes * point)
+                for point in range(points_per_session)
+            )
+            if calendar is not None:
+                window = calendar.sessions(
+                    "XNYS", session_end.date(), session_end.date(), policy=SessionPolicy.REGULAR
+                )[0]
+                timestamps = calendar.expected_bar_opens(
+                    "XNYS",
+                    window.open_at,
+                    window.close_at,
+                    interval=interval,
+                    policy=SessionPolicy.REGULAR,
+                )
             daily_close = closes[-session_count + session_index]
             previous = daily_close * 0.996
-            for point in range(points_per_session):
-                timestamp = session_open + timedelta(minutes=step_minutes * point)
-                progress = (point + 1) / points_per_session
+            for point, timestamp in enumerate(timestamps):
+                progress = (point + 1) / len(timestamps)
                 close = daily_close * (
                     0.996 + 0.004 * progress + 0.0015 * math.sin(point / 3 + phase + session_index)
                 )

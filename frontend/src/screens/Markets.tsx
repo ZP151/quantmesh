@@ -4,9 +4,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Page } from '@/components/page'
+import { InstrumentEntry } from '@/components/instrument-entry'
 import { Surface, useSurface } from '@/components/state'
 import { api } from '@/lib/api'
-import { instrumentPath } from '@/lib/instrument-route'
+import { chartEntryPath } from '@/lib/instrument-route'
 import { money, venueLabel } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
 import { cn } from '@/lib/utils'
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils'
  * Market evidence (市场证据): the cross-venue board from the seeded
  * demo universe — 6 equities on moomoo, 4 perps on hyperliquid, every
  * mark a deterministic seed. Each instrument is one click from the
- * paper order form.
+ * instrument chart, with a separate explicit paper order action.
  */
 export function MarketsScreen() {
   const query = useSurface(['markets'], api.markets)
@@ -32,6 +33,7 @@ export function MarketsScreen() {
         </Button>
       }
     >
+      <InstrumentEntry />
       <Surface
         query={query}
         title={t('screen.markets.title')}
@@ -80,7 +82,7 @@ export function MarketsScreen() {
                               <td className="py-2 pr-4 font-mono font-medium">
                                 <Link
                                   className="underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                  to={instrumentPath(instrument.venue, instrument.symbol)}
+                                  to={chartEntryPath(instrument.venue, instrument.symbol)}
                                 >
                                   {instrument.symbol}
                                 </Link>

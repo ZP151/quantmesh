@@ -21,12 +21,13 @@ from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from statistics import median
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from pydantic import ValidationError
 
 from quantmesh._fs import atomic_replace
 from quantmesh.data.artifacts import ArtifactLayer
+from quantmesh.data.calendars import XNYS_REGULAR_VERSION, CalendarService, SessionPolicy
 from quantmesh.data.capabilities import DataKind
 from quantmesh.data.lake import Lake
 from quantmesh.domain.models import InstrumentType
@@ -55,6 +56,13 @@ LIMITATIONS = (
     "Intervals are empirical and do not imply a probability of profit or execution outcome.",
     "The artifact is research evidence; the paper kernel remains the only order authority.",
 )
+XNYS_LIMITATIONS = (
+    f"Equity dates use {XNYS_REGULAR_VERSION}, regular sessions and New York midnight daily bars.",
+    "Residual rows overlap and are not independent observations.",
+    "Intermediate path bands use a square-root scaling approximation, not per-time calibration.",
+    *LIMITATIONS[1:],
+)
+SessionCalendar = Literal["legacy", "XNYS"]
 
 
 class TrustedForecastCatalog(Protocol):
@@ -159,7 +167,19 @@ def rolling_oos_forecasts(
     return tuple(rows)
 
 
-def _future_sessions(last: datetime, count: int, *, continuous: bool) -> tuple[datetime, ...]:
+def _xnys_daily(start: datetime, end: datetime) -> tuple[datetime, ...]:
+    return CalendarService().expected_bar_opens(
+        "XNYS", start, end, interval="1d", policy=SessionPolicy.REGULAR
+    )
+
+
+def _future_sessions(
+    last: datetime, count: int, *, continuous: bool, session_calendar: SessionCalendar = "legacy"
+) -> tuple[datetime, ...]:
+    if session_calendar == "XNYS":
+        return _xnys_daily(last + timedelta(microseconds=1), last + timedelta(days=count * 2 + 14))[
+            :count
+        ]
     result: list[datetime] = []
     candidate = last
     while len(result) < count:
@@ -175,11 +195,14 @@ def _path(
     horizon: int,
     residuals: Sequence[float],
     continuous: bool,
+    session_calendar: SessionCalendar = "legacy",
 ) -> ForecastPath:
     closes = [bar.close for bar in bars]
     drift = _drift(closes, len(closes) - 1)
     centered = _centered_residual_quantiles(residuals)
-    dates = _future_sessions(bars[-1].timestamp, horizon, continuous=continuous)
+    dates = _future_sessions(
+        bars[-1].timestamp, horizon, continuous=continuous, session_calendar=session_calendar
+    )
     points: list[ForecastPoint] = []
     for session, timestamp in enumerate(dates, start=1):
         predicted = closes[-1] * math.exp(drift * session)
@@ -252,8 +275,16 @@ def _metrics(horizon: int, rows: Sequence[OOSForecast]) -> ForecastMetrics:
     )
 
 
-def _unexplained_bar_gaps(bars: Sequence[object], *, continuous: bool) -> tuple[datetime, ...]:
+def _unexplained_bar_gaps(
+    bars: Sequence[object], *, continuous: bool, session_calendar: SessionCalendar = "legacy"
+) -> tuple[datetime, ...]:
     timestamps = tuple(bar.timestamp for bar in bars)
+    if session_calendar == "XNYS":
+        observed = set(timestamps)
+        expected = _xnys_daily(timestamps[0], timestamps[-1] + timedelta(microseconds=1))
+        if observed - set(expected):
+            raise ValueError("XNYS history contains a timestamp outside the daily session grid")
+        return tuple(stamp for stamp in expected if stamp not in observed)
     gaps: list[datetime] = []
     for left, right in zip(timestamps, timestamps[1:]):
         candidate = left + timedelta(days=1)
@@ -266,7 +297,21 @@ def _unexplained_bar_gaps(bars: Sequence[object], *, continuous: bool) -> tuple[
     return tuple(gaps)
 
 
-def _session_age(train_end: datetime, generated_at: datetime, *, continuous: bool) -> int:
+def _session_age(
+    train_end: datetime,
+    generated_at: datetime,
+    *,
+    continuous: bool,
+    session_calendar: SessionCalendar = "legacy",
+) -> int:
+    if session_calendar == "XNYS":
+        if generated_at == train_end:
+            return 0
+        return len(
+            _xnys_daily(
+                train_end + timedelta(microseconds=1), generated_at + timedelta(microseconds=1)
+            )
+        )
     count = 0
     candidate = train_end + timedelta(days=1)
     while candidate.date() <= generated_at.date():
@@ -344,11 +389,7 @@ def _report_core(artifact: PriceForecastArtifact) -> bytes:
 
 
 def _report_file(artifact: PriceForecastArtifact) -> bytes:
-    excluded = (
-        {"manifest_id", "quality_evaluation_id"}
-        if artifact.manifest_id is None
-        else set()
-    )
+    excluded = {"manifest_id", "quality_evaluation_id"} if artifact.manifest_id is None else set()
     return _canonical_json(artifact.model_dump(mode="json", exclude=excluded))
 
 
@@ -362,8 +403,8 @@ def _expected_hashes(artifact: PriceForecastArtifact) -> dict[str, str]:
     }
 
 
-def _config() -> dict[str, object]:
-    return {
+def _config(session_calendar: SessionCalendar = "legacy") -> dict[str, object]:
+    config: dict[str, object] = {
         "benchmark": BENCHMARK_NAME,
         "coverage_gate": [0.60, 0.98],
         "horizons": list(HORIZONS),
@@ -372,6 +413,37 @@ def _config() -> dict[str, object]:
         "residual_minimums": {"7": 30, "30": 30, "126": 12},
         "return_window": RETURN_WINDOW,
     }
+    if session_calendar == "XNYS":
+        config.update(
+            {
+                "calendar_version": XNYS_REGULAR_VERSION,
+                "session_policy": "regular",
+                "daily_timestamp": "America/New_York:midnight",
+                "calendar_algorithm": "xnys-daily-v1",
+            }
+        )
+    elif session_calendar != "legacy":
+        raise ValueError("unsupported forecast session calendar")
+    return config
+
+
+def is_xnys_config(config_digest: str) -> bool:
+    """Recognize the admitted daily-session algorithm without changing legacy evidence."""
+    return config_digest == _sha256(_canonical_json(_config("XNYS")))
+
+
+def _artifact_calendar(artifact: PriceForecastArtifact) -> SessionCalendar:
+    for selection in ("legacy", "XNYS"):
+        if artifact.config_digest == _sha256(_canonical_json(_config(selection))):
+            if selection == "XNYS":
+                _require_xnys_equity(artifact.calendar, artifact.instrument.instrument_type)
+            return selection
+    raise ValueError("forecast config_digest does not match the declared model setup")
+
+
+def _require_xnys_equity(calendar: str, instrument_type: InstrumentType) -> None:
+    if calendar != "XNYS" or instrument_type is not InstrumentType.EQUITY:
+        raise ValueError("XNYS forecast requires an XNYS equity dataset")
 
 
 def _bar_digest(bars: Sequence[object]) -> str:
@@ -404,6 +476,7 @@ def _identity(
     gap_count: int | None = None,
     duplicate_count: int | None = None,
     age_sessions: int | None = None,
+    session_calendar: SessionCalendar = "legacy",
 ) -> dict[str, object]:
     if artifact is not None:
         identity = {
@@ -462,7 +535,7 @@ def _identity(
         "history_start": bars[0].timestamp.isoformat(),
         "instrument": series.instrument.model_dump(mode="json"),
         "license": series.license,
-        "limitations": list(LIMITATIONS),
+        "limitations": list(XNYS_LIMITATIONS if session_calendar == "XNYS" else LIMITATIONS),
         "model_version": model_version,
         "revision": series.dataset_revision,
         "source": series.source,
@@ -484,6 +557,7 @@ def _promotion_blockers(
     continuous: bool,
     age_sessions: int,
     metrics: Sequence[ForecastMetrics],
+    session_calendar: SessionCalendar = "legacy",
 ) -> tuple[str, ...]:
     blockers: list[str] = []
     if history_sessions < 315:
@@ -491,7 +565,9 @@ def _promotion_blockers(
     if duplicate_count:
         blockers.append(f"history contains {duplicate_count} duplicate timestamp(s)")
     if gap_count:
-        kind = "daily" if continuous else "weekday"
+        kind = (
+            "XNYS session" if session_calendar == "XNYS" else "daily" if continuous else "weekday"
+        )
         blockers.append(f"history contains {gap_count} unexplained {kind} gap(s)")
     required = {7: 30, 30: 30, 126: 12}
     for metric in metrics:
@@ -524,10 +600,21 @@ def validate_price_forecast_artifact(
         artifact = PriceForecastArtifact.model_validate(artifact.model_dump())
     except ValidationError as error:
         raise ValueError("forecast artifact contract is internally inconsistent") from error
-    if artifact.config_digest != _sha256(_canonical_json(_config())):
-        raise ValueError("forecast config_digest does not match the declared model setup")
-    if artifact.limitations != LIMITATIONS:
+    session_calendar = _artifact_calendar(artifact)
+    limitations = XNYS_LIMITATIONS if session_calendar == "XNYS" else LIMITATIONS
+    if artifact.limitations != limitations:
         raise ValueError("forecast limitations do not match the canonical risk disclosure")
+    if session_calendar == "XNYS":
+        for path in artifact.paths:
+            expected_dates = _future_sessions(
+                artifact.train_end, path.sessions, continuous=False, session_calendar="XNYS"
+            )
+            if tuple(point.timestamp for point in path.points) != expected_dates:
+                raise ValueError("forecast XNYS projection dates do not match the pinned calendar")
+        if artifact.age_sessions != _session_age(
+            artifact.train_end, artifact.generated_at, continuous=False, session_calendar="XNYS"
+        ):
+            raise ValueError("forecast XNYS age does not match the pinned calendar")
     expected_id = f"forecast-{_sha256(_canonical_json(_identity(artifact=artifact)))[:24]}"
     if artifact.id != expected_id:
         raise ValueError("forecast id does not match its immutable setup")
@@ -555,6 +642,7 @@ def validate_price_forecast_artifact(
         continuous=continuous,
         age_sessions=artifact.age_sessions,
         metrics=artifact.metrics,
+        session_calendar=session_calendar,
     )
     if artifact.blockers != expected_blockers or artifact.eligible != (not expected_blockers):
         raise ValueError("forecast eligibility does not match its promotion evidence")
@@ -562,6 +650,7 @@ def validate_price_forecast_artifact(
 
 
 def _validate_against_bars(artifact: PriceForecastArtifact, bars: Sequence[object]) -> None:
+    session_calendar = _artifact_calendar(artifact)
     if len(bars) != artifact.history_sessions or _bar_digest(bars) != artifact.history_digest:
         raise ValueError("dataset pin history bytes do not match the forecast artifact")
     if not bars:
@@ -582,11 +671,14 @@ def _validate_against_bars(artifact: PriceForecastArtifact, bars: Sequence[objec
     }
     timestamps = tuple(bar.timestamp for bar in bars)
     duplicate_count = len(timestamps) - len(set(timestamps))
-    gap_count = len(_unexplained_bar_gaps(bars, continuous=continuous))
+    gap_count = len(
+        _unexplained_bar_gaps(bars, continuous=continuous, session_calendar=session_calendar)
+    )
     age_sessions = _session_age(
         bars[-1].timestamp,
         artifact.generated_at,
         continuous=continuous,
+        session_calendar=session_calendar,
     )
     if (
         artifact.duplicate_count != duplicate_count
@@ -606,6 +698,7 @@ def _validate_against_bars(artifact: PriceForecastArtifact, bars: Sequence[objec
             horizon=horizon,
             residuals=[row.residual_log for row in expected_by_horizon[horizon]],
             continuous=continuous,
+            session_calendar=session_calendar,
         )
         for horizon in HORIZONS
     )
@@ -618,6 +711,7 @@ def _validate_against_bars(artifact: PriceForecastArtifact, bars: Sequence[objec
         continuous=continuous,
         age_sessions=age_sessions,
         metrics=artifact.metrics,
+        session_calendar=session_calendar,
     )
     if artifact.blockers != expected_blockers or artifact.eligible != (not expected_blockers):
         raise ValueError("forecast eligibility does not match pinned history")
@@ -628,6 +722,7 @@ def run_price_forecast(
     *,
     generated_at: datetime,
     model_version: str,
+    session_calendar: SessionCalendar = "legacy",
 ) -> PriceForecastArtifact:
     """Build one deterministic artifact without mutating a registry."""
     if generated_at.tzinfo is None:
@@ -635,6 +730,9 @@ def run_price_forecast(
     generated_at = generated_at.astimezone(UTC)
     if not model_version.strip():
         raise ValueError("model_version must not be blank")
+    config_digest = _sha256(_canonical_json(_config(session_calendar)))
+    if session_calendar == "XNYS":
+        _require_xnys_equity(series.calendar, series.instrument.instrument_type)
     if series.interval != "1d":
         raise ValueError("price forecast requires manifest-gated daily history")
     if series.adjustment != "unadjusted":
@@ -659,6 +757,7 @@ def run_price_forecast(
             horizon=horizon,
             residuals=[row.residual_log for row in oos_by_horizon[horizon]],
             continuous=continuous,
+            session_calendar=session_calendar,
         )
         for horizon in HORIZONS
     )
@@ -666,8 +765,12 @@ def run_price_forecast(
 
     timestamps = tuple(bar.timestamp for bar in bars)
     duplicate_count = len(timestamps) - len(set(timestamps))
-    gap_count = len(_unexplained_bar_gaps(bars, continuous=continuous))
-    age = _session_age(bars[-1].timestamp, generated_at, continuous=continuous)
+    gap_count = len(
+        _unexplained_bar_gaps(bars, continuous=continuous, session_calendar=session_calendar)
+    )
+    age = _session_age(
+        bars[-1].timestamp, generated_at, continuous=continuous, session_calendar=session_calendar
+    )
     blockers = _promotion_blockers(
         history_sessions=len(bars),
         gap_count=gap_count,
@@ -675,8 +778,8 @@ def run_price_forecast(
         continuous=continuous,
         age_sessions=age,
         metrics=metrics,
+        session_calendar=session_calendar,
     )
-    config_digest = _sha256(_canonical_json(_config()))
     history_digest = _bar_digest(bars)
     identity = _identity(
         series=series,
@@ -688,6 +791,7 @@ def run_price_forecast(
         gap_count=gap_count,
         duplicate_count=duplicate_count,
         age_sessions=age,
+        session_calendar=session_calendar,
     )
     artifact_id = f"forecast-{_sha256(_canonical_json(identity))[:24]}"
     common: dict[str, object] = {
@@ -726,7 +830,7 @@ def run_price_forecast(
         "metrics": metrics,
         "eligible": not blockers,
         "blockers": blockers,
-        "limitations": LIMITATIONS,
+        "limitations": XNYS_LIMITATIONS if session_calendar == "XNYS" else LIMITATIONS,
     }
     placeholder = PriceForecastArtifact(
         **common,
@@ -803,17 +907,13 @@ class PriceForecastRegistry:
                 dataset_id=artifact.dataset_id,
                 compatibility_revision=artifact.dataset_revision,
             )
-            catalog_entry = self.trusted_catalog.require_research(
-                artifact.manifest_id
-            )
+            catalog_entry = self.trusted_catalog.require_research(artifact.manifest_id)
             if (
                 dataset.manifest.layer is not ArtifactLayer.ADJUSTED
                 or dataset.manifest.data_kind is not DataKind.BARS
                 or dataset.manifest.interval != "1d"
             ):
-                raise ValueError(
-                    "trusted forecast input must be an adjusted daily bar manifest"
-                )
+                raise ValueError("trusted forecast input must be an adjusted daily bar manifest")
             dataset_revision = dataset.manifest.compatibility_revision
             dataset_source = catalog_entry.provider_id
             dataset_license = catalog_entry.source_rights_id

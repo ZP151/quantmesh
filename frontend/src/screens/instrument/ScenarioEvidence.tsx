@@ -1,10 +1,11 @@
 import type { DecisionPacket } from '@/lib/api'
 import { dateTime, moneyPrecise, number, percent } from '@/lib/format'
 import { type Locale, usePreferences } from '@/lib/preferences'
+import { evidenceText } from './evidence-copy'
 
 const scenarioOrder = ['bull', 'base', 'bear'] as const
 
-export function PacketEvidenceSummary({ packet }: { packet: DecisionPacket }) {
+export function PacketEvidenceSummary({ packet, archived = true }: { packet: DecisionPacket; archived?: boolean }) {
   const { locale, t } = usePreferences()
   const evidence = packet.evidence
   const chronology = evidence.forecast_chronology
@@ -22,9 +23,9 @@ export function PacketEvidenceSummary({ packet }: { packet: DecisionPacket }) {
     <section className="min-w-0 space-y-3 px-3" aria-label={t('screen.workspace.packetEvidence')}>
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          {t('screen.workspace.archivedEvidence')}
+          {t(archived ? 'screen.workspace.archivedEvidence' : 'lab.evidence')}
         </h2>
-        <p className="mt-1 text-xs text-muted-foreground">{t('screen.workspace.archivedEvidenceNote')}</p>
+        {archived && <p className="mt-1 text-xs text-muted-foreground">{t('screen.workspace.archivedEvidenceNote')}</p>}
       </div>
       <dl className="space-y-1 border-y border-border py-3 text-xs">
         <EvidenceFact label={t('screen.workspace.historyDataset')} value={evidence.history_dataset_id} />
@@ -96,12 +97,12 @@ export function PacketEvidenceSummary({ packet }: { packet: DecisionPacket }) {
               <div aria-label={metricLabel} className="space-y-1" key={metric.sessions} role="group">
                 <p className="font-semibold">{metricLabel}</p>
                 <dl className="space-y-1">
-                  <EvidenceFact label={t('screen.workspace.oosMae')} value={number(metric.mae, locale)} />
-                  <EvidenceFact label={t('screen.workspace.oosRmse')} value={number(metric.rmse, locale)} />
-                  <EvidenceFact label={t('screen.workspace.benchmarkMae')} value={number(metric.benchmark_mae, locale)} />
+                  <EvidenceFact label={t('screen.workspace.oosMae')} value={metric.residual_count > 0 ? number(metric.mae, locale) : null} />
+                  <EvidenceFact label={t('screen.workspace.oosRmse')} value={metric.residual_count > 0 ? number(metric.rmse, locale) : null} />
+                  <EvidenceFact label={t('screen.workspace.benchmarkMae')} value={metric.residual_count > 0 ? number(metric.benchmark_mae, locale) : null} />
                   <EvidenceFact
                     label={t('screen.workspace.coverage')}
-                    value={`${percent(metric.coverage_50, locale)} / ${percent(metric.coverage_80, locale)} / ${percent(metric.coverage_95, locale)}`}
+                    value={metric.interval_test_count > 0 ? `${percent(metric.coverage_50, locale)} / ${percent(metric.coverage_80, locale)} / ${percent(metric.coverage_95, locale)}` : null}
                   />
                   <EvidenceFact label={t('screen.workspace.residualSamples')} value={number(metric.residual_count, locale)} />
                   <EvidenceFact label={t('screen.workspace.intervalTests')} value={number(metric.interval_test_count, locale)} />
@@ -213,14 +214,14 @@ export function ScenarioEvidence({ packet }: { packet: DecisionPacket }) {
                 </span>
               )}
             </div>
-            <p className="text-xs leading-relaxed">{scenario.thesis}</p>
+            <p className="text-xs leading-relaxed">{evidenceText(scenario.thesis, locale, t)}</p>
             <dl className="space-y-1 text-xs">
-              <ScenarioFact label={t('screen.workspace.trigger')} value={scenario.trigger} />
+              <ScenarioFact label={t('screen.workspace.trigger')} value={evidenceText(scenario.trigger, locale, t)} />
               <ScenarioFact label={t('screen.workspace.invalidation')} value={moneyPrecise(scenario.invalidation, locale)} />
               <ScenarioFact label={t('screen.workspace.target')} value={moneyPrecise(scenario.target, locale)} />
             </dl>
             <p className="text-[10px] leading-relaxed text-muted-foreground">
-              {scenario.confidence_reason}
+              {evidenceText(scenario.confidence_reason, locale, t)}
             </p>
           </article>
         ))}

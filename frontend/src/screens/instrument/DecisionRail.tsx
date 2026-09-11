@@ -14,27 +14,30 @@ import { money, moneyPrecise, number, quantity } from '@/lib/format'
 import type { MessageKey } from '@/lib/messages'
 import { usePreferences } from '@/lib/preferences'
 import { ProposalConfirmation } from './ProposalConfirmation'
+import { evidenceText } from './evidence-copy'
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
 interface DecisionRailProps {
+  forecastId?: string
   contextKey?: string
   evidenceUpdating?: boolean
   onNewAnalysis?: () => void
   onActionResult?: (result: DecisionPacketActionResult) => void
   packet?: DecisionPacket
   packetSource?: 'fresh' | 'persisted'
-  workspace: InstrumentWorkspace
+  workspace?: InstrumentWorkspace
 }
 
 export function DecisionRail(props: DecisionRailProps) {
-  const packet = props.packet ?? props.workspace.decision.latest ?? props.workspace.decision.draft
+  const packet = props.packet ?? props.workspace?.decision.latest ?? props.workspace?.decision.draft
+  if (!packet) return null
   const contextKey = props.contextKey
     ?? `${packet.instrument.venue}:${packet.instrument.symbol}:${packet.selected_range}`
   const packetSource = props.packetSource
-    ?? (props.workspace.decision.latest?.packet_id === packet.packet_id ? 'persisted' : 'fresh')
+    ?? (props.workspace?.decision.latest?.packet_id === packet.packet_id ? 'persisted' : 'fresh')
   return (
     <DecisionRailContext
       {...props}
@@ -49,6 +52,7 @@ export function DecisionRail(props: DecisionRailProps) {
 function DecisionRailContext({
   contextKey: contextKeyOverride,
   evidenceUpdating = false,
+  forecastId,
   onActionResult,
   onNewAnalysis,
   packet: packetOverride,
@@ -57,11 +61,12 @@ function DecisionRailContext({
 }: {
   contextKey: string
   evidenceUpdating?: boolean
+  forecastId?: string
   onActionResult?: (result: DecisionPacketActionResult) => void
   onNewAnalysis?: () => void
   packet: DecisionPacket
   packetSource: 'fresh' | 'persisted'
-  workspace: InstrumentWorkspace
+  workspace?: InstrumentWorkspace
 }) {
   const { locale, t } = usePreferences()
   const packet = packetOverride
@@ -74,20 +79,20 @@ function DecisionRailContext({
   const [limitPrice, setLimitPrice] = useState(String(packet.risk_plan.entry_price))
   const [operatorReason, setOperatorReason] = useState('')
   const [dismissedProposalIds, setDismissedProposalIds] = useState<readonly string[]>([])
-  const heldPosition = workspace.position !== null && workspace.position !== undefined
+  const heldPosition = workspace?.position !== null && workspace?.position !== undefined
     && workspace.position.quantity !== 0
   const positionMarkAvailable = !heldPosition || (
-    workspace.position?.mark_status?.status === 'available'
-    && typeof workspace.position.mark === 'number'
+    workspace?.position?.mark_status?.status === 'available'
+    && typeof workspace?.position.mark === 'number'
     && Number.isFinite(workspace.position.mark)
   )
-  const valuationComplete = workspace.risk.valuation_complete === false
+  const valuationComplete = !workspace || workspace.risk.valuation_complete === false
     ? false
     : workspace.risk.valuation_complete === true
       ? positionMarkAvailable
       : !heldPosition
-  const valuationReason = workspace.risk.valuation_reason
-    ?? workspace.position?.mark_status?.reason
+  const valuationReason = workspace?.risk.valuation_reason
+    ?? workspace?.position?.mark_status?.reason
   const viewIdentity = {
     contextKey,
     packetId: packet.packet_id,
@@ -115,6 +120,8 @@ function DecisionRailContext({
   const reasonReady = operatorReason.trim().length > 0
   const paperAllowed = isDraft
     && !evidenceUpdating
+    && workspace !== undefined
+    && (displayedPacket.scenario_lab == null || (valuationComplete && workspace.proposal.allowed))
     && displayedPacket.paper_capability.allowed
     && validPaperInput
 
@@ -124,6 +131,10 @@ function DecisionRailContext({
         ? submission.packet
         : await api.saveDecisionPacket({
             expected_packet_id: submission.packet.packet_id,
+            ...(submission.packet.scenario_lab ? {
+              horizon: submission.packet.scenario_lab.selected_horizon,
+              forecast_id: submission.forecastId ?? submission.packet.evidence.forecast_artifact_id ?? undefined,
+            } : {}),
             selected_range: submission.identity.range,
             symbol: submission.identity.symbol,
             venue: submission.identity.venue,
@@ -161,6 +172,7 @@ function DecisionRailContext({
     if (evidenceUpdating) return
     action.mutate({
       disposition,
+      forecastId,
       identity: viewIdentity,
       limitPrice: numericLimit,
       operatorReason: operatorReason.trim(),
@@ -170,7 +182,7 @@ function DecisionRailContext({
     })
   }
 
-  const persistedProposals = [...workspace.proposal.proposals]
+  const persistedProposals = [...(workspace?.proposal.proposals ?? [])]
     .reverse()
     .filter((candidate) => !dismissedProposalIds.includes(candidate.id)
       && candidate.instrument.venue === displayedPacket.instrument.venue
@@ -222,7 +234,7 @@ function DecisionRailContext({
         <p className="text-[10px] text-muted-foreground">{t('screen.workspace.spreadAtConfirmation')}</p>
       </section>
 
-      <section className="space-y-2 px-4" aria-label={t('screen.workspace.portfolioRisk')}>
+      {workspace ? <section className="space-y-2 px-4" aria-label={t('screen.workspace.portfolioRisk')}>
         <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('screen.workspace.portfolioRisk')}</h3>
         <dl className="space-y-1 text-xs">
           <Fact label={t('screen.workspace.accountEquity')} value={valuationComplete ? money(workspace.risk.equity, locale) : t('screen.workspace.valueUnavailable')} />
@@ -241,7 +253,18 @@ function DecisionRailContext({
             )}
           </div>
         )}
-      </section>
+      </section> : <p role="status" className="px-4 text-xs text-muted-foreground">{t('lab.riskUnavailable')}</p>}
+
+      {displayedPacket.scenario_lab != null && workspace?.proposal.allowed === false && (
+        <section className="space-y-2 px-4" aria-label={t('screen.workspace.paperBlockers')}>
+          <h3 className="text-[10px] font-semibold uppercase tracking-wider text-destructive">{t('screen.workspace.paperBlockers')}</h3>
+          <ul className="space-y-2 text-xs" role="status">
+            {workspace.proposal.blockers.map((reason) => (
+              <li className="rounded-lg bg-destructive/10 px-2.5 py-2" key={reason}>{evidenceText(reason, locale, t)}</li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {displayedPacket.paper_capability.blockers.length > 0 && (
         <section className="space-y-2 px-4" aria-label={t('screen.workspace.paperBlockers')}>
@@ -354,6 +377,7 @@ interface ViewIdentity {
 }
 
 interface ActionSubmission {
+  forecastId?: string
   disposition: ActionDisposition
   identity: ViewIdentity
   limitPrice: number | null

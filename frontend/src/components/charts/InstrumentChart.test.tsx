@@ -5,6 +5,8 @@ import type { ComparisonSeries, HistoricalSeries } from '@/lib/api'
 
 const chartHarness = vi.hoisted(() => {
   const series: Array<{
+    attachPrimitive: ReturnType<typeof vi.fn>
+    detachPrimitive: ReturnType<typeof vi.fn>
     applyOptions: ReturnType<typeof vi.fn>
     setData: ReturnType<typeof vi.fn>
   }> = []
@@ -16,6 +18,8 @@ const chartHarness = vi.hoisted(() => {
   const chart = {
     addSeries: vi.fn(() => {
       const next = {
+        attachPrimitive: vi.fn(),
+        detachPrimitive: vi.fn(),
         applyOptions: vi.fn(),
         priceScale: vi.fn(() => ({ applyOptions: vi.fn() })),
         setData: vi.fn(),
@@ -264,6 +268,27 @@ describe('InstrumentChart', () => {
       'href',
       'https://www.tradingview.com/',
     )
+  })
+
+  it('attaches one empirical band, labels its semantics and detaches it before chart removal', () => {
+    const view = render(<InstrumentChart forecast={forecast} mode="candles" primary={primary} />)
+    const attached = chartHarness.series.flatMap((series) => series.attachPrimitive.mock.calls)
+    expect(attached).toHaveLength(1)
+    expect(screen.getByText('P10–P90 · empirical 80% interval · dashed edges')).toBeVisible()
+    expect(screen.getByText('P50 · median · solid line')).toBeVisible()
+    expect(screen.getByText('Observed | Forecast')).toBeVisible()
+    view.rerender(<InstrumentChart forecast={null} mode="candles" primary={primary} />)
+    expect(screen.queryByText('Observed | Forecast')).not.toBeInTheDocument()
+    view.unmount()
+    const owner = chartHarness.series.find((series) => series.attachPrimitive.mock.calls.length > 0)!
+    expect(owner.detachPrimitive).toHaveBeenCalledWith(attached[0][0])
+    expect(owner.detachPrimitive.mock.invocationCallOrder[0]).toBeLessThan(chartHarness.chart.remove.mock.invocationCallOrder[0])
+  })
+
+  it('localizes the interval and split legend from the app locale', () => {
+    render(<InstrumentChart forecast={forecast} locale="zh-CN" mode="candles" primary={primary} />)
+    expect(screen.getByText('P10–P90 · 经验 80% 区间 · 虚线边界')).toBeVisible()
+    expect(screen.getByText('观测 | 预测')).toBeVisible()
   })
 
   it('uses contrast-safe light colors, shape semantics and distinct forecast line styles', () => {

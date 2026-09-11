@@ -280,6 +280,10 @@ it('keeps a keyboard-selected bucket stable through explicit Inbox invalidation 
 
   const triggered = await screen.findByRole('button', { name: 'Triggered 1' })
   await user.tab()
+  expect(screen.getByRole('textbox', { name: 'Ticker' })).toHaveFocus()
+  await user.tab()
+  expect(screen.getByRole('button', { name: 'Open chart' })).toHaveFocus()
+  await user.tab()
   expect(screen.getByRole('button', { name: 'Refresh session' })).toHaveFocus()
   await user.tab()
   expect(screen.getByRole('button', { name: 'All 4' })).toHaveFocus()
@@ -528,7 +532,7 @@ it('opens the exact pending packet and routes recoverable inbox states', async (
   expect(screen.getByText('configured mark is stale')).toBeVisible()
 })
 
-it('renders exact readiness reason in zh-CN without adding a second row action', async () => {
+it('renders exact readiness reason in zh-CN with separate chart and packet actions', async () => {
   localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
   mockedDecisionInbox.mockResolvedValue({
     ...inbox,
@@ -554,7 +558,10 @@ it('renders exact readiness reason in zh-CN without adding a second row action',
   expect(await screen.findByText('可信证据受阻')).toBeVisible()
   const localizedReason = screen.getByText('精确质量评估与此决策包不匹配。')
   expect(localizedReason).toHaveAttribute('title', 'Exact quality evaluation does not match this packet.')
-  expect(screen.getAllByRole('link')).toHaveLength(1)
+  expect(screen.getAllByRole('link')).toHaveLength(2)
+  expect(screen.getByRole('link', { name: '打开图表 NVDA' })).toHaveAttribute(
+    'href', '/instruments/moomoo/NVDA?horizon=30&analysis=fresh',
+  )
 })
 
 it.each([

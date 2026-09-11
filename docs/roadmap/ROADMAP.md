@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-09-07
+Last updated: 2026-09-11
 
 ## Status legend
 
@@ -363,7 +363,13 @@ Sequence for operator review:
    witnesses remain an independent maintenance failure domain. Final-head and
    post-merge main CI passed. See the
    [0029 ledger](../iterations/0029-decision-readiness-session.md).
-5. Expand datasets, baselines or selected Qlib/Darts adapters only where a
+5. **Implemented; architecture integration pending — iteration 0032 (issue #136):** Probabilistic Scenario Lab brings
+   large daily observed charts, exact 7/30-session forecast evidence,
+   deterministic confidence refusal and saved chart replay to the existing
+   AAPL/NVDA Instrument Workspace. Reuse current models and adapters; no new
+   provider or model framework. See the
+   [0032 ledger](../iterations/0032-probabilistic-scenario-lab.md).
+6. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
-6. Guarded broker/testnet execution only after a separate authorization.
+7. Guarded broker/testnet execution only after a separate authorization.
