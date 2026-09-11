@@ -59,6 +59,17 @@ vi.mock('lightweight-charts', () => ({
 
 import { InstrumentChart } from './InstrumentChart'
 
+it('keeps isolated realized observations visible as point markers', () => {
+  render(<InstrumentChart mode="line" primary={primary} indicators={[{
+    key: 'actual-0', label: 'Actual close', color: '#34d399', pointMarkersVisible: true,
+    points: [{ timestamp: '2026-08-10T20:00:00Z', value: 190 }],
+  }]} />)
+  expect(chartHarness.chart.addSeries).toHaveBeenCalledWith(
+    chartHarness.definitions.line,
+    expect.objectContaining({ title: 'Actual close', pointMarkersVisible: true }),
+  )
+})
+
 const primary: HistoricalSeries = {
   adjustment: 'unadjusted',
   as_of: '2026-08-08T12:00:00Z',

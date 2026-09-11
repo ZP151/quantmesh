@@ -66,6 +66,14 @@ operator disposition, while allowing restart-safe replay.
 
 ## Consequences
 
+Iteration 0033 adds a pure `forecast_comparison` response projection under
+policy `exact-close-v1`. It chooses the saved review outcome before a current
+preview and joins its original selected forecast timestamps to frozen realized
+closes. Scores require complete path evidence. No projection is stored inside
+packet, outcome or review identity payloads; no migration or new authority is
+introduced. Price errors and interval hit counts describe one correlated path,
+not calibration, P&L or promotion evidence.
+
 DecisionPacket replay is content-addressed and fails closed if a persisted
 record's identity or lineage drifts.  Reject and Watch can preserve useful
 research under evidence blockers, but Paper remains governed by the existing

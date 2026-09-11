@@ -1,6 +1,6 @@
 # Iteration 0032 — Probabilistic Scenario Lab
 
-- Status: implemented and verified; [PR #137](https://github.com/ZP151/quantmesh/pull/137) open for architecture integration
+- Status: merged and verified; [PR #137](https://github.com/ZP151/quantmesh/pull/137) squash-merged as `13743ea`
 - Started: 2026-09-11
 - Issue: [#136](https://github.com/ZP151/quantmesh/issues/136)
 - Branch: `codex/0032-probabilistic-scenario-lab`
@@ -9,6 +9,12 @@
 - Plan: `docs/superpowers/plans/2026-09-10-probabilistic-scenario-lab.md`
 
 ## User loop and acceptance
+
+Integration closure (2026-09-12 local): operator explicitly authorized merge.
+Exact final head `ad95382` passed CI 34616003196 (3311 Python passed/55 skipped,
+317 frontend passed, all gates green). PR #137 merged at 2026-09-11T17:04:29Z
+as `13743eabf4784603ed43300fd252a6c374cf5d41`; issue #136 closed. Historical
+pending-integration notes below describe their checkpoint, not current status.
 
 Open NVDA from a ticker entry, read daily observed candles and separated 7/30-session forecast evidence, save Watch within 120 seconds, and reopen identical chart/evidence/selection. AAPL demonstrates the same demo-labelled path. Benchmark/sample/coverage/stale/binding failures block Paper with explicit reasons while Reject/Watch remain usable. Existing risk and second confirmation remain authoritative.
 

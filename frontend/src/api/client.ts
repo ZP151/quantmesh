@@ -1931,6 +1931,7 @@ export interface components {
         };
         /** DecisionOutcomeReviewState */
         DecisionOutcomeReviewState: {
+            readonly forecast_comparison: components["schemas"]["ForecastOutcomeComparison"];
             outcome: components["schemas"]["DecisionOutcomeSnapshot"];
             /** Packet Id */
             packet_id: string;
@@ -2432,6 +2433,76 @@ export interface components {
             validation_end?: string | null;
             /** Validation Start */
             validation_start?: string | null;
+        };
+        /**
+         * ForecastOutcomeComparison
+         * @description Descriptive errors for one path, never calibration or trading authority.
+         */
+        ForecastOutcomeComparison: {
+            /** Benchmark Mae */
+            benchmark_mae?: number | null;
+            /** Forecast Artifact Id */
+            forecast_artifact_id: string | null;
+            /**
+             * Horizon Sessions
+             * @enum {integer}
+             */
+            horizon_sessions: 7 | 30;
+            /** Interval Coverage */
+            interval_coverage?: number | null;
+            /** Interval Hits */
+            interval_hits?: number | null;
+            /** Mean Absolute Error */
+            mean_absolute_error?: number | null;
+            /**
+             * Observed Sessions
+             * @default 0
+             */
+            observed_sessions: number;
+            /** Outcome Id */
+            outcome_id: string;
+            /**
+             * Policy Version
+             * @default exact-close-v1
+             * @constant
+             */
+            policy_version: "exact-close-v1";
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Rows
+             * @default []
+             */
+            rows: components["schemas"]["ForecastOutcomeRow"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "complete" | "pending" | "partial" | "unavailable";
+            /** Terminal Error */
+            terminal_error?: number | null;
+        };
+        /** ForecastOutcomeRow */
+        ForecastOutcomeRow: {
+            /** Absolute Error */
+            absolute_error?: number | null;
+            /** Actual Close */
+            actual_close?: number | null;
+            /** P10 */
+            p10: number;
+            /** P50 */
+            p50: number;
+            /** P90 */
+            p90: number;
+            /** Session */
+            session: number;
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /** Within Interval */
+            within_interval?: boolean | null;
         };
         /**
          * ForecastPath
