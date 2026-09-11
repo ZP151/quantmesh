@@ -1,6 +1,6 @@
 # Active Goal
 
-Status: authorized implementation goal delivered — architecture integration pending, 2026-09-11.
+Status: active — PR #137 CI and external-review correction, 2026-09-11.
 
 Deliver Iteration 0032 Probabilistic Scenario Lab using the approved chart-first
 Instrument Workspace design. One measurable loop: NVDA ticker to saved Watch
@@ -12,10 +12,11 @@ within 120 seconds, with exact 7/30-session evidence and restart-safe replay.
 - Ledger: `docs/iterations/0032-probabilistic-scenario-lab.md`
 - Spec: `docs/superpowers/specs/2026-09-10-probabilistic-scenario-lab-design.md`
 - Plan: `docs/superpowers/plans/2026-09-10-probabilistic-scenario-lab.md`
-- Frontier: PR #137 is open with implementation, tests, packaged artifacts and
-  durable evidence. GitHub's automatic `python` check was in progress on product
-  head `ba8eb5e` at publication. No manual broad gate was dispatched. Next action
-  is architecture PR review/integration; no new product slice authorized here.
+- Frontier: operator resumed continuous goal-driven work. Close the observed
+  `npm audit` high-severity js-yaml blocker in run 34504822559 and external
+  review 3981553959 (current proposal capability must gate saved-draft Paper).
+  Use regression-first corrections, scoped verification and the existing PR;
+  architecture integration remains a separate boundary.
 - Authority: implement, targeted tests, commit/push feature branch and one final
   reviewable PR. Architecture merge remains outside routine merge allowance.
 - Limits: no cloud/deployment/#124/#127/#132/#135/0021 operations, providers,

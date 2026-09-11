@@ -114,6 +114,46 @@ it('keeps safe Watch available on saved evidence when current risk data is unava
   expect(screen.getByTestId('chart')).toHaveTextContent('184 observed')
 })
 
+it.each([
+  'forecast evidence is stale',
+  'forecast is unavailable',
+  'paper proposal service is not attached',
+  'a fresh real quote is required for paper confirmation',
+])('blocks saved-draft Paper with complete valuation when current capability refuses: %s', async (reason) => {
+  const user = userEvent.setup()
+  const base = packet(7)
+  const saved = { ...base, risk_plan: { ...base.risk_plan, suggested_quantity: 1 }, scenario_lab: { ...base.scenario_lab!, confidence: 'qualified' as const, reasons: [] }, paper_capability: { allowed: true, blockers: [] } }
+  vi.mocked(api.decisionPacket).mockResolvedValue(saved)
+  vi.mocked(api.instrumentWorkspace).mockResolvedValue({
+    ...workspace, position: null, risk: { ...workspace.risk, valuation_complete: true },
+    proposal: { allowed: false, blockers: [reason], proposals: [] },
+  })
+  show(`packet=${saved.packet_id}`)
+  await screen.findByTestId('chart')
+  await user.click(screen.getByText('Risk & decision'))
+  await user.type(await screen.findByLabelText('Decision reason'), 'Wait for current evidence')
+  expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Watch decision' })).toBeEnabled()
+  expect(screen.getByRole('button', { name: 'Reject decision' })).toBeEnabled()
+  expect(screen.getByText(reason, { exact: false })).toBeInTheDocument()
+  expect(screen.getByTestId('chart')).toHaveTextContent('184 observed')
+})
+
+it('allows a qualified saved draft to propose Paper when current capability and valuation permit it', async () => {
+  const user = userEvent.setup()
+  const base = packet(7)
+  const saved = { ...base, risk_plan: { ...base.risk_plan, suggested_quantity: 1 }, scenario_lab: { ...base.scenario_lab!, confidence: 'qualified' as const, reasons: [] }, paper_capability: { allowed: true, blockers: [] } }
+  vi.mocked(api.decisionPacket).mockResolvedValue(saved)
+  vi.mocked(api.instrumentWorkspace).mockResolvedValue({
+    ...workspace, position: null, risk: { ...workspace.risk, valuation_complete: true },
+    proposal: { allowed: true, blockers: [], proposals: [] },
+  })
+  show(`packet=${saved.packet_id}`)
+  await screen.findByTestId('chart')
+  await user.click(screen.getByText('Risk & decision'))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeEnabled())
+})
+
 it('retains the abstaining chart and safe actions when the pinned artifact is unavailable', async () => {
   const user = userEvent.setup()
   const draft = packet(30)

@@ -14,6 +14,7 @@ import { money, moneyPrecise, number, quantity } from '@/lib/format'
 import type { MessageKey } from '@/lib/messages'
 import { usePreferences } from '@/lib/preferences'
 import { ProposalConfirmation } from './ProposalConfirmation'
+import { evidenceText } from './evidence-copy'
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -120,7 +121,7 @@ function DecisionRailContext({
   const paperAllowed = isDraft
     && !evidenceUpdating
     && workspace !== undefined
-    && (displayedPacket.scenario_lab == null || valuationComplete)
+    && (displayedPacket.scenario_lab == null || (valuationComplete && workspace.proposal.allowed))
     && displayedPacket.paper_capability.allowed
     && validPaperInput
 
@@ -253,6 +254,17 @@ function DecisionRailContext({
           </div>
         )}
       </section> : <p role="status" className="px-4 text-xs text-muted-foreground">{t('lab.riskUnavailable')}</p>}
+
+      {displayedPacket.scenario_lab != null && workspace?.proposal.allowed === false && (
+        <section className="space-y-2 px-4" aria-label={t('screen.workspace.paperBlockers')}>
+          <h3 className="text-[10px] font-semibold uppercase tracking-wider text-destructive">{t('screen.workspace.paperBlockers')}</h3>
+          <ul className="space-y-2 text-xs" role="status">
+            {workspace.proposal.blockers.map((reason) => (
+              <li className="rounded-lg bg-destructive/10 px-2.5 py-2" key={reason}>{evidenceText(reason, locale, t)}</li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {displayedPacket.paper_capability.blockers.length > 0 && (
         <section className="space-y-2 px-4" aria-label={t('screen.workspace.paperBlockers')}>
