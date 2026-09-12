@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge'
-import type { InstrumentWorkspace } from '@/lib/api'
+import type { InstrumentWorkspace, LiveLabel } from '@/lib/api'
 import { dateTime, moneyPrecise } from '@/lib/format'
-import { ageText } from '@/lib/live'
+import { ageText, LABEL_TEXT, liveInstrumentKey, useAgedInstruments } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
 
 function liveTone(status: InstrumentWorkspace['live']['status']): string {
@@ -32,12 +32,42 @@ export function WorkspaceHeader({
 }) {
   const { locale, t } = usePreferences()
   const live = workspace.live
+  const key = liveInstrumentKey(workspace.instrument.venue, workspace.instrument.symbol)
+  const label: LiveLabel = live.provenance === 'demo-synthetic' || live.provenance === 'synthetic'
+    ? 'synthetic'
+    : live.label && Object.hasOwn(LABEL_TEXT, live.label) ? live.label as LiveLabel : 'unavailable'
+  const aged = useAgedInstruments({
+    [key]: {
+      venue: workspace.instrument.venue,
+      instrument: workspace.instrument.symbol,
+      label,
+      kinds: {
+        quote: {
+          kind: 'quote',
+          label,
+          provenance: live.provenance ?? 'unavailable',
+          data_time: live.data_time ?? '',
+          received_at: live.received_at ?? '',
+          age_ms: live.age_ms ?? 0,
+          sequence: live.sequence ?? null,
+          sequence_gap: live.sequence_gap ?? false,
+          payload: {},
+        },
+      },
+    },
+  })[key].kinds.quote
+  const displayStatus = live.status === 'available' && aged.label === 'unavailable'
+    ? 'unavailable'
+    : live.status === 'available' && (aged.label === 'stale' || aged.label === 'delayed')
+      ? 'degraded'
+      : live.status
+  const displayLabel = live.provenance === 'real' ? aged.label : live.label
   const mark = live.last ?? (
     live.bid !== null && live.bid !== undefined && live.ask !== null && live.ask !== undefined
       ? (live.bid + live.ask) / 2
       : null
   )
-  const liveClassification = [live.label, live.provenance].filter(Boolean).join(' · ') || '—'
+  const liveClassification = [displayLabel, live.provenance].filter(Boolean).join(' · ') || '—'
 
   return (
     <header className="sticky top-14 z-20 -mx-4 border-y border-border/80 bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
@@ -51,7 +81,7 @@ export function WorkspaceHeader({
               {workspace.instrument.symbol}
             </h1>
           </div>
-          <Badge className={liveTone(live.status)}>{t(LIVE_MESSAGE[live.status])}</Badge>
+          <Badge className={liveTone(displayStatus)}>{t(LIVE_MESSAGE[displayStatus])}</Badge>
         </div>
         <dl className="grid grid-cols-2 gap-x-5 gap-y-2 text-right sm:grid-cols-4 xl:grid-cols-8">
           <div>
@@ -94,7 +124,7 @@ export function WorkspaceHeader({
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {t('screen.workspace.age')}
             </dt>
-            <dd className="font-mono text-xs">{live.age_ms === null || live.age_ms === undefined ? '—' : ageText(live.age_ms, locale)}</dd>
+            <dd className="font-mono text-xs">{live.age_ms === null || live.age_ms === undefined ? '—' : ageText(aged.age_ms, locale)}</dd>
           </div>
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">

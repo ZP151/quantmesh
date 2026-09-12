@@ -1,6 +1,6 @@
 # Iteration 0035 — Real charts from Markets and Watchlist
 
-- Status: approved user request; implementation plan prepared, 2026-09-12.
+- Status: implemented and locally reviewed; final CI and AWS acceptance pending, 2026-09-12.
 - Issue: [#144](https://github.com/ZP151/quantmesh/issues/144).
 - Branch: `codex/0035-live-instrument-charts`, from `origin/main@2a50565`.
 - Plan: `docs/superpowers/plans/2026-09-12-live-instrument-charts.md`.
@@ -50,13 +50,13 @@ can be reused; no new provider, chart package or data-plane subsystem.
 
 ## Acceptance
 
-- [ ] Backend RED/GREEN covers actual 1m replay through history/workspace APIs,
+- [x] Backend RED/GREEN covers actual 1m replay through history/workspace APIs,
   preferred resolution, revisions, append, reload, gaps and unavailable ranges.
-- [ ] Both Markets and Watchlist expose BTC/ETH/SOL chart entry points in live
+- [x] Both Markets and Watchlist expose BTC/ETH/SOL chart entry points in live
   mode with actual quote provenance/freshness and accurate non-demo wording.
-- [ ] Default live chart is 1D/line; explicit URL choices and demo behavior remain
+- [x] Default live chart is 1D/line; explicit URL choices and demo behavior remain
   intact. Current candle changes without reload; a new minute appends a point.
-- [ ] Keyboard, desktop/mobile and accessible chart table/attribution verified.
+- [x] Keyboard, desktop/mobile and accessible chart table/attribution verified locally.
 - [ ] Final source checks, bounded independent review and required CI pass;
   integrate through PR and verify the exact approved AWS deployment.
 - [ ] Actual AWS navigation/chart update/reload witness is recorded separately
@@ -77,3 +77,65 @@ AAPL/NVDA real charts cannot be claimed before those observations exist.
 Planner and Quant Researcher outputs above; independent backend investigator
 confirmed the production/test interval mismatch. Implementation, Reviewer and
 Verifier outcomes will be appended at their demonstrable slice boundaries.
+
+
+## Implementation checkpoint — source/test boundary
+
+- **Implementer / backend:** reproduced production-shaped 1m failure: 6 failed /
+  16 passed. The existing resolution contract also required a narrow matching
+  exception: contract RED 1 failed / 9 passed. It now requires exact replay
+  identity and actual coverage; no manifest/quality qualification or general
+  finer-resolution relaxation. Policy is recorded in ADR 0023.
+- **Verifier / controller:** current-worktree history/workspace selection
+  (`tests/test_live_history.py`, `tests/test_instrument_history.py`,
+  `tests/test_instrument_workspace_api.py`) passed 131 tests in 11.59s; one
+  existing Starlette deprecation warning. Includes revision/append/reopen,
+  three symbols, manifest/coarser preference and no bridging on recovery.
+- **Implementer / frontend:** entry/default RED 3 failed / 27 passed. Markets
+  and decision-Watchlist now expose configured live quote rows independently
+  of saved watches. Default live Hyperliquid range/mode is 1D/line; explicit
+  selections and demo behavior remain. Collection copy RED 1 failed / 29 passed.
+- **Verifier / controller:** Markets, Watchlist, InstrumentWorkspace and chart
+  targeted Vitest gate passed 108 tests in 10.33s. Shared current-source quote
+  state, streaming update and disconnected labels are covered. Package files
+  and dependency locks are unchanged.
+- **Implementer / chart:** live-edge append RED 2 failed / 14 passed, GREEN16.
+  Preserve native live following without overriding manual pan or forecast
+  ranges. Header cached-age RED5 failed /2 passed, GREEN47 header/shared-live
+  tests; reuse monotonic age/source policy, preserve non-real/unavailable states
+  and allow fresh HTTP recovery even with stream down. Controller combined
+  verification and packaged/AWS browser acceptance remain pending.
+
+## Reviewed local slice gate — 2026-09-12
+
+- **Verifier / frontend:** full Vitest gate passed 351 tests in 29 files (19.58s).
+  The actual `tsc -b` build found an extra argument to the shared time formatter,
+  unsupported Testing Library role options and a missing fixture session field;
+  corrected all three. The affected screens then passed 32 tests in 11.40s.
+  Production build and API generation freshness passed; committed package assets
+  were rebuilt. Oxlint reports only four existing fast-refresh warnings.
+- **Verifier / packaged browser:** new deterministic loopback feed/replay test
+  failed the old bundle's Markets entry (1 failed in 16.01s), then passed the new
+  bundle (1 passed in 7.99s). It opens BTC from Markets and ETH/SOL from Watchlist,
+  checks accessible observed closes against the history API, revises a candle,
+  appends the next minute and reloads retained points. Keyboard Enter/Space
+  switches line/candle mode. These are fixtures, not external venue observations.
+- **Reviewer:** round 1 found a valid next-minute ingestion between replay capture
+  and snapshot read could leave exact replay coverage behind the appended bar,
+  producing history HTTP 500 / workspace HTTP 422. Controller reproduced both
+  failures with a real LiveBuffer and controlled interleaving (RED 2 failed).
+  Composition now updates coverage only for the validated 1m replay exception;
+  manifest coverage remains fixed and replay-tail wording matches its coverage.
+  Round 2 confirms the issue resolved, no further actionable correction finding.
+- **Verifier / corrected source:** current-worktree combined history/contracts/
+  workspace API and packaged browser gate passed 134 tests in 24.52s, with one
+  existing Starlette deprecation warning. This supersedes earlier source counts.
+- **Verifier / visual:** controller inspected the packaged deterministic fixture
+  in Edge, including Markets BTC and Watchlist ETH. At 1280x900, document width
+  was 1265px; at 390x844 it was 375px. Full chart remained 480px tall (289px and
+  343px wide respectively), with accessible observed rows and TradingView
+  attribution. Impeccable detector returned no findings for all changed UI
+  targets. Existing chart/workspace design is retained; no dependency change.
+- **Release boundary:** this checkpoint is local evidence. AWS still runs
+  accepted `e185c3b`; final PR CI, exact-release deployment and actual upstream
+  chart update/reload witness remain required before closing #144.

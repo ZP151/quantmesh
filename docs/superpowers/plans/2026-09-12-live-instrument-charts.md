@@ -29,15 +29,17 @@ Lightweight Charts 5.2.0; no dependency changes.
 ## Task 1 — Actual 1m observations reach history/workspace (backend owner)
 
 Files: `src/quantmesh/instruments/live_history.py`, `tests/test_live_history.py`.
-Only affected existing integration tests if required; no frontend edits.
+Approved narrow expansion: `src/quantmesh/instruments/contracts.py` and
+`tests/test_instrument_history.py` admit the same identity-checked 1m fallback;
+no schema-field change. No frontend edits.
 
-- [ ] Add production-shaped 1m candles, source-time sequence, same-minute
+- [x] Add production-shaped 1m candles, source-time sequence, same-minute
   revision and next-minute append fixtures. Assert both history and workspace
   APIs return matching actual bars/coverage and `5m->1m` fallback for 1D.
-- [ ] Run RED: `python -m pytest -q tests/test_live_history.py`.
-- [ ] Permit Hyperliquid 1m only when 1D lacks an eligible preferred/coarser
+- [x] Run RED: `python -m pytest -q tests/test_live_history.py`.
+- [x] Permit Hyperliquid 1m only when 1D lacks an eligible preferred/coarser
   interval. Preserve manifest preference and every continuity/source-time gate.
-- [ ] GREEN same tests plus `tests/test_instrument_history.py` and
+- [x] GREEN same tests plus `tests/test_instrument_history.py` and
   `tests/test_instrument_workspace_api.py`; test missing/disconnected history,
   same-minute dedupe, coverage retention after reopening the buffer, and other
   venue/range refusal. Record exact RED/GREEN and limits; controller owns commit.
@@ -49,25 +51,30 @@ Files: `frontend/src/components/live-market-list.tsx` (new), its component test,
 `frontend/src/screens/Watchlist.tsx`, `frontend/src/screens/Watchlist.test.tsx`,
 `frontend/src/screens/InstrumentWorkspace.tsx`, its existing test,
 `frontend/src/lib/messages.ts`. Change route helper only if needed, with tests.
+Bounded live-follow/aging acceptance additionally owns
+`frontend/src/components/charts/InstrumentChart.tsx` and its test, plus
+`frontend/src/screens/instrument/WorkspaceHeader.tsx` and new header test.
 
-- [ ] Add RED tests for live Markets and empty decision-Watchlist still exposing
+- [x] Add RED tests for live Markets and empty decision-Watchlist still exposing
   actual BTC/ETH/SOL rows, exact venue/symbol chart links, quote timing/labels,
   unavailable/stale states and accurate live wording. Keep saved inbox evidence.
-- [ ] Add RED workspace tests: live Hyperliquid defaults to 1D/line, explicit
+- [x] Add RED workspace tests: live Hyperliquid defaults to 1D/line, explicit
   range/mode and demo defaults persist; matching candle update refreshes the
   observed series without navigation. Render source/actual coverage and empty
   collection state without claiming a full day or a forecast.
-- [ ] Implement shared small live list using existing snapshot/stream/aging
+- [x] Implement shared small live list using existing snapshot/stream/aging
   functions and owned table/badge components. No direct browser venue access.
-- [ ] Implement live-aware defaults and collecting-history messaging; reuse
+- [x] Implement live-aware defaults and collecting-history messaging; reuse
   the full InstrumentChart/MarketCanvas. Preserve selection/zoom on refresh.
-- [ ] GREEN relevant Vitest files plus chart tests. Typecheck/lint, generated
+- [x] GREEN relevant Vitest files plus chart tests. Typecheck/lint, generated
   API freshness, build committed bundle. Run Impeccable detector once on changed
   UI targets; inspect desktop/mobile/keyboard in one batch, one correction pass.
 
 ## Task 3 — Review, integration and AWS source acceptance (controller)
 
-- [ ] Combined targeted backend/frontend gates, focused packaged-browser
+- [x] New `tests/test_live_chart_e2e.py` proves the packaged live chart loop
+  through both entry points, real-shaped 1m revisions/appends and reload.
+- [x] Combined targeted backend/frontend gates, focused packaged-browser
   chart navigation/update fixture and source freshness/disconnect regressions.
 - [ ] Independent spec/standards review at the working user-loop boundary;
   at most two rounds. Record outcomes in iteration. Commit one coherent slice.

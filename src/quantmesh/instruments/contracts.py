@@ -359,12 +359,30 @@ class HistoricalSeries(StrictContract):
         if len(parts) != 2:
             raise ValueError("resolution_fallback must be '<preferred>-><selected>'")
         preferred, selected = parts
-        if interval_to_timedelta(selected) <= interval_to_timedelta(preferred):
+        if (
+            interval_to_timedelta(selected) <= interval_to_timedelta(preferred)
+            and value != "5m->1m"
+        ):
             raise ValueError("resolution_fallback must select a coarser interval")
         return value
 
     @model_validator(mode="after")
     def observed_series_is_self_consistent(self) -> "HistoricalSeries":
+        if self.resolution_fallback == "5m->1m" and not (
+            self.instrument.venue is Venue.HYPERLIQUID
+            and self.range is HistoryRange.ONE_DAY
+            and self.source == "hyperliquid-live-replay"
+            and self.dataset_id == f"live-replay-hyperliquid-{self.instrument.symbol.lower()}"
+            and self.manifest_id is None
+            and self.quality_evaluation_id is None
+            and self.interval == "1m"
+            and self.calendar == "24/7"
+            and self.adjustment == "unadjusted"
+            and self.coverage.start == self.bars[0].timestamp
+            and self.coverage.end == self.bars[-1].timestamp
+            and self.coverage.rows == len(self.bars)
+        ):
+            raise ValueError("5m->1m fallback requires exact Hyperliquid 1D local replay coverage")
         if (self.manifest_id is None) != (self.quality_evaluation_id is None):
             raise ValueError("manifest_id and quality_evaluation_id must be present together")
         identity = (self.instrument.venue, self.instrument.symbol)

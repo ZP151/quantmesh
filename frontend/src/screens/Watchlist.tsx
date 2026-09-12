@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { LiveMarketList } from '@/components/live-market-list'
 import { Page } from '@/components/page'
 import { InstrumentEntry } from '@/components/instrument-entry'
 import { Surface, useSurface } from '@/components/state'
@@ -16,6 +17,8 @@ import { usePreferences } from '@/lib/preferences'
 export function WatchlistScreen() {
   const query = useSurface(['decision-inbox'], api.decisionInbox)
   const { locale, t } = usePreferences()
+  const health = useSurface(['health'], api.health)
+  const liveRuntime = health.data?.runtime_mode === 'live'
   const [filter, setFilter] = useState<ActionFilter>('all')
   const queryClient = useQueryClient()
   const refreshButton = useRef<HTMLButtonElement>(null)
@@ -40,9 +43,10 @@ export function WatchlistScreen() {
   return (
     <Page
       title={t('screen.watchlist.title')}
-      description={t('screen.watchlist.description')}
+      description={t(liveRuntime ? 'liveMarkets.watchlistDescription' : 'screen.watchlist.description')}
     >
-      <InstrumentEntry />
+      {liveRuntime ? <LiveMarketList /> : <InstrumentEntry />}
+      {liveRuntime && <h2 className="text-base font-semibold">{t('liveMarkets.savedWatches')}</h2>}
       <div className="flex flex-wrap items-center gap-3">
         <button
           className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -89,7 +93,7 @@ export function WatchlistScreen() {
       <Surface
         query={query}
         title={t('screen.watchlist.title')}
-        empty={<p className="border-y border-border py-6 text-sm text-muted-foreground">{t('screen.watchlist.empty')}</p>}
+        empty={<p className="border-y border-border py-6 text-sm text-muted-foreground">{t(liveRuntime ? 'liveMarkets.noSavedWatches' : 'screen.watchlist.empty')}</p>}
       >
         {(inbox) => {
           const filters: { bucket: ActionFilter; label: MessageKey }[] = [

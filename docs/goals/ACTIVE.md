@@ -1,6 +1,6 @@
 # Active Goal
 
-Status: iteration 0035 approved user request and implementing, 2026-09-12.
+Status: iteration 0035 locally tested/reviewed; final PR CI and AWS acceptance pending, 2026-09-12.
 
 ## Current user outcome
 
@@ -17,6 +17,8 @@ switching and explicit range choices, and show actual source/time/coverage.
 - Diagnosis: actual Hyperliquid candles are 1m; replay history currently rejects
   finer than 5m even for 1D. Default workspace 6M falls back to small detail chart.
   Markets has demo wording/empty marks and live decision-Watchlist is empty.
+- Local gate: 134 backend/packaged browser tests, 351 full frontend tests, actual
+  production build and API freshness passed. Review race corrected and resolved.
 - Backend owns bounded resolution fallback and tests; controller owns shared
   live list, entry/default behavior, frontend tests and integration. Record
   actual RED/GREEN in iteration before declaring implementation complete.

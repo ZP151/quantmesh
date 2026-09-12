@@ -76,6 +76,18 @@ def _rebuild_series(
     bars: tuple[HistoricalBar, ...],
     limitations: tuple[str, ...],
 ) -> HistoricalSeries:
+    # The narrowly validated minute replay owns observed coverage, including a
+    # live candle ingested after replay capture. Manifest coverage remains fixed.
+    coverage = series.coverage
+    if series.resolution_fallback == "5m->1m":
+        coverage = CoverageSnapshot(
+            venue=series.instrument.venue,
+            symbol=series.instrument.symbol,
+            interval=series.interval,
+            start=bars[0].timestamp,
+            end=bars[-1].timestamp,
+            rows=len(bars),
+        )
     return HistoricalSeries(
         instrument=series.instrument,
         range=series.range,
@@ -89,7 +101,7 @@ def _rebuild_series(
         interval=series.interval,
         calendar=series.calendar,
         adjustment=series.adjustment,
-        coverage=series.coverage,
+        coverage=coverage,
         coverage_scope=series.coverage_scope,
         gaps=series.gaps,
         duplicates=series.duplicates,
@@ -231,11 +243,16 @@ def join_live_tail(
             age_ms=snapshot.age_ms,
         ),
     )
+    coverage_note = (
+        "local replay coverage includes the observed live-tail bar"
+        if series.resolution_fallback == "5m->1m"
+        else "manifest coverage is historical-only; the live-tail bar is excluded"
+    )
     limitations = tuple(
         dict.fromkeys(
             (
                 *series.limitations,
-                "manifest coverage is historical-only; the live-tail bar is excluded",
+                coverage_note,
             )
         )
     )
@@ -293,6 +310,16 @@ def _replay_series(
     eligible_intervals = tuple(
         value for value in by_interval if interval_to_timedelta(value) >= preferred
     )
+    # Hyperliquid's live runtime records 1m observations. Expose that actual
+    # resolution for the bounded 1D chart only when no preferred/coarser replay
+    # exists; manifest selection and all continuity/coverage gates stay intact.
+    if (
+        not eligible_intervals
+        and venue is Venue.HYPERLIQUID
+        and selected_range is HistoryRange.ONE_DAY
+        and "1m" in by_interval
+    ):
+        eligible_intervals = ("1m",)
     if not eligible_intervals:
         raise HistoryUnavailableError(
             "no replay candles at the preferred or a coarser resolution for "

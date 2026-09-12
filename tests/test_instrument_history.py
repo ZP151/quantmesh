@@ -191,9 +191,7 @@ class TrustedCatalog:
 
     def require_research(self, manifest_id: str):
         if not self.accepted:
-            raise CatalogQualificationError(
-                f"manifest {manifest_id} quality status is fail"
-            )
+            raise CatalogQualificationError(f"manifest {manifest_id} quality status is fail")
         return SimpleNamespace(
             provider_id="moomoo-opend",
             manifest_id=manifest_id,
@@ -437,9 +435,7 @@ def test_history_uses_only_the_nearest_coarser_fallback_and_records_it() -> None
             ("1h", Venue.MOOMOO, "NVDA"): rows_1h,
         },
     )
-    service = fake_service(
-        [binding(interval="1h"), binding(interval="30m")], {"equities": dataset}
-    )
+    service = fake_service([binding(interval="1h"), binding(interval="30m")], {"equities": dataset})
 
     series = service.history(Venue.MOOMOO, "NVDA", HistoryRange.ONE_DAY)
 
@@ -500,9 +496,7 @@ def test_all_ranges_use_nearest_coarser_fallback_and_never_finer(
         manifest(coverage("NVDA", interval=coarser)),
         {(coarser, Venue.MOOMOO, "NVDA"): [bar(interval=coarser)]},
     )
-    fallback_service = fake_service(
-        [binding(interval=coarser)], {"equities": dataset}
-    )
+    fallback_service = fake_service([binding(interval=coarser)], {"equities": dataset})
 
     selected = fallback_service.history(Venue.MOOMOO, "NVDA", requested)
 
@@ -563,9 +557,7 @@ def test_history_reopens_the_dataset_and_refuses_a_stale_manifest(tmp_path) -> N
         license="fixture-only",
         generated_at=GENERATED_AT,
     )
-    service = HistoryService(
-        [binding()], dataset_loader=lake.dataset, now=lambda: NOW
-    )
+    service = HistoryService([binding()], dataset_loader=lake.dataset, now=lambda: NOW)
     assert service.history(Venue.MOOMOO, "NVDA", HistoryRange.SIX_MONTHS).bars
 
     lake.write_bars("equities", [bar(timestamp=NOW)])
@@ -674,11 +666,7 @@ def test_history_refuses_full_coverage_extent_drift(drift: str) -> None:
                 rows=3,
             )
         ),
-        {
-            ("1d", Venue.MOOMOO, "NVDA"): [
-                bar(timestamp=timestamp) for timestamp in timestamps
-            ]
-        },
+        {("1d", Venue.MOOMOO, "NVDA"): [bar(timestamp=timestamp) for timestamp in timestamps]},
     )
     service = fake_service([binding()], {"equities": dataset})
 
@@ -1184,12 +1172,18 @@ def test_public_response_dump_keeps_json_arrays_objects_and_strict_round_trip() 
     assert isinstance(comparison_payload["keys"], list)
     assert isinstance(comparison_payload["points"], list)
     assert isinstance(comparison_payload["points"][0]["values"], dict)
-    assert HistoricalSeries.model_validate_json(
-        history.model_dump_json(), strict=True
-    ).model_dump_json() == history.model_dump_json()
-    assert ComparisonSeries.model_validate_json(
-        comparison.model_dump_json(), strict=True
-    ).model_dump_json() == comparison.model_dump_json()
+    assert (
+        HistoricalSeries.model_validate_json(
+            history.model_dump_json(), strict=True
+        ).model_dump_json()
+        == history.model_dump_json()
+    )
+    assert (
+        ComparisonSeries.model_validate_json(
+            comparison.model_dump_json(), strict=True
+        ).model_dump_json()
+        == comparison.model_dump_json()
+    )
 
 
 def test_live_tail_lineage_is_strict_frozen_and_round_trips() -> None:
@@ -1349,9 +1343,7 @@ def _series_with_live_tail() -> HistoricalSeries:
             end=NOW,
             rows=2,
         ),
-        limitations=(
-            "manifest coverage is historical-only; the live-tail bar is excluded",
-        ),
+        limitations=("manifest coverage is historical-only; the live-tail bar is excluded",),
     )
 
 
@@ -1367,9 +1359,7 @@ def test_series_strict_json_rejects_forged_live_lineage_age(forged_age: int) -> 
 def test_series_strict_json_rejects_live_receipt_after_as_of() -> None:
     payload = json.loads(_series_with_live_tail().model_dump_json())
     as_of = datetime.fromisoformat(payload["as_of"])
-    payload["bars"][-1]["live_lineage"]["received_at"] = (
-        as_of + timedelta(seconds=1)
-    ).isoformat()
+    payload["bars"][-1]["live_lineage"]["received_at"] = (as_of + timedelta(seconds=1)).isoformat()
     payload["bars"][-1]["live_lineage"]["age_ms"] = 0
 
     with pytest.raises(ValidationError, match="received_at must not exceed series as_of"):
@@ -1397,10 +1387,7 @@ def test_series_strict_json_rejects_multiple_live_tails() -> None:
             "predecessor_sequence": 0,
             "predecessor_data_time": payload["bars"][0]["timestamp"],
             "age_ms": int(
-                (
-                    as_of - datetime.fromisoformat(second["timestamp"])
-                ).total_seconds()
-                * 1000
+                (as_of - datetime.fromisoformat(second["timestamp"])).total_seconds() * 1000
             ),
         }
     )
@@ -1414,9 +1401,7 @@ def test_series_strict_json_rejects_multiple_live_tails() -> None:
 def test_series_strict_json_rejects_historical_bar_outside_manifest_coverage() -> None:
     payload = json.loads(_series_with_live_tail().model_dump_json())
     coverage_start = datetime.fromisoformat(payload["coverage"]["start"])
-    payload["bars"][0]["timestamp"] = (
-        coverage_start - timedelta(days=1)
-    ).isoformat()
+    payload["bars"][0]["timestamp"] = (coverage_start - timedelta(days=1)).isoformat()
 
     with pytest.raises(ValidationError, match="historical bars must remain inside"):
         HistoricalSeries.model_validate_json(json.dumps(payload), strict=True)
@@ -1491,3 +1476,91 @@ def test_series_live_tail_exact_age_and_outside_coverage_round_trip() -> None:
 def test_public_contracts_reject_extra_coercive_or_nonfinite_state(model, payload) -> None:
     with pytest.raises(ValidationError):
         model.model_validate(payload, strict=True)
+
+
+def _minute_replay_contract(**overrides):
+    instrument = Instrument(
+        symbol="BTC",
+        venue=Venue.HYPERLIQUID,
+        instrument_type=InstrumentType.PERPETUAL,
+        currency="USD",
+    )
+    bars = tuple(
+        HistoricalBar(
+            instrument=instrument,
+            timestamp=timestamp,
+            interval="1m",
+            open=100,
+            high=101,
+            low=99,
+            close=100,
+            volume=10,
+        )
+        for timestamp in (NOW - timedelta(minutes=1), NOW)
+    )
+    values = dict(
+        instrument=instrument,
+        range=HistoryRange.ONE_DAY,
+        as_of=NOW,
+        bars=bars,
+        dataset_id="live-replay-hyperliquid-btc",
+        dataset_revision=1,
+        source="hyperliquid-live-replay",
+        license="venue-public-market-data",
+        generated_at=NOW,
+        interval="1m",
+        calendar="24/7",
+        adjustment="unadjusted",
+        coverage=CoverageSnapshot(
+            interval="1m",
+            venue=Venue.HYPERLIQUID,
+            symbol="BTC",
+            start=bars[0].timestamp,
+            end=bars[-1].timestamp,
+            rows=2,
+        ),
+        resolution_fallback="5m->1m",
+    )
+    values.update(overrides)
+    return HistoricalSeries(**values)
+
+
+def test_minute_replay_resolution_exception_preserves_exact_source_and_coverage():
+    series = _minute_replay_contract()
+    assert series.resolution_fallback == "5m->1m"
+    assert series.coverage.rows == len(series.bars) == 2
+    assert series.manifest_id is None
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"range": HistoryRange.FIVE_DAYS},
+        {"source": "operator-import"},
+        {"dataset_id": "live-replay-hyperliquid-eth"},
+        {"instrument": NVDA},
+        {"manifest_id": "1" * 64, "quality_evaluation_id": "2" * 64},
+        {"calendar": "XNYS"},
+        {"adjustment": "split-adjusted"},
+        {"interval": "5m"},
+        {"resolution_fallback": "30m->1m"},
+    ],
+)
+def test_minute_replay_resolution_exception_rejects_unrelated_series(overrides):
+    with pytest.raises(ValidationError):
+        _minute_replay_contract(**overrides)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"rows": 100},
+        {"start": NOW - timedelta(days=1)},
+        {"end": NOW + timedelta(minutes=1)},
+    ],
+)
+def test_minute_replay_resolution_exception_cannot_claim_unrecorded_coverage(overrides):
+    actual = _minute_replay_contract().coverage
+    coverage = CoverageSnapshot(**{**actual.model_dump(), **overrides})
+    with pytest.raises(ValidationError, match="exact Hyperliquid 1D local replay coverage"):
+        _minute_replay_contract(coverage=coverage)

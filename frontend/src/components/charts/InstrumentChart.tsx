@@ -401,6 +401,7 @@ export function InstrumentChart({
     const nextContext = chartContext(primary)
     const sameContext = contextRef.current === nextContext
     const visibleRange = sameContext ? chart.timeScale().getVisibleRange() : null
+    const previousLastTime = close.data().at(-1)?.time
 
     const candleData = primary.bars.flatMap((bar) => {
       const time = utcTimestamp(bar.timestamp)
@@ -498,10 +499,20 @@ export function InstrumentChart({
       return time === null ? [] : [{ time, low: point.p10, high: point.p90 }]
     }), closeData.at(-1)?.time ?? null)
 
+    // Lightweight Charts shifts appended bars at the live edge without changing
+    // bar spacing. Restoring the old time range here would hide each new minute.
+    const followsLiveAppend = (forecast?.points.length ?? 0) === 0
+      && typeof previousLastTime === 'number'
+      && typeof visibleRange?.from === 'number'
+      && typeof visibleRange.to === 'number'
+      && visibleRange.from <= previousLastTime
+      && visibleRange.to >= previousLastTime
+      && (closeData.at(-1)?.time ?? previousLastTime) > previousLastTime
+
     if (!sameContext) {
       contextRef.current = nextContext
       chart.timeScale().fitContent()
-    } else if (visibleRange !== null && primary.bars.some((bar) => bar.is_live_tail)) {
+    } else if (visibleRange !== null && !followsLiveAppend && primary.bars.some((bar) => bar.is_live_tail)) {
       chart.timeScale().setVisibleRange(visibleRange)
     }
   }, [chartLabels, compactLabels, comparisons, forecast, indicators, mode, palette, priceFormatter, primary, timeFormatters, volume])

@@ -17,12 +17,14 @@ const chartHarness = vi.hoisted(() => {
   }
   const chart = {
     addSeries: vi.fn(() => {
+      let data: Array<{ time: number }> = []
       const next = {
         attachPrimitive: vi.fn(),
         detachPrimitive: vi.fn(),
         applyOptions: vi.fn(),
         priceScale: vi.fn(() => ({ applyOptions: vi.fn() })),
-        setData: vi.fn(),
+        data: vi.fn(() => data),
+        setData: vi.fn((nextData: Array<{ time: number }>) => { data = nextData }),
       }
       series.push(next)
       return next
@@ -190,6 +192,7 @@ describe('InstrumentChart', () => {
   beforeEach(() => {
     chartHarness.series.length = 0
     vi.clearAllMocks()
+    chartHarness.timeScale.getVisibleRange.mockReturnValue({ from: 1, to: 2 })
   })
 
   afterEach(() => vi.unstubAllGlobals())
@@ -442,6 +445,64 @@ describe('InstrumentChart', () => {
 
     expect(chartHarness.timeScale.fitContent).toHaveBeenCalledOnce()
     expect(chartHarness.timeScale.setVisibleRange).toHaveBeenCalledWith({ from: 1, to: 2 })
+  })
+
+  it.each(['line', 'candles'] as const)('keeps appended live minutes following the visible edge in %s mode', (mode) => {
+    const start = Date.parse('2026-09-12T12:00:00Z') / 1_000
+    const livePrimary = {
+      ...primary,
+      instrument: { ...primary.instrument, symbol: 'BTC', venue: 'hyperliquid' as const },
+      range: '1d' as const,
+      bars: [0, 1].map((minute) => ({
+        ...primary.bars[1],
+        timestamp: new Date((start + minute * 60) * 1_000).toISOString(),
+        close: 60_000 + minute,
+        interval: '1m' as const,
+      })),
+    }
+    const view = render(<InstrumentChart mode={mode} primary={livePrimary} />)
+    chartHarness.timeScale.getVisibleRange.mockReturnValue({ from: start, to: start + 60 })
+
+    // A revision updates the last close without changing the user's window.
+    livePrimary.bars[1] = { ...livePrimary.bars[1], close: 60_005 }
+    view.rerender(<InstrumentChart mode={mode} primary={{ ...livePrimary }} />)
+    expect(chartHarness.timeScale.setVisibleRange).toHaveBeenLastCalledWith({ from: start, to: start + 60 })
+    expect(chartHarness.series[1].setData).toHaveBeenLastCalledWith([
+      { time: start, value: 60_000 }, { time: start + 60, value: 60_005 },
+    ])
+    chartHarness.timeScale.setVisibleRange.mockClear()
+
+    for (const minute of [2, 3]) {
+      livePrimary.bars = [...livePrimary.bars, {
+        ...livePrimary.bars[1],
+        timestamp: new Date((start + minute * 60) * 1_000).toISOString(),
+        close: 60_000 + minute,
+      }]
+      view.rerender(<InstrumentChart mode={mode} primary={{ ...livePrimary }} />)
+      // The adapter must not undo the library's built-in live-edge shift.
+      expect(chartHarness.timeScale.setVisibleRange).not.toHaveBeenCalled()
+      expect(chartHarness.series[1].setData).toHaveBeenLastCalledWith(
+        expect.arrayContaining([{ time: start + minute * 60, value: 60_000 + minute }]),
+      )
+      chartHarness.timeScale.getVisibleRange.mockReturnValue({
+        from: start + (minute - 1) * 60, to: start + minute * 60,
+      })
+    }
+    expect(chartHarness.timeScale.fitContent).toHaveBeenCalledOnce()
+    expect(screen.getByRole('table', { name: 'BTC chart data' })).toHaveTextContent('60003')
+  })
+
+  it('preserves the selected forecast view when an observed live tail appends', () => {
+    const from = Date.parse(primary.bars[0].timestamp) / 1_000
+    const to = Date.parse(forecast.points[0].timestamp) / 1_000
+    const view = render(<InstrumentChart forecast={forecast} mode="line" primary={primary} />)
+    chartHarness.timeScale.getVisibleRange.mockReturnValue({ from, to })
+    view.rerender(<InstrumentChart forecast={forecast} mode="line" primary={{
+      ...primary,
+      bars: [...primary.bars, { ...primary.bars[1], timestamp: '2026-08-08T20:00:00Z' }],
+    }} />)
+    expect(chartHarness.timeScale.setVisibleRange).toHaveBeenLastCalledWith({ from, to })
+    expect(chartHarness.timeScale.fitContent).toHaveBeenCalledOnce()
   })
 
   it('reassigns comparison colors by current order after peers are removed and added', () => {
