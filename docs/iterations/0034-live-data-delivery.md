@@ -190,3 +190,24 @@ do not infer authority to purchase data or expose new public services.
   49.25s. Ruff, OpenAPI freshness, actual TypeScript and rebuilt bundle freshness
   passed. Submodule status was inspected (reference submodules uninitialized;
   none changed). Working-tree whitespace check passed.
+
+## Publication and local real-source witness
+
+- Integration commit `ed3900deeb949c0a291e5b43c9684d4db4120660` is published
+  in [PR #142](https://github.com/ZP151/quantmesh/pull/142). #141 remains the
+  prior documentation dependency. Required automatic CI is pending; neither
+  final integration nor AWS deployment is claimed complete.
+- Full local `--live` application, not an injected provider, observed public
+  Hyperliquid from 2026-09-12 08:55:09 to 09:00:11 UTC: 302.13 seconds, 61
+  samples, 61 distinct quote source timestamps for each BTC/ETH/SOL. Zero
+  disconnected samples. Maximum sampled source/receipt quote ages were BTC
+  2041ms, ETH 2641ms and SOL 4777ms; these are observations, not an SLA.
+- Paper true/live trading false throughout; risk state and empty order list
+  remained unchanged. Replay API reported 8560 stored updates at the witness
+  boundary (includes earlier diagnostic runs). After stopping only the owned
+  temporary app processes, the same lake reopened with at least that count.
+- Detailed public-data evidence is in OS-temp
+  `qm0034-live-9foa6m4c/witness-summary.json` and `witness-samples.json`.
+  This is local source-to-API/persistence evidence, **not AWS browser acceptance**.
+  Temporary app processes are stopped; the operator's real data roots and AWS
+  service remain unchanged. Tailscale SSH still awaits operator authentication.

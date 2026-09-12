@@ -17,6 +17,7 @@ and real-source acceptance pending, 2026-09-12.
 - Design: `docs/iterations/0034-live-data-delivery.md`
 - Delivery order: `docs/ITERATION_PLAN.md`
 - Implementation branch: `codex/0034-deployed-live-market-data`.
+- Integration PR: https://github.com/ZP151/quantmesh/pull/142 (CI pending).
 - Executable plan: `docs/superpowers/plans/2026-09-12-deployed-live-market-data.md`.
 - Authority: operator approved the proposed subsequent iteration, including the
   bounded existing AWS deployment update and public read-only Hyperliquid feed.
@@ -32,9 +33,13 @@ and real-source acceptance pending, 2026-09-12.
   aging and checked automatic rollback. Inclusive candle end milliseconds are
   corrected; 45-second public parser smoke passed. Controller final gates: 311
   Python/333 frontend/7 fixture browser passed; full CI and AWS acceptance pending.
-- Next: verify corrected real feed and packaged desktop/mobile/replay, publish
-  integration PR, inspect CI, finish approved AWS exact-build update after SSH
-  authentication, and record five-minute source/browser witness.
+- Local real-source witness passed: 302.13 seconds, 61 distinct source quote
+  timestamps per BTC/ETH/SOL, zero disconnected samples, risk/orders unchanged;
+  replay persisted after the temporary app stopped. This is not AWS acceptance.
+- Next: inspect final-head CI/review for #141 then #142, integrate in order,
+  finish approved AWS exact-build update after SSH authentication, and record
+  the separate five-minute AWS source/browser witness. Temporary local app is
+  stopped. Pending SSH check session is 30832; do not bypass authentication.
 - Preserve paper mode and disabled live trading. Separate further Moomoo,
   Polymarket/Kalshi and trusted-history work into subsequent bounded slices.
 - Continue from `origin/main`, preserve divergent local main and independent
