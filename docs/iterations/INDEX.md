@@ -34,9 +34,9 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0028 | completed | 2026-09-05 | 2026-09-07 | Decision Inbox & Bounded Paper Shadow Portfolio | [Issue #129](https://github.com/ZP151/quantmesh/issues/129) / [PR #130](https://github.com/ZP151/quantmesh/pull/130) / [Ledger](0028-decision-inbox-shadow-portfolio.md) |
 | 0029 | completed | 2026-09-07 | 2026-09-08 | Decision Readiness Session | [Issue #131](https://github.com/ZP151/quantmesh/issues/131) / [PR #133](https://github.com/ZP151/quantmesh/pull/133) / [Ledger](0029-decision-readiness-session.md) |
 | 0030 | independent track; issue open | — | — | Tiered validation gates | [Issue #132](https://github.com/ZP151/quantmesh/issues/132) |
-| 0031 | independent track; demo deployment recorded; issue open | — | — | Private AWS staging workstation | [Issue #135](https://github.com/ZP151/quantmesh/issues/135) |
+| 0031 | completed; integrated through 0034 | 2026-09-09 | 2026-09-12 | Private AWS staging workstation | [Issue #135](https://github.com/ZP151/quantmesh/issues/135) / [PR #142](https://github.com/ZP151/quantmesh/pull/142) |
 | 0032 | completed | 2026-09-11 | 2026-09-11 | Probabilistic Scenario Lab | [Issue #136](https://github.com/ZP151/quantmesh/issues/136) / [PR #137](https://github.com/ZP151/quantmesh/pull/137) / [Ledger](0032-probabilistic-scenario-lab.md) |
 | 0033 | completed | 2026-09-12 | 2026-09-12 | Exact Forecast Outcome Scorecard | [Issue #138](https://github.com/ZP151/quantmesh/issues/138) / [PR #139](https://github.com/ZP151/quantmesh/pull/139) / [Ledger](0033-forecast-outcome-scorecard.md) |
-| 0034 | approved implementation; deployment pending | 2026-09-12 | — | Deployed read-only live market data | [Issue #140](https://github.com/ZP151/quantmesh/issues/140) / [Design](0034-live-data-delivery.md) |
+| 0034 | completed | 2026-09-12 | 2026-09-12 | Deployed read-only live market data | [Issue #140](https://github.com/ZP151/quantmesh/issues/140) / [PR #142](https://github.com/ZP151/quantmesh/pull/142) / [Ledger](0034-live-data-delivery.md) |
 
 <!-- quantmesh-iterations:append-above -->

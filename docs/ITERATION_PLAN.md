@@ -12,39 +12,48 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 | Decision Inbox and Readiness, 0028–0029 | Merged PRs #130 / #133 | No new deployment claim here |
 | Scenario Lab, 0032 | Merged PR #137 | Merge does not establish the AWS version |
 | Forecast outcome review, 0033 | Merged PR #139; final-head CI passed | AWS not updated by the merge |
-| Private AWS workstation, 0031 / #135 | Deployment support integrating into 0034; issue remains open | Fresh HTTPS probe 2026-09-12 confirms `4022942`, demo/paper |
+| Private AWS workstation, 0031 / #135 | Integrated through merged PR #142 | Private HTTPS, exact build, loopback bind and retained demo rollback verified |
+| Deployed live data, 0034 / #140 | Merged PR #142 as `e185c3b`; final-head CI passed | AWS BTC/ETH/SOL five-minute API/browser witness and reload/replay passed; paper true/live trading false |
 | Multi-market live runtime, 0015/0019 | Connectors, buffering, replay and stream/UI foundations exist | All-market real-time operation in AWS has not been established |
 
 ## Next delivery order
 
-1. **Reconcile the deployment baseline.** Inspect the actual AWS health/build and
-   service mode; integrate #135's private-origin and release/rollback support
-   with current product main. Retain an exact rollback target. Do not deploy
-   bare main over the independent staging integration.
-2. **0034 / #140: real Hyperliquid prices in the deployed workstation.** One
-   action: open BTC/ETH/SOL and see real source timestamps and fresh/stale state.
-   Accept with a five-minute real-data witness, at least two distinct upstream
-   timestamps per symbol, controlled stale/reconnect evidence and reload/replay.
-   Use the existing runtime; orders and live execution stay outside this slice.
-3. **Equities: Moomoo/OpenD.** Establish private OpenD reachability and quote
+1. **Equities: Moomoo/OpenD.** Establish private OpenD reachability and quote
    entitlement, then prove AAPL/NVDA observations during the market session.
    Current five-second polling is not native tick push; delayed or unavailable
    data must be labelled. Do not expose OpenD publicly to solve reachability.
-4. **Prediction markets.** Verify Polymarket active-contract subscription and
+2. **Prediction markets.** Verify Polymarket active-contract subscription and
    mapping; then implement/configure Kalshi's required WebSocket authentication.
    Each venue has its own real-data acceptance; missing credentials are an
    unavailable state, not a healthy feed.
-5. **Real history through decisions and review.** Bind trusted, calendar-correct
+3. **Real history through decisions and review.** Bind trusted, calendar-correct
    historical datasets to the existing Lab/DecisionPacket loop. A few minutes
    of streaming ticks do not create months of qualified daily history. Preserve
    lineage, quality gates, costs and frozen review evidence.
 
-The [0034 design](iterations/0034-live-data-delivery.md) contains evidence,
-dependencies, acceptance criteria and non-goals. Later market slices are
-priorities, not parallel implementation commitments or completed features.
-The operator approved 0034 implementation on 2026-09-12; its exact steps are
-tracked in the [executable plan](superpowers/plans/2026-09-12-deployed-live-market-data.md).
-Defer additional model/framework breadth until the deployed data loop works.
+The [0034 ledger](iterations/0034-live-data-delivery.md) records the completed
+deployment loop: 304.88 seconds of API sampling, 60 distinct source quote times
+per BTC/ETH/SOL, zero disconnected samples, and 323.567 seconds of browser
+observations with replay/reload. Keep `4022942` as the demo rollback target.
+Later market slices are priorities, not parallel commitments or completed feeds.
+
+## Next bounded slice: AWS equity observations
+
+- User action: open AAPL/NVDA in the private workstation and inspect an actual
+  source observation, its timestamp, entitlement and market-session state.
+- Readiness first: identify the existing licensed OpenD host, verify an approved
+  private route from AWS, and inspect the actual quote entitlement. AWS cannot
+  use an operator's Windows localhost implicitly. Do not add public OpenD access,
+  purchase subscriptions or place an order as a connectivity test.
+- Measurable exit: an open-session witness records at least two distinct source
+  timestamps for each symbol; closed, delayed and unavailable observations remain
+  distinguishable. Keep the existing five-second polling label explicit.
+- Deliver one adapter/configuration-to-page loop. Last-price data without bid/ask
+  remains research-only; do not fabricate an executable quote. Preserve the
+  completed Hyperliquid deployment and the independent 0021 soak.
+- Only after readiness is established, write the exact-file test-first plan and
+  its issue/iteration record. Additional model/framework work remains sequenced
+  behind verified data access and trusted historical evidence.
 
 ## Execution and completion rules
 
