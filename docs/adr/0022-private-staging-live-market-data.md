@@ -18,6 +18,8 @@ without a profile override still starts in demo mode through the same unit.
 Activation verifies exact build, expected runtime, paper true and live trading
 false. Retained activation infers the canonical saved profile, never rewrites
 its environment and restores the previous release on failed health.
+New base-runtime installations use that release's `requirements-audit.txt`
+as pip constraints, without installing the development/research extras.
 
 Private Tailscale HTTPS, exact browser-origin checks, loopback binding and
 retained-release rollback remain mandatory. No public service or new AWS

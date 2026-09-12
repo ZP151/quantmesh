@@ -30,8 +30,8 @@ const LABEL_RANK: Record<LiveLabel, number> = {
   unavailable: 4,
 }
 
-/** Kinds that carry market data — status updates are connector health
- * (shown in the health panel), never part of the instrument badge. */
+/** Kinds that carry market data. Connector status can veto availability,
+ * but a healthy status must not improve the freshness of market data. */
 const DATA_KINDS: readonly LiveKind[] = [
   'quote',
   'trade',
@@ -147,6 +147,7 @@ export function dataViews(instrument: LiveInstrumentState): LiveView[] {
 
 /** The instrument badge: the most degraded data kind's label. */
 export function instrumentLabel(instrument: LiveInstrumentState): LiveLabel {
+  if (instrument.kinds.status?.label === 'unavailable') return 'unavailable'
   const views = dataViews(instrument)
   if (views.length === 0) return 'unavailable'
   return views[views.length - 1].label

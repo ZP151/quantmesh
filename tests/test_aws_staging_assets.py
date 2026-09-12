@@ -125,7 +125,10 @@ def test_invalid_ref_is_rejected_before_commands_or_filesystem_changes(
     assert not root.exists()
 
 
-def test_successful_deployment_activates_exact_healthy_release(tmp_path: Path) -> None:
+@pytest.mark.parametrize("live_market_data", [False, True])
+def test_successful_deployment_activates_exact_healthy_release(
+    tmp_path: Path, live_market_data: bool
+) -> None:
     deploy = _load_deploy_program()
     layout = deploy.Layout(root=tmp_path / "quantmesh")
     commands = FakeCommands(GOOD_REF)
@@ -137,6 +140,7 @@ def test_successful_deployment_activates_exact_healthy_release(tmp_path: Path) -
     result = deploy.deploy(
         GOOD_REF,
         staging_origin=STAGING_ORIGIN,
+        live_market_data=live_market_data,
         layout=layout,
         run_command=commands,
         service=service,
@@ -144,7 +148,7 @@ def test_successful_deployment_activates_exact_healthy_release(tmp_path: Path) -
         activate=activate,
         read_health=lambda: {
             "status": "ok",
-            "runtime_mode": "demo",
+            "runtime_mode": "live" if live_market_data else "demo",
             "paper_mode": True,
             "live_trading": False,
             "deployment": {"environment": "staging", "build_ref": GOOD_REF},
@@ -162,12 +166,25 @@ def test_successful_deployment_activates_exact_healthy_release(tmp_path: Path) -
     assert service.actions == ["restart"]
     assert (release / ".staging.env").read_text(encoding="utf-8") == (
         f"QUANTMESH_ENVIRONMENT=staging\nQUANTMESH_BUILD_REF={GOOD_REF}\n"
-        f"QUANTMESH_STAGING_ORIGIN={STAGING_ORIGIN}\n"
+        f"QUANTMESH_STAGING_ORIGIN={STAGING_ORIGIN}\n" + (LIVE_PROFILE if live_market_data else "")
     )
     flattened = [call for call, _ in commands.calls]
     assert any(call[-2:] == ("origin", GOOD_REF) for call in flattened)
     assert any(call[-2:] == ("rev-parse", "FETCH_HEAD") for call in flattened)
     assert any("worktree" in call and str(release) in call for call in flattened)
+    install_commands = [call for call in flattened if "pip" in call and "install" in call]
+    assert install_commands == [
+        (
+            str(release / ".venv" / "bin" / "python"),
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--constraint",
+            str(release / "requirements-audit.txt"),
+            str(release),
+        )
+    ]
 
 
 def test_fetched_commit_mismatch_never_activates_release(tmp_path: Path) -> None:

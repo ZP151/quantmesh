@@ -30,7 +30,7 @@ the exact build plus `runtime_mode=live`, `paper_mode=true`,
 `live_trading=false`. Wait for actual observations after health succeeds;
 startup health alone does not establish provider connectivity.
 
-Open Cockpit over private HTTPS, inspect all three quotes/source times and
+Open `/app/cockpit` over private HTTPS, inspect all three quotes/source times and
 freshness, reload, and use the recorded replay controls. Capture five minutes
 with at least two distinct source timestamps per symbol and the exact build.
 Use quote/trade/book timestamps, not receipt-timed metrics, as the witness.

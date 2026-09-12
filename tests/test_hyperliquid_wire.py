@@ -120,9 +120,16 @@ def test_candle_frame_uses_the_same_parser() -> None:
 
 def test_captured_public_candle_accepts_inclusive_close_millisecond() -> None:
     frame = {
-        "t": 1789203000000, "T": 1789203059999, "s": "BTC", "i": "1m",
-        "o": "77293.0", "c": "77298.0", "h": "77299.0", "l": "77293.0",
-        "v": "5.22211", "n": 86,
+        "t": 1789203000000,
+        "T": 1789203059999,
+        "s": "BTC",
+        "i": "1m",
+        "o": "77293.0",
+        "c": "77298.0",
+        "h": "77299.0",
+        "l": "77293.0",
+        "v": "5.22211",
+        "n": 86,
     }
     bar = parse_candle_frame(frame, BTC, interval="1m")
     assert bar.timestamp == _t(1789203000000)
@@ -372,13 +379,55 @@ def test_official_bbo_preserves_prices_and_base_sizes() -> None:
     ) == {"bid": 60000, "ask": 60001, "bid_size": 1, "ask_size": 2}
 
 
+@pytest.mark.parametrize("side", [0, 1])
+@pytest.mark.parametrize("count", [{}, {"n": None}, {"n": True}, {"n": -1}, {"n": 1.5}, {"n": "1"}])
+def test_official_bbo_requires_nonnegative_integer_order_count(side, count) -> None:
+    from quantmesh.hyperliquid.wire import parse_bbo_frame
+
+    levels = [{"px": "1", "sz": "1", "n": 1}, {"px": "2", "sz": "1", "n": 1}]
+    levels[side] = {"px": levels[side]["px"], "sz": "1", **count}
+    with pytest.raises(HyperliquidProtocolError, match="count must be a non-negative integer"):
+        parse_bbo_frame({"coin": "BTC", "time": T0, "bbo": levels})
+
+
+def test_official_bbo_zero_order_count_is_valid() -> None:
+    from quantmesh.hyperliquid.wire import parse_bbo_frame
+
+    assert parse_bbo_frame(
+        {
+            "coin": "BTC",
+            "time": T0,
+            "bbo": [
+                {"px": "1", "sz": "0", "n": 0},
+                {"px": "2", "sz": "1", "n": 1},
+            ],
+        }
+    ) == {"bid": 1, "ask": 2, "bid_size": 0, "ask_size": 1}
+
+
+def test_official_bbo_null_side_does_not_hide_malformed_counterparty_count() -> None:
+    from quantmesh.hyperliquid.wire import parse_bbo_frame
+
+    with pytest.raises(HyperliquidProtocolError, match="count must be a non-negative integer"):
+        parse_bbo_frame(
+            {
+                "coin": "BTC",
+                "time": T0,
+                "bbo": [
+                    None,
+                    {"px": "2", "sz": "1", "n": False},
+                ],
+            }
+        )
+
+
 @pytest.mark.parametrize(
     "bbo",
     [
         [],
         [None],
-        [{"px": "2", "sz": "1"}, {"px": "1", "sz": "1"}],
-        [{"px": "1", "sz": "-1"}, {"px": "2", "sz": "1"}],
+        [{"px": "2", "sz": "1", "n": 1}, {"px": "1", "sz": "1", "n": 1}],
+        [{"px": "1", "sz": "-1", "n": 1}, {"px": "2", "sz": "1", "n": 1}],
     ],
 )
 def test_official_bbo_malformed_or_crossed_book_fails_closed(bbo) -> None:

@@ -73,7 +73,8 @@ fixture files only where the same corrected contract requires alignment.
 
 Files: `src/quantmesh/live/feed.py`, `tests/test_live_feed.py`,
 `frontend/src/lib/live.ts`, `frontend/src/lib/live.test.ts`,
-`frontend/src/screens/Cockpit.tsx`, `frontend/src/screens/Cockpit.test.tsx`.
+`frontend/src/screens/Cockpit.tsx`, `frontend/src/screens/CockpitDetail.tsx`,
+`frontend/src/screens/Cockpit.test.tsx`.
 Only minimal compatible response typing in `frontend/src/lib/api.ts` and
 existing bilingual messages if required; coordinate these shared files.
 
@@ -89,6 +90,9 @@ existing bilingual messages if required; coordinate these shared files.
 - [x] GREEN same tests plus affected live consumers; typecheck/lint. Controller
   owns one combined desktop/mobile browser inspection and correction batch.
 - [x] Commit at reviewed coherent checkpoint with quant semantics recorded.
+- [x] External-review correction, scoped by Planner: share monotonic aging with
+  the existing detail consumer and retain disconnected status as an availability
+  veto during snapshot/stream reconciliation and timer aging. No new surface.
 
 ## Controller verification and deployment
 

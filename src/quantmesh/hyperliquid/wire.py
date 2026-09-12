@@ -272,6 +272,9 @@ def parse_bbo_frame(frame: object) -> dict[str, float] | None:
             parsed.append(None)
             continue
         level = _mapping(side, f"bbo {name} level")
+        count = level.get("n")
+        if type(count) is not int or count < 0:
+            raise HyperliquidProtocolError(f"bbo {name} count must be a non-negative integer")
         price = _num(level.get("px"), f"bbo {name} price")
         size = _num(level.get("sz"), f"bbo {name} size")
         if price <= 0 or size < 0:

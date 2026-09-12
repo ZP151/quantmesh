@@ -338,6 +338,8 @@ def deploy(
             "pip",
             "install",
             "--disable-pip-version-check",
+            "--constraint",
+            str(release / "requirements-audit.txt"),
             str(release),
         ],
         None,

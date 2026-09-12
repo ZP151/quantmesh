@@ -448,6 +448,29 @@ describe('openLiveConnection', () => {
 
 
 describe('source and browser freshness', () => {
+  it('preserves a disconnected snapshot veto while cached data ages', () => {
+    const row = instrument({ quote: quote('BTC', 100, 101), status: statusUpdate('BTC') })
+    row.label = 'unavailable'
+    row.kinds.status = { ...row.kinds.status, provenance: 'unavailable', label: 'unavailable' }
+    const rows = { 'hyperliquid:BTC': row }
+    expect(ageInstruments(rows, Date.parse(T0) + 1000)['hyperliquid:BTC'].label).toBe('unavailable')
+    expect(ageInstruments(rows, Date.parse(T0) + 31000)['hyperliquid:BTC'].label).toBe('unavailable')
+    const { result } = renderHook(() => useAgedInstruments(rows))
+    expect(result.current['hyperliquid:BTC'].label).toBe('unavailable')
+  })
+
+  it('retains disconnect through incoming quotes and recovers on connected status', () => {
+    const initial = mergeUpdate({}, quote('BTC', 100, 101))
+    const disconnected = mergeUpdate(initial, {
+      ...statusUpdate('BTC'), state: 'disconnected', provenance: 'unavailable',
+    })
+    expect(disconnected['hyperliquid:BTC'].label).toBe('unavailable')
+    const newQuote = mergeUpdate(disconnected, quote('BTC', 101, 102))
+    expect(newQuote['hyperliquid:BTC'].label).toBe('unavailable')
+    const recovered = mergeUpdate(newQuote, statusUpdate('BTC'))
+    expect(recovered['hyperliquid:BTC'].label).toBe('real')
+  })
+
   it('does not freshen an old source quote on receipt', () => {
     const rows = mergeUpdate({}, quote('BTC', 100, 101, {
       received_at: '2026-08-09T10:02:00Z',

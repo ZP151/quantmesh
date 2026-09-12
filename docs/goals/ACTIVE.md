@@ -35,6 +35,10 @@ and real-source acceptance pending, 2026-09-12.
   aging and checked automatic rollback. Inclusive candle end milliseconds are
   corrected; 45-second public parser smoke passed. Controller final gates: 311
   Python/333 frontend/7 fixture browser passed; full CI and AWS acceptance pending.
+- Later external review produced four bounded corrections, scoped by Planner
+  and verified: detail timer aging, disconnect veto, audited install constraints
+  and strict BBO order count. Latest controller gate:326 Python/336 frontend/
+  7 browser passed. See iteration ledger for RED/GREEN and dependency evidence.
 - Local real-source witness passed: 302.13 seconds, 61 distinct source quote
   timestamps per BTC/ETH/SOL, zero disconnected samples, risk/orders unchanged;
   replay persisted after the temporary app stopped. This is not AWS acceptance.
@@ -44,6 +48,11 @@ and real-source acceptance pending, 2026-09-12.
   stopped. SSH check session30832 completed successfully. AWS preflight: Python
   3.12.3, 54GB free disk, ~1.3GB available RAM, passwordless sudo, retained
   demo release and private Serve route intact. No AWS service change yet.
+- Correct browser route `/app/cockpit` works in Edge and confirms the deployed
+  demo/no-feed state. Earlier wrong-route errors are superseded. AWS-host public
+  WebSocket probe received397 BBO frames in45.22seconds acrossBTC/ETH/SOL;
+  this is host reachability, not deployed-app acceptance. Reuse the open Edge
+  tab for the eventual exact-build browser/replay witness.
 - Preserve paper mode and disabled live trading. Separate further Moomoo,
   Polymarket/Kalshi and trusted-history work into subsequent bounded slices.
 - Continue from `origin/main`, preserve divergent local main and independent

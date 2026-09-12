@@ -232,3 +232,57 @@ do not infer authority to purchase data or expose new public services.
 - Browser automation navigation to the private AWS hostname was refused by
   both in-app and Edge surfaces (ERR_BLOCKED_BY_CLIENT). HTTPS/SSH CLI access
   works; deployed browser acceptance remains a separate unresolved gate.
+
+## Planner checkpoint — external review before activation
+
+- Corrected the browser preflight: the deployed route is `/app/cockpit`.
+  Edge renders staging4022942, the demo banner and "no live feed is attached".
+  Earlier `/cockpit` navigation failures were not evidence of blocked private
+  browser access. SSH authentication is complete; no activation has occurred.
+- AWS-host direct public WebSocket probe at09:12:53UTC ran45.22seconds:
+  3 subscription acknowledgments,397 BBO frames and182/83/132 distinct source
+  timestamps for BTC/ETH/SOL. This proves venue reachability from AWS only;
+  application/browser live acceptance still awaits deployment.
+- New external PR review arrived after the bounded independent review and
+  correction confirmation. Returned to Planner before further implementation:
+  reduce the remaining work to four concrete acceptance defects, without
+  another open-ended structural review or market expansion. Reuse the existing
+  aging hook in the detail screen, preserve the disconnected-status veto in
+  shared label derivation, constrain deployment to the audited dependency
+  closure, and validate the official BBO order-count field. Each requires
+  reproduced RED/GREEN evidence. Existing protocol/replay architecture stays.
+- The source timestamp/freshness and deterministic deployment contracts make
+  these corrections part of the current user loop. Final-head CI must rerun
+  after the single correction checkpoint; old-head success cannot authorize
+  activation. No deployment, order or independent soak changes are allowed
+  during this correction step.
+
+## External-review correction verification
+
+- **Implementer / frontend:** regression RED reproduced both disconnect veto
+  cases and frozen detail age:3 failed/61 passed. Shared label derivation now
+  retains unavailable status; quotes cannot clear it until a connected status
+  arrives. Detail uses the same monotonic aging hook. Targeted GREEN64 passed.
+  Full-suite load exposed an existing wait race between connector text and the
+  actual watchlist row; the test now waits for the BTC row link. Full frontend
+  GREEN336 passed across27 files in21.72seconds.
+- **Implementer / protocol:** required BBO `n` is a non-negative integer;
+  missing/null/bool/negative/fraction/string fail closed. A null side cannot
+  conceal a malformed counterpart. RED13 failed/1 passed; agent GREEN114
+  wire/supervisor tests. Controller includes these in the combined gate below.
+- **Implementer / deployment:** installation constrains the base package with
+  the candidate's audited closure. Demo/live command assertions both failed
+  before correction. Agent staging/identity GREEN78 passed. Read-only Linux
+  CPython3.12 wheel resolution and marker/Requires-Python inspection verified
+  all37 base runtime dependencies against the pinned closure; no dependency
+  installation or shared-environment mutation occurred.
+- **Reviewer / controller:** inspected the bounded corrections against each
+  external finding; retained null-side behavior, explicit reconnect recovery,
+  base-only dependency installation, old demo environment and checked rollback.
+  No third broad architecture review or additional market work was launched.
+- **Verifier / controller:** combined nine-file protocol/feed/router/replay/
+  staging/identity gate:326 passed in26.67seconds, one existing Starlette
+  warning. Packaged browser gate:7 passed in36.16seconds. Full frontend336
+  passed; TypeScript build, generated API and frontend lint passed (existing
+  four Fast Refresh warnings). Current bundle rebuilt. These supersede the
+  earlier local counts; full final-head CI and AWS live acceptance remain open.
