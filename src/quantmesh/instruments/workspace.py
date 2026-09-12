@@ -37,7 +37,7 @@ from quantmesh.instruments.proposals import (
     forecast_freshness_blocker,
 )
 from quantmesh.live.contract import Provenance, UpdateKind
-from quantmesh.live.feed import LiveFeed
+from quantmesh.live.feed import ExactUpdateSnapshot, LiveFeed
 from quantmesh.live.marks import (
     AccountValuationSnapshot,
     LiveMarkSnapshot,
@@ -54,18 +54,16 @@ def _positive(payload: Mapping[str, object], name: str) -> float | None:
 
 
 def _live_evidence(
-    feed: LiveFeed | None,
+    snapshot: ExactUpdateSnapshot | None,
     *,
-    venue: Venue,
-    symbol: str,
+    feed_attached: bool,
     as_of: datetime,
 ) -> WorkspaceLiveEvidence:
-    if feed is None:
+    if not feed_attached:
         return WorkspaceLiveEvidence(
             status="unavailable",
             reason="no live feed is attached",
         )
-    snapshot = feed.snapshot_exact(venue, symbol, UpdateKind.QUOTE, as_of=as_of)
     if snapshot is None:
         return WorkspaceLiveEvidence(
             status="unavailable",
@@ -349,7 +347,12 @@ class InstrumentWorkspaceService:
         horizon: Literal[7, 30] | None = None,
         forecast_id: str | None = None,
     ) -> InstrumentWorkspace:
-        generated_at = self._now()
+        if self._live_feed is None:
+            generated_at, live_snapshot = self._now(), None
+        else:
+            generated_at, live_snapshot = self._live_feed.capture_exact(
+                venue, symbol, UpdateKind.QUOTE, clock=self._now
+            )
         if generated_at.tzinfo is None:
             raise ValueError("workspace clock must be timezone-aware")
         generated_at = generated_at.astimezone(UTC)
@@ -406,9 +409,8 @@ class InstrumentWorkspaceService:
                 as_of=generated_at,
             )
         live = _live_evidence(
-            self._live_feed,
-            venue=venue,
-            symbol=symbol,
+            live_snapshot,
+            feed_attached=self._live_feed is not None,
             as_of=generated_at,
         )
         forecast = _forecast_summary(artifact) if artifact is not None else None

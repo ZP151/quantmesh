@@ -36,7 +36,8 @@ from quantmesh.instruments.contracts import (
 from quantmesh.instruments.forecast import run_price_forecast
 from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
 from quantmesh.instruments.proposals import PaperDecisionService, ProposalLedger
-from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
+from quantmesh.live.buffer import LiveBuffer
+from quantmesh.live.contract import MarketUpdate, Provenance, SourceState, UpdateKind
 from quantmesh.live.feed import ExactUpdateSnapshot, LiveFeed
 from quantmesh.live.fence import QuoteFence
 
@@ -448,6 +449,64 @@ def test_workspace_keeps_typed_live_absence_and_degradation(
     assert reason_fragment in live["reason"].lower()
 
 
+@pytest.mark.parametrize(
+    "state,expected_status,reason_fragment",
+    [
+        ("future-receipt", "degraded", "receipt time is in the future"),
+        ("future-source", "degraded", "freshness is unavailable"),
+        ("disconnected", "degraded", "continuity is unproven"),
+        ("missing", "unavailable", "no live quote"),
+    ],
+)
+def test_workspace_captured_quote_keeps_existing_refusal_guards(
+    state, expected_status, reason_fragment
+):
+    feed = LiveFeed() if state == "missing" else _quote_feed()
+    if state == "disconnected":
+        feed.ingest(
+            [
+                MarketUpdate(
+                    venue=Venue.MOOMOO,
+                    instrument="NVDA",
+                    kind=UpdateKind.STATUS,
+                    provenance=Provenance.UNAVAILABLE,
+                    data_time=NOW,
+                    received_at=NOW,
+                    state=SourceState.DISCONNECTED,
+                )
+            ]
+        )
+    elif state in {"future-receipt", "future-source"}:
+        feed.ingest(
+            [
+                MarketUpdate(
+                    venue=Venue.MOOMOO,
+                    instrument="NVDA",
+                    kind=UpdateKind.QUOTE,
+                    provenance=Provenance.REAL,
+                    data_time=NOW + timedelta(seconds=10) if state == "future-source" else NOW,
+                    received_at=NOW + timedelta(microseconds=800)
+                    if state == "future-receipt"
+                    else NOW,
+                    sequence=9,
+                    payload={"bid": 104.9, "ask": 105.1, "bid_size": 1, "ask_size": 1},
+                )
+            ]
+        )
+    app = create_workstation_app(
+        account=PaperAccount(cash=100_000),
+        history=RecordingHistoryService(),
+        live_feed=feed,
+        workspace_clock=lambda: NOW,
+        host="127.0.0.1",
+    )
+    with TestClient(app) as client:
+        response = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m")
+    assert response.status_code == 200, response.text
+    live = response.json()["live"]
+    assert live["status"] == expected_status
+    assert reason_fragment in live["reason"]
+
 def test_workspace_exposes_real_live_lineage_without_relabeling_it(
     tmp_path: Path,
 ) -> None:
@@ -715,6 +774,103 @@ def test_workspace_valuation_cannot_observe_a_quote_after_generated_at(
     assert workspace["risk"]["equity"] == pytest.approx(
         account.equity({position_key(NVDA): 105.0})
     )
+
+
+def test_workspace_pins_quote_before_live_history_and_next_request_observes_arrival(
+    tmp_path: Path, monkeypatch
+) -> None:
+    cut = NOW.replace(second=51)
+
+    def quote(sequence, received_at, bid=100):
+        return MarketUpdate(
+            venue=Venue.HYPERLIQUID,
+            instrument="BTC",
+            kind=UpdateKind.QUOTE,
+            provenance=Provenance.REAL,
+            data_time=cut - timedelta(milliseconds=329),
+            received_at=received_at,
+            sequence=sequence,
+            payload={"bid": bid, "ask": bid + 1, "bid_size": 1, "ask_size": 1},
+        )
+
+    with LiveBuffer(tmp_path / "replay") as buffer:
+        feed = LiveFeed(lake=buffer)
+        opened = cut.replace(second=0)
+        feed.ingest(
+            [
+                MarketUpdate(
+                    venue=Venue.HYPERLIQUID,
+                    instrument="BTC",
+                    kind=UpdateKind.CANDLE,
+                    provenance=Provenance.REAL,
+                    data_time=opened + timedelta(minutes=offset),
+                    received_at=cut - timedelta(seconds=2 - offset),
+                    sequence=int((opened + timedelta(minutes=offset)).timestamp() * 1000),
+                    payload={
+                        "interval": "1m",
+                        "open": 100,
+                        "high": 102,
+                        "low": 99,
+                        "close": 101,
+                        "volume": 1,
+                        "final": False,
+                    },
+                )
+                for offset in (-1, 0)
+            ]
+        )
+        feed.ingest(
+            [
+                quote(1, cut - timedelta(milliseconds=2)),
+                quote(2, cut - timedelta(milliseconds=1)),
+            ]
+        )
+        replay = buffer.replay
+        injected = False
+
+        def capture_then_quote(**kwargs):
+            nonlocal injected
+            rows = replay(**kwargs)
+            if not injected:
+                injected = True
+                feed.ingest([quote(3, cut + timedelta(microseconds=800), bid=200)])
+            return rows
+
+        monkeypatch.setattr(buffer, "replay", capture_then_quote)
+        clock_values = iter((cut, cut + timedelta(seconds=1)))
+        clock_calls = []
+
+        def clock():
+            value = next(clock_values)
+            clock_calls.append(value)
+            return value
+
+        app = create_workstation_app(
+            account=PaperAccount(cash=100_000),
+            live_feed=feed,
+            workspace_clock=clock,
+            host="127.0.0.1",
+        )
+        with TestClient(app) as client:
+            first = client.get("/api/instruments/hyperliquid/BTC/workspace?range=1d")
+            assert first.status_code == 200, first.text
+            body = first.json()
+            assert clock_calls == [cut]
+            assert body["generated_at"] == cut.isoformat().replace("+00:00", "Z")
+            assert body["history"]["as_of"] == body["generated_at"]
+            assert body["live"]["status"] == "available", body["live"]
+            assert body["live"]["bid"] == 100
+            assert body["live"]["age_ms"] == 329
+            assert body["live"]["received_at"] == (
+                cut - timedelta(milliseconds=1)
+            ).isoformat().replace("+00:00", "Z")
+
+            second = client.get("/api/instruments/hyperliquid/BTC/workspace?range=1d")
+            assert second.status_code == 200, second.text
+            assert second.json()["live"]["status"] == "available"
+            assert second.json()["live"]["bid"] == 200
+            assert clock_calls == [cut, cut + timedelta(seconds=1)]
+
 
 
 def test_create_proposal_is_preview_only(tmp_path: Path) -> None:

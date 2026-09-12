@@ -9,6 +9,7 @@ never start the pump (the browser E2E is the pump's gate).
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from threading import Event, Thread
 from typing import Any
 
 import pytest
@@ -138,6 +139,62 @@ class TestLabel:
 
 
 class TestIngestAndCache:
+    def test_capture_exact_freezes_clock_payload_and_proof_before_competing_ingest(self):
+        feed = _feed()
+        feed.ingest(
+            [
+                _upd(sequence=1, received_at=T0 - timedelta(milliseconds=2)),
+                _upd(sequence=2, received_at=T0 - timedelta(milliseconds=1)),
+            ]
+        )
+        started = Event()
+        finished = Event()
+        clock_calls = []
+
+        def ingest_after_clock():
+            started.set()
+            feed.ingest([_upd(sequence=3, received_at=T0 + timedelta(milliseconds=1))])
+            finished.set()
+
+        writer = Thread(target=ingest_after_clock, daemon=True)
+
+        def clock():
+            clock_calls.append(T0)
+            writer.start()
+            assert started.wait(timeout=2)
+            # The writer reached ingest while the request clock was sampled.
+            # It must not replace either the quote or its continuity proof.
+            assert not finished.wait(timeout=0.05)
+            return T0
+
+        try:
+            captured_at, snapshot = feed.capture_exact(
+                Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, clock=clock
+            )
+        finally:
+            if writer.ident is not None:
+                writer.join(timeout=2)
+        assert not writer.is_alive()
+        assert finished.is_set()
+        assert clock_calls == [T0]
+        assert captured_at == T0
+        assert snapshot.sequence == 2
+        assert snapshot.predecessor_sequence == 1
+        assert snapshot.continuity_proven is True
+        assert snapshot.freshness_label == "real"
+        assert snapshot.age_ms == 1
+        with pytest.raises(TypeError):
+            snapshot.payload["bid"] = 9
+        latest = feed.snapshot_exact(Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0)
+        assert latest.sequence == 3  # Existing latest-cache semantics are preserved.
+        assert latest.received_at > T0
+        assert snapshot.sequence == 2
+        feed.ingest([_upd(kind=UpdateKind.STATUS, state=SourceState.DISCONNECTED)])
+        disconnected = feed.snapshot_exact(Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0)
+        assert disconnected.continuity_proven is False
+        assert snapshot.continuity_proven is True
+
+
     def test_exact_snapshot_is_keyed_by_venue_symbol_and_kind(self) -> None:
         feed = _feed()
         feed.ingest(

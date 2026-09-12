@@ -103,6 +103,53 @@ trading change. Older-minute cursor policy is recorded as a separate follow-up.
 
 ## Task 3 — Review, integration and AWS source acceptance (controller)
 
+### Planner return after deployed acceptance attempt 1
+
+PR #145 is merged and `90fe577` is deployed, but the continuous-source gate
+failed. Freeze the chart UX and reopen only two directly reproduced source
+boundaries on `codex/0035-chart-acceptance` / issue #144:
+
+**Task 3a — Local-observation identity:** own `src/quantmesh/live/hyperliquid.py`
+and new `tests/test_live_observation_identity.py`. Audit `activeAssetCtx` and
+`allMids`, whose observation clock lacks an upstream stable event identity.
+
+- [x] RED: `python -m pytest -q tests/test_live_observation_identity.py`.
+  Same-millisecond observations with distinct microseconds must survive the real
+  feed/buffer path, including identical and changed normalized payloads. Same
+  full clock with changed payload must also remain distinct; exact same clock
+  and content must deduplicate. Subsequent three-symbol quotes must still flow.
+- [x] Include full-precision normalized UTC observation time and normalized
+  payload in identities for these two channels only. Preserve exchange-timed
+  quote/book/trade and candle semantics, explicit-ID conflict quarantine,
+  append-only legacy evidence and all source/freshness/continuity fields.
+- [x] GREEN focused tests plus candle revisions, feed, buffer and supervisor;
+  controller records compatibility in ADR-0024 and independent review.
+
+**Task 3b — Workspace request cut:** own `src/quantmesh/live/feed.py`,
+`src/quantmesh/instruments/workspace.py`, `tests/test_live_feed.py` and
+`tests/test_instrument_workspace_api.py`. Existing public API reproduction is
+RED: one assembly-race failure, two genuine future-time controls pass.
+
+- [x] RED the public workspace interleaving: inject a quote during history
+  assembly after the request clock; response retains its captured quote and the
+  next request observes the new quote. Test clock sampled once with detached
+  payload/proof and source-state freshness, including the clock/read boundary.
+- [x] Capture request clock and exact quote/proof atomically under the existing
+  feed lock. Compose header evidence from that captured snapshot. Keep the same
+  generated timestamp for history/valuation and preserve existing `snapshot_exact`
+  semantics for other consumers. No source/receipt-future tolerance relaxation.
+- [x] GREEN `python -m pytest -q tests/test_live_feed.py
+  tests/test_instrument_workspace_api.py`; genuine future receipt, excessive
+  source skew, missing/stale/disconnected quotes and valuation race stay guarded.
+
+Controller owns docs, integration, a fresh independent review (maximum two
+rounds for this reduced batch), combined local gate and final-head CI/PR before
+another deployment. No collector watchdog, general time model rewrite, buffer
+exception suppression, new provider, UI redesign or trading authority changes.
+Acceptance reruns both actual API and browser witnesses together: early price
+movement is insufficient if freshness later fails. Preserve four existing
+quarantine records; require no new false collisions. Issue #144 stays open.
+
 - [x] New `tests/test_live_chart_e2e.py` proves the packaged live chart loop
   through both entry points, real-shaped 1m revisions/appends and reload.
 - [x] Combined targeted backend/frontend gates, focused packaged-browser
@@ -111,7 +158,7 @@ trading change. Older-minute cursor policy is recorded as a separate follow-up.
   at most two rounds. Record outcomes in iteration. Commit one coherent slice.
   External findings caused a documented Planner return and reduced boundary
   batch; its independent review and final local gate passed.
-- [ ] Publish PR referencing #144; resolve findings promptly while final-head
+- [x] Publish PR referencing #144; resolve findings promptly while final-head
   CI runs. Required full Python/frontend/install/audit/build/lint CI must pass
   before merge; do not start a duplicate full local suite or unrelated soak.
 - [ ] Use checked exact-release private AWS update under standing user scope.

@@ -1,4 +1,4 @@
-# ADR-0024 — Hyperliquid candle observation identity
+# ADR-0024 — Hyperliquid observation identities
 
 - Status: accepted design; implementation/acceptance tracked in iteration 0035
 - Date: 2026-09-12
@@ -52,3 +52,35 @@ subsequent quotes. Verify subscriber delivery, exact-repeat deduplication,
 WebSocket/REST identity parity, legacy reopen, same-minute chart coalescing and
 continued quarantine of actual explicit-ID/content conflicts. Final private AWS
 acceptance must witness real active-candle updates and a next-minute append.
+
+## Extension — local-clock metrics observations
+
+Actual deployed acceptance exposed a separate collision in `activeAssetCtx`:
+the ID used millisecond-truncated local observation time, while its normalized
+content digest retained microseconds. `allMids` has the same mapping. A real
+normalizer/feed/buffer reproduction of the captured timestamp and metrics
+produced the exact AWS conflicting identity. Identical payloads separated by
+one microsecond can conflict before either row is stored in a batch.
+
+For these two channels, derive an explicitly versioned local-observation ID
+from channel, coin, full-precision UTC observation time and canonical normalized
+payload. Use exactly the time and payload that enter the normalized update.
+Time precision alone cannot distinguish changed content at the same clock;
+payload alone cannot distinguish equal content at different microseconds.
+Exchange-timed BBO, books, trades and the candle decision above are unchanged.
+
+These feeds have local observation clocks; the new ID does not establish an
+exchange event timestamp or exactly-once upstream delivery. Same full clock
+and normalized payload deduplicate even with a different transport receipt;
+a new observation time or changed content identifies a distinct observation.
+Canonical UTC conversion prevents equivalent timezone representations from
+changing identity. Quarantine still rejects an explicitly reused identity with
+different content.
+
+Legacy rows, quarantine and opaque recovery checkpoint IDs remain untouched.
+A repeated legacy observation may append once with its new mapping; no data
+migration, legacy ID alias or retrospective deduplication is claimed. Verify
+both channels through same-batch and sequential persistence, restart replay,
+exact repeats, changed payload/time and subsequent real feed-pump delivery.
+The actual acceptance baseline retains all four old quarantine entries and
+requires no new false identity conflict after deployment.

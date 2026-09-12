@@ -1,8 +1,10 @@
 # Iteration 0035 — Real charts from Markets and Watchlist
 
-- Status: chart and candle revision prerequisite tested/reviewed; final CI and AWS acceptance pending, 2026-09-12.
+- Status: chart PR merged/deployed; continuous-source acceptance failed;
+  bounded identity/request-clock follow-up in progress, 2026-09-12.
 - Issue: [#144](https://github.com/ZP151/quantmesh/issues/144).
-- Branch: `codex/0035-live-instrument-charts`, from `origin/main@2a50565`.
+- Original branch: `codex/0035-live-instrument-charts`, from `origin/main@2a50565`.
+- Follow-up branch: `codex/0035-chart-acceptance`, from merged `origin/main@90fe577`.
 - Plan: `docs/superpowers/plans/2026-09-12-live-instrument-charts.md`.
 
 ## User action and measurable outcome
@@ -259,3 +261,139 @@ No lake deletion, unit change, new resource or firewall operation occurred.
 - No frontend source/package changes after the previous production build and
   359-test frontend gate. Full final-head CI still precedes merge/deployment;
   the operational restart does not substitute for fixed-build AWS acceptance.
+
+## Final CI and integration
+
+CI [34700259858](https://github.com/ZP151/quantmesh/actions/runs/34700259858)
+passed for `7230c686ab8f17ad6c2b35dd03272daf111ae380`: 3486 Python tests
+passed, 56 skipped and 9 warnings in 2953.78s; 359 frontend tests passed.
+Install, license/audit, generated API, typecheck, frontend lint, committed bundle
+and Ruff gates all passed. Local packaged-browser evidence remains the explicit
+browser gate; optional CI skips are not represented as executed tests.
+
+All four PR threads were resolved, the final independent source-identity review
+was clean and the worktree was clean. PR #145 squash-merged at 15:38:28 UTC as
+`90fe57763835d4962c9431042f71ce0d54121c1c`. The candidate and merged commit
+share tree `3a1fcad13fff759a4bc2b30fd6520ca6e363eaa1`; `git diff --exit-code`
+between them passed. Remote feature branch deleted; local main preserved.
+Acceptance closeout uses `codex/0035-chart-acceptance` from that origin/main.
+
+### Additional unchanged-release evidence while CI ran
+
+- At 15:05 UTC, SOL's 15:04 candle volume changed 1199.99 -> 1204.99 between
+  receipts 15:05:00.264774 and .751846, with unchanged OHLC
+  101.99/102.01/101.98/101.98. The same legacy final-ID collision stopped the
+  feed. Stable snapshot `/tmp/quantmesh-0035-stalled-lake-x5u4qrre` retained
+  256996 updates and two quarantine entries. The captured SOL pair passed
+  candidate normalization/feed/buffer admission: two IDs, zero new quarantine.
+- A second operational restart reached the 90s shutdown timeout at 15:17:51,
+  then started PID 41316. Fresh-source verification failed: a BTC 15:17 final
+  candle conflict stopped the feed again at 15:18:01.037070. Stable snapshot
+  `/tmp/quantmesh-0035-stalled-lake-wt8vby3_` retained 257106 updates and three
+  quarantine entries. No original row for the last conflicting ID was stored;
+  original content is not inferred. No further restart loop or CI cancellation.
+- The deployment acceptance quarantine baseline is therefore **three retained
+  entries**. These existing records must remain; they are not new-build failures.
+  Repeated old-build failures reinforce why restart/HTTP health cannot prove
+  the requested continuously updating chart loop.
+
+### Actual-source acceptance tooling review
+
+The API witness now persists and checks quote provenance, freshness (0–30s),
+continuity and exact symbols on every sample and at completion, preventing early
+chart activity from hiding a later stalled collector. Actual fresh quotes passed;
+recorded stale, age-only, delayed, gapped and unrecovered controls were rejected.
+
+The actual AWS browser witness covers all six entry paths, then observes all
+three charts together. Every changed DOM close or appended minute after baseline
+must match real candle evidence received by that symbol's page. Settled points
+are additionally compared with the history API; reload, keyboard, attribution
+and desktop/mobile checks remain required. Both bounded acceptance-tool reviews
+resolved their single finding in the second round. These are prepared tools,
+not a claim of actual new-build acceptance before their deployed runs complete.
+
+## Deployed attempt 1 and reduced follow-up boundary
+
+The reviewed helper activated exact `90fe577` on private AWS. Independent
+postchecks confirmed build, live market-data profile, paper true/live false,
+service running, loopback 127.0.0.1:8765 and successful pip check. Both retained
+releases remain. The outer stdin wrapper returned exit 1 only after successful
+activation/postchecks because of a trailing CR-only line; independent checks
+confirmed deployment, so it was not repeated.
+
+**Verifier / actual browser:** all six Markets/Watchlist links reached the
+three full charts. Over 302 seconds, BTC/ETH/SOL respectively had 22/21/15 DOM
+changes matching their own received candle frames, three or four tail minutes,
+and four/five/four distinct closes in one minute. Settled points matched the
+history API and survived reload. Keyboard mode switches, TradingView attribution,
+desktop 1440x1000 and mobile 390x844 overflow checks passed, with no page errors.
+Artifacts are in `output/playwright/0035-aws-90fe577/attempt-1` (ignored).
+
+**Verifier / actual continuous source: FAILED.** The parallel API witness
+rejected an ETH quote aged 31811ms after all collection stopped at
+15:45:47.617449 UTC. Stable DB/WAL copy
+`/tmp/quantmesh-0035-stalled-lake-821r_gz_` retained 262548 updates and four
+quarantine entries. The fourth is a new BTC **metrics** identity collision,
+observed 15:45:47.609815: conflicting source time 15:45:47.265680, receipt
+15:45:47.265719, funding -0.0000046821, mark 77371, index 77408.3 and open
+interest 36310.0256. Original row is absent; do not infer its content. HTTP
+health and early chart movement cannot establish sustained feed acceptance.
+
+**Quant Researcher / source boundary:** local-observation identities must not
+truncate a clock that remains full precision in the content digest. Audit only
+Hyperliquid activeAssetCtx/allMids and retain genuine conflict quarantine and
+legacy rows. Local observation time is not a new exchange timestamp guarantee.
+
+**Verifier / workspace boundary:** an actual screenshot also showed a fresh
+329ms quote degraded as received in the future. A deterministic public workspace
+API reproduction returned generated_at 15:44:51.000000 with a quote ingested
+during history assembly at receipt 15:44:51.000800. RED: one failed, two passed
+in 24.09s; preexisting future receipt and excessive source skew remain refused.
+Eight sequential actual API samples did not capture the race; they are not RED
+evidence. The cause is a frozen request clock followed by a later latest-cache
+read; `snapshot_exact(as_of)` labels freshness but does not select historical
+observations.
+
+**Planner/Product:** retain the same user action and five-minute freshness
+success metric. Task 3a corrects only the two local-observation identities;
+Task 3b atomically captures the workspace clock and exact detached quote/proof
+before assembly. Exact file ownership, RED/GREEN and prohibitions are recorded
+in the tracked plan. This is a reduced follow-up PR from merged origin/main,
+with fresh review and final CI; no further UI/provider/watchdog expansion.
+Current AWS remains deployed but unaccepted; quarantine baseline is now four.
+
+### Reduced follow-up implementation and review — 16:00 UTC
+
+- **Implementer / Task 3a:** repository RED 15 failed / 10 passed in 2.68s.
+  Full UTC observation instant, channel, coin and canonical normalized payload
+  now qualify only activeAssetCtx/allMids IDs. GREEN 168 passed in 9.42s across
+  the new 25-case regression and supervisor/feed/buffer/candle tests. Exact
+  repeats, changed microseconds/content, legacy reopen and real pump/subscriber
+  continuation into all three quote streams are covered. A test-only JSON-key
+  ordering assertion was corrected to compare persisted bytes and model fields;
+  product serialization was not changed.
+- **Implementer / Task 3b:** public replay/API race RED and clock/read-boundary
+  RED preceded implementation. Capture the single clock read and exact detached
+  quote/proof under the existing RLock, then release before workspace assembly.
+  The clock callback must be quick and side-effect-free. Existing snapshot_exact
+  semantics, valuation, receipt/source-future and continuity guards are unchanged.
+  Final focused GREEN 79 passed in 9.62s, one existing Starlette warning.
+- **Reviewer / fresh round one:** independent spec/correctness and standards/
+  architecture reviews both found no actionable issues. No second round needed.
+  Review included the strengthened actual API witness: each sample records and
+  checks workspace availability, real provenance/label, age and receipt bound.
+  Controlled assertion checks reject future receipt and eight recorded stale
+  responses; these controls are not actual-source success claims.
+- **Verifier / controller:** shared Python `-m pytest -q` with unique OS-temp
+  basetemp on observation identity, candle revisions, supervisor, feed, buffer,
+  fence, marks, live history, instrument history/workspace and packaged chart
+  E2E: **342 passed, one existing warning in 49.14s**. Ruff across src/tests/tools,
+  diff whitespace and submodule checks passed; pointers remain unchanged.
+  Frontend source, generated assets and dependency locks are unchanged.
+  Generated API freshness passed with the shared `QUANTMESH_PYTHON` and
+  worktree `PYTHONPATH`; an initial invocation without these selected the wrong
+  Python and failed package import before checking the API. No package install
+  or schema regeneration was required.
+- **Release gate:** commit this coherent reviewed correction, require final-head
+  CI, then merge/update existing private AWS and repeat both actual witnesses.
+  `90fe577` remains deployed but unaccepted. Do not close #144 at the code gate.
