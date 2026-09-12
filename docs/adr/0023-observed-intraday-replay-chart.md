@@ -18,6 +18,10 @@ Hyperliquid 1D local replay at 1m with `resolution_fallback="5m->1m"`. The
 contract validates source and dataset identity against the exact instrument,
 24/7 unadjusted interval, absent manifest/quality qualification, and exact
 coverage rows/start/end. Other finer fallbacks remain invalid.
+Preferred/coarser candidates suppress 1m only after passing the same continuity
+and two-observation gates. Observed replay coverage and generation receipt bound
+advance together when composition includes a newly ingested tail; this does not
+advance manifest coverage or its generation vintage.
 
 Use actual venue candle OHLCV and source-open timestamps. Same-minute revisions
 replace a point; contiguous next minutes append. Keep source/receipt bounds,

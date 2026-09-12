@@ -76,8 +76,10 @@ Bounded live-follow/aging acceptance additionally owns
   through both entry points, real-shaped 1m revisions/appends and reload.
 - [x] Combined targeted backend/frontend gates, focused packaged-browser
   chart navigation/update fixture and source freshness/disconnect regressions.
-- [ ] Independent spec/standards review at the working user-loop boundary;
+- [x] Independent spec/standards review at the working user-loop boundary;
   at most two rounds. Record outcomes in iteration. Commit one coherent slice.
+  External findings caused a documented Planner return and reduced boundary
+  batch; its independent review and final local gate passed.
 - [ ] Publish PR referencing #144; resolve findings promptly while final-head
   CI runs. Required full Python/frontend/install/audit/build/lint CI must pass
   before merge; do not start a duplicate full local suite or unrelated soak.

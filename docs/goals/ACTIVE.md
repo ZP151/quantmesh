@@ -9,6 +9,7 @@ chart update from real venue observations. Default to 1D/line, preserve candle
 switching and explicit range choices, and show actual source/time/coverage.
 
 - Issue: https://github.com/ZP151/quantmesh/issues/144
+- PR: https://github.com/ZP151/quantmesh/pull/145 (open; final-head CI required).
 - Iteration: `docs/iterations/0035-live-instrument-charts.md`
 - Plan: `docs/superpowers/plans/2026-09-12-live-instrument-charts.md`
 - Branch: `codex/0035-live-instrument-charts`, from `origin/main@2a50565`.
@@ -17,8 +18,10 @@ switching and explicit range choices, and show actual source/time/coverage.
 - Diagnosis: actual Hyperliquid candles are 1m; replay history currently rejects
   finer than 5m even for 1D. Default workspace 6M falls back to small detail chart.
   Markets has demo wording/empty marks and live decision-Watchlist is empty.
-- Local gate: 134 backend/packaged browser tests, 351 full frontend tests, actual
-  production build and API freshness passed. Review race corrected and resolved.
+- Local gate: 143 backend/packaged browser tests, 359 full frontend tests, actual
+  production build and API freshness passed. Local race and four external review
+  boundaries corrected; independent reduced-batch review has no findings.
+  Old CI 34697814465 / `940a74b` was cancelled as superseded, never a merge gate.
 - Backend owns bounded resolution fallback and tests; controller owns shared
   live list, entry/default behavior, frontend tests and integration. Record
   actual RED/GREEN in iteration before declaring implementation complete.

@@ -139,3 +139,44 @@ Verifier outcomes will be appended at their demonstrable slice boundaries.
 - **Release boundary:** this checkpoint is local evidence. AWS still runs
   accepted `e185c3b`; final PR CI, exact-release deployment and actual upstream
   chart update/reload witness remain required before closing #144.
+
+## Planner return — external boundary review
+
+The local review used its two rounds. External PR #145 review rejected the
+candidate before integration on four missing boundary cases. Return to
+Planner/Product rather than expanding the patch/review loop: freeze chart UX,
+providers, controls and data contracts; the remaining implementation is reduced
+to one bounded acceptance correction batch:
+
+1. Seed live rows from the configured market directory, retaining unavailable
+   symbol links before the first update; overlay only actual observations.
+2. Render loading/error while runtime identity is unresolved on Markets and
+   Watchlist; do not infer demo mode from a missing health response.
+3. Only a continuity-valid preferred/coarser replay may suppress valid 1m replay.
+4. A raced observed replay tail advances its own generation receipt bound;
+   manifest generation/coverage stay fixed.
+
+Each case needs a failing regression and one combined corrected gate. No other
+feature or visual polish is admitted. CI run 34697814465 for `940a74b` was
+cancelled as superseded. A further structural failure returns to planning again
+instead of extending this correction batch; AWS remains on `e185c3b`.
+
+### Reduced boundary batch verification
+
+- Frontend RED: 8 failures / 2 passes for empty/failed source snapshots and
+  unresolved/failed runtime identity on both entry surfaces. GREEN: 70 combined
+  Markets/Watchlist tests; full frontend 359 passed in 14.59s. The explicit
+  source-error banner assertion subsequently passed all 10 entry tests.
+- Backend RED: six invalid/single/gapped 5m/30m candidates failed, while two
+  valid-candidate controls passed. Candidate GREEN8. Generation-time race
+  RED2; corrected tests include fixed manifest generation and coverage even
+  with an appended live bar. Agent combined backend GREEN142 in 22.72s.
+- Controller final combined backend/contracts/workspace and packaged-browser
+  gate: 143 passed in 26.91s. One existing Starlette deprecation warning.
+  Production `tsc -b`/Vite build and API client freshness passed; rebuilt package
+  assets committed with source. Ruff, scoped formatting and whitespace passed.
+- Independent reduced-batch review: no actionable findings across all four
+  boundaries. Valid coarse series retains priority; no broader range, provider,
+  manifest authority, trading behavior or dependency changes.
+- All four PR #145 findings are addressed by this checkpoint. Final-head CI
+  must rerun; deployment and actual-source chart acceptance remain outstanding.

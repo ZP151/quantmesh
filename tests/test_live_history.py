@@ -422,6 +422,57 @@ def _history_pair(feed: LiveFeed, now: datetime, symbol: str = "BTC"):
     return history, workspace
 
 
+@pytest.mark.parametrize("interval,minutes", [("5m", 5), ("30m", 30)])
+@pytest.mark.parametrize("state", ["single", "gapped", "invalid", "valid"])
+def test_minute_replay_fallback_requires_usable_preferred_candidate(
+    tmp_path: Path, interval, minutes, state
+):
+    anchor = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
+    with LiveBuffer(tmp_path / "replay") as buffer:
+        feed = LiveFeed(lake=buffer)
+        candidates = []
+        if state != "single":
+            candidates.append(
+                _candle(
+                    anchor - timedelta(minutes=minutes * (2 if state == "gapped" else 1)),
+                    sequence=200,
+                    close=300,
+                    interval=interval,
+                )
+            )
+        latest = _candle(anchor, sequence=201, close=301, interval=interval)
+        if state == "invalid":
+            # Zero OHLC is storable, but cannot become positive-price history.
+            latest = MarketUpdate.model_validate(
+                {
+                    **latest.model_dump(),
+                    "content_digest": None,
+                    "payload": {**latest.payload, "open": 0, "high": 0, "low": 0, "close": 0},
+                }
+            )
+        candidates.append(latest)
+        feed.ingest(candidates)
+        feed.ingest(
+            [
+                _production_candle("BTC", anchor - timedelta(minutes=1), anchor, 100),
+                _production_candle("BTC", anchor, anchor + timedelta(seconds=1), 101),
+            ]
+        )
+        history, workspace = _history_pair(feed, anchor + timedelta(seconds=2))
+        assert history.status_code == workspace.status_code == 200
+        primary = history.json()["primary"]
+        assert primary == workspace.json()["history"]
+        if state == "valid":
+            assert primary["interval"] == interval
+            assert [bar["close"] for bar in primary["bars"]] == [300, 301]
+            assert primary["resolution_fallback"] == (None if interval == "5m" else "5m->30m")
+        else:
+            assert primary["interval"] == "1m"
+            assert primary["resolution_fallback"] == "5m->1m"
+            assert [bar["close"] for bar in primary["bars"]] == [100, 101]
+            assert primary["coverage"]["rows"] == 2
+
+
 @pytest.mark.parametrize("endpoint", ["history", "workspace"])
 def test_minute_replay_live_append_after_replay_capture_keeps_exact_coverage(
     tmp_path: Path, monkeypatch, endpoint
@@ -469,6 +520,13 @@ def test_minute_replay_live_append_after_replay_capture_keeps_exact_coverage(
         assert series["coverage"]["rows"] == 3
         assert series["coverage"]["end"] == series["bars"][-1]["timestamp"]
         assert series["bars"][-1]["is_live_tail"] is True
+        lineage_received_at = datetime.fromisoformat(
+            series["bars"][-1]["live_lineage"]["received_at"].replace("Z", "+00:00")
+        )
+        assert lineage_received_at == now - timedelta(seconds=1)
+        assert datetime.fromisoformat(series["generated_at"].replace("Z", "+00:00")) >= (
+            lineage_received_at
+        )
         assert not any("manifest coverage" in value for value in series["limitations"])
 
 
@@ -613,7 +671,8 @@ def test_minute_replay_collecting_and_gaps_never_fabricate_continuity(tmp_path: 
             )
 
 
-def test_minute_replay_fallback_does_not_replace_manifest_history(tmp_path: Path):
+@pytest.mark.parametrize("live_interval", ["1m", "5m"])
+def test_minute_replay_fallback_does_not_replace_manifest_history(tmp_path: Path, live_interval):
     anchor = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
     root = tmp_path / "lake"
     instrument = Instrument(
@@ -643,6 +702,7 @@ def test_minute_replay_fallback_does_not_replace_manifest_history(tmp_path: Path
         source="operator-import",
         license="operator-supplied",
         data_class=DatasetClass.OBSERVED,
+        generated_at=anchor - timedelta(hours=1),
     )
     historical = HistoryService(discover_history_bindings(root), dataset_loader=lake.dataset)
     with LiveBuffer(root) as buffer:
@@ -653,6 +713,13 @@ def test_minute_replay_fallback_does_not_replace_manifest_history(tmp_path: Path
                 _production_candle("BTC", anchor, anchor + timedelta(seconds=1), 101),
             ]
         )
+        if live_interval == "5m":
+            feed.ingest(
+                [
+                    _candle(anchor - timedelta(minutes=5), sequence=200, close=100),
+                    _candle(anchor, sequence=201, close=101),
+                ]
+            )
         app = create_workstation_app(
             account=PaperAccount(cash=100_000),
             live_feed=feed,
@@ -668,4 +735,12 @@ def test_minute_replay_fallback_does_not_replace_manifest_history(tmp_path: Path
         assert primary["source"] == "operator-import"
         assert primary["resolution_fallback"] is None
         assert primary["interval"] == "5m"
-        assert [bar["close"] for bar in primary["bars"]] == [91]
+        assert [bar["close"] for bar in primary["bars"]] == (
+            [91, 101] if live_interval == "5m" else [91]
+        )
+        assert datetime.fromisoformat(primary["generated_at"].replace("Z", "+00:00")) == (
+            anchor - timedelta(hours=1)
+        )
+        assert primary["coverage"]["rows"] == 1
+        if live_interval == "5m":
+            assert primary["bars"][-1]["is_live_tail"] is True

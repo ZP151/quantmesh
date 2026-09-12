@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { LiveMarketList } from '@/components/live-market-list'
 import { Page } from '@/components/page'
 import { InstrumentEntry } from '@/components/instrument-entry'
-import { Surface, useSurface } from '@/components/state'
+import { ErrorState, LoadingState, Surface, useSurface } from '@/components/state'
 import { api, type DecisionInbox } from '@/lib/api'
 import { chartEntryPath, decisionPacketPath, instrumentPath, supportedLabTicker } from '@/lib/instrument-route'
 import { dateTime, money } from '@/lib/format'
@@ -39,6 +39,10 @@ export function WatchlistScreen() {
     restoreRefreshFocus.current ||= document.activeElement === refreshButton.current
     refresh.mutate()
   }
+
+  if (!health.data) return <Page title={t('screen.watchlist.title')} description="">
+    {health.isPending ? <LoadingState /> : <ErrorState title={t('liveMarkets.runtimeUnavailable')} detail={health.error?.message ?? ''} />}
+  </Page>
 
   return (
     <Page

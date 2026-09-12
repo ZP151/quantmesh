@@ -32,6 +32,45 @@ beforeEach(() => {
 })
 
 for (const [name, Component] of [['Markets', MarketsScreen], ['Watchlist', WatchlistScreen]] as const) {
+  function renderSurface() {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(<QueryClientProvider client={client}><PreferencesProvider><MemoryRouter><Component /></MemoryRouter></PreferencesProvider></QueryClientProvider>)
+  }
+
+  it(`${name} keeps configured chart links before any source observation`, async () => {
+    vi.mocked(api.liveState).mockResolvedValue({ generated_at: at, instruments: {} })
+    renderSurface()
+    for (const symbol of ['BTC', 'ETH', 'SOL']) {
+      expect(await screen.findByRole('link', { name: symbol })).toHaveAttribute('href', `/instruments/hyperliquid/${symbol}?range=1d&mode=line`)
+    }
+    expect(screen.getAllByText('Unavailable')).toHaveLength(3)
+    expect(screen.queryByText('Real')).not.toBeInTheDocument()
+  })
+
+  it(`${name} retains unavailable configured links when source snapshots fail`, async () => {
+    vi.mocked(api.liveState).mockRejectedValue(new Error('source offline'))
+    renderSurface()
+    expect(await screen.findByRole('link', { name: 'SOL' })).toBeInTheDocument()
+    expect(await screen.findByRole('status')).toBeInTheDocument()
+    expect(screen.getAllByText('Unavailable')).toHaveLength(3)
+  })
+
+  it(`${name} waits for runtime identity without rendering demo content`, async () => {
+    vi.mocked(api.health).mockReturnValue(new Promise(() => {}))
+    renderSurface()
+    expect(screen.getByLabelText('Loading')).toBeInTheDocument()
+    expect(screen.queryByText(/synthetic marks|nothing here is live|seeded favorites/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'BTC' })).not.toBeInTheDocument()
+  })
+
+  it(`${name} explains failed runtime identity instead of showing demo content`, async () => {
+    vi.mocked(api.health).mockRejectedValue(new Error('runtime identity offline'))
+    renderSurface()
+    expect(await screen.findByText('Runtime identity unavailable')).toBeInTheDocument()
+    expect(screen.getByText('runtime identity offline')).toBeInTheDocument()
+    expect(screen.queryByText(/synthetic marks|nothing here is live|seeded favorites/i)).not.toBeInTheDocument()
+  })
+
   it(`${name} opens real charts even without a saved decision watch and follows source quotes`, async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(<QueryClientProvider client={client}><PreferencesProvider><MemoryRouter><Component /></MemoryRouter></PreferencesProvider></QueryClientProvider>)
