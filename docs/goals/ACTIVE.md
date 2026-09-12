@@ -1,63 +1,69 @@
 # Active Goal
 
-Status: iteration 0035 chart PR merged/deployed; actual-source acceptance failed,
-bounded follow-up correction in progress, 2026-09-12.
+Status: iteration 0035 product acceptance passed; documentation closeout awaiting
+review/integration, 2026-09-13 (local date).
 
-## Current user outcome
+## Accepted user outcome
 
-Open BTC/ETH/SOL from Markets or Watchlist on AWS and see the existing full-size
-chart update from real venue observations. Default to 1D/line, preserve candle
-switching and explicit range choices, and show actual source/time/coverage.
+Markets and Watchlist on private AWS open BTC/ETH/SOL in the full chart with
+1D/line defaults and real Hyperliquid minute observations. Current candles
+revise, new minutes append and reload retains recorded coverage. Actual source,
+time, freshness and the explicit 5m-to-1m fallback remain visible.
 
 - Issue: https://github.com/ZP151/quantmesh/issues/144
-- PR: https://github.com/ZP151/quantmesh/pull/145 (merged as `90fe577`).
-- Iteration: `docs/iterations/0035-live-instrument-charts.md`
-- Plan: `docs/superpowers/plans/2026-09-12-live-instrument-charts.md`
-- Follow-up branch: `codex/0035-chart-acceptance`, from `origin/main@90fe577`.
-- Final CI 34700259858 passed exact candidate `7230c68`: Python 3486 passed /
-  56 skipped, frontend 359 passed. Merged tree is identical to the tested tree.
-  Exact `90fe577` is deployed; independent health/profile/pip/service checks
-  passed, loopback/private access and paper true/live false preserved.
-- Actual browser attempt 1 passed six entry paths, three moving full charts,
-  matching received candles, reload, keyboard and desktop/mobile checks. The
-  parallel continuous API gate FAILED after the collector stopped at
-  15:45:47 UTC from a different BTC metrics identity collision. Early chart
-  movement and HTTP health are insufficient. Current build remains unaccepted.
-- Preserve **four** quarantine entries: three prior final-candle collisions
-  and the new metrics collision. Stable evidence copy is
-  `/tmp/quantmesh-0035-stalled-lake-821r_gz_`; do not restart repeatedly or erase
-  evidence. Actual browser/API artifacts: ignored
-  `output/playwright/0035-aws-90fe577/attempt-1`.
-- Planner reduced follow-up: Task 3a corrects full-precision, content-qualified
-  local-observation identities for Hyperliquid activeAssetCtx/allMids; Task 3b
-  captures workspace clock and detached quote/proof together before assembly.
-  The latter has a public API RED reproducing false future-receipt degradation
-  for a 329ms quote. Both need tracked RED/GREEN, independent review, final CI
-  and a new deployed API/browser witness. Issue #144 stays open.
-- Task 3a/3b implementation and fresh round-one spec/standards reviews are
-  complete with no findings. Controller combined source/packaged-browser gate
-  passed 342 tests in 49.14s; Ruff/diff/submodule checks passed. The next gate is
-  the follow-up PR's full final-head CI, then exact merge/deploy and actual
-  five-minute API/browser acceptance. Frontend assets/dependencies unchanged.
-- User explicitly approved continued development and requested these real
-  streaming charts; existing private AWS update follows reviewed/tested scope.
-- Merged chart work includes exact 1m replay fallback, configured live entries,
-  1D/line defaults, live following and closed-candle revision identity. Combined
-  local 306 backend/packaged browser tests passed before the final green CI.
-  Superseded cancelled CI runs are recorded in the iteration, never acceptance.
-- Root owns docs/integration; separate bounded owners handle Task 3a and 3b
-  files from the tracked plan. No UI redesign, watchdog, general time model,
-  provider expansion, conflict suppression or execution change.
+- Code PRs: #145 merged as `90fe577`; corrective #146 merged as
+  `9cfe1bc8ff910792b3f8cb6928763b667ba2442a`.
+- Exact deployed build: `9cfe1bc`; live market data, paper true/live false,
+  service PID41909, loopback8765/private HTTPS. Deployment completed exit0.
+- Corrective CI34704029214 passed: 3517 Python tests, 56 skipped, 9 warnings;
+  frontend359 and install/audit/API/typecheck/lint/bundle gates passed. Reviewed
+  candidate6dc6ec3 and merge9cfe1bc share tree
+  `bafcff7e3ba027d2cb329f2e3bc239b8fe0a30e8`.
+- Actual API witness passed313.748s/21samples: three real, fresh quote streams
+  and available workspace evidence throughout sampling; orders/risk unchanged.
+- Actual browser witness passed301.968s: all six entry paths, six tail minutes
+  per coin,41/20/21 BTC/ETH/SOL DOM changes matched their own received frames,
+  API point comparison, reload, keyboard,1440/390px and no page errors.
+- Artifacts: ignored `output/playwright/0035-aws-9cfe1bc/attempt-1` (API) and
+  `attempt-2` (browser). A first browser attempt hit the assertion default5s;
+  the helper's intended20s assertion timeout was applied for attempt2. No
+  product change or network substitution. These witness sessions are terminal;
+  do not poll old handles or rerun deployment/CI to recover session output.
+- Stable DB/WAL copy `/tmp/quantmesh-0035-stalled-lake-l3zrnx3z` contains270555
+  accepted updates through17:07:32 UTC and the unchanged four old quarantines.
+  Independent17:12:53–56 UTC health/workspaces remained real/fresh/available.
+- Iteration: `docs/iterations/0035-live-instrument-charts.md`.
+- Plan: `docs/superpowers/plans/2026-09-12-live-instrument-charts.md`.
+- Closeout branch: `codex/0035-chart-closeout`, from `origin/main@9cfe1bc`.
+  Review and integrate its evidence-only docs; close #144 after that gate.
+  AWS already runs the accepted source tree; a docs-only merge needs no deploy.
 
-## Preserved completion and boundaries
+## Evidence and boundaries to preserve
 
-0034 is complete: PR #142 / AWS `e185c3b`, acceptance PR #143 merged as
-`2a50565`, issue #140 closed. Paper true/live false and private/loopback access.
-Retain `e185c3b` live rollback and older `4022942` demo. #135 stays open for
-operator-deferred firewall acceptance; do not change its rules. Preserve 0021
-soak and independent worktrees; never reset divergent local main.
+The first chart build90fe577 failed sustained acceptance after a metrics ID
+collision despite moving charts. The correction qualifies local-observation
+identities with full UTC time/content and captures workspace clock/quote/proof
+together. Earlier failed witnesses and four quarantine rows remain intact.
+Do not treat old failures as current state or HTTP health as source acceptance.
+Controlled disconnect/gap/future tests are separate from actual source witnesses.
 
-Next after this user-requested chart slice: existing licensed Moomoo/OpenD
-host, approved private AWS route and quote entitlement, then AAPL/NVDA witness.
-No new paid data, public OpenD, credentials or order tests. Standing reviewed
-merge authority: `.codex/prompts/goal.md`.
+0034 completed via #142/#143; #140 closed. Retain e185c3b (prior live build with
+the diagnosed identity limitations) and4022942 demo rollback. #135 remains open
+for operator-deferred firewall acceptance. Preserve0021 soak, independent
+worktrees and divergent local main. No new public access, paid subscriptions,
+credentials, order tests, execution enablement or strategy promotion.
+
+## Next bounded slice
+
+Moomoo/OpenD readiness for AAPL/NVDA: identify the existing licensed host,
+verify the approved private AWS route and inspect quote entitlement. Current
+five-second polling is not native tick push. Open-session real observations,
+delayed/closed/unavailable semantics and an actual page witness are required.
+Local Windows default-port/process probes alone cannot establish remote OpenD
+absence or entitlement. Await the existing operator readiness information;
+do not infer credentials or expose OpenD publicly. Write the exact-file plan
+and issue only once readiness is established. Prediction venues and qualified
+history follow sequentially in `docs/ITERATION_PLAN.md`.
+
+Standing reviewed merge/private-deployment authority remains in the user request
+and `.codex/prompts/goal.md`; no further confirmation for this approved scope.

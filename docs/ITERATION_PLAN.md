@@ -1,6 +1,6 @@
 # QuantMesh Iteration Plan
 
-Updated: 2026-09-12. This replaces the original conceptual iterations 0–5;
+Updated: 2026-09-13. This replaces the original conceptual iterations 0–5;
 historical delivery IDs and evidence remain in the [iteration index](iterations/INDEX.md).
 Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 [ACTIVE](goals/ACTIVE.md) for the resumable frontier.
@@ -15,14 +15,15 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 | Private AWS workstation, 0031 / #135 | Integrated through merged PR #142 | Private HTTPS, exact build, loopback bind and retained demo rollback verified; #135 stays open for operator-deferred instance firewall acceptance |
 | Deployed live data, 0034 / #140 | Merged PR #142 as `e185c3b`; final-head CI passed | AWS BTC/ETH/SOL five-minute API/browser witness and reload/replay passed; paper true/live trading false |
 | Multi-market live runtime, 0015/0019 | Connectors, buffering, replay and stream/UI foundations exist | All-market real-time operation in AWS has not been established |
+| Real instrument charts, 0035 / #144 | Merged PRs #145/#146; corrective final-head CI passed | AWS `9cfe1bc`: six entry paths,313.748s API and301.968s browser witnesses passed for BTC/ETH/SOL, including revisions/appends/reload; four old quarantines preserved with none added |
 
 ## Next delivery order
 
-0. **Active user priority: iteration 0035 / #144.** Real updating charts from
+0. **Accepted user priority: iteration 0035 / #144.** Real updating charts from
    Markets and Watchlist using existing Hyperliquid BTC/ETH/SOL observations.
    Reuse the full chart, default live 1D/line and label actual recorded coverage.
-   See [0035](iterations/0035-live-instrument-charts.md). Finish this user loop
-   before broadening market coverage below.
+   See [0035](iterations/0035-live-instrument-charts.md) for actual acceptance
+   and the documentation closeout. Broaden market coverage sequentially below.
 
 1. **Equities: Moomoo/OpenD.** Establish private OpenD reachability and quote
    entitlement, then prove AAPL/NVDA observations during the market session.

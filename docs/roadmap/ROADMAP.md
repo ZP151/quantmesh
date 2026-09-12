@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-09-12
+Last updated: 2026-09-13
 
 ## Status legend
 
@@ -377,9 +377,12 @@ Sequence for operator review:
    and public Hyperliquid BTC/ETH/SOL are deployed at `e185c3b`. Five-minute
    source/API and browser witnesses, reload/replay, paper-only state and
    controlled stale/reconnect checks passed. The original `4022942` demo
-   release is retained. **Active user priority — 0035 / #144:** full real charts
-   from Markets/Watchlist using recorded 1m Hyperliquid observations and
-   truthful coverage/freshness. **After this slice:** private Moomoo/OpenD reachability and actual
+   release is retained. **Accepted — 0035 / #144, PRs #145/#146:** full real
+   charts from Markets/Watchlist at AWS `9cfe1bc`, using recorded1m Hyperliquid
+   observations and truthful coverage/freshness. Separate five-minute API and
+   browser witnesses passed, including reload and actual minute revisions.
+   See the [0035 ledger](../iterations/0035-live-instrument-charts.md).
+   **Next:** private Moomoo/OpenD reachability and actual
    entitlements for AAPL/NVDA, then prediction venues in sequential slices.
    Other venues and qualified historical coverage remain unaccepted.
    See the [delivery ledger](../iterations/0034-live-data-delivery.md)

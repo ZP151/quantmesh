@@ -161,14 +161,15 @@ quarantine records; require no new false collisions. Issue #144 stays open.
 - [x] Publish PR referencing #144; resolve findings promptly while final-head
   CI runs. Required full Python/frontend/install/audit/build/lint CI must pass
   before merge; do not start a duplicate full local suite or unrelated soak.
-- [ ] Use checked exact-release private AWS update under standing user scope.
-  Retain currently accepted live `e185c3b` rollback and older demo `4022942`;
+- [x] Use checked exact-release private AWS update under standing user scope.
+  Retain prior live `e185c3b` and older demo `4022942` rollback artifacts;
+  e185c3b has the diagnosed identity limitations recorded in the iteration.
   verify exact build/profile, loopback/private route and paper/live invariants.
-- [ ] In actual AWS browser, navigate from both Markets and Watchlist to all
+- [x] In actual AWS browser, navigate from both Markets and Watchlist to all
   three symbols. Witness >=2 updates of the active real candle and >=1 next
   minute append; compare chart table points to history/workspace API. Reload
   and verify actual covered points remain. Chart source/coverage must be honest.
-- [ ] Controlled fixture proves quiet/disconnect stops fresh claims and recovery
+- [x] Controlled fixture proves quiet/disconnect stops fresh claims and recovery
   never bridges a missing interval. Record real-source evidence separately.
 - [ ] Complete iteration, roadmap/ACTIVE, exact merge/deployment/acceptance
   record; close #144 only when proven. Moomoo/OpenD readiness remains next.
