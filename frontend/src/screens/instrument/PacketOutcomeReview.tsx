@@ -8,6 +8,7 @@ import {
   type DecisionOutcomeReviewState,
 } from '@/lib/api'
 import { usePreferences } from '@/lib/preferences'
+import { ForecastOutcomeComparison } from './ForecastOutcomeComparison'
 
 interface PacketOutcomeReviewProps {
   contextKey: string
@@ -137,7 +138,7 @@ export function PacketOutcomeReview({ contextKey, packetId }: PacketOutcomeRevie
   const ownContext = packetId === null || outcomeId === null
     ? null
     : `${contextKey}:${packetId}:${outcomeId}`
-  const unavailable = query.isError || failedContext === ownContext
+  const unavailable = query.isError || (ownContext !== null && failedContext === ownContext)
   const loading = packetId !== null && (query.isPending || (
     save.isPending
     && save.variables.contextKey === contextKey
@@ -184,6 +185,9 @@ export function PacketOutcomeReview({ contextKey, packetId }: PacketOutcomeRevie
           </p>
         ) : outcome !== null ? (
           <>
+            {state?.forecast_comparison?.outcome_id === outcome.outcome_id && (
+              <ForecastOutcomeComparison comparison={state.forecast_comparison} outcome={outcome} saved={saved !== null} />
+            )}
             <OutcomeEvidence locale={locale} outcome={outcome} />
             {saved === null ? (
               <form className="min-w-0 space-y-3" onSubmit={(event) => {

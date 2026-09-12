@@ -1,6 +1,6 @@
 # ADR 0021 — Scenario Lab evidence and calendar versions
 
-- Status: accepted for implementation; architecture PR awaits operator integration
+- Status: accepted; operator-authorized PR #137 merged as `13743ea`
 - Date: 2026-09-11
 - Issue: #136
 - Extends: ADR 0019 (packet identity), ADR 0020 (data-plane boundary)

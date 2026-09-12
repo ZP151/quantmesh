@@ -363,13 +363,17 @@ Sequence for operator review:
    witnesses remain an independent maintenance failure domain. Final-head and
    post-merge main CI passed. See the
    [0029 ledger](../iterations/0029-decision-readiness-session.md).
-5. **Implemented; architecture integration pending — iteration 0032 (issue #136):** Probabilistic Scenario Lab brings
+5. **Done as iteration 0032 (merged PR #137):** Probabilistic Scenario Lab brings
    large daily observed charts, exact 7/30-session forecast evidence,
    deterministic confidence refusal and saved chart replay to the existing
    AAPL/NVDA Instrument Workspace. Reuse current models and adapters; no new
    provider or model framework. See the
    [0032 ledger](../iterations/0032-probabilistic-scenario-lab.md).
-6. Expand datasets, baselines or selected Qlib/Darts adapters only where a
+6. **Active iteration 0033 (issue #138):** exact forecast outcome scorecard
+   compares saved 7/30-session forecasts with realized daily closes inside the
+   existing review. Saved outcomes replay unchanged; incomplete paths cannot
+   produce complete-path scores. See the [0033 ledger](../iterations/0033-forecast-outcome-scorecard.md).
+7. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
-7. Guarded broker/testnet execution only after a separate authorization.
+8. Guarded broker/testnet execution only after a separate authorization.

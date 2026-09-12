@@ -15,7 +15,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 from quantmesh.domain.models import Side
 from quantmesh.domain.orders import Order, OrderStatus, validate_order_replay
@@ -35,6 +35,10 @@ from quantmesh.instruments.decision_packets import (
     DecisionPacketStore,
     decision_packet_id,
     validate_decision_packet_lineage,
+)
+from quantmesh.instruments.forecast_outcomes import (
+    ForecastOutcomeComparison,
+    compare_forecast_outcome,
 )
 from quantmesh.instruments.monitoring import (
     DecisionWatchEvaluation,
@@ -523,6 +527,11 @@ class DecisionOutcomeReviewState(_Contract):
     root_packet: DecisionPacket
     outcome: DecisionOutcomeSnapshot
     review: DecisionReviewRecord | None = None
+
+    @computed_field
+    @property
+    def forecast_comparison(self) -> ForecastOutcomeComparison:
+        return compare_forecast_outcome(self.review.outcome if self.review else self.outcome)
 
     @model_validator(mode="after")
     def exact_authoritative_packets(self) -> DecisionOutcomeReviewState:

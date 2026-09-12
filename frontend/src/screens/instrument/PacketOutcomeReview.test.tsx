@@ -6,6 +6,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { api, type DecisionOutcomeReviewState } from '@/lib/api'
 import { PreferencesProvider } from '@/lib/preferences'
 
+const comparisonView = vi.hoisted(() => vi.fn())
+vi.mock('./ForecastOutcomeComparison', () => ({
+  ForecastOutcomeComparison: (props: unknown) => { comparisonView(props); return <div>Exact comparison</div> },
+}))
+
 vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/api')>()
   return {
@@ -85,6 +90,12 @@ beforeEach(() => {
 })
 
 describe('PacketOutcomeReview', () => {
+  it('shows loading without a false failure before any outcome identity exists', () => {
+    mockedPreview.mockImplementationOnce(() => new Promise(() => {}))
+    renderReview()
+    expect(screen.getByRole('status')).toBeVisible()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
   it('keeps a draft save-first and never requests an outcome', () => {
     renderReview(null)
 
@@ -97,6 +108,7 @@ describe('PacketOutcomeReview', () => {
     renderReview()
 
     expect(await screen.findByText('Horizon pending')).toBeVisible()
+    expect(screen.getByText('Forecast horizon target')).toBeVisible()
     expect(screen.getByText('Planned reward / risk')).toBeVisible()
     expect(screen.getByText('Gross path R')).toBeVisible()
     expect(screen.getByText('Realized paper R')).toBeVisible()
@@ -263,6 +275,30 @@ describe('PacketOutcomeReview', () => {
     expect(await screen.findByText('Review saved')).toBeVisible()
     expect(screen.getByText('outcome-000000000000000000000001')).toBeVisible()
     expect(screen.queryByText('outcome-000000000000000000000002')).not.toBeInTheDocument()
+  })
+
+  it('passes only the matching frozen comparison and outcome to the review chart', async () => {
+    const forecastComparison = { outcome_id: savedState.review!.outcome.outcome_id } as DecisionOutcomeReviewState['forecast_comparison']
+    mockedPreview.mockResolvedValueOnce({
+      ...savedState,
+      forecast_comparison: forecastComparison,
+      outcome: { ...savedState.outcome, outcome_id: 'outcome-newer-preview' },
+    })
+    renderReview()
+    expect(await screen.findByText('Exact comparison')).toBeVisible()
+    expect(comparisonView).toHaveBeenLastCalledWith({
+      comparison: forecastComparison, outcome: savedState.review!.outcome, saved: true,
+    })
+  })
+
+  it('does not mix a mismatched comparison into the current packet outcome', async () => {
+    mockedPreview.mockResolvedValueOnce({
+      ...previewState,
+      forecast_comparison: { outcome_id: 'outcome-other' } as DecisionOutcomeReviewState['forecast_comparison'],
+    })
+    renderReview()
+    expect(await screen.findByText('Horizon pending')).toBeVisible()
+    expect(comparisonView).not.toHaveBeenCalled()
   })
 
   it('isolates late responses and failures by exact packet context', async () => {

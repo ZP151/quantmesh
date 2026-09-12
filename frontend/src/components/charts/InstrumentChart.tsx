@@ -29,7 +29,7 @@ export interface InstrumentChartProps {
   labels?: Partial<InstrumentChartLabels>
   locale?: Locale
   mode: 'candles' | 'line'
-  primary: HistoricalSeries
+  primary: Pick<HistoricalSeries, 'instrument' | 'range' | 'bars'>
   volume?: boolean
 }
 
@@ -37,6 +37,7 @@ export interface ChartLine {
   color: string
   key: string
   label: string
+  pointMarkersVisible?: boolean
   points: readonly { timestamp: string; value: number }[]
 }
 
@@ -163,7 +164,7 @@ function prefersReducedMotion(): boolean {
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function chartContext(primary: HistoricalSeries): string {
+function chartContext(primary: InstrumentChartProps['primary']): string {
   return `${primary.instrument.venue}:${primary.instrument.symbol}:${primary.range}`
 }
 
@@ -473,6 +474,7 @@ export function InstrumentChart({
           priceLineVisible: false,
           lastValueVisible: !compactLabels,
           title: compactLabels ? '' : indicator.label,
+          pointMarkersVisible: indicator.pointMarkersVisible ?? false,
         })
         indicatorRefs.current.set(indicator.key, series)
       }
