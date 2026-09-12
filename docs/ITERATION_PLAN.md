@@ -12,7 +12,7 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 | Decision Inbox and Readiness, 0028–0029 | Merged PRs #130 / #133 | No new deployment claim here |
 | Scenario Lab, 0032 | Merged PR #137 | Merge does not establish the AWS version |
 | Forecast outcome review, 0033 | Merged PR #139; final-head CI passed | AWS not updated by the merge |
-| Private AWS workstation, 0031 / #135 | Independent deployment branch; issue remains open | Last recorded activation: 2026-09-09, `4022942`, demo/paper; fresh server probe outstanding |
+| Private AWS workstation, 0031 / #135 | Deployment support integrating into 0034; issue remains open | Fresh HTTPS probe 2026-09-12 confirms `4022942`, demo/paper |
 | Multi-market live runtime, 0015/0019 | Connectors, buffering, replay and stream/UI foundations exist | All-market real-time operation in AWS has not been established |
 
 ## Next delivery order
@@ -42,6 +42,8 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 The [0034 design](iterations/0034-live-data-delivery.md) contains evidence,
 dependencies, acceptance criteria and non-goals. Later market slices are
 priorities, not parallel implementation commitments or completed features.
+The operator approved 0034 implementation on 2026-09-12; its exact steps are
+tracked in the [executable plan](superpowers/plans/2026-09-12-deployed-live-market-data.md).
 Defer additional model/framework breadth until the deployed data loop works.
 
 ## Execution and completion rules

@@ -103,6 +103,10 @@ export function AppShell() {
     enabled: runtimeMode === 'demo',
   })
   const healthVersion = health.data?.version ? `v${health.data.version}` : 'local'
+  const deployment = health.data?.deployment
+  const stagingLabel = deployment
+    ? t('shell.stagingBuild', { ref: deployment.build_ref })
+    : undefined
   const demoAttached = runtimeMode === 'demo' && demoStatus.data !== undefined
   const retainedResets = demoStatus.data?.retained_resets ?? []
 
@@ -180,6 +184,17 @@ export function AppShell() {
           <h1 className="text-sm font-semibold">{title}</h1>
 
           <div className="ml-auto flex items-center gap-1.5">
+            {deployment?.environment === 'staging' && stagingLabel && (
+              <Badge
+                variant="outline"
+                aria-label={stagingLabel}
+                title={stagingLabel}
+                className="border-amber-500/60 bg-amber-500/10 font-mono text-[10px] text-amber-800 dark:text-amber-300"
+              >
+                STAGING · {deployment.build_ref.slice(0, 7)}
+              </Badge>
+            )}
+
             {demoAttached && demoStatus.data && (
               <Badge
                 variant="outline"

@@ -24,6 +24,7 @@ import {
   reconcileUpdates,
   realizedVol,
   spreadBps,
+  useAgedInstruments,
   useLiveConnection,
 } from '@/lib/live'
 import { api } from '@/lib/api'
@@ -289,7 +290,8 @@ export function CockpitDetailScreen({
     setInstruments((previous) => mergeUpdate(previous, update))
   })
 
-  const instrument = instruments[liveInstrumentKey(venue, symbol)]
+  const agedInstruments = useAgedInstruments(instruments)
+  const instrument = agedInstruments[liveInstrumentKey(venue, symbol)]
   const directoryMatches = marketDirectory.data?.instruments.filter(
     (candidate) => candidate.symbol === symbol,
   ) ?? []

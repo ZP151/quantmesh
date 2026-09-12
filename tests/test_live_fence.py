@@ -377,10 +377,10 @@ def _bbo(coin: str) -> dict[str, object]:
         "data": {
             "coin": coin,
             "time": 1_750_000_000_000,
-            "bid": 100.0,
-            "bidSz": 1.0,
-            "ask": 100.5,
-            "askSz": 2.0,
+            "bbo": [
+                {"px": "100.0", "sz": "1.0", "n": 1},
+                {"px": "100.5", "sz": "2.0", "n": 1},
+            ],
         },
     }
 

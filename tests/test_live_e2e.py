@@ -31,7 +31,7 @@ import socket
 import threading
 import urllib.request
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import cast
 
 import pytest
@@ -93,10 +93,10 @@ def _bbo(coin: str) -> dict:
         "data": {
             "coin": coin,
             "time": 1_750_000_000_000,
-            "bid": 100.0,
-            "bidSz": 1.0,
-            "ask": 100.5,
-            "askSz": 2.0,
+            "bbo": [
+                {"px": "100.0", "sz": "1.0", "n": 1},
+                {"px": "100.5", "sz": "2.0", "n": 1},
+            ],
         },
     }
 
@@ -149,7 +149,7 @@ def _mids() -> dict:
 
 def _asset_ctx() -> dict:
     ctx = {"funding": 1.25e-05, "markPx": 100.3, "oraclePx": 100.1, "openInterest": 123.4}
-    return {"channel": "activeAssetCtx", "data": {"BTC": ctx}}
+    return {"channel": "activeAssetCtx", "data": {"coin": "BTC", "ctx": ctx}}
 
 
 def _venue_plan() -> list[tuple[float, object]]:
@@ -165,6 +165,10 @@ def _venue_plan() -> list[tuple[float, object]]:
     plan: list[tuple[float, object]] = [
         (0.0, frame)
         for frame in (
+            {
+                "channel": "subscriptionResponse",
+                "data": {"method": "subscribe", "subscription": {"type": "bbo", "coin": "BTC"}},
+            },
             _bbo("BTC"),
             _mids(),
             _asset_ctx(),
@@ -191,6 +195,18 @@ def _venue_plan() -> list[tuple[float, object]]:
 # -- the scripted venue on its own loop ----------------------------------------
 
 
+def _current_source_times(frame: object) -> object:
+    """Bind live browser observations to transmission time, not an old fixture date."""
+    if not isinstance(frame, dict):
+        return frame
+    now_ms = int(datetime.now(UTC).timestamp() * 1000)
+    if frame.get("channel") in ("bbo", "l2Book"):
+        return {**frame, "data": {**frame["data"], "time": now_ms}}
+    if frame.get("channel") == "trades":
+        return {**frame, "data": [{**row, "time": now_ms} for row in frame["data"]]}
+    return frame
+
+
 @pytest.fixture(scope="module")
 def venue_url() -> tuple[str, Callable[[], None]]:
     """The ScriptedVenue on its own asyncio loop in a daemon thread (the
@@ -207,7 +223,9 @@ def venue_url() -> tuple[str, Callable[[], None]]:
         async def serve() -> None:
             quiet = asyncio.Event()
             holder["quiet"] = quiet
-            async with ScriptedVenue(plan=_venue_plan(), quiet=quiet) as venue:
+            async with ScriptedVenue(
+                plan=_venue_plan(), quiet=quiet, transform_frame=_current_source_times,
+            ) as venue:
                 holder["url"] = venue.url
                 held: asyncio.Future[None] = asyncio.get_running_loop().create_future()
                 holder["held"] = held

@@ -1,7 +1,7 @@
 """Hyperliquid venue supervisor (iteration 0015 Phase B, ADR-0014).
 
 Subscribes the 4–8 perp watchlist over the official public WebSocket
-(candle/l2Book/trades/bbo per coin, allMids and activeAssetCtx once),
+(candle/l2Book/trades/bbo/activeAssetCtx per coin, allMids once),
 normalizes every frame into the owned ``MarketUpdate`` contract and
 recovers on reconnect exactly like the M5 ``StreamSupervisor``: REST
 candle backfill over the dark window, book snapshot replace, trades
@@ -17,6 +17,7 @@ deterministically, mirroring ``SimulatedStreamTransport``.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 from datetime import UTC, datetime, timedelta
@@ -136,19 +137,31 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             specs[f"l2Book:{coin.lower()}"] = {"type": "l2Book", "coin": coin}
             specs[f"trades:{coin.lower()}"] = {"type": "trades", "coin": coin}
             specs[f"bbo:{coin.lower()}"] = {"type": "bbo", "coin": coin}
+            specs[f"activeAssetCtx:{coin.lower()}"] = {"type": "activeAssetCtx", "coin": coin}
         specs["allMids"] = {"type": "allMids"}
-        specs["activeAssetCtx"] = {"type": "activeAssetCtx"}
         return specs
 
     # -- dispatch -------------------------------------------------------------
 
     def dispatch(self, frame: object, now: datetime) -> list[MarketUpdate]:
         if not isinstance(frame, dict):
-            raise HyperliquidProtocolError(
-                f"frame must be an object, got {type(frame).__name__}"
-            )
+            raise HyperliquidProtocolError(f"frame must be an object, got {type(frame).__name__}")
         channel = frame.get("channel")
         if channel == "pong":
+            return []
+        if channel == "subscriptionResponse":
+            response = frame.get("data")
+            subscription = response.get("subscription") if isinstance(response, dict) else None
+            if (
+                not isinstance(response, dict)
+                or response.get("method") != "subscribe"
+                or not isinstance(subscription, dict)
+                or not any(
+                    all(subscription.get(key) == value for key, value in spec.items())
+                    for spec in self._subscribed.values()
+                )
+            ):
+                raise HyperliquidProtocolError("invalid or unsolicited subscription acknowledgment")
             return []
         identifier = _frame_identifier(frame)
         if identifier == "trades" and frame.get("data") == []:
@@ -167,7 +180,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             return self._on_bbo(identifier, frame.get("data"), now)
         if identifier == "allMids":
             return self._on_all_mids(frame.get("data"), now)
-        if identifier == "activeAssetCtx":
+        if identifier.startswith("activeAssetCtx:"):
             return self._on_asset_ctx(frame.get("data"), now)
         raise HyperliquidProtocolError(
             f"frame for unsubscribed identifier {identifier!r} (channel {channel!r})"
@@ -396,16 +409,14 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             )
         return super().on_disconnect(now)
 
-    def _on_bbo(
-        self, identifier: str, data: object, now: datetime
-    ) -> list[MarketUpdate]:
+    def _on_bbo(self, identifier: str, data: object, now: datetime) -> list[MarketUpdate]:
         coin = identifier.split(":")[1].upper()
         payload = parse_bbo_frame(data)
         assert isinstance(data, dict)
         data_time = _frame_time(data)
-        source_event_id = _source_id(
-            [int(to_ms(data_time)), coin, "bbo", payload]
-        )
+        if payload is None:
+            return []
+        source_event_id = _source_id([int(to_ms(data_time)), coin, "bbo", payload])
         continuity, evidence = self._resume_evidence(
             coin,
             "bbo",
@@ -673,26 +684,28 @@ def _frame_identifier(frame: dict) -> str:
     if channel == "l2Book":
         if not isinstance(data, dict):
             raise HyperliquidProtocolError("l2Book frame data must be an object")
-        return f'l2Book:{str(data.get("coin")).lower()}'
+        return f"l2Book:{str(data.get('coin')).lower()}"
     if channel == "trades":
         if not isinstance(data, list) or not data:
             return "trades"
         first = data[0]
         if not isinstance(first, dict):
             raise HyperliquidProtocolError("trades frame rows must be objects")
-        return f'trades:{str(first.get("coin")).lower()}'
+        return f"trades:{str(first.get('coin')).lower()}"
     if channel == "candle":
         if not isinstance(data, dict):
             raise HyperliquidProtocolError("candle frame data must be an object")
-        return f'candle:{str(data.get("s")).lower()},{data.get("i")}'
+        return f"candle:{str(data.get('s')).lower()},{data.get('i')}"
     if channel == "bbo":
         if not isinstance(data, dict):
             raise HyperliquidProtocolError("bbo frame data must be an object")
-        return f'bbo:{str(data.get("coin")).lower()}'
+        return f"bbo:{str(data.get('coin')).lower()}"
     if channel == "allMids":
         return "allMids"
     if channel == "activeAssetCtx":
-        return "activeAssetCtx"
+        if not isinstance(data, dict):
+            raise HyperliquidProtocolError("activeAssetCtx frame data must be an object")
+        return f"activeAssetCtx:{str(data.get('coin')).lower()}"
     raise HyperliquidProtocolError(f"unknown frame channel {channel!r}")
 
 
@@ -759,8 +772,17 @@ class LiveHyperliquidTransport:
         block or await)."""
 
     def close(self) -> None:
-        """Best-effort close at shutdown; the pump is cancelled with us."""
+        """Release the TCP transport immediately, including on cancellation.
+
+        The supervisor's close protocol is synchronous. Aborting the underlying
+        asyncio transport avoids leaving an unawaited WebSocket close coroutine
+        or an orphaned socket after protocol failure or application shutdown.
+        """
+        socket = self._socket
         self._socket = None
+        self._outbox.clear()
+        if socket is not None:
+            socket.transport.abort()
 
     def send(self, message: dict) -> None:
         """Queue a subscription; flushed to the wire once the socket
@@ -768,8 +790,12 @@ class LiveHyperliquidTransport:
         self._outbox.append(json.dumps(message))
 
     async def recv(self) -> object:
-        socket = await self._ensure_open()
-        return json.loads(await socket.recv())
+        try:
+            socket = await self._ensure_open()
+            return json.loads(await socket.recv())
+        except asyncio.CancelledError:
+            self.close()
+            raise
 
     async def _ensure_open(self):
         import websockets

@@ -164,6 +164,7 @@ function renderDetail(symbol = 'SOL', venue = 'hyperliquid') {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.spyOn(Date, 'now').mockReturnValue(Date.parse(T0) + 500)
   mocked.liveState.mockResolvedValue(STATE)
   mocked.liveStatus.mockResolvedValue(STATUS)
   mocked.markets.mockResolvedValue({
@@ -180,7 +181,7 @@ beforeEach(() => {
 describe('CockpitScreen', () => {
   it('renders the watchlist with per-instrument labels', async () => {
     renderScreen()
-    await waitFor(() => expect(screen.getByText('BTC')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('link', { name: 'BTC' })).toBeInTheDocument())
     expect(screen.getByText('Real')).toBeInTheDocument()
     expect(screen.getByText('Stale')).toBeInTheDocument()
     // SOL appears twice: the watchlist row and the connector panel chip.
@@ -498,6 +499,23 @@ describe('live timeline reconciliation', () => {
 })
 
 describe('CockpitDetailScreen', () => {
+  it('ages cached detail evidence when snapshots and stream supply no new data', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] })
+    try {
+      mocked.liveState.mockResolvedValueOnce(STATE).mockImplementation(() => new Promise(() => {}))
+      const mounted = renderDetail('BTC')
+      await waitFor(() => expect(screen.getAllByText('Real')).toHaveLength(2))
+      expect(screen.getByText('500 ms')).toBeInTheDocument()
+      act(() => vi.advanceTimersByTime(31_000))
+      expect(screen.queryAllByText('Real')).toHaveLength(0)
+      expect(screen.getAllByText('Stale')).toHaveLength(2)
+      expect(screen.getByText('32 s')).toBeInTheDocument()
+      mounted.unmount()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('ignores same-symbol updates from another venue', async () => {
     let push: (update: MarketUpdate) => void = () => {}
     mockedStream.mockImplementation((onUpdate) => {

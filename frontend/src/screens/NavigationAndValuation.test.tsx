@@ -151,6 +151,33 @@ beforeEach(() => {
 })
 
 describe('canonical instrument workspace navigation', () => {
+  it('shows the exact staging build separately from package and runtime identity', async () => {
+    const buildRef = '0123456789abcdef0123456789abcdef01234567'
+    mocked.health.mockResolvedValue({
+      deployment: { build_ref: buildRef, environment: 'staging' },
+      live_trading: false,
+      paper_mode: true,
+      project: 'QuantMesh',
+      runtime_mode: 'operator',
+      status: 'ok',
+      version: '0.1.1rc1',
+    })
+
+    render(<App />, { wrapper: Providers })
+
+    const identity = await screen.findByLabelText(`Staging build ${buildRef}`)
+    expect(identity).toHaveTextContent('STAGING · 0123456')
+    expect(identity).toHaveAttribute('title', `Staging build ${buildRef}`)
+    expect(screen.getByText('v0.1.1rc1')).toBeInTheDocument()
+  })
+
+  it('does not imply a staging deployment for the default local health response', async () => {
+    render(<App />, { wrapper: Providers })
+
+    await screen.findByText('v0.1.1rc1')
+    expect(screen.queryByText(/^STAGING/)).not.toBeInTheDocument()
+  })
+
   it('keeps retained reset directories visible to the operator in the shell', async () => {
     mocked.health.mockResolvedValue({
       live_trading: false,

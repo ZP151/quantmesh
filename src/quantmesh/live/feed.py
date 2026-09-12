@@ -131,10 +131,7 @@ def _continuity_proof(
         return predecessor
     if current.received_at < previous.received_at:
         return predecessor
-    if (
-        current.venue is Venue.HYPERLIQUID
-        and current.kind is UpdateKind.TRADE
-    ):
+    if current.venue is Venue.HYPERLIQUID and current.kind is UpdateKind.TRADE:
         if (
             current.source_event_id == previous.source_event_id
             or current.received_at <= previous.received_at
@@ -153,10 +150,7 @@ def _continuity_proof(
             and previous.sequence is None
             and current.received_at > previous.received_at
         )
-        if (
-            not (sequence_ordered or receipt_ordered)
-            or current.data_time < previous.data_time
-        ):
+        if not (sequence_ordered or receipt_ordered) or current.data_time < previous.data_time:
             return predecessor
         return _ContinuityProof(True, previous.sequence, previous.data_time)
     if type(current.sequence) is not int or type(previous.sequence) is not int:
@@ -180,6 +174,20 @@ def _continuity_proof(
     return _ContinuityProof(True, previous.sequence, previous.data_time)
 
 
+_SOURCE_TIMED_KINDS = frozenset(
+    {UpdateKind.QUOTE, UpdateKind.TRADE, UpdateKind.L2_SNAPSHOT, UpdateKind.L2_DELTA}
+)
+_CLOCK_SKEW = timedelta(seconds=5)
+
+
+def _freshness_time(update: MarketUpdate) -> datetime:
+    # Candle time identifies its interval, and metrics may be receipt-timed.
+    # Neither can be treated as an exchange quote timestamp.
+    if update.kind in _SOURCE_TIMED_KINDS:
+        return min(update.data_time, update.received_at)
+    return update.received_at
+
+
 def label(update: MarketUpdate, now: datetime, *, lag: timedelta) -> str:
     """The cockpit state label for one update (ADR-0014 decision 6).
 
@@ -193,7 +201,9 @@ def label(update: MarketUpdate, now: datetime, *, lag: timedelta) -> str:
         return SYNTHETIC
     if update.provenance is Provenance.DELAYED:
         return DELAYED
-    if now - update.received_at > lag:
+    if update.kind in _SOURCE_TIMED_KINDS and update.data_time - update.received_at > _CLOCK_SKEW:
+        return UNAVAILABLE
+    if now - _freshness_time(update) > lag:
         return STALE
     return FRESH
 
@@ -209,7 +219,7 @@ def _view(update: MarketUpdate, now: datetime, *, lag: timedelta) -> dict[str, o
         "provenance": update.provenance.value,
         "data_time": update.data_time.isoformat(),
         "received_at": update.received_at.isoformat(),
-        "age_ms": _age_ms(now, update.received_at),
+        "age_ms": _age_ms(now, _freshness_time(update)),
         "sequence": update.sequence,
         "sequence_gap": update.sequence_gap,
         "continuity": update.continuity.value,
@@ -318,8 +328,7 @@ class LiveFeed:
             affected = [
                 stream_key
                 for stream_key in self._latest
-                if stream_key[:2] == key[:2]
-                and stream_key[2] != UpdateKind.STATUS.value
+                if stream_key[:2] == key[:2] and stream_key[2] != UpdateKind.STATUS.value
             ]
             for stream_key in affected:
                 previous = self._latest[stream_key]
@@ -372,7 +381,7 @@ class LiveFeed:
             proof = self._continuity[key]
         try:
             freshness_label = label(copied, as_of, lag=self.lag)
-            age_ms = _age_ms(as_of, copied.received_at)
+            age_ms = _age_ms(as_of, _freshness_time(copied))
         except (TypeError, ValueError):
             freshness_label = None
             age_ms = None
@@ -406,11 +415,9 @@ class LiveFeed:
         """
         now = now if now is not None else datetime.now(UTC)
         instruments: dict[str, dict[str, object]] = {}
-        newest: dict[str, MarketUpdate] = {}
         with self._lock:
             latest = [
-                (key, update.model_copy(deep=True))
-                for key, update in sorted(self._latest.items())
+                (key, update.model_copy(deep=True)) for key, update in sorted(self._latest.items())
             ]
             book_sides = [
                 (key, update.model_copy(deep=True))
@@ -421,17 +428,22 @@ class LiveFeed:
             entry = instruments.setdefault(identity, {"venue": venue, "instrument": instrument})
             kinds = entry.setdefault("kinds", {})  # type: ignore[assignment]
             kinds[kind] = _view(update, now, lag=self.lag)  # type: ignore[index]
-            if identity not in newest or update.received_at > newest[identity].received_at:
-                newest[identity] = update
         for (venue, instrument, side), update in book_sides:
             identity = f"{venue}:{instrument}"
             entry = instruments.setdefault(identity, {"venue": venue, "instrument": instrument})
             sides = entry.setdefault("book_sides", {})  # type: ignore[assignment]
             sides[side] = _view(update, now, lag=self.lag)  # type: ignore[index]
-            if identity not in newest or update.received_at > newest[identity].received_at:
-                newest[identity] = update
-        for identity, update in newest.items():
-            instruments[identity]["label"] = label(update, now, lag=self.lag)
+        ranks = {FRESH: 0, DELAYED: 1, SYNTHETIC: 2, STALE: 3, UNAVAILABLE: 4}
+        for entry in instruments.values():
+            kinds = entry.get("kinds", {})
+            # A disconnected status can veto availability, but fresh status or
+            # metrics must never make an old quote fresh again.
+            labels = [
+                view["label"]
+                for kind, view in kinds.items()
+                if kind != "status" or view["label"] == UNAVAILABLE
+            ]
+            entry["label"] = max(labels, key=ranks.__getitem__) if labels else UNAVAILABLE
         return {"generated_at": now.isoformat(), "instruments": instruments}
 
     def statuses(self, *, now: datetime | None = None) -> dict[str, object]:
@@ -441,13 +453,9 @@ class LiveFeed:
         now = now if now is not None else datetime.now(UTC)
         sources: dict[str, dict[str, dict[str, object]]] = {}
         with self._lock:
-            latest = [
-                (key, update.model_copy(deep=True))
-                for key, update in self._latest.items()
-            ]
+            latest = [(key, update.model_copy(deep=True)) for key, update in self._latest.items()]
             supervisors = [
-                (supervisor.venue, tuple(supervisor.watchlist))
-                for supervisor in self._supervisors
+                (supervisor.venue, tuple(supervisor.watchlist)) for supervisor in self._supervisors
             ]
         for (venue, instrument, kind), update in latest:
             if kind != UpdateKind.STATUS.value or update.state is None:

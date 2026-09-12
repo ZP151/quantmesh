@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import websockets
@@ -41,6 +42,8 @@ class ScriptedVenue:
     #: While set, the handler sends no further frames but keeps the socket
     #: open — the quiet tail without depending on the plan's wall clock.
     quiet: asyncio.Event | None = None
+    #: Optional browser-fixture clock binding; deterministic plans default to verbatim frames.
+    transform_frame: Callable[[object], object] | None = None
 
     async def __aenter__(self) -> ScriptedVenue:
         self._server = await websockets.serve(
@@ -72,7 +75,8 @@ class ScriptedVenue:
                         await socket.close(code=1000, reason="scripted end")
                         return
                     raise ValueError(f"unknown control frame {frame!r}")
-                await socket.send(json.dumps(frame))
+                outgoing = self.transform_frame(frame) if self.transform_frame else frame
+                await socket.send(json.dumps(outgoing))
         except websockets.ConnectionClosed:
             return  # client went away mid-script: fine for a fixture
 

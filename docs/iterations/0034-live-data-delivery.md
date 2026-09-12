@@ -1,9 +1,11 @@
 # Iteration 0034 — Deployed read-only live market data
 
-- Status: prioritized design; implementation and deployment not started
+- Status: approved implementation in progress; AWS activation and acceptance pending
 - Planned: 2026-09-12
 - Issue: [#140](https://github.com/ZP151/quantmesh/issues/140)
 - Planning branch: `codex/0034-live-data-delivery-plan`, from `origin/main@6ea9a13`
+- Implementation branch: `codex/0034-deployed-live-market-data`
+- Executable plan: `docs/superpowers/plans/2026-09-12-deployed-live-market-data.md`
 - Dependency: reconcile private staging integration in [#135](https://github.com/ZP151/quantmesh/issues/135); do not overwrite its independent worktree
 
 ## User action and outcome
@@ -118,3 +120,191 @@ do not infer authority to purchase data or expose new public services.
 - **Publication:** issue #140 tracks the proposed delivery; this planning PR
   references it without closing it. Implementation and live-provider acceptance
   remain outstanding.
+
+## 2026-09-12 — Approved implementation checkpoint
+
+- **Planner:** operator explicitly approved the subsequent iteration. Created
+  the goal for the deployed BTC/ETH/SOL loop. #141's missing 0033 goal archive
+  was added in `388645a`; the actual review thread is resolved, fresh CI pending.
+  Its commits are present on this integration branch without bypassing CI.
+- **Verifier / AWS:** fresh private HTTPS health confirmed exact `4022942`,
+  demo, paper true/live false. Tailscale identifies the intended node online.
+  SSH requires an operator identity check; no host-key bypass was used.
+- **Integrator:** merged independent staging `9a177c6` into this worktree,
+  retained current product/goal/index/roadmap records and rebuilt current assets.
+  The original staging worktree and branch remain untouched. No local-main reset.
+- **Quant Researcher:** found ACK/context/BBO protocol mismatches and receipt-only
+  freshness masking old quotes. Actual public ACKs also include server-default
+  fields, so literal request/response equality is invalid. Historical chart
+  backfill is explicitly excluded; recorded MarketUpdate replay is acceptance.
+- **Implementer / deployment:** canonical explicit live profile and mode/safety
+  health validation, legacy environment compatibility and retained rollback.
+  Agent recorded baseline 31 passed, RED 23 failed/18 passed plus CLI RED,
+  then 63 staging/identity passed. Controller integration selection below
+  independently includes these tests.
+- **Implementer / protocol:** official nested BBO/context, ACK handling and
+  socket cleanup. Null sides emit no quote/activity; malformed sides fail closed.
+  RED 18 failed/76 passed; follow-up null/fixture RED observed. Agent's targeted
+  140-test gate passed before the actual ACK default-echo correction.
+- **Implementer / freshness:** three backend and three frontend RED assertions
+  reproduced old-source/future-clock/cache-aging defects. Source-based quote
+  age and a client timer fix them; receipt-timed metrics do not refresh quotes.
+  The aggregate backend label preserves disconnected unavailability.
+- **Verifier / controller:** 152 feed/router/replay/staging/identity tests passed
+  in 15.53s with one existing Starlette warning. 74 frontend tests passed in
+  10.11s. OpenAPI generation/check and actual TypeScript/build passed; current
+  bundle is rebuilt. Initial default pytest cleanup hit an unrelated Windows
+  temp permission error; subsequent runs use unique owned `--basetemp` paths.
+  Protocol actual-source probe and browser fixture acceptance are still running.
+- **Scope:** no order, server update, paid subscription, credentials or
+  independent operational track change at this checkpoint. ADR-0022 records
+  the bounded private read-only profile and timestamp semantics.
+
+## Reviewed integration verification
+
+- **Reviewer:** independent Standards/Spec review identified browser wall-clock
+  skew and unverified automatic rollback. Both are corrected and the sole
+  confirmation found no remaining issue. Cached age now adds monotonic browser
+  elapsed time to initial server/source age and cannot recover on clock rollback.
+  Failed activation validates and health-checks the retained release; failed
+  restoration has a separate error. Correction RED: two clock cases and 14
+  rollback cases; targeted GREEN evidence is included in controller checks.
+- **Protocol actual-source correction:** live ACKs contain server-added defaults;
+  match requested fields while tolerating additional response fields. Real
+  candles use an inclusive end millisecond: accept exactly the interval or
+  interval minus one millisecond; reject neighboring invalid durations. Captured
+  public frames reproduced both failures before correction. A bounded public
+  parser then consumed 932 frames over 45 seconds without errors, including
+  78 candles and 578 BBO frames across BTC/ETH/SOL.
+- **Verifier / controller:** final nine-file Python selection passed 311 tests
+  in 32.96s, one existing Starlette warning. Full frontend passed 333 tests in
+  21.50s. Initial fixture browser pass: 7 passed in 44.01s; final correction
+  confirmation is tracked separately. Ruff all-source checks passed. No full
+  local pytest/release/soak was launched; automatic final-head CI remains a gate.
+- **Current limitation:** the built-in browser refused the local test port and
+  Chrome automation is unavailable. Existing project browser E2E provides the
+  packaged loopback fixture acceptance; actual-source API/persistence is being
+  witnessed separately. Do not call this an AWS browser acceptance.
+
+- **Final local boundary:** correction browser confirmation passed 7 tests in
+  49.25s. Ruff, OpenAPI freshness, actual TypeScript and rebuilt bundle freshness
+  passed. Submodule status was inspected (reference submodules uninitialized;
+  none changed). Working-tree whitespace check passed.
+
+## Publication and local real-source witness
+
+- Integration commit `ed3900deeb949c0a291e5b43c9684d4db4120660` is published
+  in [PR #142](https://github.com/ZP151/quantmesh/pull/142). #141 remains the
+  prior documentation dependency. Required automatic CI is pending; neither
+  final integration nor AWS deployment is claimed complete.
+- Full local `--live` application, not an injected provider, observed public
+  Hyperliquid from 2026-09-12 08:55:09 to 09:00:11 UTC: 302.13 seconds, 61
+  samples, 61 distinct quote source timestamps for each BTC/ETH/SOL. Zero
+  disconnected samples. Maximum sampled source/receipt quote ages were BTC
+  2041ms, ETH 2641ms and SOL 4777ms; these are observations, not an SLA.
+- Paper true/live trading false throughout; risk state and empty order list
+  remained unchanged. Replay API reported 8560 stored updates at the witness
+  boundary (includes earlier diagnostic runs). After stopping only the owned
+  temporary app processes, the same lake reopened with at least that count.
+- Detailed public-data evidence is in OS-temp
+  `qm0034-live-9foa6m4c/witness-summary.json` and `witness-samples.json`.
+  This is local source-to-API/persistence evidence, **not AWS browser acceptance**.
+  Temporary app processes are stopped; the operator's real data roots and AWS
+  service remain unchanged. Tailscale SSH still awaits operator authentication.
+
+
+## Resume — AWS access and dependency integration
+
+- Previous goal turn made implementation and verified local-source progress.
+  SSH check session30832 now completed: operator authentication accepted,
+  intended retained4022942 release active under quantmesh user/group.
+- Remote read-only preflight: Ubuntu Python3.12.3, 54GB disk available,
+  approximately1.3GB available memory, passwordless sudo and existing private
+  Tailscale Serve ->127.0.0.1:8765. No deployment or infrastructure change yet.
+- PR#141 merged as00a0ee0 at09:02:33UTC. Its final archive-head run34683518613
+  remained in progress when rechecked; GitHub auto-merge did not wait for that
+  optional check. No green claim is made. For#142 explicitly wait for final-head
+  CI success before merge/deploy, regardless of repository auto-merge policy.
+- Merged origin/main into the integration branch. Conflicts were only the
+  already-carried planning documents; retained current implementation/evidence
+  versions, without discarding new upstream source changes. Source code and
+  generated bundle are unchanged from reviewed/tested ed3900d.
+- Browser automation navigation to the private AWS hostname was refused by
+  both in-app and Edge surfaces (ERR_BLOCKED_BY_CLIENT). HTTPS/SSH CLI access
+  works; deployed browser acceptance remains a separate unresolved gate.
+
+## Planner checkpoint — external review before activation
+
+- Corrected the browser preflight: the deployed route is `/app/cockpit`.
+  Edge renders staging4022942, the demo banner and "no live feed is attached".
+  Earlier `/cockpit` navigation failures were not evidence of blocked private
+  browser access. SSH authentication is complete; no activation has occurred.
+- AWS-host direct public WebSocket probe at09:12:53UTC ran45.22seconds:
+  3 subscription acknowledgments,397 BBO frames and182/83/132 distinct source
+  timestamps for BTC/ETH/SOL. This proves venue reachability from AWS only;
+  application/browser live acceptance still awaits deployment.
+- New external PR review arrived after the bounded independent review and
+  correction confirmation. Returned to Planner before further implementation:
+  reduce the remaining work to four concrete acceptance defects, without
+  another open-ended structural review or market expansion. Reuse the existing
+  aging hook in the detail screen, preserve the disconnected-status veto in
+  shared label derivation, constrain deployment to the audited dependency
+  closure, and validate the official BBO order-count field. Each requires
+  reproduced RED/GREEN evidence. Existing protocol/replay architecture stays.
+- The source timestamp/freshness and deterministic deployment contracts make
+  these corrections part of the current user loop. Final-head CI must rerun
+  after the single correction checkpoint; old-head success cannot authorize
+  activation. No deployment, order or independent soak changes are allowed
+  during this correction step.
+
+## External-review correction verification
+
+- **Implementer / frontend:** regression RED reproduced both disconnect veto
+  cases and frozen detail age:3 failed/61 passed. Shared label derivation now
+  retains unavailable status; quotes cannot clear it until a connected status
+  arrives. Detail uses the same monotonic aging hook. Targeted GREEN64 passed.
+  Full-suite load exposed an existing wait race between connector text and the
+  actual watchlist row; the test now waits for the BTC row link. Full frontend
+  GREEN336 passed across27 files in21.72seconds.
+- **Implementer / protocol:** required BBO `n` is a non-negative integer;
+  missing/null/bool/negative/fraction/string fail closed. A null side cannot
+  conceal a malformed counterpart. RED13 failed/1 passed; agent GREEN114
+  wire/supervisor tests. Controller includes these in the combined gate below.
+- **Implementer / deployment:** installation constrains the base package with
+  the candidate's audited closure. Demo/live command assertions both failed
+  before correction. Agent staging/identity GREEN78 passed. Read-only Linux
+  CPython3.12 wheel resolution and marker/Requires-Python inspection verified
+  all37 base runtime dependencies against the pinned closure; no dependency
+  installation or shared-environment mutation occurred.
+- **Reviewer / controller:** inspected the bounded corrections against each
+  external finding; retained null-side behavior, explicit reconnect recovery,
+  base-only dependency installation, old demo environment and checked rollback.
+  No third broad architecture review or additional market work was launched.
+- **Verifier / controller:** combined nine-file protocol/feed/router/replay/
+  staging/identity gate:326 passed in26.67seconds, one existing Starlette
+  warning. Packaged browser gate:7 passed in36.16seconds. Full frontend336
+  passed; TypeScript build, generated API and frontend lint passed (existing
+  four Fast Refresh warnings). Current bundle rebuilt. These supersede the
+  earlier local counts; full final-head CI and AWS live acceptance remain open.
+
+## CI fixture clock correction — 2026-09-12
+
+- PR#141 archive-head run34683518613 completed successfully at09:25:16UTC:
+  3321 Python passed/55 skipped and325 frontend passed. This closes its earlier
+  pending-check uncertainty; it does not change the recorded merge ordering.
+- PR#142 run34685627199 atf62630e failed after40m13s of full pytest:
+  3441 passed/55 skipped/1 failed. All preceding frontend/audit/build/lint
+  checks succeeded. The only failure was the prediction-pipeline test expecting
+  `real` for a2025 source timestamp observed at its2026 clock. Local invocation
+  of that exact test reproduced the same failure in3.59seconds.
+- **Quant/Reviewer:** source-age behavior is correct. Do not weaken freshness or
+  alter prediction-provider production code to satisfy an inconsistent fixture.
+  Scope the correction to the pipeline's observation clock and stronger tests.
+- **Implementer:** exercise both source age0 and60seconds; assert both venue
+  labels, preserved source/receipt timestamps and exact source age. The quiet
+  test now starts from proven fresh data before crossing the five-second lag.
+- **Verifier:** prediction/feed selection passed102 tests in1.88seconds.
+  Controller inspected the diff; only tests and checkpoint documents changed.
+  Ruff and scoped formatting/whitespace checks passed. App source and built
+  assets remain those already verified atf62630e. No AWS service update occurred.
+  A new final-head CI run is required before merge and deployment.

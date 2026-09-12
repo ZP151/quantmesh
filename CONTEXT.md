@@ -27,12 +27,12 @@ loop. The 0021 Scheduler/Provider/evidence data plane stays separate. AI remains
 optional and advisory. Final `v0.1.1` promotion and real-money execution remain
 outside this iteration.
 
-The next product priority is iteration 0034 / issue #140: deployed read-only
-live market data, beginning with a bounded Hyperliquid user loop. This is a
-prioritized design, not completed implementation. The independent AWS staging
-record from 2026-09-09 identifies build `4022942` in demo mode; the current
-server has not been freshly probed. Reconcile #135's private deployment support
-before updating it. Merged connector/UI capability must not be described as
+The active product iteration is 0034 / issue #140: deployed read-only
+live market data, beginning with a bounded Hyperliquid user loop. Implementation
+is approved and under integration; deployed acceptance remains outstanding.
+A fresh 2026-09-12 AWS HTTPS probe confirmed build `4022942` in demo mode.
+#135's private deployment support is being integrated before updating it.
+Merged connector/UI capability must not be described as
 verified live-market coverage. See `docs/ITERATION_PLAN.md` for delivery order.
 
 ## Bounded context

@@ -1,7 +1,7 @@
 # Active Goal
 
-Status: iteration 0033 completed and merged; iteration 0034 prioritized design,
-implementation not started, 2026-09-12.
+Status: iteration 0034 approved and implementing; final integration, AWS activation
+and real-source acceptance pending, 2026-09-12.
 
 ## Completed checkpoint
 
@@ -16,20 +16,48 @@ implementation not started, 2026-09-12.
 - Issue: https://github.com/ZP151/quantmesh/issues/140
 - Design: `docs/iterations/0034-live-data-delivery.md`
 - Delivery order: `docs/ITERATION_PLAN.md`
-- Planning branch: `codex/0034-live-data-delivery-plan`, from `origin/main@6ea9a13`.
-- User request: confirm current completion, organize the next iteration, and
-  investigate absent real-time feeds in the AWS deployment.
-- Evidence: independent #135 staging ledger records 2026-09-09 build `4022942`
-  with `runtime_mode=demo`; its service command uses `--demo`. Current server
-  state has not been freshly probed. The deployment branch also contains
-  private-origin/build-identity support that must be reconciled with main.
-- Next execution begins with read-only deployed build/mode inspection and #135
-  integration coordination, then an executable test-first plan for one
-  Hyperliquid BTC/ETH/SOL source-to-browser loop. Do not treat this prioritized
-  design as an already implemented or deployed feature.
-- Planning scope permits repository documentation and read-only inspection;
-  no cloud mutation, provider credential changes, paid data subscription,
-  trusted-root writes or #124/#127/#132/0021 operations occurred here.
+- Implementation branch: `codex/0034-deployed-live-market-data`.
+- Integration PR: https://github.com/ZP151/quantmesh/pull/142 (CI pending).
+- Executable plan: `docs/superpowers/plans/2026-09-12-deployed-live-market-data.md`.
+- Authority: operator approved the proposed subsequent iteration, including the
+  bounded existing AWS deployment update and public read-only Hyperliquid feed.
+  No new AWS resources, paid subscriptions, credentials or public access.
+- AWS fresh HTTPS/SSH probes confirm exact `4022942`, runtime demo, paper true/live
+  false. Tailscale SSH identity check completed; approved server access works.
+- Integrated staging9a177c6 locally; preserved original independent worktree.
+  Explicit live profile/verified rollback and Hyperliquid protocol/freshness
+  corrections are implemented. See ledger for test counts and RED/GREEN.
+- #141 merged as `00a0ee0` at 2026-09-12 09:02:33 UTC. Its archive-head CI
+  was still running when inspected; do not claim that run passed. GitHub auto
+  merge permitted integration before that optional check completed. Wait for
+  #142 final-head CI explicitly before its integration/deployment.
+- Review: Standards/Spec correction confirmation passed for monotonic browser
+  aging and checked automatic rollback. Inclusive candle end milliseconds are
+  corrected; 45-second public parser smoke passed. Controller final gates: 311
+  Python/333 frontend/7 fixture browser passed; full CI and AWS acceptance pending.
+- Later external review produced four bounded corrections, scoped by Planner
+  and verified: detail timer aging, disconnect veto, audited install constraints
+  and strict BBO order count. Latest controller gate:326 Python/336 frontend/
+  7 browser passed. See iteration ledger for RED/GREEN and dependency evidence.
+- #141 archive-head CI34683518613 is now successful (3321 Python/325 frontend).
+  #142 CI34685627199 atf62630e failed only an inconsistent prediction fixture
+  clock:3441 passed/55 skipped/1 failed. Fixed only test clocks/assertions;
+  prediction/feed102 passed. App source/assets remain unchanged. Wait for the
+  new exact final-head CI, not the failed prior run; see PR#142 for its run ID.
+- Local real-source witness passed: 302.13 seconds, 61 distinct source quote
+  timestamps per BTC/ETH/SOL, zero disconnected samples, risk/orders unchanged;
+  replay persisted after the temporary app stopped. This is not AWS acceptance.
+- Next: inspect final-head CI/review for #141 then #142, integrate in order,
+  finish approved AWS exact-build update after SSH authentication, and record
+  the separate five-minute AWS source/browser witness. Temporary local app is
+  stopped. SSH check session30832 completed successfully. AWS preflight: Python
+  3.12.3, 54GB free disk, ~1.3GB available RAM, passwordless sudo, retained
+  demo release and private Serve route intact. No AWS service change yet.
+- Correct browser route `/app/cockpit` works in Edge and confirms the deployed
+  demo/no-feed state. Earlier wrong-route errors are superseded. AWS-host public
+  WebSocket probe received397 BBO frames in45.22seconds acrossBTC/ETH/SOL;
+  this is host reachability, not deployed-app acceptance. Reuse the open Edge
+  tab for the eventual exact-build browser/replay witness.
 - Preserve paper mode and disabled live trading. Separate further Moomoo,
   Polymarket/Kalshi and trusted-history work into subsequent bounded slices.
 - Continue from `origin/main`, preserve divergent local main and independent

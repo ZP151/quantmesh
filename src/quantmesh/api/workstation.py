@@ -191,32 +191,41 @@ def _is_loopback(host: str) -> bool:
     return host in {"localhost", "::1"} or host.startswith("127.")
 
 
+def _is_allowed_browser_origin(origin: str) -> bool:
+    try:
+        hostname = urlsplit(origin).hostname
+    except ValueError:
+        return False
+    if hostname is not None and _is_loopback(hostname):
+        return True
+    return (
+        settings.environment == "staging"
+        and settings.staging_origin is not None
+        and origin == settings.staging_origin
+    )
+
+
 def _guard_origin(app: FastAPI, request: Request, redirect: str, surface: str) -> Response | None:
-    """Refuse a write-surface POST whose Origin is present but not
-    loopback (threat model T-14, docs/threat-model.md).
+    """Refuse a write POST outside loopback/the exact staging origin.
 
     Browser CSRF — a hostile page in the user's browser POSTing to the
     loopback bind — always sends an Origin naming the attacker's site;
-    a same-origin form send names the loopback host. An absent Origin
-    is allowed: a non-browser client (CLI, drill) cannot be
-    distinguished from a same-origin send, and refusing it would break
-    every non-browser consumer of the two write surfaces. Returns the
-    typed error page to return, or None when the origin passes.
+    a same-origin form send names the loopback host or the one private
+    Tailscale HTTPS origin configured for staging. An absent Origin is
+    allowed: a non-browser client (CLI, drill) cannot be distinguished
+    from a same-origin send. Returns the typed error page to return, or
+    None when the origin passes (threat model T-14).
     """
     origin = request.headers.get("origin")
     if origin is None:
         return None
-    try:
-        hostname = urlsplit(origin).hostname
-    except ValueError:
-        hostname = None
-    if hostname is not None and _is_loopback(hostname):
+    if _is_allowed_browser_origin(origin):
         return None
     return _error_page(
         app,
         request,
         redirect,
-        f"{surface} POST refused: cross-origin send (Origin {origin!r} is not loopback)",
+        f"{surface} POST refused: cross-origin send (Origin {origin!r} is not allowed)",
     )
 
 
@@ -826,21 +835,15 @@ def _json_context(request: Request) -> PageContext:
 
 
 def _json_guard_origin(request: Request, surface: str) -> None:
-    """Refuse a JSON write POST whose Origin is present but not
-    loopback (threat model T-14), as a typed 403 for the JSON surface
-    instead of the HTML error page the form endpoints render."""
+    """Apply the shared browser-origin rule as a typed JSON 403."""
     origin = request.headers.get("origin")
     if origin is None:
         return
-    try:
-        hostname = urlsplit(origin).hostname
-    except ValueError:
-        hostname = None
-    if hostname is not None and _is_loopback(hostname):
+    if _is_allowed_browser_origin(origin):
         return
     raise HTTPException(
         status_code=403,
-        detail=f"{surface} refused: cross-origin send (Origin {origin!r} is not loopback)",
+        detail=f"{surface} refused: cross-origin send (Origin {origin!r} is not allowed)",
     )
 
 
