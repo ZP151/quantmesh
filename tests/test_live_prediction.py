@@ -758,7 +758,11 @@ class TestPredictionPipeline:
             stale=timedelta(seconds=10),
         )
 
-    def test_both_venues_stream_into_one_board(self, tmp_path):
+    @pytest.mark.parametrize("source_age_seconds,expected_label", [(0, "real"), (60, "stale")])
+    def test_both_venues_stream_into_one_board(self, tmp_path, source_age_seconds, expected_label):
+        # Receipt must not freshen old venue timestamps. Exercise both a fresh
+        # observation and an old frame arriving at the observation clock.
+        observed_at = TS + timedelta(seconds=source_age_seconds)
         feed = self._feed(tmp_path)
         pm = make_pm_supervisor([], source=StubPMBookSource({PM_TOKEN: pm_book_snapshot()}))
         ks = make_kalshi_supervisor(
@@ -766,20 +770,18 @@ class TestPredictionPipeline:
         )
         for supervisor in (pm, ks):
             feed.attach(supervisor)
-        pm.on_open(NOW)
-        ks.on_open(NOW)
-        pm.on_frame(pm_book(PM_TOKEN), NOW)
+        pm.on_open(observed_at)
+        ks.on_open(observed_at)
+        pm.on_frame(pm_book(PM_TOKEN), observed_at)
         feed.ingest(pm.drain() + ks.drain())
-        pm.on_frame(
-            pm_price_change(PM_TOKEN, [{"price": "0.62", "side": "BUY"}]), NOW
-        )
+        pm.on_frame(pm_price_change(PM_TOKEN, [{"price": "0.62", "side": "BUY"}]), observed_at)
         ks.on_frame(
             kalshi_frame(
                 "orderbook_delta",
                 KALSHI_TICKER,
                 {"side": "yes", "delta": [{"price": 60, "count": -40}]},
             ),
-            NOW,
+            observed_at,
         )
         feed.ingest(pm.drain() + ks.drain())
 
@@ -793,11 +795,17 @@ class TestPredictionPipeline:
                 )
             ]
         )
-        snapshot = feed.latest_state(now=NOW)
-        rows = board.render(snapshot, NOW)
+        snapshot = feed.latest_state(now=observed_at)
+        rows = board.render(snapshot, observed_at)
         (row,) = rows
         pm_row, ks_row = row["venues"]
-        assert pm_row["label"] == "real"
+        assert pm_row["label"] == expected_label
+        assert ks_row["label"] == expected_label
+        for entry in snapshot["instruments"].values():
+            quote = entry["kinds"]["quote"]
+            assert quote["data_time"] == TS.isoformat()
+            assert quote["received_at"] == observed_at.isoformat()
+            assert quote["age_ms"] == source_age_seconds * 1000
         assert pm_row["probability"] == 63.5  # (0.62 + 0.65) / 2
         assert pm_row["depth"] == 175.0
         assert ks_row["probability"] == 62.0
@@ -807,10 +815,11 @@ class TestPredictionPipeline:
         feed = self._feed(tmp_path)
         pm = make_pm_supervisor([], source=StubPMBookSource({PM_TOKEN: pm_book_snapshot()}))
         feed.attach(pm)
-        pm.on_open(NOW)
-        pm.on_frame(pm_book(PM_TOKEN), NOW)
+        pm.on_open(TS)
+        pm.on_frame(pm_book(PM_TOKEN), TS)
         feed.ingest(pm.drain())
-        later = NOW + timedelta(seconds=6)
+        assert feed.latest_state(now=TS)["instruments"][f"polymarket:{PM_TOKEN}"]["label"] == "real"
+        later = TS + timedelta(seconds=6)
         snapshot = feed.latest_state(now=later)
         board = demo_board()
         row = next(r for r in board.render(snapshot, later) if r["event_key"] == "btc-100k")

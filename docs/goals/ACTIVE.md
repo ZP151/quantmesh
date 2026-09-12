@@ -39,6 +39,11 @@ and real-source acceptance pending, 2026-09-12.
   and verified: detail timer aging, disconnect veto, audited install constraints
   and strict BBO order count. Latest controller gate:326 Python/336 frontend/
   7 browser passed. See iteration ledger for RED/GREEN and dependency evidence.
+- #141 archive-head CI34683518613 is now successful (3321 Python/325 frontend).
+  #142 CI34685627199 atf62630e failed only an inconsistent prediction fixture
+  clock:3441 passed/55 skipped/1 failed. Fixed only test clocks/assertions;
+  prediction/feed102 passed. App source/assets remain unchanged. Wait for the
+  new exact final-head CI, not the failed prior run; see PR#142 for its run ID.
 - Local real-source witness passed: 302.13 seconds, 61 distinct source quote
   timestamps per BTC/ETH/SOL, zero disconnected samples, risk/orders unchanged;
   replay persisted after the temporary app stopped. This is not AWS acceptance.

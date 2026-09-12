@@ -286,3 +286,25 @@ do not infer authority to purchase data or expose new public services.
   passed; TypeScript build, generated API and frontend lint passed (existing
   four Fast Refresh warnings). Current bundle rebuilt. These supersede the
   earlier local counts; full final-head CI and AWS live acceptance remain open.
+
+## CI fixture clock correction — 2026-09-12
+
+- PR#141 archive-head run34683518613 completed successfully at09:25:16UTC:
+  3321 Python passed/55 skipped and325 frontend passed. This closes its earlier
+  pending-check uncertainty; it does not change the recorded merge ordering.
+- PR#142 run34685627199 atf62630e failed after40m13s of full pytest:
+  3441 passed/55 skipped/1 failed. All preceding frontend/audit/build/lint
+  checks succeeded. The only failure was the prediction-pipeline test expecting
+  `real` for a2025 source timestamp observed at its2026 clock. Local invocation
+  of that exact test reproduced the same failure in3.59seconds.
+- **Quant/Reviewer:** source-age behavior is correct. Do not weaken freshness or
+  alter prediction-provider production code to satisfy an inconsistent fixture.
+  Scope the correction to the pipeline's observation clock and stronger tests.
+- **Implementer:** exercise both source age0 and60seconds; assert both venue
+  labels, preserved source/receipt timestamps and exact source age. The quiet
+  test now starts from proven fresh data before crossing the five-second lag.
+- **Verifier:** prediction/feed selection passed102 tests in1.88seconds.
+  Controller inspected the diff; only tests and checkpoint documents changed.
+  Ruff and scoped formatting/whitespace checks passed. App source and built
+  assets remain those already verified atf62630e. No AWS service update occurred.
+  A new final-head CI run is required before merge and deployment.
