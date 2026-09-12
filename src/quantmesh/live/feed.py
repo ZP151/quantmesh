@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from threading import RLock
@@ -362,6 +362,24 @@ class LiveFeed:
             self._loop.create_task(self._deliver(update))
 
     # -- queries ------------------------------------------------------------
+
+    def capture_exact(
+        self,
+        venue: Venue,
+        instrument: str,
+        kind: UpdateKind,
+        *,
+        clock: Callable[[], datetime],
+    ) -> tuple[datetime, ExactUpdateSnapshot | None]:
+        """Sample a request clock and detach its quote/proof before another ingest.
+
+        The clock must be a quick, side-effect-free local read. The lock is released before the
+        caller performs history, account or other potentially blocking work.
+        Existing future-time checks still apply to the captured observation.
+        """
+        with self._lock:
+            as_of = clock()
+            return as_of, self.snapshot_exact(venue, instrument, kind, as_of=as_of)
 
     def snapshot_exact(
         self,

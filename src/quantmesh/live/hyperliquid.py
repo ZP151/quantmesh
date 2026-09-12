@@ -100,6 +100,22 @@ def _source_id(value: object) -> str:
     return hashlib.sha256(canonical).hexdigest()
 
 
+def _local_metrics_source_id(
+    coin: str, channel: str, observed_at: datetime, payload: dict[str, float]
+) -> str:
+    # These channels have no provider event clock/ID. Preserve the same full
+    # local observation time and normalized content that the replay digest uses.
+    return _source_id(
+        [
+            "hl-local-observation-v2",
+            coin,
+            channel,
+            observed_at.astimezone(UTC).isoformat(),
+            sorted(payload.items()),
+        ]
+    )
+
+
 def _candle_source_id(coin: str, bar: Bar, *, final: bool) -> str:
     # Elapsed close time does not make upstream OHLCV immutable (ADR-0024).
     # Qualify each observation by content identically for WebSocket and REST.
@@ -448,7 +464,8 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
         for coin, price in mids.items():
             if coin not in self._coins:
                 continue
-            source_event_id = _source_id([int(to_ms(now)), coin, "allMids"])
+            payload = {"mid": price}
+            source_event_id = _local_metrics_source_id(coin, "allMids", now, payload)
             continuity, evidence = self._resume_evidence(
                 coin,
                 "allMids",
@@ -459,7 +476,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             updates.append(_update(
                 _instrument(coin),
                 UpdateKind.METRICS,
-                {"mid": price},
+                payload,
                 data_time=now,
                 continuity=continuity,
                 source_event_id=source_event_id,
@@ -473,9 +490,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
         for coin, metrics in ctx.items():
             if coin not in self._coins:
                 continue
-            source_event_id = _source_id(
-                [int(to_ms(now)), coin, "activeAssetCtx"]
-            )
+            source_event_id = _local_metrics_source_id(coin, "activeAssetCtx", now, metrics)
             continuity, evidence = self._resume_evidence(
                 coin,
                 "activeAssetCtx",
