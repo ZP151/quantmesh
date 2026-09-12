@@ -36,8 +36,8 @@ function isVenue(value: string): value is HistoricalVenue {
   return VENUES.includes(value as HistoricalVenue)
 }
 
-function historyRange(value: string | null): HistoryRange {
-  return value !== null && RANGES.includes(value as HistoryRange) ? value as HistoryRange : '6m'
+function historyRange(value: string | null, fallback: HistoryRange = '6m'): HistoryRange {
+  return value !== null && RANGES.includes(value as HistoryRange) ? value as HistoryRange : fallback
 }
 
 function forecastHorizon(value: string | null): ForecastHorizon {
@@ -73,7 +73,14 @@ function LegacyInstrumentWorkspaceScreen() {
   const { locale, t } = usePreferences()
   const { symbol = '', venue = '' } = useParams<{ symbol: string; venue: string }>()
   const [search, setSearch] = useSearchParams()
-  const range = historyRange(search.get('range'))
+  const health = useQuery({
+    queryKey: ['health'],
+    queryFn: api.health,
+    retry: false,
+  })
+  const liveChart = health.data?.runtime_mode === 'live' && venue === 'hyperliquid'
+  const defaultMode = liveChart ? 'line' : 'candles'
+  const range = historyRange(search.get('range'), liveChart ? '1d' : '6m')
   const requestedPacketValue = search.get('packet')
   const requestedPacketId = requestedPacketValue !== null && DECISION_PACKET_ID.test(requestedPacketValue)
     ? requestedPacketValue
@@ -81,7 +88,7 @@ function LegacyInstrumentWorkspaceScreen() {
   const invalidRequestedPacketId = requestedPacketValue !== null && requestedPacketId === null
   const horizon = forecastHorizon(search.get('horizon'))
   const compare = search.getAll('compare').filter(Boolean).slice(0, 3)
-  const mode = search.get('mode') === 'line' ? 'line' : 'candles'
+  const mode = search.get('mode') === 'line' ? 'line' : search.get('mode') === 'candles' ? 'candles' : defaultMode
   const volume = search.get('volume') === '1'
   const showSma20 = search.get('sma20') === '1'
   const showSma50 = search.get('sma50') === '1'
@@ -113,13 +120,8 @@ function LegacyInstrumentWorkspaceScreen() {
   useEffect(() => () => {
     if (trailingLiveRefresh.current !== null) clearTimeout(trailingLiveRefresh.current)
   }, [refreshWorkspace])
-  const health = useQuery({
-    queryKey: ['health'],
-    queryFn: api.health,
-    retry: false,
-  })
   const query = useQuery({
-    enabled: validVenue && symbol.length > 0,
+    enabled: validVenue && symbol.length > 0 && !health.isPending,
     queryKey: ['instrument-workspace', venue, symbol, range, compare],
     queryFn: () => api.instrumentWorkspace(venue as HistoricalVenue, symbol, range, compare),
     placeholderData: (previous, previousQuery) => retainSameInstrument(
@@ -158,7 +160,12 @@ function LegacyInstrumentWorkspaceScreen() {
   if (query.isPending) return <WorkspaceLoading />
   if (query.isError && query.data === undefined) {
     if (liveRuntime && query.error instanceof ApiError && query.error.status === 404) {
-      return <CockpitDetailScreen showWorkspaceLink={false} />
+      return <>
+        <p className="border-y border-border py-3 text-sm text-muted-foreground" role="status">
+          {t(liveChart && range === '1d' && compare.length === 0 ? 'liveMarkets.collectingChart' : 'liveMarkets.chartUnavailable')}
+        </p>
+        <CockpitDetailScreen showWorkspaceLink={false} />
+      </>
     }
     return <WorkspaceError error={query.error} symbol={symbol} venue={venue} />
   }
@@ -327,7 +334,7 @@ function LegacyInstrumentWorkspaceScreen() {
             history={workspace.history}
             marketState={displayedPacket.market_state}
             mode={mode}
-            onModeChange={(next) => updateParam('mode', next === 'candles' ? null : next)}
+            onModeChange={(next) => updateParam('mode', next === defaultMode ? null : next)}
             onRangeChange={updateRange}
             onSma20Change={(enabled) => updateParam('sma20', enabled ? '1' : null)}
             onSma50Change={(enabled) => updateParam('sma50', enabled ? '1' : null)}

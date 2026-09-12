@@ -910,3 +910,30 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(screen.getByRole('heading', { name: 'NVDA' })).toBeInTheDocument()
   })
 })
+
+
+it('defaults a live Hyperliquid chart to recorded 1D observations and line mode', async () => {
+  mockedHealth.mockResolvedValue({ status: 'ok', project: 'QuantMesh', version: 'test', runtime_mode: 'live', paper_mode: true, live_trading: false })
+  renderWorkspace('/instruments/hyperliquid/BTC')
+  await waitFor(() => expect(mockedWorkspace).toHaveBeenCalledWith('hyperliquid', 'BTC', '1d', []))
+  expect(await screen.findByRole('button', { name: 'Line' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+
+it('explains collection when real quotes exist before contiguous chart history', async () => {
+  mockedHealth.mockResolvedValue({ status: 'ok', project: 'QuantMesh', version: 'test', runtime_mode: 'live', paper_mode: true, live_trading: false })
+  mockedWorkspace.mockRejectedValue(new ApiError(404, 'live replay continuity is not proven'))
+  renderWorkspace('/instruments/hyperliquid/BTC?range=1d&mode=line')
+  expect(await screen.findByText(/Waiting for two consecutive one-minute observations/)).toBeInTheDocument()
+})
+
+it('retains explicit live range and candle mode when switching away from defaults', async () => {
+  mockedHealth.mockResolvedValue({ status: 'ok', project: 'QuantMesh', version: 'test', runtime_mode: 'live', paper_mode: true, live_trading: false })
+  renderWorkspace('/instruments/hyperliquid/BTC?range=5d&mode=candles')
+  await waitFor(() => expect(mockedWorkspace).toHaveBeenCalledWith('hyperliquid', 'BTC', '5d', []))
+  expect(await screen.findByRole('button', { name: 'Candles' })).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.click(screen.getByRole('button', { name: 'Line' }))
+  expect(screen.getByRole('button', { name: 'Line' })).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.click(screen.getByRole('button', { name: 'Candles' }))
+  expect(screen.getByRole('button', { name: 'Candles' })).toHaveAttribute('aria-pressed', 'true')
+})

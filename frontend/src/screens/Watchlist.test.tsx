@@ -12,7 +12,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/api')>()
   return {
     ...actual,
-    api: { ...actual.api, decisionInbox: vi.fn(), refreshDecisionSession: vi.fn() },
+    api: { ...actual.api, health: vi.fn(), decisionInbox: vi.fn(), refreshDecisionSession: vi.fn() },
   }
 })
 
@@ -174,6 +174,7 @@ beforeEach(() => {
   vi.restoreAllMocks()
   vi.clearAllMocks()
   localStorage.clear()
+  vi.mocked(api.health).mockResolvedValue({ status: 'ok', project: 'QuantMesh', version: 'test', runtime_mode: 'demo', paper_mode: true, live_trading: false })
   mockedDecisionInbox.mockResolvedValue(inbox)
   mockedRefresh.mockResolvedValue({
     started_at: '2026-09-08T12:00:00Z',

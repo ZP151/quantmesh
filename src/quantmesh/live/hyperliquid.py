@@ -22,6 +22,7 @@ import hashlib
 import json
 from datetime import UTC, datetime, timedelta
 
+from quantmesh.domain.market_data import Bar
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.hyperliquid.errors import HyperliquidProtocolError
 from quantmesh.hyperliquid.identity import (
@@ -97,6 +98,20 @@ def _source_id(value: object) -> str:
         "utf-8"
     )
     return hashlib.sha256(canonical).hexdigest()
+
+
+def _candle_source_id(coin: str, bar: Bar, *, final: bool) -> str:
+    # Elapsed close time does not make upstream OHLCV immutable (ADR-0024).
+    # Qualify each observation by content identically for WebSocket and REST.
+    return _source_id(
+        [
+            int(to_ms(bar.timestamp)),
+            coin,
+            _CANDLE_INTERVAL,
+            "final" if final else "provisional",
+            [bar.open, bar.high, bar.low, bar.close, bar.volume],
+        ]
+    )
 
 
 class HyperliquidVenueSupervisor(VenueSupervisor):
@@ -192,16 +207,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
         coin = identifier.split(":")[1].rsplit(",", 1)[0].upper()
         bar = parse_candle_frame(data, _instrument(coin), interval=_CANDLE_INTERVAL)
         final = bar.timestamp + timedelta(minutes=1) <= now
-        candle_content = [bar.open, bar.high, bar.low, bar.close, bar.volume]
-        source_event_id = _source_id(
-            [
-                int(to_ms(bar.timestamp)),
-                coin,
-                _CANDLE_INTERVAL,
-                "final" if final else "provisional",
-                None if final else candle_content,
-            ]
-        )
+        source_event_id = _candle_source_id(coin, bar, final=final)
         continuity, evidence = self._resume_evidence(
             coin,
             "candle",
@@ -560,15 +566,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                 self._continuity_pending[(coin, "candle")] = recovery_state
             batch_evidence: ContinuityEvidence | None = None
             for index, bar in enumerate(bars):
-                source_event_id = _source_id(
-                    [
-                        int(to_ms(bar.timestamp)),
-                        coin,
-                        _CANDLE_INTERVAL,
-                        "final",
-                        None,
-                    ]
-                )
+                source_event_id = _candle_source_id(coin, bar, final=True)
                 if index == 0:
                     continuity, evidence = self._resume_evidence(
                         coin,

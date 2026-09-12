@@ -18,6 +18,12 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 
 ## Next delivery order
 
+0. **Active user priority: iteration 0035 / #144.** Real updating charts from
+   Markets and Watchlist using existing Hyperliquid BTC/ETH/SOL observations.
+   Reuse the full chart, default live 1D/line and label actual recorded coverage.
+   See [0035](iterations/0035-live-instrument-charts.md). Finish this user loop
+   before broadening market coverage below.
+
 1. **Equities: Moomoo/OpenD.** Establish private OpenD reachability and quote
    entitlement, then prove AAPL/NVDA observations during the market session.
    Current five-second polling is not native tick push; delayed or unavailable

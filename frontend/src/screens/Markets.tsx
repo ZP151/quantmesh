@@ -3,9 +3,10 @@ import { Activity } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { LiveMarketList } from '@/components/live-market-list'
 import { Page } from '@/components/page'
 import { InstrumentEntry } from '@/components/instrument-entry'
-import { Surface, useSurface } from '@/components/state'
+import { ErrorState, LoadingState, Surface, useSurface } from '@/components/state'
 import { api } from '@/lib/api'
 import { chartEntryPath } from '@/lib/instrument-route'
 import { money, venueLabel } from '@/lib/format'
@@ -22,6 +23,15 @@ export function MarketsScreen() {
   const query = useSurface(['markets'], api.markets)
   const venues = useSurface(['overview'], api.overview)
   const { t } = usePreferences()
+  const health = useSurface(['health'], api.health)
+  if (!health.data) return <Page title={t('screen.markets.title')} description="">
+    {health.isPending ? <LoadingState /> : <ErrorState title={t('liveMarkets.runtimeUnavailable')} detail={health.error?.message ?? ''} />}
+  </Page>
+  if (health.data?.runtime_mode === 'live') return (
+    <Page title={t('screen.markets.title')} description={t('liveMarkets.description')}>
+      <LiveMarketList />
+    </Page>
+  )
 
   return (
     <Page

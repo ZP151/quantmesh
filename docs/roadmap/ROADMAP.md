@@ -377,7 +377,9 @@ Sequence for operator review:
    and public Hyperliquid BTC/ETH/SOL are deployed at `e185c3b`. Five-minute
    source/API and browser witnesses, reload/replay, paper-only state and
    controlled stale/reconnect checks passed. The original `4022942` demo
-   release is retained. **Next:** private Moomoo/OpenD reachability and actual
+   release is retained. **Active user priority — 0035 / #144:** full real charts
+   from Markets/Watchlist using recorded 1m Hyperliquid observations and
+   truthful coverage/freshness. **After this slice:** private Moomoo/OpenD reachability and actual
    entitlements for AAPL/NVDA, then prediction venues in sequential slices.
    Other venues and qualified historical coverage remain unaccepted.
    See the [delivery ledger](../iterations/0034-live-data-delivery.md)
