@@ -1,0 +1,37 @@
+{
+  "build_ref": "e185c3b052ca0cdd3590b0d5d05fd7460d783fb7",
+  "route": "/app/cockpit",
+  "browser": "Edge",
+  "duration_seconds": 323.567,
+  "observations": [
+    {
+      "observed_at": "2026-09-12T10:48:33.339Z",
+      "rows": [
+        "BTChyperliquidReal$77,310.00$77,311.00$77,310.500.1$77,311.0018:48:3218:48:33—317 ms",
+        "ETHhyperliquidReal$2,531.30$2,531.40$2,531.350.4$2,531.3018:48:3218:48:33—367 ms",
+        "SOLhyperliquidReal$101.98$101.99$101.991.0$101.9718:48:3318:48:33—261 ms"
+      ]
+    },
+    {
+      "observed_at": "2026-09-12T10:49:55.209Z",
+      "rows": [
+        "BTChyperliquidReal$77,310.00$77,311.00$77,310.500.1$77,311.0018:49:5418:49:54—260 ms",
+        "ETHhyperliquidReal$2,531.90$2,532.00$2,531.950.4$2,531.9018:49:5418:49:54—260 ms",
+        "SOLhyperliquidReal$101.99$102.00$102.001.0$102.0018:49:5418:49:54—260 ms"
+      ]
+    },
+    {
+      "observed_at": "2026-09-12T10:53:56.906Z",
+      "rows": [
+        "BTChyperliquidReal$77,294.00$77,295.00$77,294.500.1$77,294.0018:53:5618:53:56—223 ms",
+        "ETHhyperliquidReal$2,530.50$2,530.60$2,530.550.4$2,530.5018:53:5518:53:55—1 s",
+        "SOLhyperliquidReal$101.99$102.00$102.001.0$101.9918:53:5518:53:55—1 s"
+      ]
+    }
+  ],
+  "desktop": {"viewport_width":1280,"viewport_height":900,"document_width":1280},
+  "mobile": {"viewport_width":390,"viewport_height":844,"document_width":375,"table_container_width":343,"table_scroll_width":1136},
+  "viewport_restored": true,
+  "keyboard_replay": {"button":"Replay 5 min","key":"Enter","updates":2533,"source":"lake","label":"Replay mode","live_quotes_continued":true},
+  "reload": {"live_websocket_reconnected":true,"recorded_extent_after_reload":3501,"same_earliest_minute":"2026-09-12T10:47:00Z"}
+}

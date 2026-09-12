@@ -107,16 +107,20 @@ into the shared environment. Independent tasks use separate test temp roots.
   do not launch a duplicate multi-hour local suite or soak.
 - [x] One independent Standards/Spec review at the user-loop boundary; at most
   two rounds, then reduce scope on structural failure.
-- [ ] Publish one integration PR referencing #135/#140, check required CI and
+- [x] Publish one integration PR referencing #135/#140, check required CI and
   unresolved review, merge dependencies in order under standing authority.
-- [ ] Inspect SSH service/user/disk/retained release without dumping env secrets.
+- [x] Inspect SSH service/user/disk/retained release without dumping env secrets.
   Install the reviewed unit and exact release through the checked deployment
   path; retain `4022942` rollback. No new AWS resource or public ingress.
-- [ ] Probe private HTTPS exact build, `runtime_mode=live`, paper true/live false.
+- [x] Probe private HTTPS exact build, `runtime_mode=live`, paper true/live false.
   Observe five minutes; each BTC/ETH/SOL has >=2 distinct upstream quote/trade/
   book timestamps. Record receipt/browser timing and existing replay extent.
-- [ ] Open real cockpit in browser, inspect prices/source/freshness, reload and
+- [x] Open real cockpit in browser, inspect prices/source/freshness, reload and
   replay. Controlled disconnect is tested in the fixture, not induced in soak.
   Verify risk state unchanged and no order created.
-- [ ] Record separate merge/deployment/live-data checkpoints; archive completed
+- [x] Record separate merge/deployment/live-data checkpoints; archive completed
   goal, update ACTIVE and finish only when required acceptance is demonstrated.
+
+Completion evidence: `docs/iterations/0034-live-data-delivery.md`, final AWS
+acceptance checkpoint on 2026-09-12. PR #142 merged as `e185c3b`; the exact
+build passed the separate source/API/browser witness.

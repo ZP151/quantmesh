@@ -1,6 +1,6 @@
 # Iteration 0031 — Private AWS staging workstation
 
-- Status: repository-ready; external provisioning awaits operator confirmation
+- Status: implementation integrated through PR #142; operator-deferred firewall acceptance remains open
 - Started: 2026-09-09
 - Tracking issue: [#135](https://github.com/ZP151/quantmesh/issues/135)
 - Integration branch: `codex/0031-aws-private-staging`
@@ -17,7 +17,8 @@ roll back to the previously activated release after a failed health check.
 
 ## Safety boundary
 
-- Paper/demo mode remains mandatory; live execution is not enabled.
+- Paper execution remains mandatory; live execution is not enabled. Demo stays
+  the default profile; operator-approved iteration 0034 adds read-only live data.
 - The target boundary exposes no application port, HTTP or HTTPS to the public
   Internet. A newly created Lightsail instance starts with a default public
   HTTP rule; remove it before installing or accepting the service.
@@ -180,3 +181,26 @@ roll back to the previously activated release after a failed health check.
   chose to retain the default public HTTP 80 and SSH 22 Lightsail rules for
   now; the application itself remains loopback-only, but removing those rules
   after multi-device Tailscale verification remains a hardening follow-up.
+
+### 2026-09-12 — Main integration and approved live-data extension
+
+- PR #142 merged the independent deployment implementation into main as
+  `e185c3b052ca0cdd3590b0d5d05fd7460d783fb7`. The independent worktree remains
+  untouched. Final-head CI passed 3443 Python / 336 frontend tests.
+- The same exact merged build is active in AWS with the explicitly approved
+  read-only data profile. Paper is true, live trading is false, private Serve
+  still targets 127.0.0.1:8765 and the original `4022942` demo release remains.
+- Five-minute real-feed and browser/replay evidence is in the
+  [0034 ledger](0034-live-data-delivery.md). This supersedes the original
+  demo-only observation profile, without changing order authority. The
+  previously retained Lightsail firewall rules remain a separate follow-up.
+
+### Closeout review — retained firewall follow-up
+
+The implementation and private application/data path are delivered, but the
+original no-public-HTTP firewall boundary above has not been met. The operator
+previously chose to retain public HTTP 80 and SSH 22 temporarily. Keep issue
+#135 and iteration 0031 open for that deferred hardening/acceptance; PR #143
+closes only #140. Do not remove these rules as part of iteration 0034. The
+application remains loopback-bound behind private Serve; this does not itself
+satisfy the separate instance firewall boundary.

@@ -1,0 +1,74 @@
+{
+  "scope": "AWS deployed application API witness; browser evidence recorded separately",
+  "seconds": 304.88,
+  "health": {
+    "status": "ok",
+    "project": "QuantMesh",
+    "version": "0.1.1rc1",
+    "paper_mode": true,
+    "live_trading": false,
+    "deployment": {
+      "environment": "staging",
+      "build_ref": "e185c3b052ca0cdd3590b0d5d05fd7460d783fb7"
+    },
+    "runtime_mode": "live"
+  },
+  "samples": 60,
+  "distinct_quote_source_times": {
+    "BTC": 60,
+    "ETH": 60,
+    "SOL": 60
+  },
+  "risk_unchanged": true,
+  "orders_unchanged": true,
+  "replay": {
+    "source": "lake",
+    "count": 5468,
+    "earliest": "2026-09-12T10:47:14.188289+00:00",
+    "latest": "2026-09-12T10:52:50.618775+00:00",
+    "venues": [
+      "hyperliquid"
+    ]
+  },
+  "started_at": "2026-09-12T10:47:45.622964+00:00",
+  "ended_at": "2026-09-12T10:52:50.354646+00:00",
+  "quote_observations": {
+    "BTC": {
+      "all_labels_real": true,
+      "source_age_ms_max": 2531,
+      "source_age_ms_median": 527.0,
+      "source_to_receipt_ms_min": 193.664,
+      "source_to_receipt_ms_max": 565.398,
+      "source_to_receipt_ms_median": 230.59550000000002
+    },
+    "ETH": {
+      "all_labels_real": true,
+      "source_age_ms_max": 4507,
+      "source_age_ms_median": 613.5,
+      "source_to_receipt_ms_min": 193.868,
+      "source_to_receipt_ms_max": 548.116,
+      "source_to_receipt_ms_median": 235.072
+    },
+    "SOL": {
+      "all_labels_real": true,
+      "source_age_ms_max": 5248,
+      "source_age_ms_median": 561.5,
+      "source_to_receipt_ms_min": 192.992,
+      "source_to_receipt_ms_max": 565.551,
+      "source_to_receipt_ms_median": 232.409
+    }
+  },
+  "disconnected_samples": 0,
+  "final_health": {
+    "status": "ok",
+    "project": "QuantMesh",
+    "version": "0.1.1rc1",
+    "paper_mode": true,
+    "live_trading": false,
+    "deployment": {
+      "environment": "staging",
+      "build_ref": "e185c3b052ca0cdd3590b0d5d05fd7460d783fb7"
+    },
+    "runtime_mode": "live"
+  }
+}

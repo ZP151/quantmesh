@@ -1,6 +1,6 @@
 # Iteration 0034 — Deployed read-only live market data
 
-- Status: approved implementation in progress; AWS activation and acceptance pending
+- Status: completed and accepted on AWS, 2026-09-12
 - Planned: 2026-09-12
 - Issue: [#140](https://github.com/ZP151/quantmesh/issues/140)
 - Planning branch: `codex/0034-live-data-delivery-plan`, from `origin/main@6ea9a13`
@@ -81,22 +81,22 @@ Protocol references checked 2026-09-12:
 
 ## Acceptance gates for the first implementation
 
-- [ ] Inspect the actual AWS build/mode and reconcile #135 ownership before
+- [x] Inspect the actual AWS build/mode and reconcile #135 ownership before
   preparing a deployment candidate; retain private HTTPS and rollback behavior.
-- [ ] Write the executable test-first implementation plan against that reconciled
+- [x] Write the executable test-first implementation plan against that reconciled
   baseline, naming exact affected runtime/configuration/UI/test files. This
   document is a prioritized design, not an executable implementation plan.
-- [ ] Preserve source identity and freshness through existing APIs to the
+- [x] Preserve source identity and freshness through existing APIs to the
   rendered prices. Demo, disconnected, stale and live states must be distinct.
-- [ ] Record the five-minute BTC/ETH/SOL witness with timestamps and build SHA;
+- [x] Record the five-minute BTC/ETH/SOL witness with timestamps and build SHA;
   verify reload/replay and stale detection within the configured threshold.
-- [ ] Test disconnect/reconnect using a controlled harness; do not interrupt
+- [x] Test disconnect/reconnect using a controlled harness; do not interrupt
   unrelated production or soak connections to manufacture evidence.
-- [ ] Run targeted regression checks while developing and required broad gates
+- [x] Run targeted regression checks while developing and required broad gates
   at the reviewed slice/PR boundary; attach exact commands/results to this ledger.
-- [ ] Verify `paper_mode=true`, `live_trading=false` and unchanged order/risk
+- [x] Verify `paper_mode=true`, `live_trading=false` and unchanged order/risk
   authority before and after the user loop.
-- [ ] Publish an exact-build deployment acceptance checkpoint separately from
+- [x] Publish an exact-build deployment acceptance checkpoint separately from
   the merge checkpoint. A green CI run is not a live-provider witness.
 
 ## Non-goals and boundaries
@@ -308,3 +308,92 @@ do not infer authority to purchase data or expose new public services.
   Ruff and scoped formatting/whitespace checks passed. App source and built
   assets remain those already verified atf62630e. No AWS service update occurred.
   A new final-head CI run is required before merge and deployment.
+
+
+## Final integration and AWS acceptance — 2026-09-12
+
+This checkpoint supersedes the pending deployment/CI statements above, which
+remain chronological evidence of the investigation and corrections.
+
+- **Planner/Product:** the operator can open the private AWS cockpit and inspect
+  real BTC/ETH/SOL source observations, aging and replay. This closes the bounded
+  #140 user action and integrates #135; other markets remain subsequent slices.
+- **Reviewer:** all four external review threads on [PR #142](https://github.com/ZP151/quantmesh/pull/142)
+  were resolved after the bounded correction review. Final tested head
+  `ee8b4644eb4ee70ec07168c1b3cea95c5de68b75` and merged main
+  `e185c3b052ca0cdd3590b0d5d05fd7460d783fb7` have the identical Git tree
+  `45cadd9613f39236ce81b96cb9c4a149c596e977`. Merge completed at 10:45:43 UTC,
+  after [CI run 34687576761](https://github.com/ZP151/quantmesh/actions/runs/34687576761)
+  succeeded at 10:44:20 UTC. Divergent local main and independent operational
+  worktrees were preserved.
+- **Verifier / code:** final-head CI passed 3443 Python tests / 55 skipped /
+  9 warnings and 336 frontend tests. License/audit, generated API, typecheck,
+  lint and committed-bundle checks passed. The preceding local gate passed
+  326 targeted Python, 336 frontend and 7 packaged browser tests; the final
+  fixture-only clock correction separately passed 102 prediction/feed tests.
+- **Implementer / deployment:** activated exact merged build `e185c3b` through
+  the reviewed deployment script and unit; service started at 10:47:11 UTC.
+  Both private HTTPS and loopback health reported staging, `runtime_mode=live`,
+  `paper_mode=true`, `live_trading=false` and the full merged build ref. Actual
+  AWS `pip check` reported no broken requirements. The service remains under
+  the quantmesh user, listening only on `127.0.0.1:8765`, behind existing private
+  Tailscale Serve. No new AWS resource, public application ingress or credential.
+  Retained rollback: `402294248406fa865d601633f4e5ba3bd3521b5b` with its demo
+  profile. Existing unrelated firewall hardening remains in the #135 ledger.
+- **Verifier / actual source:** private application API sampling from
+  10:47:45.622964 to 10:52:50.354646 UTC ran 304.88 seconds: 60 samples and
+  60 distinct upstream quote times for each BTC/ETH/SOL. All 180 quote samples
+  were labelled real; zero disconnected samples. Risk state and the empty
+  order list remained unchanged; initial and final health were identical.
+  The replay lake held 5468 updates at this boundary, beginning at
+  10:47:14.188289 UTC. See [summary](evidence/0034/aws-witness-summary.json)
+  and [quote observations](evidence/0034/aws-quote-observations.jsonl).
+- **Verifier / actual browser:** Edge rendered `/app/cockpit` with exact staging
+  build, live read-only banner, connected WebSocket and advancing source times
+  for all three instruments. Three observations span 323.567 seconds. Desktop
+  1280x900 and mobile 390x844 had no document overflow; the mobile table has
+  its own horizontal scroll. Keyboard Enter opened five-minute lake replay
+  (2533 updates); live quotes continued. Clear replay restored the live view.
+  Reload reconnected the WebSocket and retained the same earliest recorded
+  minute (3501 updates then). Viewport override was reset. See
+  [browser witness](evidence/0034/aws-browser-witness.json).
+- **Quant Researcher:** source-to-server receipt medians were BTC 230.596ms,
+  ETH 235.072ms and SOL 232.409ms; maximum sampled source ages were 2531ms,
+  4507ms and 5248ms respectively. These finite observations are not an SLA or
+  a measured continuous browser transport latency. Browser event/receipt times
+  were inspected separately. Controlled quiet/disconnect/reconnect acceptance
+  comes from feed/supervisor and browser regressions, not an induced AWS outage.
+  No order authority, strategy qualification or trusted historical dataset is
+  established by this live-data witness.
+
+### Operator acceptance / 操作验收
+
+Open [AWS private cockpit](https://quantmesh-staging.tail99d23c.ts.net/app/cockpit)
+from the authorized tailnet. Verify staging `e185c3b`, live read-only session,
+BTC/ETH/SOL real rows with advancing event times, then use Replay 5 min and
+Clear replay. Paper remains enabled; live trading remains disabled.
+
+在已授权的私有网络中打开上方地址，可查看 BTC、ETH、SOL 的真实行情、源时间、
+新鲜度与五分钟回放。本轮仅验收这三个 Hyperliquid 标的；美股、预测市场和可信
+历史数据尚未完成 AWS 实际数据验收。下一步先核对 Moomoo/OpenD 私有连接和
+行情权限，再交付 AAPL/NVDA 页面观察闭环；详见迭代计划。
+
+### Closeout evidence review
+
+- Independent closeout reviewer: pass, no actionable findings in documentation,
+  local links, source counts/statistics, build identity, scope or secret exposure.
+  This was a document/evidence audit, not another architecture review.
+- Controller validation recomputed 180 JSONL observations, 60 distinct source
+  clocks per symbol, age and receipt-delay summaries, exact build/safety fields,
+  browser duration/layout/replay flags and local evidence links: passed.
+- Fresh AWS loopback health still reported exact `e185c3b`, live data, paper true
+  and live trading false. `git diff --check` passed. Vendored submodule revisions
+  were inspected and remain uninitialized/unchanged in this worktree.
+
+- External closeout review identified an inconsistent 0031 completion claim:
+  its original public-HTTP firewall boundary remains unmet after the operator
+  deferred changing the instance rules. Corrected the 0031 status/index and
+  ACTIVE/delivery plan. #135 stays open for that acceptance; #143 closes only
+  #140. This is a documentation correction, with no firewall/runtime mutation
+  or expansion of 0034. The integrated staging support and live-data acceptance
+  remain proven independently of the deferred instance hardening.

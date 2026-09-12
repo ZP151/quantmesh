@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-09-11
+Last updated: 2026-09-12
 
 ## Status legend
 
@@ -373,13 +373,14 @@ Sequence for operator review:
    compares saved 7/30-session forecasts with realized daily closes inside the
    existing review. Saved outcomes replay unchanged; incomplete paths cannot
    produce complete-path scores. See the [0033 ledger](../iterations/0033-forecast-outcome-scorecard.md).
-7. **Active iteration 0034 (issue #140; approved implementation):** deployed read-only
-   live market data. Reconcile private staging support (#135), then prove
-   Hyperliquid BTC/ETH/SOL source-to-browser freshness, stale/reconnect behavior
-   and replay on the exact deployed build. Follow with Moomoo/OpenD and
-   prediction venues in sequential slices. Prior prototype connector completion
-   is not evidence of live feeds in AWS: a fresh 2026-09-12 probe confirmed demo
-   build `4022942`. Deployment acceptance remains pending. See the [delivery design](../iterations/0034-live-data-delivery.md)
+7. **Done as iteration 0034 (merged PR #142):** private staging support (#135)
+   and public Hyperliquid BTC/ETH/SOL are deployed at `e185c3b`. Five-minute
+   source/API and browser witnesses, reload/replay, paper-only state and
+   controlled stale/reconnect checks passed. The original `4022942` demo
+   release is retained. **Next:** private Moomoo/OpenD reachability and actual
+   entitlements for AAPL/NVDA, then prediction venues in sequential slices.
+   Other venues and qualified historical coverage remain unaccepted.
+   See the [delivery ledger](../iterations/0034-live-data-delivery.md)
    and [current iteration plan](../ITERATION_PLAN.md).
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and

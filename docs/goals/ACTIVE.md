@@ -1,65 +1,33 @@
 # Active Goal
 
-Status: iteration 0034 approved and implementing; final integration, AWS activation
-and real-source acceptance pending, 2026-09-12.
+Status: iteration 0034 implementation and AWS acceptance complete, 2026-09-12.
+Repository closeout is tracked by the acceptance PR linked to #140/#135.
+On resume, verify its merge and #140 closure before marking the goal tool complete.
+#135 remains open for the operator-deferred instance firewall acceptance; its
+implementation integration is complete and does not block the #140 data slice.
 
 ## Completed checkpoint
 
-- PR #139 merged as `6ea9a1305b2b3eea28795ccb0059d6ebba82b769`; issue #138 closed.
-- Final-head CI run 34628077408 succeeded: 3321 Python passed /55 skipped,
-  325 frontend passed. Independent reviews and real frozen save/replay evidence
-  are recorded in `docs/iterations/0033-forecast-outcome-scorecard.md`.
-- This merge does not update AWS or establish live-provider acceptance.
+- PR #142 merged as `e185c3b052ca0cdd3590b0d5d05fd7460d783fb7`; final-head
+  CI34687576761 passed 3443 Python / 55 skipped and 336 frontend tests.
+- Exact merged build is active at the private AWS `/app/cockpit` route.
+  BTC/ETH/SOL actual-source API witness ran 304.88 seconds, 60 distinct source
+  times each; browser witness spans 323.567 seconds with replay/reload accepted.
+- Paper mode true, live trading false; risk/orders unchanged. Retained demo
+  rollback `402294248406fa865d601633f4e5ba3bd3521b5b` remains available.
+- Evidence: `docs/iterations/0034-live-data-delivery.md` and its tracked JSON/JSONL.
+- Goal archive: `docs/goals/archive/2026-09-12-deployed-live-market-data.md`.
 
 ## Next frontier
 
-- Issue: https://github.com/ZP151/quantmesh/issues/140
-- Design: `docs/iterations/0034-live-data-delivery.md`
-- Delivery order: `docs/ITERATION_PLAN.md`
-- Implementation branch: `codex/0034-deployed-live-market-data`.
-- Integration PR: https://github.com/ZP151/quantmesh/pull/142 (CI pending).
-- Executable plan: `docs/superpowers/plans/2026-09-12-deployed-live-market-data.md`.
-- Authority: operator approved the proposed subsequent iteration, including the
-  bounded existing AWS deployment update and public read-only Hyperliquid feed.
-  No new AWS resources, paid subscriptions, credentials or public access.
-- AWS fresh HTTPS/SSH probes confirm exact `4022942`, runtime demo, paper true/live
-  false. Tailscale SSH identity check completed; approved server access works.
-- Integrated staging9a177c6 locally; preserved original independent worktree.
-  Explicit live profile/verified rollback and Hyperliquid protocol/freshness
-  corrections are implemented. See ledger for test counts and RED/GREEN.
-- #141 merged as `00a0ee0` at 2026-09-12 09:02:33 UTC. Its archive-head CI
-  was still running when inspected; do not claim that run passed. GitHub auto
-  merge permitted integration before that optional check completed. Wait for
-  #142 final-head CI explicitly before its integration/deployment.
-- Review: Standards/Spec correction confirmation passed for monotonic browser
-  aging and checked automatic rollback. Inclusive candle end milliseconds are
-  corrected; 45-second public parser smoke passed. Controller final gates: 311
-  Python/333 frontend/7 fixture browser passed; full CI and AWS acceptance pending.
-- Later external review produced four bounded corrections, scoped by Planner
-  and verified: detail timer aging, disconnect veto, audited install constraints
-  and strict BBO order count. Latest controller gate:326 Python/336 frontend/
-  7 browser passed. See iteration ledger for RED/GREEN and dependency evidence.
-- #141 archive-head CI34683518613 is now successful (3321 Python/325 frontend).
-  #142 CI34685627199 atf62630e failed only an inconsistent prediction fixture
-  clock:3441 passed/55 skipped/1 failed. Fixed only test clocks/assertions;
-  prediction/feed102 passed. App source/assets remain unchanged. Wait for the
-  new exact final-head CI, not the failed prior run; see PR#142 for its run ID.
-- Local real-source witness passed: 302.13 seconds, 61 distinct source quote
-  timestamps per BTC/ETH/SOL, zero disconnected samples, risk/orders unchanged;
-  replay persisted after the temporary app stopped. This is not AWS acceptance.
-- Next: inspect final-head CI/review for #141 then #142, integrate in order,
-  finish approved AWS exact-build update after SSH authentication, and record
-  the separate five-minute AWS source/browser witness. Temporary local app is
-  stopped. SSH check session30832 completed successfully. AWS preflight: Python
-  3.12.3, 54GB free disk, ~1.3GB available RAM, passwordless sudo, retained
-  demo release and private Serve route intact. No AWS service change yet.
-- Correct browser route `/app/cockpit` works in Edge and confirms the deployed
-  demo/no-feed state. Earlier wrong-route errors are superseded. AWS-host public
-  WebSocket probe received397 BBO frames in45.22seconds acrossBTC/ETH/SOL;
-  this is host reachability, not deployed-app acceptance. Reuse the open Edge
-  tab for the eventual exact-build browser/replay witness.
-- Preserve paper mode and disabled live trading. Separate further Moomoo,
-  Polymarket/Kalshi and trusted-history work into subsequent bounded slices.
-- Continue from `origin/main`, preserve divergent local main and independent
-  operational worktrees. Routine reviewed integration remains governed by
-  `.codex/prompts/goal.md`; deployment authority is tracked separately in #135.
+- Follow `docs/ITERATION_PLAN.md`: Moomoo/OpenD private reachability and actual
+  quote entitlement first, then one AAPL/NVDA API-to-page observation slice.
+- Identify the existing licensed OpenD host and approved private AWS route;
+  Windows-local OpenD is not implicitly reachable by AWS. Preserve explicit
+  five-second polling, closed/delayed/unavailable states and research-only
+  last prices without bid/ask. No purchase, public OpenD or order test.
+- Create the next issue/iteration and exact-file test-first plan after readiness
+  evidence. Do not claim equities or prediction markets are accepted on AWS.
+- Preserve the independent 0021 soak and operational worktrees. New branches
+  start from `origin/main`; do not reset divergent local main. Standing reviewed
+  merge authority remains in `.codex/prompts/goal.md`.

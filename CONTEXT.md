@@ -27,13 +27,14 @@ loop. The 0021 Scheduler/Provider/evidence data plane stays separate. AI remains
 optional and advisory. Final `v0.1.1` promotion and real-money execution remain
 outside this iteration.
 
-The active product iteration is 0034 / issue #140: deployed read-only
-live market data, beginning with a bounded Hyperliquid user loop. Implementation
-is approved and under integration; deployed acceptance remains outstanding.
-A fresh 2026-09-12 AWS HTTPS probe confirmed build `4022942` in demo mode.
-#135's private deployment support is being integrated before updating it.
-Merged connector/UI capability must not be described as
-verified live-market coverage. See `docs/ITERATION_PLAN.md` for delivery order.
+Iteration 0034 / issue #140 delivered the first real AWS market-data loop.
+PR #142 integrated private staging support and merged as `e185c3b`, deployed
+on 2026-09-12 with public Hyperliquid BTC/ETH/SOL feeds, paper mode on and
+live trading off. Five-minute API and browser witnesses, reload/replay and
+controlled stale/reconnect tests passed; `4022942` remains the demo rollback.
+This establishes those three crypto instruments only. Next: private Moomoo/
+OpenD reachability and entitlements for AAPL/NVDA, followed by prediction
+venues and trusted history. See `docs/ITERATION_PLAN.md` for delivery order.
 
 ## Bounded context
 
