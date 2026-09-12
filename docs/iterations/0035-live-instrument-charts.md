@@ -1,7 +1,7 @@
 # Iteration 0035 — Real charts from Markets and Watchlist
 
-- Status: chart PR merged/deployed; continuous-source acceptance failed;
-  bounded identity/request-clock follow-up in progress, 2026-09-12.
+- Status: product accepted on AWS; documentation closeout pending integration,
+  2026-09-13 local date. Earlier failed attempts remain recorded below.
 - Issue: [#144](https://github.com/ZP151/quantmesh/issues/144).
 - Original branch: `codex/0035-live-instrument-charts`, from `origin/main@2a50565`.
 - Follow-up branch: `codex/0035-chart-acceptance`, from merged `origin/main@90fe577`.
@@ -59,11 +59,11 @@ can be reused; no new provider, chart package or data-plane subsystem.
 - [x] Default live chart is 1D/line; explicit URL choices and demo behavior remain
   intact. Current candle changes without reload; a new minute appends a point.
 - [x] Keyboard, desktop/mobile and accessible chart table/attribution verified locally.
-- [ ] Final source checks, bounded independent review and required CI pass;
+- [x] Final source checks, bounded independent review and required CI pass;
   integrate through PR and verify the exact approved AWS deployment.
-- [ ] Actual AWS navigation/chart update/reload witness is recorded separately
+- [x] Actual AWS navigation/chart update/reload witness is recorded separately
   from controlled disconnect/recovery tests. Paper true/live false; no orders.
-- [ ] Update roadmap/ACTIVE and retain Moomoo/OpenD readiness as next frontier.
+- [x] Update roadmap/ACTIVE and retain Moomoo/OpenD readiness as next frontier.
 
 ## Boundaries and authority
 
@@ -397,3 +397,114 @@ Current AWS remains deployed but unaccepted; quarantine baseline is now four.
 - **Release gate:** commit this coherent reviewed correction, require final-head
   CI, then merge/update existing private AWS and repeat both actual witnesses.
   `90fe577` remains deployed but unaccepted. Do not close #144 at the code gate.
+
+The correction was committed/pushed as
+`6dc6ec38af49fea177540c0cd65785d150eb4fb2` and published as
+[PR #146](https://github.com/ZP151/quantmesh/pull/146). Full final-head CI
+[34704029214](https://github.com/ZP151/quantmesh/actions/runs/34704029214)
+started 16:02:40 UTC. The initial PR review-thread query has no findings; recheck
+at merge. The source is frozen while this gate runs. Deployment wrapper stdin
+is prepared as explicit LF bytes to avoid the prior terminal CR-only line;
+it has not been executed for the correction before the merge gate.
+
+### Follow-up final CI and integration
+
+CI 34704029214 completed successfully at 16:55:46 UTC for exact `6dc6ec3`:
+**3517 Python tests passed, 56 skipped, 9 warnings in 3089.91s**; frontend
+**359 passed** in 29 files. Install, dependency/license audit, generated API,
+typecheck, lint and committed bundle checks passed. Full log is preserved in
+OS-temp `qm0035-followup-ci.log`; watcher session48903 terminated with exit0.
+
+Final PR query confirmed exact reviewed head, non-draft/CLEAN state, successful
+required CI and no unresolved review threads. PR #146 squash-merged at
+16:57:08 UTC as `9cfe1bc8ff910792b3f8cb6928763b667ba2442a`. Candidate and
+merge share tree `bafcff7e3ba027d2cb329f2e3bc239b8fe0a30e8`; their full diff
+is empty. Remote feature branch deleted, local main/worktrees preserved.
+Closeout continues on `codex/0035-chart-closeout` from this origin/main.
+
+The reviewed deployer/unit blob hashes remain unchanged. The LF-byte wrapper
+has now started the exact merged release update in exec session49856. This is
+deployment in progress, not renewed real-source acceptance; preserve the four
+quarantine rows and wait for the same command before independent verification.
+
+### Corrected AWS deployment and renewed witness
+
+The exact `9cfe1bc` deploy command completed with exit0. Retained e185c3b and
+4022942 releases remain; pip check passed. Independent HTTPS health confirms
+exact build, live market-data profile, paper true/live false; service PID41909
+is active/running on127.0.0.1:8765. A mid-update502 coincided with old PID41533
+in systemd stop-sigterm and no listener; deployment finished without another
+mutation. Reviewed helper: `/tmp/quantmesh-0035-deploy.4bByQL/deploy_release.py`.
+
+Actual API witness started17:00:44 UTC and initially observed all three fresh
+quotes, available workspace evidence and new minute appends. It remains a
+300-second check, not completion from early movement. In-app tab6 was reloaded
+to9cfe1bc and Markets->BTC visibly renders the real full line, WebSocket and
+source/freshness labels without the prior false-future warning.
+
+Browser attempt1 terminated on ETH chart loading at the assertion library's
+default5s timeout (empty loading main), while the separate API witness remained
+active. The helper had set only context timeout20s; assertions use their own
+timeout. Set the assertion timeout to the intended20s and started a new browser
+attempt2, retaining failed attempt1 evidence. No product change, feed restart,
+source substitution or CI rerun. Final sustained/API/DOM/reload evidence remains
+required before closing the iteration.
+
+### Accepted actual-source checkpoint — corrected build 9cfe1bc
+
+- **Verifier / actual API:** 313.748 seconds, 21 samples, ending 17:06:13 UTC
+  on 2026-09-12. Each coin had 21 distinct source quote times; maximum sampled
+  quote ages BTC2507ms / ETH3327ms / SOL2708ms. Every sampled workspace was
+  available/real with age within30s and receipt no later than its request cut.
+  All coins crossed six tail minutes, with3/4/5 distinct closes in one minute.
+  History identifies Hyperliquid live replay and explicit5m-to-1m fallback;
+  actual coverage grew from16:59–17:00 to16:59–17:05, two to seven bars.
+  Final exact-build health, fresh quotes, unchanged orders and unchanged risk
+  passed. These are21 sequential samples over313.748s, not a latency SLA or
+  continuous measurement of every event between requests.
+- **Verifier / actual browser:** 301.968 seconds and100 observations. All six
+  Markets/Watchlist-to-BTC/ETH/SOL paths opened1D/line. Each coin crossed six
+  minutes;6/5/5 distinct closes occurred within a minute. All41/20/21 changed
+  DOM tails matched real candles received by that same page. Eight settled
+  points per coin matched the history API before and after reload. Keyboard
+  Candles/Line, TradingView attribution,1440x1000 and390x844 widths passed;
+  no horizontal overflow or page errors. Success summary was written only
+  after every assertion; the terminal handle is now closed. Root inspected
+  the real mobile screenshot and current in-app full BTC line.
+- **Reviewer / acceptance round one:** independent recomputation of both raw
+  witnesses found no freshness, future-time or unmatched DOM-change failure.
+  Persisted candle-frame counts are146/83/56; summary146/84/60 includes later
+  callbacks during per-coin final checks. Use raw counts for artifact claims.
+  This timing difference does not affect any matched observation or gate.
+- **Verifier / persistence:** stable DB/WAL copy
+  `/tmp/quantmesh-0035-stalled-lake-l3zrnx3z` contains270555 accepted updates
+  through17:07:32.364892 UTC, versus262548 at the old stalled baseline. All four
+  prior quarantine rows remain and no new quarantine was added. The helper's
+  inherited `stalled-lake` prefix does not describe the current running feed.
+  Only the stable copied database was opened; primary evidence was preserved.
+- **Verifier / post-browser:** independent17:12:53–56 UTC HTTPS checks still
+  returned exact9cfe1bc/live/paper true/live false and all three real available
+  workspaces, ages BTC540ms / ETH499ms / SOL1556ms, with no future warning.
+- **Artifacts:** ignored `output/playwright/0035-aws-9cfe1bc/attempt-1` contains
+  API summary/JSONL; sibling `attempt-2` contains browser summary/JSONL, raw
+  candle frames, per-coin desktop PNG/AX and BTC1440/390px PNG. OS-temp
+  `qm0035-final-health.json` preserves the independent final response.
+- **Controlled evidence stays separate:** the combined342-test gate and full
+  CI include disconnect barriers, collecting/gap refusal, two-new-session-
+  candle recovery, stale and genuine future/source-skew controls. No real
+  provider outage was injected or claimed by the actual-source witness.
+
+**Planner / closeout:** the requested crypto chart loop is accepted. Integrate
+this documentation-only checkpoint and close #144 through its PR; no further
+AWS deployment is needed for documentation. Next is existing licensed
+Moomoo/OpenD host, approved private route and quote entitlement before an
+AAPL/NVDA open-session witness. Short observed crypto history is not qualified
+multi-month history or a forecast. Paper and live-execution boundaries remain.
+
+Closeout review: independent acceptance review found no unmet runtime gate;
+independent documentation review found one premature index completion date,
+corrected to leave integration pending. Retained e185c3b is explicitly a prior
+live artifact with known identity limitations. Fresh `ruff check src tests tools`,
+`git diff --check` and submodule comparison passed; only seven documentation
+files changed from the accepted deployed tree. Required closeout PR CI remains
+an integration gate, with no duplicate full local suite or deployment.

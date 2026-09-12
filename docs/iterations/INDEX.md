@@ -38,7 +38,6 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0032 | completed | 2026-09-11 | 2026-09-11 | Probabilistic Scenario Lab | [Issue #136](https://github.com/ZP151/quantmesh/issues/136) / [PR #137](https://github.com/ZP151/quantmesh/pull/137) / [Ledger](0032-probabilistic-scenario-lab.md) |
 | 0033 | completed | 2026-09-12 | 2026-09-12 | Exact Forecast Outcome Scorecard | [Issue #138](https://github.com/ZP151/quantmesh/issues/138) / [PR #139](https://github.com/ZP151/quantmesh/pull/139) / [Ledger](0033-forecast-outcome-scorecard.md) |
 | 0034 | completed | 2026-09-12 | 2026-09-12 | Deployed read-only live market data | [Issue #140](https://github.com/ZP151/quantmesh/issues/140) / [PR #142](https://github.com/ZP151/quantmesh/pull/142) / [Ledger](0034-live-data-delivery.md) |
-| 0035 | implementing | 2026-09-12 | — | Real streaming instrument charts | [Issue #144](https://github.com/ZP151/quantmesh/issues/144) |
+| 0035 | product accepted; docs closeout | 2026-09-12 | — | Real streaming instrument charts | [Issue #144](https://github.com/ZP151/quantmesh/issues/144) / [PR #145](https://github.com/ZP151/quantmesh/pull/145) / [PR #146](https://github.com/ZP151/quantmesh/pull/146) / [Ledger](0035-live-instrument-charts.md) |
 
 <!-- quantmesh-iterations:append-above -->
-

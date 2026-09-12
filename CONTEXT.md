@@ -32,6 +32,12 @@ PR #142 integrated private staging support and merged as `e185c3b`, deployed
 on 2026-09-12 with public Hyperliquid BTC/ETH/SOL feeds, paper mode on and
 live trading off. Five-minute API and browser witnesses, reload/replay and
 controlled stale/reconnect tests passed; `4022942` remains the demo rollback.
+Iteration 0035 extends this to full real charts from Markets and Watchlist.
+PRs #145/#146 merged; corrected `9cfe1bc` is deployed and accepted on
+2026-09-13 local date. Separate five-minute API/browser witnesses proved real
+minute revisions/appends, reload retention and source/freshness semantics for
+BTC/ETH/SOL. The earlier chart build's identity collision was corrected; old
+quarantine evidence remains. See the 0035 ledger for failed and accepted runs.
 This establishes those three crypto instruments only. Next: private Moomoo/
 OpenD reachability and entitlements for AAPL/NVDA, followed by prediction
 venues and trusted history. See `docs/ITERATION_PLAN.md` for delivery order.
