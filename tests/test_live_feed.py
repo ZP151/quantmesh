@@ -193,9 +193,7 @@ class TestIngestAndCache:
 
         rendered = feed.latest_state(now=T0)
         rendered["instruments"]["hyperliquid:BTC"]["kinds"]["quote"]["payload"]["bid"] = 999.0
-        snapshot = feed.snapshot_exact(
-            Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0
-        )
+        snapshot = feed.snapshot_exact(Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0)
 
         assert snapshot is not None
         assert snapshot.payload["bid"] == 100.0
@@ -267,9 +265,7 @@ class TestExactContinuity:
     def test_first_observation_is_unproven_and_valid_second_update_is_proven(self) -> None:
         feed = _feed()
         feed.ingest([_candle(sequence=80)])
-        first = feed.snapshot_exact(
-            Venue.HYPERLIQUID, "BTC", UpdateKind.CANDLE, as_of=T0
-        )
+        first = feed.snapshot_exact(Venue.HYPERLIQUID, "BTC", UpdateKind.CANDLE, as_of=T0)
 
         assert first is not None
         assert first.continuity_proven is False
@@ -341,9 +337,7 @@ class TestExactContinuity:
                 )
             ]
         )
-        feed.ingest(
-            [_candle(data_time=T0 + timedelta(minutes=2), sequence=102)]
-        )
+        feed.ingest([_candle(data_time=T0 + timedelta(minutes=2), sequence=102)])
         post_gap = feed.snapshot_exact(
             Venue.HYPERLIQUID,
             "BTC",
@@ -354,9 +348,7 @@ class TestExactContinuity:
         assert post_gap is not None
         assert post_gap.continuity_proven is False
 
-        feed.ingest(
-            [_candle(data_time=T0 + timedelta(minutes=3), sequence=103)]
-        )
+        feed.ingest([_candle(data_time=T0 + timedelta(minutes=3), sequence=103)])
         recovered = feed.snapshot_exact(
             Venue.HYPERLIQUID,
             "BTC",
@@ -448,12 +440,8 @@ class TestExactContinuity:
         assert second.continuity_proven is True
         assert second.predecessor_sequence == 102
 
-    @pytest.mark.parametrize(
-        "state", [SourceState.CONNECTED, SourceState.LAGGING]
-    )
-    def test_connected_or_lagging_status_cannot_fabricate_proof(
-        self, state: SourceState
-    ) -> None:
+    @pytest.mark.parametrize("state", [SourceState.CONNECTED, SourceState.LAGGING])
+    def test_connected_or_lagging_status_cannot_fabricate_proof(self, state: SourceState) -> None:
         feed = _feed()
         feed.ingest([_candle(sequence=100)])
         feed.ingest(
@@ -630,9 +618,7 @@ class TestExactContinuity:
                 future.result()
             snapshots = [future.result() for future in reads]
 
-        assert set(snapshots) == {
-            (Venue.HYPERLIQUID, "BTC", UpdateKind.CANDLE, "1m")
-        }
+        assert set(snapshots) == {(Venue.HYPERLIQUID, "BTC", UpdateKind.CANDLE, "1m")}
 
     def test_ingest_caches_latest_per_kind(self) -> None:
         feed = _feed()
@@ -733,6 +719,7 @@ class TestFanOut:
     def test_overflow_drops_oldest_per_client(self) -> None:
         feed = _feed(queue_size=2)
         queue = feed.subscribe()
+
         async def push_all() -> None:
             for offset in range(3):
                 await feed.publish(_upd(received_at=T0 + timedelta(seconds=offset)))
@@ -758,16 +745,12 @@ class TestFanOut:
 
 
 class TestLake:
-    def test_redelivery_does_not_refresh_cache_lake_or_subscribers(
-        self, tmp_path
-    ) -> None:
+    def test_redelivery_does_not_refresh_cache_lake_or_subscribers(self, tmp_path) -> None:
         with LiveBuffer(root=tmp_path) as lake:
             feed = _feed(lake=lake)
             queue = feed.subscribe()
             original = _upd(source_event_id="quote-a", received_at=T0)
-            redelivery = original.model_copy(
-                update={"received_at": T0 + timedelta(seconds=10)}
-            )
+            redelivery = original.model_copy(update={"received_at": T0 + timedelta(seconds=10)})
 
             async def publish_both() -> None:
                 await feed.publish(original)
@@ -777,9 +760,7 @@ class TestLake:
 
             assert len(lake.replay()) == 1
             assert queue.qsize() == 1
-            snapshot = feed.snapshot_exact(
-                Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0
-            )
+            snapshot = feed.snapshot_exact(Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0)
             assert snapshot is not None
             assert snapshot.received_at == T0
 
@@ -912,12 +893,15 @@ class TestLake:
             with pytest.raises(RuntimeError, match="injected source_status write failure"):
                 feed.ingest([disconnected])
 
-            assert feed.snapshot_exact(
-                Venue.HYPERLIQUID,
-                "BTC",
-                UpdateKind.CANDLE,
-                as_of=T0 + timedelta(minutes=1),
-            ) == before
+            assert (
+                feed.snapshot_exact(
+                    Venue.HYPERLIQUID,
+                    "BTC",
+                    UpdateKind.CANDLE,
+                    as_of=T0 + timedelta(minutes=1),
+                )
+                == before
+            )
             assert feed.statuses(now=T0 + timedelta(minutes=1))["venues"] == []
             assert lake.replay(kinds={UpdateKind.STATUS.value}) == []
             assert lake.statuses() == []
@@ -995,9 +979,7 @@ class TestLake:
         feed.ingest([bid, ask])
         state = feed.latest_state(now=T0)["instruments"]["hyperliquid:BTC"]
         assert set(state["book_sides"]) == {"bid", "ask"}
-        assert {
-            view["snapshot_epoch"] for view in state["book_sides"].values()
-        } == {"book-epoch-1"}
+        assert {view["snapshot_epoch"] for view in state["book_sides"].values()} == {"book-epoch-1"}
         lake.close()
 
         reopened = LiveBuffer(root=tmp_path)
@@ -1055,3 +1037,27 @@ class TestConstruction:
             LiveFeed(lag=LAG, stale=LAG)
         with pytest.raises(ValueError):
             LiveFeed(lag=STALE, stale=LAG)
+
+
+class TestSourceFreshness:
+    def test_old_quote_received_now_stays_stale_in_snapshot(self):
+        feed = _feed()
+        feed.ingest([_upd(data_time=T0 - timedelta(minutes=2), received_at=T0)])
+        view = feed.latest_state(now=T0)["instruments"]["hyperliquid:BTC"]["kinds"]["quote"]
+        assert view["label"] == "stale"
+        assert view["age_ms"] == 120_000
+        exact = feed.snapshot_exact(Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0)
+        assert exact.age_ms == 120_000
+
+    def test_quote_ahead_of_receipt_clock_is_unavailable(self):
+        update = _upd(data_time=T0 + timedelta(minutes=1), received_at=T0)
+        assert label(update, T0, lag=LAG) == "unavailable"
+
+    def test_receipt_timed_metrics_do_not_refresh_a_stale_quote(self):
+        feed = _feed()
+        feed.ingest([_upd(data_time=T0 - timedelta(minutes=2))])
+        feed.ingest([_upd(kind=UpdateKind.METRICS, payload={"mid": 100.0})])
+        row = feed.latest_state(now=T0)["instruments"]["hyperliquid:BTC"]
+        assert row["kinds"]["metrics"]["label"] == "real"
+        assert row["kinds"]["quote"]["label"] == "stale"
+        assert row["label"] == "stale"

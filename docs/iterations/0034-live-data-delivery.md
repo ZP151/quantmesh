@@ -1,9 +1,11 @@
 # Iteration 0034 — Deployed read-only live market data
 
-- Status: prioritized design; implementation and deployment not started
+- Status: approved implementation in progress; AWS activation and acceptance pending
 - Planned: 2026-09-12
 - Issue: [#140](https://github.com/ZP151/quantmesh/issues/140)
 - Planning branch: `codex/0034-live-data-delivery-plan`, from `origin/main@6ea9a13`
+- Implementation branch: `codex/0034-deployed-live-market-data`
+- Executable plan: `docs/superpowers/plans/2026-09-12-deployed-live-market-data.md`
 - Dependency: reconcile private staging integration in [#135](https://github.com/ZP151/quantmesh/issues/135); do not overwrite its independent worktree
 
 ## User action and outcome
@@ -118,3 +120,73 @@ do not infer authority to purchase data or expose new public services.
 - **Publication:** issue #140 tracks the proposed delivery; this planning PR
   references it without closing it. Implementation and live-provider acceptance
   remain outstanding.
+
+## 2026-09-12 — Approved implementation checkpoint
+
+- **Planner:** operator explicitly approved the subsequent iteration. Created
+  the goal for the deployed BTC/ETH/SOL loop. #141's missing 0033 goal archive
+  was added in `388645a`; the actual review thread is resolved, fresh CI pending.
+  Its commits are present on this integration branch without bypassing CI.
+- **Verifier / AWS:** fresh private HTTPS health confirmed exact `4022942`,
+  demo, paper true/live false. Tailscale identifies the intended node online.
+  SSH requires an operator identity check; no host-key bypass was used.
+- **Integrator:** merged independent staging `9a177c6` into this worktree,
+  retained current product/goal/index/roadmap records and rebuilt current assets.
+  The original staging worktree and branch remain untouched. No local-main reset.
+- **Quant Researcher:** found ACK/context/BBO protocol mismatches and receipt-only
+  freshness masking old quotes. Actual public ACKs also include server-default
+  fields, so literal request/response equality is invalid. Historical chart
+  backfill is explicitly excluded; recorded MarketUpdate replay is acceptance.
+- **Implementer / deployment:** canonical explicit live profile and mode/safety
+  health validation, legacy environment compatibility and retained rollback.
+  Agent recorded baseline 31 passed, RED 23 failed/18 passed plus CLI RED,
+  then 63 staging/identity passed. Controller integration selection below
+  independently includes these tests.
+- **Implementer / protocol:** official nested BBO/context, ACK handling and
+  socket cleanup. Null sides emit no quote/activity; malformed sides fail closed.
+  RED 18 failed/76 passed; follow-up null/fixture RED observed. Agent's targeted
+  140-test gate passed before the actual ACK default-echo correction.
+- **Implementer / freshness:** three backend and three frontend RED assertions
+  reproduced old-source/future-clock/cache-aging defects. Source-based quote
+  age and a client timer fix them; receipt-timed metrics do not refresh quotes.
+  The aggregate backend label preserves disconnected unavailability.
+- **Verifier / controller:** 152 feed/router/replay/staging/identity tests passed
+  in 15.53s with one existing Starlette warning. 74 frontend tests passed in
+  10.11s. OpenAPI generation/check and actual TypeScript/build passed; current
+  bundle is rebuilt. Initial default pytest cleanup hit an unrelated Windows
+  temp permission error; subsequent runs use unique owned `--basetemp` paths.
+  Protocol actual-source probe and browser fixture acceptance are still running.
+- **Scope:** no order, server update, paid subscription, credentials or
+  independent operational track change at this checkpoint. ADR-0022 records
+  the bounded private read-only profile and timestamp semantics.
+
+## Reviewed integration verification
+
+- **Reviewer:** independent Standards/Spec review identified browser wall-clock
+  skew and unverified automatic rollback. Both are corrected and the sole
+  confirmation found no remaining issue. Cached age now adds monotonic browser
+  elapsed time to initial server/source age and cannot recover on clock rollback.
+  Failed activation validates and health-checks the retained release; failed
+  restoration has a separate error. Correction RED: two clock cases and 14
+  rollback cases; targeted GREEN evidence is included in controller checks.
+- **Protocol actual-source correction:** live ACKs contain server-added defaults;
+  match requested fields while tolerating additional response fields. Real
+  candles use an inclusive end millisecond: accept exactly the interval or
+  interval minus one millisecond; reject neighboring invalid durations. Captured
+  public frames reproduced both failures before correction. A bounded public
+  parser then consumed 932 frames over 45 seconds without errors, including
+  78 candles and 578 BBO frames across BTC/ETH/SOL.
+- **Verifier / controller:** final nine-file Python selection passed 311 tests
+  in 32.96s, one existing Starlette warning. Full frontend passed 333 tests in
+  21.50s. Initial fixture browser pass: 7 passed in 44.01s; final correction
+  confirmation is tracked separately. Ruff all-source checks passed. No full
+  local pytest/release/soak was launched; automatic final-head CI remains a gate.
+- **Current limitation:** the built-in browser refused the local test port and
+  Chrome automation is unavailable. Existing project browser E2E provides the
+  packaged loopback fixture acceptance; actual-source API/persistence is being
+  witnessed separately. Do not call this an AWS browser acceptance.
+
+- **Final local boundary:** correction browser confirmation passed 7 tests in
+  49.25s. Ruff, OpenAPI freshness, actual TypeScript and rebuilt bundle freshness
+  passed. Submodule status was inspected (reference submodules uninitialized;
+  none changed). Working-tree whitespace check passed.

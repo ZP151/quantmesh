@@ -75,14 +75,22 @@ def _json_finite(value):  # noqa: ANN001, ANN202
     return value
 
 
-def _health() -> dict[str, str | bool]:
-    return {
+def _health() -> dict[str, object]:
+    payload: dict[str, object] = {
         "status": "ok",
         "project": settings.app_name,
         "version": __version__,
         "paper_mode": settings.default_paper_mode,
         "live_trading": settings.allow_live_trading,
     }
+    if settings.environment == "staging":
+        if settings.build_ref is None:
+            raise RuntimeError("staging health requires an exact build_ref")
+        payload["deployment"] = {
+            "environment": "staging",
+            "build_ref": settings.build_ref,
+        }
+    return payload
 
 
 def _order_summary(order: Order) -> dict:
@@ -123,7 +131,7 @@ def observability_router() -> APIRouter:
     router = APIRouter()
 
     @router.get("/health")
-    def health(request: Request) -> dict[str, str | bool]:
+    def health(request: Request) -> dict[str, object]:
         payload = _health()
         payload["runtime_mode"] = (
             "demo"
@@ -193,9 +201,7 @@ def observability_router() -> APIRouter:
                 current.starting_cash if current.starting_cash is not None else current.cash
             ),
             "realized_pnl": current.realized_pnl,
-            "unrealized_pnl": (
-                current.unrealized_pnl(marks) if valuation_complete else None
-            ),
+            "unrealized_pnl": (current.unrealized_pnl(marks) if valuation_complete else None),
             "equity": current.equity(marks) if valuation_complete else None,
             "total_pnl": current.total_pnl(marks) if valuation_complete else None,
             "valuation_complete": valuation_complete,
@@ -263,5 +269,5 @@ app = FastAPI(title=settings.app_name, version=__version__)
 
 
 @app.get("/health")
-def health() -> dict[str, str | bool]:
+def health() -> dict[str, object]:
     return _health()

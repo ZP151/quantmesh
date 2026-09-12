@@ -164,6 +164,7 @@ function renderDetail(symbol = 'SOL', venue = 'hyperliquid') {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.spyOn(Date, 'now').mockReturnValue(Date.parse(T0) + 500)
   mocked.liveState.mockResolvedValue(STATE)
   mocked.liveStatus.mockResolvedValue(STATUS)
   mocked.markets.mockResolvedValue({

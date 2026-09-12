@@ -25,6 +25,7 @@ from quantmesh.live.contract import (
 )
 from quantmesh.live.hyperliquid import (
     HyperliquidVenueSupervisor,
+    LiveHyperliquidTransport,
     ScriptedHyperliquidTransport,
 )
 from quantmesh.live.supervisor import (
@@ -47,10 +48,10 @@ def _bbo(
         "data": {
             "coin": coin,
             "time": time_ms,
-            "bid": bid,
-            "bidSz": 1.0,
-            "ask": ask,
-            "askSz": 2.0,
+            "bbo": [
+                {"px": str(bid), "sz": "1.0", "n": 1},
+                {"px": str(ask), "sz": "2.0", "n": 1},
+            ],
         },
     }
 
@@ -109,7 +110,7 @@ def _mids() -> dict:
 
 def _asset_ctx() -> dict:
     ctx = {"funding": 1.25e-05, "markPx": 100.3, "oraclePx": 100.1, "openInterest": 123.4}
-    return {"channel": "activeAssetCtx", "data": {"BTC": ctx}}
+    return {"channel": "activeAssetCtx", "data": {"coin": "BTC", "ctx": ctx}}
 
 
 def _setup(
@@ -901,3 +902,151 @@ class TestBufferIntegration:
 def test_venue_enum_used() -> None:
     """The contract's venue enum is the domain enum (no new venue strings)."""
     assert Venue.HYPERLIQUID.value == "hyperliquid"
+
+
+class TestOfficialProtocol:
+    def test_real_book_ack_tolerates_server_added_defaults(self) -> None:
+        supervisor, _ = _setup()
+        supervisor.on_open(T0)
+        supervisor.on_frame(
+            {
+                "channel": "subscriptionResponse",
+                "data": {
+                    "method": "subscribe",
+                    "subscription": {
+                        "type": "l2Book", "coin": "BTC", "nSigFigs": None,
+                        "mantissa": None, "fast": False,
+                    },
+                },
+            },
+            T0,
+        )
+        assert supervisor.drain() == []
+
+    def test_acknowledgments_preserve_subscription_and_emit_no_market_data(self) -> None:
+        supervisor, transport = _setup()
+        supervisor.on_open(T0)
+        for message in transport.sent:
+            supervisor.on_frame({"channel": "subscriptionResponse", "data": message}, T0)
+        assert supervisor.drain() == []
+        supervisor.on_frame(_bbo("BTC"), T0)
+        assert supervisor.drain()[0].kind is UpdateKind.QUOTE
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            None,
+            {},
+            {"method": "unsubscribe", "subscription": {"type": "bbo", "coin": "BTC"}},
+            {"method": "subscribe", "subscription": {"type": "bbo", "coin": "DOGE"}},
+        ],
+    )
+    def test_unknown_or_malformed_ack_is_rejected(self, data) -> None:
+        supervisor, _ = _setup()
+        supervisor.on_open(T0)
+        with pytest.raises(HyperliquidProtocolError):
+            supervisor.on_frame({"channel": "subscriptionResponse", "data": data}, T0)
+
+    def test_context_subscribes_and_routes_each_coin(self) -> None:
+        supervisor, transport = _setup()
+        supervisor.subscribe(["BTC", "ETH", "SOL"])
+        supervisor.on_open(T0)
+        subscriptions = [message["subscription"] for message in transport.sent]
+        assert [spec for spec in subscriptions if spec["type"] == "activeAssetCtx"] == [
+            {"type": "activeAssetCtx", "coin": coin} for coin in ["BTC", "ETH", "SOL"]
+        ]
+        for coin in ["BTC", "ETH", "SOL"]:
+            frame = _asset_ctx()
+            frame["data"]["coin"] = coin
+            supervisor.on_frame(frame, T0)
+        assert [update.instrument for update in supervisor.drain()] == ["BTC", "ETH", "SOL"]
+        frame = _asset_ctx()
+        frame["data"]["coin"] = "DOGE"
+        with pytest.raises(HyperliquidProtocolError):
+            supervisor.on_frame(frame, T0)
+
+    def test_ack_data_disconnect_resubscribe_keeps_gap(self) -> None:
+        supervisor, transport = _setup()
+        supervisor.on_open(T0)
+        supervisor.on_frame({"channel": "subscriptionResponse", "data": transport.sent[0]}, T0)
+        supervisor.on_frame(_bbo("BTC"), T0)
+        supervisor.on_persisted(supervisor.drain())
+        supervisor.on_disconnect(T0 + timedelta(seconds=1))
+        supervisor.drain()
+        supervisor.on_open(T0 + timedelta(seconds=2), reconnected=True)
+        supervisor.on_frame({"channel": "subscriptionResponse", "data": transport.sent[-1]}, T0)
+        supervisor.on_frame(_bbo("BTC", time_ms=1_750_000_001_000), T0 + timedelta(seconds=3))
+        [quote] = supervisor.drain()
+        assert quote.continuity is ContinuityState.UNKNOWN_AFTER_DISCONNECT
+        assert quote.data_time == datetime.fromtimestamp(1_750_000_001, tz=UTC)
+
+    @pytest.mark.parametrize("side", [0, 1])
+    def test_null_bbo_side_never_fabricates_a_quote(self, side) -> None:
+        supervisor, _ = _setup()
+        supervisor.on_open(T0)
+        frame = _bbo("BTC")
+        frame["data"]["bbo"][side] = None
+        supervisor.on_frame(frame, T0)
+        assert supervisor.drain() == []
+
+
+class TestLiveTransportCleanup:
+    def test_close_aborts_socket_and_discards_obsolete_subscriptions(self) -> None:
+        class Connection:
+            def __init__(self):
+                self.transport = self
+                self.aborted = False
+
+            def abort(self):
+                self.aborted = True
+
+        socket = Connection()
+        transport = LiveHyperliquidTransport("ws://127.0.0.1:1")
+        transport._socket = socket
+        transport.send({"old": "subscription"})
+        transport.close()
+        assert socket.aborted
+        assert transport._socket is None
+        assert transport._outbox == []
+        transport.close()
+
+    def test_cancellation_releases_connected_socket(self, monkeypatch) -> None:
+        class Connection:
+            def __init__(self):
+                self.transport = self
+                self.aborted = False
+
+            async def recv(self):
+                raise asyncio.CancelledError
+
+            def abort(self):
+                self.aborted = True
+
+        socket = Connection()
+        transport = LiveHyperliquidTransport("ws://127.0.0.1:1")
+        transport._socket = socket
+        with pytest.raises(asyncio.CancelledError):
+            asyncio.run(transport.recv())
+        assert socket.aborted
+        assert transport._socket is None
+
+
+def test_fixture_transforms_at_each_send_without_changing_plan() -> None:
+    from tests.fixture_ws_venue import ScriptedVenue, collect_frames
+
+    original = _bbo("BTC")
+    calls = []
+
+    def stamp(frame):
+        calls.append(frame)
+        return {**frame, "data": {**frame["data"], "time": len(calls)}}
+
+    async def drill():
+        async with ScriptedVenue(
+            plan=[(0, original), (0, original)], transform_frame=stamp,
+        ) as venue:
+            return await collect_frames(venue)
+
+    frames = asyncio.run(drill())
+    assert [frame["data"]["time"] for frame in frames] == [1, 2]
+    assert original["data"]["time"] == 1_750_000_000_000

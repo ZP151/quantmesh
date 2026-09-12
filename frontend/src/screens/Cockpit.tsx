@@ -18,6 +18,7 @@ import {
   quoteNumbers,
   spreadBps,
   useLiveConnection,
+  useAgedInstruments,
 } from '@/lib/live'
 import { api, type LiveInstrumentState, type LiveSourceState, type LiveStatus, type ReplayWindow } from '@/lib/api'
 import { dateTime, money, timeOfDay } from '@/lib/format'
@@ -337,12 +338,13 @@ export function CockpitScreen() {
     refetchInterval: SNAPSHOT_INTERVAL_MS,
   })
 
+  const agedInstruments = useAgedInstruments(instruments)
   const rows = useMemo(
     () =>
-      Object.entries(instruments)
+      Object.entries(agedInstruments)
         .map(([key, instrument]) => ({ key, symbol: liveInstrumentSymbol(key), instrument }))
         .sort((a, b) => a.symbol.localeCompare(b.symbol) || a.instrument.venue.localeCompare(b.instrument.venue)),
-    [instruments],
+    [agedInstruments],
   )
   const identities = rows.map((row) => row.key).join(',')
   const trailQuery = useQuery({

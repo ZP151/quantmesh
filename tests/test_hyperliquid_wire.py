@@ -95,6 +95,7 @@ def funding(**overrides: object) -> dict:
 
 # --- candles ----------------------------------------------------------------
 
+
 def test_candle_parses_into_a_canonical_bar() -> None:
     bar = parse_candle(candle(), BTC, interval="1m")
 
@@ -115,6 +116,25 @@ def test_candle_frame_uses_the_same_parser() -> None:
     bar = parse_candle_frame(frame["data"], BTC, interval="1m")
 
     assert bar.timestamp == _t(T0)
+
+
+def test_captured_public_candle_accepts_inclusive_close_millisecond() -> None:
+    frame = {
+        "t": 1789203000000, "T": 1789203059999, "s": "BTC", "i": "1m",
+        "o": "77293.0", "c": "77298.0", "h": "77299.0", "l": "77293.0",
+        "v": "5.22211", "n": 86,
+    }
+    bar = parse_candle_frame(frame, BTC, interval="1m")
+    assert bar.timestamp == _t(1789203000000)
+    assert bar.close == 77298.0
+    assert bar.volume == 5.22211
+    assert bar.interval == "1m"
+
+
+@pytest.mark.parametrize("offset", [-2, 1, -60_000])
+def test_candle_close_rejects_durations_outside_inclusive_or_exclusive_boundary(offset) -> None:
+    with pytest.raises(HyperliquidProtocolError, match="spans"):
+        parse_candle(candle(T=T0 + STEP_MS + offset), BTC, interval="1m")
 
 
 def test_candle_interval_mismatch_fails_closed() -> None:
@@ -153,6 +173,7 @@ def test_candle_non_mapping_row_fails_closed() -> None:
 
 
 # --- l2Book -----------------------------------------------------------------
+
 
 def test_l2_book_parses_into_a_canonical_book() -> None:
     book = parse_l2_book(l2_book(), BTC)
@@ -204,6 +225,7 @@ def test_l2_book_symbol_mismatch_fails_closed() -> None:
 
 # --- trades -----------------------------------------------------------------
 
+
 def test_trades_parse_with_aggressor_sides() -> None:
     events = parse_trades([trade(), trade(side="B", tid=8)], BTC)
 
@@ -229,6 +251,7 @@ def test_trades_reject_wrong_symbols() -> None:
 
 # --- funding ----------------------------------------------------------------
 
+
 def test_funding_parses_rates_and_premiums() -> None:
     rates = parse_funding([funding()])
 
@@ -250,6 +273,7 @@ def test_funding_rejects_non_lists() -> None:
 
 
 # --- allMids / meta / spotMeta -----------------------------------------------
+
 
 def test_all_mids_parses_float_string_prices() -> None:
     mids = parse_all_mids({"mids": {"BTC": "107.25", "ETH": "3500.5"}, "time": T0})
@@ -311,6 +335,7 @@ def test_spot_meta_unknown_token_index_fails_closed() -> None:
 
 # --- time -------------------------------------------------------------------
 
+
 def test_ms_to_utc_converts_and_rejects_junk() -> None:
     assert ms_to_utc(T0) == _t(T0)
     assert ms_to_utc(str(T0)) == _t(T0)
@@ -320,3 +345,62 @@ def test_ms_to_utc_converts_and_rejects_junk() -> None:
         ms_to_utc("soon")
     with pytest.raises(HyperliquidProtocolError, match="negative"):
         ms_to_utc(-1)
+
+
+@pytest.mark.parametrize(
+    "sides",
+    [[None, None], [None, {"px": "2", "sz": "1", "n": 1}], [{"px": "1", "sz": "1", "n": 1}, None]],
+)
+def test_official_bbo_null_sides_are_unavailable(sides) -> None:
+    from quantmesh.hyperliquid.wire import parse_bbo_frame
+
+    assert parse_bbo_frame({"coin": "BTC", "time": T0, "bbo": sides}) is None
+
+
+def test_official_bbo_preserves_prices_and_base_sizes() -> None:
+    from quantmesh.hyperliquid.wire import parse_bbo_frame
+
+    assert parse_bbo_frame(
+        {
+            "coin": "BTC",
+            "time": T0,
+            "bbo": [
+                {"px": "60000", "sz": "1", "n": 2},
+                {"px": "60001", "sz": "2", "n": 3},
+            ],
+        }
+    ) == {"bid": 60000, "ask": 60001, "bid_size": 1, "ask_size": 2}
+
+
+@pytest.mark.parametrize(
+    "bbo",
+    [
+        [],
+        [None],
+        [{"px": "2", "sz": "1"}, {"px": "1", "sz": "1"}],
+        [{"px": "1", "sz": "-1"}, {"px": "2", "sz": "1"}],
+    ],
+)
+def test_official_bbo_malformed_or_crossed_book_fails_closed(bbo) -> None:
+    from quantmesh.hyperliquid.wire import parse_bbo_frame
+
+    with pytest.raises(HyperliquidProtocolError):
+        parse_bbo_frame({"coin": "BTC", "time": T0, "bbo": bbo})
+
+
+def test_official_asset_context_envelope() -> None:
+    from quantmesh.hyperliquid.wire import parse_asset_ctx_map
+
+    assert parse_asset_ctx_map(
+        {
+            "coin": "ETH",
+            "ctx": {
+                "funding": "0.0001",
+                "markPx": "2000",
+                "oraclePx": "2001",
+                "openInterest": "3",
+            },
+        }
+    ) == {
+        "ETH": {"funding_rate": 0.0001, "mark_price": 2000, "index_price": 2001, "open_interest": 3}
+    }

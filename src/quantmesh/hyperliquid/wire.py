@@ -19,14 +19,14 @@ submodule source, not from docs:
 
 Every parser fails closed: a missing key, a non-numeric price, an
 unknown side, a symbol or interval that does not match the request, or
-a candle whose close does not land exactly one interval after its open
+a candle whose close does not match the inclusive or exclusive interval boundary
 raises ``HyperliquidProtocolError`` instead of producing a silently
 wrong model. Unambiguous shapes (``s`` matches the instrument symbol,
-``T - t`` equals the interval) are the only thing that may pass.
+``T - t`` equals the interval or exactly one millisecond less) may pass.
 """
 
 import math
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel, ValidationError, model_validator
 
@@ -81,9 +81,7 @@ def _num(value: object, field: str) -> float:
         try:
             value = float(value)
         except ValueError as error:
-            raise HyperliquidProtocolError(
-                f"{field} must be numeric, got {value!r}"
-            ) from error
+            raise HyperliquidProtocolError(f"{field} must be numeric, got {value!r}") from error
     if not math.isfinite(value):
         raise HyperliquidProtocolError(f"{field} must be finite, got {value!r}")
     return float(value)
@@ -118,10 +116,13 @@ def parse_candle(row: object, instrument: Instrument, *, interval: str) -> Bar:
         close_dt = ms_to_utc(close_ms)
     except HyperliquidProtocolError as error:
         raise HyperliquidProtocolError(f"candle time: {error}") from error
-    if close_dt - open_dt != step:
+    # The public API closes on the last millisecond of the interval. Keep
+    # accepting the exclusive boundary used by existing normalized fixtures;
+    # neither convention changes the canonical open timestamp or interval.
+    if close_dt - open_dt not in (step - timedelta(milliseconds=1), step):
         raise HyperliquidProtocolError(
             f"candle {instrument.symbol!r} {interval} spans {close_dt - open_dt}, "
-            f"expected exactly {step}"
+            f"expected {step} (exclusive) or {step - timedelta(milliseconds=1)} (inclusive)"
         )
     try:
         return Bar(
@@ -254,45 +255,64 @@ def parse_all_mids(frame: object) -> dict[str, float]:
     return parsed
 
 
-def parse_bbo_frame(frame: object) -> dict[str, float]:
+def parse_bbo_frame(frame: object) -> dict[str, float] | None:
     """A WS ``bbo`` frame's data payload → normalized best bid/ask quote.
 
-    Hyperliquid's BBO channel pushes one row per coin: ``{coin, time,
-    bid, bidSz, ask, askSz}`` where sizes are USD notional. The
-    supervisor normalizes this into the cockpit QUOTE contract.
+    The official ``bbo`` tuple contains bid/ask ``{px, sz, n}`` levels,
+    with sizes in base units. A null side is a valid incomplete book;
+    it cannot replace the last complete quote or refresh its timestamp.
     """
     row = _mapping(frame, "bbo frame")
-    bid = _num(row.get("bid"), "bbo bid")
-    ask = _num(row.get("ask"), "bbo ask")
+    sides = row.get("bbo")
+    if not isinstance(sides, list) or len(sides) != 2:
+        raise HyperliquidProtocolError("bbo must contain exactly two sides")
+    parsed: list[tuple[float, float] | None] = []
+    for name, side in zip(("bid", "ask"), sides, strict=True):
+        if side is None:
+            parsed.append(None)
+            continue
+        level = _mapping(side, f"bbo {name} level")
+        price = _num(level.get("px"), f"bbo {name} price")
+        size = _num(level.get("sz"), f"bbo {name} size")
+        if price <= 0 or size < 0:
+            raise HyperliquidProtocolError("bbo requires positive prices and non-negative sizes")
+        parsed.append((price, size))
+    bid_level, ask_level = parsed
+    if bid_level is None or ask_level is None:
+        return None
+    bid, bid_size = bid_level
+    ask, ask_size = ask_level
     if ask < bid:
         raise HyperliquidProtocolError(f"bbo ask {ask} below bid {bid} for {row.get('coin')!r}")
     return {
         "bid": bid,
         "ask": ask,
-        "bid_size": _num(row.get("bidSz"), "bbo bidSz"),
-        "ask_size": _num(row.get("askSz"), "bbo askSz"),
+        "bid_size": bid_size,
+        "ask_size": ask_size,
     }
 
 
 def parse_asset_ctx_map(frame: object) -> dict[str, dict[str, float]]:
     """A WS ``activeAssetCtx`` frame's data payload → coin → metrics.
 
-    Hyperliquid pushes one map per frame: ``{coin: {funding, markPx,
-    oraclePx, openInterest, premium, …}}``; only the fields the cockpit
+    Hyperliquid pushes ``{coin, ctx: {funding, markPx, oraclePx,
+    openInterest, …}}`` per subscription; only the fields the cockpit
     renders are kept, and every value must be numeric or the frame is
     rejected (fail-closed).
     """
     frame = _mapping(frame, "activeAssetCtx frame")
-    parsed: dict[str, dict[str, float]] = {}
-    for coin, ctx in frame.items():
-        ctx = _mapping(ctx, f"activeAssetCtx row for {coin}")
-        parsed[str(coin)] = {
+    coin = frame.get("coin")
+    if not isinstance(coin, str) or not coin.strip():
+        raise HyperliquidProtocolError("activeAssetCtx requires a coin")
+    ctx = _mapping(frame.get("ctx"), f"activeAssetCtx row for {coin}")
+    return {
+        coin: {
             "funding_rate": _num(ctx.get("funding"), f"funding for {coin}"),
             "mark_price": _num(ctx.get("markPx"), f"markPx for {coin}"),
             "index_price": _num(ctx.get("oraclePx"), f"oraclePx for {coin}"),
             "open_interest": _num(ctx.get("openInterest"), f"openInterest for {coin}"),
         }
-    return parsed
+    }
 
 
 class FundingRate(BaseModel):

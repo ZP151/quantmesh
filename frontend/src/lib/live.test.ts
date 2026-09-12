@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import type { LiveInstrumentState, LiveKind, LiveLabel, LiveView, MarketUpdate } from '@/lib/api'
 import {
   ageText,
+  ageInstruments,
   bookDepth,
   bookSide,
   candleCloses,
@@ -19,6 +20,7 @@ import {
   realizedVol,
   spreadBps,
   useLiveConnection,
+  useAgedInstruments,
 } from './live'
 
 describe('useLiveConnection', () => {
@@ -441,5 +443,75 @@ describe('openLiveConnection', () => {
     FakeSocket.instances[0].onopen?.()
     expect(statuses).toEqual(['connecting'])
     expect(FakeEventSource.instances).toHaveLength(0)
+  })
+})
+
+
+describe('source and browser freshness', () => {
+  it('does not freshen an old source quote on receipt', () => {
+    const rows = mergeUpdate({}, quote('BTC', 100, 101, {
+      received_at: '2026-08-09T10:02:00Z',
+    }))
+    expect(rows['hyperliquid:BTC'].kinds.quote.label).toBe('stale')
+    expect(rows['hyperliquid:BTC'].kinds.quote.age_ms).toBe(120000)
+  })
+
+  it('ages cached quotes without incoming streams or snapshots', () => {
+    const rows = mergeUpdate({}, quote('BTC', 100, 101))
+    const aged = ageInstruments(rows, Date.parse(T0) + 31000)
+    expect(aged['hyperliquid:BTC'].label).toBe('stale')
+    expect(aged['hyperliquid:BTC'].kinds.quote.age_ms).toBe(31000)
+    expect(rows['hyperliquid:BTC'].label).toBe('real')
+  })
+
+  it('refuses a source clock far ahead of receipt', () => {
+    const rows = mergeUpdate({}, quote('BTC', 100, 101, {
+      data_time: '2026-08-09T10:01:00Z',
+    }))
+    expect(rows['hyperliquid:BTC'].kinds.quote.label).toBe('unavailable')
+  })
+})
+
+
+describe('cached cockpit clock', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('ages displayed prices while no transport supplies a new update', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(T0))
+    const rows = mergeUpdate({}, quote('BTC', 100, 101))
+    const { result, unmount } = renderHook(() => useAgedInstruments(rows))
+    expect(result.current['hyperliquid:BTC'].label).toBe('real')
+    act(() => vi.advanceTimersByTime(31000))
+    expect(result.current['hyperliquid:BTC'].label).toBe('stale')
+    unmount()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+})
+
+
+describe('cached cockpit clock skew', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('expires within thirty seconds even if browser clock trails AWS by an hour', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(Date.parse(T0) - 3600000))
+    const rows = mergeUpdate({}, quote('BTC', 100, 101))
+    const { result } = renderHook(() => useAgedInstruments(rows))
+    expect(result.current['hyperliquid:BTC'].label).toBe('real')
+    act(() => vi.advanceTimersByTime(31000))
+    expect(result.current['hyperliquid:BTC'].label).toBe('stale')
+  })
+
+  it('does not restore freshness when the browser wall clock moves backward', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(T0))
+    const rows = mergeUpdate({}, quote('BTC', 100, 101))
+    const { result } = renderHook(() => useAgedInstruments(rows))
+    act(() => vi.advanceTimersByTime(31000))
+    expect(result.current['hyperliquid:BTC'].label).toBe('stale')
+    vi.setSystemTime(new Date(Date.parse(T0) - 3600000))
+    act(() => vi.advanceTimersByTime(1000))
+    expect(result.current['hyperliquid:BTC'].label).toBe('stale')
   })
 })

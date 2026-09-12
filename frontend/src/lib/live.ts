@@ -249,20 +249,108 @@ export function mergeUpdate(
     label: update.provenance === 'real' ? 'real' : (update.provenance as LiveLabel),
     payload: update.payload,
   }
+  const timedView = ageView(view, Date.parse(update.received_at))
   const instrument: LiveInstrumentState = {
     venue: update.venue,
     instrument: update.instrument,
-    label: view.label,
-    kinds: { [update.kind]: view },
+    label: timedView.label,
+    kinds: { [update.kind]: timedView },
     book_sides: {},
   }
   if (update.kind === 'l2_snapshot') {
     const side = update.payload.side
     if (side === 'bid' || side === 'ask') {
-      instrument.book_sides![side] = view
+      instrument.book_sides![side] = timedView
     }
   }
   return { ...instruments, [key]: reconcileInstrumentState(previous, instrument) }
+}
+
+const SOURCE_TIMED_KINDS: readonly LiveKind[] = ['quote', 'trade', 'l2_snapshot', 'l2_delta']
+const FRESHNESS_LAG_MS = 30_000
+const CLOCK_SKEW_MS = 5_000
+
+function ageView(view: LiveView, nowMs: number): LiveView {
+  const received = Date.parse(view.received_at)
+  const source = Date.parse(view.data_time)
+  const sourceTimed = SOURCE_TIMED_KINDS.includes(view.kind)
+  const valid = Number.isFinite(received) && Number.isFinite(nowMs)
+    && (!sourceTimed || Number.isFinite(source))
+  const timestamp = sourceTimed ? Math.min(source, received) : received
+  const age_ms = valid ? Math.max(view.age_ms, 0, nowMs - timestamp) : view.age_ms
+  let label = view.label
+  if (view.provenance === 'real') {
+    if (!valid || (sourceTimed && source - received > CLOCK_SKEW_MS)) label = 'unavailable'
+    else if (label === 'real' && age_ms > FRESHNESS_LAG_MS) label = 'stale'
+  }
+  return { ...view, age_ms, label }
+}
+
+/** Age cached display data even when both stream and snapshot transport stop.
+ * Preserve server degradation; only a new observation can restore freshness. */
+export function ageInstruments(
+  instruments: Record<string, LiveInstrumentState>,
+  nowMs: number,
+): Record<string, LiveInstrumentState> {
+  return Object.fromEntries(Object.entries(instruments).map(([key, instrument]) => {
+    const aged: LiveInstrumentState = {
+      ...instrument,
+      kinds: Object.fromEntries(Object.entries(instrument.kinds)
+        .map(([kind, view]) => [kind, ageView(view, nowMs)])),
+      book_sides: Object.fromEntries(Object.entries(instrument.book_sides ?? {})
+        .map(([side, view]) => [side, ageView(view, nowMs)])),
+    }
+    aged.label = instrumentLabel(aged)
+    return [key, aged]
+  }))
+}
+
+export function useAgedInstruments(instruments: Record<string, LiveInstrumentState>) {
+  const [, tick] = useState(0)
+  const observations = useRef(new Map<string, {
+    identity: string
+    observedAt: number
+    age: number
+    label: LiveLabel
+  }>())
+  useEffect(() => {
+    const timer = window.setInterval(() => tick((value) => value + 1), 1_000)
+    return () => window.clearInterval(timer)
+  }, [])
+  const now = performance.now()
+  const next = new Map<string, {
+    identity: string
+    observedAt: number
+    age: number
+    label: LiveLabel
+  }>()
+  const observe = (key: string, view: LiveView): LiveView => {
+    const identity = view.source_event_id ?? `${view.data_time}:${view.received_at}`
+    const initial = ageView(view, Date.parse(view.received_at))
+    const previous = observations.current.get(key)
+    const same = previous?.identity === identity
+    const age = same
+      ? Math.max(initial.age_ms, previous.age + Math.max(0, now - previous.observedAt))
+      : initial.age_ms
+    let label = initial.label
+    if (same && LABEL_RANK[previous.label] > LABEL_RANK[label]) label = previous.label
+    if (label === 'real' && age > FRESHNESS_LAG_MS) label = 'stale'
+    next.set(key, { identity, observedAt: now, age, label })
+    return { ...initial, age_ms: Math.floor(age), label }
+  }
+  const aged = Object.fromEntries(Object.entries(instruments).map(([key, instrument]) => {
+    const row = {
+      ...instrument,
+      kinds: Object.fromEntries(Object.entries(instrument.kinds)
+        .map(([kind, view]) => [kind, observe(`${key}:${kind}`, view)])),
+      book_sides: Object.fromEntries(Object.entries(instrument.book_sides ?? {})
+        .map(([side, view]) => [side, observe(`${key}:book:${side}`, view)])),
+    }
+    row.label = instrumentLabel(row)
+    return [key, row]
+  }))
+  observations.current = next
+  return aged
 }
 
 // --- Quote math -----------------------------------------------------------
