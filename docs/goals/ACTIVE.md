@@ -22,13 +22,15 @@ and real-source acceptance pending, 2026-09-12.
 - Authority: operator approved the proposed subsequent iteration, including the
   bounded existing AWS deployment update and public read-only Hyperliquid feed.
   No new AWS resources, paid subscriptions, credentials or public access.
-- AWS fresh HTTPS probe confirms exact `4022942`, runtime demo, paper true/live
-  false. Tailscale SSH identity check is pending operator login; no bypass.
+- AWS fresh HTTPS/SSH probes confirm exact `4022942`, runtime demo, paper true/live
+  false. Tailscale SSH identity check completed; approved server access works.
 - Integrated staging9a177c6 locally; preserved original independent worktree.
   Explicit live profile/verified rollback and Hyperliquid protocol/freshness
   corrections are implemented. See ledger for test counts and RED/GREEN.
-- #141's archive correction388645a is present locally and its review resolved;
-  new CI pending. Merge dependencies only after their checks pass.
+- #141 merged as `00a0ee0` at 2026-09-12 09:02:33 UTC. Its archive-head CI
+  was still running when inspected; do not claim that run passed. GitHub auto
+  merge permitted integration before that optional check completed. Wait for
+  #142 final-head CI explicitly before its integration/deployment.
 - Review: Standards/Spec correction confirmation passed for monotonic browser
   aging and checked automatic rollback. Inclusive candle end milliseconds are
   corrected; 45-second public parser smoke passed. Controller final gates: 311
@@ -39,7 +41,9 @@ and real-source acceptance pending, 2026-09-12.
 - Next: inspect final-head CI/review for #141 then #142, integrate in order,
   finish approved AWS exact-build update after SSH authentication, and record
   the separate five-minute AWS source/browser witness. Temporary local app is
-  stopped. Pending SSH check session is 30832; do not bypass authentication.
+  stopped. SSH check session30832 completed successfully. AWS preflight: Python
+  3.12.3, 54GB free disk, ~1.3GB available RAM, passwordless sudo, retained
+  demo release and private Serve route intact. No AWS service change yet.
 - Preserve paper mode and disabled live trading. Separate further Moomoo,
   Polymarket/Kalshi and trusted-history work into subsequent bounded slices.
 - Continue from `origin/main`, preserve divergent local main and independent

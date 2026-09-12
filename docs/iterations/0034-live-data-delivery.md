@@ -211,3 +211,24 @@ do not infer authority to purchase data or expose new public services.
   This is local source-to-API/persistence evidence, **not AWS browser acceptance**.
   Temporary app processes are stopped; the operator's real data roots and AWS
   service remain unchanged. Tailscale SSH still awaits operator authentication.
+
+
+## Resume — AWS access and dependency integration
+
+- Previous goal turn made implementation and verified local-source progress.
+  SSH check session30832 now completed: operator authentication accepted,
+  intended retained4022942 release active under quantmesh user/group.
+- Remote read-only preflight: Ubuntu Python3.12.3, 54GB disk available,
+  approximately1.3GB available memory, passwordless sudo and existing private
+  Tailscale Serve ->127.0.0.1:8765. No deployment or infrastructure change yet.
+- PR#141 merged as00a0ee0 at09:02:33UTC. Its final archive-head run34683518613
+  remained in progress when rechecked; GitHub auto-merge did not wait for that
+  optional check. No green claim is made. For#142 explicitly wait for final-head
+  CI success before merge/deploy, regardless of repository auto-merge policy.
+- Merged origin/main into the integration branch. Conflicts were only the
+  already-carried planning documents; retained current implementation/evidence
+  versions, without discarding new upstream source changes. Source code and
+  generated bundle are unchanged from reviewed/tested ed3900d.
+- Browser automation navigation to the private AWS hostname was refused by
+  both in-app and Edge surfaces (ERR_BLOCKED_BY_CLIENT). HTTPS/SSH CLI access
+  works; deployed browser acceptance remains a separate unresolved gate.
