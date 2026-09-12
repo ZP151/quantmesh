@@ -1,6 +1,6 @@
 # Iteration 0033 — Exact Forecast Outcome Scorecard
 
-- Status: implemented, reviewed and locally verified; [PR #139](https://github.com/ZP151/quantmesh/pull/139) open, automatic CI pending
+- Status: completed and merged through [PR #139](https://github.com/ZP151/quantmesh/pull/139) at `6ea9a13`; AWS deployment not updated by this merge
 - Started: 2026-09-12
 - Issue: [#138](https://github.com/ZP151/quantmesh/issues/138)
 - Branch: `codex/0033-forecast-outcome-scorecard`
@@ -117,3 +117,18 @@ issue #138 on integration. This final documentation checkpoint records the
 reviewable deliverable; automatic final-head CI is pending, not claimed green.
 Next resume inspects that exact head and any review feedback before routine
 squash integration. #137 was already merged under explicit operator authority.
+
+## 2026-09-12 — Integration closeout
+
+- **Verifier:** final-head `090d85d100622cc1c250a6becc6f3e9687b235bd`
+  [CI run 34628077408](https://github.com/ZP151/quantmesh/actions/runs/34628077408)
+  succeeded: 3321 Python passed, 55 skipped, 9 warnings (2981.76s), and 325
+  frontend passed. This supersedes the pending publication checkpoint above.
+- **Reviewer:** the sole remote comment concerned the stale ACTIVE frontier;
+  final-head documentation already corrected it. The resolved thread was
+  closed after verification. No outstanding review request blocked integration.
+- **Integrator:** PR #139 squash-merged at 2026-09-12 06:26:29 UTC as
+  `6ea9a1305b2b3eea28795ccb0059d6ebba82b769`; issue #138 is closed.
+- **Product handoff:** implementation/review/CI/integration are complete. AWS
+  deployment and real-provider acceptance are separate, unclaimed outcomes.
+  The operator's observed data gap is prioritized in iteration 0034 / #140.

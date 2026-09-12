@@ -19,12 +19,21 @@ Evidence-backed Decision Copilot, is merged through PR #128. Iteration 0028,
 Decision Inbox & Bounded Paper Shadow Portfolio, is merged through PR #130.
 Iteration 0029, Decision Readiness Session, is merged through PR #133.
 Iteration 0032, Probabilistic Scenario Lab, merged through PR #137 at `13743ea`.
-Iteration 0033 (issue #138) adds exact forecast-versus-outcome review. The Lab
+Iteration 0033 merged through PR #139 at `6ea9a13`, adding exact
+forecast-versus-outcome review. The Lab
 brings a chart-first AAPL/NVDA daily workspace, exact 7/30-session
 forecast evidence and saved analysis replay to the existing DecisionPacket
 loop. The 0021 Scheduler/Provider/evidence data plane stays separate. AI remains
 optional and advisory. Final `v0.1.1` promotion and real-money execution remain
 outside this iteration.
+
+The next product priority is iteration 0034 / issue #140: deployed read-only
+live market data, beginning with a bounded Hyperliquid user loop. This is a
+prioritized design, not completed implementation. The independent AWS staging
+record from 2026-09-09 identifies build `4022942` in demo mode; the current
+server has not been freshly probed. Reconcile #135's private deployment support
+before updating it. Merged connector/UI capability must not be described as
+verified live-market coverage. See `docs/ITERATION_PLAN.md` for delivery order.
 
 ## Bounded context
 

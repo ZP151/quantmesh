@@ -369,11 +369,19 @@ Sequence for operator review:
    AAPL/NVDA Instrument Workspace. Reuse current models and adapters; no new
    provider or model framework. See the
    [0032 ledger](../iterations/0032-probabilistic-scenario-lab.md).
-6. **Active iteration 0033 (issue #138):** exact forecast outcome scorecard
+6. **Done as iteration 0033 (merged PR #139):** exact forecast outcome scorecard
    compares saved 7/30-session forecasts with realized daily closes inside the
    existing review. Saved outcomes replay unchanged; incomplete paths cannot
    produce complete-path scores. See the [0033 ledger](../iterations/0033-forecast-outcome-scorecard.md).
-7. Expand datasets, baselines or selected Qlib/Darts adapters only where a
+7. **Next priority, iteration 0034 (issue #140; design only):** deployed read-only
+   live market data. Reconcile private staging support (#135), then prove
+   Hyperliquid BTC/ETH/SOL source-to-browser freshness, stale/reconnect behavior
+   and replay on the exact deployed build. Follow with Moomoo/OpenD and
+   prediction venues in sequential slices. Prior prototype connector completion
+   is not evidence of live feeds in AWS: its last recorded activation was demo
+   build `4022942`. See the [delivery design](../iterations/0034-live-data-delivery.md)
+   and [current iteration plan](../ITERATION_PLAN.md).
+8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
-8. Guarded broker/testnet execution only after a separate authorization.
+9. Guarded broker/testnet execution only after a separate authorization.
