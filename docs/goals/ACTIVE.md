@@ -2,7 +2,9 @@
 
 Status: iteration 0034 implementation and AWS acceptance complete, 2026-09-12.
 Repository closeout is tracked by the acceptance PR linked to #140/#135.
-On resume, verify its merge and issue closure before marking the goal tool complete.
+On resume, verify its merge and #140 closure before marking the goal tool complete.
+#135 remains open for the operator-deferred instance firewall acceptance; its
+implementation integration is complete and does not block the #140 data slice.
 
 ## Completed checkpoint
 

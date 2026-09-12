@@ -27,3 +27,7 @@ Next frontier is the bounded Moomoo/OpenD readiness and AAPL/NVDA observation
 slice in [delivery order](../../ITERATION_PLAN.md). All-market operation and
 trusted historical datasets remain unaccepted. The independent 0021 soak and
 divergent local main were preserved.
+
+Issue #135 remains open for operator-deferred instance firewall acceptance.
+Its deployment implementation is integrated; this goal closes only the #140
+real-data delivery slice and does not waive or perform that deferred hardening.

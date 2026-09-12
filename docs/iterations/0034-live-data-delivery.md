@@ -389,3 +389,11 @@ Clear replay. Paper remains enabled; live trading remains disabled.
 - Fresh AWS loopback health still reported exact `e185c3b`, live data, paper true
   and live trading false. `git diff --check` passed. Vendored submodule revisions
   were inspected and remain uninitialized/unchanged in this worktree.
+
+- External closeout review identified an inconsistent 0031 completion claim:
+  its original public-HTTP firewall boundary remains unmet after the operator
+  deferred changing the instance rules. Corrected the 0031 status/index and
+  ACTIVE/delivery plan. #135 stays open for that acceptance; #143 closes only
+  #140. This is a documentation correction, with no firewall/runtime mutation
+  or expansion of 0034. The integrated staging support and live-data acceptance
+  remain proven independently of the deferred instance hardening.

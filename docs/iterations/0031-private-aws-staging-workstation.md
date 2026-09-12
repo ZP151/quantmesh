@@ -1,6 +1,6 @@
 # Iteration 0031 — Private AWS staging workstation
 
-- Status: completed; integrated through PR #142 / iteration 0034
+- Status: implementation integrated through PR #142; operator-deferred firewall acceptance remains open
 - Started: 2026-09-09
 - Tracking issue: [#135](https://github.com/ZP151/quantmesh/issues/135)
 - Integration branch: `codex/0031-aws-private-staging`
@@ -194,3 +194,13 @@ roll back to the previously activated release after a failed health check.
   [0034 ledger](0034-live-data-delivery.md). This supersedes the original
   demo-only observation profile, without changing order authority. The
   previously retained Lightsail firewall rules remain a separate follow-up.
+
+### Closeout review — retained firewall follow-up
+
+The implementation and private application/data path are delivered, but the
+original no-public-HTTP firewall boundary above has not been met. The operator
+previously chose to retain public HTTP 80 and SSH 22 temporarily. Keep issue
+#135 and iteration 0031 open for that deferred hardening/acceptance; PR #143
+closes only #140. Do not remove these rules as part of iteration 0034. The
+application remains loopback-bound behind private Serve; this does not itself
+satisfy the separate instance firewall boundary.
