@@ -70,6 +70,37 @@ Bounded live-follow/aging acceptance additionally owns
   API freshness, build committed bundle. Run Impeccable detector once on changed
   UI targets; inspect desktop/mobile/keyboard in one batch, one correction pass.
 
+## Task 2a — Closed-minute revision admission (actual-source prerequisite)
+
+Files: `src/quantmesh/live/hyperliquid.py`, `tests/test_live_supervisor.py`,
+`tests/test_live_feed.py`; optional isolated `tests/test_live_candle_revisions.py`
+if needed to keep the real-pump regression cohesive. Controller owns ADR-0024
+and iteration/goal evidence. No other implementation files are authorized.
+
+- [x] RED: shared Python `-m pytest -q tests/test_live_candle_revisions.py`
+  (or the selected new tests in the two existing files). Replay the recorded
+  14:22 BTC candle at 14:23:00.033701 and .538628, volume 26.45105 -> 26.45336,
+  through real LiveFeed.run/LiveBuffer. Assert both observations reach replay
+  and subscribers and later BTC/ETH/SOL quotes still flow.
+- [x] Use one normalized OHLCV-qualified identity helper for WebSocket and REST
+  candles, including closed intervals. Preserve provisional identities, final
+  flag semantics, source sequence, persistence acknowledgement and gap gates.
+- [x] Assert identical receipts and WS/REST content deduplicate; different
+  content revises. Reopen a legacy-ID buffer without rewriting its evidence;
+  admit the new observation and coalesce same-minute chart replay. Keep actual
+  explicit-ID/content conflicts quarantined and rejected.
+- [x] GREEN selected regressions plus `tests/test_live_supervisor.py`,
+  `tests/test_live_feed.py`, `tests/test_live_buffer.py` and
+  `tests/test_live_history.py`; independent review capped at two rounds.
+  Include this dependency in the coherent commit and final CI before deployment.
+
+Compatibility: ADR-0024 preserves legacy IDs and rows. One equal-content
+observation may append under the new identity after upgrade; subsequent
+new-format redeliveries deduplicate. No retroactive exactly-once claim. Recovery
+does not promise discovery of older-minute corrections outside its fetch window.
+No ledger migration, conflict suppression, watchdog, grace period, provider or
+trading change. Older-minute cursor policy is recorded as a separate follow-up.
+
 ## Task 3 — Review, integration and AWS source acceptance (controller)
 
 - [x] New `tests/test_live_chart_e2e.py` proves the packaged live chart loop

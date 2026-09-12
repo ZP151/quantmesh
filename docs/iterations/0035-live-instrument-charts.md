@@ -1,6 +1,6 @@
 # Iteration 0035 — Real charts from Markets and Watchlist
 
-- Status: implemented and locally reviewed; final CI and AWS acceptance pending, 2026-09-12.
+- Status: chart and candle revision prerequisite tested/reviewed; final CI and AWS acceptance pending, 2026-09-12.
 - Issue: [#144](https://github.com/ZP151/quantmesh/issues/144).
 - Branch: `codex/0035-live-instrument-charts`, from `origin/main@2a50565`.
 - Plan: `docs/superpowers/plans/2026-09-12-live-instrument-charts.md`.
@@ -180,3 +180,82 @@ instead of extending this correction batch; AWS remains on `e185c3b`.
   manifest authority, trading behavior or dependency changes.
 - All four PR #145 findings are addressed by this checkpoint. Final-head CI
   must rerun; deployment and actual-source chart acceptance remain outstanding.
+
+## Actual-source blocker / Planner dependency — 2026-09-12
+
+While final CI was running, the existing AWS `e185c3b` feed stopped advancing
+at 14:23:00 UTC. HTTP remained healthy and all three quote rows aged to stale;
+the source tracker still reported its prior connected transition. The direct
+`/api/live/state` age assertion failed (>30s). Current public Hyperliquid REST
+still returned new prices from the same AWS host, excluding a general provider
+or AWS outbound outage. No service restart or data deletion was used to hide it.
+
+A stable copy of the unchanged live DuckDB plus WAL was inspected in an owned
+AWS temporary directory (`/tmp/quantmesh-0035-stalled-lake-cvyi_zhd`): 226965
+accepted updates, last receipt 14:23:00.745761 UTC, and one identity quarantine.
+BTC's 14:22 candle arrived at 14:23:00.033701 with volume 26.45105, then at
+14:23:00.538628 with volume 26.45336. OHLC stayed 77357/77377/77357/77362.
+Both observations were locally classified final and assigned the same source
+identity because `_on_candle` drops candle content from final IDs. The valid
+late volume revision triggered `LiveIdentityConflictError` in persistence and
+terminated the feed pump. This directly blocks the requested continuous charts.
+
+Planner adds only the prerequisite candle-observation identity correction to
+this same user loop. Distinguish revisions from exact redelivery, keep WebSocket
+and REST identity parity, preserve actual conflict quarantine and append-only
+legacy evidence, and exercise the real feed pump with the recorded pattern.
+No watchdog redesign, blanket exception swallowing, grace-time heuristic, data
+rewrite, provider expansion or 0021 soak change. Identity compatibility must be
+explicit before implementation. CI 34698638115 / `025ac8d` is superseded and
+cancelled; its chart checks do not establish real-source completion.
+
+### Quant Researcher / revision identity decision
+
+The recorded pair reproduced the same failure through real `LiveFeed.run` and
+`LiveBuffer`: pump terminated with `LiveIdentityConflictError`, one accepted
+candle and one quarantine; reopening retained the legacy identity and 14:22
+checkpoint. No network, database rewrite or service substitute was involved.
+The upstream candle schema has no immutable-final event flag; elapsed local
+close time is insufficient evidence of final contents. ADR-0024 specifies
+shared normalized OHLCV-qualified observation identity for WebSocket and REST.
+
+Keep every legacy row and quarantine. A first equivalent closed observation
+under the new mapping may append once; the chart coalesces same-minute rows,
+and subsequent new-format repeats deduplicate. No retroactive exactly-once or
+discovery of older corrections is claimed. Existing older-minute cursor policy
+and visibility of a failed background collector task are separate follow-ups;
+neither is silently redesigned inside this source-identity prerequisite.
+
+### Operational recovery (unchanged release, not fix acceptance)
+
+After preserving the source snapshot/quarantine, restarted the existing service
+on unchanged `e185c3b`. Shutdown waited on background tasks and reached systemd's
+90-second stop timeout at 14:42:15 UTC; systemd terminated the old process and
+started PID 41012. The immediate startup health probe raced the listener and
+failed; the following probe returned the exact same build, live market-data
+profile, paper true and live trading false. At 14:43:08 UTC, BTC/ETH/SOL quotes
+all had real labels and 1182ms source age. This restores current service only;
+the legacy identity bug remains until the tested correction is deployed.
+No lake deletion, unit change, new resource or firewall operation occurred.
+
+### Task 2a implementation, review and controller verification
+
+- Implementer RED: recorded pump and legacy admission regressions failed
+  (2 failed/2 passed). Shared WS/REST normalized OHLCV helper corrected both;
+  focused GREEN4, combined supervisor/feed/buffer/history GREEN176 in 15.07s.
+  Final focused rerun after restoring unrelated formatting: 4 passed in 1.59s.
+- Independent Task 2a round-one spec/correctness review: no actionable findings.
+  Verified exact provisional ID preservation, final/source sequence semantics,
+  real pump/subscriber path, REST parity, persistence/recovery lineage, legacy
+  replay/chart compatibility and unchanged explicit conflict quarantine.
+- Controller fresh combined gate: shared Python `-m pytest -q` on
+  `test_live_candle_revisions`, `test_live_supervisor`, `test_live_feed`,
+  `test_live_buffer`, `test_live_fence`, `test_live_history`,
+  `test_instrument_history`, `test_instrument_workspace_api` and
+  `test_live_chart_e2e`, with unique OS-temp basetemp: **306 passed in 32.57s**.
+  One existing Starlette deprecation warning. Ruff `check src tests tools`,
+  new-test format check and `git diff --check` passed. Submodule pointers are
+  unchanged/uninitialized; no copied upstream code or new dependency.
+- No frontend source/package changes after the previous production build and
+  359-test frontend gate. Full final-head CI still precedes merge/deployment;
+  the operational restart does not substitute for fixed-build AWS acceptance.

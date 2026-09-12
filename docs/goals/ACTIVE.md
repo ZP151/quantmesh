@@ -1,6 +1,6 @@
 # Active Goal
 
-Status: iteration 0035 locally tested/reviewed; final PR CI and AWS acceptance pending, 2026-09-12.
+Status: iteration 0035 chart and source-revision fix tested/reviewed; final CI and AWS acceptance pending, 2026-09-12.
 
 ## Current user outcome
 
@@ -22,6 +22,14 @@ switching and explicit range choices, and show actual source/time/coverage.
   production build and API freshness passed. Local race and four external review
   boundaries corrected; independent reduced-batch review has no findings.
   Old CI 34697814465 / `940a74b` was cancelled as superseded, never a merge gate.
+- Actual AWS collector stopped at 14:23 UTC: a legitimate closed-minute volume
+  revision collided with the legacy content-free final candle ID. Real pump
+  reproduction confirmed `LiveIdentityConflictError`; data/quarantine retained.
+  CI 34698638115 / `025ac8d` is also cancelled as superseded. Task 2a / ADR-0024
+  is implemented and independently reviewed: controller combined 306 tests
+  passed. Fresh final-head CI remains required. Unchanged AWS e185 service was
+  restarted; at 14:43 UTC all three quotes were real and 1182ms old. Do not
+  treat this operational restart or HTTP health as fixed-build acceptance.
 - Backend owns bounded resolution fallback and tests; controller owns shared
   live list, entry/default behavior, frontend tests and integration. Record
   actual RED/GREEN in iteration before declaring implementation complete.
