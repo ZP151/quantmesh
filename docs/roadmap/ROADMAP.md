@@ -377,12 +377,13 @@ Sequence for operator review:
    and public Hyperliquid BTC/ETH/SOL are deployed at `e185c3b`. Five-minute
    source/API and browser witnesses, reload/replay, paper-only state and
    controlled stale/reconnect checks passed. The original `4022942` demo
-   release is retained. **REOPENED — 0035 / #144, PRs #145/#146:** full real
-   charts from Markets/Watchlist at AWS `9cfe1bc`, using recorded1m Hyperliquid
-   observations and truthful coverage/freshness. Separate five-minute API and
-   browser witnesses passed, including reload and actual minute revisions,
-   but next-day operator evidence showed stale quotes and HTTP timeouts after
-   retained-lake growth. Restore sustained chart operation before new markets.
+   release is retained. **Done as iteration 0035 / #144, through PR #149:**
+   full real charts from Markets/Watchlist at AWS `76203e0`, using recorded
+   1m Hyperliquid observations and explicit coverage/freshness. Following the
+   next-day retained-lake failure, selective lookup and completion-based refresh
+   repairs passed a 601.662-second paired AWS witness: six paths, actual minute
+   revisions/appends, reload retention and 296 completed workspace requests,
+   with no timeouts/failures. Other market feeds remain a separate frontier.
    See the [0035 ledger](../iterations/0035-live-instrument-charts.md).
    **Next:** private Moomoo/OpenD reachability and actual
    entitlements for AAPL/NVDA, then prediction venues in sequential slices.

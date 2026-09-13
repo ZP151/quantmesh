@@ -15,16 +15,16 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 | Private AWS workstation, 0031 / #135 | Integrated through merged PR #142 | Private HTTPS, exact build, loopback bind and retained demo rollback verified; #135 stays open for operator-deferred instance firewall acceptance |
 | Deployed live data, 0034 / #140 | Merged PR #142 as `e185c3b`; final-head CI passed | AWS BTC/ETH/SOL five-minute API/browser witness and reload/replay passed; paper true/live trading false |
 | Multi-market live runtime, 0015/0019 | Connectors, buffering, replay and stream/UI foundations exist | All-market real-time operation in AWS has not been established |
-| Real instrument charts, 0035 / #144 | Merged PRs #145/#146/#147; reopened for sustained-operation repair | Initial AWS9cfe1bc witnesses passed; next-day operator page stalls and quotes lag~252s. Retained855594-row lake exposes per-update full scans; four old quarantines unchanged. Renewed acceptance pending |
+| Real instrument charts, 0035 / #144 | Integrated through PR #149; lookup and refresh repairs merged | AWS `76203e0` passed a 601.662-second paired witness: six entry paths, real revisions/appends, reload retention, 296 completed workspace requests, no failures/timeouts; paper on/live execution off. Replay API reports 1,074,523 retained observations. Earlier failures and snapshot limits remain in the ledger |
 
 ## Next delivery order
 
-0. **Reopened user priority: iteration 0035 / #144.** Restore real updating charts from
-   Markets and Watchlist using existing Hyperliquid BTC/ETH/SOL observations.
-   Reuse the full chart, default live 1D/line and label actual recorded coverage.
-   See [0035](iterations/0035-live-instrument-charts.md) for initial acceptance
-   and the next-day retained-lake failure. Complete the selective lookup repair
-   and real retained-data witness before broadening market coverage below.
+0. **Completed user priority: iteration 0035 / #144.** BTC/ETH/SOL real charts
+   from Markets and Watchlist now have renewed AWS acceptance. Preserve the
+   observed-coverage labels and five-second delay after each completed refresh.
+   See [0035](iterations/0035-live-instrument-charts.md), its compact evidence,
+   and the [operator steps](runbooks/live-chart-acceptance.md). This is a measured
+   ten-minute result, not an indefinite uptime or complete historical-data claim.
 
 1. **Equities: Moomoo/OpenD.** Establish private OpenD reachability and quote
    entitlement, then prove AAPL/NVDA observations during the market session.
