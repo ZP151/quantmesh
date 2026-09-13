@@ -49,6 +49,50 @@ is authoritative. The old release's unchanged env selects default demo;
 neither demo nor live data is deleted. Stop if retained identity/origin does
 not match; do not rewrite evidence to force acceptance.
 
+## Iteration 0035 — Accept the real chart loop
+
+Use the exact deployed build recorded in issue #144 and the 0035 ledger. A
+merged PR, a healthy process or a visible old chart alone does not pass this
+check. The supported live chart scope is Hyperliquid BTC/ETH/SOL, not every
+market listed in the application.
+
+1. Open Markets or Watchlist, then each symbol under **Live instruments**.
+   The full chart should open at `?range=1d&mode=line`; select **1D / Line**
+   for this check. Repeat from both entry points.
+2. Check **LIVE SOURCE = hyperliquid**, **LIVE CLASSIFICATION = real**,
+   advancing **DATA TIME**, and **AGE <= 30 seconds**. A `stale · real`
+   classification means real but outdated data and fails freshness acceptance.
+   The stream should settle on WebSocket and keep receiving observations.
+3. Observe all three symbols for at least five minutes. For each symbol, require
+   at least two changes within a current minute and at least one later-minute
+   append without reloading. Compare chart data with
+   the history API and that page's received candle frames in the verifier
+   witness. A fresh quote alone does not prove a moving chart.
+4. Reload and confirm settled observed points remain. Record coverage start,
+   end and row count. `hyperliquid-live-replay`, `1m` and `5m->1m` describe
+   continuity-checked recorded minutes; they do not promise full-day or five-day
+   historical coverage. A restart/disconnect may require new continuous minutes
+   before an available chart appears.
+
+Record API response times and source age under simultaneous browser use on the
+retained lake. Repeated loading, a frozen source time, stale classification or
+20-second API timeouts fail acceptance, even if restarting briefly helps.
+Keep `paper_mode=true` and `live_trading=false`; real market data does not require
+placing an order. Controlled gap/disconnect tests and actual source observation
+are separate evidence. Consult the dated 0035 ledger for failures and limits.
+
+### 中文操作验收
+
+从 **Markets / Watchlist → Live instruments → BTC、ETH、SOL** 打开完整图表，
+先选 **1D / Line**。核对来源 `hyperliquid`、分类 `real`，数据时间持续前进，
+Age 不超过 30 秒；`stale · real` 表示真实但已过期，不能算实时验收通过。
+三个币种都持续观察至少 5 分钟，各自确认同一当前分钟内至少两次价格变化，
+并在后续分钟至少追加一个新点；刷新后，
+已采集的连续走势仍保留。当前分钟数据不等于完整的 1 天或 5 天历史。
+重连后可能需要重新采集连续分钟；若持续卡在加载、时间冻结或出现超时，
+应记录当时的版本、来源时间和页面状态，继续排查。行情验收无需下单，
+Paper 模式与关闭实盘执行应保持不变。
+
 ## Known account and cost boundary
 
 The AWS console inspection on 2026-09-09 showed USD 0 current/prior-month cost,

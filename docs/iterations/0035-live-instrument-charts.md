@@ -575,3 +575,161 @@ Root combined source/packaged-browser gate:349 passed, one existing Starlette
 warning in52.20s. Global Ruff and changed-test format checks passed; diff
 whitespace passed. No submodule/dependency/frontend asset changes. Commit this
 reviewed checkpoint and require exact-head full CI before merge/deployment.
+
+### Supplementary retained local runtime â€” 2026-09-13 08:28 UTC
+
+PR #148 candidate7f8065357946b399c0cc75983af1d8b92b4f49e9 is undergoing required
+CI34747168953; AWS still runs9cfe1bc and remains unaccepted. This checkpoint
+does not change the source candidate or substitute local evidence for AWS.
+
+Verifier used a hash-verified COPY of the855594-row public-market snapshot.
+All15 Settings storage roots and the fresh empty paper account were isolated
+under OS-temp; only public Hyperliquid BTC/ETH/SOL and loopback56684 were used.
+Index creation3.281s, buffer initialization4.269s, cold HTTP ready9.405s.
+Over339.23s,285 API samples had no transport timeout: health/state114x200;
+workspaces18 initial collecting404s, followed by153x200 from30.42s onward.
+Every successful workspace was real/available with receipt<=generated_at.
+Maximum workspace quote ages were2.730/3.954/5.177s for BTC/ETH/SOL.
+Under concurrent browser load, maximum workspace response times were
+4.097/4.354/5.691s; health maximum1.954s and state90ms. These are local sampled
+limits, not AWS guarantees. Rows/sequence grew855594->862247 (+6653), the four
+old quarantines remained, orders stayed0 and source snapshot hash was unchanged.
+Owned runtime stopped cleanly08:28:15UTC; port closed and stderr empty.
+Artifacts: OS-temp qm0035-retained-runtime-fbc2c6c6a1844d698c68e39ac09c0931
+report.json/analysis.json, inspected by root.
+
+Root supplementary browser witness reached all six Markets/Watchlist paths
+and recorded50 samples through149.232s. Three minute tails per coin and
+16/16/13 changed BTC/ETH/SOL DOM tails matched that page's own real candle
+frames; maximum distinct closes within a minute were4/4/3. This browser run
+is explicitly INCOMPLETE: its final BTC reload API comparison overlapped the
+owned server's scheduled shutdown and got ECONNREFUSED. An earlier local
+attempt expected the staging-only deployment badge; the isolated local server
+correctly omits that field. Neither failure is hidden or counted as complete
+AWS/browser acceptance. Actual deployed witness keeps the exact build check.
+Artifacts: ignored output/playwright/0035-local-retained-7f80653/attempt-2,
+including partial-summary.json and raw DOM/frame evidence.
+
+Operational reviewer found no actionable issue in the exact-hash-verified
+deployment wrapper using the existing deploy(...health_attempts=180) parameter.
+The AWS copied-lake index build took32.63s, exceeding the CLI's default30
+immediate-failure retries. The extended attempt count retains exact build,
+runtime/paper safety and automatic rollback checks; it is not a strict180s
+deadline because probes add time. No deployment has run at this checkpoint.
+
+### Exact-head CI and integration service failure â€” 2026-09-13 09:16 UTC
+
+Required CI34747168953 succeeded on candidate
+7f8065357946b399c0cc75983af1d8b92b4f49e9:3524 Python tests passed,56 skipped,
+9 existing warnings in3148.74s;359 frontend tests and all install/audit/license/
+generated-client/typecheck/lint/bundle gates passed. Run completed09:08:17UTC.
+Watcher1285 and enclosing wait77 are terminal exit0; do not poll/restart them.
+Root inspected final logs in OS-temp qm0035-recovery-ci.log, PR OPEN/non-draft/
+CLEAN, exact head/base8f9c25a and no unresolved review threads before integration.
+
+Normal GitHub squash integration has not succeeded. GraphQL returned EOF then
+an internal execution error; REST PUT returned HTTP500 with empty body
+(request E363:88EC3:C59C48:D252A4:6AA668BF). Existing authenticated browser
+showed checks passed/ready to merge, but Confirm squash and merge returned
+"Unable to read response from the server. Please try again later." Subsequent
+PR/main reads still show OPEN and8f9c25a. A REST merge_commit_sha while merged=false
+is a prospective test merge, not proof of integration. No AWS deployment ran.
+
+Independent integration reviewer confirmed there is no compliant direct-main
+fallback: active branch rules require pull_request and standing goal authority
+requires squash. A one-commit fast-forward or manually closing a local squash
+would not meet those requirements. Preserve the reviewed green candidate and
+retry normal GitHub squash after service recovery; do not bypass branch rules.
+Acceptance documentation review resolved its one finding in round2: both
+languages now require at least5min, two active-minute changes per symbol and
+at least one later-minute append. Actual AWS acceptance remains outstanding.
+
+Blocked audit09:22UTC: the same normal-squash integration failure has recurred
+across three consecutive goal turns. Latest REST responseHTTP500/empty body,
+requestCB11:14391B:BC67CB:C955F9:6AA66B3D. Post-attempt authoritative reads:
+PR148 OPEN, same green7f806535 head, main8f9c25a; private SSH current release
+still9cfe1bc8ff910792b3f8cb6928763b667ba2442a. Goal is externally blocked,
+not completed. Source/review/CI work is preserved; merge, exact AWS deployment,
+retained-lake source/browser acceptance and final evidence integration remain.
+Three local documentation files contain the reviewed post-CI checkpoints and
+operator instructions; keep them for closeout after PR148 integration rather
+than altering its green head and triggering unrelated repeat CI.
+
+
+### Manual integration, deployed recovery and failed load acceptance — 2026-09-13 10:00 UTC
+
+Operator manually merged PR148 at09:39:11UTC as5332a19. Root verified MERGED
+state and full tree2549e8df6a4c8c674ceb20fec88f0e558254e109 equality with green
+7f806535. The prior GitHub service blocker is resolved. Existing reviewed
+private deployer activated exact5332a19 successfully (exit0); PID44749 started
+09:43:53UTC, quantmesh user, loopback8765, live data/papertrue/livefalse.
+Retained data and rollback releases remain. No new infrastructure or order.
+
+Verifier actual API attempt1 recorded16 complete rounds09:45:08–09:54:38UTC,
+ten distinct minute tails per coin and coverage09:44–09:54/11rows at last round.
+Maximum quote ages BTC4298ms/ETH4362ms/SOL4700ms; workspace2231/1678/5791ms;
+all sampled source/workspace contracts passed real/fresh/receipt bounds.
+The helper exited1 at its final BTC revision assertion: only2distinct closes
+in a minute, required3; ETH4/SOL3 from raw records. Slow sequential sampling
+cannot prove BTC's required two within-minute changes. In-memory per-request
+latencies and final orders/risk comparison were not emitted after failure,
+so those final gates remain unproved. No timeout exception occurred in the
+completed API rounds. This is incomplete evidence, not a passed API witness.
+
+Actual browser attempt2 independently failed its20s initial SOL chart wait.
+BTC/ETH Markets+Watchlist paths passed by loop order; SOL displayed5332a19
+shell without the instrument workspace. Six-path completion, sustained samples,
+reload/keyboard/mobile were not reached. No silent retry or longer timeout.
+Root viewed the user's actual BTC1DLine full chart with real Hyperliquid source,
+WebSocket, fresh quote and changing closes; that page alone does not establish
+full acceptance. The conservative future-receipt candle-join limitation also
+appeared while valid replay/quotes continued; no time bound was loosened.
+
+A strict stable COPY of DB+WAL succeeded on attempt6 after load witnesses:
+/tmp/quantmesh-0035-recovered-lake-778zbzvd,416607600copiedbytes,896780accepted
+rows/maxseq through09:56:58.781310UTC, source lookup index present and old
+quarantines4unchanged. Primary never opened by diagnostic DuckDB connection.
+The measured retention check exited0. API84521/browser72652/deploy80854 are
+terminal; do not poll them. Ignored artifacts in
+output/playwright/0035-aws-5332a19/attempt-1/partial-summary.json and
+attempt-2/failure.json retain failed evidence.
+
+Planner returns to bounded load diagnosis before any acceptance claim or next
+market. Independent source audit identifies whole-workspace invalidation on
+all matching updates every500ms plus retained10000-row replay/validation and
+shared admission/read locking as a possible amplification path. Correlated
+browser resource trace and copied-lake stage timings are required before a
+new fix. Live perf439samples has no single dominant native DuckDB scan like
+the old admission profile; do not assume the previous query repair failed or
+claim CPU-credit exhaustion. CPU steal remains observed, not attributed.
+
+
+### Planner / quant read-load slice — 2026-09-13 10:03 UTC
+
+One diagnostic run (not a replacement acceptance run) opened all three charts:
+workspace totals BTC3.163s/ETH13.167s/SOL13.225s, TTFB3.157/13.150/13.205s.
+ETH/SOL lazy chunks15/34ms; health2.534/4.866/8.582s as pages accumulated.
+Nineteen workspace starts, sixteen200completions, three pending at controlled
+close; no page errors or price-trail calls. This localizes delay before the
+workspace HTTP response; it does not alone prove the complete server cause.
+Trace: OS-temp qm0035-aws-load-trace-jzf2y6cx. Owned browser closed, exit0.
+
+Independent isolated retained replay profile (current5332a19, DuckDB1.5.5,
+Windows20threads) returned10000models each; full history-equivalent377–409ms,
+model conversion/validation236–259ms and SQL+fetch76/80/83ms. Only13/14/18rows
+followed the last disconnect in that snapshot; all10000 were validated first.
+AlternativeTOP-N query returned exactly equal rows but98/94/82ms, no consistent
+improvement, so no query rewrite follows. Source hash unchanged. Artifact
+OS-temp qm0035-replay-profile-j1u_o091/analysis.json. Native live439sample profile
+aggregates DuckDB37.59%, Python31.89%, libc12.98%; unlike old admission it has
+no single dominant scan symbol. Local stages cannot quantify AWS contention.
+
+Planner and independent quant reviewer approve one bounded completion-based
+refresh slice in the active plan. For live Hyperliquid only, matching events
+cannot force back-to-back whole-workspace reads; automatic refresh waits5s
+after request success/failure and never overlaps in-flight work. Reuse existing
+ReactQuery polling, scopes and source authority; preserve all backend validation.
+Spacing can be response duration+5s, so aging/stale indications must remain
+honest. Do not represent this as tick-by-tick rendering. Actual three-chart AWS
+latency and source acceptance remain the deciding gate. No other market,
+backend/cache architecture, paid capacity or trading change is included.
