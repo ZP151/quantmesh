@@ -62,11 +62,11 @@ required regression belongs there). No other production file.
 
 - [x] Deploy exact merged source using reviewed existing private release helper.
   Keep the original lake, all four old quarantines and rollback releases.
-- [ ] On retained production-sized lake, paired API/browser witness: six
+- [x] On retained production-sized lake, paired API/browser witness: six
   Markets/Watchlist entry paths; real source/time/age<=30s; at least two active
   candle changes and one next-minute append; reload retains covered points.
   Health/state/workspace response times must be recorded, with no20s timeouts.
-- [ ] Check existing stale/disconnect/gap controls separately; papertrue/livefalse
+- [x] Check existing stale/disconnect/gap controls separately; papertrue/livefalse
   and orders/risk unchanged. Observe response/ingestion under actual browser
   load, then record user-facing acceptance steps and limits in iteration/issue.
   Do not infer durable health merely from a brief fresh restart.
@@ -109,10 +109,83 @@ other venue timings, user-driven refresh, packet mutations and UI copy stay.
   stale/degraded labels at existing thresholds. Response duration plus5s is
   the possible refresh spacing, not a promise of five-second ticks. No stale
   value becomes fresh just because WebSocket remains connected.
-- [ ] Independent spec/standards review max2rounds; root full frontend suite,
+- [x] Independent spec/standards review max2rounds; root full frontend suite,
   typecheck/lint/API freshness and production build plus packaged chart E2E.
   Commit/push one reviewed slice, required exact-head CI, squash merge.
-- [ ] Exact AWS deployment; actual three-page trace shows bounded request
+- [x] Exact AWS deployment; actual three-page trace shows bounded request
   rate and lower response times, then complete source/browser/reload gates.
   If response time still violates acceptance, record failure and return to
   Planner; do not increase timeouts or freshness tolerance to pass.
+
+### Task3a deployment and measurement boundary — 2026-09-13 11:30 UTC
+
+Final e23ab82 CI34751913362 passed3524Python/365frontend. PR149 merged as
+76203e03476b120e149a0c06d9932849bb4d8e14, tree6e43a7754040bd35b2cef5b8094922fd90157e14
+equal to tested candidate. Private deployment exited0, PID45254/papertrue/livefalse.
+Paired actual attempt1 passed all six paths but failed after one DOM sample:
+SOL-60 had no native completion at20.140s. It began in the OLD SOL document
+during full navigation; new SOL-70 completed200 in10.577s. Native trace lacks
+send/response timing for SOL-60, so backend20s timeout is not yet established.
+The failure is retained. After the helper's prior two review rounds, return
+to Planner to reduce/disambiguate the document-lifecycle measurement before
+another run. Keep active-document20s/source-age/sustained/reload/safety criteria.
+
+## Task3b — distinguish abandoned documents in the acceptance measurement
+
+Planner independently approved a bounded measurement-only slice after the
+above failure. Own a new OS-temp qm0035-paired-aws-witness-v2.py and adjacent
+pure controls; preserve the original helper and failed actual artifacts.
+No application, server, data, timeout or freshness change is authorized by this
+measurement design. Use native CDP requestId/page/frameId/loaderId identity,
+not URL/time matching between Playwright callbacks.
+
+- [x] RED/GREEN pure controls: eligible exact old-loader request retires below
+  20s at confirmed commit; >=20s still fails; new/unknown loader, other page/frame,
+  SPA and intent-without-commit cannot retire; known errors/non2xx survive;
+  late completion/failure stays attached to censored request, never counted as
+  success; reload and successive document changes preserve identities/deadlines.
+- [x] Native Network requestWillBeSent/responseReceived/loadingFinished/
+  loadingFailed plus Page.frameNavigated feed one consistent monotonic gate.
+  Only an explicit full-navigation/reload operation and confirmed new-document
+  commit may retire unresolved requests from that exact prior page/frame/loader.
+  Check deadline and known failure before cut. Retirements are censored
+  observations, separate from completed-response latency and success counts.
+- [x] Independent bounded review, maximum two rounds; root verifies controls,
+  unchanged original helper SHA and unchanged application tree. Retain all
+  six paths,600s simultaneous three-page sampling, own-frame matching, real
+  source/time/age, history/reload, responsive requests and unchanged safety.
+- [x] Run one new actual witness against deployed76203e0 in a new artifact
+  directory. Retain the earlier inconclusive request/failure. If active-document
+  latency or source checks fail, record that evidence and return to Planner.
+
+Protocol reference: [Chrome DevTools canonical browser protocol schema](https://raw.githubusercontent.com/ChromeDevTools/devtools-protocol/master/json/browser_protocol.json).
+requestWillBeSent includes request/loader identity and optional frame identity;
+frameNavigated confirms the frame has a new loader. Navigation intent alone is
+insufficient, and a worker's empty loader cannot establish retirement authority.
+
+Planner clarification: the existing narrow expected-navigation abort exception
+is retained. Only native canceled=true plus exact net::ERR_ABORTED, matching
+explicit old page/frame/loader, start-to-abort<20s and subsequently confirmed
+replacement-document commit can become a censored cancellation. Pending commit
+is not success; operation end without commit fails. Known non2xx/other failures
+remain failures. Add controls for pre-commit abort, missing commit, >=20s abort
+and abort with known HTTP failure. Do not classify a normal current-document
+network error as a navigation cancellation.
+
+## Final acceptance checkpoint — 2026-09-13 12:15 UTC
+
+Task 3b's final helper and 18 control methods passed independent review. The
+actual deployed `76203e0` witness passed 601.662 seconds across all six entry
+paths: 175 samples per page, 62/55/53 real-frame-matched chart changes, 11 minute
+tails per coin and 296 completed requests with no censoring, pending requests,
+errors or 20-second violations. Reload retention, source/freshness, keyboard,
+desktop/mobile and unchanged orders/risk/paper/live-execution checks passed.
+Independent raw-evidence review found no issues. The detailed final checkpoint
+and copy-only retention limitation are recorded in
+[iteration 0035](../../iterations/0035-live-instrument-charts.md).
+
+Existing replay-window API evidence shows 1,074,523 rows through 12:11:55 UTC.
+The fresh stable-copy inspection failed to obtain a quiet window; no primary
+mutation or fresh quarantine count is claimed. This does not replace the actual
+chart reload evidence. Documentation review/integration closes this plan; no
+additional source repair, deployment, acceptance rerun or new market is needed.

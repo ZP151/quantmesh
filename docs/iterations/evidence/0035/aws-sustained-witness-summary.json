@@ -1,0 +1,267 @@
+{
+  "recorded_at": "2026-09-13T12:16:57.148146+00:00",
+  "integration": {
+    "issue": "https://github.com/ZP151/quantmesh/issues/144",
+    "pull_request": "https://github.com/ZP151/quantmesh/pull/149",
+    "candidate": "e23ab823894763dd0acdd36541db410e61178071",
+    "ci_run": "https://github.com/ZP151/quantmesh/actions/runs/34751913362",
+    "ci_conclusion": "success",
+    "ci_checkout": "b4b6adc2c9d203f7f7a17a3fe4d593eee786a0f7",
+    "python_tests": {
+      "passed": 3524,
+      "skipped": 56,
+      "warnings": 9,
+      "seconds": 3001.44
+    },
+    "frontend_tests_passed": 365,
+    "merged_commit": "76203e03476b120e149a0c06d9932849bb4d8e14",
+    "merged_at": "2026-09-13T11:20:26Z",
+    "candidate_ci_checkout_and_merged_tree": "6e43a7754040bd35b2cef5b8094922fd90157e14",
+    "deployment_exit_code": 0,
+    "deployed_commit": "76203e03476b120e149a0c06d9932849bb4d8e14",
+    "release": "/opt/quantmesh/releases/76203e03476b120e149a0c06d9932849bb4d8e14",
+    "service": "quantmesh-staging.service",
+    "pid": 45254,
+    "service_started_at": "2026-09-13T11:24:24Z",
+    "bind": "127.0.0.1:8765",
+    "runtime_mode": "live",
+    "paper_mode": true,
+    "live_trading": false,
+    "acceptance": "passed; attempt-2 independently audited, attempt-1 failure retained",
+    "note": "Controller metadata transcribed from completed CLI/API results; actual browser evidence is stored separately."
+  },
+  "acceptance": {
+    "audit_scope": "Independent offline raw-evidence audit; no test, browser, network, deployment or acceptance rerun. Only this report was written.",
+    "status": "passed",
+    "findings": [],
+    "build": "76203e03476b120e149a0c06d9932849bb4d8e14",
+    "helper_sha256": "9a3a26014624a33855824f3ae1d29990bd70c78f827b95b159390ee51a88dcff",
+    "sampling": {
+      "reported_seconds": 601.6619380000047,
+      "raw_first_to_last_DOM_seconds": 598.3356,
+      "raw_sampling_start_to_first_postloop_history_probe_seconds": 601.6001,
+      "three_page_samples": 175,
+      "six_paths": [
+        [
+          "markets",
+          "BTC"
+        ],
+        [
+          "markets/watchlist",
+          "BTC"
+        ],
+        [
+          "markets",
+          "ETH"
+        ],
+        [
+          "markets/watchlist",
+          "ETH"
+        ],
+        [
+          "markets",
+          "SOL"
+        ],
+        [
+          "markets/watchlist",
+          "SOL"
+        ]
+      ]
+    },
+    "symbols": {
+      "BTC": {
+        "dom_samples": 175,
+        "own_frames": 395,
+        "dom_changes_matched_to_prior_own_frames": 62,
+        "tail_minutes": 11,
+        "max_distinct_closes_same_minute": 6,
+        "quote_samples": 48,
+        "quote_source_times": 48,
+        "max_reported_quote_age_ms": 2173,
+        "max_quote_source_age_at_capture_ms": 2988.483,
+        "max_receipt_age_at_capture_ms": 1668.644,
+        "continuity_counts": {
+          "complete": 48
+        },
+        "settled_matches_before_after_reload": [
+          141,
+          142
+        ],
+        "retained_reload_points_checked": 141,
+        "final_coverage": {
+          "interval": "1m",
+          "venue": "hyperliquid",
+          "symbol": "BTC",
+          "start": "2026-09-13T09:44:00Z",
+          "end": "2026-09-13T12:07:00Z",
+          "rows": 144
+        },
+        "final_workspace_age_ms": 594,
+        "workspace_latency_seconds": {
+          "completed": 100,
+          "max": 5.742878,
+          "p95_nearest_rank": 2.578809
+        }
+      },
+      "ETH": {
+        "dom_samples": 175,
+        "own_frames": 194,
+        "dom_changes_matched_to_prior_own_frames": 55,
+        "tail_minutes": 11,
+        "max_distinct_closes_same_minute": 5,
+        "quote_samples": 48,
+        "quote_source_times": 48,
+        "max_reported_quote_age_ms": 3364,
+        "max_quote_source_age_at_capture_ms": 3795.483,
+        "max_receipt_age_at_capture_ms": 2929.781,
+        "continuity_counts": {
+          "complete": 48
+        },
+        "settled_matches_before_after_reload": [
+          141,
+          142
+        ],
+        "retained_reload_points_checked": 141,
+        "final_coverage": {
+          "interval": "1m",
+          "venue": "hyperliquid",
+          "symbol": "ETH",
+          "start": "2026-09-13T09:44:00Z",
+          "end": "2026-09-13T12:07:00Z",
+          "rows": 144
+        },
+        "final_workspace_age_ms": 1513,
+        "workspace_latency_seconds": {
+          "completed": 99,
+          "max": 6.277535,
+          "p95_nearest_rank": 3.450217
+        }
+      },
+      "SOL": {
+        "dom_samples": 175,
+        "own_frames": 237,
+        "dom_changes_matched_to_prior_own_frames": 53,
+        "tail_minutes": 11,
+        "max_distinct_closes_same_minute": 7,
+        "quote_samples": 48,
+        "quote_source_times": 48,
+        "max_reported_quote_age_ms": 5551,
+        "max_quote_source_age_at_capture_ms": 5587.87,
+        "max_receipt_age_at_capture_ms": 5327.027,
+        "continuity_counts": {
+          "complete": 48
+        },
+        "settled_matches_before_after_reload": [
+          142,
+          142
+        ],
+        "retained_reload_points_checked": 142,
+        "final_coverage": {
+          "interval": "1m",
+          "venue": "hyperliquid",
+          "symbol": "SOL",
+          "start": "2026-09-13T09:44:00Z",
+          "end": "2026-09-13T12:07:00Z",
+          "rows": 144
+        },
+        "final_workspace_age_ms": 1500,
+        "workspace_latency_seconds": {
+          "completed": 97,
+          "max": 5.737128,
+          "p95_nearest_rank": 2.999651
+        }
+      }
+    },
+    "cdp_native": {
+      "requests": 296,
+      "completed": 296,
+      "failed": 0,
+      "pending": 0,
+      "censored": 0,
+      "violations": 0,
+      "latency_percentile_method": "nearest-rank p95, native loadingFinished minus requestWillBeSent, grouped by URL instrument"
+    },
+    "api_probes": {
+      "count": 82,
+      "max_seconds": 4.475503399968147
+    },
+    "safety": {
+      "health_observations": 21,
+      "exact_build_all": true,
+      "paper_mode": true,
+      "live_trading": false,
+      "baseline_equals_final": true,
+      "baseline_and_final": {
+        "orders": [],
+        "risk": {
+          "paper_limits": {
+            "kill_switch": false,
+            "max_order_quantity": null,
+            "max_notional": null,
+            "max_position_quantity": null
+          },
+          "hl_posture": null,
+          "alerts": [],
+          "alerts_bound": false
+        }
+      }
+    },
+    "limits": [
+      "Raw DOM samples span slightly less than600s because sampling is discrete; raw subsequent history-probe boundary corroborates full600s loop.",
+      "Keyboard/viewport assertions are recorded by the retained helper and summary; this audit did not rerun browser interactions.",
+      "This evidence establishes this bounded deployed run, not indefinite availability."
+    ],
+    "audited_at": "2026-09-13T12:10:59.348480+00:00"
+  },
+  "refresh_spacing": {
+    "BTC": {
+      "scope": "Longest-lived document loader containing sustained sampling; excludes explicit full navigations/reloads",
+      "loader_id": "4F4798D0162EFC649C94AD9AACE86582",
+      "requests": 93,
+      "minimum_response_end_to_next_request_s": 5.002072999952361,
+      "maximum_response_end_to_next_request_s": 5.036595000186935
+    },
+    "ETH": {
+      "scope": "Longest-lived document loader containing sustained sampling; excludes explicit full navigations/reloads",
+      "loader_id": "B6D920CD7ED31FADC380C01B25BC192C",
+      "requests": 93,
+      "minimum_response_end_to_next_request_s": 5.002328000031412,
+      "maximum_response_end_to_next_request_s": 5.026238000020385
+    },
+    "SOL": {
+      "scope": "Longest-lived document loader containing sustained sampling; excludes explicit full navigations/reloads",
+      "loader_id": "7A9D686534472A50F37B29C3142E0FFA",
+      "requests": 92,
+      "minimum_response_end_to_next_request_s": 5.002286999952048,
+      "maximum_response_end_to_next_request_s": 5.024686999851838
+    }
+  },
+  "retention": {
+    "current_readonly_replay_extent": {
+      "source": "lake",
+      "count": 1074523,
+      "earliest": "2026-09-12T18:47:14.188289+08:00",
+      "latest": "2026-09-13T20:11:55.168468+08:00",
+      "venues": [
+        "hyperliquid"
+      ]
+    },
+    "previous_direct_snapshot_rows": 896780,
+    "growth_since_previous_snapshot": 177743,
+    "stable_file_copy": "Failed after ten attempts during active writes; primary unchanged; no pause or retry",
+    "last_direct_quarantine_index_check": {
+      "at": "2026-09-13T09:56:58Z",
+      "quarantines": 4,
+      "lookup_index_present": true
+    },
+    "fresh_direct_quarantine_count": null
+  },
+  "limits": [
+    "BTC/ETH/SOL Hyperliquid only; no all-market or tick-by-tick claim",
+    "Recorded minute coverage and explicit 5m->1m fallback, not qualified full-range history",
+    "601.662-second observation does not certify indefinite availability",
+    "Previous failed witnesses remain failures; no threshold or age relaxation",
+    "No orders, new infrastructure or live-execution enablement"
+  ],
+  "raw_artifacts": "output/playwright/0035-aws-76203e0/attempt-2 (ignored local artifacts)"
+}

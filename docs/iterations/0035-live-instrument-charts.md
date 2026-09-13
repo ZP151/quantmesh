@@ -1,11 +1,15 @@
 # Iteration 0035 — Real charts from Markets and Watchlist
 
-- Status: REOPENED on2026-09-13 07:55 UTC after operator-reported loading and
-  stale quotes. Prior closeout PR147 merged; sustained recovery is in progress.
+- Status: actual AWS user-loop ACCEPTED on 2026-09-13 12:07 UTC after sustained
+  recovery; documentation closeout in progress. Earlier failures remain below.
 - Issue: [#144](https://github.com/ZP151/quantmesh/issues/144).
 - Original branch: `codex/0035-live-instrument-charts`, from `origin/main@2a50565`.
 - Follow-up branch: `codex/0035-chart-acceptance`, from merged `origin/main@90fe577`.
 - Plan: `docs/superpowers/plans/2026-09-12-live-instrument-charts.md`.
+- Recovery: `docs/superpowers/plans/2026-09-13-sustained-live-chart-recovery.md`.
+- Latest deployment: `76203e03476b120e149a0c06d9932849bb4d8e14` (PR #149).
+- [Compact acceptance evidence](evidence/0035/aws-sustained-witness-summary.json)
+  and [operator steps](../runbooks/live-chart-acceptance.md).
 
 ## User action and measurable outcome
 
@@ -814,3 +818,168 @@ all source, own-frame/DOM, reload and safety checks and persists failures.
 Reviewed helper SHA2563dbab3130e33e26f718391321bff0f6bddbda39e652540ce91bcf5f3eb21ac58.
 It has not run against AWS; exact new merge/deployment and actual acceptance
 remain outstanding. The supplementary local result cannot close144.
+
+### Verifier / integration and actual measurement failure — 2026-09-13 11:30 UTC
+
+Final candidate e23ab823894763dd0acdd36541db410e61178071 passed required
+CI34751913362:3524Python tests,56skipped,9warnings in3001.44s;365frontend tests
+and license/audit/API/typecheck/lint/committed-bundle gates passed. The only
+GitHub review thread was resolved. PR149 merged11:20:26UTC as
+76203e03476b120e149a0c06d9932849bb4d8e14; exact fulltree
+6e43a7754040bd35b2cef5b8094922fd90157e14 equals tested candidate. A PowerShell
+unquoted HEAD^{tree} read failed; corrected quoted revision and explicit tree
+comparison passed. No mutation occurred in the failed read.
+
+The CI log's synthetic merge checkout b4b6adc2c9d203f7f7a17a3fe4d593eee786a0f7
+was independently resolved through GitHub's commit API to that same fulltree;
+the tested checkout, PR candidate and deployed squash merge agree.
+
+Reviewed existing private deployer/unit blob IDs remain unchanged. Deployment
+session59488 exited0, activated exact76203e0, pip check passed, service User
+quantmesh/PID45254 started11:24:24UTC and listens only127.0.0.1:8765. One health
+probe during release transition returned502; post-completion health returned
+ok/exact build/runtime live/papertrue/livefalse. Both user's IAB QuantMesh tabs
+were reloaded, BTC screenshot showed build76203e0 and real chart. No lake,
+rollback, public access or trading configuration was changed.
+
+Reviewed paired helper actual AWS attempt1/session59913 exited1. Six actual
+Markets/Watchlist paths opened1D/Line real charts,102–103rows, but only one DOM
+sample per coin preceded failure. SOL-60 remained pending at20.140s; no600s,
+reload or final orders/risk gate was reached. Preserve artifacts in ignored
+output/playwright/0035-aws-76203e0/attempt-1, including trace, request/frame/DOM/
+source streams, screenshots and server journal. No retry or threshold change.
+
+Independent browser audit matched helper events to native trace: SOL-56
+completed200 at11:25:51.739; full Watchlist navigation began53.938; SOL-60 was
+born56.753 in the old SOL document,5.014s after prior completion. Watchlist
+document responded59.343. New-document SOL-70 started11:26:03.877 and completed
+200 at14.454 (10.577s); all six paths passed14.965. SOL-60 tripped16.893 and
+remained unresolved at21.004 cutoff. Native response/status/send timings are
+also absent, so this is not evidence of a dropped Python completion callback,
+but it does not prove the server held a request20s. Old-document abandonment
+remains ambiguous. New SOL response was fresh200, not asset304 cache reuse.
+
+Independent backend audit still identifies repeated10000-model replay
+conversion as a potential workspace-specific cost. BTC/ETH completed requests
+show native TTFB10.27/10.38s while nearby state/health probes were22/15ms;
+neither that observation nor prior local profiles proves SOL-60's cause.
+After owned witness browsers closed, a four-interval vmstat sample showed
+0–2%steal; this is not a concurrent-load comparison with earlier42–62%steal.
+
+Planner boundary: the helper already had two review rounds. Return to a
+bounded document-lifecycle measurement design before patching it or choosing
+another backend fix. Retain20s active-document request, actual source/freshness,
+600s three-page changes/appends, reload and unchanged-safety gates. Issue144
+and the goal remain incomplete; no additional market work has started.
+
+### Task3b measurement controls and review checkpoint — 2026-09-13 11:50 UTC
+
+Planner approved native CDP page/request/frame/loader identity with confirmed
+document replacement as the only authority for censoring old-document requests.
+Censored observations are never successes or completed-latency samples. Keep
+20s active-document deadlines and all real-source/600s/reload/safety assertions.
+An expected native canceled=true/net::ERR_ABORTED below20s requires exact old
+identity, explicit full navigation/reload and subsequent commit; missing commit,
+other failures and non2xx still fail. The active plan contains exact controls.
+
+Implementer prepared separate OS-temp v2 helper; original helper/failure stay.
+Pure controls recorded initial censor RED, seven-control RED, and expected-abort
+RED, then GREEN13methods/35subtests. Root independently reran13methods, passed.
+One authorized synthetic loopback wiring fixture used the same observer: old
+loader request50016.2 had no native terminal event and was censored at1.537226s;
+new loader50016.4 completedHTTP200 in5.15ms, sole completed latency sample.
+This reproduces the lifecycle gap, not market-data acceptance. Browser/server
+closed, port52044 closed. A late synthetic server write logged WinError10053,
+preserved without retry. Root inspected raw loader events and report. Artifacts:
+OS-temp qm0035-v2-cdp-wiring-s9bewrgw; helper/test reports adjacent in OS-temp.
+
+Independent review round1 of v2 SHA
+b20cf19350c95745318cb076b721ad700aede3c81e28512fbed62bdc93664ca8 found one P2:
+drain applies queued frameNavigated at a later sampled clock before later queued
+native completion. Start0, commit/response19.8/finish19.9, sampled20.1 could
+permanently misclassify a valid completion as pending>=20s. Return to implementer
+for one observer-level RED/GREEN correction before round2. Other original
+acceptance gates remain intact. No new AWS witness has run at this checkpoint.
+
+### Task3b round2 and actual run start — 2026-09-13 11:58 UTC
+
+Observer-level RED reproduced both queued native finish19.9 at cut20.1 being
+misclassified and a native event20.2 arriving during a sampled clock20.1.
+Drain now reconciles known native outcomes before timestamp-less commits and
+uses max(sampled clock,native batch timestamps) as one browser-clock frontier.
+No deadline grace is added. True>=20s finishes/pending requests, HTTP503,
+generic failures, exact new-loader deadlines and previously censored late
+events have contrasting controls. GREEN18methods/40subtests; root reran18,
+passed. Ruff/compile/format passed. Independent round2 resolved P2, no further
+findings. Original source/assertions/failure remain unchanged.
+
+Reviewed final helper SHA256
+9a3a26014624a33855824f3ae1d29990bd70c78f827b95b159390ee51a88dcff.
+Earlier loopback wire fixture tested b20cf193's shared CDP binding; the final
+batch-order correction has observer-level controls, not a second wire run.
+Actual new witness started11:56:35UTC on deployed76203e0, session97072,
+output/playwright/0035-aws-76203e0/attempt-2. All six entry paths passed by
+11:56:58.753 with133rows each;600s simultaneous sampling is in progress.
+This start/progress checkpoint is not final acceptance.
+
+### Actual AWS acceptance completed — 2026-09-13 12:15 UTC
+
+Verifier: the reviewed v2 witness exited 0 at 12:07:43 UTC on deployed
+`76203e03476b120e149a0c06d9932849bb4d8e14`. Sampling lasted 601.662 seconds
+with 175 observations per page. All six Markets/Watchlist entry paths passed.
+BTC/ETH/SOL produced 62/55/53 DOM changes matched to earlier real frames from
+their own pages, 11 minute tails each and up to 6/5/7 distinct closes within
+one minute. The first-to-last DOM sample span was 598.336 seconds; the sampling
+loop duration, rather than that narrower span, establishes the ten-minute gate.
+
+All 296 native workspace requests completed; none failed, timed out, remained
+pending or were censored. Maximum latency was 5.743/6.278/5.737 seconds and p95
+was 2.579/3.450/3.000 seconds. In each page's longest-lived sampling document,
+minimum response-end-to-next-request spacing was 5.002073/5.002328/5.002287
+seconds. Explicit full navigations and reloads are outside that spacing claim.
+All 21 health observations matched the deployed build, paper enabled and live
+execution disabled. Quote observations were real with complete continuity;
+maximum reported quote age was 5.551 seconds. Orders and risk state were unchanged.
+
+Each chart grew from 133 to 144 rows, covering 09:44 through 12:07 UTC. Settled
+API history matched before and after reload; independently checked retained
+points were 141/141/142. Keyboard Candles/Line switching, 1440px and 390px
+layouts, no horizontal overflow and TradingView attribution passed. Root viewed
+the actual BTC screenshot. Independent Reviewer/Verifier audited raw CDP events,
+frames, source times and DOM observations offline and reported no findings.
+
+Evidence: `output/playwright/0035-aws-76203e0/attempt-2` contains the raw witness,
+`verifier-audit.json`, `refresh-spacing.json`, helper, controls and screenshots.
+The portable tracked summary is
+[aws-sustained-witness-summary.json](evidence/0035/aws-sustained-witness-summary.json);
+operator steps are in [the acceptance guide](../runbooks/live-chart-acceptance.md).
+Earlier failed/inconclusive attempts remain failures; this passing run needed
+zero request censoring. No application change followed the deployed PR #149.
+
+Retention: the existing in-process replay-window API reported 1,074,523 retained
+rows, from 2026-09-12 10:47:14 UTC through 2026-09-13 12:11:55 UTC: 177,743 more
+than the previous direct snapshot. A separate stable-copy attempt exhausted ten
+tries while writes continued and exited 1. It did not alter or pause the primary
+lake, and no unstable copy was read or retried. Current extent and growth are
+API evidence; the last direct index/quarantine check remains 09:56 UTC, with the
+lookup index present and four old quarantines. No fresh direct count is claimed.
+
+Planner/Product: issue #144's real-chart user loop is accepted. This remains a
+bounded ten-minute witness and partial recorded history, not indefinite uptime,
+qualified full-day history, tick-by-tick rendering or all-market acceptance.
+Documentation integration is the remaining closeout step. Next is existing
+Moomoo/OpenD host, private route and quote-entitlement readiness for AAPL/NVDA;
+the operator's connection-information reply is pending. No new market or paid
+capacity is authorized by this acceptance, and paper remains the default.
+
+### Documentation review and verification boundary
+
+Independent closeout review found no material findings across the eight changed
+documentation/evidence files. Root validation passed strict UTF-8 decoding of
+344 Markdown files, 19 local links, JSON parsing and equality with the retained
+raw audit/spacing/replay-extent files. `git diff --check` and
+`ruff check src tests tools` passed. `git submodule status` completed; its nine
+uninitialized pinned submodules were unchanged. Source/frontend/deploy/tests/tools
+are identical to the deployed, CI-tested `76203e0` tree. No new application test
+run is claimed for these documentation changes; the final documentation PR's
+required CI must pass before integration. No redeployment is required.
