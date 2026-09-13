@@ -167,11 +167,13 @@ class LiveBuffer:
                 key = self._identity_key(update)
                 existing = existing_by_key.get(key)
                 if existing is None:
+                    # Row equality keeps exact scope without preventing DuckDB's
+                    # single-column source-ID index scan.
                     row = self._con.execute(
                         "SELECT local_seq, content_digest FROM market_updates "
-                        "WHERE venue = ? AND instrument = ? AND kind = ? "
-                        "AND source_event_id = ?",
-                        list(key),
+                        "WHERE source_event_id = ? "
+                        "AND row(venue, instrument, kind) = row(?, ?, ?)",
+                        [key[3], key[0], key[1], key[2]],
                     ).fetchone()
                     if row is not None:
                         existing = (row[0], row[1])
@@ -394,6 +396,12 @@ class LiveBuffer:
                 "CREATE UNIQUE INDEX IF NOT EXISTS idx_updates_source_identity "
                 "ON market_updates "
                 "(venue, instrument, kind, source_event_id)"
+            )
+            self._con.execute(
+                # Composite uniqueness remains authoritative; this non-unique
+                # index supplies the selective read path after legacy migration.
+                "CREATE INDEX IF NOT EXISTS idx_updates_source_event_lookup "
+                "ON market_updates (source_event_id)"
             )
             self._con.execute(
                 "CREATE UNIQUE INDEX IF NOT EXISTS idx_quarantine_conflict_identity "

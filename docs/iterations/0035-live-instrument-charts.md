@@ -1,7 +1,7 @@
 # Iteration 0035 — Real charts from Markets and Watchlist
 
-- Status: product accepted on AWS; documentation closeout pending integration,
-  2026-09-13 local date. Earlier failed attempts remain recorded below.
+- Status: REOPENED on2026-09-13 07:55 UTC after operator-reported loading and
+  stale quotes. Prior closeout PR147 merged; sustained recovery is in progress.
 - Issue: [#144](https://github.com/ZP151/quantmesh/issues/144).
 - Original branch: `codex/0035-live-instrument-charts`, from `origin/main@2a50565`.
 - Follow-up branch: `codex/0035-chart-acceptance`, from merged `origin/main@90fe577`.
@@ -508,3 +508,70 @@ live artifact with known identity limitations. Fresh `ruff check src tests tools
 `git diff --check` and submodule comparison passed; only seven documentation
 files changed from the accepted deployed tree. Required closeout PR CI remains
 an integration gate, with no duplicate full local suite or deployment.
+
+## Reopened operator acceptance — 2026-09-13 07:55 UTC
+
+The operator cannot see live data. Actual9cfe1bc BTC page remains in Loading
+instrument workspace. BTC/ETH/SOL sampled quote ages are252837/252099/251895ms,
+all stale; health, live/state and BTC workspace all exceed20s in the bounded
+read-only probe qm0035-operator-probe.py. SSH localhost health also exceeds8s.
+
+PID41909 remains running after~15h; memory/disk have headroom. t3.small has
+73–79% sampled CPU steal (CPU-credit balance is not measured). Public
+Hyperliquid allMids responds within5s. CPU profiling447samples attributes
+52.57% to DuckDB string decompression,15.66% to column filtering and6.49% to
+partial string scanning. Stable preserved DB/WAL copy:
+/tmp/quantmesh-0035-stalled-lake-d17h3lj3,855594rows,402857256bytes,still4old
+quarantines. This is a persistence/response-latency investigation, not a
+reappearance of the previously fixed identity conflicts.
+
+On a separate copied database /tmp/quantmesh-0035-lookup-benchmark-8e8jm7y4,
+DuckDB1.5.5 exact identity lookups take0.872s(hit)/0.714s(miss), both Sequential
+Scan. An additive source_event_id index alone does NOT fix the existing
+four-predicate query:0.611/0.664s and still Sequential Scan. MAX(local_seq)
+is~1ms. Query-shape benchmarking continues before implementation. No live
+DB/index/service mutation, infrastructure change or trading action yet.
+
+### Sustained-recovery implementation and retained workload evidence
+
+- Planner: bounded admission lookup correction, with exact-file plan
+  `docs/superpowers/plans/2026-09-13-sustained-live-chart-recovery.md`.
+  Existing approved real-chart outcome and private-deployment authority apply.
+- Researcher/root: reopened actual855594-row DuckDB1.5.5 copy still needs1.101s
+  for the old four-predicate lookup; row-scoped equality plus source-ID index
+  needs3.628ms and produces Index Scan with equal results. Independent local
+  checkpointed200004-row SQL experiment confirms hits/misses/shared-ID scopes.
+- Implementer RED3failed/4passed: actual captured admission query sequential,
+  and the required index absent after legacy/reopen. GREEN7passed5.64s; focused
+  buffer/feed/candle/observation/supervisor regression175passed14.31s. Add only
+  the nonunique source-ID index after legacy migration and express complete
+  scope as row equality. Preserve compositeUNIQUE and all transaction guards.
+- Reviewer: independent spec/correctness and standards/architecture/safety
+  round-one reviews found no actionable issues. No second round needed.
+- Root whole-batch benchmark: local copies of the preserved actual lake using
+  baseline9cfe1bc versus fixed LiveBuffer, six fresh21-event batches plus exact
+  redeliveries. Each batch includes3candles/3quotes/6metrics/6paired-book/3trades.
+  At100000rows, fresh median120.3ms->32.4ms and admission checks183->896/s.
+  At855594rows, fresh median291.4ms->58.0ms, maximum-of-six360.9ms->106.6ms,
+  whole-workload CPU17.94s->1.08s, checks74.9->458.9/s. Measured process RSS
+ 320.2MB->353.9MB and resulting DB395.1MB->487.1MB at the larger size.
+  Each run preserved quarantine count4, exact replay/duplicate receipt
+  sequences, expected inserted row count and reopened contents. These are
+  local benchmarks, not AWS throughput guarantees; six samples do not establish
+  a production latency percentile. Artifact OS-temp
+  `qm0035-batch-benchmark-1lrsex6_/summary.json`.
+- Benchmark setup caveat: an initial attempt to shrink a copied indexed lake
+  using DELETE hit DuckDB's "Failed to delete all rows from index" error. Only
+  that owned temporary copy was touched. The source backup and AWS primary
+  remain intact. The100000-row fixture was then constructed by copying rows
+  into a fresh schema; the855594-row test uses the full unchanged source copy.
+  This DELETE behavior is recorded for separate retention triage, not silently
+  repaired or applied to production during this slice.
+- No frontend, API schema, provider, dependency or order behavior changed.
+  Broad source/packaged-chart gate, final PR CI and actual retained-lake AWS
+  acceptance follow. The current production build has not yet been updated.
+
+Root combined source/packaged-browser gate:349 passed, one existing Starlette
+warning in52.20s. Global Ruff and changed-test format checks passed; diff
+whitespace passed. No submodule/dependency/frontend asset changes. Commit this
+reviewed checkpoint and require exact-head full CI before merge/deployment.

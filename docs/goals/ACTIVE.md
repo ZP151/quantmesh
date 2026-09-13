@@ -1,7 +1,14 @@
 # Active Goal
 
-Status: iteration 0035 product acceptance passed; documentation closeout awaiting
-review/integration, 2026-09-13 (local date).
+Status: iteration0035 REOPENED by operator evidence, 2026-09-13 07:55 UTC.
+Prior closeout PR147 merged as8f9c25a, but the following day the page remains
+loading and real quotes lag~252s. Issue144 is reopened. Current branch:
+`codex/0035-sustained-chart-recovery`, from origin/main8f9c25a.
+Execute `docs/superpowers/plans/2026-09-13-sustained-live-chart-recovery.md`.
+Actual retained855594-row copy proves the existing identity lookup does a
+full scan; row-scoped equality plus a single-column nonunique source-event
+index enables Index Scan. Implementation/review/deployment/renewed acceptance
+are pending. Do not treat the historical acceptance below as current health.
 
 ## Accepted user outcome
 
