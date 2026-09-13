@@ -38,7 +38,11 @@ PRs #145/#146 merged; corrected `9cfe1bc` is deployed and accepted on
 minute revisions/appends, reload retention and source/freshness semantics for
 BTC/ETH/SOL. The earlier chart build's identity collision was corrected; old
 quarantine evidence remains. See the 0035 ledger for failed and accepted runs.
-This establishes those three crypto instruments only. Next: private Moomoo/
+Operator evidence the following day reopened0035: after~15h, live quote lag
+and HTTP timeouts prevent chart acceptance. The retained-lake lookup performance
+repair is tracked in the2026-09-13 sustained-live-chart-recovery plan; current
+health must be re-proven before proceeding to additional markets.
+This scope covers those three crypto instruments only. Next: private Moomoo/
 OpenD reachability and entitlements for AAPL/NVDA, followed by prediction
 venues and trusted history. See `docs/ITERATION_PLAN.md` for delivery order.
 

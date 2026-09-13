@@ -84,3 +84,28 @@ both channels through same-batch and sequential persistence, restart replay,
 exact repeats, changed payload/time and subsequent real feed-pump delivery.
 The actual acceptance baseline retains all four old quarantine entries and
 requires no new false identity conflict after deployment.
+
+## Physical lookup access path — sustained operation
+
+Next-day AWS evidence on855594 retained rows exposed per-update sequential
+scans in exact identity admission. Composite uniqueness remains necessary but
+does not provide this selective lookup path in DuckDB1.5.5. An additional
+non-unique source_event_id index alone still left the original four scalar
+predicates sequential in the measured query plan.
+
+Retain the complete identity by querying source_event_id equality plus
+`row(venue, instrument, kind) = row(?, ?, ?)`. On the actual retained copy this
+uses Index Scan with equal results. All scope columns are NOT NULL; source IDs
+are validated. The composite UNIQUE constraint remains the authority; a source
+ID alone is not globally unique. Install the additive index in the migration's
+second transaction after legacy columns/backfill validation. No identity, row,
+quarantine, schema-version or transaction semantics change.
+
+The extra index adds startup, memory and disk cost; measure retained-lake batch
+admission and real runtime response/quote freshness before accepting recovery.
+Source-only candidate filtering, sequence caching and async thread changes are
+unnecessary for this bounded measured fix. See the
+[DuckDB indexing guidance](https://duckdb.org/docs/current/guides/performance/indexing)
+and iteration0035 for actual query/batch evidence, including the rejected
+index-only experiment. Older software can read this schema but retains its
+old slow query, so rollback is not a performance recovery guarantee.
