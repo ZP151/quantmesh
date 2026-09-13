@@ -656,7 +656,7 @@ operator instructions; keep them for closeout after PR148 integration rather
 than altering its green head and triggering unrelated repeat CI.
 
 
-### Manual integration, deployed recovery and failed load acceptance — 2026-09-13 10:00 UTC
+### Manual integration, deployed recovery and failed load acceptance â€” 2026-09-13 10:00 UTC
 
 Operator manually merged PR148 at09:39:11UTC as5332a19. Root verified MERGED
 state and full tree2549e8df6a4c8c674ceb20fec88f0e558254e109 equality with green
@@ -665,8 +665,8 @@ private deployer activated exact5332a19 successfully (exit0); PID44749 started
 09:43:53UTC, quantmesh user, loopback8765, live data/papertrue/livefalse.
 Retained data and rollback releases remain. No new infrastructure or order.
 
-Verifier actual API attempt1 recorded16 complete rounds09:45:08–09:54:38UTC,
-ten distinct minute tails per coin and coverage09:44–09:54/11rows at last round.
+Verifier actual API attempt1 recorded16 complete rounds09:45:08â€“09:54:38UTC,
+ten distinct minute tails per coin and coverage09:44â€“09:54/11rows at last round.
 Maximum quote ages BTC4298ms/ETH4362ms/SOL4700ms; workspace2231/1678/5791ms;
 all sampled source/workspace contracts passed real/fresh/receipt bounds.
 The helper exited1 at its final BTC revision assertion: only2distinct closes
@@ -704,7 +704,7 @@ the old admission profile; do not assume the previous query repair failed or
 claim CPU-credit exhaustion. CPU steal remains observed, not attributed.
 
 
-### Planner / quant read-load slice — 2026-09-13 10:03 UTC
+### Planner / quant read-load slice â€” 2026-09-13 10:03 UTC
 
 One diagnostic run (not a replacement acceptance run) opened all three charts:
 workspace totals BTC3.163s/ETH13.167s/SOL13.225s, TTFB3.157/13.150/13.205s.
@@ -715,8 +715,8 @@ workspace HTTP response; it does not alone prove the complete server cause.
 Trace: OS-temp qm0035-aws-load-trace-jzf2y6cx. Owned browser closed, exit0.
 
 Independent isolated retained replay profile (current5332a19, DuckDB1.5.5,
-Windows20threads) returned10000models each; full history-equivalent377–409ms,
-model conversion/validation236–259ms and SQL+fetch76/80/83ms. Only13/14/18rows
+Windows20threads) returned10000models each; full history-equivalent377â€“409ms,
+model conversion/validation236â€“259ms and SQL+fetch76/80/83ms. Only13/14/18rows
 followed the last disconnect in that snapshot; all10000 were validated first.
 AlternativeTOP-N query returned exactly equal rows but98/94/82ms, no consistent
 improvement, so no query rewrite follows. Source hash unchanged. Artifact
@@ -735,7 +735,7 @@ latency and source acceptance remain the deciding gate. No other market,
 backend/cache architecture, paid capacity or trading change is included.
 
 
-### Task3a implementation and controller gates — 2026-09-13 10:14 UTC
+### Task3a implementation and controller gates â€” 2026-09-13 10:14 UTC
 
 Implementer owns only InstrumentWorkspace.tsx and its component test. Six new
 regressions failed on old behavior (6failed/30skipped,3.69s) then passed with the
@@ -767,3 +767,50 @@ source+asset gate and require new exact-head CI before merge/deploy; prior
 PR148 CI does not certify this frontend change. AWS still5332a19 and complete
 actual acceptance remains outstanding. Remote merged PR148 feature branch was
 removed under standing authority; its local branch/main history is preserved.
+
+### PR149 encoding correction and supplementary local acceptance â€” 2026-09-13 10:27 UTC
+
+PR149 candidate6e2f63fc2033674b18bb80fe572e5475b9e0c8bf passed CI pre-test gates
+and entered Python tests. GitHub review then correctly found Windows-1252 dash
+bytes introduced by root's default-encoding documentation writes. Strict UTF-8
+decoding reproduced both failures. Replaced exactly7 invalid punctuation bytes
+in this ledger and3 in the plan with the intended UTF-8 en/em dashes, preserving
+all existing valid content. Independent byte-level review found no remaining
+issue; all343 tracked Markdown files decode strictly as UTF-8. Subsequent writes
+must use explicit UTF-8. CI34751315247 was cancelled as superseded, not counted
+as passed; watcher64952 is terminal exit1/cancelled. New final-head CI is required.
+
+The unchanged6e2f63f source and packaged assets also passed a supplementary
+LOCAL actual-public-feed witness on a hash-verified855594-row copy. All15
+Settings Path roots and empty paper account were isolated. Six Markets/Watchlist
+paths passed;300.260s/93 DOM samples per page proved six tail minutes each,
+maximum distinct closes within a minute6/7/7, and33/33/35 changed BTC/ETH/SOL
+DOM tails matched their own real candle frames. Six settled points per coin
+matched API history before and after reload. Source/receipt/coverage checks,
+papertrue/livefalse, orders/risk equality, keyboard and1440/390px passed.
+
+Completed browser workspace requests60/59/59 had sampled p95 latency
+748/788/875ms and maxima1229/999/1096ms; zero request violations or page errors.
+Browser-native request/response timestamps show completion-to-next-read minima
+5.001630/5.000903/5.001242s. Python callback arrival timestamps have small
+delivery jitter (minimum4.9979s), retained separately rather than rounded into
+a strict timing claim. Light API state/health probes and final workspace/history
+checks replace the earlier redundant full-workspace probe loop; this is not a
+controlled performance comparison with that different workload or an AWS result.
+
+Runtime grew855594->863889rows (+8295), quarantine4->4, orders0; source SHA
+unchanged. Server stopped10:24:45UTC, owned port49674 closed and processes exited.
+Cleanup logged two Windows Proactor connection-reset callbacks and a5s Uvicorn
+graceful-shutdown warning (Cancel0runningtasks); those logs are preserved, not
+reported as warning-free shutdown. No source patch/retry was made for them.
+Root inspected reports and raw request/DOM records. Artifacts: OS-temp
+qm0035-local-paired-6e2f63f-y2nh76p9/{analysis.json,report.json,browser/}.
+
+The actual AWS paired helper now has completed independent review: round1
+caught a missing gate on slow/failed browser-origin workspace fetches; round2
+verified explicit failed/non2xx/completed-or-pending>=20s rejection and narrow
+navigation-cancellation handling. Eighteen offline gate controls pass. It keeps
+all source, own-frame/DOM, reload and safety checks and persists failures.
+Reviewed helper SHA2563dbab3130e33e26f718391321bff0f6bddbda39e652540ce91bcf5f3eb21ac58.
+It has not run against AWS; exact new merge/deployment and actual acceptance
+remain outstanding. The supplementary local result cannot close144.

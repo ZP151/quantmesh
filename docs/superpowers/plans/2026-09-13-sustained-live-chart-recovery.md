@@ -72,13 +72,13 @@ required regression belongs there). No other production file.
   Do not infer durable health merely from a brief fresh restart.
 
 
-## Task3a — bounded live chart refresh after failed AWS load acceptance
+## Task3a â€” bounded live chart refresh after failed AWS load acceptance
 
 Planner/quant checkpoint2026-09-13 10:03UTC: actual deployed sources remain
 fresh, but initial SOL chart failed20s. A single diagnostic trace localized
 ETH/SOL delays to workspace TTFB13.15/13.21s; lazy chunks15/34ms. Whole-workspace
 invalidations on each matching update every500ms can produce back-to-back
-retained reads. Local copied855594-row replay costs377–409ms, of which236–259ms
+retained reads. Local copied855594-row replay costs377â€“409ms, of which236â€“259ms
 is conversion/validation of10000rows. AlternativeTOP-N query has no consistent
 improvement. This slice bounds read frequency; it does not weaken validation,
 replace replay or presume complete server-side attribution.

@@ -1,6 +1,6 @@
 # Active Goal
 
-Status: iteration0035 recovery ACTIVE, 2026-09-13 10:14 UTC. Actual acceptance
+Status: iteration0035 recovery ACTIVE, 2026-09-13 10:27 UTC. Actual acceptance
 failed on5332a19; the bounded Task3a frontend correction is now tested/reviewed,
 awaiting its new exact-head PR/CI, merge, deployment and actual AWS witness. Prior GitHub merge blocker is
 resolved by operator merge; it is not the current blocker.
@@ -33,8 +33,15 @@ Other markets retain existing behavior. Six new RED/GREEN regressions,
 107targeted and365full frontend tests pass; independent spec/standards reviews
 have no findings. Typecheck/lint/API-client/production build and packaged chart
 E2E1test17.41s pass. Prior PR148 CI must not substitute for this new change.
-Paired actual AWS helper is being reviewed; it will capture API source checks
-alongside three chart pages, preserve20s gates and always save failed evidence.
+PR149 opened on6e2f63fc2033674b18bb80fe572e5475b9e0c8bf. CI34751315247 was
+cancelled after GitHub review found invalid Windows-1252 dash bytes in two docs;
+strictUTF8 correction and independent review passed, all343Markdown files decode.
+New final-head CI is required; cancelled watcher64952 is terminal.
+Supplementary isolated LOCAL paired witness passed300.260s/93samples per page,
+six paths, own-frame matched revisions/appends/reload/safety, sourcecopy intact,
+rows855594->863889,quarantine4->4. See ledger for timing and Windows cleanup
+warnings; this is not AWS acceptance. Paired AWS helper review completed,
+including browser-request>=20s/failure gate and18offline controls.
 No new deployment or successful final acceptance at this checkpoint.
 
 Current branch: codex/0035-sustained-chart-closeout, from origin/main5332a19.
