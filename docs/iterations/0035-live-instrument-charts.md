@@ -983,3 +983,22 @@ uninitialized pinned submodules were unchanged. Source/frontend/deploy/tests/too
 are identical to the deployed, CI-tested `76203e0` tree. No new application test
 run is claimed for these documentation changes; the final documentation PR's
 required CI must pass before integration. No redeployment is required.
+
+### Documentation range correction — PR #150 review
+
+GitHub review of `674141d` identified an ambiguous operator instruction: the
+guide mentioned 1D and 5D beside the `5m->1m` fallback. Root verified
+`live_history.py`: only Hyperliquid 1D admits the 1m fallback. The guide now
+scopes that assertion to 1D and explains that live replay's 5D requires eligible
+30m/coarser data, or an available historical dataset, otherwise correctly
+reports unavailable. The review's suggested 5m value was checked against
+`_PREFERRED_INTERVAL` and corrected to 30m. A direct BTC 1D link is included. This
+corrects documentation only; no 5D capability or new acceptance run is claimed.
+Required CI for the corrected documentation head must pass before integration.
+
+Round-two bounded review found no findings. Existing `tests/test_live_history.py`
+passed 34 tests with one warning in 12.76 seconds using a fresh owned basetemp.
+The initial invocation reached test completion but failed pytest cleanup with
+Windows access denied on the shared `pytest-current` path; it is not counted as
+a passing run. No shared temporary path was changed. Documentation UTF-8, link,
+JSON/raw-evidence equality and diff checks passed again. Source remains unchanged.
