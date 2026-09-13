@@ -733,3 +733,37 @@ Spacing can be response duration+5s, so aging/stale indications must remain
 honest. Do not represent this as tick-by-tick rendering. Actual three-chart AWS
 latency and source acceptance remain the deciding gate. No other market,
 backend/cache architecture, paid capacity or trading change is included.
+
+
+### Task3a implementation and controller gates — 2026-09-13 10:14 UTC
+
+Implementer owns only InstrumentWorkspace.tsx and its component test. Six new
+regressions failed on old behavior (6failed/30skipped,3.69s) then passed with the
+bounded fix (6passed/30skipped,3.89s). Live Hyperliquid invalidation now reads the
+exact query state and refuses while non-idle or within5s of latest data/error
+settlement. Polling stops during fetching and restarts5s after settlement.
+Other venues retain the500ms event path. Stable exact query keys and timer
+cleanup cover venue/symbol/range/comparison changes and unmount.
+
+Real QueryClient/QueryObserver tests use deferred success/failure: no queued
+invalidation while fetching, no new read at4999ms, eventual fallback at5000ms
+without another event, wrong identity/sibling range isolation, authoritative
+history revision/append, and stale labeling despite connected WebSocket.
+Targeted107tests passed10.11s. Independent spec and standards reviewers each
+found no actionable issues in round1; no second source-review round needed.
+
+Controller gates: full frontend365tests passed16.19s; typecheck and Oxlint
+passed (four existing Fast Refresh export warnings). Initial API-client check
+used unconfigured global Python and failed import; rerun with documented shared
+QUANTMESH_PYTHON and worktreePYTHONPATH passed, client unchanged. Global Ruff and
+whitespace passed; submodule pointers unchanged. Production TypeScript/Vite
+build succeeded and copied owned packaged assets; existing large-chunk warning
+remains. Packaged actual-loopback chart E2E passed1test17.41s with existing
+assertion limits, including revision/append/reload/source comparison/controls.
+No packaged-test timeout or backend change was needed.
+
+The reviewed documentation checkpoint cda1560 is already pushed. Commit this
+source+asset gate and require new exact-head CI before merge/deploy; prior
+PR148 CI does not certify this frontend change. AWS still5332a19 and complete
+actual acceptance remains outstanding. Remote merged PR148 feature branch was
+removed under standing authority; its local branch/main history is preserved.

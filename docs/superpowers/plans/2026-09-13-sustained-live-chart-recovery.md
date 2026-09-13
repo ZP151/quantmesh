@@ -93,19 +93,19 @@ under src/quantmesh/api/static/app and documentation/build integration.
 Only live Hyperliquid automatic workspace refresh changes; existing Moomoo/
 other venue timings, user-driven refresh, packet mutations and UI copy stay.
 
-- [ ] RED component regressions using actual QueryClient and deferred responses:
+- [x] RED component regressions using actual QueryClient and deferred responses:
   sustained matching quote/candle bursts never refresh while fetching and never
   start another request until5000ms after success/error settlement; eventual
   fallback refresh still occurs without another event. Wrong identities do
   not trigger refresh. Route/range/comparison changes and unmount leave no
   obsolete callback. Refreshed authoritative history visibly revises/appends.
-- [ ] Gate live Hyperliquid invalidation for the exact active query on idle
+- [x] Gate live Hyperliquid invalidation for the exact active query on idle
   fetchStatus and elapsed5000ms since max(dataUpdatedAt,errorUpdatedAt). Reuse
   existing QueryClient; no custom global cache or new state authority.
   Poll interval is false while fetching and5000ms when idle for this scope,
   verified against installed QueryObserver timers. Existing500ms callbacks may
   coalesce events but must not re-admit a request before this completion gate.
-- [ ] GREEN targeted workspace/live/chart frontend tests. Preserve aging and
+- [x] GREEN targeted workspace/live/chart frontend tests. Preserve aging and
   stale/degraded labels at existing thresholds. Response duration plus5s is
   the possible refresh spacing, not a promise of five-second ticks. No stale
   value becomes fresh just because WebSocket remains connected.

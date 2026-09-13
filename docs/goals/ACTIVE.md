@@ -1,7 +1,8 @@
 # Active Goal
 
-Status: iteration0035 recovery ACTIVE, 2026-09-13 10:00 UTC; actual acceptance
-failed after deployment, diagnosis continues. Prior GitHub merge blocker is
+Status: iteration0035 recovery ACTIVE, 2026-09-13 10:14 UTC. Actual acceptance
+failed on5332a19; the bounded Task3a frontend correction is now tested/reviewed,
+awaiting its new exact-head PR/CI, merge, deployment and actual AWS witness. Prior GitHub merge blocker is
 resolved by operator merge; it is not the current blocker.
 
 PR148 merged manually at09:39:11UTC as5332a19cb0458170ca8b3a6d69fa95157aac3aab.
@@ -26,11 +27,15 @@ Artifacts: output/playwright/0035-aws-5332a19/attempt-{1,2}, partial-summary.jso
 and failure.json. User IAB BTC1DLine visibly showed real changing full chart;
 that one page is not complete six-path acceptance.
 
-Read-only diagnosis now correlates browser initial resource timings and copied
-retained-replay cost. Current frontend invalidates whole workspace on any
-matching live update up to every500ms, each replay validates up to10000 rows.
-Shared DB lock can couple reads to event-loop ingestion; this is a hypothesis
-pending measurement, not a proven fix. No new source change yet.
+Task3a bounds live Hyperliquid full-workspace refresh to5s after request
+success/failure, refuses in-flight invalidation and targets exact query scope.
+Other markets retain existing behavior. Six new RED/GREEN regressions,
+107targeted and365full frontend tests pass; independent spec/standards reviews
+have no findings. Typecheck/lint/API-client/production build and packaged chart
+E2E1test17.41s pass. Prior PR148 CI must not substitute for this new change.
+Paired actual AWS helper is being reviewed; it will capture API source checks
+alongside three chart pages, preserve20s gates and always save failed evidence.
+No new deployment or successful final acceptance at this checkpoint.
 
 Current branch: codex/0035-sustained-chart-closeout, from origin/main5332a19.
 Keep reviewed docs plus new failure checkpoints. Continue the active plan;
