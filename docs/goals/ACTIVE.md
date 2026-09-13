@@ -1,14 +1,53 @@
 # Active Goal
 
-Status: iteration0035 REOPENED by operator evidence, 2026-09-13 07:55 UTC.
-Prior closeout PR147 merged as8f9c25a, but the following day the page remains
-loading and real quotes lag~252s. Issue144 is reopened. Current branch:
-`codex/0035-sustained-chart-recovery`, from origin/main8f9c25a.
-Execute `docs/superpowers/plans/2026-09-13-sustained-live-chart-recovery.md`.
-Actual retained855594-row copy proves the existing identity lookup does a
-full scan; row-scoped equality plus a single-column nonunique source-event
-index enables Index Scan. Implementation/review/deployment/renewed acceptance
-are pending. Do not treat the historical acceptance below as current health.
+Status: iteration0035 recovery ACTIVE, 2026-09-13 10:27 UTC. Actual acceptance
+failed on5332a19; the bounded Task3a frontend correction is now tested/reviewed,
+awaiting its new exact-head PR/CI, merge, deployment and actual AWS witness. Prior GitHub merge blocker is
+resolved by operator merge; it is not the current blocker.
+
+PR148 merged manually at09:39:11UTC as5332a19cb0458170ca8b3a6d69fa95157aac3aab.
+Exact tree2549e8df6a4c8c674ceb20fec88f0e558254e109 equals tested candidate
+7f8065357946b399c0cc75983af1d8b92b4f49e9. Required CI34747168953 passed3524 Python
+and359 frontend tests; do not repeat that completed source gate.
+
+Exact5332a19 deployed successfully through reviewed private helper; release
+command exit0, PID44749 started09:43:53UTC, private loopback8765,
+papertrue/livefalse. Original retained lake and rollback releases preserved.
+Stable copied lake09:56:58UTC:896780 rows/sequence, index present, four old
+quarantines unchanged; /tmp/quantmesh-0035-recovered-lake-778zbzvd.
+
+Actual API witness attempt1 exited1 after16 completed rounds across~10min:
+all source/workspace samples real/fresh, ten tail minutes each, but BTC had
+only2 distinct closes within one sampled minute (required3). ETH4/SOL3.
+Per-request latency list and final orders/risk comparison were not emitted
+because final assertion failed; do not infer those gates. Browser attempt2
+exited1 waiting20s for SOL chart in initial navigation; BTC/ETH paths passed,
+sustained/reload phase never started. Sessions84521/72652 are terminal.
+Artifacts: output/playwright/0035-aws-5332a19/attempt-{1,2}, partial-summary.json
+and failure.json. User IAB BTC1DLine visibly showed real changing full chart;
+that one page is not complete six-path acceptance.
+
+Task3a bounds live Hyperliquid full-workspace refresh to5s after request
+success/failure, refuses in-flight invalidation and targets exact query scope.
+Other markets retain existing behavior. Six new RED/GREEN regressions,
+107targeted and365full frontend tests pass; independent spec/standards reviews
+have no findings. Typecheck/lint/API-client/production build and packaged chart
+E2E1test17.41s pass. Prior PR148 CI must not substitute for this new change.
+PR149 opened on6e2f63fc2033674b18bb80fe572e5475b9e0c8bf. CI34751315247 was
+cancelled after GitHub review found invalid Windows-1252 dash bytes in two docs;
+strictUTF8 correction and independent review passed, all343Markdown files decode.
+New final-head CI is required; cancelled watcher64952 is terminal.
+Supplementary isolated LOCAL paired witness passed300.260s/93samples per page,
+six paths, own-frame matched revisions/appends/reload/safety, sourcecopy intact,
+rows855594->863889,quarantine4->4. See ledger for timing and Windows cleanup
+warnings; this is not AWS acceptance. Paired AWS helper review completed,
+including browser-request>=20s/failure gate and18offline controls.
+No new deployment or successful final acceptance at this checkpoint.
+
+Current branch: codex/0035-sustained-chart-closeout, from origin/main5332a19.
+Keep reviewed docs plus new failure checkpoints. Continue the active plan;
+do not close144 or expand markets while full actual acceptance is unmet.
+Historical9cfe1bc short acceptance below is not current AWS health.
 
 ## Accepted user outcome
 

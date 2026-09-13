@@ -1,10 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider, QueryObserver } from '@tanstack/react-query'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
-import { ApiError, api, type DecisionPacket, type InstrumentWorkspace } from '@/lib/api'
+import { ApiError, api, type DecisionPacket, type InstrumentWorkspace, type MarketUpdate } from '@/lib/api'
 import { dateTime } from '@/lib/format'
 import { useLiveConnection } from '@/lib/live'
 import { PreferencesProvider } from '@/lib/preferences'
@@ -38,7 +38,10 @@ vi.mock('@/lib/live', async (importOriginal) => {
 
 vi.mock('@/components/charts/InstrumentChart', () => ({
   InstrumentChart: ({ primary }: { primary: InstrumentWorkspace['history'] }) => (
-    <div data-testid="instrument-chart">{primary.instrument.symbol} chart</div>
+    <div data-testid="instrument-chart">
+      {primary.instrument.symbol} chart
+      <output data-testid="chart-observations">{primary.bars.map((bar) => `${bar.timestamp}:${bar.close}`).join('|')}</output>
+    </div>
   ),
 }))
 
@@ -63,12 +66,15 @@ let publishLiveUpdate: Parameters<typeof useLiveConnection>[0]
 
 function deferred<T>() {
   let resolve!: (value: T) => void
-  const promise = new Promise<T>((next) => { resolve = next })
-  return { promise, resolve }
+  let reject!: (reason: Error) => void
+  const promise = new Promise<T>((next, fail) => { resolve = next; reject = fail })
+  return { promise, resolve, reject }
 }
 
-function renderWorkspace(path = '/instruments/moomoo/NVDA?range=6m') {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+function renderWorkspace(
+  path = '/instruments/moomoo/NVDA?range=6m',
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   return render(
     <QueryClientProvider client={client}>
       <PreferencesProvider>
@@ -92,6 +98,7 @@ function LocationProbe() {
     <output data-testid="location">{`${location.pathname}${location.search}`}</output>
     <button onClick={() => navigate(-1)}>Back</button>
     <button onClick={() => navigate(1)}>Forward</button>
+    <button onClick={() => navigate('/instruments/hyperliquid/ETH?range=1d')}>ETH route</button>
   </>
 }
 
@@ -936,4 +943,168 @@ it('retains explicit live range and candle mode when switching away from default
   expect(screen.getByRole('button', { name: 'Line' })).toHaveAttribute('aria-pressed', 'true')
   await userEvent.click(screen.getByRole('button', { name: 'Candles' }))
   expect(screen.getByRole('button', { name: 'Candles' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+describe('live Hyperliquid completion-based refresh', () => {
+  const key = ['instrument-workspace', 'hyperliquid', 'BTC', '1d', []]
+  const liveHealth = { status: 'ok', project: 'QuantMesh', version: 'test', runtime_mode: 'live', paper_mode: true, live_trading: false } as const
+  const update: MarketUpdate = {
+    data_time: '2026-08-08T12:00:00Z', instrument: 'BTC', kind: 'quote',
+    payload: { last: 999999 }, provenance: 'real', received_at: '2026-08-08T12:00:00Z',
+    sequence: 1, sequence_gap: false, state: 'connected', state_note: null, venue: 'hyperliquid',
+  }
+
+  function liveWorkspace(symbol = 'BTC', range: InstrumentWorkspace['history']['range'] = '1d'): InstrumentWorkspace {
+    const instrument = { ...workspace.instrument, venue: 'hyperliquid' as const, symbol, instrument_type: 'perpetual' as const }
+    return {
+      ...workspace, instrument,
+      history: {
+        ...workspace.history, instrument, range, source: 'hyperliquid-ws',
+        bars: workspace.history.bars.map((bar) => ({ ...bar, instrument })),
+      },
+      live: { ...workspace.live, status: 'available', provenance: 'real', label: 'real', source: 'hyperliquid-ws', age_ms: 0, last: 184, data_time: '2026-08-08T12:00:00Z', received_at: '2026-08-08T12:00:00Z' },
+      decision: { latest: null, draft: { ...workspace.decision.draft, instrument, selected_range: range } },
+    }
+  }
+
+  async function advance(milliseconds: number) {
+    await act(async () => { await vi.advanceTimersByTimeAsync(milliseconds) })
+  }
+
+  function setup() {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-08T12:00:00Z'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    client.setQueryData(['health'], liveHealth)
+    mockedHealth.mockResolvedValue(liveHealth)
+    const view = renderWorkspace('/instruments/hyperliquid/BTC?range=1d', client)
+    return { client, view }
+  }
+
+  it.each(['success', 'error'] as const)('waits five seconds after %s despite bursts and refreshes without another event', async (settlement) => {
+    const initial = liveWorkspace()
+    const pending = deferred<InstrumentWorkspace>()
+    const fallback = deferred<InstrumentWorkspace>()
+    mockedWorkspace.mockResolvedValueOnce(initial).mockReturnValueOnce(pending.promise).mockReturnValue(fallback.promise)
+    const { client, view } = setup()
+    try {
+      await advance(1)
+      const firstSettled = client.getQueryState(key)!.dataUpdatedAt
+      expect(mockedLiveConnection).toHaveBeenLastCalledWith(expect.any(Function), true)
+      for (let index = 0; index < 8; index += 1) {
+        act(() => publishLiveUpdate({ ...update, kind: index % 2 ? 'candle' : 'quote' }))
+        await advance(250)
+        expect(mockedWorkspace).toHaveBeenCalledTimes(1)
+      }
+      // HTTP evidence remains authoritative; even the pushed extreme quote cannot change it.
+      expect(screen.getByText('Mark').closest('div')).toHaveTextContent('184')
+      await advance(firstSettled + 5_000 - Date.now())
+      expect(mockedWorkspace).toHaveBeenCalledTimes(2)
+      for (let index = 0; index < 7; index += 1) {
+        act(() => publishLiveUpdate(update))
+        await advance(1_000)
+        expect(mockedWorkspace).toHaveBeenCalledTimes(2)
+        expect(client.getQueryState(key)!.isInvalidated).toBe(false)
+      }
+      const revised = { ...initial, history: { ...initial.history, bars: [
+        { ...initial.history.bars[0], close: 188 },
+        { ...initial.history.bars[0], close: 190, timestamp: '2026-08-08T12:01:00Z' },
+      ] } }
+      await act(async () => {
+        if (settlement === 'success') pending.resolve(revised)
+        else pending.reject(new Error('refresh transport offline'))
+      })
+      await advance(1)
+      const state = client.getQueryState(key)!
+      const completedAt = Math.max(state.dataUpdatedAt, state.errorUpdatedAt)
+      if (settlement === 'success') {
+        expect(screen.getByTestId('chart-observations')).toHaveTextContent(':188|2026-08-08T12:01:00Z:190')
+      } else {
+        expect(screen.getByText('Background refresh failed — showing last known workspace')).toBeInTheDocument()
+        expect(screen.getByTestId('chart-observations')).toHaveTextContent(':184')
+      }
+      act(() => publishLiveUpdate(update))
+      await advance(completedAt + 4_999 - Date.now())
+      expect(mockedWorkspace).toHaveBeenCalledTimes(2)
+      await advance(1)
+      expect(mockedWorkspace).toHaveBeenCalledTimes(3)
+      // Connection health never resets the age of the retained HTTP evidence.
+      await advance(20_000)
+      expect(screen.getByText('Live classification').closest('div')).toHaveTextContent('stale · real')
+      expect(mockedWorkspace).toHaveBeenCalledTimes(3)
+    } finally {
+      view.unmount()
+      client.clear()
+      vi.useRealTimers()
+    }
+  })
+
+  it('ignores wrong identities and invalidates only the exact active query', async () => {
+    mockedWorkspace.mockResolvedValue(liveWorkspace())
+    const { client, view } = setup()
+    const siblingRead = vi.fn().mockResolvedValue(liveWorkspace('BTC', '5d'))
+    const observer = new QueryObserver(client, {
+      queryKey: ['instrument-workspace', 'hyperliquid', 'BTC', '5d', []],
+      queryFn: siblingRead, staleTime: Infinity, initialData: liveWorkspace('BTC', '5d'),
+    })
+    const unsubscribe = observer.subscribe(() => {})
+    try {
+      await advance(1)
+      const invalidate = vi.spyOn(client, 'invalidateQueries')
+      client.setQueryData(key, liveWorkspace(), { updatedAt: Date.now() - 5_001 })
+      act(() => {
+        publishLiveUpdate({ ...update, instrument: 'ETH' })
+        publishLiveUpdate({ ...update, venue: 'moomoo' })
+      })
+      await advance(501)
+      expect(invalidate).not.toHaveBeenCalled()
+      act(() => publishLiveUpdate(update))
+      await advance(1)
+      expect(mockedWorkspace).toHaveBeenCalledTimes(2)
+      expect(siblingRead).not.toHaveBeenCalled()
+    } finally {
+      unsubscribe()
+      view.unmount()
+      client.clear()
+      vi.useRealTimers()
+    }
+  })
+
+  it.each(['range', 'comparison', 'route'] as const)('clears a trailing callback across %s changes and unmount', async (scope) => {
+    mockedWorkspace.mockImplementation(async (_venue, symbol, range) => liveWorkspace(symbol, range))
+    const { client, view } = setup()
+    try {
+      await advance(1)
+      // Queue the existing 500ms coalescer, then leave its exact query scope.
+      act(() => publishLiveUpdate(update))
+      await advance(100)
+      act(() => publishLiveUpdate(update))
+      const invalidate = vi.spyOn(client, 'invalidateQueries')
+      act(() => {
+        if (scope === 'range') fireEvent.click(screen.getByRole('button', { name: '5D' }))
+        else if (scope === 'route') fireEvent.click(screen.getByRole('button', { name: 'ETH route' }))
+        else {
+          fireEvent.change(screen.getByRole('textbox', { name: 'Comparison instrument' }), { target: { value: 'hyperliquid:ETH' } })
+        }
+      })
+      if (scope === 'comparison') act(() => fireEvent.click(screen.getByRole('button', { name: 'Add comparison' })))
+      await advance(1)
+      invalidate.mockClear()
+      await advance(500)
+      expect(invalidate).not.toHaveBeenCalled()
+      const callsAfterSwitch = mockedWorkspace.mock.calls.length
+      act(() => publishLiveUpdate({ ...update, instrument: scope === 'route' ? 'ETH' : 'BTC' }))
+      await advance(100)
+      act(() => publishLiveUpdate({ ...update, instrument: scope === 'route' ? 'ETH' : 'BTC' }))
+      view.unmount()
+      invalidate.mockClear()
+      await advance(6_000)
+      expect(invalidate).not.toHaveBeenCalled()
+      expect(mockedWorkspace).toHaveBeenCalledTimes(callsAfterSwitch)
+    } finally {
+      view.unmount()
+      client.clear()
+      vi.useRealTimers()
+    }
+  })
 })

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'react-router-dom'
 
@@ -87,7 +87,11 @@ function LegacyInstrumentWorkspaceScreen() {
     : null
   const invalidRequestedPacketId = requestedPacketValue !== null && requestedPacketId === null
   const horizon = forecastHorizon(search.get('horizon'))
-  const compare = search.getAll('compare').filter(Boolean).slice(0, 3)
+  const compare = useMemo(() => search.getAll('compare').filter(Boolean).slice(0, 3), [search])
+  const workspaceQueryKey = useMemo(
+    () => ['instrument-workspace', venue, symbol, range, compare],
+    [compare, range, symbol, venue],
+  )
   const mode = search.get('mode') === 'line' ? 'line' : search.get('mode') === 'candles' ? 'candles' : defaultMode
   const volume = search.get('volume') === '1'
   const showSma20 = search.get('sma20') === '1'
@@ -100,11 +104,18 @@ function LegacyInstrumentWorkspaceScreen() {
   const refreshWorkspace = useCallback(() => {
     lastLiveRefresh.current = Date.now()
     trailingLiveRefresh.current = null
+    if (liveChart) {
+      const state = queryClient.getQueryState(workspaceQueryKey)
+      // A live event cannot queue another retained read before this one settles.
+      if (state === undefined || state.fetchStatus !== 'idle'
+        || Date.now() - Math.max(state.dataUpdatedAt, state.errorUpdatedAt) < 5_000) return
+    }
     void queryClient.invalidateQueries({
-      queryKey: ['instrument-workspace', venue, symbol],
+      queryKey: liveChart ? workspaceQueryKey : ['instrument-workspace', venue, symbol],
+      exact: liveChart,
       refetchType: 'active',
     }, { cancelRefetch: false })
-  }, [queryClient, symbol, venue])
+  }, [liveChart, queryClient, symbol, venue, workspaceQueryKey])
   const onLiveUpdate = useCallback((update: MarketUpdate) => {
     if (update.venue !== venue || update.instrument !== symbol) return
     const remaining = 500 - (Date.now() - lastLiveRefresh.current)
@@ -119,10 +130,11 @@ function LegacyInstrumentWorkspaceScreen() {
   }, [refreshWorkspace, symbol, venue])
   useEffect(() => () => {
     if (trailingLiveRefresh.current !== null) clearTimeout(trailingLiveRefresh.current)
+    trailingLiveRefresh.current = null
   }, [refreshWorkspace])
   const query = useQuery({
     enabled: validVenue && symbol.length > 0 && !health.isPending,
-    queryKey: ['instrument-workspace', venue, symbol, range, compare],
+    queryKey: workspaceQueryKey,
     queryFn: () => api.instrumentWorkspace(venue as HistoricalVenue, symbol, range, compare),
     placeholderData: (previous, previousQuery) => retainSameInstrument(
       previous,
@@ -130,7 +142,9 @@ function LegacyInstrumentWorkspaceScreen() {
       venue,
       symbol,
     ),
-    refetchInterval: 5_000,
+    refetchInterval: (activeQuery) => liveChart && activeQuery.state.fetchStatus === 'fetching'
+      ? false
+      : 5_000,
     retry: false,
   })
   const selectedPacketId = invalidRequestedPacketId
