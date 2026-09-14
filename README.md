@@ -28,6 +28,12 @@ includes later decision, scenario, review, and live-chart work through iteration
 0035. Final `v0.1.1` promotion and real-money execution remain gated. See
 [production readiness](#production-readiness) for the evidence and its limits.
 
+![NVDA Scenario Lab showing saved synthetic demo evidence, candles, volume and forecast intervals](docs/images/scenario-lab-demo.png)
+
+*Scenario Lab, captured from the local demo on 2026-09-15. All prices and
+forecasts shown are synthetic; this is a product walkthrough, not live-market
+or investment-performance evidence.*
+
 ## Why QuantMesh?
 
 Market research often ends with a screenshot, notebook, or trade that loses
@@ -126,10 +132,11 @@ Use Python 3.13 with venv support. The URL is the same.
 
 1. Confirm the **Demo** label, then open NVDA from Markets or Watchlist.
 2. Inspect its chart, Scenario Lab, forecast horizon, and evidence status.
-3. Save an analysis and choose **Watch** or **Reject**. For a paper rehearsal,
-   inspect the proposal and confirm it only when its evidence and risk gates allow it.
-4. Reopen the saved packet and its review. Check the original evidence and
-   any available outcome; a not-yet-observed outcome stays pending.
+3. Expand **Risk & decision**, enter a **Decision reason**, and select
+   **Watch decision** or **Reject decision** to save the analysis. For a paper
+   rehearsal, inspect the proposal and confirm it only when its evidence and risk gates allow it.
+4. Reload the saved packet URL and expand **Monitoring & review**. Check the
+   original evidence and any available outcome; a not-yet-observed outcome stays pending.
 5. Use **Reset demo** to return to the seeded scenario when needed. Reset is
    limited to the marked demo root.
 
@@ -236,7 +243,7 @@ forecast quality, or current health of another deployment.
 
 | Stage | Outcome |
 | --- | --- |
-| Delivered: foundation and workstation, 0000–0020 | Deterministic paper kernel, research/data adapters, risk/audit, React workstation, localization, and instrument decision workspace. |
+| Delivered: foundation and workstation, 0001–0020 | Deterministic paper kernel, research/data adapters, risk/audit, React workstation, localization, and instrument decision workspace. |
 | Delivered: durable evidence, 0021–0026 | Trusted data fabric, durable ledgers, reconciliation, numeric policy, and local runtime assembly; soak remains a separate gate. |
 | Delivered: decisions and learning, 0027–0029 / 0032–0033 | Decision Copilot, Inbox, readiness session, Scenario Lab, and frozen forecast-versus-outcome review. |
 | Accepted bounded deployment: 0034–0035 | Private BTC/ETH/SOL live observations and replayable real charts. |

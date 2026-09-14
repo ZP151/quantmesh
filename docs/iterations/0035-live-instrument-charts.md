@@ -1053,3 +1053,22 @@ JSON/raw-evidence equality and diff checks passed again. Source remains unchange
   The pinned NumPy requires Python >=3.12, so both quick-start paths explicitly
   use Python 3.13 rather than implying the lock works on the package's declared
   minimum 3.11. Full local pytest is running; PR CI must pass before merge.
+- **Browser verification:** used the installed base-only runtime and an isolated
+  marked demo root on an owned loopback port. Playwright walked Markets -> NVDA
+  -> Risk & decision -> Decision reason -> Watch decision, then reloaded the
+  resulting exact packet URL and opened Monitoring & review. Saved evidence
+  and the original packet identity survived reload. Updated walkthrough steps
+  to the observed controls: choosing Watch/Reject saves the analysis; there is
+  no separate Save button. No order or external account operation was requested.
+- **Product image:** captured the actual saved NVDA Scenario Lab at 1440x1080.
+  `docs/images/scenario-lab-demo.png` is byte-identical to the original screenshot
+  (SHA-256 `e1a0111f620435a122c7e9214654b1eed6dccc1bee9594f1c03778c82445c47a`).
+  Both captions explicitly identify synthetic demo data and capture date.
+  Root viewed the image; TradingView attribution and demo labels remain visible.
+- **Final bounded review:** independent second-round review of the image,
+  corrected walkthrough and Python baseline found no actionable issues.
+  Fresh UTF-8/fence/link validation now passes 106 links/anchors. Full local
+  pytest and required remote CI evidence are tracked in
+  [PR #152](https://github.com/ZP151/quantmesh/pull/152); integration waits for
+  the final PR head's required checks. No deployment or final release is part
+  of this documentation change.
