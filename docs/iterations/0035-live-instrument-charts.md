@@ -1,7 +1,8 @@
 # Iteration 0035 — Real charts from Markets and Watchlist
 
 - Status: actual AWS user-loop ACCEPTED on 2026-09-13 12:07 UTC after sustained
-  recovery; documentation closeout in progress. Earlier failures remain below.
+  recovery; documentation integrated through [PR #150](https://github.com/ZP151/quantmesh/pull/150).
+  Issue #144 is closed. Earlier failures remain below.
 - Issue: [#144](https://github.com/ZP151/quantmesh/issues/144).
 - Original branch: `codex/0035-live-instrument-charts`, from `origin/main@2a50565`.
 - Follow-up branch: `codex/0035-chart-acceptance`, from merged `origin/main@90fe577`.
@@ -1002,3 +1003,72 @@ The initial invocation reached test completion but failed pytest cleanup with
 Windows access denied on the shared `pytest-current` path; it is not counted as
 a passing run. No shared temporary path was changed. Documentation UTF-8, link,
 JSON/raw-evidence equality and diff checks passed again. Source remains unchanged.
+
+## 2026-09-15 — Product README refresh / issue #151
+
+- **Planner/Product:** [#151](https://github.com/ZP151/quantmesh/issues/151)
+  updates the English and Simplified Chinese repository entry points. User
+  action: understand the current product, start the credential-free demo, and
+  locate accepted evidence and next steps without reconstructing iteration
+  history. Success criteria: complete startup commands, a first decision loop,
+  market/mode boundaries, readiness gates and working documentation links in
+  both languages. No runtime, dependency, infrastructure, release promotion,
+  trading authority or soak changes.
+- **Research:** read current `main@e4e0d09`, product strategy, roadmap, delivery
+  plan, ADRs 0022–0024 and the 0035 portable evidence. Structural references:
+  [MergePilot](https://github.com/ZP151/mergepilot) for workflow/outcome tables,
+  readiness evidence, setup and support;
+  [Archeform](https://github.com/ZP151/archeform) for a clear core artifact and
+  lifecycle diagram; [OpenBB](https://github.com/OpenBB-finance/OpenBB),
+  [Freqtrade](https://github.com/freqtrade/freqtrade), and
+  [NautilusTrader](https://github.com/nautechsystems/nautilus_trader) for product
+  scope, installation, operating modes and contribution entry points. Original
+  prose only; no upstream text/code/assets copied and no runtime admission.
+- **Quant Researcher:** preserve synthetic/demo labels, evidence refusal,
+  incomplete-path scoring limits, costs and out-of-sample promotion gates.
+  Distinguish observed intraday replay from qualified history and AI explanation
+  from deterministic order authority. The 601.662-second witness is historical
+  build-scoped evidence, not an uptime SLA or proof of predictive performance.
+- **Implementer:** replaced the obsolete iteration-0019 README framing with
+  decision/session/scenario/review and real-chart workflows. Added requirements,
+  constrained base installation, local/demo/live setup, data/action boundaries,
+  a Mermaid lifecycle, architecture navigation, production gates, roadmap,
+  developer checks and incident/support links. Corrected the index and this
+  ledger's stale closeout status against merged PR #150 and closed issue #144.
+  Local main fast-forwarded cleanly; work branch starts at `origin/main`.
+- **Verification in progress:** README UTF-8, fenced-block balance and 104
+  local-link/anchor checks pass; Ruff and pinned submodule status pass. The
+  registered local Python 3.11 installation could not initialize its standard
+  library, before any project code; clean installation uses Python 3.13, matching
+  CI and the updated quick-start commands. Independent review, isolated startup
+  smoke and full-suite results will be recorded before completion.
+- **Reviewer:** independent read-only review identified one nonexistent risk
+  directory link; both READMEs now link the actual execution and Hyperliquid
+  risk modules. Rechecked current diff: no remaining actionable findings;
+  bilingual claims, mode boundaries, commands and 0035 status corrections agree.
+- **Verifier:** fresh Python 3.13 venv installed the base package with
+  `-c requirements-audit.txt` (no development/research/browser extras). CLI help,
+  isolated demo startup, health, demo status and SPA shell HTTP requests passed
+  with synthetic provenance headers; only the owned process/root was used.
+  The pinned NumPy requires Python >=3.12, so both quick-start paths explicitly
+  use Python 3.13 rather than implying the lock works on the package's declared
+  minimum 3.11. Full local pytest is running; PR CI must pass before merge.
+- **Browser verification:** used the installed base-only runtime and an isolated
+  marked demo root on an owned loopback port. Playwright walked Markets -> NVDA
+  -> Risk & decision -> Decision reason -> Watch decision, then reloaded the
+  resulting exact packet URL and opened Monitoring & review. Saved evidence
+  and the original packet identity survived reload. Updated walkthrough steps
+  to the observed controls: choosing Watch/Reject saves the analysis; there is
+  no separate Save button. No order or external account operation was requested.
+- **Product image:** captured the actual saved NVDA Scenario Lab at 1440x1080.
+  `docs/images/scenario-lab-demo.png` is byte-identical to the original screenshot
+  (SHA-256 `e1a0111f620435a122c7e9214654b1eed6dccc1bee9594f1c03778c82445c47a`).
+  Both captions explicitly identify synthetic demo data and capture date.
+  Root viewed the image; TradingView attribution and demo labels remain visible.
+- **Final bounded review:** independent second-round review of the image,
+  corrected walkthrough and Python baseline found no actionable issues.
+  Fresh UTF-8/fence/link validation now passes 106 links/anchors. Full local
+  pytest and required remote CI evidence are tracked in
+  [PR #152](https://github.com/ZP151/quantmesh/pull/152); integration waits for
+  the final PR head's required checks. No deployment or final release is part
+  of this documentation change.
