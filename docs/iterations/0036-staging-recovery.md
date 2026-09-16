@@ -73,6 +73,15 @@ the vendor response: `Before calling the Get Real-time Quotes interface, please
 subscribe to Basic data first.` No quote values were accepted, persisted or
 shown as real. The local OpenD process is therefore reachable, but the required
 AAPL/NVDA quote entitlement is not yet ready.
+
+After installing the repository-declared `moomoo-api==10.10.7008` package in
+the local development environment, the same probe was rerun on 2026-09-17
+00:52 SGT and passed with `quote=True`, `history_kline=True`,
+`auth_required=False`; the read-only AAPL/NVDA request still failed closed with
+the same Basic-data entitlement message. Targeted regression checks then passed
+`82 passed, 1 skipped` (`test_moomoo_cli.py`, `test_moomoo_opend.py` and
+`test_live_smoke.py`), and Ruff passed. This remains local capability evidence;
+it does not establish an AWS route or accept fixture data as real.
 ## Local verification checkpoint — 2026-09-17
 
 The existing live-smoke contract passed 24 tests in 0.08 seconds. Ruff,
