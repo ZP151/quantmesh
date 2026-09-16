@@ -39,7 +39,8 @@ layer.
 ## Recovery exit criteria
 
 - The existing peer is online, responds to three pings and accepts private TCP 443.
-- `/health` reports build `76203e03476b120e149a0c06d9932849bb4d8e14`, live runtime, paper enabled and live trading disabled.
+- `/health` reports build `76203e03476b120e149a0c06d9932849bb4d8e14`, live runtime, paper enabled and live trading disabled, with visible staging environment and exact build metadata.
+- The instance's `tailscale serve status` shows private HTTPS proxying only to `127.0.0.1:8765`.
 - `tools/live_smoke.py --watchlist BTC,ETH,SOL` passes with read-only GETs.
 - Markets and Watchlist 1D/Line pages show real Hyperliquid data times and retain points after reload.
 - No new AWS resource, public ingress, credential, order or live-execution change occurs.
@@ -57,7 +58,11 @@ operator must inspect or start the existing Lightsail instance and its
 `tailscaled`/`quantmesh-staging.service` state. No credentials are needed in
 chat; only the connection result and redacted host/status evidence are needed.
 
-## OpenD readiness checkpoint — 2026-09-17 00:40 SGT
+## OpenD preflight evidence — deferred follow-up, 2026-09-17
+
+This evidence is preparatory only and does not advance the AWS recovery slice;
+the recovery gate above must close before a separate Moomoo/OpenD issue and
+test-first plan starts.
 
 The existing Windows `moomoo_OpenD.exe` is running as PID 40028 and listens on
 `127.0.0.1:11111`; port 11112 is not listening. The read-only
@@ -82,10 +87,34 @@ the same Basic-data entitlement message. Targeted regression checks then passed
 `82 passed, 1 skipped` (`test_moomoo_cli.py`, `test_moomoo_opend.py` and
 `test_live_smoke.py`), and Ruff passed. This remains local capability evidence;
 it does not establish an AWS route or accept fixture data as real.
+
 ## Local verification checkpoint — 2026-09-17
 
-The existing live-smoke contract passed 24 tests in 0.08 seconds. Ruff,
-whitespace and the unchanged application-tree check passed; six changed
-tracked Markdown/document files decoded as UTF-8. The remote recovery checks
-remain blocked at the network boundary: the peer is still offline, Tailscale
-ping and TCP 443 time out, and no `/health` response exists to inspect.
+The exact focused commands and outcomes are:
+
+```text
+python -m pytest -q --basetemp=output/pytest-temp-0036-2 tests/test_moomoo_cli.py tests/test_moomoo_opend.py tests/test_live_smoke.py
+82 passed, 1 skipped in 1.02s (exit 0)
+ruff check src tests tools
+All checks passed! (exit 0)
+git diff --check
+exit 0
+git diff --exit-code origin/main -- src frontend deploy tests tools
+exit 0 (APPLICATION_TREE_UNCHANGED)
+```
+
+The eight changed tracked Markdown/document files decoded as UTF-8. The remote
+recovery checks remain blocked at the network boundary: the peer is still
+offline, Tailscale ping and TCP 443 time out, and no `/health` response exists
+to inspect. The local OpenD preflight is therefore not a recovery acceptance.
+
+## Review checkpoint — 2026-09-17
+
+The two-axis review of `git diff origin/main...HEAD` found that the first
+version mixed a deferred OpenD preflight into the recovery slice, omitted the
+Serve loopback and visible metadata gates, and did not state exact command
+outcomes. The plan and ledger now classify OpenD as a separate follow-up,
+require `tailscale serve status` to target only `127.0.0.1:8765`, require
+environment/build metadata, and record the focused command exit codes. The
+AWS recovery itself remains incomplete until the operator restores the peer;
+this review is not acceptance evidence.
