@@ -41,7 +41,6 @@ The agent cannot restore an offline AWS/Tailscale peer from the local host. An
 operator must inspect or start the existing Lightsail instance and its
 `tailscaled`/`quantmesh-staging.service` state. No credentials are needed in
 chat; only the connection result and redacted host/status evidence are needed.
-
 ## Local verification checkpoint — 2026-09-17
 
 The existing live-smoke contract passed 24 tests in 0.08 seconds. Ruff,
@@ -49,4 +48,3 @@ whitespace and the unchanged application-tree check passed; six changed
 tracked Markdown/document files decoded as UTF-8. The remote recovery checks
 remain blocked at the network boundary: the peer is still offline, Tailscale
 ping and TCP 443 time out, and no `/health` response exists to inspect.
-

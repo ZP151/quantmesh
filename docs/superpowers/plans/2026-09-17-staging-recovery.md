@@ -61,4 +61,3 @@
 - [ ] Capture only the existing OpenD private host, port, market-session and entitlement state; never request password or OTP.
 - [ ] Verify private reachability and run the typed probe. A failed probe remains `unavailable`, never fixture data.
 - [ ] Only after reachability is proven, write the exact-file test-first plan and issue. The exit metric is two distinct source timestamps for AAPL and NVDA during an open session, with truthful delayed/closed/unavailable labels.
-
