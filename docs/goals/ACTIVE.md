@@ -1,9 +1,9 @@
 # Active Goal
 
-Status: iteration0035 actual AWS chart acceptance PASSED, 2026-09-13 12:15 UTC.
-Documentation closeout is in progress; review, commit and integrate this
-evidence-only branch before closing issue144. No new deployment is needed for
-documentation. The prior GitHub merge blocker is resolved.
+Status: iteration0036 ACTIVE, 2026-09-17. The 0035 AWS real-chart acceptance
+and documentation closeout are complete; this goal now resumes the next route.
+The current private AWS endpoint is unreachable because its Tailscale peer is
+offline. No application regression is established.
 
 ## Accepted user loop
 
@@ -35,6 +35,23 @@ tick-by-tick rendering. Automatic workspace reads wait5s after completion.
   refresh-spacing.json and screenshots. HelperSHA256:
   9a3a26014624a33855824f3ae1d29990bd70c78f827b95b159390ee51a88dcff.
 
+## Current recovery checkpoint
+
+- Local Tailscale is healthy: backend Running, UDP/IPv4 available, Singapore
+  DERP latency 6 ms.
+- `quantmesh-staging.tail99d23c.ts.net` resolves to `100.90.189.16`, but the
+  peer is offline with no handshake and was last seen 2026-09-14 22:32 SGT.
+- Tailscale ping, TCP 443 and HTTPS `/health` all fail from the local host.
+  This is a node/network boundary result, not an application health result.
+- Recovery issue: [#135](https://github.com/ZP151/quantmesh/issues/135).
+- Active iteration: [0036 staging recovery](../iterations/0036-staging-recovery.md).
+- Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
+
+An operator must inspect or start the existing Lightsail instance and check
+`tailscaled` and `quantmesh-staging.service` from the AWS console or authorized
+Tailscale SSH. The agent must not invent a healthy application response while
+the peer is offline.
+
 ## Retention evidence and limits
 
 Existing replay-window API reports1074523rows through12:11:55UTC, with earliest
@@ -52,15 +69,14 @@ Planner reset the measurement slice; native document identities,18pure controls
 and two review rounds resolved it. The passing actual run censored zero requests.
 A ten-minute witness does not certify indefinite availability.
 
-## Closeout and next frontier
+## Next frontier after recovery
 
-Current branch: codex/0035-live-chart-acceptance from origin/main76203e0.
-Update/review the iteration, roadmap, context, compact evidence and operator
-steps. Preserve divergent localmain; new branches start from origin/main.
-Use the normal reviewed PR workflow and standing merge authority. Retain
-e185c3b and4022942 rollback releases; do not change infrastructure or execution.
+Current branch: `codex/0036-staging-recovery-docs` from `origin/main@c74ea03`.
+Complete the recovery gate with the normal reviewed PR workflow. Preserve
+divergent local `main`; new branches start from `origin/main`. Retain `e185c3b`
+and `4022942` rollback releases; do not change infrastructure or execution.
 
-Next bounded slice is Moomoo/OpenD readiness for AAPL/NVDA: identify the existing
+After recovery, the next bounded slice is Moomoo/OpenD readiness for AAPL/NVDA: identify the existing
 licensed host, approved private AWS route and actual quote entitlement. The
 operator connection-information question is pending; no credentials are needed
 in chat. Windows localhost probes cannot establish remote absence. Only after

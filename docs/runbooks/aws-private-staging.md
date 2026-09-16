@@ -4,6 +4,26 @@ This runbook creates one private QuantMesh acceptance station for a
 single operator, with demo as the default. It does not enable live or testnet trading, public HTTP(S), a
 database, snapshots, CI deployment or multi-user access.
 
+## Current recovery checkpoint — 2026-09-17
+
+The accepted 0035 release remains
+`76203e03476b120e149a0c06d9932849bb4d8e14`. The current Windows probe found
+the local Tailscale client healthy and the `quantmesh-staging` peer offline,
+last seen 2026-09-14, with no handshake; private DNS still resolves but
+Tailscale ping, TCP 443 and HTTPS `/health` cannot connect. This is a
+host/network boundary failure. Do not redeploy or classify it as an application
+regression until the peer is online.
+
+From the AWS/Lightsail console or an already authorized private SSH session,
+the operator may inspect the existing instance and run `sudo systemctl is-active
+tailscaled quantmesh-staging.service`, `tailscale status`, and `curl --fail
+--silent http://127.0.0.1:8765/health`. If the operator elects to restart after
+inspection, restart only the existing service and repeat loopback health. Do not
+create a new instance, change the release, alter the lake, expose a public port,
+enable Funnel or change trading authority. After the node is online, continue
+with the exact health, `tools/live_smoke.py --watchlist BTC,ETH,SOL`, and browser
+checks in the 0036 recovery plan.
+
 ## Iteration 0034 — Explicit read-only live-data update
 
 Use a reviewed, pushed exact candidate that includes ADR-0022. First inspect

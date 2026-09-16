@@ -1,9 +1,17 @@
 # QuantMesh Iteration Plan
 
-Updated: 2026-09-13. This replaces the original conceptual iterations 0–5;
+Updated: 2026-09-17. This replaces the original conceptual iterations 0–5;
 historical delivery IDs and evidence remain in the [iteration index](iterations/INDEX.md).
 Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 [ACTIVE](goals/ACTIVE.md) for the resumable frontier.
+
+## Current resumable goal
+
+Iteration 0035 is complete. Iteration 0036 is active because the existing
+private AWS/Tailscale peer is currently offline. Restore the existing node and
+pass the exact-build health, read-only live-smoke and browser recovery gate
+before starting Moomoo/OpenD work. See the
+[0036 recovery plan](superpowers/plans/2026-09-17-staging-recovery.md).
 
 ## Confirmed state
 
@@ -19,22 +27,26 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 
 ## Next delivery order
 
-0. **Completed user priority: iteration 0035 / #144.** BTC/ETH/SOL real charts
+0. **Recovery gate: iteration 0036 / #135.** Restore the existing private AWS
+   peer and verify the accepted `76203e0` release with health, read-only live
+   smoke and a short BTC/ETH/SOL 1D/Line browser check. Current evidence is
+   node-offline, not an application regression; no new deployment is implied.
+1. **Completed user priority: iteration 0035 / #144.** BTC/ETH/SOL real charts
    from Markets and Watchlist now have renewed AWS acceptance. Preserve the
    observed-coverage labels and five-second delay after each completed refresh.
    See [0035](iterations/0035-live-instrument-charts.md), its compact evidence,
    and the [operator steps](runbooks/live-chart-acceptance.md). This is a measured
    ten-minute result, not an indefinite uptime or complete historical-data claim.
 
-1. **Equities: Moomoo/OpenD.** Establish private OpenD reachability and quote
+2. **Equities: Moomoo/OpenD.** Establish private OpenD reachability and quote
    entitlement, then prove AAPL/NVDA observations during the market session.
    Current five-second polling is not native tick push; delayed or unavailable
    data must be labelled. Do not expose OpenD publicly to solve reachability.
-2. **Prediction markets.** Verify Polymarket active-contract subscription and
+3. **Prediction markets.** Verify Polymarket active-contract subscription and
    mapping; then implement/configure Kalshi's required WebSocket authentication.
    Each venue has its own real-data acceptance; missing credentials are an
    unavailable state, not a healthy feed.
-3. **Real history through decisions and review.** Bind trusted, calendar-correct
+4. **Real history through decisions and review.** Bind trusted, calendar-correct
    historical datasets to the existing Lab/DecisionPacket loop. A few minutes
    of streaming ticks do not create months of qualified daily history. Preserve
    lineage, quality gates, costs and frozen review evidence.

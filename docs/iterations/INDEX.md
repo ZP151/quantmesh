@@ -39,5 +39,6 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0033 | completed | 2026-09-12 | 2026-09-12 | Exact Forecast Outcome Scorecard | [Issue #138](https://github.com/ZP151/quantmesh/issues/138) / [PR #139](https://github.com/ZP151/quantmesh/pull/139) / [Ledger](0033-forecast-outcome-scorecard.md) |
 | 0034 | completed | 2026-09-12 | 2026-09-12 | Deployed read-only live market data | [Issue #140](https://github.com/ZP151/quantmesh/issues/140) / [PR #142](https://github.com/ZP151/quantmesh/pull/142) / [Ledger](0034-live-data-delivery.md) |
 | 0035 | completed; bounded AWS acceptance | 2026-09-12 | 2026-09-13 | Real streaming instrument charts and sustained-operation recovery | [Issue #144](https://github.com/ZP151/quantmesh/issues/144) / [PR #149](https://github.com/ZP151/quantmesh/pull/149) / [PR #150](https://github.com/ZP151/quantmesh/pull/150) / [Ledger](0035-live-instrument-charts.md) |
+| 0036 | active; private staging recovery blocked on offline peer | 2026-09-17 | — | Private AWS staging recovery and equity readiness | [Issue #135](https://github.com/ZP151/quantmesh/issues/135) / [Plan](../superpowers/plans/2026-09-17-staging-recovery.md) / [Ledger](0036-staging-recovery.md) |
 
 <!-- quantmesh-iterations:append-above -->
