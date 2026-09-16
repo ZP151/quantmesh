@@ -2,6 +2,7 @@
 
 - Status: ACTIVE, 2026-09-17. The 0035 chart acceptance remains valid historical evidence; the current private endpoint is unreachable because the Tailscale peer is offline.
 - Linked issue: [#135 — Private AWS staging workstation](https://github.com/ZP151/quantmesh/issues/135).
+- Review PR: [#154 — private staging recovery](https://github.com/ZP151/quantmesh/pull/154).
 - Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
 - Runbook: [AWS private staging](../runbooks/aws-private-staging.md).
 
