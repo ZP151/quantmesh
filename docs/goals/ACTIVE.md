@@ -1,9 +1,9 @@
 # Active Goal
 
 Status: iteration0036 ACTIVE, 2026-09-17. The 0035 AWS real-chart acceptance
-and documentation closeout are complete; this goal now resumes the next route.
-The current private AWS endpoint is unreachable because its Tailscale peer is
-offline. No application regression is established.
+and documentation closeout are complete. The existing private AWS endpoint has
+now recovered and the deployed real-data chart is accepted; this goal remains
+active for the lake-retention guard and the separate Moomoo/OpenD route.
 
 ## Accepted user loop
 
@@ -39,29 +39,35 @@ tick-by-tick rendering. Automatic workspace reads wait5s after completion.
 
 - Local Tailscale is healthy: backend Running, UDP/IPv4 available, Singapore
   DERP latency 6 ms.
-- `quantmesh-staging.tail99d23c.ts.net` resolves to `100.90.189.16`, but the
-  peer is offline with no handshake and was last seen 2026-09-14 22:32 SGT.
-- Tailscale ping, TCP 443 and HTTPS `/health` all fail from the local host.
-  This is a node/network boundary result, not an application health result.
-- The Tailscale Machines console independently reports `quantmesh-staging` as
-  **Machine not connected** and its browser SSH entry warns that the machine is
-  offline. Read-only checks of the existing AWS public address also timed out
-  on TCP 22/443. Console login therefore did not restore the instance or
-  `tailscaled`; no public ingress was added.
-- The existing Lightsail console showed the instance as Running. Rebooting that
-  same instance completed, but browser SSH returned `UPSTREAM_ERROR [515]`
-  before and after reboot, and a compatible SSH attempt still timed out at
-  TCP/22. Lightsail Networking already allows TCP/22 to Any IPv4/IPv6 and
-  browser SSH; no firewall rule was changed. The peer remained offline after
-  the reboot.
+- `quantmesh-staging.tail99d23c.ts.net` resolves to `100.90.189.16`; after a
+  cold stop/start of the existing Lightsail instance, the peer is online and
+  accepts private TCP 443.
+- HTTPS `/health` reports build
+  `76203e03476b120e149a0c06d9932849bb4d8e14`, runtime `live`, `paper_mode=true`
+  and `live_trading=false`.
+- The earlier Tailscale Machines snapshot and public-address checks captured the
+  pre-recovery outage: the console showed **Machine not connected** and TCP
+  22/443 timed out. After the cold start, local `tailscale status` shows the
+  peer `active` with a direct IPv6 path; no public ingress was added.
+- The instance initially looped on startup because its 1.9 GiB host had no swap
+  while the 2.4 GiB live DuckDB lake held about 3.7M rows. Kernel OOM logs
+  identified `quantmesh-workstation` as the killed process. A persistent 2 GiB
+  swapfile on the existing disk restored startup; this is an operational
+  mitigation pending a source-level retention guard.
+- `tools/live_smoke.py --watchlist BTC,ETH,SOL` passed 13 read-only checks in
+  0.9s. `/live/state` contains current real Hyperliquid quote/trade/metrics/L2
+  and candle observations for all three instruments, and `/live/status` reports
+  each source connected.
+- Browser acceptance at the deployed BTC 1D/Line path showed `Live proven`,
+  source `hyperliquid`, `real · real`, WebSocket stream and about 3s age while
+  current-minute OHLC rows advanced.
 - Recovery issue: [#135](https://github.com/ZP151/quantmesh/issues/135).
 - Active iteration: [0036 staging recovery](../iterations/0036-staging-recovery.md).
 - Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
 
-An operator must inspect or start the existing Lightsail instance and check
-`tailscaled` and `quantmesh-staging.service` from the AWS console or authorized
-Tailscale SSH. The agent must not invent a healthy application response while
-the peer is offline.
+The recovery gate is now closed with the evidence above. The next operator
+acceptance must repeat the same checks after the retention guard is deployed;
+the agent must not treat swap alone as a permanent lake-safety fix.
 
 Local OpenD is available on Windows at `127.0.0.1:11111`; the read-only probe
 reported quote/history capability and `auth_required=false`. This is local
@@ -87,6 +93,12 @@ Planner reset the measurement slice; native document identities,18pure controls
 and two review rounds resolved it. The passing actual run censored zero requests.
 A ten-minute witness does not certify indefinite availability.
 
+The recovery found the production failure mode behind that limit: the running
+service opens the full DuckDB lake before any production prune call, and the
+host had no swap. The follow-up slice must add an explicit retention setting,
+safe pruning cadence and startup/soak evidence. Until then, the swapfile is
+documented as a reversible host mitigation only.
+
 ## Next frontier after recovery
 
 Current branch: `docs/135-staging-recovery` from `origin/main@c74ea03`;
@@ -95,7 +107,10 @@ Complete the recovery gate with the normal reviewed PR workflow. Preserve
 divergent local `main`; new branches start from `origin/main`. Retain `e185c3b`
 and `4022942` rollback releases; do not change infrastructure or execution.
 
-After recovery, the next bounded slice is Moomoo/OpenD readiness for AAPL/NVDA: identify the existing
+After recovery, the next bounded slice is the live-lake retention guard: add a
+configurable retention window, safe pruning cadence and deployment evidence
+against the existing BTC/ETH/SOL feed. Then continue with Moomoo/OpenD
+readiness for AAPL/NVDA: identify the existing
 licensed host, approved private AWS route and actual quote entitlement. The
 operator connection-information question is pending; no credentials are needed
 in chat. Windows localhost probes cannot establish remote absence. Only after

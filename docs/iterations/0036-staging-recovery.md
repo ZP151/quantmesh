@@ -1,6 +1,6 @@
 # Iteration 0036 — Private staging recovery and equity readiness
 
-- Status: ACTIVE, 2026-09-17. The 0035 chart acceptance remains valid historical evidence; the current private endpoint is unreachable because the Tailscale peer is offline.
+- Status: ACTIVE, 2026-09-17. The private recovery gate closed after the existing Lightsail node was cold-started and its service was made healthy. This iteration remains active for the lake-retention guard and the separate Moomoo/OpenD readiness slice.
 - Linked issue: [#135 — Private AWS staging workstation](https://github.com/ZP151/quantmesh/issues/135).
 - Review PR: [#154 — private staging recovery](https://github.com/ZP151/quantmesh/pull/154).
 - Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
@@ -13,7 +13,7 @@ Open the existing private AWS workstation and see the accepted exact build
 observations and paper-only safety state. After recovery, provide the existing
 Moomoo OpenD private host and entitlement state so AAPL/NVDA can be tested.
 
-## Current diagnosis — 2026-09-17 00:29 SGT
+## Initial diagnosis — 2026-09-17 00:29 SGT (historical)
 
 The Windows Tailscale client is healthy: backend `Running`, local node online,
 UDP/IPv4 available and Singapore DERP latency 6 ms. DNS resolves
@@ -53,6 +53,51 @@ Last seen 2026-09-14 22:32 GMT+8. The instance is therefore not operationally
 reachable for the required in-host `tailscaled`, application health or Serve
 checks; the recovery gate remains blocked below the application layer.
 
+## Recovery completion and live-data evidence — 2026-09-17 02:12–02:23 SGT
+
+The existing instance was then stopped and started from the Lightsail console.
+Its dynamic public address changed, and the same instance became reachable over
+SSH. No new instance or ingress rule was created. In-host checks showed
+`tailscaled` enabled and active, `tailscale serve status` exposing only the
+tailnet HTTPS origin and proxying to `http://127.0.0.1:8765`, and the Tailscale
+peer online at `100.90.189.16`.
+
+The first application start exposed the actual service failure: the 1.9 GiB
+host had no swap, while `live/updates.duckdb` contained about 3,699,148 rows
+(about 2.4 GiB on disk) from BTC/ETH/SOL. The kernel repeatedly killed the
+`quantmesh-workstation` process during startup while DuckDB migrated/indexed the
+lake. This explains the earlier browser `UPSTREAM_ERROR [515]`; it was an
+instance memory failure, not fabricated chart data or a Tailscale Serve error.
+
+As an operational recovery measure on the existing disk, a 2 GiB `/swapfile`
+was created with mode `0600` and persisted in `/etc/fstab`. After the service
+restart, the process completed lake startup and remained active. The health
+response was:
+
+```json
+{"status":"ok","project":"QuantMesh","version":"0.1.1rc1","paper_mode":true,"live_trading":false,"deployment":{"environment":"staging","build_ref":"76203e03476b120e149a0c06d9932849bb4d8e14"},"runtime_mode":"live"}
+```
+
+The private route then passed `tailscale ping`, TCP 443 and the read-only
+`Invoke-RestMethod .../health` check. The read-only live smoke command passed
+all 13 checks in 0.9 seconds for BTC, ETH and SOL. `/live/state` showed real
+Hyperliquid quote, trade, metrics, L2 and 1-minute candle observations with
+current receipt times; `/live/status` reported the three sources connected.
+
+The browser acceptance was performed against the deployed URL after the API
+checks. The BTC `range=1d&mode=line` workspace rendered `Live proven`, live
+source `hyperliquid`, classification `real · real`, `WebSocket` stream and a
+roughly 3-second age. The observed OHLC table advanced through the current
+minutes and the 1D/Line controls were selected. This is the accepted real-data
+chart path; status rows may age independently while the live market kinds stay
+fresh.
+
+The swap is a host mitigation, not the durable fix. `LiveBuffer.prune()` exists
+but production startup has no bounded-lake sweep, and the current service
+constructs the buffer with its default retention. A follow-up implementation
+slice must make retention configurable, invoke it on a safe cadence, and prove
+startup behavior against a growing lake before this iteration can be closed.
+
 ## Recovery exit criteria
 
 - The existing peer is online, responds to three pings and accepts private TCP 443.
@@ -70,10 +115,13 @@ OpenD, add prediction credentials, claim all-market coverage, or repeat the full
 
 ## Current stop condition
 
-The agent cannot restore an offline AWS/Tailscale peer from the local host. An
-operator must inspect or start the existing Lightsail instance and its
-`tailscaled`/`quantmesh-staging.service` state. No credentials are needed in
-chat; only the connection result and redacted host/status evidence are needed.
+The AWS/Tailscale recovery gate is closed, but iteration closeout is held by the
+unbounded-lake risk identified during recovery. The next bounded slice must
+ship the retention guard and repeat the health, live-smoke and browser gates
+without relying on another OOM recovery. The separate Moomoo/OpenD route and
+quote-entitlement work remains deferred as described below. No credentials are
+needed in chat; only connection results and redacted host/status evidence are
+needed.
 
 ## OpenD preflight evidence — deferred follow-up, 2026-09-17
 
@@ -121,9 +169,9 @@ exit 0 (APPLICATION_TREE_UNCHANGED)
 ```
 
 The eight changed tracked Markdown/document files decoded as UTF-8. The remote
-recovery checks remain blocked at the network boundary: the peer is still
-offline, Tailscale ping and TCP 443 time out, and no `/health` response exists
-to inspect. The local OpenD preflight is therefore not a recovery acceptance.
+recovery checks above are now green; the remaining verification gap is the
+source-level retention guard and its deployment witness. The local OpenD
+preflight remains separate from AWS acceptance.
 
 ## Review checkpoint — 2026-09-17
 
@@ -133,5 +181,6 @@ Serve loopback and visible metadata gates, and did not state exact command
 outcomes. The plan and ledger now classify OpenD as a separate follow-up,
 require `tailscale serve status` to target only `127.0.0.1:8765`, require
 environment/build metadata, and record the focused command exit codes. The
-AWS recovery itself remains incomplete until the operator restores the peer;
-this review is not acceptance evidence.
+AWS recovery itself is accepted by the evidence above. This review still does
+not close the iteration because the swap mitigation must be replaced by a
+bounded-lake implementation and the OpenD follow-up remains outstanding.
