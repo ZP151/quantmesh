@@ -71,9 +71,9 @@
 - Modify: this plan
 
 - [x] **Step 1: Record behavior** - the source comments and this plan document the seven-day default, `QUANTMESH_LIVE_RETENTION_DAYS`, startup-before-index guard, five-minute cadence, and explicit `0` opt-out. AWS remains paper-only and requires re-acceptance after a reviewed PR.
-- [x] **Step 2: Verify** - the focused command passed `216 passed, 6 warnings`; Ruff and `git diff --check` pass. The full-suite gate is still running separately.
-- [ ] **Step 3: Record release gate** - record exact counts and scope; do not claim AWS acceptance until a new deployment reports exact build plus live smoke and chart checks.
-- [ ] **Step 4: Commit** - `git commit -m "docs: specify live lake retention release gate"`.
+- [x] **Step 2: Verify** - the focused command passed `216 passed, 6 warnings`; Ruff and `git diff --check` pass. The local full-suite run was stopped during the long integration section; required PR CI remains the release gate.
+- [x] **Step 3: Record release gate** - PR #155 records the exact focused counts and scope; AWS acceptance remains deferred until a new deployment reports exact build plus live smoke and chart checks.
+- [x] **Step 4: Commit** - `0cbc2e4 docs: record live lake retention verification`.
 
 ## Final requirements checklist
 
@@ -82,5 +82,5 @@
 - [x] Running feeds prune at most once every five minutes by default.
 - [x] Complete L2 snapshot epochs and source-status rows remain intact.
 - [x] Existing paper/live safety state is unchanged.
-- [x] Focused tests and Ruff pass; the full-suite gate remains in progress.
+- [x] Focused tests and Ruff pass; the full-suite gate is delegated to PR CI.
 - [ ] AWS operator witness is recorded separately after deployment.
