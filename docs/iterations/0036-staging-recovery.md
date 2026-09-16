@@ -37,6 +37,22 @@ an HTTPS `/health` request produced no response. No public ingress is being
 opened; this only confirms that the current outage is below the application
 layer.
 
+## Operator recovery attempt — 2026-09-17 02:08 SGT
+
+The existing Lightsail console showed `quantmesh-staging` as **Running**. A
+reboot of that same instance completed, but the browser-based SSH client
+returned `UPSTREAM_ERROR [515]` before and after the reboot. A compatible SSH
+attempt to the displayed public address (`47.128.230.51`) then timed out at
+TCP/22. The Lightsail Networking page confirms that TCP/22 is already allowed
+to Any IPv4/IPv6 address and to Lightsail browser SSH, so no firewall rule was
+changed.
+
+After the reboot, the Tailscale client still reports `quantmesh-staging` as
+offline and the control plane still reports **Machine not connected** with
+Last seen 2026-09-14 22:32 GMT+8. The instance is therefore not operationally
+reachable for the required in-host `tailscaled`, application health or Serve
+checks; the recovery gate remains blocked below the application layer.
+
 ## Recovery exit criteria
 
 - The existing peer is online, responds to three pings and accepts private TCP 443.

@@ -48,6 +48,12 @@ tick-by-tick rendering. Automatic workspace reads wait5s after completion.
   offline. Read-only checks of the existing AWS public address also timed out
   on TCP 22/443. Console login therefore did not restore the instance or
   `tailscaled`; no public ingress was added.
+- The existing Lightsail console showed the instance as Running. Rebooting that
+  same instance completed, but browser SSH returned `UPSTREAM_ERROR [515]`
+  before and after reboot, and a compatible SSH attempt still timed out at
+  TCP/22. Lightsail Networking already allows TCP/22 to Any IPv4/IPv6 and
+  browser SSH; no firewall rule was changed. The peer remained offline after
+  the reboot.
 - Recovery issue: [#135](https://github.com/ZP151/quantmesh/issues/135).
 - Active iteration: [0036 staging recovery](../iterations/0036-staging-recovery.md).
 - Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
