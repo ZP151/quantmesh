@@ -48,6 +48,7 @@ from quantmesh.live.supervisor import VenueSupervisor
 
 _POLL_SECONDS = 0.05  # supervisor outbox poll cadence (drain loop)
 _TICK_SECONDS = 1.0  # freshness tick cadence (quiet venues still transition)
+_PRUNE_INTERVAL = timedelta(minutes=5)
 _MAX_SUBSCRIBER_QUEUE = 256  # per-client bound; overflow drops oldest
 
 FRESH = "real"
@@ -246,12 +247,17 @@ class LiveFeed:
         lag: timedelta = timedelta(seconds=30),
         stale: timedelta = timedelta(seconds=90),
         queue_size: int = _MAX_SUBSCRIBER_QUEUE,
+        prune_interval: timedelta = _PRUNE_INTERVAL,
     ) -> None:
         if not (timedelta(0) < lag < stale):
             raise ValueError("require 0 < lag < stale")
+        if prune_interval <= timedelta(0):
+            raise ValueError("prune_interval must be positive")
         self.lag = lag
         self.stale = stale
         self._lake = lake
+        self._prune_interval = prune_interval
+        self._last_prune_at: datetime | None = None
         self._queue_size = queue_size
         self._lock = RLock()
         self._latest: dict[tuple[str, str, str], MarketUpdate] = {}
@@ -269,6 +275,22 @@ class LiveFeed:
     def replay_buffer(self) -> LiveBuffer | None:
         """The attached local replay authority, when persistence is enabled."""
         return self._lake
+
+    def prune_if_due(self, now: datetime | None = None) -> int:
+        """Run the lake retention sweep at most once per configured interval."""
+        if self._lake is None:
+            return 0
+        current = now if now is not None else datetime.now(UTC)
+        if current.tzinfo is None:
+            raise ValueError("prune time must be timezone-aware")
+        if (
+            self._last_prune_at is not None
+            and current - self._last_prune_at < self._prune_interval
+        ):
+            return 0
+        removed = self._lake.prune()
+        self._last_prune_at = current
+        return removed
 
     # -- deterministic surface (drills) -------------------------------------
 
@@ -611,6 +633,7 @@ class LiveFeed:
         while True:
             await asyncio.sleep(_TICK_SECONDS)
             now = datetime.now(UTC)
+            self.prune_if_due(now)
             for supervisor in self._supervisors:
                 supervisor.on_tick(now)
                 updates = supervisor.drain()

@@ -73,10 +73,6 @@ CREATE TABLE IF NOT EXISTS source_status (
     changed_at  TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (venue, instrument)
 );
-CREATE INDEX IF NOT EXISTS idx_updates_partition
-    ON market_updates (venue, instrument, kind, local_seq);
-CREATE INDEX IF NOT EXISTS idx_updates_received
-    ON market_updates (received_at);
 CREATE TABLE IF NOT EXISTS identity_quarantine (
     quarantine_id BIGINT PRIMARY KEY,
     venue VARCHAR NOT NULL,
@@ -92,6 +88,13 @@ CREATE TABLE IF NOT EXISTS live_schema_metadata (
     component VARCHAR PRIMARY KEY,
     version INTEGER NOT NULL
 );
+"""
+
+_BASE_INDEXES = """
+CREATE INDEX IF NOT EXISTS idx_updates_partition
+    ON market_updates (venue, instrument, kind, local_seq);
+CREATE INDEX IF NOT EXISTS idx_updates_received
+    ON market_updates (received_at);
 """
 
 _UPDATE_COLUMNS = (
@@ -119,7 +122,21 @@ class LiveBuffer:
         self._con.execute("SET TimeZone = 'UTC'")
         self._assert_supported_schema()
         self._con.execute(_SCHEMA)
+        self._prune_before_migration()
         self._migrate_market_updates()
+        self._con.execute(_BASE_INDEXES)
+
+    def _prune_before_migration(self) -> None:
+        """Bound schema-v2 lakes before rebuilding identity indexes.
+
+        Legacy lakes do not have the retention columns yet, so they must pass
+        through the identity migration before a retention sweep is possible.
+        """
+        columns = {
+            row[1] for row in self._con.execute("PRAGMA table_info('market_updates')").fetchall()
+        }
+        if {"kind", "received_at", "snapshot_epoch"}.issubset(columns):
+            self.prune()
 
     def _assert_supported_schema(self) -> None:
         """Fail closed before mutating a lake written by newer software."""

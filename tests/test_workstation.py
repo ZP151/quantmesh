@@ -608,6 +608,7 @@ class TestConsoleScript:
         monkeypatch.setattr(settings, "live_watchlist", "BTC")
         monkeypatch.setattr(settings, "prediction_watchlist", "")
         monkeypatch.setattr(settings, "moomoo_watchlist", "")
+        monkeypatch.setattr(settings, "live_retention_days", 3)
         monkeypatch.setattr(settings, "lake_root", tmp_path / "lake")
         monkeypatch.setattr(settings, "orders_dir", tmp_path / "orders")
 
@@ -623,6 +624,7 @@ class TestConsoleScript:
         assert app.state.paper_decisions is not None
         assert app.state.proposal_service is app.state.paper_decisions
         assert app.state.live.replay_buffer is not None
+        assert app.state.live.replay_buffer.retention == timedelta(days=3)
         [hyperliquid] = app.state.live._supervisors
         assert isinstance(hyperliquid._rest, PublicInfoRecoverySource)
         for name in ("exchange", "order", "wallet", "sign", "cancel"):

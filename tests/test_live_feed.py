@@ -123,6 +123,22 @@ def _candle(
     )
 
 
+def test_prune_if_due_runs_immediately_then_on_five_minute_cadence(tmp_path) -> None:
+    old = datetime.now(UTC) - timedelta(days=10)
+    lake = LiveBuffer(root=tmp_path, retention_days=1)
+    try:
+        lake.append(_upd(instrument="BTC", received_at=old))
+        lake.append(_upd(instrument="ETH", received_at=datetime.now(UTC)))
+        feed = _feed(lake=lake)
+
+        assert feed.prune_if_due(now=T0) == 1
+        lake.append(_upd(instrument="SOL", received_at=old))
+        assert feed.prune_if_due(now=T0 + timedelta(minutes=4)) == 0
+        assert feed.prune_if_due(now=T0 + timedelta(minutes=5)) == 1
+    finally:
+        lake.close()
+
+
 class TestLabel:
     def test_provenance_labels(self) -> None:
         fresh = T0 + timedelta(seconds=5)
@@ -1031,7 +1047,7 @@ class TestLake:
             source_event_id="book-epoch-1:ask",
             snapshot_epoch="book-epoch-1",
         )
-        lake = LiveBuffer(root=tmp_path)
+        lake = LiveBuffer(root=tmp_path, retention_days=0)
         feed = _feed(lake=lake)
         feed.ingest([bid, ask])
         state = feed.latest_state(now=T0)["instruments"]["hyperliquid:BTC"]
@@ -1039,7 +1055,7 @@ class TestLake:
         assert {view["snapshot_epoch"] for view in state["book_sides"].values()} == {"book-epoch-1"}
         lake.close()
 
-        reopened = LiveBuffer(root=tmp_path)
+        reopened = LiveBuffer(root=tmp_path, retention_days=0)
         try:
             restored = _feed(lake=reopened).latest_state(now=T0)["instruments"]
             sides = restored["hyperliquid:BTC"]["book_sides"]

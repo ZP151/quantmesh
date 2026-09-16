@@ -139,11 +139,11 @@ class TestAppendReplayRoundTrip:
             sequence=11,
             source_event_id="trade-a",
         )
-        first = LiveBuffer(tmp_path)
+        first = LiveBuffer(tmp_path, retention_days=0)
         assert first.append(first_update) == 1
         first.close()
 
-        reopened = LiveBuffer(tmp_path)
+        reopened = LiveBuffer(tmp_path, retention_days=0)
         redelivery = first_update.model_copy(
             update={"received_at": first_update.received_at + timedelta(seconds=10)}
         )
@@ -262,13 +262,13 @@ class TestAppendReplayRoundTrip:
         )
         connection.close()
 
-        migrated = LiveBuffer(tmp_path)
+        migrated = LiveBuffer(tmp_path, retention_days=0)
         [row] = migrated.replay()
         assert row.source_event_id == "legacy-v1:7"
         assert row.continuity.value == "known-gap"
         migrated.close()
 
-        reopened = LiveBuffer(tmp_path)
+        reopened = LiveBuffer(tmp_path, retention_days=0)
         try:
             [same] = reopened.replay()
             assert same == row
@@ -423,12 +423,12 @@ class TestAppendReplayRoundTrip:
     def test_non_status_append_commits_for_a_reopened_long_lived_lake(
         self, tmp_path: Path
     ) -> None:
-        lake = LiveBuffer(tmp_path)
+        lake = LiveBuffer(tmp_path, retention_days=0)
         update = _quote("BTC", sequence=7)
         assert lake.append(update) == 1
         lake.close()
 
-        reopened = LiveBuffer(tmp_path)
+        reopened = LiveBuffer(tmp_path, retention_days=0)
         try:
             assert reopened.replay() == [update]
         finally:
@@ -727,6 +727,18 @@ class TestStatusUpsert:
 
 
 class TestRetention:
+    def test_reopen_prunes_old_rows_before_index_migration(self, tmp_path: Path) -> None:
+        old = datetime.now(UTC) - timedelta(days=10)
+        first = LiveBuffer(tmp_path, retention_days=7)
+        first.append(_quote("BTC", received_at=old))
+        first.close()
+
+        reopened = LiveBuffer(tmp_path, retention_days=7)
+        try:
+            assert reopened.replay() == []
+        finally:
+            reopened.close()
+
     def test_old_rows_pruned_fresh_kept(self, tmp_path: Path) -> None:
         past = datetime.now(UTC) - timedelta(days=10)
         buffer = LiveBuffer(tmp_path, retention_days=1)
