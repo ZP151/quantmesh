@@ -60,5 +60,5 @@
 
 - [ ] Capture only the existing OpenD private host, port, market-session and entitlement state; never request password or OTP.
 - [x] Local readiness check: `moomoo_OpenD.exe` listens on `127.0.0.1:11111`; the read-only `quantmesh-moomoo probe` reports quote/history capability and `auth_required=False`. This does not establish an AWS route.
-- [ ] Verify private reachability and run the typed probe. A failed probe remains `unavailable`, never fixture data.
+- [ ] Verify private reachability and run the typed probe. A failed probe remains `unavailable`, never fixture data. The current AAPL/NVDA quote request is blocked by the vendor's Basic data subscription requirement.
 - [ ] Only after reachability is proven, write the exact-file test-first plan and issue. The exit metric is two distinct source timestamps for AAPL and NVDA during an open session, with truthful delayed/closed/unavailable labels.

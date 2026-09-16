@@ -62,7 +62,9 @@ Later market slices are priorities, not parallel commitments or completed feeds.
 - Local readiness is confirmed on Windows: OpenD listens on `127.0.0.1:11111`
   and the read-only capability probe reports quote/history access with
   `auth_required=false`. This does not make localhost reachable from AWS;
-  establish an approved private route or AWS-side OpenD placement first.
+  establish an approved private route or AWS-side OpenD placement first. A
+  direct AAPL/NVDA quote request is currently rejected because the vendor
+  requires a Basic data subscription, so no real equity quote is accepted yet.
 - User action: open AAPL/NVDA in the private workstation and inspect an actual
   source observation, its timestamp, entitlement and market-session state.
 - Readiness first: identify the existing licensed OpenD host, verify an approved

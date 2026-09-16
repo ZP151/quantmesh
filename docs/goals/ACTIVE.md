@@ -55,7 +55,9 @@ the peer is offline.
 Local OpenD is available on Windows at `127.0.0.1:11111`; the read-only probe
 reported quote/history capability and `auth_required=false`. This is local
 readiness evidence only. AWS still needs an approved private route or an
-AWS-side OpenD placement before AAPL/NVDA can be accepted there.
+AWS-side OpenD placement before AAPL/NVDA can be accepted there. A direct
+read-only AAPL/NVDA quote request was rejected by the vendor because Basic data
+subscription is required; no quote was accepted or persisted.
 
 ## Retention evidence and limits
 

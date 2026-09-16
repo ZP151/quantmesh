@@ -52,6 +52,12 @@ closed the vendor contexts cleanly; no order or account operation was issued.
 This proves local OpenD capability only. It does not prove that AWS can reach
 Windows localhost, so the approved private route or an AWS-side OpenD placement
 remains the next readiness dependency.
+
+A read-only `stock_quote(["US.AAPL", "US.NVDA"])` attempt then failed closed with
+the vendor response: `Before calling the Get Real-time Quotes interface, please
+subscribe to Basic data first.` No quote values were accepted, persisted or
+shown as real. The local OpenD process is therefore reachable, but the required
+AAPL/NVDA quote entitlement is not yet ready.
 ## Local verification checkpoint — 2026-09-17
 
 The existing live-smoke contract passed 24 tests in 0.08 seconds. Ruff,
