@@ -14,6 +14,15 @@ Tailscale ping, TCP 443 and HTTPS `/health` cannot connect. This is a
 host/network boundary failure. Do not redeploy or classify it as an application
 regression until the peer is online.
 
+The Tailscale Machines console independently reports **Machine not connected**
+and warns that its browser SSH entry may not open because the machine is
+offline. The local client and control plane agree on the last-seen time
+(2026-09-14 22:32 GMT+8). A read-only TCP check of the existing AWS address
+also timed out on ports 22 and 443; this does not authorize opening public
+ingress. Logging in to the Tailscale console is not a recovery action: the
+existing Lightsail instance and its `tailscaled` service still need operator
+inspection.
+
 From the AWS/Lightsail console or an already authorized private SSH session,
 the operator may inspect the existing instance and run `sudo systemctl is-active
 tailscaled quantmesh-staging.service`, `tailscale status`, and `curl --fail

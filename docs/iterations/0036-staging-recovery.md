@@ -21,6 +21,21 @@ last seen 2026-09-14 22:32 SGT, with no handshake. Tailscale ping and TCP 443
 fail, so HTTPS `/health` times out before an application response. This is a
 node/network boundary failure, not evidence of an application regression.
 
+## Control-plane cross-check — 2026-09-17
+
+The Tailscale Machines console independently shows `quantmesh-staging` as
+**Machine not connected**, with the same last-seen time (2026-09-14 22:32
+GMT+8). Its SSH entry warns that the machine appears offline, so starting an
+SSH session cannot provide loopback evidence. The console login itself is
+healthy but does not start the AWS instance or `tailscaled`; recovery still
+requires the existing Lightsail instance to be started or inspected from its
+AWS/authorized host console.
+
+The public AWS address was also checked read-only: TCP 22 and 443 timed out and
+an HTTPS `/health` request produced no response. No public ingress is being
+opened; this only confirms that the current outage is below the application
+layer.
+
 ## Recovery exit criteria
 
 - The existing peer is online, responds to three pings and accepts private TCP 443.

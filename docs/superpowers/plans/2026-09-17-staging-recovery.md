@@ -24,9 +24,9 @@
 
 **Files:** `docs/iterations/0036-staging-recovery.md`, `docs/goals/ACTIVE.md`.
 
-- [ ] Run `tailscale status --json`, `tailscale netcheck`, `tailscale ping --c 3 quantmesh-staging`, `Resolve-DnsName quantmesh-staging.tail99d23c.ts.net`, and `Test-NetConnection quantmesh-staging.tail99d23c.ts.net -Port 443`.
-- [ ] Record node online state, last-seen time, resolved address, TCP 443 and `/health`. The 2026-09-17 baseline is local Tailscale healthy, Singapore DERP reachable, DNS `100.90.189.16`, peer offline since 2026-09-14, no handshake, ping timeout and TCP 443 failure.
-- [ ] Commit the evidence checkpoint; do not alter AWS or Tailscale from the agent host.
+- [x] Run `tailscale status --json`, `tailscale netcheck`, `tailscale ping --c 3 quantmesh-staging`, `Resolve-DnsName quantmesh-staging.tail99d23c.ts.net`, and `Test-NetConnection quantmesh-staging.tail99d23c.ts.net -Port 443`.
+- [x] Record node online state, last-seen time, resolved address, TCP 443 and `/health`. The 2026-09-17 baseline is local Tailscale healthy, Singapore DERP reachable, DNS `100.90.189.16`, peer offline since 2026-09-14, no handshake, ping timeout and TCP 443 failure. The Tailscale Machines console independently reports **Machine not connected**, and read-only checks of the existing AWS address time out on TCP 22/443.
+- [x] Commit the evidence checkpoint; do not alter AWS or Tailscale from the agent host.
 
 ### Task 2: Operator restores the existing node
 

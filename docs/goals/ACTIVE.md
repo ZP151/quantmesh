@@ -43,6 +43,11 @@ tick-by-tick rendering. Automatic workspace reads wait5s after completion.
   peer is offline with no handshake and was last seen 2026-09-14 22:32 SGT.
 - Tailscale ping, TCP 443 and HTTPS `/health` all fail from the local host.
   This is a node/network boundary result, not an application health result.
+- The Tailscale Machines console independently reports `quantmesh-staging` as
+  **Machine not connected** and its browser SSH entry warns that the machine is
+  offline. Read-only checks of the existing AWS public address also timed out
+  on TCP 22/443. Console login therefore did not restore the instance or
+  `tailscaled`; no public ingress was added.
 - Recovery issue: [#135](https://github.com/ZP151/quantmesh/issues/135).
 - Active iteration: [0036 staging recovery](../iterations/0036-staging-recovery.md).
 - Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
