@@ -386,10 +386,12 @@ Sequence for operator review:
    with no timeouts/failures. Other market feeds remain a separate frontier.
    See the [0035 ledger](../iterations/0035-live-instrument-charts.md).
    **Current recovery gate (iteration 0036):** the accepted release remains
-   `76203e0`, but the private Tailscale peer is currently offline. Restore the
-   existing node and re-run exact health, read-only smoke and a short browser
-   check before advancing. **Next:** private Moomoo/OpenD reachability and actual
-   entitlements for AAPL/NVDA, then prediction venues in sequential slices.
+   `76203e0`; the existing private Tailscale peer is online again and exact
+   health, read-only smoke and the real BTC chart route pass. Recovery exposed
+   a 2.4 GiB live lake and a no-swap OOM loop, so the **next** bounded slice is
+   a configurable retention guard and restart/soak witness. Private
+   Moomoo/OpenD reachability and actual AAPL/NVDA entitlements follow that
+   guard, then prediction venues in sequential slices.
    Other venues and qualified historical coverage remain unaccepted.
    See the [delivery ledger](../iterations/0034-live-data-delivery.md)
    and [current iteration plan](../ITERATION_PLAN.md).
