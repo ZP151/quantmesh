@@ -41,6 +41,17 @@ The agent cannot restore an offline AWS/Tailscale peer from the local host. An
 operator must inspect or start the existing Lightsail instance and its
 `tailscaled`/`quantmesh-staging.service` state. No credentials are needed in
 chat; only the connection result and redacted host/status evidence are needed.
+
+## OpenD readiness checkpoint — 2026-09-17 00:40 SGT
+
+The existing Windows `moomoo_OpenD.exe` is running as PID 40028 and listens on
+`127.0.0.1:11111`; port 11112 is not listening. The read-only
+`quantmesh-moomoo probe` completed successfully and reported
+`quote=True`, `history_kline=True`, `auth_required=False`. The probe opened and
+closed the vendor contexts cleanly; no order or account operation was issued.
+This proves local OpenD capability only. It does not prove that AWS can reach
+Windows localhost, so the approved private route or an AWS-side OpenD placement
+remains the next readiness dependency.
 ## Local verification checkpoint — 2026-09-17
 
 The existing live-smoke contract passed 24 tests in 0.08 seconds. Ruff,

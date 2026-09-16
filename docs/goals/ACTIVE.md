@@ -52,6 +52,11 @@ An operator must inspect or start the existing Lightsail instance and check
 Tailscale SSH. The agent must not invent a healthy application response while
 the peer is offline.
 
+Local OpenD is available on Windows at `127.0.0.1:11111`; the read-only probe
+reported quote/history capability and `auth_required=false`. This is local
+readiness evidence only. AWS still needs an approved private route or an
+AWS-side OpenD placement before AAPL/NVDA can be accepted there.
+
 ## Retention evidence and limits
 
 Existing replay-window API reports1074523rows through12:11:55UTC, with earliest
