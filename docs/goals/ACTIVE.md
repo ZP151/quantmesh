@@ -83,7 +83,8 @@ A ten-minute witness does not certify indefinite availability.
 
 ## Next frontier after recovery
 
-Current branch: `codex/0036-staging-recovery-docs` from `origin/main@c74ea03`.
+Current branch: `docs/135-staging-recovery` from `origin/main@c74ea03`;
+review PR: [#154](https://github.com/ZP151/quantmesh/pull/154).
 Complete the recovery gate with the normal reviewed PR workflow. Preserve
 divergent local `main`; new branches start from `origin/main`. Retain `e185c3b`
 and `4022942` rollback releases; do not change infrastructure or execution.
