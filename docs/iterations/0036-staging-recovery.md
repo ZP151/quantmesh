@@ -194,3 +194,21 @@ environment/build metadata, and record the focused command exit codes. The
 AWS recovery itself is accepted by the evidence above. This review still does
 not close the iteration because the swap mitigation must be replaced by a
 bounded-lake implementation and the OpenD follow-up remains outstanding.
+
+## Retention startup correction checkpoint — 2026-09-17
+
+The first retention deployment from PR [#155](https://github.com/ZP151/quantmesh/pull/155)
+activated `ab90f92` but failed closed during `LiveFeed` startup. The retained
+`market_updates` lake made the prior `latest()` window query exhaust the
+1.4 GiB process limit before the health gate could answer. The service was
+stopped, and the previously accepted `76203e0` release was restored with its
+private Tailscale Serve path; no failed release is counted as deployed.
+
+Issue [#157](https://github.com/ZP151/quantmesh/issues/157) records the failure
+and acceptance criteria. The follow-up PR
+[#158](https://github.com/ZP151/quantmesh/pull/158) changes latest-state
+selection to a bounded grouped `MAX(local_seq)` lookup, adds a 100,000-row
+regression under a 32 MiB DuckDB limit, and makes the 420-attempt health gate a
+seven-minute elapsed deadline. Focused local tests are green; the exact merged
+head still requires full CI and a fresh AWS health, read-only live-smoke and
+browser chart witness before this checkpoint can close.
