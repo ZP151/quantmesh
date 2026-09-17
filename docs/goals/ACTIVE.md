@@ -1,5 +1,17 @@
 # Active Goal
 
+## Capacity checkpoint — 2026-09-18
+
+The operator selected **8 GB Lightsail** as the next-stage capacity target.
+See [capacity evidence and upgrade preparation](2026-09-18-lightsail-8gb-preparation.md)
+for the USD 44/month base budget, CPU limits, migration/rollback preparation
+and acceptance gates. This is a recorded future choice, not an AWS change.
+GitHub now shows #155 merged as `ab90f92`, with the subsequent startup OOM
+tracked by #157 / open PR #158. Finish that bounded-memory work and verify the
+exact live state before migration; capacity acceptance precedes adding #156
+feeds. The older recovery/build observations below are historical and must not
+be treated as a fresh health witness. Keep the independent 0021 soak untouched.
+
 Status: iteration0036 ACTIVE, 2026-09-17. The 0035 AWS real-chart acceptance
 and documentation closeout are complete. The existing private AWS endpoint has
 now recovered and the deployed real-data chart is accepted; this goal remains
