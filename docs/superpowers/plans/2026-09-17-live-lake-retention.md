@@ -27,6 +27,7 @@
 - Modify: `src/quantmesh/live/buffer.py`
 - Modify: `src/quantmesh/settings.py`
 - Modify: `src/quantmesh/api/workstation.py`
+- Modify: `deploy/aws/lightsail/deploy_release.py`
 - Test: `tests/test_live_buffer.py`
 - Test: `tests/test_workstation.py`
 - Test: `tests/test_deployment_identity.py`
@@ -81,6 +82,8 @@ PR CI is still required before merge or AWS deployment.
 
 The runtime sweep first counts eligible rows using the same retention predicate
 and skips index churn when the lake is already within its retention window.
+The deployment health gate now retries for up to 180 checks so a retained lake
+can finish its multi-minute startup before activation is declared failed.
 
 ### Task 3: Document and verify the recovery-to-guard handoff
 
@@ -105,5 +108,6 @@ and skips index churn when the lake is already within its retention window.
 - [x] Running feeds prune at most once every five minutes by default.
 - [x] Complete L2 snapshot epochs and source-status rows remain intact.
 - [x] Existing paper/live safety state is unchanged.
+- [x] Deployment health retries cover the measured slow-lake startup window.
 - [x] Focused tests and Ruff pass; the full-suite gate is delegated to PR CI.
 - [ ] AWS operator witness is recorded separately after deployment.
