@@ -170,10 +170,12 @@ class LiveBuffer:
         from a persisted indexed table.  Startup is single-writer, so detach
         every secondary index on ``market_updates`` for the short retention
         transaction, then rebuild the supported indexes even when the sweep
-        raises.  The primary-key constraint remains database-owned.
+        raises.  The same guard is used by the running-feed cadence. The
+        primary-key constraint remains database-owned.
         """
         if self.retention == timedelta(0):
             return 0
+        cutoff = datetime.now(UTC) - self.retention
         with self._connection_lock:
             index_names = [
                 row[0]
@@ -186,7 +188,23 @@ class LiveBuffer:
                 for index_name in index_names:
                     quoted_name = '"' + index_name.replace('"', '""') + '"'
                     self._con.execute(f"DROP INDEX IF EXISTS {quoted_name}")
-                return self.prune()
+                before = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
+                self._con.execute(
+                    "DELETE FROM market_updates WHERE "
+                    "(kind != 'l2_snapshot' AND received_at < ?) OR "
+                    "(kind = 'l2_snapshot' AND snapshot_epoch IS NULL "
+                    "AND received_at < ?) OR "
+                    "(kind = 'l2_snapshot' AND "
+                    "(venue, instrument, snapshot_epoch) IN ("
+                    "  SELECT venue, instrument, snapshot_epoch FROM market_updates "
+                    "  WHERE kind = 'l2_snapshot' "
+                    "  GROUP BY venue, instrument, snapshot_epoch "
+                    "  HAVING MAX(received_at) < ?"
+                    "))",
+                    [cutoff, cutoff, cutoff],
+                )
+                after = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
+                return before - after
             finally:
                 self._ensure_indexes()
 
@@ -477,33 +495,15 @@ class LiveBuffer:
             raise
 
     def prune(self) -> int:
-        """Delete updates older than the retention window (bounded lake).
+        """Safely delete updates older than the retention window.
 
         Returns the number of rows removed. ``retention_days=0``
         disables pruning entirely (unbounded lake). The status table is
-        kept — it is small and current-state, not event data.
+        kept — it is small and current-state, not event data. Secondary
+        indexes are detached and rebuilt around the DELETE for DuckDB builds
+        that reject deleting rows from a persisted indexed table.
         """
-        if self.retention == timedelta(0):
-            return 0
-        cutoff = datetime.now(UTC) - self.retention
-        with self._connection_lock:
-            before = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
-            self._con.execute(
-                "DELETE FROM market_updates WHERE "
-                "(kind != 'l2_snapshot' AND received_at < ?) OR "
-                "(kind = 'l2_snapshot' AND snapshot_epoch IS NULL "
-                "AND received_at < ?) OR "
-                "(kind = 'l2_snapshot' AND "
-                "(venue, instrument, snapshot_epoch) IN ("
-                "  SELECT venue, instrument, snapshot_epoch FROM market_updates "
-                "  WHERE kind = 'l2_snapshot' "
-                "  GROUP BY venue, instrument, snapshot_epoch "
-                "  HAVING MAX(received_at) < ?"
-                "))",
-                [cutoff, cutoff, cutoff],
-            )
-            after = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
-        return before - after
+        return self._prune_with_indexes_disabled()
 
     # -- reads ------------------------------------------------------------
 

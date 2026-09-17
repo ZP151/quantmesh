@@ -124,6 +124,28 @@ class _FailSecondMarketInsertOnce:
         return getattr(self._connection, name)
 
 
+class _RejectIndexedDelete:
+    """Simulate DuckDB builds that reject DELETE while secondary indexes exist."""
+
+    def __init__(self, connection: Any) -> None:
+        self._connection = connection
+
+    def execute(self, query: str, parameters: object = None) -> Any:
+        if query.startswith("DELETE FROM market_updates"):
+            indexes = self._connection.execute(
+                "SELECT index_name FROM duckdb_indexes() "
+                "WHERE table_name = 'market_updates'"
+            ).fetchall()
+            if indexes:
+                raise RuntimeError("simulated indexed DELETE failure")
+        if parameters is None:
+            return self._connection.execute(query)
+        return self._connection.execute(query, parameters)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._connection, name)
+
+
 @pytest.fixture
 def buffer(tmp_path: Path) -> LiveBuffer:
     yield LiveBuffer(tmp_path, retention_days=7)
@@ -802,6 +824,29 @@ class TestRetention:
             assert buffer.prune() == 1
             rows = buffer.replay()
             assert [r.instrument for r in rows] == ["ETH"]
+        finally:
+            buffer.close()
+
+    def test_runtime_prune_detaches_indexes_before_delete(self, tmp_path: Path) -> None:
+        old = datetime.now(UTC) - timedelta(days=10)
+        buffer = LiveBuffer(tmp_path, retention_days=1)
+        buffer.append(_quote("BTC", received_at=old))
+        buffer._con = _RejectIndexedDelete(buffer._con)
+        try:
+            assert buffer.prune() == 1
+            assert buffer.replay() == []
+            assert {
+                "idx_updates_partition",
+                "idx_updates_received",
+                "idx_updates_source_identity",
+                "idx_updates_source_event_lookup",
+            } <= {
+                row[0]
+                for row in buffer._con.execute(
+                    "SELECT index_name FROM duckdb_indexes() "
+                    "WHERE table_name = 'market_updates'"
+                ).fetchall()
+            }
         finally:
             buffer.close()
 

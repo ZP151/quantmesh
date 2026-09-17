@@ -39,7 +39,7 @@
 
 - [x] **Step 1: Write failing tests** - added negative-setting, workstation wiring, startup prune, and cadence tests.
 - [x] **Step 2: Verify red** - the focused command failed for the absent setting, default wiring, startup prune and scheduler (`4 failed, 3 passed, 209 deselected`).
-- [x] **Step 3: Implement minimal guard** - moved index DDL out of schema migration, detached secondary indexes for the short startup sweep and rebuilt them in a `finally` block, migrated legacy rows before their first sweep, added `live_retention_days = Field(default=7, ge=0)`, and passed it to `LiveBuffer`.
+- [x] **Step 3: Implement minimal guard** - moved index DDL out of schema migration, made the public `prune()` detach secondary indexes for every sweep and rebuild them in a `finally` block, migrated legacy rows before their first sweep, added `live_retention_days = Field(default=7, ge=0)`, and passed it to `LiveBuffer`.
 - [x] **Step 4: Verify green** - focused buffer/feed/workstation/settings run passed `216 passed, 6 warnings`.
 - [x] **Step 5: Commit** - `71961bc feat: bound live lake retention`.
 
@@ -74,8 +74,8 @@ identified three runtime hazards, all corrected in the current working tree:
 - the five-minute sweep runs in a worker thread so the asyncio feed loop keeps
   supervisor/network delivery responsive.
 
-The correction tests were red-first and are now green. The focused release gate
-passes `233 passed, 6 warnings` across deployment identity, workstation,
+The correction tests were red-first (including the simulated indexed-DELETE
+failure) and are now green. The focused release gate passes `234 passed, 6 warnings` across deployment identity, workstation,
 buffer, lookup, feed and replay tests; Ruff and `git diff --check` pass. Fresh
 PR CI is still required before merge or AWS deployment.
 
@@ -96,7 +96,8 @@ PR CI is still required before merge or AWS deployment.
 
 ## Final requirements checklist
 
-- [x] Schema-v2 lake prunes before expensive identity-index migration.
+- [x] Schema-v2 lake prunes before expensive identity-index migration, with
+  persisted secondary indexes detached and restored around every DELETE.
 - [x] `QUANTMESH_LIVE_RETENTION_DAYS` defaults to 7 and rejects negatives.
 - [x] Running feeds prune at most once every five minutes by default.
 - [x] Complete L2 snapshot epochs and source-status rows remain intact.
