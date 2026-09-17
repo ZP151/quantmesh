@@ -108,6 +108,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_quarantine_conflict_identity
      existing_content_digest, conflicting_content_digest);
 """
 
+_RETENTION_PREDICATE = """
+(kind != 'l2_snapshot' AND received_at < ?) OR
+(kind = 'l2_snapshot' AND snapshot_epoch IS NULL AND received_at < ?) OR
+(kind = 'l2_snapshot' AND
+ (venue, instrument, snapshot_epoch) IN (
+   SELECT venue, instrument, snapshot_epoch FROM market_updates
+   WHERE kind = 'l2_snapshot'
+   GROUP BY venue, instrument, snapshot_epoch
+   HAVING MAX(received_at) < ?
+ ))
+"""
+
 _UPDATE_COLUMNS = (
     "local_seq, venue, instrument, kind, provenance, data_time, received_at, "
     "sequence, sequence_gap, continuity, source_event_id, content_digest, "
@@ -176,7 +188,15 @@ class LiveBuffer:
         if self.retention == timedelta(0):
             return 0
         cutoff = datetime.now(UTC) - self.retention
+        parameters = [cutoff, cutoff, cutoff]
         with self._connection_lock:
+            eligible = self._con.execute(
+                "SELECT COUNT(*) FROM market_updates WHERE "
+                f"{_RETENTION_PREDICATE}",
+                parameters,
+            ).fetchone()[0]
+            if eligible == 0:
+                return 0
             index_names = [
                 row[0]
                 for row in self._con.execute(
@@ -188,23 +208,11 @@ class LiveBuffer:
                 for index_name in index_names:
                     quoted_name = '"' + index_name.replace('"', '""') + '"'
                     self._con.execute(f"DROP INDEX IF EXISTS {quoted_name}")
-                before = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
                 self._con.execute(
-                    "DELETE FROM market_updates WHERE "
-                    "(kind != 'l2_snapshot' AND received_at < ?) OR "
-                    "(kind = 'l2_snapshot' AND snapshot_epoch IS NULL "
-                    "AND received_at < ?) OR "
-                    "(kind = 'l2_snapshot' AND "
-                    "(venue, instrument, snapshot_epoch) IN ("
-                    "  SELECT venue, instrument, snapshot_epoch FROM market_updates "
-                    "  WHERE kind = 'l2_snapshot' "
-                    "  GROUP BY venue, instrument, snapshot_epoch "
-                    "  HAVING MAX(received_at) < ?"
-                    "))",
-                    [cutoff, cutoff, cutoff],
+                    "DELETE FROM market_updates WHERE " f"{_RETENTION_PREDICATE}",
+                    parameters,
                 )
-                after = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
-                return before - after
+                return eligible
             finally:
                 self._ensure_indexes()
 

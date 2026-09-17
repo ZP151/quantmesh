@@ -79,6 +79,9 @@ failure) and are now green. The focused release gate passes `234 passed, 6 warni
 buffer, lookup, feed and replay tests; Ruff and `git diff --check` pass. Fresh
 PR CI is still required before merge or AWS deployment.
 
+The runtime sweep first counts eligible rows using the same retention predicate
+and skips index churn when the lake is already within its retention window.
+
 ### Task 3: Document and verify the recovery-to-guard handoff
 
 **Files:**
