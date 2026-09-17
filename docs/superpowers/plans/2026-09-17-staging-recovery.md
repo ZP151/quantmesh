@@ -69,7 +69,8 @@ is-active`/loopback health sequence while the peer is offline. The minimal
 target is to bring the existing node back without changing its release or
 firewall. Passing evidence is both units active, loopback `/health` successful,
 `tailscale status` online, three Windows pings and TCP 443; commit only the
-operator status evidence.
+operator status evidence. Issue #135's existing public-firewall acceptance
+remains open and is not closed or changed by this recovery.
 
 ### Task 3: Verify the accepted release and live read-only surface
 
@@ -91,7 +92,7 @@ read-only live smoke, and `/live/status` plus `/live/state`; on the instance,
 
 **Files:** `docs/iterations/0036-staging-recovery.md`, `docs/goals/ACTIVE.md`.
 
-- [x] Open the deployed BTC workspace with `range=1d&mode=line`; confirm Hyperliquid, `real · real`, advancing source time and freshness. The browser showed `Live proven`, WebSocket and about 3s age; API smoke covered ETH and SOL.
+- [x] Open the deployed BTC workspace with `range=1d&mode=line`; confirm Hyperliquid, `real · real`, advancing source time and freshness. The browser showed `Live proven`, WebSocket and about 3s age; API smoke covered ETH and SOL. The accepted 0035 witness supplies the required current-minute candle revisions and later-minute append.
 - [x] Observe the recovery window and reload the chart; current-minute OHLC rows advanced and the 1D/Line route retained observed points. Do not call this a new ten-minute witness.
 - [x] Run the focused live-smoke test, Ruff and `git diff --check`; the evidence is recorded in the iteration ledger.
 - [x] Push the reviewed documentation/evidence PR from `origin/main`; no deployment follows docs-only changes. Required CI is still running for the latest evidence commit.

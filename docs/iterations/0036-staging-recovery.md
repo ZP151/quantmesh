@@ -10,8 +10,8 @@
 
 Open the existing private AWS workstation and see the accepted exact build
 `76203e03476b120e149a0c06d9932849bb4d8e14`, live Hyperliquid BTC/ETH/SOL
-observations and paper-only safety state. After recovery, provide the existing
-Moomoo OpenD private host and entitlement state so AAPL/NVDA can be tested.
+observations and paper-only safety state. Moomoo/OpenD host and entitlement
+readiness is tracked by a separate follow-up and is not part of this outcome.
 
 ## Initial diagnosis — 2026-09-17 00:29 SGT (historical)
 
@@ -88,8 +88,11 @@ The browser acceptance was performed against the deployed URL after the API
 checks. The BTC `range=1d&mode=line` workspace rendered `Live proven`, live
 source `hyperliquid`, classification `real · real`, `WebSocket` stream and a
 roughly 3-second age. The observed OHLC table advanced through the current
-minutes and the 1D/Line controls were selected. This is the accepted real-data
-chart path; status rows may age independently while the live market kinds stay
+minutes and the 1D/Line controls were selected. The already accepted 0035
+five-minute witness also recorded two current-minute candle revisions followed
+by a later-minute candle append for BTC, ETH and SOL; this recovery check
+re-established the same real-data path without claiming a new sustained
+witness. Status rows may age independently while the live market kinds stay
 fresh.
 
 The swap is a host mitigation, not the durable fix. `LiveBuffer.prune()` exists
@@ -97,6 +100,11 @@ but production startup has no bounded-lake sweep, and the current service
 constructs the buffer with its default retention. A follow-up implementation
 slice must make retention configurable, invoke it on a safe cadence, and prove
 startup behavior against a growing lake before this iteration can be closed.
+
+Issue #135 remains open for the operator-deferred Lightsail firewall acceptance
+recorded in its existing ledger. This recovery did not inspect, remove or add
+public HTTP/SSH rules, and closing the service/reachability gate must not be
+read as closing that issue.
 
 ## Recovery exit criteria
 
@@ -106,6 +114,8 @@ startup behavior against a growing lake before this iteration can be closed.
 - `tools/live_smoke.py --watchlist BTC,ETH,SOL` passes with read-only GETs.
 - Markets and Watchlist 1D/Line pages show real Hyperliquid data times and retain points after reload.
 - No new AWS resource, public ingress, credential, order or live-execution change occurs.
+- Existing public firewall acceptance for issue #135 remains an explicit open
+  operator item; no firewall rule was changed by this recovery.
 
 ## Explicit non-goals
 
