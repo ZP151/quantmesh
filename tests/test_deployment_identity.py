@@ -73,6 +73,12 @@ def test_local_settings_need_no_build_ref() -> None:
     assert local.build_ref is None
 
 
+def test_live_retention_days_rejects_negative_values() -> None:
+    assert Settings(_env_file=None).live_retention_days == 7
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, live_retention_days=-1)
+
+
 def test_staging_accepts_one_exact_commit() -> None:
     staging = Settings(
         _env_file=None,

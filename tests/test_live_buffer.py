@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+import duckdb
 import pytest
 from pydantic import ValidationError
 
@@ -123,6 +124,28 @@ class _FailSecondMarketInsertOnce:
         return getattr(self._connection, name)
 
 
+class _RejectIndexedDelete:
+    """Simulate DuckDB builds that reject DELETE while secondary indexes exist."""
+
+    def __init__(self, connection: Any) -> None:
+        self._connection = connection
+
+    def execute(self, query: str, parameters: object = None) -> Any:
+        if query.startswith("DELETE FROM market_updates"):
+            indexes = self._connection.execute(
+                "SELECT index_name FROM duckdb_indexes() "
+                "WHERE table_name = 'market_updates'"
+            ).fetchall()
+            if indexes:
+                raise RuntimeError("simulated indexed DELETE failure")
+        if parameters is None:
+            return self._connection.execute(query)
+        return self._connection.execute(query, parameters)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._connection, name)
+
+
 @pytest.fixture
 def buffer(tmp_path: Path) -> LiveBuffer:
     yield LiveBuffer(tmp_path, retention_days=7)
@@ -139,11 +162,11 @@ class TestAppendReplayRoundTrip:
             sequence=11,
             source_event_id="trade-a",
         )
-        first = LiveBuffer(tmp_path)
+        first = LiveBuffer(tmp_path, retention_days=0)
         assert first.append(first_update) == 1
         first.close()
 
-        reopened = LiveBuffer(tmp_path)
+        reopened = LiveBuffer(tmp_path, retention_days=0)
         redelivery = first_update.model_copy(
             update={"received_at": first_update.received_at + timedelta(seconds=10)}
         )
@@ -262,13 +285,13 @@ class TestAppendReplayRoundTrip:
         )
         connection.close()
 
-        migrated = LiveBuffer(tmp_path)
+        migrated = LiveBuffer(tmp_path, retention_days=0)
         [row] = migrated.replay()
         assert row.source_event_id == "legacy-v1:7"
         assert row.continuity.value == "known-gap"
         migrated.close()
 
-        reopened = LiveBuffer(tmp_path)
+        reopened = LiveBuffer(tmp_path, retention_days=0)
         try:
             [same] = reopened.replay()
             assert same == row
@@ -423,12 +446,12 @@ class TestAppendReplayRoundTrip:
     def test_non_status_append_commits_for_a_reopened_long_lived_lake(
         self, tmp_path: Path
     ) -> None:
-        lake = LiveBuffer(tmp_path)
+        lake = LiveBuffer(tmp_path, retention_days=0)
         update = _quote("BTC", sequence=7)
         assert lake.append(update) == 1
         lake.close()
 
-        reopened = LiveBuffer(tmp_path)
+        reopened = LiveBuffer(tmp_path, retention_days=0)
         try:
             assert reopened.replay() == [update]
         finally:
@@ -727,6 +750,71 @@ class TestStatusUpsert:
 
 
 class TestRetention:
+    def test_reopen_prunes_old_rows_before_index_migration(self, tmp_path: Path) -> None:
+        old = datetime.now(UTC) - timedelta(days=10)
+        first = LiveBuffer(tmp_path, retention_days=7)
+        first.append(_quote("BTC", received_at=old))
+        first.close()
+
+        reopened = LiveBuffer(tmp_path, retention_days=7)
+        try:
+            assert reopened.replay() == []
+            assert {
+                "idx_updates_partition",
+                "idx_updates_received",
+                "idx_updates_source_identity",
+                "idx_updates_source_event_lookup",
+            } <= {
+                row[0]
+                for row in reopened._con.execute(
+                    "SELECT index_name FROM duckdb_indexes() "
+                    "WHERE table_name = 'market_updates'"
+                ).fetchall()
+            }
+        finally:
+            reopened.close()
+
+    def test_legacy_lake_prunes_after_identity_migration(self, tmp_path: Path) -> None:
+        """A pre-0021 lake is bounded after its retention columns are added."""
+        path = tmp_path / "live" / "updates.duckdb"
+        path.parent.mkdir(parents=True)
+        old = datetime.now(UTC) - timedelta(days=10)
+        with duckdb.connect(str(path)) as connection:
+            connection.execute(
+                "CREATE TABLE market_updates ("
+                "local_seq BIGINT PRIMARY KEY, venue VARCHAR NOT NULL, "
+                "instrument VARCHAR NOT NULL, kind VARCHAR NOT NULL, "
+                "provenance VARCHAR NOT NULL, data_time TIMESTAMPTZ NOT NULL, "
+                "received_at TIMESTAMPTZ NOT NULL, sequence BIGINT, "
+                "sequence_gap BOOLEAN NOT NULL DEFAULT FALSE, state VARCHAR, "
+                "state_note VARCHAR, payload_json VARCHAR NOT NULL)"
+            )
+            connection.execute(
+                "INSERT INTO market_updates VALUES "
+                "(7, 'hyperliquid', 'BTC', 'quote', 'real', ?, ?, 9, true, "
+                "NULL, NULL, ?)",
+                [old, old, json.dumps({"bid": 100.0, "ask": 100.5})],
+            )
+
+        with LiveBuffer(tmp_path, retention_days=1) as migrated:
+            assert migrated.replay() == []
+            assert migrated._con.execute(
+                "SELECT version FROM live_schema_metadata "
+                "WHERE component = 'market_updates'"
+            ).fetchone() == (2,)
+            assert {
+                "idx_updates_partition",
+                "idx_updates_received",
+                "idx_updates_source_identity",
+                "idx_updates_source_event_lookup",
+            } <= {
+                row[0]
+                for row in migrated._con.execute(
+                    "SELECT index_name FROM duckdb_indexes() "
+                    "WHERE table_name = 'market_updates'"
+                ).fetchall()
+            }
+
     def test_old_rows_pruned_fresh_kept(self, tmp_path: Path) -> None:
         past = datetime.now(UTC) - timedelta(days=10)
         buffer = LiveBuffer(tmp_path, retention_days=1)
@@ -736,6 +824,29 @@ class TestRetention:
             assert buffer.prune() == 1
             rows = buffer.replay()
             assert [r.instrument for r in rows] == ["ETH"]
+        finally:
+            buffer.close()
+
+    def test_runtime_prune_detaches_indexes_before_delete(self, tmp_path: Path) -> None:
+        old = datetime.now(UTC) - timedelta(days=10)
+        buffer = LiveBuffer(tmp_path, retention_days=1)
+        buffer.append(_quote("BTC", received_at=old))
+        buffer._con = _RejectIndexedDelete(buffer._con)
+        try:
+            assert buffer.prune() == 1
+            assert buffer.replay() == []
+            assert {
+                "idx_updates_partition",
+                "idx_updates_received",
+                "idx_updates_source_identity",
+                "idx_updates_source_event_lookup",
+            } <= {
+                row[0]
+                for row in buffer._con.execute(
+                    "SELECT index_name FROM duckdb_indexes() "
+                    "WHERE table_name = 'market_updates'"
+                ).fetchall()
+            }
         finally:
             buffer.close()
 

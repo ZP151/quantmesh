@@ -95,6 +95,9 @@ class Settings(BaseSettings):
     # The bounded live watchlist (comma-separated perp coins); empty
     # means no live feed is attached and the workstation runs unchanged.
     live_watchlist: str = ""
+    # Retention for the read-only live replay lake. Seven days is the
+    # bounded default; zero is reserved for explicit local replay drills.
+    live_retention_days: int = Field(default=7, ge=0)
     # Prediction comparison watchlist (iteration 0015 Phase E):
     # comma-separated key[:title[:pm_token[:kalshi_ticker[:expiry_date]]]]
     # event pairs (the board's own parsing rules). Empty means no

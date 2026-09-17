@@ -235,7 +235,11 @@ class TestPointInTimeReplay:
         updates — same order, same every field — and repeated replays on
         one connection must agree with each other too."""
         path = tmp_path
-        first = LiveBuffer(path, retention_days=7)
+        # The session timestamps are fixed historical fixtures.  Retention is
+        # exercised separately; keep this byte-identity test focused on the
+        # reopen/replay contract rather than allowing the default production
+        # window to delete its rows.
+        first = LiveBuffer(path, retention_days=0)
         feed = _feed(first)
         for batch in _natural_session():
             feed.ingest(batch)
@@ -246,7 +250,7 @@ class TestPointInTimeReplay:
         assert all(u.data_time.isoformat().endswith("+00:00") for u in first.replay())
         first.close()
 
-        second = LiveBuffer(path, retention_days=7)
+        second = LiveBuffer(path, retention_days=0)
         try:
             again = [u.model_dump() for u in second.replay()]
             assert again == expected

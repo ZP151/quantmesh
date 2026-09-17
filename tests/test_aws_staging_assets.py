@@ -187,6 +187,40 @@ def test_successful_deployment_activates_exact_healthy_release(
     ]
 
 
+def test_default_health_window_covers_slow_lake_startup(tmp_path: Path) -> None:
+    deploy = _load_deploy_program()
+    layout = deploy.Layout(root=tmp_path / "quantmesh")
+    commands = FakeCommands(GOOD_REF)
+    service = FakeService()
+    state, history, read_active, activate = _activation(None)
+    attempts = 0
+
+    def read_health() -> dict[str, object]:
+        nonlocal attempts
+        attempts += 1
+        if attempts <= 31:
+            raise OSError("workstation is still opening the replay lake")
+        return _healthy(GOOD_REF)
+
+    result = deploy.deploy(
+        GOOD_REF,
+        staging_origin=STAGING_ORIGIN,
+        layout=layout,
+        run_command=commands,
+        service=service,
+        read_active=read_active,
+        activate=activate,
+        read_health=read_health,
+        sleep=lambda _: None,
+    )
+
+    assert result.commit == GOOD_REF
+    assert attempts == 32
+    assert state["active"] == layout.releases / GOOD_REF
+    assert history == [layout.releases / GOOD_REF]
+    assert service.actions == ["restart"]
+
+
 def test_fetched_commit_mismatch_never_activates_release(tmp_path: Path) -> None:
     deploy = _load_deploy_program()
     layout = deploy.Layout(root=tmp_path / "quantmesh")

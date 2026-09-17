@@ -1749,7 +1749,10 @@ def main(argv: list[str] | None = None) -> None:
                     "--live requires a watchlist: set QUANTMESH_LIVE_WATCHLIST "
                     "(e.g. BTC,ETH,SOL,HYPE)"
                 )
-            replay = LiveBuffer(root=settings.lake_root)
+            replay = LiveBuffer(
+                root=settings.lake_root,
+                retention_days=settings.live_retention_days,
+            )
             account_snapshot = PaperAccountFile(settings.orders_dir)
             account = account_snapshot.load_or_create(account)
             journal = OrderJournal(settings.orders_dir)

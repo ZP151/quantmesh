@@ -73,10 +73,6 @@ CREATE TABLE IF NOT EXISTS source_status (
     changed_at  TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (venue, instrument)
 );
-CREATE INDEX IF NOT EXISTS idx_updates_partition
-    ON market_updates (venue, instrument, kind, local_seq);
-CREATE INDEX IF NOT EXISTS idx_updates_received
-    ON market_updates (received_at);
 CREATE TABLE IF NOT EXISTS identity_quarantine (
     quarantine_id BIGINT PRIMARY KEY,
     venue VARCHAR NOT NULL,
@@ -92,6 +88,36 @@ CREATE TABLE IF NOT EXISTS live_schema_metadata (
     component VARCHAR PRIMARY KEY,
     version INTEGER NOT NULL
 );
+"""
+
+_BASE_INDEXES = """
+CREATE INDEX IF NOT EXISTS idx_updates_partition
+    ON market_updates (venue, instrument, kind, local_seq);
+CREATE INDEX IF NOT EXISTS idx_updates_received
+    ON market_updates (received_at);
+"""
+
+_IDENTITY_INDEXES = """
+CREATE UNIQUE INDEX IF NOT EXISTS idx_updates_source_identity
+    ON market_updates (venue, instrument, kind, source_event_id);
+CREATE INDEX IF NOT EXISTS idx_updates_source_event_lookup
+    ON market_updates (source_event_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_quarantine_conflict_identity
+    ON identity_quarantine
+    (venue, instrument, kind, source_event_id,
+     existing_content_digest, conflicting_content_digest);
+"""
+
+_RETENTION_PREDICATE = """
+(kind != 'l2_snapshot' AND received_at < ?) OR
+(kind = 'l2_snapshot' AND snapshot_epoch IS NULL AND received_at < ?) OR
+(kind = 'l2_snapshot' AND
+ (venue, instrument, snapshot_epoch) IN (
+   SELECT venue, instrument, snapshot_epoch FROM market_updates
+   WHERE kind = 'l2_snapshot'
+   GROUP BY venue, instrument, snapshot_epoch
+   HAVING MAX(received_at) < ?
+ ))
 """
 
 _UPDATE_COLUMNS = (
@@ -119,7 +145,81 @@ class LiveBuffer:
         self._con.execute("SET TimeZone = 'UTC'")
         self._assert_supported_schema()
         self._con.execute(_SCHEMA)
-        self._migrate_market_updates()
+        columns = self._market_update_columns()
+        if {"kind", "received_at", "snapshot_epoch"}.issubset(columns):
+            self._prune_before_migration()
+            self._migrate_market_updates()
+        else:
+            # Legacy rows do not have the retention marker needed by the
+            # sweep.  Migrate them first, then prune before installing the
+            # identity indexes so the first cleanup is safe as well.
+            self._migrate_market_updates()
+            self._prune_after_migration()
+        self._ensure_indexes()
+
+    def _prune_before_migration(self) -> None:
+        """Bound schema-v2 lakes before rebuilding identity indexes.
+
+        Legacy lakes do not have the retention columns yet, so they must pass
+        through the identity migration before a retention sweep is possible.
+        """
+        self._prune_with_indexes_disabled()
+
+    def _prune_after_migration(self) -> None:
+        """Prune a legacy lake after retention columns become available."""
+        self._prune_with_indexes_disabled()
+
+    def _market_update_columns(self) -> set[str]:
+        return {
+            row[1]
+            for row in self._con.execute("PRAGMA table_info('market_updates')").fetchall()
+        }
+
+    def _prune_with_indexes_disabled(self) -> int:
+        """Sweep rows while secondary indexes are detached.
+
+        DuckDB versions used by the deployed workstation can reject a DELETE
+        from a persisted indexed table.  Startup is single-writer, so detach
+        every secondary index on ``market_updates`` for the short retention
+        transaction, then rebuild the supported indexes even when the sweep
+        raises.  The same guard is used by the running-feed cadence. The
+        primary-key constraint remains database-owned.
+        """
+        if self.retention == timedelta(0):
+            return 0
+        cutoff = datetime.now(UTC) - self.retention
+        parameters = [cutoff, cutoff, cutoff]
+        with self._connection_lock:
+            eligible = self._con.execute(
+                "SELECT COUNT(*) FROM market_updates WHERE "
+                f"{_RETENTION_PREDICATE}",
+                parameters,
+            ).fetchone()[0]
+            if eligible == 0:
+                return 0
+            index_names = [
+                row[0]
+                for row in self._con.execute(
+                    "SELECT index_name FROM duckdb_indexes() "
+                    "WHERE table_name = 'market_updates'"
+                ).fetchall()
+            ]
+            try:
+                for index_name in index_names:
+                    quoted_name = '"' + index_name.replace('"', '""') + '"'
+                    self._con.execute(f"DROP INDEX IF EXISTS {quoted_name}")
+                self._con.execute(
+                    "DELETE FROM market_updates WHERE " f"{_RETENTION_PREDICATE}",
+                    parameters,
+                )
+                return eligible
+            finally:
+                self._ensure_indexes()
+
+    def _ensure_indexes(self) -> None:
+        """Install the supported lookup and retention indexes idempotently."""
+        self._con.execute(_IDENTITY_INDEXES)
+        self._con.execute(_BASE_INDEXES)
 
     def _assert_supported_schema(self) -> None:
         """Fail closed before mutating a lake written by newer software."""
@@ -386,29 +486,12 @@ class LiveBuffer:
             with suppress(BaseException):
                 self._con.execute("ROLLBACK")
             raise
-        # DuckDB cannot create an index in a transaction with outstanding row
-        # updates. A second idempotent transaction installs constraints before
-        # advancing the version, so interruption leaves an old version that is
-        # safely retried rather than a falsely complete migration.
+        # Advance the version only after every row has an identity.  Index DDL
+        # is intentionally kept out of this transaction: retention may need to
+        # detach persisted indexes before deleting rows, then reinstall them
+        # after migration/pruning has completed.
         self._con.execute("BEGIN TRANSACTION")
         try:
-            self._con.execute(
-                "CREATE UNIQUE INDEX IF NOT EXISTS idx_updates_source_identity "
-                "ON market_updates "
-                "(venue, instrument, kind, source_event_id)"
-            )
-            self._con.execute(
-                # Composite uniqueness remains authoritative; this non-unique
-                # index supplies the selective read path after legacy migration.
-                "CREATE INDEX IF NOT EXISTS idx_updates_source_event_lookup "
-                "ON market_updates (source_event_id)"
-            )
-            self._con.execute(
-                "CREATE UNIQUE INDEX IF NOT EXISTS idx_quarantine_conflict_identity "
-                "ON identity_quarantine "
-                "(venue, instrument, kind, source_event_id, "
-                "existing_content_digest, conflicting_content_digest)"
-            )
             self._con.execute(
                 "INSERT INTO live_schema_metadata VALUES ('market_updates', 2) "
                 "ON CONFLICT (component) DO UPDATE SET version = excluded.version"
@@ -420,33 +503,15 @@ class LiveBuffer:
             raise
 
     def prune(self) -> int:
-        """Delete updates older than the retention window (bounded lake).
+        """Safely delete updates older than the retention window.
 
         Returns the number of rows removed. ``retention_days=0``
         disables pruning entirely (unbounded lake). The status table is
-        kept — it is small and current-state, not event data.
+        kept — it is small and current-state, not event data. Secondary
+        indexes are detached and rebuilt around the DELETE for DuckDB builds
+        that reject deleting rows from a persisted indexed table.
         """
-        if self.retention == timedelta(0):
-            return 0
-        cutoff = datetime.now(UTC) - self.retention
-        with self._connection_lock:
-            before = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
-            self._con.execute(
-                "DELETE FROM market_updates WHERE "
-                "(kind != 'l2_snapshot' AND received_at < ?) OR "
-                "(kind = 'l2_snapshot' AND snapshot_epoch IS NULL "
-                "AND received_at < ?) OR "
-                "(kind = 'l2_snapshot' AND "
-                "(venue, instrument, snapshot_epoch) IN ("
-                "  SELECT venue, instrument, snapshot_epoch FROM market_updates "
-                "  WHERE kind = 'l2_snapshot' "
-                "  GROUP BY venue, instrument, snapshot_epoch "
-                "  HAVING MAX(received_at) < ?"
-                "))",
-                [cutoff, cutoff, cutoff],
-            )
-            after = self._con.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0]
-        return before - after
+        return self._prune_with_indexes_disabled()
 
     # -- reads ------------------------------------------------------------
 

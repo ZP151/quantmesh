@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from quantmesh.domain.models import Venue
+from quantmesh.live import feed as feed_module
 from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import (
     ContinuityState,
@@ -121,6 +122,49 @@ def _candle(
             "final": True,
         },
     )
+
+
+def test_prune_if_due_runs_immediately_then_on_five_minute_cadence(tmp_path) -> None:
+    old = datetime.now(UTC) - timedelta(days=10)
+    lake = LiveBuffer(root=tmp_path, retention_days=1)
+    try:
+        lake.append(_upd(instrument="BTC", received_at=old))
+        lake.append(_upd(instrument="ETH", received_at=datetime.now(UTC)))
+        feed = _feed(lake=lake)
+
+        assert feed.prune_if_due(now=T0) == 1
+        lake.append(_upd(instrument="SOL", received_at=old))
+        assert feed.prune_if_due(now=T0 + timedelta(minutes=4)) == 0
+        assert feed.prune_if_due(now=T0 + timedelta(minutes=5)) == 1
+    finally:
+        lake.close()
+
+
+def test_tick_loop_dispatches_retention_sweep_off_event_loop(monkeypatch) -> None:
+    """The synchronous DuckDB sweep must not pause supervisor/network pumps."""
+    feed = _feed()
+    calls: list[tuple[object, tuple[object, ...]]] = []
+    sleeps = 0
+
+    async def fake_to_thread(func, *args, **kwargs):
+        calls.append((func, args))
+        return func(*args, **kwargs)
+
+    async def fake_sleep(_seconds: float) -> None:
+        nonlocal sleeps
+        sleeps += 1
+        if sleeps > 1:
+            raise asyncio.CancelledError
+
+    monkeypatch.setattr(feed_module.asyncio, "to_thread", fake_to_thread)
+    monkeypatch.setattr(feed_module.asyncio, "sleep", fake_sleep)
+
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(feed._tick_loop())
+
+    assert len(calls) == 1
+    assert calls[0][0] == feed.prune_if_due
+    assert calls[0][1][0].tzinfo is not None
 
 
 class TestLabel:
@@ -1031,7 +1075,7 @@ class TestLake:
             source_event_id="book-epoch-1:ask",
             snapshot_epoch="book-epoch-1",
         )
-        lake = LiveBuffer(root=tmp_path)
+        lake = LiveBuffer(root=tmp_path, retention_days=0)
         feed = _feed(lake=lake)
         feed.ingest([bid, ask])
         state = feed.latest_state(now=T0)["instruments"]["hyperliquid:BTC"]
@@ -1039,7 +1083,7 @@ class TestLake:
         assert {view["snapshot_epoch"] for view in state["book_sides"].values()} == {"book-epoch-1"}
         lake.close()
 
-        reopened = LiveBuffer(root=tmp_path)
+        reopened = LiveBuffer(root=tmp_path, retention_days=0)
         try:
             restored = _feed(lake=reopened).latest_state(now=T0)["instruments"]
             sides = restored["hyperliquid:BTC"]["book_sides"]

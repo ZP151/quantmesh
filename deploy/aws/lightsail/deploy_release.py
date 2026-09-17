@@ -20,6 +20,10 @@ from typing import Any, Protocol
 REPOSITORY_URL = "https://github.com/ZP151/quantmesh.git"
 HEALTH_URL = "http://127.0.0.1:8765/api/health"
 EXACT_COMMIT = re.compile(r"^[0-9a-f]{40}$")
+# A retained live lake can take several minutes to open and rebuild its
+# indexes on the 2 GiB staging host. Keep the identity gate, but allow that
+# bounded startup time before declaring activation failed and rolling back.
+DEFAULT_HEALTH_ATTEMPTS = 180
 
 
 class DeploymentError(RuntimeError):
@@ -276,7 +280,7 @@ def deploy(
     read_active: ReadActive | None = None,
     activate: Activate | None = None,
     read_health: ReadHealth = read_health,
-    health_attempts: int = 30,
+    health_attempts: int = DEFAULT_HEALTH_ATTEMPTS,
     sleep: Callable[[float], None] = time.sleep,
 ) -> DeploymentResult:
     commit = validate_commit(commit)
@@ -373,7 +377,7 @@ def activate_existing(
     read_active: ReadActive | None = None,
     activate: Activate | None = None,
     read_health: ReadHealth = read_health,
-    health_attempts: int = 30,
+    health_attempts: int = DEFAULT_HEALTH_ATTEMPTS,
     sleep: Callable[[float], None] = time.sleep,
 ) -> DeploymentResult:
     commit = validate_commit(commit)
