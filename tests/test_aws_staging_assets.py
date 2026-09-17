@@ -189,6 +189,7 @@ def test_successful_deployment_activates_exact_healthy_release(
 
 def test_default_health_window_covers_slow_lake_startup(tmp_path: Path) -> None:
     deploy = _load_deploy_program()
+    assert deploy.DEFAULT_HEALTH_ATTEMPTS == 420
     layout = deploy.Layout(root=tmp_path / "quantmesh")
     commands = FakeCommands(GOOD_REF)
     service = FakeService()
@@ -219,6 +220,34 @@ def test_default_health_window_covers_slow_lake_startup(tmp_path: Path) -> None:
     assert state["active"] == layout.releases / GOOD_REF
     assert history == [layout.releases / GOOD_REF]
     assert service.actions == ["restart"]
+
+
+def test_health_window_is_bounded_by_elapsed_time() -> None:
+    deploy = _load_deploy_program()
+    elapsed = 0.0
+    reads = 0
+
+    def clock() -> float:
+        return elapsed
+
+    def read_health() -> dict[str, object]:
+        nonlocal elapsed, reads
+        reads += 1
+        elapsed += 3.0
+        raise OSError("health endpoint is not answering")
+
+    with pytest.raises(deploy.DeploymentError, match="health check failed"):
+        deploy._wait_for_health(
+            GOOD_REF,
+            runtime_mode="live",
+            read=read_health,
+            attempts=420,
+            sleep=lambda seconds: None,
+            clock=clock,
+        )
+
+    assert reads == 140
+    assert elapsed == 420.0
 
 
 def test_fetched_commit_mismatch_never_activates_release(tmp_path: Path) -> None:

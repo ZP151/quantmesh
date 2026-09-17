@@ -82,8 +82,25 @@ PR CI is still required before merge or AWS deployment.
 
 The runtime sweep first counts eligible rows using the same retention predicate
 and skips index churn when the lake is already within its retention window.
-The deployment health gate now retries for up to 180 checks so a retained lake
-can finish its multi-minute startup before activation is declared failed.
+The deployment health gate now uses a seven-minute elapsed deadline (with a
+maximum of 420 one-second attempts) so a retained lake can finish its
+multi-minute startup without allowing slow connection timeouts to stretch the
+rollback window indefinitely.
+
+### Startup query correction checkpoint — 2026-09-17
+
+The first retention deployment (`ab90f92`, PR #155) reached the new release but
+failed closed during `LiveFeed` startup: the old `latest()` window query
+materialized the retained `market_updates` lake and DuckDB exhausted the
+1.4 GiB process limit. The service was stopped and the previously accepted
+`76203e0` release was restored; no failed release was counted as deployed.
+
+Issue [#157](https://github.com/ZP151/quantmesh/issues/157) tracks the bounded
+latest-state correction. PR [#158](https://github.com/ZP151/quantmesh/pull/158)
+uses a grouped `MAX(local_seq)` lookup, adds a 100,000-row regression under a
+32 MiB DuckDB limit, and bounds the health loop by elapsed time. Its focused
+tests and the full CI release gate must pass before the exact merged commit is
+deployed and the AWS health, live-smoke and browser gates are repeated.
 
 ### Task 3: Document and verify the recovery-to-guard handoff
 
@@ -97,7 +114,7 @@ can finish its multi-minute startup before activation is declared failed.
 
 - [x] **Step 1: Record behavior** - the source comments and this plan document the seven-day default, `QUANTMESH_LIVE_RETENTION_DAYS`, startup-before-index guard, five-minute cadence, and explicit `0` opt-out. AWS remains paper-only and requires re-acceptance after a reviewed PR.
 - [x] **Step 2: Verify** - the focused command passed `216 passed, 6 warnings`; Ruff and `git diff --check` pass. The local full-suite run was stopped during the long integration section; required PR CI remains the release gate.
-- [x] **Step 3: Record release gate** - PR #155 records the exact focused counts and scope; AWS acceptance remains deferred until a new deployment reports exact build plus live smoke and chart checks.
+- [x] **Step 3: Record release gate** - PR #158 records the bounded latest-state correction and exact focused counts; AWS acceptance remains deferred until the merged commit reports exact build plus live smoke and chart checks.
 - [x] **Step 4: Commit** - `0cbc2e4 docs: record live lake retention verification`.
 
 ## Final requirements checklist
@@ -108,6 +125,8 @@ can finish its multi-minute startup before activation is declared failed.
 - [x] Running feeds prune at most once every five minutes by default.
 - [x] Complete L2 snapshot epochs and source-status rows remain intact.
 - [x] Existing paper/live safety state is unchanged.
-- [x] Deployment health retries cover the measured slow-lake startup window.
+- [x] Deployment health uses a seven-minute elapsed deadline for the measured
+  slow-lake startup window.
+- [x] Latest-state startup lookup stays bounded under a 32 MiB DuckDB limit.
 - [x] Focused tests and Ruff pass; the full-suite gate is delegated to PR CI.
 - [ ] AWS operator witness is recorded separately after deployment.

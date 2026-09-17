@@ -624,19 +624,25 @@ class LiveBuffer:
             clauses.append("instrument = ?")
             params.append(instrument)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        stream_channel = (
+            "CASE WHEN kind = 'l2_snapshot' "
+            "  THEN json_extract_string(payload_json, '$.side') "
+            "WHEN kind = 'metrics' "
+            "  THEN CASE WHEN json_extract(payload_json, '$.mid') IS NOT NULL "
+            "    THEN 'allMids' ELSE 'activeAssetCtx' END "
+            "ELSE '' END"
+        )
         with self._connection_lock:
+            # Keep only one scalar sequence per stream while scanning the lake.
+            # A window over every retained row can materialize the whole lake
+            # on the small staging host before it discards all but these rows.
             rows = self._con.execute(
-                f"SELECT {_UPDATE_COLUMNS} FROM market_updates {where} "
-                "QUALIFY ROW_NUMBER() OVER ("
-                "  PARTITION BY venue, instrument, kind, "
-                "  CASE WHEN kind = 'l2_snapshot' "
-                "    THEN json_extract_string(payload_json, '$.side') "
-                "  WHEN kind = 'metrics' "
-                "    THEN CASE WHEN json_extract(payload_json, '$.mid') IS NOT NULL "
-                "      THEN 'allMids' ELSE 'activeAssetCtx' END "
-                "  ELSE '' END "
-                "  ORDER BY local_seq DESC"
-                ") = 1 ORDER BY local_seq",
+                f"WITH latest_seq AS ("
+                f"  SELECT MAX(local_seq) AS local_seq FROM market_updates {where} "
+                f"  GROUP BY venue, instrument, kind, {stream_channel}"
+                f") SELECT {_UPDATE_COLUMNS} FROM market_updates "
+                "WHERE local_seq IN (SELECT local_seq FROM latest_seq) "
+                "ORDER BY local_seq",
                 params,
             ).fetchall()
         return [_row_to_update(row) for row in rows]
