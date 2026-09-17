@@ -2,6 +2,17 @@
 
 ## Capacity planning checkpoint — 2026-09-18
 
+- **Order-preparation follow-up:** at the operator's request, populated the
+  existing Lightsail form through the enabled Create instance button for one
+  `quantmesh-staging-8gb`, Ubuntu 24.04, Singapore Zone A, General Purpose
+  Dual-stack, USD 44/month. Kept automatic snapshots off and the launch script
+  empty; selected existing Default SSH key and project/environment tags.
+  No purchase or infrastructure mutation was submitted. The capacity record
+  now contains the clean-image/data-restore choice and post-creation runtime
+  configuration handoff. PR #158 is now merged as `33aa052`; the old host was
+  on that SHA at 16:42:22 UTC, but loopback health connection was refused.
+  This is not an accepted release or rollback witness. Read-only checks and
+  form preparation did not interfere with the ongoing recovery work.
 - **Planner/operator:** record 8 GB / 2 vCPU / 160 GB Lightsail as the next
   stage, linked to #135. The user action remains opening the private real-data
   charts; the capacity outcome requires representative restart/sweep evidence

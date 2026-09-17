@@ -52,10 +52,10 @@ has the same CPU baseline as 2 GB and is not the selected next-stage target.
 
 ## Dependencies and next-stage handoff
 
-Remote state checked on 2026-09-18: retention [PR #155](https://github.com/ZP151/quantmesh/pull/155)
+Earlier preparation check on 2026-09-18: retention [PR #155](https://github.com/ZP151/quantmesh/pull/155)
 merged as `ab90f92`; [#157](https://github.com/ZP151/quantmesh/issues/157) reports
 that this release still hit DuckDB OOM in `LiveBuffer.latest()` on the retained
-lake. PR #158 is open for bounded latest-state startup. These are GitHub
+lake. PR #158 was open for bounded latest-state startup. These are GitHub
 records, not a fresh verification of the currently deployed build. An 8 GB
 upgrade complements the fix and must not be used to close that defect by
 masking its unbounded query.
@@ -109,3 +109,66 @@ baseline and burst capacity repeatedly depletes, compare a worker split,
 compute-oriented instances and the 16 GB / 4 vCPU bundle. Multi-user state,
 queues, PostgreSQL/RDS, load balancing and high availability need separate
 requirements and architecture decisions; none is adopted or purchased here.
+
+## Creation form prepared — 2026-09-18, approximately 00:45 SGT
+
+The operator asked to continue through the final purchase-confirmation screen.
+The existing AWS Lightsail create form was filled and the enabled **Create
+instance** button was left unclicked. No chargeable resource was created.
+
+| Field | Prepared value |
+| --- | --- |
+| Name / quantity | `quantmesh-staging-8gb` / one |
+| Region / zone | Singapore, `ap-southeast-1a` |
+| Image | Linux operating system, Ubuntu 24.04 LTS (clean image) |
+| Plan / network | General purpose / Dual-stack |
+| Bundle | 8 GB RAM, 2 vCPU, 160 GB SSD, 5 TB transfer |
+| Displayed price | USD 44/month before applicable tax and extras |
+| SSH key | Existing regional Default SSH key; no new key created or exported |
+| Tags | `Project=QuantMesh`, `Environment=staging` |
+| Automatic snapshots | Disabled in this form; migration backup is a separate gate |
+| Launch script | None; no unattended collector start or embedded credentials |
+
+The clean-image route intentionally avoids cloning the existing Tailscale
+identity and an automatically started collector. It replaces the earlier
+snapshot-expansion option for this prepared order; validated application data
+must be restored separately. The old instance and its data remain untouched.
+If both instances are retained for a full month, their base total is USD 56
+before tax/credits/extras, not USD 44. Merely stopping the old one does not
+eliminate its instance charge.
+
+### Runtime configuration handoff (prepared, not applied)
+
+- Establish independent Tailscale device `quantmesh-staging-8gb` and derive
+  its canonical private HTTPS origin from the new device's actual DNS name.
+  Do not copy the old host's Tailscale state or assume a tailnet suffix.
+- Inspect both Lightsail firewall families immediately after creation. The
+  create form does not expose firewall configuration, and default public
+  rules must not be described as hardened. Scope temporary bootstrap SSH,
+  remove unnecessary public application access and complete private SSH/Serve
+  verification before removing the bootstrap route. No Funnel or public
+  application listener is part of the target.
+- Use the repository's unprivileged `quantmesh` systemd profile, loopback
+  `127.0.0.1:8765`, `/opt/quantmesh/releases/<exact SHA>` and writable
+  `/var/lib/quantmesh`. Apply the actual new canonical origin; retain
+  `paper_mode=true`, `live_trading=false`, and the reviewed seven-day retention
+  default unless separately changed. No new symbols or OpenD exposure.
+- Install and health-check the selected exact merged release before cutover.
+  Quiesce the old writer during the agreed migration window; preserve a
+  recoverable, verified copy of the complete application data set, including
+  the live lake, paper/orders and decisions. Verify restore before allowing
+  the new collector to become authoritative. Never claim that a raw copy of
+  an actively written database proves consistency.
+- Retain the old host and data for rollback; switch the private operator URL
+  only after exact-build, source freshness, replay/reload and safety checks.
+  Follow the representative sweep/restart and 24-hour gates above. No budget
+  notifications, new backups or deletions were enabled by form preparation.
+
+Latest dependency check: PR #158 merged as
+`33aa0521da8305001e0bd62b377c53738c85e11d`, with its reported Python CI check
+passing. At **2026-09-17 16:42:22 UTC**, the old host's release symlink pointed
+to this SHA, systemd was active with `NRestarts=1`, but loopback TCP/8765 refused
+the health request. Therefore this is a candidate release, not a freshly
+accepted runtime or a proven rollback witness. No restart, repair or deployment
+was attempted during order preparation; recheck before proceeding with data
+migration. The form readiness does not close the Class C migration review gate.
