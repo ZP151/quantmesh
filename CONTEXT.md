@@ -47,6 +47,14 @@ This scope covers those three crypto instruments only. Next: private Moomoo/
 OpenD reachability and entitlements for AAPL/NVDA, followed by prediction
 venues and trusted history. See `docs/ITERATION_PLAN.md` for delivery order.
 
+Iteration 0036 is the current recovery gate as of 2026-09-17. The accepted
+release is unchanged, but the private `quantmesh-staging` Tailscale peer was
+offline from the Windows probe (last seen 2026-09-14; no handshake; private
+443 and `/health` timed out). Local Tailscale and Singapore DERP were healthy,
+so this is recorded as a host/network blocker. Restore the existing node and
+re-run the exact health, read-only smoke and short chart checks before starting
+Moomoo/OpenD readiness. No deployment or live-execution change is implied.
+
 ## Bounded context
 
 QuantMesh currently uses one bounded context: quantitative research and guarded execution. Split contexts only when the frontend, research runtime or execution runtime develops a genuinely independent language and lifecycle.

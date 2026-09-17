@@ -48,3 +48,7 @@ Add domain-specific checks for connectors, replay data, migrations and frontend 
 - One PR should close one coherent vertical slice.
 - Protected/shared branches are never force-pushed.
 - Live-trading changes require a dedicated risk review and paper-mode regression tests.
+- Apply the impact classes and merge/deployment gates in
+  [`review-policy.md`](review-policy.md); documentation/evidence-only PRs may
+  use the direct squash path after green CI, while runtime changes keep a human
+  review gate.
