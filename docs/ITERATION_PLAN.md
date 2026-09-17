@@ -1,9 +1,17 @@
 # QuantMesh Iteration Plan
 
-Updated: 2026-09-13. This replaces the original conceptual iterations 0–5;
+Updated: 2026-09-17. This replaces the original conceptual iterations 0–5;
 historical delivery IDs and evidence remain in the [iteration index](iterations/INDEX.md).
 Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 [ACTIVE](goals/ACTIVE.md) for the resumable frontier.
+
+## Current resumable goal
+
+Iteration 0035 is complete. Iteration 0036 remains active after the existing
+private AWS/Tailscale peer recovered and passed the exact-build health,
+read-only live-smoke and browser recovery gate. The recovery exposed an
+unbounded DuckDB lake that must be guarded before the next provider slice. See the
+[0036 recovery plan](superpowers/plans/2026-09-17-staging-recovery.md).
 
 ## Confirmed state
 
@@ -12,29 +20,37 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 | Decision Inbox and Readiness, 0028–0029 | Merged PRs #130 / #133 | No new deployment claim here |
 | Scenario Lab, 0032 | Merged PR #137 | Merge does not establish the AWS version |
 | Forecast outcome review, 0033 | Merged PR #139; final-head CI passed | AWS not updated by the merge |
-| Private AWS workstation, 0031 / #135 | Integrated through merged PR #142 | Private HTTPS, exact build, loopback bind and retained demo rollback verified; #135 stays open for operator-deferred instance firewall acceptance |
+| Private AWS workstation, 0031 / #135 | Integrated through merged PR #142 | Private HTTPS, exact build, loopback bind and retained demo rollback verified; the 0036 recovery gate now passes on the existing instance, with lake-retention hardening still open |
 | Deployed live data, 0034 / #140 | Merged PR #142 as `e185c3b`; final-head CI passed | AWS BTC/ETH/SOL five-minute API/browser witness and reload/replay passed; paper true/live trading false |
 | Multi-market live runtime, 0015/0019 | Connectors, buffering, replay and stream/UI foundations exist | All-market real-time operation in AWS has not been established |
 | Real instrument charts, 0035 / #144 | Integrated through PR #149; lookup and refresh repairs merged | AWS `76203e0` passed a 601.662-second paired witness: six entry paths, real revisions/appends, reload retention, 296 completed workspace requests, no failures/timeouts; paper on/live execution off. Replay API reports 1,074,523 retained observations. Earlier failures and snapshot limits remain in the ledger |
 
 ## Next delivery order
 
-0. **Completed user priority: iteration 0035 / #144.** BTC/ETH/SOL real charts
+0. **Recovery gate: iteration 0036 / #135.** The existing private AWS peer now
+   passes exact-build health, read-only live smoke and the BTC/ETH/SOL real-data
+   chart route. The same recovery found a 2.4 GiB live lake and host OOM loop;
+   no new deployment is implied by the operational swap mitigation.
+1. **Completed user priority: iteration 0035 / #144.** BTC/ETH/SOL real charts
    from Markets and Watchlist now have renewed AWS acceptance. Preserve the
    observed-coverage labels and five-second delay after each completed refresh.
    See [0035](iterations/0035-live-instrument-charts.md), its compact evidence,
    and the [operator steps](runbooks/live-chart-acceptance.md). This is a measured
    ten-minute result, not an indefinite uptime or complete historical-data claim.
 
-1. **Equities: Moomoo/OpenD.** Establish private OpenD reachability and quote
+2. **Live-lake retention guard.** Make the live retention window explicit,
+   prune on a safe cadence and prove startup/soak behavior on the existing
+   BTC/ETH/SOL feed. Keep the lake and source lineage truthful; do not silently
+   truncate data or use swap as the acceptance criterion.
+3. **Equities: Moomoo/OpenD.** Establish private OpenD reachability and quote
    entitlement, then prove AAPL/NVDA observations during the market session.
    Current five-second polling is not native tick push; delayed or unavailable
    data must be labelled. Do not expose OpenD publicly to solve reachability.
-2. **Prediction markets.** Verify Polymarket active-contract subscription and
+4. **Prediction markets.** Verify Polymarket active-contract subscription and
    mapping; then implement/configure Kalshi's required WebSocket authentication.
    Each venue has its own real-data acceptance; missing credentials are an
    unavailable state, not a healthy feed.
-3. **Real history through decisions and review.** Bind trusted, calendar-correct
+5. **Real history through decisions and review.** Bind trusted, calendar-correct
    historical datasets to the existing Lab/DecisionPacket loop. A few minutes
    of streaming ticks do not create months of qualified daily history. Preserve
    lineage, quality gates, costs and frozen review evidence.
@@ -45,8 +61,28 @@ per BTC/ETH/SOL, zero disconnected samples, and 323.567 seconds of browser
 observations with replay/reload. Keep `4022942` as the demo rollback target.
 Later market slices are priorities, not parallel commitments or completed feeds.
 
-## Next bounded slice: AWS equity observations
+## Next bounded slice: bounded live-lake retention
 
+- User action: run the existing read-only BTC/ETH/SOL service across a restart
+  while the lake contains updates older than the configured window, then inspect
+  the retained extent and current chart continuity.
+- Measurable exit: the service starts without an OOM loop on a representative
+  growing lake, deletes only rows outside the configured received-at window,
+  preserves complete L2 snapshot epochs and keeps current live labels real.
+- Implementation boundary: add the setting, buffer wiring, safe prune cadence,
+  and focused tests. Do not expose OpenD, add public ingress, alter order
+  authority or silently copy/truncate the production lake.
+- Deploy only after targeted tests and review; repeat exact health, live-smoke
+  and browser evidence on the existing AWS node with paper mode unchanged.
+
+## Next bounded slice after retention: AWS equity observations
+
+- Local readiness is confirmed on Windows: OpenD listens on `127.0.0.1:11111`
+  and the read-only capability probe reports quote/history access with
+  `auth_required=false`. This does not make localhost reachable from AWS;
+  establish an approved private route or AWS-side OpenD placement first. A
+  direct AAPL/NVDA quote request is currently rejected because the vendor
+  requires a Basic data subscription, so no real equity quote is accepted yet.
 - User action: open AAPL/NVDA in the private workstation and inspect an actual
   source observation, its timestamp, entitlement and market-session state.
 - Readiness first: identify the existing licensed OpenD host, verify an approved

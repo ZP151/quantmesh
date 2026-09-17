@@ -1,9 +1,9 @@
 # Active Goal
 
-Status: iteration0035 actual AWS chart acceptance PASSED, 2026-09-13 12:15 UTC.
-Documentation closeout is in progress; review, commit and integrate this
-evidence-only branch before closing issue144. No new deployment is needed for
-documentation. The prior GitHub merge blocker is resolved.
+Status: iteration0036 ACTIVE, 2026-09-17. The 0035 AWS real-chart acceptance
+and documentation closeout are complete. The existing private AWS endpoint has
+now recovered and the deployed real-data chart is accepted; this goal remains
+active for the lake-retention guard and the separate Moomoo/OpenD route.
 
 ## Accepted user loop
 
@@ -35,6 +35,47 @@ tick-by-tick rendering. Automatic workspace reads wait5s after completion.
   refresh-spacing.json and screenshots. HelperSHA256:
   9a3a26014624a33855824f3ae1d29990bd70c78f827b95b159390ee51a88dcff.
 
+## Current recovery checkpoint
+
+- Local Tailscale is healthy: backend Running, UDP/IPv4 available, Singapore
+  DERP latency 6 ms.
+- `quantmesh-staging.tail99d23c.ts.net` resolves to `100.90.189.16`; after a
+  cold stop/start of the existing Lightsail instance, the peer is online and
+  accepts private TCP 443.
+- HTTPS `/health` reports build
+  `76203e03476b120e149a0c06d9932849bb4d8e14`, runtime `live`, `paper_mode=true`
+  and `live_trading=false`.
+- The earlier Tailscale Machines snapshot and public-address checks captured the
+  pre-recovery outage: the console showed **Machine not connected** and TCP
+  22/443 timed out. After the cold start, local `tailscale status` shows the
+  peer `active` with a direct IPv6 path; no public ingress was added.
+- The instance initially looped on startup because its 1.9 GiB host had no swap
+  while the 2.4 GiB live DuckDB lake held about 3.7M rows. Kernel OOM logs
+  identified `quantmesh-workstation` as the killed process. A persistent 2 GiB
+  swapfile on the existing disk restored startup; this is an operational
+  mitigation pending a source-level retention guard.
+- `tools/live_smoke.py --watchlist BTC,ETH,SOL` passed 13 read-only checks in
+  0.9s. `/live/state` contains current real Hyperliquid quote/trade/metrics/L2
+  and candle observations for all three instruments, and `/live/status` reports
+  each source connected.
+- Browser acceptance at the deployed BTC 1D/Line path showed `Live proven`,
+  source `hyperliquid`, `real · real`, WebSocket stream and about 3s age while
+  current-minute OHLC rows advanced.
+- Recovery issue: [#135](https://github.com/ZP151/quantmesh/issues/135).
+- Active iteration: [0036 staging recovery](../iterations/0036-staging-recovery.md).
+- Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
+
+The recovery gate is now closed with the evidence above. The next operator
+acceptance must repeat the same checks after the retention guard is deployed;
+the agent must not treat swap alone as a permanent lake-safety fix.
+
+Local OpenD is available on Windows at `127.0.0.1:11111`; the read-only probe
+reported quote/history capability and `auth_required=false`. This is local
+readiness evidence only. AWS still needs an approved private route or an
+AWS-side OpenD placement before AAPL/NVDA can be accepted there. A direct
+read-only AAPL/NVDA quote request was rejected by the vendor because Basic data
+subscription is required; no quote was accepted or persisted.
+
 ## Retention evidence and limits
 
 Existing replay-window API reports1074523rows through12:11:55UTC, with earliest
@@ -52,15 +93,24 @@ Planner reset the measurement slice; native document identities,18pure controls
 and two review rounds resolved it. The passing actual run censored zero requests.
 A ten-minute witness does not certify indefinite availability.
 
-## Closeout and next frontier
+The recovery found the production failure mode behind that limit: the running
+service opens the full DuckDB lake before any production prune call, and the
+host had no swap. The follow-up slice must add an explicit retention setting,
+safe pruning cadence and startup/soak evidence. Until then, the swapfile is
+documented as a reversible host mitigation only.
 
-Current branch: codex/0035-live-chart-acceptance from origin/main76203e0.
-Update/review the iteration, roadmap, context, compact evidence and operator
-steps. Preserve divergent localmain; new branches start from origin/main.
-Use the normal reviewed PR workflow and standing merge authority. Retain
-e185c3b and4022942 rollback releases; do not change infrastructure or execution.
+## Next frontier after recovery
 
-Next bounded slice is Moomoo/OpenD readiness for AAPL/NVDA: identify the existing
+Current branch: `docs/135-staging-recovery` from `origin/main@c74ea03`;
+review PR: [#154](https://github.com/ZP151/quantmesh/pull/154).
+Complete the recovery gate with the normal reviewed PR workflow. Preserve
+divergent local `main`; new branches start from `origin/main`. Retain `e185c3b`
+and `4022942` rollback releases; do not change infrastructure or execution.
+
+After recovery, the next bounded slice is the live-lake retention guard: add a
+configurable retention window, safe pruning cadence and deployment evidence
+against the existing BTC/ETH/SOL feed. Then continue with Moomoo/OpenD
+readiness for AAPL/NVDA: identify the existing
 licensed host, approved private AWS route and actual quote entitlement. The
 operator connection-information question is pending; no credentials are needed
 in chat. Windows localhost probes cannot establish remote absence. Only after
