@@ -39,7 +39,7 @@
 
 - [x] **Step 1: Write failing tests** - added negative-setting, workstation wiring, startup prune, and cadence tests.
 - [x] **Step 2: Verify red** - the focused command failed for the absent setting, default wiring, startup prune and scheduler (`4 failed, 3 passed, 209 deselected`).
-- [x] **Step 3: Implement minimal guard** - moved base indexes out of schema bootstrap, pruned schema-v2 rows before `_migrate_market_updates()`, installed base indexes after migration, added `live_retention_days = Field(default=7, ge=0)`, and passed it to `LiveBuffer`.
+- [x] **Step 3: Implement minimal guard** - moved index DDL out of schema migration, detached secondary indexes for the short startup sweep and rebuilt them in a `finally` block, migrated legacy rows before their first sweep, added `live_retention_days = Field(default=7, ge=0)`, and passed it to `LiveBuffer`.
 - [x] **Step 4: Verify green** - focused buffer/feed/workstation/settings run passed `216 passed, 6 warnings`.
 - [x] **Step 5: Commit** - `71961bc feat: bound live lake retention`.
 
@@ -56,9 +56,28 @@
 
 - [x] **Step 1: Write failing test** - seeded old and fresh updates in a real `LiveBuffer`, called `prune_if_due()` at controlled UTC times, and asserted first removal, pre-five-minute skip and post-five-minute eligibility.
 - [x] **Step 2: Verify red** - the focused command failed with `AttributeError: 'LiveFeed' object has no attribute 'prune_if_due'`.
-- [x] **Step 3: Implement minimal cadence** - stored interval/last timestamp, called attached lake `prune()` when due, and invoked it from the tick loop; no second writer/thread/format was added.
+- [x] **Step 3: Implement minimal cadence** - stored interval/last timestamp, called attached lake `prune()` when due, and dispatched the synchronous sweep with `asyncio.to_thread` from the tick loop; no second writer/format was added.
 - [x] **Step 4: Verify green** - the combined focused buffer/feed/workstation/settings run passed `216 passed, 6 warnings`.
 - [x] **Step 5: Commit** - included in `71961bc feat: bound live lake retention`.
+
+### Review correction checkpoint — 2026-09-17
+
+The first PR CI run (`35138573308`) exposed one historical replay fixture that
+was unintentionally subject to the new seven-day default (`3526 passed, 1
+failed, 56 skipped`). The fixture now opts out with `retention_days=0` because
+retention behavior is covered by the dedicated tests. The automated review also
+identified three runtime hazards, all corrected in the current working tree:
+
+- persisted secondary indexes are detached during the startup DELETE and
+  rebuilt even when the sweep raises;
+- legacy schemas are migrated, swept, and indexed in that order;
+- the five-minute sweep runs in a worker thread so the asyncio feed loop keeps
+  supervisor/network delivery responsive.
+
+The correction tests were red-first and are now green. The focused release gate
+passes `233 passed, 6 warnings` across deployment identity, workstation,
+buffer, lookup, feed and replay tests; Ruff and `git diff --check` pass. Fresh
+PR CI is still required before merge or AWS deployment.
 
 ### Task 3: Document and verify the recovery-to-guard handoff
 

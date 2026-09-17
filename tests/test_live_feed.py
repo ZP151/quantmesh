@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from quantmesh.domain.models import Venue
+from quantmesh.live import feed as feed_module
 from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import (
     ContinuityState,
@@ -137,6 +138,33 @@ def test_prune_if_due_runs_immediately_then_on_five_minute_cadence(tmp_path) -> 
         assert feed.prune_if_due(now=T0 + timedelta(minutes=5)) == 1
     finally:
         lake.close()
+
+
+def test_tick_loop_dispatches_retention_sweep_off_event_loop(monkeypatch) -> None:
+    """The synchronous DuckDB sweep must not pause supervisor/network pumps."""
+    feed = _feed()
+    calls: list[tuple[object, tuple[object, ...]]] = []
+    sleeps = 0
+
+    async def fake_to_thread(func, *args, **kwargs):
+        calls.append((func, args))
+        return func(*args, **kwargs)
+
+    async def fake_sleep(_seconds: float) -> None:
+        nonlocal sleeps
+        sleeps += 1
+        if sleeps > 1:
+            raise asyncio.CancelledError
+
+    monkeypatch.setattr(feed_module.asyncio, "to_thread", fake_to_thread)
+    monkeypatch.setattr(feed_module.asyncio, "sleep", fake_sleep)
+
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(feed._tick_loop())
+
+    assert len(calls) == 1
+    assert calls[0][0] == feed.prune_if_due
+    assert calls[0][1][0].tzinfo is not None
 
 
 class TestLabel:

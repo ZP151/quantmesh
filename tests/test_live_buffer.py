@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+import duckdb
 import pytest
 from pydantic import ValidationError
 
@@ -736,8 +737,61 @@ class TestRetention:
         reopened = LiveBuffer(tmp_path, retention_days=7)
         try:
             assert reopened.replay() == []
+            assert {
+                "idx_updates_partition",
+                "idx_updates_received",
+                "idx_updates_source_identity",
+                "idx_updates_source_event_lookup",
+            } <= {
+                row[0]
+                for row in reopened._con.execute(
+                    "SELECT index_name FROM duckdb_indexes() "
+                    "WHERE table_name = 'market_updates'"
+                ).fetchall()
+            }
         finally:
             reopened.close()
+
+    def test_legacy_lake_prunes_after_identity_migration(self, tmp_path: Path) -> None:
+        """A pre-0021 lake is bounded after its retention columns are added."""
+        path = tmp_path / "live" / "updates.duckdb"
+        path.parent.mkdir(parents=True)
+        old = datetime.now(UTC) - timedelta(days=10)
+        with duckdb.connect(str(path)) as connection:
+            connection.execute(
+                "CREATE TABLE market_updates ("
+                "local_seq BIGINT PRIMARY KEY, venue VARCHAR NOT NULL, "
+                "instrument VARCHAR NOT NULL, kind VARCHAR NOT NULL, "
+                "provenance VARCHAR NOT NULL, data_time TIMESTAMPTZ NOT NULL, "
+                "received_at TIMESTAMPTZ NOT NULL, sequence BIGINT, "
+                "sequence_gap BOOLEAN NOT NULL DEFAULT FALSE, state VARCHAR, "
+                "state_note VARCHAR, payload_json VARCHAR NOT NULL)"
+            )
+            connection.execute(
+                "INSERT INTO market_updates VALUES "
+                "(7, 'hyperliquid', 'BTC', 'quote', 'real', ?, ?, 9, true, "
+                "NULL, NULL, ?)",
+                [old, old, json.dumps({"bid": 100.0, "ask": 100.5})],
+            )
+
+        with LiveBuffer(tmp_path, retention_days=1) as migrated:
+            assert migrated.replay() == []
+            assert migrated._con.execute(
+                "SELECT version FROM live_schema_metadata "
+                "WHERE component = 'market_updates'"
+            ).fetchone() == (2,)
+            assert {
+                "idx_updates_partition",
+                "idx_updates_received",
+                "idx_updates_source_identity",
+                "idx_updates_source_event_lookup",
+            } <= {
+                row[0]
+                for row in migrated._con.execute(
+                    "SELECT index_name FROM duckdb_indexes() "
+                    "WHERE table_name = 'market_updates'"
+                ).fetchall()
+            }
 
     def test_old_rows_pruned_fresh_kept(self, tmp_path: Path) -> None:
         past = datetime.now(UTC) - timedelta(days=10)

@@ -633,7 +633,11 @@ class LiveFeed:
         while True:
             await asyncio.sleep(_TICK_SECONDS)
             now = datetime.now(UTC)
-            self.prune_if_due(now)
+            # DuckDB retention is synchronous and may scan/delete a large
+            # persisted lake.  Keep that work off the asyncio loop so a
+            # supervisor's reconnect, freshness and subscriber pumps remain
+            # responsive while the five-minute sweep runs.
+            await asyncio.to_thread(self.prune_if_due, now)
             for supervisor in self._supervisors:
                 supervisor.on_tick(now)
                 updates = supervisor.drain()

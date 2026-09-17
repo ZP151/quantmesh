@@ -97,6 +97,17 @@ CREATE INDEX IF NOT EXISTS idx_updates_received
     ON market_updates (received_at);
 """
 
+_IDENTITY_INDEXES = """
+CREATE UNIQUE INDEX IF NOT EXISTS idx_updates_source_identity
+    ON market_updates (venue, instrument, kind, source_event_id);
+CREATE INDEX IF NOT EXISTS idx_updates_source_event_lookup
+    ON market_updates (source_event_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_quarantine_conflict_identity
+    ON identity_quarantine
+    (venue, instrument, kind, source_event_id,
+     existing_content_digest, conflicting_content_digest);
+"""
+
 _UPDATE_COLUMNS = (
     "local_seq, venue, instrument, kind, provenance, data_time, received_at, "
     "sequence, sequence_gap, continuity, source_event_id, content_digest, "
@@ -122,9 +133,17 @@ class LiveBuffer:
         self._con.execute("SET TimeZone = 'UTC'")
         self._assert_supported_schema()
         self._con.execute(_SCHEMA)
-        self._prune_before_migration()
-        self._migrate_market_updates()
-        self._con.execute(_BASE_INDEXES)
+        columns = self._market_update_columns()
+        if {"kind", "received_at", "snapshot_epoch"}.issubset(columns):
+            self._prune_before_migration()
+            self._migrate_market_updates()
+        else:
+            # Legacy rows do not have the retention marker needed by the
+            # sweep.  Migrate them first, then prune before installing the
+            # identity indexes so the first cleanup is safe as well.
+            self._migrate_market_updates()
+            self._prune_after_migration()
+        self._ensure_indexes()
 
     def _prune_before_migration(self) -> None:
         """Bound schema-v2 lakes before rebuilding identity indexes.
@@ -132,11 +151,49 @@ class LiveBuffer:
         Legacy lakes do not have the retention columns yet, so they must pass
         through the identity migration before a retention sweep is possible.
         """
-        columns = {
-            row[1] for row in self._con.execute("PRAGMA table_info('market_updates')").fetchall()
+        self._prune_with_indexes_disabled()
+
+    def _prune_after_migration(self) -> None:
+        """Prune a legacy lake after retention columns become available."""
+        self._prune_with_indexes_disabled()
+
+    def _market_update_columns(self) -> set[str]:
+        return {
+            row[1]
+            for row in self._con.execute("PRAGMA table_info('market_updates')").fetchall()
         }
-        if {"kind", "received_at", "snapshot_epoch"}.issubset(columns):
-            self.prune()
+
+    def _prune_with_indexes_disabled(self) -> int:
+        """Sweep rows while secondary indexes are detached.
+
+        DuckDB versions used by the deployed workstation can reject a DELETE
+        from a persisted indexed table.  Startup is single-writer, so detach
+        every secondary index on ``market_updates`` for the short retention
+        transaction, then rebuild the supported indexes even when the sweep
+        raises.  The primary-key constraint remains database-owned.
+        """
+        if self.retention == timedelta(0):
+            return 0
+        with self._connection_lock:
+            index_names = [
+                row[0]
+                for row in self._con.execute(
+                    "SELECT index_name FROM duckdb_indexes() "
+                    "WHERE table_name = 'market_updates'"
+                ).fetchall()
+            ]
+            try:
+                for index_name in index_names:
+                    quoted_name = '"' + index_name.replace('"', '""') + '"'
+                    self._con.execute(f"DROP INDEX IF EXISTS {quoted_name}")
+                return self.prune()
+            finally:
+                self._ensure_indexes()
+
+    def _ensure_indexes(self) -> None:
+        """Install the supported lookup and retention indexes idempotently."""
+        self._con.execute(_IDENTITY_INDEXES)
+        self._con.execute(_BASE_INDEXES)
 
     def _assert_supported_schema(self) -> None:
         """Fail closed before mutating a lake written by newer software."""
@@ -403,29 +460,12 @@ class LiveBuffer:
             with suppress(BaseException):
                 self._con.execute("ROLLBACK")
             raise
-        # DuckDB cannot create an index in a transaction with outstanding row
-        # updates. A second idempotent transaction installs constraints before
-        # advancing the version, so interruption leaves an old version that is
-        # safely retried rather than a falsely complete migration.
+        # Advance the version only after every row has an identity.  Index DDL
+        # is intentionally kept out of this transaction: retention may need to
+        # detach persisted indexes before deleting rows, then reinstall them
+        # after migration/pruning has completed.
         self._con.execute("BEGIN TRANSACTION")
         try:
-            self._con.execute(
-                "CREATE UNIQUE INDEX IF NOT EXISTS idx_updates_source_identity "
-                "ON market_updates "
-                "(venue, instrument, kind, source_event_id)"
-            )
-            self._con.execute(
-                # Composite uniqueness remains authoritative; this non-unique
-                # index supplies the selective read path after legacy migration.
-                "CREATE INDEX IF NOT EXISTS idx_updates_source_event_lookup "
-                "ON market_updates (source_event_id)"
-            )
-            self._con.execute(
-                "CREATE UNIQUE INDEX IF NOT EXISTS idx_quarantine_conflict_identity "
-                "ON identity_quarantine "
-                "(venue, instrument, kind, source_event_id, "
-                "existing_content_digest, conflicting_content_digest)"
-            )
             self._con.execute(
                 "INSERT INTO live_schema_metadata VALUES ('market_updates', 2) "
                 "ON CONFLICT (component) DO UPDATE SET version = excluded.version"
