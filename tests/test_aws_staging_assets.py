@@ -189,6 +189,7 @@ def test_successful_deployment_activates_exact_healthy_release(
 
 def test_default_health_window_covers_slow_lake_startup(tmp_path: Path) -> None:
     deploy = _load_deploy_program()
+    assert deploy.DEFAULT_HEALTH_ATTEMPTS == 420
     layout = deploy.Layout(root=tmp_path / "quantmesh")
     commands = FakeCommands(GOOD_REF)
     service = FakeService()

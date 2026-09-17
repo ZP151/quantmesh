@@ -21,9 +21,10 @@ REPOSITORY_URL = "https://github.com/ZP151/quantmesh.git"
 HEALTH_URL = "http://127.0.0.1:8765/api/health"
 EXACT_COMMIT = re.compile(r"^[0-9a-f]{40}$")
 # A retained live lake can take several minutes to open and rebuild its
-# indexes on the 2 GiB staging host. Keep the identity gate, but allow that
-# bounded startup time before declaring activation failed and rolling back.
-DEFAULT_HEALTH_ATTEMPTS = 180
+# indexes on the 2 GiB staging host. Keep the identity gate, but allow a
+# bounded seven-minute startup window before declaring activation failed and
+# rolling back.
+DEFAULT_HEALTH_ATTEMPTS = 420
 
 
 class DeploymentError(RuntimeError):

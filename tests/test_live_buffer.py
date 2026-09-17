@@ -665,6 +665,47 @@ class TestPriceTrailIdentity:
 
 
 class TestLatest:
+    def test_latest_uses_bounded_memory_for_a_large_lake(self, tmp_path: Path) -> None:
+        lake = LiveBuffer(tmp_path, retention_days=0)
+        try:
+            lake._con.execute("SET memory_limit='32MB'")
+            lake._con.execute(
+                """
+                INSERT INTO market_updates
+                SELECT i::BIGINT,
+                       'hyperliquid',
+                       CASE WHEN i % 2 = 0 THEN 'BTC' ELSE 'ETH' END,
+                       CASE WHEN i % 3 = 0 THEN 'quote'
+                            WHEN i % 3 = 1 THEN 'trade'
+                            ELSE 'metrics' END,
+                       'real',
+                       TIMESTAMPTZ '2026-08-09 10:00:00+00:00',
+                       TIMESTAMPTZ '2026-08-09 10:00:00+00:00',
+                       i::BIGINT, false, 'complete',
+                       'event-' || i::VARCHAR,
+                       NULL,
+                       NULL, NULL, NULL, NULL,
+                       CASE WHEN i % 3 = 0 THEN '{"bid":100.0,"ask":101.0}'
+                            WHEN i % 3 = 1 THEN '{"price":100.0,"size":1.0,"side":"buy"}'
+                            ELSE '{"mid":100.0}' END
+                FROM range(1, 100001) AS rows(i)
+                """
+            )
+
+            rows = lake.latest()
+
+            assert len(rows) == 6
+            assert {(row.instrument, row.kind) for row in rows} == {
+                ("BTC", UpdateKind.QUOTE),
+                ("BTC", UpdateKind.TRADE),
+                ("BTC", UpdateKind.METRICS),
+                ("ETH", UpdateKind.QUOTE),
+                ("ETH", UpdateKind.TRADE),
+                ("ETH", UpdateKind.METRICS),
+            }
+        finally:
+            lake.close()
+
     def test_one_row_per_venue_instrument_kind(self, buffer: LiveBuffer) -> None:
         buffer.append(_quote("BTC", bid=100.0))
         buffer.append(_quote("BTC", bid=100.5))
