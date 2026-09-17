@@ -1,5 +1,43 @@
 # Iteration 0036 — Private staging recovery and equity readiness
 
+## Capacity planning checkpoint — 2026-09-18
+
+- **Order-preparation follow-up:** at the operator's request, populated the
+  existing Lightsail form through the enabled Create instance button for one
+  `quantmesh-staging-8gb`, Ubuntu 24.04, Singapore Zone A, General Purpose
+  Dual-stack, USD 44/month. Kept automatic snapshots off and the launch script
+  empty; selected existing Default SSH key and project/environment tags.
+  No purchase or infrastructure mutation was submitted. The capacity record
+  now contains the clean-image/data-restore choice and post-creation runtime
+  configuration handoff. PR #158 is now merged as `33aa052`; the old host was
+  on that SHA at 16:42:22 UTC, but loopback health connection was refused.
+  This is not an accepted release or rollback witness. Read-only checks and
+  form preparation did not interfere with the ongoing recovery work.
+- **Planner/operator:** record 8 GB / 2 vCPU / 160 GB Lightsail as the next
+  stage, linked to #135. The user action remains opening the private real-data
+  charts; the capacity outcome requires representative restart/sweep evidence
+  and 24-hour stability before more feed workload. No purchase or migration
+  belongs to this documentation checkpoint.
+- **Research/cost:** preserve the dated OOM, active swap and health-timeout
+  evidence; distinguish CPU baseline from peak vCPU count. Budget USD 44/month
+  base, with tax/credits/backup/overlap handled separately. No new data rights,
+  research claims or order authority are introduced.
+- **Implementer:** captured the selected target, evidence limits, dependencies,
+  migration/rollback preparation and later expansion triggers in the
+  [capacity record](../goals/2026-09-18-lightsail-8gb-preparation.md), linked from
+  ACTIVE and the roadmap. #155 is merged at `ab90f92`; #157 reports subsequent
+  startup OOM and #158 remains open. Earlier recovery success below is not a
+  current availability claim.
+- **Reviewer (same agent):** limited this change to documentation. Removed
+  speculative production sizing and public/multi-user topology commitments
+  from the supplied discussion; preserved private access, paper-only defaults,
+  the independent soak and outstanding #135 firewall acceptance.
+- **Verifier:** staged `git diff --check`, strict UTF-8 decoding, documentation
+  scope validation (4 Markdown files) and all 16 local link targets passed.
+  Runtime tests were not run for this prose-only change; PR CI is a separate
+  merge gate. No application behavior, AWS state or deployment commands
+  changed. The upgrade and its acceptance remain pending.
+
 - Status: ACTIVE, 2026-09-17. The private recovery gate closed after the existing Lightsail node was cold-started and its service was made healthy. This iteration remains active for the lake-retention guard and the separate Moomoo/OpenD readiness slice.
 - Linked issue: [#135 — Private AWS staging workstation](https://github.com/ZP151/quantmesh/issues/135).
 - Review PR: [#154 — private staging recovery](https://github.com/ZP151/quantmesh/pull/154).

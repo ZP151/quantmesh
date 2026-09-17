@@ -395,6 +395,12 @@ Sequence for operator review:
    Other venues and qualified historical coverage remain unaccepted.
    See the [delivery ledger](../iterations/0034-live-data-delivery.md)
    and [current iteration plan](../ITERATION_PLAN.md).
+   **Next-stage capacity choice, 2026-09-18:** prepare the operator-selected
+   8 GB / 2 vCPU / 160 GB Lightsail upgrade, USD 44/month base. Retention #155
+   is merged; bounded startup #157/#158 and representative lake acceptance
+   remain prerequisites to expanding feed workload. See the
+   [capacity preparation record](../goals/2026-09-18-lightsail-8gb-preparation.md).
+   Migration is not executed by this documentation checkpoint.
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
