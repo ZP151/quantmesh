@@ -1,9 +1,47 @@
 # Active Goal
 
-Status: iteration0036 ACTIVE, 2026-09-17. The 0035 AWS real-chart acceptance
-and documentation closeout are complete. The existing private AWS endpoint has
-now recovered and the deployed real-data chart is accepted; this goal remains
-active for the lake-retention guard and the separate Moomoo/OpenD route.
+Status: iteration0036 ACTIVE, 2026-09-23. The 0035 AWS real-chart acceptance
+and the 8 GB migration's short acceptance are complete; this goal remains
+active until the new host's sustained capacity gate is closed and the separate
+Moomoo/OpenD route is ready.
+
+## 8 GB capacity handoff — observation is a prerequisite
+
+The authoritative private origin is now
+`https://quantmesh-staging-8gb.tail99d23c.ts.net`, serving exact merged build
+`33aa0521da8305001e0bd62b377c53738c85e11d`. The restored dataset passed archive
+hash, WAL recovery, JSON payload validation, 13-check read-only smoke, chart
+entry-path, and controlled restart checks. The host currently reports about
+6.0 GiB available RAM, no swap, an active service and zero automatic restarts.
+These are the completed migration facts recorded in [PR #159](https://github.com/ZP151/quantmesh/pull/159);
+the PR remains open because its CI was intentionally cancelled while the
+operator prepares capacity work.
+
+The migration did not fill the old collection gap (the stopped source ends on
+2026-09-17 and the new collector resumes on 2026-09-22), and it did not prove
+the old 90-second shutdown behavior. A local, read-only observer started on
+2026-09-22 16:21:42 UTC records five-minute smoke, quote/candle freshness,
+health safety flags, service restarts, memory, swap, disk and recent journal
+lines for 24 hours. The observation gate remains open until the complete log
+is reviewed. No later provider or UI acceptance may treat this short sample as
+indefinite availability.
+
+The gate requires all of the following before the next provider slice:
+
+- every sample keeps build `33aa0521`, `paper_mode=true` and
+  `live_trading=false`;
+- BTC, ETH and SOL quote/candle observations remain real and under the
+  observer's 60-second freshness limit;
+- the service stays active with no automatic restarts, OOM evidence or swap
+  activity, and capacity/disk trends are reviewed;
+- an operator-approved old-host rollback rehearsal and a new-host reboot test
+  are separately completed or explicitly deferred with a recorded reason;
+- the evidence is mirrored into iteration 0036 before its closeout.
+
+The old origin is retained as a rollback resource and is not deleted. The
+historical gap remains an explicit limitation; any backfill must use a
+source-backed, lineage-preserving dataset and cannot be inferred from the
+live replay.
 
 ## Accepted user loop
 
@@ -65,9 +103,9 @@ tick-by-tick rendering. Automatic workspace reads wait5s after completion.
 - Active iteration: [0036 staging recovery](../iterations/0036-staging-recovery.md).
 - Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
 
-The recovery gate is now closed with the evidence above. The next operator
-acceptance must repeat the same checks after the retention guard is deployed;
-the agent must not treat swap alone as a permanent lake-safety fix.
+The recovery gate is now superseded operationally by the 8 GB host, but the
+capacity observation above is still open. The agent must not treat a short
+smoke, extra RAM or the former swap mitigation as a permanent stability claim.
 
 Local OpenD is available on Windows at `127.0.0.1:11111`; the read-only probe
 reported quote/history capability and `auth_required=false`. This is local
@@ -94,23 +132,18 @@ and two review rounds resolved it. The passing actual run censored zero requests
 A ten-minute witness does not certify indefinite availability.
 
 The recovery found the production failure mode behind that limit: the running
-service opens the full DuckDB lake before any production prune call, and the
-host had no swap. The follow-up slice must add an explicit retention setting,
-safe pruning cadence and startup/soak evidence. Until then, the swapfile is
-documented as a reversible host mitigation only.
+service opened the full DuckDB lake before any production prune call, and the
+old host had no swap. The retention setting, bounded latest-state lookup and
+startup deadline are now in merged `33aa0521`; the new host's sustained
+observation is the remaining evidence gate. The old swapfile remains a
+reversible host mitigation and is not part of the new-host acceptance.
 
-## Next frontier after recovery
+## Next frontier after migration
 
-Current branch: `docs/135-staging-recovery` from `origin/main@c74ea03`;
-review PR: [#154](https://github.com/ZP151/quantmesh/pull/154).
-Complete the recovery gate with the normal reviewed PR workflow. Preserve
-divergent local `main`; new branches start from `origin/main`. Retain `e185c3b`
-and `4022942` rollback releases; do not change infrastructure or execution.
-
-After recovery, the next bounded slice is the live-lake retention guard: add a
-configurable retention window, safe pruning cadence and deployment evidence
-against the existing BTC/ETH/SOL feed. Then continue with Moomoo/OpenD
-readiness for AAPL/NVDA: identify the existing
+Keep the observation, rollback and reboot gates in front of new provider work.
+Preserve the old release and verified backups; do not change infrastructure or
+execution while the capacity evidence is incomplete. After the gate closes,
+continue with Moomoo/OpenD readiness for AAPL/NVDA: identify the existing
 licensed host, approved private AWS route and actual quote entitlement. The
 operator connection-information question is pending; no credentials are needed
 in chat. Windows localhost probes cannot establish remote absence. Only after

@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-09-17
+Last updated: 2026-09-23
 
 ## Status legend
 
@@ -385,13 +385,13 @@ Sequence for operator review:
    revisions/appends, reload retention and 296 completed workspace requests,
    with no timeouts/failures. Other market feeds remain a separate frontier.
    See the [0035 ledger](../iterations/0035-live-instrument-charts.md).
-   **Current recovery gate (iteration 0036):** the accepted release remains
-   `76203e0`; the existing private Tailscale peer is online again and exact
-   health, read-only smoke and the real BTC chart route pass. Recovery exposed
-   a 2.4 GiB live lake and a no-swap OOM loop, so the **next** bounded slice is
-   a configurable retention guard and restart/soak witness. Private
-   Moomoo/OpenD reachability and actual AAPL/NVDA entitlements follow that
-   guard, then prediction venues in sequential slices.
+   **Current capacity gate (iteration 0036 / PR #159):** the new 8 GB private
+   Tailscale origin serves exact merged `33aa0521`; archive/WAL/JSON restore,
+   13-check smoke, real BTC/ETH/SOL chart paths and a controlled restart pass.
+   A 24-hour capacity/freshness observation, an operator-approved rollback
+   rehearsal and a host reboot test remain ahead of private Moomoo/OpenD
+   reachability and actual AAPL/NVDA entitlement. The September 17–22 source
+   gap remains recorded and is not silently backfilled.
    Other venues and qualified historical coverage remain unaccepted.
    See the [delivery ledger](../iterations/0034-live-data-delivery.md)
    and [current iteration plan](../ITERATION_PLAN.md).
