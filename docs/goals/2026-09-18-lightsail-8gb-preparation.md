@@ -1,8 +1,10 @@
 # Lightsail 8 GB upgrade preparation
 
-Status: next-stage capacity choice recorded on 2026-09-18 at the operator's
-request. Preparation only; no instance purchase, migration or deployment has
-been performed by this documentation task. Related work: [#135](https://github.com/ZP151/quantmesh/issues/135),
+Status: capacity choice recorded on 2026-09-18; the operator created the 8 GB
+instance and authorized setup on 2026-09-22. Setup and migration evidence
+below supersedes the historical form-preparation status. Sustained capacity
+acceptance and old-instance retirement remain separate gates.
+Related work: [#135](https://github.com/ZP151/quantmesh/issues/135),
 [#157](https://github.com/ZP151/quantmesh/issues/157) / [PR #158](https://github.com/ZP151/quantmesh/pull/158),
 and [iteration 0036](../iterations/0036-staging-recovery.md).
 
@@ -172,3 +174,135 @@ the health request. Therefore this is a candidate release, not a freshly
 accepted runtime or a proven rollback witness. No restart, repair or deployment
 was attempted during order preparation; recheck before proceeding with data
 migration. The form readiness does not close the Class C migration review gate.
+
+## Operator-created instance checkpoint — 2026-09-22
+
+The operator reported creating `quantmesh-staging-8gb`; the AWS console
+confirmed Running, Ubuntu 24.04 LTS, Singapore Zone A and the selected 8 GB
+bundle. Browser SSH confirmed cloud-init done, 7,816 MiB physical memory,
+7,321 MiB available, no configured swap and 152 GiB free on the root volume.
+These are idle-host measurements, not application capacity acceptance.
+
+The default public HTTP rule was removed. The unrestricted IPv4 and IPv6
+SSH sources were removed, leaving only AWS Lightsail browser SSH over IPv4
+as a temporary bootstrap route. The console confirmed the rule update and
+displayed only SSH/TCP 22 with "Lightsail browser SSH only". No public
+application listener, static IP, snapshot or load balancer was added.
+
+Official Tailscale installation completed with version 1.102.4. A fresh
+device identity named `quantmesh-staging-8gb` awaits operator login and
+authorization; no authentication URL or credential is retained here. The
+canonical private origin, private SSH and Serve are not yet verified.
+OS deployment prerequisites (CA certificates, curl, git, Python and venv)
+completed successfully in a fresh browser SSH session after hardening.
+No application was started or data migrated on the new host.
+
+A fresh read-only old-host probe initially required Tailscale SSH's additional
+authentication check, which subsequently passed. At 15:31:15 UTC the old
+host reported exact build `33aa0521da8305001e0bd62b377c53738c85e11d`, healthy
+live-data mode, paper true and live trading false. Systemd was running with
+one restart, 797,884,416 bytes current service memory, 984 MiB available RAM
+and 1,343 MiB swap used out of 2,047 MiB. A privileged directory-size check
+reported 4.2 GiB live data; root had 46 GiB free. Serve remained tailnet-only
+and proxied to loopback port 8765. This is a point-in-time health witness,
+not chart freshness, restart or rollback acceptance. The old instance and
+its data remain the migration source. This checkpoint records setup evidence and does
+not close the Class C migration review or the 24-hour capacity gate.
+
+## Private configuration and data restore — 2026-09-22
+
+After the operator completed device authorization, private SSH verified the
+new hostname and its actual canonical origin:
+`https://quantmesh-staging-8gb.tail99d23c.ts.net`. The remaining temporary
+AWS browser SSH rule was removed; the console showed **No firewall rules**,
+and a new Tailscale SSH connection still succeeded.
+
+The existing bootstrap installed exact merged build
+`33aa0521da8305001e0bd62b377c53738c85e11d` as unprivileged `quantmesh`, with
+systemd enabled and application TCP/8765 bound only to loopback. Initial demo
+health passed with exact identity, paper true and live trading false. Private
+Serve proxied to loopback. Its first HTTPS probe timed out while ACME was
+issuing the new hostname's certificate; after issuance a verified HTTPS GET
+returned 200 in 0.429 seconds. No certificate verification bypass was used.
+
+The new demo service was stopped. Its canonical demo environment and seeded
+data were preserved separately. The existing deployment helper generated
+the canonical live-data profile for the same build and new origin, retaining
+BTC/ETH/SOL, paper safety and default retention. This is an explicit profile
+selection for the new host, not a changed application commit.
+
+Old-host shutdown started at 15:39:43 UTC. Uvicorn waited for background tasks
+past the configured 90-second stop limit, so systemd killed the process at
+15:41:13; MainPID became zero. This is an unresolved graceful-shutdown defect,
+not a clean exit witness. The complete stopped `/var/lib/quantmesh`, including
+the live DuckDB WAL, demo state, orders and decisions, was archived and compared
+byte-for-byte to the stopped source before restoration.
+
+Archive size: **4,434,759,680 bytes**. Source and destination SHA-256:
+`1e5b3c5e0acdd3539afd1825f82e744a45a66f02197a3e70cbc8fca9760adbcc`.
+The initial laptop-relayed transfer was interrupted and its partial file was
+not used. The complete copy was transferred directly between the existing
+Tailscale devices after normal SSH session reauthentication. Backups are on
+instance disks in root-only directories; no paid snapshot resource was created.
+
+### Bounded acceptance completed — 2026-09-23, approximately 00:02 SGT
+
+- Restore matched the verified archive before opening the database. WAL
+  recovery and checkpoint succeeded; all 6,535,216 market records were readable,
+  all payloads were valid JSON, and BTC/ETH/SOL were present. Verification took
+  39.685 seconds. Full archives remain on both hosts, including expired rows.
+- The archive's latest receipt was September 17 at 19:45:23 UTC (September 18
+  at 03:45 SGT), despite the old process's healthy endpoint. Current observations
+  resumed on September 22 at about 15:53 UTC. The intervening collection gap is
+  preserved honestly; the application displays continuity-checked recent replay.
+- New live startup completed in approximately 58 seconds on the representative
+  lake. Normal startup retention reduced the live extent to about 2.84 million
+  rows while preserving the complete pre-migration archive. Service memory peak
+  was 3,311,214,592 bytes (3.08 GiB), with no swap and no automatic restart.
+- The 13-check read-only smoke passed in 0.4 seconds. Sixty-three samples over
+  324.56 seconds retained exact build, live-data mode, paper true and live
+  trading false. Max health latency was 0.187 seconds, max state latency 0.209
+  seconds, and max quote age 2,149 ms. All three current source timestamps
+  advanced. Their recorded minute coverage grew from two rows to eight. This
+  observation crossed the first scheduled five-minute sweep boundary with no
+  service errors; it does not independently instrument sweep duration.
+- Both Markets and Watchlist opened all three 1D/Line workspaces. Visible
+  provenance was real, stream transport reached WebSocket, and current charts
+  rendered. SOL reload retained its observed minutes. One browser accessibility
+  read timed out; subsequent screenshot/navigation and the simultaneous API
+  measurements succeeded. These are bounded checks, not the full prior paired
+  ten-minute browser benchmark.
+- After closing the browser's live connection, a controlled service restart
+  exited gracefully and returned exact healthy live mode in 16 seconds. The
+  post-restart smoke passed all 13 checks in 0.5 seconds, with zero automatic
+  restarts. This does not establish the cause of the old shutdown timeout.
+- The new unit is enabled. The old unit has MainPID zero and is disabled to
+  avoid automatically restarting a second collector. The old AWS instance,
+  release, source data and verified backup remain; no instance was deleted.
+  The interrupted relay file on the new host is explicitly named
+  `migration-20260922.partial.tar` and must not be used for recovery. The
+  validated new-host archive is `migration-20260922.direct.tar` under
+  `/var/backups/quantmesh`; the old host retains `migration-20260922.tar` there.
+
+Local detailed evidence is in the task's ignored
+`output/lightsail-8gb-migration/` directory: restore verification, archive
+checkpoint, five-minute observations and final health. The durable facts above
+are mirrored in iteration 0036. No application source or deployment helper was
+changed by this setup. The evidence PR is not a substitute for formal Class C
+review or operator acceptance of retirement.
+
+### Remaining capacity and rollback boundaries
+
+The short observation does not close the 24-hour stability/CPU-burst gate.
+There has been no full old-host rollback drill after new ingestion began, and
+no host reboot test; service enablement and a process restart are verified.
+For rollback, stop the new collector first, preserve its later observations,
+then re-enable/start the retained old service and verify exact health,
+paper safety, current source times and the old private URL. Its retained data
+ends before new-host ingestion, so a rollback cannot silently discard that
+new interval. Do not delete either source merely because short smoke is green.
+
+Base overlap remains USD 56/month (44 new plus 12 old), before tax, credits
+and extras. Stopping the old application does not stop instance billing.
+Old-host stale ingestion and the 90-second shutdown timeout remain follow-ups;
+this migration does not claim to fix their underlying causes.

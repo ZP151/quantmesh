@@ -232,3 +232,57 @@ environment/build metadata, and record the focused command exit codes. The
 AWS recovery itself is accepted by the evidence above. This review still does
 not close the iteration because the swap mitigation must be replaced by a
 bounded-lake implementation and the OpenD follow-up remains outstanding.
+
+## 8 GB host setup checkpoint — 2026-09-22
+
+Planner/operator selected and created `quantmesh-staging-8gb`. Implementer
+verified cloud-init completion and installed official Tailscale 1.102.4;
+removed default public HTTP and unrestricted IPv4/IPv6 SSH, retaining only
+AWS browser SSH over IPv4 temporarily. Verifier observed the console's
+successful update and a fresh browser SSH connection after hardening.
+Idle resources: 7,816 MiB RAM, 7,321 MiB available, no swap, 152 GiB free.
+These measurements do not prove workload capacity.
+
+Reviewer boundary: new-device authorization is awaiting the operator;
+Class C migration review, canonical private origin, deployment, consistent
+data restore, rollback and sustained capacity acceptance remain open.
+The old-host probe passed renewed Tailscale SSH authentication and returned
+healthy exact `33aa052`, live-data mode, paper true and live trading false.
+Its live directory was 4.2 GiB with 1,343 MiB swap used; private Serve still
+proxied to loopback. New-host OS deployment prerequisites completed. No old
+service/data change or new collector start occurred. See the updated
+[capacity preparation record](../goals/2026-09-18-lightsail-8gb-preparation.md).
+
+## 8 GB migration acceptance — 2026-09-23 SGT
+
+Implementer completed private authorization, removed the remaining temporary
+public rule, installed unchanged merged `33aa052` and restored the complete
+application dataset through a verified archive. The canonical new station is
+`https://quantmesh-staging-8gb.tail99d23c.ts.net`; old collection is stopped and
+disabled with the source and both verified backups retained.
+
+Verifier: 4,434,759,680-byte archive hashes matched on both hosts; tar comparisons
+passed before database use. WAL recovery, checkpoint and a full JSON-validity
+scan passed for 6,535,216 records in 39.685 seconds. The old dataset stopped at
+September 17, 19:45 UTC; the healthy old HTTP endpoint was not proof of live
+ingestion. New source observations resumed September 22, about 15:53 UTC.
+
+The 13-check smoke passed in 0.4 seconds. All 63 samples over 324.56 seconds
+kept exact build, paper true, live trading false and fresh real BTC/ETH/SOL.
+Max health/state latency was 0.187/0.209 seconds; max quote age 2,149 ms.
+History coverage grew from two to eight current minutes per symbol. Both UI
+entry paths opened all three charts; SOL reload retained coverage. A browser
+AX read timed out once while API samples and subsequent UI checks succeeded.
+Startup peak was 3.08 GiB with zero swap; retention reduced the active extent
+to about 2.84M rows. The observation crossed the first five-minute sweep boundary
+without logged service errors. A controlled new-service restart exited
+gracefully and recovered in 16 seconds; post-restart smoke passed 13/13 in
+0.5 seconds. No automated restart occurred.
+
+Reviewer/Planner boundaries remain explicit: old shutdown exceeded 90 seconds
+and was SIGKILLed before backup, so WAL recovery was mandatory. The old feed
+gap and old shutdown root causes are not fixed here. 24-hour capacity/burst
+observation, full old-host rollback and host reboot are not yet proven. Keep
+both instances pending that decision; base overlap is USD 56/month before
+tax/credits/extras. This evidence does not close formal Class C review or
+authorize deletion, new feeds, public ingress or live execution.
