@@ -23,16 +23,19 @@ and diff checks are clean, and the report distinguishes `route_unavailable`,
 
 ## Implementation checkpoint — 2026-09-23
 
-Commit `50b2ddb` adds `ReadinessReport`, `SymbolReadiness` and
-`run_readiness(...)`. It validates quote and history payloads through the
-existing Moomoo adapter, requires at least one daily history row and preserves
-per-symbol failures. A capability response that advertises order access is
-reported but never called by this boundary.
+Commits `50b2ddb` through `3ff91d2` add `ReadinessReport`,
+`SymbolReadiness` and `run_readiness(...)`. The boundary validates quote and
+history payloads through the existing Moomoo adapter, requires at least one
+daily history row, rejects cross-market responses and preserves per-symbol
+failures. A capability response that advertises order access is reported but
+never called by this boundary.
 
-The follow-up CLI changes are on the current feature branch and add the
-private TCP preflight plus stable text/JSON output. The local focused suite
-currently passes `69 passed, 1 skipped`; Ruff and `git diff --check` pass. CI
-is intentionally paused, so no remote check, push, merge or deploy is claimed.
+The follow-up CLI changes add the private TCP preflight plus stable text/JSON
+output. The latest focused suite passes `96 passed, 1 skipped` including the
+existing live-smoke checks; Ruff and `git diff --check` pass. A full 3,601-test
+run was attempted but interrupted during a long pre-existing segment before
+the latest fixes, so it is not claimed as green. CI is intentionally paused,
+so no remote check, push, merge or deploy is claimed.
 
 ## Current operator evidence and blocker
 

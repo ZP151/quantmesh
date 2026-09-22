@@ -122,9 +122,11 @@ Later market slices are priorities, not parallel commitments or completed feeds.
 - Current operational result: AWS `100.86.41.64` to Windows
   `100.91.234.68:11111` is closed. No public port is opened; the real-source
   acceptance remains pending.
-- Local verification: the readiness/CLI/OpenD suite is `69 passed, 1 skipped`;
-  Ruff and `git diff --check` pass. CI is paused, so no remote check or deploy
-  is claimed.
+- Local verification: the readiness/CLI/OpenD/live-smoke suite is `96 passed,
+  1 skipped`; Ruff and `git diff --check` pass. A full 3,601-test run was
+  attempted but interrupted in a long pre-existing segment before the latest
+  fixes, so it is not claimed as green. CI is paused, so no remote check or
+  deploy is claimed.
 - Next evidence: after the capacity gate and private route are ready, run the
   probe in an open US session and capture two source timestamps for each symbol,
   with paper mode true and live execution false.

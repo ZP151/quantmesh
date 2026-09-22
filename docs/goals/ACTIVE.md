@@ -56,7 +56,7 @@ details are in [iteration 0037](../iterations/0037-moomoo-opend-readiness.md).
 
 The AWS-to-Windows OpenD route (`100.86.41.64` to `100.91.234.68:11111`) is
 currently closed, so the operational result is `route_unavailable`; no public
-port is opened. Local focused verification is green (`69 passed, 1 skipped`,
+port is opened. Local focused verification is green (`96 passed, 1 skipped`,
 Ruff and diff check passed). CI remains paused and this code work is not a
 deployment, merge or real-equity acceptance claim.
 
