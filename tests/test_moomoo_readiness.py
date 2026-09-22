@@ -155,6 +155,22 @@ def test_all_malformed_symbols_set_protocol_error_summary() -> None:
     assert [row.status for row in report.symbols] == ["protocol_error", "protocol_error"]
 
 
+@pytest.mark.parametrize("kind", ["quote", "history"])
+def test_cross_market_payload_is_protocol_error(kind: str) -> None:
+    if kind == "quote":
+        client = StubClient(quote_payloads={"US.AAPL": _quote("HK.AAPL")})
+    else:
+        client = StubClient(history_payloads={"US.AAPL": _history("HK.AAPL")})
+
+    report = run_readiness(client, ["US.AAPL"])
+
+    assert report.symbols[0].status == "protocol_error"
+    assert report.symbols[0].quote_status == ("protocol_error" if kind == "quote" else "ready")
+    assert report.symbols[0].history_status == (
+        "protocol_error" if kind == "history" else "ready"
+    )
+
+
 def test_readiness_never_calls_order_operations() -> None:
     client = StubClient()
 

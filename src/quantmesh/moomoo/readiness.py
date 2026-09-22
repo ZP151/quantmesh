@@ -180,6 +180,7 @@ def _probe_quote(
 ) -> tuple[str, str | None]:
     try:
         payload = client.stock_quote([code])
+        _assert_payload_code(payload, code)
         adapter.stock_quote_to_quote(instrument, payload)
     except OpenDProtocolError as error:
         return "protocol_error", str(error)
@@ -197,6 +198,7 @@ def _probe_history(
 ) -> tuple[str, str | None, int]:
     try:
         payload = client.history_kline(code, interval=interval)
+        _assert_payload_code(payload, code)
         bars = adapter.history_kline_to_bars(instrument, payload)
     except OpenDProtocolError as error:
         return "protocol_error", str(error), 0
@@ -225,6 +227,25 @@ def _instrument_for_code(code: str) -> Instrument:
         currency=currency,
         metadata={"market": market},
     )
+
+
+def _assert_payload_code(payload: object, code: str) -> None:
+    """Reject a valid-looking response that belongs to another market."""
+    if not isinstance(payload, dict):
+        return
+    top_code = payload.get("code")
+    if top_code is not None and top_code != code:
+        raise OpenDProtocolError(
+            f"payload code {top_code!r} does not match requested code {code!r}"
+        )
+    rows = payload.get("rows")
+    if not isinstance(rows, list):
+        return
+    for index, row in enumerate(rows):
+        if isinstance(row, dict) and row.get("code") is not None and row["code"] != code:
+            raise OpenDProtocolError(
+                f"payload row {index} code {row['code']!r} does not match requested code {code!r}"
+            )
 
 
 def _error_detail(error: Exception) -> str:
