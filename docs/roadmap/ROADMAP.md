@@ -395,6 +395,12 @@ Sequence for operator review:
    Other venues and qualified historical coverage remain unaccepted.
    See the [delivery ledger](../iterations/0034-live-data-delivery.md)
    and [current iteration plan](../ITERATION_PLAN.md).
+   **Iteration 0037 development (issue #156):** the local, read-only
+   `quantmesh-moomoo readiness --json` boundary now checks the private TCP
+   route and validates AAPL/NVDA quote plus daily-history responses without
+   touching order APIs. The AWS-to-Windows route is currently closed, so no
+   equity source is accepted and no public OpenD ingress is added. Deployment
+   and merge remain behind the 8 GB observation gate.
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.

@@ -24,6 +24,7 @@ from quantmesh.moomoo.opend import (
     OpenDSdkMissingError,
     OpenDUnavailableError,
 )
+from quantmesh.moomoo.readiness import ReadinessReport, SymbolReadiness
 
 
 class StubClient:
@@ -95,6 +96,95 @@ def test_probe_rejects_unknown_command(stub_client: StubClient) -> None:
 def test_probe_closes_client_on_failure(stub_client: StubClient) -> None:
     stub_client.error = OpenDUnavailableError("down")
     cli.main(["probe"])
+    assert stub_client.closed is True
+
+
+def _readiness_report(status: str) -> ReadinessReport:
+    symbol_status = "ready" if status == "ready" else "partial"
+    return ReadinessReport(
+        status=status,
+        capabilities=OpenDCapabilities(True, True, True, True, False),
+        symbols=(
+            SymbolReadiness(
+                code="US.AAPL",
+                status=symbol_status,
+                quote_status="ready",
+                history_status="ready" if status == "ready" else "unavailable",
+                history_detail=None if status == "ready" else "history unavailable",
+                history_rows=1 if status == "ready" else 0,
+            ),
+        ),
+        interval="1d",
+    )
+
+
+def test_readiness_route_unavailable_stops_before_sdk(monkeypatch, capsys) -> None:
+    def fail_build(_settings):
+        raise AssertionError("SDK client must not be built for a closed route")
+
+    monkeypatch.setattr(cli, "_build_client", fail_build)
+    monkeypatch.setattr(cli, "_check_opend_route", lambda _settings: (False, "connection refused"))
+
+    code = cli.main(["readiness", "--json"])
+
+    assert code == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "route_unavailable"
+    assert payload["order_checked"] is False
+    assert payload["requested_symbols"] == ["US.AAPL", "US.NVDA"]
+
+
+def test_readiness_json_reports_codes_and_never_checks_orders(
+    monkeypatch, stub_client: StubClient, capsys
+) -> None:
+    calls: list[list[str]] = []
+
+    def fake_run(client, codes, *, interval):
+        assert client is stub_client
+        calls.append(codes)
+        assert interval == "1d"
+        return _readiness_report("ready")
+
+    monkeypatch.setattr(cli, "_check_opend_route", lambda _settings: (True, None))
+    monkeypatch.setattr(cli, "run_readiness", fake_run)
+
+    code = cli.main(["readiness", "--json"])
+
+    assert code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "ready"
+    assert payload["symbols"][0]["code"] == "US.AAPL"
+    assert payload["order_checked"] is False
+    assert calls == [["US.AAPL", "US.NVDA"]]
+    assert stub_client.closed is True
+
+
+def test_readiness_partial_exits_one(monkeypatch, stub_client: StubClient, capsys) -> None:
+    monkeypatch.setattr(cli, "_check_opend_route", lambda _settings: (True, None))
+    monkeypatch.setattr(
+        cli, "run_readiness", lambda *_args, **_kwargs: _readiness_report("partial")
+    )
+
+    assert cli.main(["readiness", "--json", "--symbols", "AAPL"]) == 1
+    assert json.loads(capsys.readouterr().out)["status"] == "partial"
+    assert stub_client.closed is True
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_code", "expected_status"),
+    [
+        (OpenDAuthRequiredError("account locked"), 2, "auth_required"),
+        (OpenDSdkMissingError("sdk missing"), 3, "sdk_missing"),
+    ],
+)
+def test_readiness_maps_typed_provider_failures(
+    monkeypatch, stub_client: StubClient, capsys, error, expected_code, expected_status
+) -> None:
+    stub_client.error = error
+    monkeypatch.setattr(cli, "_check_opend_route", lambda _settings: (True, None))
+
+    assert cli.main(["readiness", "--json"]) == expected_code
+    assert json.loads(capsys.readouterr().out)["status"] == expected_status
     assert stub_client.closed is True
 
 

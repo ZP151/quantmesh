@@ -3,7 +3,8 @@
 Status: iteration0036 ACTIVE, 2026-09-23. The 0035 AWS real-chart acceptance
 and the 8 GB migration's short acceptance are complete; this goal remains
 active until the new host's sustained capacity gate is closed and the separate
-Moomoo/OpenD route is ready.
+Moomoo/OpenD route is ready. A code-only iteration 0037 readiness slice is now
+underway; it does not waive the capacity gate for deployment or merge.
 
 ## 8 GB capacity handoff — observation is a prerequisite
 
@@ -42,6 +43,22 @@ The old origin is retained as a rollback resource and is not deleted. The
 historical gap remains an explicit limitation; any backfill must use a
 source-backed, lineage-preserving dataset and cannot be inferred from the
 live replay.
+
+## Iteration 0037 development checkpoint — private Moomoo/OpenD readiness
+
+The current feature branch adds a read-only `quantmesh-moomoo readiness
+--json` command for issue [#156](https://github.com/ZP151/quantmesh/issues/156).
+It checks the private TCP route before SDK use, probes only quote and daily
+history for `US.AAPL` and `US.NVDA`, and preserves route, SDK, auth,
+entitlement and protocol failures as explicit statuses. The report never
+opens an order context or persists quote/account data. Plan and acceptance
+details are in [iteration 0037](../iterations/0037-moomoo-opend-readiness.md).
+
+The AWS-to-Windows OpenD route (`100.86.41.64` to `100.91.234.68:11111`) is
+currently closed, so the operational result is `route_unavailable`; no public
+port is opened. Local focused verification is green (`69 passed, 1 skipped`,
+Ruff and diff check passed). CI remains paused and this code work is not a
+deployment, merge or real-equity acceptance claim.
 
 ## Accepted user loop
 
@@ -142,15 +159,16 @@ reversible host mitigation and is not part of the new-host acceptance.
 
 Keep the observation, rollback and reboot gates in front of new provider work.
 Preserve the old release and verified backups; do not change infrastructure or
-execution while the capacity evidence is incomplete. After the gate closes,
-continue with Moomoo/OpenD readiness for AAPL/NVDA: identify the existing
-licensed host, approved private AWS route and actual quote entitlement. The
+execution while the capacity evidence is incomplete. While the gate runs,
+continue only code and local verification for Moomoo/OpenD readiness. After it
+closes, identify the existing licensed host, approved private AWS route and
+actual quote entitlement, then run the probe during an open session. The
 operator connection-information question is pending; no credentials are needed
-in chat. Windows localhost probes cannot establish remote absence. Only after
-readiness is established, write the exact-file plan and issue. An open-session
-real-data witness and truthful delayed/closed/unavailable labels are required;
-existing five-second polling is not native tick push. Then prediction venues
-and qualified historical evidence follow sequentially in docs/ITERATION_PLAN.md.
+in chat. Windows localhost probes cannot establish remote absence. An
+open-session real-data witness and truthful delayed/closed/unavailable labels
+are required; existing five-second polling is not native tick push. Then
+prediction venues and qualified historical evidence follow sequentially in
+docs/ITERATION_PLAN.md.
 
 Keep0021soak and issues135/132/127 independent. No public OpenD exposure, paid
 subscriptions, orders, strategy promotion or opportunistic maintenance changes.

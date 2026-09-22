@@ -11,8 +11,11 @@ Iteration 0035 is complete. Iteration 0036 remains active after the 8 GB
 private AWS migration passed its bounded restore, smoke, chart and restart
 checks. The 24-hour capacity/freshness observation, rollback rehearsal and
 host reboot gate are still open; the old collection gap is recorded rather
-than backfilled. See the [0036 recovery plan](superpowers/plans/2026-09-17-staging-recovery.md)
-and the [8 GB observation plan](superpowers/plans/2026-09-23-8gb-observation-gate.md).
+than backfilled. Code-only work for iteration 0037 may proceed during the
+observation, but its deployment and merge acceptance remain behind the gate.
+See the [0036 recovery plan](superpowers/plans/2026-09-17-staging-recovery.md),
+the [8 GB observation plan](superpowers/plans/2026-09-23-8gb-observation-gate.md)
+and the [0037 readiness ledger](iterations/0037-moomoo-opend-readiness.md).
 
 ## Confirmed state
 
@@ -45,6 +48,13 @@ and the [8 GB observation plan](superpowers/plans/2026-09-23-8gb-observation-gat
    entitlement, then prove AAPL/NVDA observations during the market session.
    Current five-second polling is not native tick push; delayed or unavailable
    data must be labelled. Do not expose OpenD publicly to solve reachability.
+3. **Iteration 0037 code slice (in progress).** The read-only
+   `quantmesh-moomoo readiness --json` command now performs a private TCP
+   preflight and a bounded quote/daily-history report for `US.AAPL` and
+   `US.NVDA`. It is local, paper-safe and order-free. Run it on AWS only after
+   the capacity gate and an approved private route are available; a closed
+   route is recorded as `route_unavailable` rather than degraded into fixture
+   data.
 4. **Prediction markets.** Verify Polymarket active-contract subscription and
    mapping; then implement/configure Kalshi's required WebSocket authentication.
    Each venue has its own real-data acceptance; missing credentials are an
@@ -99,6 +109,25 @@ Later market slices are priorities, not parallel commitments or completed feeds.
 - Only after readiness is established, write the exact-file test-first plan and
   its issue/iteration record. Additional model/framework work remains sequenced
   behind verified data access and trusted historical evidence.
+
+## Current bounded development slice: Moomoo/OpenD readiness report
+
+- User action: run `quantmesh-moomoo readiness --json` with the private OpenD
+  endpoint and inspect route, capability, quote and daily-history statuses for
+  AAPL/NVDA.
+- Measurable code outcome: the command returns stable `ready`, `partial`,
+  `route_unavailable`, `sdk_missing`, `auth_required`, `unavailable` and
+  `protocol_error` states, exits non-zero for any incomplete symbol and never
+  opens an order context.
+- Current operational result: AWS `100.86.41.64` to Windows
+  `100.91.234.68:11111` is closed. No public port is opened; the real-source
+  acceptance remains pending.
+- Local verification: the readiness/CLI/OpenD suite is `69 passed, 1 skipped`;
+  Ruff and `git diff --check` pass. CI is paused, so no remote check or deploy
+  is claimed.
+- Next evidence: after the capacity gate and private route are ready, run the
+  probe in an open US session and capture two source timestamps for each symbol,
+  with paper mode true and live execution false.
 
 ## Execution and completion rules
 
