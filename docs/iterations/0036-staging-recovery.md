@@ -1,5 +1,43 @@
 # Iteration 0036 — Private staging recovery and equity readiness
 
+## Capacity planning checkpoint — 2026-09-18
+
+- **Order-preparation follow-up:** at the operator's request, populated the
+  existing Lightsail form through the enabled Create instance button for one
+  `quantmesh-staging-8gb`, Ubuntu 24.04, Singapore Zone A, General Purpose
+  Dual-stack, USD 44/month. Kept automatic snapshots off and the launch script
+  empty; selected existing Default SSH key and project/environment tags.
+  No purchase or infrastructure mutation was submitted. The capacity record
+  now contains the clean-image/data-restore choice and post-creation runtime
+  configuration handoff. PR #158 is now merged as `33aa052`; the old host was
+  on that SHA at 16:42:22 UTC, but loopback health connection was refused.
+  This is not an accepted release or rollback witness. Read-only checks and
+  form preparation did not interfere with the ongoing recovery work.
+- **Planner/operator:** record 8 GB / 2 vCPU / 160 GB Lightsail as the next
+  stage, linked to #135. The user action remains opening the private real-data
+  charts; the capacity outcome requires representative restart/sweep evidence
+  and 24-hour stability before more feed workload. No purchase or migration
+  belongs to this documentation checkpoint.
+- **Research/cost:** preserve the dated OOM, active swap and health-timeout
+  evidence; distinguish CPU baseline from peak vCPU count. Budget USD 44/month
+  base, with tax/credits/backup/overlap handled separately. No new data rights,
+  research claims or order authority are introduced.
+- **Implementer:** captured the selected target, evidence limits, dependencies,
+  migration/rollback preparation and later expansion triggers in the
+  [capacity record](../goals/2026-09-18-lightsail-8gb-preparation.md), linked from
+  ACTIVE and the roadmap. #155 is merged at `ab90f92`; #157 reports subsequent
+  startup OOM and #158 remains open. Earlier recovery success below is not a
+  current availability claim.
+- **Reviewer (same agent):** limited this change to documentation. Removed
+  speculative production sizing and public/multi-user topology commitments
+  from the supplied discussion; preserved private access, paper-only defaults,
+  the independent soak and outstanding #135 firewall acceptance.
+- **Verifier:** staged `git diff --check`, strict UTF-8 decoding, documentation
+  scope validation (4 Markdown files) and all 16 local link targets passed.
+  Runtime tests were not run for this prose-only change; PR CI is a separate
+  merge gate. No application behavior, AWS state or deployment commands
+  changed. The upgrade and its acceptance remain pending.
+
 - Status: ACTIVE, 2026-09-17. The private recovery gate closed after the existing Lightsail node was cold-started and its service was made healthy. This iteration remains active for the lake-retention guard and the separate Moomoo/OpenD readiness slice.
 - Linked issue: [#135 — Private AWS staging workstation](https://github.com/ZP151/quantmesh/issues/135).
 - Review PR: [#154 — private staging recovery](https://github.com/ZP151/quantmesh/pull/154).
@@ -212,3 +250,57 @@ regression under a 32 MiB DuckDB limit, and makes the 420-attempt health gate a
 seven-minute elapsed deadline. Focused local tests are green; the exact merged
 head still requires full CI and a fresh AWS health, read-only live-smoke and
 browser chart witness before this checkpoint can close.
+
+## 8 GB host setup checkpoint — 2026-09-22
+
+Planner/operator selected and created `quantmesh-staging-8gb`. Implementer
+verified cloud-init completion and installed official Tailscale 1.102.4;
+removed default public HTTP and unrestricted IPv4/IPv6 SSH, retaining only
+AWS browser SSH over IPv4 temporarily. Verifier observed the console's
+successful update and a fresh browser SSH connection after hardening.
+Idle resources: 7,816 MiB RAM, 7,321 MiB available, no swap, 152 GiB free.
+These measurements do not prove workload capacity.
+
+Reviewer boundary: new-device authorization is awaiting the operator;
+Class C migration review, canonical private origin, deployment, consistent
+data restore, rollback and sustained capacity acceptance remain open.
+The old-host probe passed renewed Tailscale SSH authentication and returned
+healthy exact `33aa052`, live-data mode, paper true and live trading false.
+Its live directory was 4.2 GiB with 1,343 MiB swap used; private Serve still
+proxied to loopback. New-host OS deployment prerequisites completed. No old
+service/data change or new collector start occurred. See the updated
+[capacity preparation record](../goals/2026-09-18-lightsail-8gb-preparation.md).
+
+## 8 GB migration acceptance — 2026-09-23 SGT
+
+Implementer completed private authorization, removed the remaining temporary
+public rule, installed unchanged merged `33aa052` and restored the complete
+application dataset through a verified archive. The canonical new station is
+`https://quantmesh-staging-8gb.tail99d23c.ts.net`; old collection is stopped and
+disabled with the source and both verified backups retained.
+
+Verifier: 4,434,759,680-byte archive hashes matched on both hosts; tar comparisons
+passed before database use. WAL recovery, checkpoint and a full JSON-validity
+scan passed for 6,535,216 records in 39.685 seconds. The old dataset stopped at
+September 17, 19:45 UTC; the healthy old HTTP endpoint was not proof of live
+ingestion. New source observations resumed September 22, about 15:53 UTC.
+
+The 13-check smoke passed in 0.4 seconds. All 63 samples over 324.56 seconds
+kept exact build, paper true, live trading false and fresh real BTC/ETH/SOL.
+Max health/state latency was 0.187/0.209 seconds; max quote age 2,149 ms.
+History coverage grew from two to eight current minutes per symbol. Both UI
+entry paths opened all three charts; SOL reload retained coverage. A browser
+AX read timed out once while API samples and subsequent UI checks succeeded.
+Startup peak was 3.08 GiB with zero swap; retention reduced the active extent
+to about 2.84M rows. The observation crossed the first five-minute sweep boundary
+without logged service errors. A controlled new-service restart exited
+gracefully and recovered in 16 seconds; post-restart smoke passed 13/13 in
+0.5 seconds. No automated restart occurred.
+
+Reviewer/Planner boundaries remain explicit: old shutdown exceeded 90 seconds
+and was SIGKILLed before backup, so WAL recovery was mandatory. The old feed
+gap and old shutdown root causes are not fixed here. 24-hour capacity/burst
+observation, full old-host rollback and host reboot are not yet proven. Keep
+both instances pending that decision; base overlap is USD 56/month before
+tax/credits/extras. This evidence does not close formal Class C review or
+authorize deletion, new feeds, public ingress or live execution.

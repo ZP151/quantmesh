@@ -1,5 +1,32 @@
 # Active Goal
 
+## Capacity checkpoint — 2026-09-23 SGT
+
+The operator selected **8 GB Lightsail** as the next-stage capacity target.
+See [capacity evidence and upgrade preparation](2026-09-18-lightsail-8gb-preparation.md)
+for the USD 44/month base budget, CPU limits, migration/rollback preparation
+and acceptance gates. The operator has now created the new instance.
+GitHub shows #155 merged as `ab90f92` and #158 merged as `33aa052`.
+The 8 GB instance now serves exact `33aa052` at
+`https://quantmesh-staging-8gb.tail99d23c.ts.net`. All AWS public inbound rules
+are removed; private SSH and loopback-backed Serve work. Full data restore,
+WAL recovery, 13-check smoke, a 63-sample/324-second freshness observation,
+both chart entry paths for BTC/ETH/SOL and a 16-second graceful restart passed.
+Paper remains true and live trading false. Startup peak was 3.08 GiB with no
+swap. The old service is stopped and disabled, with its data and verified
+archive retained; both AWS instances still accrue base charges (USD 56/month
+combined before tax/credits/extras).
+
+The old health response concealed a historical feed gap: its latest stored
+receipt was September 17 at 19:45 UTC (September 18, 03:45 SGT). New actual
+observations resumed September 22 at about 15:53 UTC; no history was fabricated
+across that gap. The old process also required SIGKILL after its 90-second
+shutdown timeout. The new host's controlled restart exited gracefully.
+24-hour capacity/burst-credit observation and a full old-host rollback drill
+remain open before retirement or adding #156 feeds. The older recovery/build
+observations below are historical and are not fresh health witnesses.
+Keep the independent 0021 soak untouched.
+
 Status: iteration0036 ACTIVE, 2026-09-17. The 0035 AWS real-chart acceptance
 and documentation closeout are complete. The existing private AWS endpoint has
 now recovered and the deployed real-data chart is accepted; this goal remains

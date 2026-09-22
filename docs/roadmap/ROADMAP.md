@@ -395,6 +395,14 @@ Sequence for operator review:
    Other venues and qualified historical coverage remain unaccepted.
    See the [delivery ledger](../iterations/0034-live-data-delivery.md)
    and [current iteration plan](../ITERATION_PLAN.md).
+   **Capacity migration, 2026-09-23 SGT:** the operator-created 8 GB / 2 vCPU /
+   160 GB Lightsail instance now runs merged `33aa052`, USD 44/month base.
+   Full archive/WAL restore, fresh BTC/ETH/SOL, five-minute observation and
+   service restart passed; the old collector is stopped with data retained.
+   The 24-hour capacity/burst gate and full rollback remain prerequisites to
+   retirement or expanding feed workload. See the
+   [capacity preparation record](../goals/2026-09-18-lightsail-8gb-preparation.md).
+   Temporary two-instance base overlap is USD 56/month before tax and extras.
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
