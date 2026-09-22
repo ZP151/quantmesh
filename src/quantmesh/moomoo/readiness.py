@@ -113,7 +113,9 @@ def run_readiness(
     results = tuple(
         _probe_symbol(client, adapter, code, capabilities, interval) for code in codes
     )
-    if all(symbol.status == "ready" for symbol in results):
+    if all(symbol.status == "protocol_error" for symbol in results):
+        status = "protocol_error"
+    elif all(symbol.status == "ready" for symbol in results):
         status = "ready"
     elif any(symbol.status in {"ready", "partial"} for symbol in results):
         status = "partial"

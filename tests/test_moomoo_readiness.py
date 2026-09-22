@@ -141,6 +141,20 @@ def test_malformed_payload_is_protocol_error(payloads: dict[str, dict], field: s
     assert getattr(report.symbols[0], field) == "protocol_error"
 
 
+def test_all_malformed_symbols_set_protocol_error_summary() -> None:
+    client = StubClient(
+        quote_payloads={
+            "US.AAPL": {"rows": [{"code": "US.AAPL"}]},
+            "US.NVDA": {"rows": [{"code": "US.NVDA"}]},
+        }
+    )
+
+    report = run_readiness(client, ["US.AAPL", "US.NVDA"])
+
+    assert report.status == "protocol_error"
+    assert [row.status for row in report.symbols] == ["protocol_error", "protocol_error"]
+
+
 def test_readiness_never_calls_order_operations() -> None:
     client = StubClient()
 
