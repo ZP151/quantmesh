@@ -21,9 +21,10 @@ REPOSITORY_URL = "https://github.com/ZP151/quantmesh.git"
 HEALTH_URL = "http://127.0.0.1:8765/api/health"
 EXACT_COMMIT = re.compile(r"^[0-9a-f]{40}$")
 # A retained live lake can take several minutes to open and rebuild its
-# indexes on the 2 GiB staging host. Keep the identity gate, but allow that
-# bounded startup time before declaring activation failed and rolling back.
-DEFAULT_HEALTH_ATTEMPTS = 180
+# indexes on the 2 GiB staging host. Keep the identity gate, but allow a
+# bounded seven-minute startup window before declaring activation failed and
+# rolling back.
+DEFAULT_HEALTH_ATTEMPTS = 420
 
 
 class DeploymentError(RuntimeError):
@@ -163,10 +164,12 @@ def _wait_for_health(
     read: ReadHealth,
     attempts: int,
     sleep: Callable[[float], None],
+    clock: Callable[[], float] = time.monotonic,
 ) -> Mapping[str, Any]:
     if attempts < 1:
         raise DeploymentError("health attempts must be positive")
     last_problem = "identity, runtime mode or paper safety did not match"
+    deadline = clock() + attempts
     for attempt in range(attempts):
         try:
             payload = read()
@@ -175,8 +178,12 @@ def _wait_for_health(
             last_problem = "identity, runtime mode or paper safety did not match"
         except (OSError, TimeoutError, ValueError, DeploymentError) as exc:
             last_problem = type(exc).__name__
-        if attempt + 1 < attempts:
-            sleep(1)
+        if attempt + 1 >= attempts:
+            break
+        remaining = deadline - clock()
+        if remaining <= 0:
+            break
+        sleep(min(1.0, remaining))
     raise DeploymentError(f"health check failed for {commit}: {last_problem}")
 
 
