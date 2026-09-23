@@ -5,7 +5,8 @@ and the 8 GB migration's short acceptance are complete; this goal remains
 active until the new host's sustained capacity gate is closed and the separate
 Moomoo/OpenD route is ready. A code-only iteration 0037 readiness slice is now
 locally verified. The user explicitly prioritized development and deferred observation
-to later acceptance. CI remains paused; local development and review continue.
+to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
+explicitly restored CI and authorized merge/private deployment after all checks pass.
 
 ## 8 GB capacity handoff — later acceptance work
 
@@ -16,8 +17,8 @@ hash, WAL recovery, JSON payload validation, 13-check read-only smoke, chart
 entry-path, and controlled restart checks. The host currently reports about
 6.0 GiB available RAM, no swap, an active service and zero automatic restarts.
 These are the completed migration facts recorded in [PR #159](https://github.com/ZP151/quantmesh/pull/159);
-the PR remains open because its CI was intentionally cancelled while the
-operator prepares capacity work.
+the PR remains open after its earlier CI cancellation. Resuming CI for the
+equity repair does not itself merge this separate migration-evidence PR.
 
 The migration did not fill the old collection gap (the stopped source ends on
 2026-09-17 and the new collector resumes on 2026-09-22), and it did not prove
@@ -57,24 +58,33 @@ and allowlisted typed diagnostics protect the operator command. It never
 opens an order context or persists quote/account rows. Plan and acceptance
 details are in [iteration 0037](../iterations/0037-moomoo-opend-readiness.md).
 
-The AWS-to-Windows OpenD route (`100.86.41.64` to `100.91.234.68:11111`) is
-last tested closed; this is not a fresh AWS probe. The latest local Windows
-check also found no listener at `127.0.0.1:11111` and returned
-`route_unavailable`; no public port is opened. Local focused verification is
+The direct AWS-to-Windows OpenD port was closed. On 2026-09-23 the user
+completed SSH revalidation and OpenD login. A reverse Tailscale SSH tunnel now
+connects AWS `127.0.0.1:11111` to Windows `127.0.0.1:11111`; both listeners
+remain loopback-only. Isolated AWS readiness and actual polling pass, with
+AAPL/NVDA source clocks advancing at 15:46 UTC. The active AWS release lacks
+the SDK/watchlist configuration and has not been changed. The tunnel requires
+the Windows machine, OpenD and SSH process to remain running; it is not yet
+a reboot-persistent service. Previous readiness-only local verification is
 green (`121 passed, 1 skipped`); complete file coverage after corrective
 reruns totals `3567 passed, 61 skipped`. Ruff, diff checks and independent
-review pass, as recorded in iteration 0037. CI remains paused and this code work is not a
+review pass, as recorded in iteration 0037. This earlier code checkpoint was not a
 deployment, merge or real-equity acceptance claim.
 
-Next sequence: the reviewed local readiness repair is complete; execute the
-[live-polling follow-up](../superpowers/plans/2026-09-23-moomoo-live-polling-repair.md)
-(the live connect still uses the general probe and ticker reads omit SDK
-registration); establish the private OpenD quote route; prove source-time progression and truthful
-session/delay labels for AAPL/NVDA through Markets and Watchlist; then review
+The [live-polling follow-up](../superpowers/plans/2026-09-23-moomoo-live-polling-repair.md)
+now fixes quote-only connect, TICKER subscription, Linux worker HOME restoration
+and an opt-in, constrained SDK deployment profile. Its two independent review
+rounds have no actionable findings; final broad verification covers all 149
+files with 3582 passed and 61 skipped. Ruff and diff checks pass.
+Next sequence: close this local checkpoint; implement source-backed equity
+candles for Markets/Watchlist (the existing poller emits metrics/trades only);
+run the newly authorized CI, merge/deploy the reviewed exact release,
+and verify the actual page loop and truthful session/delay labels; then review
 the deferred 8 GB observation and operational drills with deployment evidence.
 The prior Basic-data error is not proof of a paid entitlement requirement:
 the old transport omitted the SDK subscription call. Actual subscription
-acceptance and rights remain unverified until a real OpenD run.
+acceptance is now proven for these two symbols in the recorded open-session
+sample. It is not evidence of broader rights, every session or all markets.
 
 ## Accepted user loop
 

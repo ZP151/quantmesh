@@ -58,7 +58,7 @@ class MoomooProtocolError(ValueError):
 class _PollClient(Protocol):
     """The OpenD boundary the transport polls (the M4 client shape)."""
 
-    def probe(self) -> OpenDCapabilities: ...
+    def probe_market_data(self) -> OpenDCapabilities: ...
 
     def stock_quote(self, codes: list[str]) -> dict: ...
 
@@ -94,7 +94,7 @@ class MoomooVenueTransport:
         self._task: asyncio.Task[None] | None = None
 
     def connect(self) -> None:
-        capabilities = self._client.probe()
+        capabilities = self._client.probe_market_data()
         if not capabilities.quote:
             raise MoomooProtocolError(
                 "OpenD probe reports quote capability off — the read-only "

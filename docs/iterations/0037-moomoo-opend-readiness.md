@@ -132,12 +132,16 @@ Actual rights remain unknown until a real subscription succeeds.
 
 ## Remaining sequence
 
+Release-authority update (September 24 Singapore / September 23 UTC): the
+user explicitly restored CI and authorized pushing the reviewed repair, then
+merging/deploying to the 8 GB private host after all checks pass. This supersedes
+earlier pause records; actual CI, merge and deployment evidence follows separately.
+
 1. Local readiness repair and broad verification are complete at this checkpoint.
-2. Next execute the [live-polling follow-up](../superpowers/plans/2026-09-23-moomoo-live-polling-repair.md):
-   its connect still uses the general probe, and ticker reads lack SDK
-   registration. These are not repaired by the readiness-only command.
-3. Establish the licensed OpenD private quote route; the local process is not
-   currently listening. Do not solve this by opening public ingress.
+2. Complete broad verification and independent review of the
+   [live-polling follow-up](../superpowers/plans/2026-09-23-moomoo-live-polling-repair.md).
+3. Verify the new private OpenD quote tunnel from AWS at the SDK level;
+   local real observations now pass. Do not open public ingress.
 4. Collect real AAPL/NVDA source-time progression and session/delay evidence,
    then validate the Markets/Watchlist chart loop on the new AWS host.
 5. Review the deferred 8 GB observation/drills and staged release evidence.
@@ -157,3 +161,89 @@ trading, place an order as a connectivity test, fabricate bid/ask values, or
 claim AWS equity acceptance before the route and entitlement witness exists.
 The 8 GB 24-hour capacity/freshness, rollback and reboot work remains in
 iteration 0036 for later operational acceptance, without blocking development.
+
+## 2026-09-23 live polling repair and private route checkpoint
+
+- **Planner/Product:** issue #156 remains the single slice. Repair the existing
+  read-only polling path, establish private connectivity, then verify real
+  AAPL/NVDA source progression. CI stays paused; no application deployment.
+- **Quant Researcher:** a successful subscription is not a license purchase or
+  evidence of every feed entitlement. Accept venue source clocks only; preserve
+  the 30-second freshness fence, no invented bid/ask, and neutral-tick filtering.
+  No research-performance or trading-readiness claim follows from this witness.
+- **Implementer:** live `connect()` now calls `probe_market_data()` and never
+  falls back to the trading probe. Ticker reads register `SubType.TICKER` on
+  their own context with `subscribe_push=False`, using the strict tuple/status
+  validator and closing on success, denial, malformed replies and exceptions.
+  Five-second polling and source payload mapping remain unchanged.
+- **Verifier:** eight new real-adapter/fake-SDK cases failed before the fix.
+  The four-file focused rerun passes **73, with 1 skipped**. An initial run
+  reached all assertions but pytest's shared Windows temporary-directory cleanup
+  failed with WinError 5; an isolated `--basetemp` rerun exits zero. Whole-tree
+  Ruff passes. Complete-suite verification is in progress in
+  `output/pytest-0037-polling-shards/`, independent of the previous checkpoint.
+- **Operator connectivity:** after the user completed Tailscale SSH verification
+  and logged into OpenD, Windows listens only on `127.0.0.1:11111`. A Tailscale
+  SSH reverse tunnel binds AWS `127.0.0.1:11111` to that Windows loopback port;
+  AWS TCP connection succeeds. No public OpenD listener was introduced.
+- **Real local witness:** readiness reports both symbols ready with 252 daily
+  rows each, quote/history true and order capabilities false. Actual polling
+  from 15:40:55–15:41:02 UTC produces two quote frames and four 100-row ticker
+  frames. AAPL source time advances `11:40:56.631 → 11:41:01.944` Eastern;
+  NVDA `11:40:56.797 → 11:41:02.210`. Each quote frame yields two accepted
+  metrics updates; ticker frames yield 29/40/29/25 accepted trades. This is
+  real source progression through the candidate adapter, not AWS chart proof.
+  Safe metadata: `output/moomoo-local-polling-witness.json`.
+- **AWS dependency finding:** deployed build `33aa0521` lacks `moomoo-api`.
+  An isolated temporary probe directory is being prepared with the exact local
+  SDK closure; the active service environment and application are unchanged.
+- **AWS verification correction:** installing the SDK only through a temporary
+  `PYTHONPATH` is insufficient for the deliberately scrubbed readiness worker.
+  A temporary virtual environment with explicit dependency paths fixed that
+  harness issue. The real Linux SDK then reproduced a missing-`HOME` startup
+  failure. A failing regression and source inspection identify its logger's
+  required environment lookup; the worker now restores the real OS user home
+  when absent, before SDK import. It does not widen the collection environment
+  allowlist or replace the home directory with a task path. SDK-native logs
+  remain in the OS user's own log location; CLI output stays sanitized.
+- **Actual AWS witness:** final isolated readiness exits 0, both equities ready
+  with 252 daily rows and order capabilities false. Between 15:46:22–15:46:28
+  UTC the candidate receives two quote frames and four 100-row ticker frames.
+  AAPL quote source `11:46:22.386 → 11:46:27.983` Eastern; NVDA
+  `11:46:22.109 → 11:46:27.277`. Quotes produce two accepted metrics each;
+  ticker frames produce 40/11/28/47 accepted trades. Archive SHA-256
+  `0f4971ff4c773581e3fbb5b8744fddd08610cf92270c3c255cb39b5ecd758d66`;
+  sanitized result in `output/moomoo-aws-polling-witness.json`. This proves the
+  private protocol route and this bounded session sample, not the deployed UI.
+- **Deployment preparation:** added explicit `--moomoo-market-data` to the
+  existing release tool, requiring live data. It installs the constrained
+  existing SDK extra and fixes US AAPL/NVDA, loopback:11111 and five-second
+  polling. Default-off and legacy profiles are preserved; canonical equity
+  profiles support reactivation and rollback. No active environment or service
+  was changed. The deployment/readiness regression group passes **84 tests**.
+- **Reviewer:** independent polling review and a second review including the
+  Linux worker/deployment additions both report no actionable findings. They
+  explicitly distinguish health/readiness from final chart acceptance.
+- **Chart acceptance gap:** `MoomooVenueSupervisor` currently emits METRICS and
+  TRADE only; `LiveHistoryService` consumes CANDLE observations. Even after the
+  deployment flag is enabled, quotes alone cannot fill the large equity chart.
+  Source-backed candle delivery is the next development slice, followed by
+  Markets/Watchlist browser acceptance. Never label this route witness as a
+  completed chart loop or synthesize OHLC from sparse polling snapshots.
+- **Next-slice feasibility:** a bounded local call through the existing
+  `MoomooOpenDClient.history_kline(interval="5m", start="2026-09-23")`
+  returned 28 validated unadjusted bars for each equity at 15:54:57 UTC.
+  Provider timestamps span 13:35–15:50 UTC. These real historical responses
+  were not inserted into the active lake or presented as current candles.
+  Safe metadata: `output/moomoo-intraday-feasibility.json`. Next design must
+  verify provider bar start/end semantics, use the official subscribed
+  `get_cur_kline` contract for current updates, preserve distinct source/receipt
+  clocks and equity session gaps, and retain the actual licensed-data label.
+- **Final local gate:** all 149 test files complete. Reconciled current collection
+  is 3643 cases: **3582 passed, 61 skipped**, zero failures. The broad run began
+  before the Linux/deployment additions, so its results for the three affected
+  files are explicitly superseded by their final 84-pass rerun. The evidence
+  reconciler checks every file/count and records changed Python SHA-256 values
+  in `output/0037-polling-verification-final.json`. Whole-tree Ruff (including
+  deploy code), diff check and submodule-pin inspection pass. Slow demo tests
+  completed normally; no test was removed or relaxed to obtain this result.

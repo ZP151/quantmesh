@@ -1,7 +1,9 @@
 """Exercise readiness through the real client/transport without vendor access."""
 
 import json
+import os
 import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -27,6 +29,7 @@ class Table:
 
 @pytest.fixture
 def sdk(monkeypatch):
+    monkeypatch.setenv("HOME", str(Path.home()))
     events = []
 
     class QuoteContext:
@@ -131,4 +134,27 @@ def test_worker_report_uses_real_quote_only_chain(sdk, monkeypatch, tmp_path, ma
     assert payload["status"] == ("protocol_error" if malformed else "ready")
     assert payload["order_checked"] is False
     assert "SECRET_SENTINEL" not in output.read_text(encoding="utf-8")
+    assert "trade" not in events
+
+
+def test_worker_restores_os_user_home_required_by_linux_sdk(sdk, monkeypatch, tmp_path):
+    """The scrubbed subprocess has no HOME; the Linux SDK reads it on import."""
+    module, events = sdk
+    original_init = module.OpenQuoteContext.__init__
+    expected_home = str(Path.home())
+
+    def init(self, **kwargs):
+        assert os.environ["HOME"] == expected_home
+        original_init(self, **kwargs)
+
+    monkeypatch.delenv("HOME", raising=False)
+    monkeypatch.setattr(module.OpenQuoteContext, "__init__", init)
+    request, output = tmp_path / "request.json", tmp_path / "report.json"
+    request.write_text(json.dumps({
+        "host": "127.0.0.1", "port": 11111, "codes": ["US.AAPL"],
+        "connect_timeout_s": 1, "request_timeout_s": 1,
+    }), encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["worker", str(request), str(output)])
+    assert worker_main() == 0
+    assert json.loads(output.read_text())["status"] == "ready"
     assert "trade" not in events

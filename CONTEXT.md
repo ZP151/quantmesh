@@ -55,8 +55,13 @@ Iteration 0036's 24-hour observation and remaining operational drills belong
 to later acceptance, not a prerequisite to development, per the user's latest
 instruction. Iteration 0037 is the active product slice: quote-only Moomoo
 readiness, SDK subscription, typed diagnostics and a bounded worker. Private
-OpenD reachability and actual AAPL/NVDA market-session evidence remain open.
-CI remains paused; no new deployment or live-execution change is implied.
+OpenD now has a private loopback SSH route and actual AAPL/NVDA source-time
+progression evidence from an isolated AWS candidate on 2026-09-23. The running
+site still uses `33aa0521`; equity candle delivery and browser acceptance are
+open. The polling repair includes quote-only connect, TICKER registration,
+Linux worker startup and an optional deployment profile for the locked SDK.
+The user has now restored CI and authorized checked merge/private deployment;
+actual release evidence is still required. Live execution remains disabled.
 
 ## Bounded context
 

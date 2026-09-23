@@ -90,14 +90,14 @@ Later market slices are priorities, not parallel commitments or completed feeds.
 - CI boundary: PR #159 stays open while CI is paused; no merge or deployment
   claim is made from a cancelled check.
 
-## Next bounded slice after capacity acceptance: AWS equity observations
+## Active product slice: AWS equity observations (capacity acceptance deferred)
 
-- Local readiness is confirmed on Windows: OpenD listens on `127.0.0.1:11111`
-  and the read-only capability probe reports quote/history access with
-  `auth_required=false`. This does not make localhost reachable from AWS;
-  establish an approved private route or AWS-side OpenD placement first. A
-  direct AAPL/NVDA quote request is currently rejected because the vendor
-  requires a Basic data subscription, so no real equity quote is accepted yet.
+- Local and isolated AWS readiness are confirmed on 2026-09-23 after SDK
+  subscription repairs and user login. A reverse Tailscale SSH tunnel joins
+  AWS loopback:11111 to Windows loopback:11111. Both equities return quotes,
+  252 daily bars and progressing source clocks; no trading context is opened.
+  The earlier Basic-data error was missing SDK registration, not established
+  evidence of a paid entitlement requirement.
 - User action: open AAPL/NVDA in the private workstation and inspect an actual
   source observation, its timestamp, entitlement and market-session state.
 - Readiness first: identify the existing licensed OpenD host, verify an approved
@@ -114,7 +114,7 @@ Later market slices are priorities, not parallel commitments or completed feeds.
   its issue/iteration record. Additional model/framework work remains sequenced
   behind verified data access and trusted historical evidence.
 
-## Current bounded development slice: Moomoo/OpenD readiness report
+## Current checkpoint: readiness, polling and opt-in deployment profile
 
 - User action: run `quantmesh-moomoo readiness --json` with the private OpenD
   endpoint and inspect route, capability, quote and daily-history statuses for
@@ -123,17 +123,23 @@ Later market slices are priorities, not parallel commitments or completed feeds.
   `route_unavailable`, `sdk_missing`, `auth_required`, `unavailable` and
   `protocol_error` states, exits non-zero for any incomplete symbol and never
   opens an order context.
-- Current operational result: AWS `100.86.41.64` to Windows
-  `100.91.234.68:11111` is closed. No public port is opened; the real-source
-  acceptance remains pending.
-- Local verification: the readiness/CLI/OpenD/live-smoke suite is `96 passed,
-  1 skipped`; Ruff and `git diff --check` pass. A full 3,601-test run was
-  attempted but interrupted in a long pre-existing segment before the latest
-  fixes, so it is not claimed as green. CI is paused, so no remote check or
-  deploy is claimed.
-- Next evidence: after the capacity gate and private route are ready, run the
-  probe in an open US session and capture two source timestamps for each symbol,
-  with paper mode true and live execution false.
+- Current operational result: the private tunnel and actual SDK route pass.
+  The isolated AWS candidate records two progressing quote/ticker rounds per
+  symbol. Windows/OpenD/SSH must stay running. The deployed app remains
+  `33aa0521` without the SDK/watchlist; no public OpenD port was added.
+- Local verification: the previous readiness checkpoint completed all files
+  with 3567 passed/61 skipped. The polling repair passes 73/1 focused checks;
+  deployment/Linux-worker additions pass 84 targeted checks. Two independent
+  review rounds have no findings. Current full verification is recorded in
+  iteration 0037. The user has authorized CI resumption, then merge/private
+  deployment after all checks pass. This is not yet deployment evidence.
+- Next development: source-backed current equity candles into
+  `LiveHistoryService`, then actual Markets/Watchlist chart acceptance. Current
+  metrics/trade output is insufficient for chart history. A read-only local
+  five-minute-history probe returned 28 validated bars per equity; timestamp
+  semantics, session gaps, current-bar lineage and licensed-source labeling
+  must be settled before wiring the series. Never synthesize OHLC from sparse
+  quotes. Deferred 8 GB observation does not block this development.
 
 ## Execution and completion rules
 

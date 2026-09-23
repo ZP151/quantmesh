@@ -415,7 +415,17 @@ class SdkTransport:
         """Recent real-time tickers as a pandas-free payload."""
         context = self._open_quote_ctx()
         try:
+            from moomoo import SubType  # type: ignore[import-not-found]
+
+            ret, message = _sdk_result(
+                context.subscribe([code], [SubType.TICKER], subscribe_push=False),
+                "subscribe", arity=2,
+            )
+            if ret != 0:
+                raise self._classify(RuntimeError(message))
             ret, table = context.get_rt_ticker(code, num=num)
+        except OpenDError:
+            raise
         except Exception as error:  # noqa: BLE001 - classify, never leak
             raise self._classify(error) from error
         finally:

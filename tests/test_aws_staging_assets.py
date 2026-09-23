@@ -21,6 +21,13 @@ LIVE_PROFILE = (
     "QUANTMESH_ORDERS_DIR=/var/lib/quantmesh/live/orders\n"
     "QUANTMESH_DECISIONS_DIR=/var/lib/quantmesh/live/decisions\n"
 )
+MOOMOO_PROFILE = (
+    "QUANTMESH_MOOMOO_WATCHLIST=AAPL,NVDA\n"
+    "QUANTMESH_MOOMOO_MARKET=US\n"
+    "QUANTMESH_MOOMOO_OPEND_HOST=127.0.0.1\n"
+    "QUANTMESH_MOOMOO_OPEND_PORT=11111\n"
+    "QUANTMESH_MOOMOO_POLL_INTERVAL_S=5\n"
+)
 
 
 def _load_deploy_program() -> ModuleType:
@@ -475,6 +482,92 @@ def test_explicit_live_deployment_writes_isolated_canonical_profile(tmp_path: Pa
     )
 
 
+def test_moomoo_deployment_installs_sdk_and_keeps_profile_reactivatable(tmp_path):
+    deploy = _load_deploy_program()
+    layout = deploy.Layout(root=tmp_path / "quantmesh")
+    commands = FakeCommands(GOOD_REF)
+    _, _, read_active, activate = _activation(None)
+    result = deploy.deploy(
+        GOOD_REF, staging_origin=STAGING_ORIGIN, live_market_data=True,
+        moomoo_market_data=True, layout=layout, run_command=commands,
+        service=FakeService(), read_active=read_active, activate=activate,
+        read_health=lambda: _healthy(GOOD_REF, "live"), health_attempts=1,
+    )
+    assert (result.release / ".staging.env").read_text().endswith(LIVE_PROFILE + MOOMOO_PROFILE)
+    installs = [call for call, _ in commands.calls if "pip" in call]
+    assert len(installs) == 1
+    assert installs[0][-1] == f"{result.release}[moomoo]"
+    assert "--constraint" in installs[0]
+    assert deploy.activate_existing(
+        GOOD_REF, staging_origin=STAGING_ORIGIN, layout=layout,
+        service=FakeService(), read_active=read_active, activate=activate,
+        read_health=lambda: _healthy(GOOD_REF, "live"), health_attempts=1,
+    ).commit == GOOD_REF
+
+
+def test_moomoo_profile_requires_live_before_any_side_effect(tmp_path):
+    deploy = _load_deploy_program()
+    commands = FakeCommands(GOOD_REF)
+    root = tmp_path / "quantmesh"
+    with pytest.raises(deploy.DeploymentError, match="requires live"):
+        deploy.deploy(
+            GOOD_REF, staging_origin=STAGING_ORIGIN, moomoo_market_data=True,
+            layout=deploy.Layout(root=root), run_command=commands,
+        )
+    assert not root.exists()
+    assert commands.calls == []
+
+
+def test_failure_restores_previous_moomoo_release(tmp_path):
+    deploy = _load_deploy_program()
+    layout = deploy.Layout(root=tmp_path / "quantmesh")
+    previous = layout.releases / OLD_REF
+    _retained_release(previous, profile=LIVE_PROFILE + MOOMOO_PROFILE)
+    state, history, read_active, activate = _activation(previous)
+    with pytest.raises(deploy.DeploymentError, match="health check"):
+        deploy.deploy(
+            GOOD_REF, staging_origin=STAGING_ORIGIN, live_market_data=True,
+            moomoo_market_data=True, layout=layout, run_command=FakeCommands(GOOD_REF),
+            service=FakeService(), read_active=read_active, activate=activate,
+            read_health=lambda: _healthy(OLD_REF, "live"), health_attempts=1,
+        )
+    assert state["active"] == previous
+    assert history == [layout.releases / GOOD_REF, previous]
+
+
+@pytest.mark.parametrize("flags", [
+    ["--moomoo-market-data"],
+    ["--moomoo-market-data", "--activate-existing"],
+])
+def test_cli_rejects_incompatible_moomoo_flags(monkeypatch, capsys, flags):
+    deploy = _load_deploy_program()
+    monkeypatch.setattr(
+        sys, "argv", [str(DEPLOY_PROGRAM), GOOD_REF, "--origin", STAGING_ORIGIN, *flags],
+    )
+    with pytest.raises(SystemExit) as error:
+        deploy.main()
+    assert error.value.code == 2
+    message = capsys.readouterr().err
+    assert "unrecognized arguments" not in message
+    assert "requires --live-market-data" in message or "infers its retained profile" in message
+
+
+def test_cli_passes_explicit_moomoo_profile(monkeypatch):
+    deploy = _load_deploy_program()
+    captured = {}
+
+    def fake_deploy(commit, **kwargs):
+        captured.update(kwargs)
+        return deploy.DeploymentResult(commit, Path("unused"), _healthy(commit, "live"))
+
+    monkeypatch.setattr(deploy, "deploy", fake_deploy)
+    monkeypatch.setattr(sys, "argv", [str(DEPLOY_PROGRAM), GOOD_REF, "--origin", STAGING_ORIGIN,
+                                     "--live-market-data", "--moomoo-market-data"])
+    assert deploy.main() == 0
+    assert captured == {"staging_origin": STAGING_ORIGIN, "live_market_data": True,
+                        "moomoo_market_data": True}
+
+
 @pytest.mark.parametrize("live_market_data", [False, True])
 @pytest.mark.parametrize(
     ("field", "bad_value"),
@@ -633,7 +726,10 @@ def test_cli_selects_demo_by_default_and_live_only_explicitly(
     deploy = _load_deploy_program()
     calls = []
 
-    def prepare(commit: str, *, staging_origin: str, live_market_data: bool):
+    def prepare(
+        commit: str, *, staging_origin: str, live_market_data: bool, moomoo_market_data: bool,
+    ):
+        assert moomoo_market_data is False
         calls.append((commit, staging_origin, live_market_data))
         return deploy.DeploymentResult(commit=commit, release=Path("release"), health={})
 

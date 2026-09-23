@@ -187,7 +187,12 @@ def _wait_for_health(
     raise DeploymentError(f"health check failed for {commit}: {last_problem}")
 
 
-def _environment_text(commit: str, staging_origin: str, *, live_market_data: bool = False) -> str:
+def _environment_text(
+    commit: str, staging_origin: str, *, live_market_data: bool = False,
+    moomoo_market_data: bool = False,
+) -> str:
+    if moomoo_market_data and not live_market_data:
+        raise DeploymentError("Moomoo market data requires live market data")
     # Retain the legacy demo environment exactly so old releases stay activatable.
     environment = (
         f"QUANTMESH_ENVIRONMENT=staging\nQUANTMESH_BUILD_REF={commit}\n"
@@ -200,6 +205,14 @@ def _environment_text(commit: str, staging_origin: str, *, live_market_data: boo
             "QUANTMESH_LAKE_ROOT=/var/lib/quantmesh/live/data\n"
             "QUANTMESH_ORDERS_DIR=/var/lib/quantmesh/live/orders\n"
             "QUANTMESH_DECISIONS_DIR=/var/lib/quantmesh/live/decisions\n"
+        )
+    if moomoo_market_data:
+        environment += (
+            "QUANTMESH_MOOMOO_WATCHLIST=AAPL,NVDA\n"
+            "QUANTMESH_MOOMOO_MARKET=US\n"
+            "QUANTMESH_MOOMOO_OPEND_HOST=127.0.0.1\n"
+            "QUANTMESH_MOOMOO_OPEND_PORT=11111\n"
+            "QUANTMESH_MOOMOO_POLL_INTERVAL_S=5\n"
         )
     return environment
 
@@ -215,6 +228,10 @@ def _retained_runtime_mode(commit: str, release: Path, staging_origin: str) -> s
     if environment == _environment_text(commit, staging_origin):
         return "demo"
     if environment == _environment_text(commit, staging_origin, live_market_data=True):
+        return "live"
+    if environment == _environment_text(
+        commit, staging_origin, live_market_data=True, moomoo_market_data=True,
+    ):
         return "live"
     raise DeploymentError(f"release identity does not match: {release}")
 
@@ -280,6 +297,7 @@ def deploy(
     *,
     staging_origin: str,
     live_market_data: bool = False,
+    moomoo_market_data: bool = False,
     layout: Layout = Layout(),
     repository_url: str = REPOSITORY_URL,
     run_command: RunCommand = run_command,
@@ -292,6 +310,10 @@ def deploy(
 ) -> DeploymentResult:
     commit = validate_commit(commit)
     staging_origin = validate_staging_origin(staging_origin)
+    environment_text = _environment_text(
+        commit, staging_origin, live_market_data=live_market_data,
+        moomoo_market_data=moomoo_market_data,
+    )
     service = service or SystemdService()
     read_active = read_active or (lambda: read_active_release(layout.current))
     activate = activate or (lambda target: activate_release(layout.current, target))
@@ -351,12 +373,12 @@ def deploy(
             "--disable-pip-version-check",
             "--constraint",
             str(release / "requirements-audit.txt"),
-            str(release),
+            f"{release}[moomoo]" if moomoo_market_data else str(release),
         ],
         None,
     )
     (release / ".staging.env").write_text(
-        _environment_text(commit, staging_origin, live_market_data=live_market_data),
+        environment_text,
         encoding="utf-8",
     )
 
@@ -422,6 +444,11 @@ def main() -> int:
         help="prepare the canonical BTC/ETH/SOL live-data profile with paper trading only",
     )
     parser.add_argument(
+        "--moomoo-market-data",
+        action="store_true",
+        help="add read-only AAPL/NVDA via existing loopback OpenD; requires --live-market-data",
+    )
+    parser.add_argument(
         "--activate-existing",
         action="store_true",
         help="reactivate a retained release instead of preparing a new one",
@@ -429,12 +456,17 @@ def main() -> int:
     args = parser.parse_args()
     if args.activate_existing and args.live_market_data:
         parser.error("--activate-existing infers its retained profile; omit --live-market-data")
+    if args.activate_existing and args.moomoo_market_data:
+        parser.error("--activate-existing infers its retained profile; omit --moomoo-market-data")
+    if args.moomoo_market_data and not args.live_market_data:
+        parser.error("--moomoo-market-data requires --live-market-data")
     try:
         if args.activate_existing:
             result = activate_existing(args.commit, staging_origin=args.origin)
         else:
             result = deploy(
-                args.commit, staging_origin=args.origin, live_market_data=args.live_market_data
+                args.commit, staging_origin=args.origin, live_market_data=args.live_market_data,
+                moomoo_market_data=args.moomoo_market_data,
             )
     except (DeploymentError, OSError, subprocess.SubprocessError) as exc:
         parser.exit(1, f"deployment failed: {exc}\n")

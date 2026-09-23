@@ -398,11 +398,14 @@ Sequence for operator review:
    **Iteration 0037 development (issue #156):** the local, read-only
    `quantmesh-moomoo readiness --json` boundary now checks the private TCP
    route and validates AAPL/NVDA quote plus daily-history responses without
-   touching order APIs. The AWS-to-Windows route is currently closed, so no
-   equity source is accepted and no public OpenD ingress is added. Deployment
-   and merge are not claimed while CI remains paused. The readiness repair
-   adds quote-only discovery, required SDK QUOTE subscription and a bounded
-   worker; real source-time progression remains a separate acceptance step.
+   touching order APIs. A private loopback SSH tunnel now passes actual AWS
+   quote/history and AAPL/NVDA source-time progression checks in an isolated
+   candidate environment. The live poller fixes quote-only discovery and TICKER
+   subscription; Linux worker startup and the optional SDK deployment profile
+   are repaired. CI resumption and checked merge/deployment are now authorized;
+   the application has not yet been deployed at this checkpoint.
+   Equity candle delivery to Markets/Watchlist and actual browser acceptance
+   remain next; metrics/trade observations alone do not fill the chart series.
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.

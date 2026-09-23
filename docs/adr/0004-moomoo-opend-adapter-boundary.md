@@ -176,6 +176,12 @@ Official surfaces rechecked for this extension:
 - `ready` certifies readable, schema-valid data only. It does not establish
   source freshness, session progression, full history or order authority.
   Market-session and AWS entry-path evidence remain separate acceptance gates.
+- The live poll transport uses the same quote-only discovery. Ticker reads
+  register `SubType.TICKER` on their own quote context before reading, with
+  `subscribe_push=False` and strict subscription-result validation. The
+  application still polls every five seconds; no native push or hard live-call
+  deadline is implied. See the official
+  [ticker contract](https://openapi.moomoo.com/moomoo-api-doc/en/quote/get-ticker.html).
 
 ## Consequences
 
