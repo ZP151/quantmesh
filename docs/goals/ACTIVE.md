@@ -4,8 +4,8 @@ Status: iteration0037 ACTIVE, 2026-09-23. The 0035 AWS real-chart acceptance
 and the 8 GB migration's short acceptance are complete; this goal remains
 active until the new host's sustained capacity gate is closed and the separate
 Moomoo/OpenD route is ready. PR #161 is now merged and deployed; its live API acceptance passes.
-The remaining list-price display correction is locally verified and reviewed,
-awaiting its follow-up CI and private deployment; full equity charts remain open. The user explicitly prioritized development and deferred observation
+PR #162 also passed CI and is deployed as `c8e1813`; API and list-page
+acceptance pass. Full equity minute charts remain the next product slice. The user explicitly prioritized development and deferred observation
 to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
 explicitly restored CI and authorized merge/private deployment after all checks pass.
 
@@ -13,7 +13,8 @@ explicitly restored CI and authorized merge/private deployment after all checks 
 
 The authoritative private origin is now
 `https://quantmesh-staging-8gb.tail99d23c.ts.net`, serving exact merged build
-`db3d18fdb5a241826c7276760af59a49c2fc679d` after PR #161. The original
+`c8e1813c15d4837d8b0a7480ea376bbca5839161` after PR #162.
+Previous `db3d18f` remains retained for rollback. The original
 migration checkpoint used retained rollback build `33aa0521`. The restored dataset passed archive
 hash, WAL recovery, JSON payload validation, 13-check read-only smoke, chart
 entry-path, and controlled restart checks. The host currently reports about
@@ -90,9 +91,14 @@ tests, type/lint/build consistency, 27 Python asset/identity checks and an
 independent review with no actionable findings. Local browser preview against
 the actual private AWS feed shows both prices and progressing source times;
 this is candidate evidence, not a follow-up production-deployment claim.
-Next: CI the display follow-up, normal match-head squash merge, verify tree,
-deploy the precise merged version and accept both actual AWS list pages.
-Then implement source-backed equity minute candles (existing poller emits
+Release follow-up: PR #162 / CI35896206023 passed 3591 Python tests
+(56 skipped) and 379 frontend tests. Normal squash merge at 18:27:52 UTC
+produced `c8e1813c15d4837d8b0a7480ea376bbca5839161`, with the same tree
+`b96aae511fa48b15a62ee6bfaf1559b0cac26e2e` as candidate `8229a7e`.
+The exact release was deployed and passed 18 API checks plus five advancing
+real sources. Markets/Watchlist now show Last trade, Real and moving source
+clocks for AAPL/NVDA. Do not redeploy either completed release.
+Next implement source-backed equity minute candles (existing poller emits
 metrics/trades only). Review the deferred capacity/drill evidence later.
 The prior Basic-data error is not proof of a paid entitlement requirement:
 the old transport omitted the SDK subscription call. Actual subscription

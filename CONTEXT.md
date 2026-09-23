@@ -48,7 +48,7 @@ OpenD reachability and entitlements for AAPL/NVDA, followed by prediction
 venues and trusted history. See `docs/ITERATION_PLAN.md` for delivery order.
 
 As of 2026-09-23, the active private host is `quantmesh-staging-8gb` at
-`https://quantmesh-staging-8gb.tail99d23c.ts.net`, running merged `db3d18f` (PR #161).
+`https://quantmesh-staging-8gb.tail99d23c.ts.net`, running merged `c8e1813` (PR #162).
 Migration restore, short smoke, BTC/ETH/SOL charts and controlled restart
 passed; the old service is stopped and retained for rollback (PR #159).
 Iteration 0036's 24-hour observation and remaining operational drills belong
@@ -61,8 +61,8 @@ checks and real BTC/ETH/SOL/AAPL/NVDA source-time progression pass with paper
 mode enabled and live execution disabled. Browser acceptance found that the
 shared Markets/Watchlist table ignored Moomoo metrics.last. A bounded display
 follow-up now shows Last trade and its source time without creating bid/ask or
-order authority; local frontend verification and independent review pass, with
-follow-up CI/private deployment still pending. Source-backed equity minute
+order authority; PR #162 passed full CI and independent review, merged and deployed as
+`c8e1813`. Both actual list pages show real prices and advancing source clocks. Source-backed equity minute
 candles and full chart acceptance remain the next separate slice. The Windows
 OpenD process and private reverse SSH tunnel must remain running.
 
