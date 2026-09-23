@@ -2,7 +2,7 @@
 
 - Status: ACTIVE, 2026-09-23. The local readiness repair is implemented,
   reviewed, merged and deployed through PR #161. Live equity API acceptance
-  passes; list-price rendering and full equity charts remain open. The 8 GB
+  and real list-price rendering pass through PR #162; full equity charts remain open. The 8 GB
   observation stays in later operational acceptance.
 - Linked issue: [#156 — Private Moomoo/OpenD AAPL/NVDA readiness](https://github.com/ZP151/quantmesh/issues/156).
 - Plan: [Moomoo readiness probe plan](../superpowers/plans/2026-09-23-moomoo-readiness-probe.md).
@@ -324,3 +324,49 @@ iteration 0036 for later operational acceptance, without blocking development.
   The actual AWS BTC chart was separately inspected at db3d18f: Live proven,
   observed minute OHLCV and real source. This local preview does not claim the
   display follow-up is deployed or that stock full charts exist.
+
+
+## PR #162 release acceptance — 2026-09-23 UTC
+
+- **Release/Verifier:** final candidate `8229a7ea95bde55d971f49677b6689e2da1c9200`
+  passed [CI35896206023](https://github.com/ZP151/quantmesh/actions/runs/35896206023):
+  **3591 Python passed / 56 skipped**, **379 frontend passed**, all other gates
+  green, no unresolved inline review. Normal match-head squash at 18:27:52 UTC
+  merged [PR #162](https://github.com/ZP151/quantmesh/pull/162) as
+  `c8e1813c15d4837d8b0a7480ea376bbca5839161`. Both trees are
+  `b96aae511fa48b15a62ee6bfaf1559b0cac26e2e`.
+- **Deployment:** existing private loopback:11111 listener and TCP route pass.
+  The reviewed tool activated exact c8e1813, exit 0. Previous db3d18f and
+  33aa0521 remain retained. No public exposure or trading changes occurred.
+- **Operational limitation:** the old process reached systemd's 90-second
+  stop deadline and was killed at 18:30:34 UTC. Its recorded memory peak was
+  6.2 GiB, swap peak zero. After activation, the first external health request
+  exceeded 15 seconds and browser navigation timed out. Later loopback and
+  private HTTPS probes recovered; no repair or rollback was applied. These
+  failed attempts remain evidence, not a claim of seamless restart. Long-run
+  capacity and graceful shutdown remain the deferred iteration0036 gate.
+- **API acceptance:** retry after response recovery passed **18 checks**, exact
+  c8e1813 identity, paper=true/live=false, and four samples of real progressing
+  BTC/ETH/SOL/AAPL/NVDA source clocks. Evidence is in
+  `output/0037-deployed-market-witness.json` and
+  `output/0037-pr162-deployed-market-witness.log`; the previous release report
+  was preserved as `output/0037-pr161-deployed-market-witness.json`.
+- **Browser acceptance:** actual AWS Markets displayed AAPL 336.99 / NVDA
+  225.36, Last trade, Real, source clocks 18:35:03 / 18:35:02 UTC, age 4s.
+  Its next read showed NVDA 225.37 and clocks 18:35:14 / 18:35:12 UTC.
+  Watchlist opened with the same live last-price, label and clock surface.
+  Watchlist's later read showed AAPL 336.95 / NVDA 225.47, clocks
+  18:36:14 / 18:36:13 UTC and sub-second age. Both actual pages therefore
+  exhibited price/time changes from real source observations.
+- **Crypto regression:** Watchlist's BTC link opened the 1D/Line workspace on
+  exact c8e1813, Live proven, real Hyperliquid source and WebSocket, with
+  observed 1m OHLCV through 18:36 UTC. Existing coverage/fallback warnings stay
+  visible. This confirms the bounded chart entry, not uninterrupted history
+  across the restart or complete equity charts.
+- **Handoff:** list release is accepted and its CI/deployment heartbeat may now
+  pause to prevent duplicate activation. Next product work is source-backed
+  AAPL/NVDA regular-session 1m charts, current-minute revisions, new-minute
+  appends and reload retention without changing quote/order authority. The
+  feasibility plan and raw timestamp samples are preserved in output; turn
+  them into the next tracked slice plan before implementation. Keep the
+  deferred capacity/shutdown issue and migration-evidence PR #159 separate.

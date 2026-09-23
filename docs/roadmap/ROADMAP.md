@@ -405,8 +405,8 @@ Sequence for operator review:
    are repaired. PR #161 passed full CI, merged and deployed as `db3d18f`.
    Exact build, 18 smoke checks and five real instruments with advancing source
    clocks pass. Browser acceptance exposed a metrics-only list-price omission;
-   the bounded Markets/Watchlist display follow-up is locally verified/reviewed
-   and awaits CI/deployment. Source-backed equity minute candles and full chart
+   the bounded Markets/Watchlist display follow-up passed full CI and deployed
+   through PR #162 at `c8e1813`, with actual list price/time updates verified. Source-backed equity minute candles and full chart
    acceptance follow separately; metrics/trades do not fill the chart series.
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
