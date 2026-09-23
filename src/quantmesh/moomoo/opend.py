@@ -111,6 +111,10 @@ class OpenDTransport(Protocol):
 
     def probe(self) -> dict: ...
 
+    def probe_market_data(self) -> dict:
+        """Dedicated quote-only discovery; never fall back to a trade probe."""
+        raise NotImplementedError("this transport does not serve quote-only discovery")
+
     def history_kline(
         self, code: str, *, interval: str, start: str | None, end: str | None, autype: str
     ) -> dict:
@@ -195,6 +199,16 @@ class SdkTransport:
             return OpenQuoteContext(host=self._host, port=self._port)
         except Exception as error:  # noqa: BLE001 - classify, never leak
             raise self._classify(error) from error
+
+    def probe_market_data(self) -> dict:
+        """Discover the quote endpoint without constructing any trade context.
+
+        Opening a context is connectivity evidence only. Symbol-level requests
+        must still prove that quotes and history are actually available.
+        """
+        quote = self._open_quote_ctx()
+        quote.close()
+        return {"quote": True, "history_kline": True}
 
     def probe(self) -> dict:
         try:
@@ -427,7 +441,19 @@ class SdkTransport:
         """Stock quotes as a pandas-free payload; rows carry their own code."""
         context = self._open_quote_ctx()
         try:
+            from moomoo import SubType  # type: ignore[import-not-found]
+
+            # OpenD requires a Basic/QUOTE subscription on this context before
+            # a snapshot read. This is SDK registration, not a rights purchase.
+            ret, message = _sdk_result(
+                context.subscribe(codes, [SubType.QUOTE], subscribe_push=False),
+                "subscribe", arity=2,
+            )
+            if ret != 0:
+                raise self._classify(RuntimeError(message))
             ret, table = context.get_stock_quote(codes)
+        except OpenDError:
+            raise
         except Exception as error:  # noqa: BLE001 - classify, never leak
             raise self._classify(error) from error
         finally:
@@ -554,6 +580,18 @@ class MoomooOpenDClient:
                 connect_timeout_s=settings.moomoo_opend_connect_timeout_s,
                 request_timeout_s=settings.moomoo_opend_request_timeout_s,
             )
+        )
+
+    def probe_market_data(self) -> OpenDCapabilities:
+        """Quote-only connectivity; trading capabilities remain unexamined."""
+        payload = self._transport.probe_market_data()
+        if not isinstance(payload, dict) or any(
+            not isinstance(payload.get(key), bool) for key in ("quote", "history_kline")
+        ):
+            raise OpenDProtocolError("market-data probe must return boolean capabilities")
+        return OpenDCapabilities(
+            quote=payload["quote"], history_kline=payload["history_kline"],
+            order=False, order_query=False,
         )
 
     def probe(self) -> OpenDCapabilities:

@@ -1,12 +1,13 @@
 # Active Goal
 
-Status: iteration0036 ACTIVE, 2026-09-23. The 0035 AWS real-chart acceptance
+Status: iteration0037 ACTIVE, 2026-09-23. The 0035 AWS real-chart acceptance
 and the 8 GB migration's short acceptance are complete; this goal remains
 active until the new host's sustained capacity gate is closed and the separate
 Moomoo/OpenD route is ready. A code-only iteration 0037 readiness slice is now
-underway; it does not waive the capacity gate for deployment or merge.
+locally verified. The user explicitly prioritized development and deferred observation
+to later acceptance. CI remains paused; local development and review continue.
 
-## 8 GB capacity handoff — observation is a prerequisite
+## 8 GB capacity handoff — later acceptance work
 
 The authoritative private origin is now
 `https://quantmesh-staging-8gb.tail99d23c.ts.net`, serving exact merged build
@@ -27,7 +28,8 @@ lines for 24 hours. The observation gate remains open until the complete log
 is reviewed. No later provider or UI acceptance may treat this short sample as
 indefinite availability.
 
-The gate requires all of the following before the next provider slice:
+The later operational acceptance checklist retains the following; these are
+not prerequisites to developing the next provider slice:
 
 - every sample keeps build `33aa0521`, `paper_mode=true` and
   `live_trading=false`;
@@ -46,19 +48,33 @@ live replay.
 
 ## Iteration 0037 development checkpoint — private Moomoo/OpenD readiness
 
-The current feature branch adds a read-only `quantmesh-moomoo readiness
+The current feature branch repairs and extends `quantmesh-moomoo readiness
 --json` command for issue [#156](https://github.com/ZP151/quantmesh/issues/156).
-It checks the private TCP route before SDK use, probes only quote and daily
-history for `US.AAPL` and `US.NVDA`, and preserves route, SDK, auth,
-entitlement and protocol failures as explicit statuses. The report never
-opens an order context or persists quote/account data. Plan and acceptance
+It checks the private TCP route before SDK use, uses dedicated quote-only
+capability discovery, subscribes to SDK QUOTE data before snapshot reads,
+and validates daily history for `US.AAPL` and `US.NVDA`. A hard worker deadline
+and allowlisted typed diagnostics protect the operator command. It never
+opens an order context or persists quote/account rows. Plan and acceptance
 details are in [iteration 0037](../iterations/0037-moomoo-opend-readiness.md).
 
 The AWS-to-Windows OpenD route (`100.86.41.64` to `100.91.234.68:11111`) is
-currently closed, so the operational result is `route_unavailable`; no public
-port is opened. Local focused verification is green (`96 passed, 1 skipped`,
-Ruff and diff check passed). CI remains paused and this code work is not a
+last tested closed; this is not a fresh AWS probe. The latest local Windows
+check also found no listener at `127.0.0.1:11111` and returned
+`route_unavailable`; no public port is opened. Local focused verification is
+green (`121 passed, 1 skipped`); complete file coverage after corrective
+reruns totals `3567 passed, 61 skipped`. Ruff, diff checks and independent
+review pass, as recorded in iteration 0037. CI remains paused and this code work is not a
 deployment, merge or real-equity acceptance claim.
+
+Next sequence: the reviewed local readiness repair is complete; execute the
+[live-polling follow-up](../superpowers/plans/2026-09-23-moomoo-live-polling-repair.md)
+(the live connect still uses the general probe and ticker reads omit SDK
+registration); establish the private OpenD quote route; prove source-time progression and truthful
+session/delay labels for AAPL/NVDA through Markets and Watchlist; then review
+the deferred 8 GB observation and operational drills with deployment evidence.
+The prior Basic-data error is not proof of a paid entitlement requirement:
+the old transport omitted the SDK subscription call. Actual subscription
+acceptance and rights remain unverified until a real OpenD run.
 
 ## Accepted user loop
 
@@ -157,14 +173,11 @@ reversible host mitigation and is not part of the new-host acceptance.
 
 ## Next frontier after migration
 
-Keep the observation, rollback and reboot gates in front of new provider work.
-Preserve the old release and verified backups; do not change infrastructure or
-execution while the capacity evidence is incomplete. While the gate runs,
-continue only code and local verification for Moomoo/OpenD readiness. After it
-closes, identify the existing licensed host, approved private AWS route and
-actual quote entitlement, then run the probe during an open session. The
-operator connection-information question is pending; no credentials are needed
-in chat. Windows localhost probes cannot establish remote absence. An
+Proceed with the current product development slice while observation, rollback
+and reboot work stays in later acceptance. Preserve the old release and
+verified backups. Identify the existing licensed host, private AWS route and
+actual quote entitlement, then run the probe during an open session. No
+credentials are needed in chat. Windows localhost probes cannot establish remote absence. An
 open-session real-data witness and truthful delayed/closed/unavailable labels
 are required; existing five-second polling is not native tick push. Then
 prediction venues and qualified historical evidence follow sequentially in

@@ -389,8 +389,8 @@ Sequence for operator review:
    Tailscale origin serves exact merged `33aa0521`; archive/WAL/JSON restore,
    13-check smoke, real BTC/ETH/SOL chart paths and a controlled restart pass.
    A 24-hour capacity/freshness observation, an operator-approved rollback
-   rehearsal and a host reboot test remain ahead of private Moomoo/OpenD
-   reachability and actual AAPL/NVDA entitlement. The September 17–22 source
+   rehearsal and a host reboot test remain in later acceptance while private
+   Moomoo/OpenD development proceeds. The September 17–22 source
    gap remains recorded and is not silently backfilled.
    Other venues and qualified historical coverage remain unaccepted.
    See the [delivery ledger](../iterations/0034-live-data-delivery.md)
@@ -400,7 +400,9 @@ Sequence for operator review:
    route and validates AAPL/NVDA quote plus daily-history responses without
    touching order APIs. The AWS-to-Windows route is currently closed, so no
    equity source is accepted and no public OpenD ingress is added. Deployment
-   and merge remain behind the 8 GB observation gate.
+   and merge are not claimed while CI remains paused. The readiness repair
+   adds quote-only discovery, required SDK QUOTE subscription and a bounded
+   worker; real source-time progression remains a separate acceptance step.
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.

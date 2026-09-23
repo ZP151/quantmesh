@@ -4,7 +4,7 @@
 
 **Goal:** Provide a read-only, machine-checkable readiness report for the private Moomoo/OpenD route and the AAPL/NVDA quote/history entitlements without enabling orders or live trading.
 
-**Architecture:** Keep the vendor boundary in `MoomooOpenDClient` and add a small readiness value model that validates quote and history payloads through the existing `MoomooDataAdapter`. The CLI performs a bounded TCP route check before invoking the SDK and emits stable text or JSON statuses; all failures remain typed and no trade APIs are called.
+**Architecture:** Keep the vendor boundary in `MoomooOpenDClient` with dedicated quote-only discovery and validate quote/history payloads through `MoomooDataAdapter`. The CLI performs a bounded TCP route check before a hard-deadline SDK worker, reusing the existing collection process runner. Reports contain only typed, allowlisted diagnostics; no trade APIs are called.
 
 **Tech Stack:** Python 3.11+, dataclasses, argparse, pytest, existing Moomoo OpenD adapter and settings.
 
@@ -35,7 +35,7 @@
 - Test: `tests/test_moomoo_readiness.py`
 
 **Interfaces:**
-- Consumes: `MoomooOpenDClient.probe`, `.stock_quote`, `.history_kline`, `MoomooDataAdapter`.
+- Consumes: `MoomooOpenDClient.probe_market_data`, `.stock_quote`, `.history_kline`, `MoomooDataAdapter`.
 - Produces: `ReadinessReport`, `SymbolReadiness`, and `run_readiness(client, codes, interval="1d")`.
 
 - [x] **Step 1: Write the failing test**
@@ -89,7 +89,7 @@ Expected: failures because the `readiness` subcommand and route helper do not ex
 
 Add a bounded `socket.create_connection` route check with the configured timeout, invoke the report only after route success, render stable text or JSON with endpoint and per-symbol statuses, close the client in every path, and map typed errors to the documented exits. Do not add order or account operations.
 
-- [x] **Step 4: Run targeted and full verification**
+- [x] **Step 4: Run targeted verification**
 
 Run: `python -m pytest tests/test_moomoo_readiness.py tests/test_moomoo_cli.py -q`
 Run: `python -m ruff check src/quantmesh/moomoo tests/test_moomoo_readiness.py tests/test_moomoo_cli.py`
@@ -110,3 +110,27 @@ git commit -m "feat: expose Moomoo readiness probe"
 - [x] Ruff and `git diff --check` pass.
 - [x] No CI run, push, merge, port opening, deploy, or live-trading change occurs while the user has CI paused and the 8 GB observation gate is open.
 - [x] The next operational step is to run the command on the private AWS path after OpenD is made reachable, then append actual AAPL/NVDA entitlement evidence.
+
+## Resume repair — 2026-09-23
+
+The original checked tasks did not prove the transitive quote-only boundary.
+Independent review found `probe()` created a trade context, and the quote
+transport omitted the required SDK subscription. This repair supersedes those
+claims; the user deferred the 8 GB observation to later acceptance.
+
+- [x] Reproduce the real client/transport chain with a fake SDK that forbids
+  trade context creation and requires QUOTE subscription before a read.
+- [x] Implement dedicated quote-only discovery and subscribe with push disabled.
+- [x] Validate subscription tuple/status with the existing strict SDK helper;
+  malformed and denied subscriptions stop before quote reads and close contexts.
+- [x] Preserve error categories and redact provider/payload values; validate
+  requests before network use and match history interval/adjustment exactly.
+- [x] Reuse the bounded JSON subprocess boundary; expose a finite 30-second
+  default SDK-worker deadline, test termination and temporary-file cleanup.
+- [x] Finish two review rounds and targeted regression: 121 passed, 1 skipped.
+- [x] Record complete broad verification and save the local repair checkpoint:
+  148 files, 3,628 cases; 3,567 passed and 61 skipped after explicit corrective
+  reruns. Source hashes and exact retry coverage are reconciled. No CI/push/deploy.
+- [ ] Real private-route and AAPL/NVDA session witness (later operational step).
+
+No push, remote merge, CI activation or deployment while CI remains paused.

@@ -16,6 +16,7 @@ does not name a ``--fixture`` script.
 
 import argparse
 import json
+import math
 import socket
 import sys
 import uuid
@@ -44,10 +45,9 @@ from quantmesh.moomoo.market_data import market_zone
 from quantmesh.moomoo.opend import (
     MoomooOpenDClient,
     OpenDAuthRequiredError,
-    OpenDProtocolError,
     OpenDSdkMissingError,
 )
-from quantmesh.moomoo.readiness import run_readiness
+from quantmesh.moomoo.readiness_process import run_readiness_process
 from quantmesh.settings import Settings, settings
 
 _EXIT_OK = 0
@@ -68,8 +68,8 @@ def _check_opend_route(config: Settings) -> tuple[bool, str | None]:
             (config.moomoo_opend_host, config.moomoo_opend_port),
             timeout=config.moomoo_opend_connect_timeout_s,
         )
-    except OSError as error:
-        return False, f"{type(error).__name__}: {error}"
+    except OSError:
+        return False, "OpenD TCP connection failed; check the private endpoint and route"
     connection.close()
     return True, None
 
@@ -145,42 +145,27 @@ def _readiness(args: argparse.Namespace) -> int:
         _render_readiness(payload, as_json=args.as_json)
         return _EXIT_UNAVAILABLE
 
-    client: MoomooOpenDClient | None = None
-    try:
-        client = _build_client(config)
-        report = run_readiness(client, codes, interval="1d")
-    except OpenDSdkMissingError as error:
-        payload = _readiness_error_payload("sdk_missing", config, codes, str(error))
-        _render_readiness(payload, as_json=args.as_json)
-        return _EXIT_SDK_MISSING
-    except OpenDAuthRequiredError as error:
-        payload = _readiness_error_payload("auth_required", config, codes, str(error))
-        _render_readiness(payload, as_json=args.as_json)
-        return _EXIT_AUTH_REQUIRED
-    except (OpenDUnavailableError, OpenDProtocolError) as error:
-        payload = _readiness_error_payload("unavailable", config, codes, str(error))
-        _render_readiness(payload, as_json=args.as_json)
-        return _EXIT_UNAVAILABLE
-    finally:
-        if client is not None:
-            client.close()
-
+    report = run_readiness_process(config, codes, timeout_seconds=args.timeout_seconds)
     payload = {
         "endpoint": {
             "host": config.moomoo_opend_host,
             "port": config.moomoo_opend_port,
         },
         "requested_symbols": codes,
-        **report.as_dict(),
+        **report,
     }
-    if report.capabilities.auth_required:
-        payload["readiness_status"] = payload["status"]
-        payload["status"] = "auth_required"
-        exit_code = _EXIT_AUTH_REQUIRED
-    else:
-        exit_code = _EXIT_OK if report.status == "ready" else _EXIT_UNAVAILABLE
+    exit_code = {
+        "ready": _EXIT_OK, "auth_required": _EXIT_AUTH_REQUIRED, "sdk_missing": _EXIT_SDK_MISSING,
+    }.get(str(report["status"]), _EXIT_UNAVAILABLE)
     _render_readiness(payload, as_json=args.as_json)
     return exit_code
+
+
+def _readiness_timeout(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed) or not 0 < parsed <= 300:
+        raise argparse.ArgumentTypeError("must be finite and within (0, 300] seconds")
+    return parsed
 
 
 def _positive_float(value: str) -> float:
@@ -363,6 +348,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="market prefix for bare symbols (default: US)",
     )
     readiness.add_argument("--json", dest="as_json", action="store_true")
+    readiness.add_argument(
+        "--timeout-seconds", type=_readiness_timeout, default=30,
+        help="SDK worker deadline, excluding TCP preflight and process cleanup (default: 30)",
+    )
 
     paper = subparsers.add_parser(
         "paper-order", help="place a simulated order against a fixture script"

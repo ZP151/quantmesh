@@ -12,7 +12,8 @@ private AWS migration passed its bounded restore, smoke, chart and restart
 checks. The 24-hour capacity/freshness observation, rollback rehearsal and
 host reboot gate are still open; the old collection gap is recorded rather
 than backfilled. Code-only work for iteration 0037 may proceed during the
-observation, but its deployment and merge acceptance remain behind the gate.
+observation. The user explicitly moved observation and operational drills to
+later acceptance; they do not block the next development slice. CI stays paused.
 See the [0036 recovery plan](superpowers/plans/2026-09-17-staging-recovery.md),
 the [8 GB observation plan](superpowers/plans/2026-09-23-8gb-observation-gate.md)
 and the [0037 readiness ledger](iterations/0037-moomoo-opend-readiness.md).
@@ -34,8 +35,8 @@ and the [0037 readiness ledger](iterations/0037-moomoo-opend-readiness.md).
 
 0. **Capacity gate: iteration 0036 / PR #159.** The new 8 GB private AWS
    origin passes exact-build health, read-only live smoke, real BTC/ETH/SOL
-   charts and controlled restart. Keep the 24-hour observation, rollback
-   rehearsal and reboot test ahead of the next provider slice; the old source
+   charts and controlled restart. Review the 24-hour observation, rollback
+   rehearsal and reboot test at later operational acceptance; the old source
    gap remains explicit.
 1. **Completed user priority: iteration 0035 / #144.** BTC/ETH/SOL real charts
    from Markets and Watchlist now have renewed AWS acceptance. Preserve the
@@ -44,17 +45,20 @@ and the [0037 readiness ledger](iterations/0037-moomoo-opend-readiness.md).
    and the [operator steps](runbooks/live-chart-acceptance.md). This is a measured
    ten-minute result, not an indefinite uptime or complete historical-data claim.
 
-2. **Equities: Moomoo/OpenD after capacity acceptance.** Establish private OpenD reachability and quote
+2. **Equities: Moomoo/OpenD, active development.** Establish private OpenD reachability and quote
    entitlement, then prove AAPL/NVDA observations during the market session.
    Current five-second polling is not native tick push; delayed or unavailable
    data must be labelled. Do not expose OpenD publicly to solve reachability.
-3. **Iteration 0037 code slice (in progress).** The read-only
+3. **Iteration 0037 readiness repair (locally verified).** The read-only
    `quantmesh-moomoo readiness --json` command now performs a private TCP
    preflight and a bounded quote/daily-history report for `US.AAPL` and
-   `US.NVDA`. It is local, paper-safe and order-free. Run it on AWS only after
-   the capacity gate and an approved private route are available; a closed
+   `US.NVDA`. The repaired path uses quote-only discovery, SDK QUOTE
+   subscription, sanitized typed errors and a hard process deadline.
+   Run it on AWS after a private route is available; a closed
    route is recorded as `route_unavailable` rather than degraded into fixture
-   data.
+   data. Full local coverage after corrective reruns: 3,567 passed, 61 skipped.
+   Next fix the separate live polling probe/TICKER subscription path using the
+   [bounded follow-up plan](superpowers/plans/2026-09-23-moomoo-live-polling-repair.md).
 4. **Prediction markets.** Verify Polymarket active-contract subscription and
    mapping; then implement/configure Kalshi's required WebSocket authentication.
    Each venue has its own real-data acceptance; missing credentials are an

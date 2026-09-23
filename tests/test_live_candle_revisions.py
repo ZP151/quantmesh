@@ -14,6 +14,7 @@ from quantmesh.live.buffer import LiveBuffer, LiveIdentityConflictError
 from quantmesh.live.contract import ContinuityState, MarketUpdate, UpdateKind
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.hyperliquid import HyperliquidVenueSupervisor, ScriptedHyperliquidTransport
+from tests.live_clock import freeze_buffer_clock
 
 OPEN = datetime(2026, 9, 12, 14, 22, tzinfo=UTC)
 FIRST_RECEIPT = OPEN + timedelta(minutes=1, microseconds=33_701)
@@ -180,7 +181,10 @@ def test_closed_rest_and_websocket_observation_identity_and_recovery_parity(tmp_
         assert buffer.quarantined() == []
 
 
-def test_legacy_reopen_retains_evidence_accepts_revision_and_coalesces_history(tmp_path):
+def test_legacy_reopen_retains_evidence_accepts_revision_and_coalesces_history(
+    tmp_path, monkeypatch
+):
+    freeze_buffer_clock(monkeypatch, REVISION_RECEIPT + timedelta(minutes=1))
     supervisor = _supervisor()
     previous_open = OPEN - timedelta(minutes=1)
     previous = _observed(supervisor, _candle(opened=previous_open), OPEN).model_copy(

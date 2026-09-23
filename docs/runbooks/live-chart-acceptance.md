@@ -3,10 +3,12 @@
 目标：确认真实行情进入完整图表，并能持续更新、刷新后保留已记录走势。
 2026-09-13 UTC：AWS `76203e0` 已通过 601.662 秒实际验收，三个币种各有 175 次页面抽样，296 个工作区请求全部完成。详见[迭代记录](../iterations/0035-live-instrument-charts.md)及其中的限制说明。后续版本仍需重新验收。
 
-1. 打开 [Markets](https://quantmesh-staging.tail99d23c.ts.net/app/markets)，从 Live instruments 点击 BTC、ETH 或 SOL。再从 [Watchlist](https://quantmesh-staging.tail99d23c.ts.net/app/markets/watchlist) 重复进入。两处都应打开完整图表，默认选择 1D 和 Line。
+2026-09-23：当前入口已切换到 8 GB 新主机，运行版本为 33aa0521。以下链接指向新站点；上述十分钟证据仍是历史版本的验收记录，新主机的短验收见迭代 0036，24 小时观察留待后续评审。
+
+1. 打开 [Markets](https://quantmesh-staging-8gb.tail99d23c.ts.net/app/markets)，从 Live instruments 点击 BTC、ETH 或 SOL。再从 [Watchlist](https://quantmesh-staging-8gb.tail99d23c.ts.net/app/markets/watchlist) 重复进入。两处都应打开完整图表，默认选择 1D 和 Line。
 2. 查看来源和时间：应显示 `hyperliquid-live-replay`、真实行情分类及最近的数据时间。WebSocket 只表示传输连接；还需确认数据时间持续前进。
 3. 三个币种同时打开，连续观察 10 分钟。同一分钟的最新价格应随实际行情修订，跨分钟后曲线应追加。行情不变时无需强求每次刷新都改变价格。
-4. 在 1D 下刷新各页面，已记录的走势应仍然可见。记录范围由实际采集覆盖决定；选择 1D 或 5D 不代表系统已经拥有完整一天或五天的历史。1D 使用已采集的分钟数据时，页面应显示实际范围及 `5m->1m` 分辨率回退。该回退仅适用于 1D：实时回放的 5D 需要合格的 30m 或更粗粒度数据，缺少这些数据且没有可用历史数据集时显示不可用是预期行为。当前实时分钟走势请使用 [BTC 1D](https://quantmesh-staging.tail99d23c.ts.net/app/instruments/hyperliquid/BTC?range=1d&mode=line) 入口。
+4. 在 1D 下刷新各页面，已记录的走势应仍然可见。记录范围由实际采集覆盖决定；选择 1D 或 5D 不代表系统已经拥有完整一天或五天的历史。1D 使用已采集的分钟数据时，页面应显示实际范围及 `5m->1m` 分辨率回退。该回退仅适用于 1D：实时回放的 5D 需要合格的 30m 或更粗粒度数据，缺少这些数据且没有可用历史数据集时显示不可用是预期行为。当前实时分钟走势请使用 [BTC 1D](https://quantmesh-staging-8gb.tail99d23c.ts.net/app/instruments/hyperliquid/BTC?range=1d&mode=line) 入口。
 5. 用键盘切换 Candles / Line，并在窄屏查看，确认图表可见且页面没有横向溢出。
 
 右侧的 `EVIDENCE BLOCKED` 表示研究或交易所需证据不足，应与行情来源分别检查。刚开始采集的分钟走势仍可能缺少完整历史和预测证据。

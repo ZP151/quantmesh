@@ -119,10 +119,10 @@ def _readiness_report(status: str) -> ReadinessReport:
 
 
 def test_readiness_route_unavailable_stops_before_sdk(monkeypatch, capsys) -> None:
-    def fail_build(_settings):
+    def fail_build(*args, **kwargs):
         raise AssertionError("SDK client must not be built for a closed route")
 
-    monkeypatch.setattr(cli, "_build_client", fail_build)
+    monkeypatch.setattr(cli, "run_readiness_process", fail_build)
     monkeypatch.setattr(cli, "_check_opend_route", lambda _settings: (False, "connection refused"))
 
     code = cli.main(["readiness", "--json"])
@@ -139,14 +139,14 @@ def test_readiness_json_reports_codes_and_never_checks_orders(
 ) -> None:
     calls: list[list[str]] = []
 
-    def fake_run(client, codes, *, interval):
-        assert client is stub_client
+    def fake_run(config, codes, *, timeout_seconds):
+        assert config is cli.settings
         calls.append(codes)
-        assert interval == "1d"
-        return _readiness_report("ready")
+        assert timeout_seconds == 30
+        return _readiness_report("ready").as_dict()
 
     monkeypatch.setattr(cli, "_check_opend_route", lambda _settings: (True, None))
-    monkeypatch.setattr(cli, "run_readiness", fake_run)
+    monkeypatch.setattr(cli, "run_readiness_process", fake_run)
 
     code = cli.main(["readiness", "--json"])
 
@@ -156,18 +156,19 @@ def test_readiness_json_reports_codes_and_never_checks_orders(
     assert payload["symbols"][0]["code"] == "US.AAPL"
     assert payload["order_checked"] is False
     assert calls == [["US.AAPL", "US.NVDA"]]
-    assert stub_client.closed is True
+    assert stub_client.closed is False  # SDK lifetime is isolated in the worker.
 
 
 def test_readiness_partial_exits_one(monkeypatch, stub_client: StubClient, capsys) -> None:
     monkeypatch.setattr(cli, "_check_opend_route", lambda _settings: (True, None))
     monkeypatch.setattr(
-        cli, "run_readiness", lambda *_args, **_kwargs: _readiness_report("partial")
+        cli, "run_readiness_process",
+        lambda *_args, **_kwargs: _readiness_report("partial").as_dict()
     )
 
     assert cli.main(["readiness", "--json", "--symbols", "AAPL"]) == 1
     assert json.loads(capsys.readouterr().out)["status"] == "partial"
-    assert stub_client.closed is True
+    assert stub_client.closed is False
 
 
 @pytest.mark.parametrize(
@@ -182,10 +183,13 @@ def test_readiness_maps_typed_provider_failures(
 ) -> None:
     stub_client.error = error
     monkeypatch.setattr(cli, "_check_opend_route", lambda _settings: (True, None))
+    monkeypatch.setattr(cli, "run_readiness_process", lambda *args, **kwargs: {
+        "status": expected_status, "symbols": [], "order_checked": False,
+    })
 
     assert cli.main(["readiness", "--json"]) == expected_code
     assert json.loads(capsys.readouterr().out)["status"] == expected_status
-    assert stub_client.closed is True
+    assert stub_client.closed is False
 
 
 # --- paper-order / reconcile: fixture-first simulated trading -------------------------

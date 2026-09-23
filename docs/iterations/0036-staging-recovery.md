@@ -245,7 +245,8 @@ but the 24-hour gate remains open until the complete log is reviewed.
 Before iteration 0036 closeout, the operator must separately decide whether to
 run the disruptive old-host rollback rehearsal and new-host reboot test. Both
 must preserve the new observations and re-check exact health, real-source
-freshness, paper mode and disabled live execution. No Moomoo/OpenD or other
-provider acceptance starts before this capacity gate is closed. PR #159's CI
+freshness, paper mode and disabled live execution. The user's subsequent
+instruction defers these drills and observation review to later acceptance;
+they must not block iteration 0037 development or private route preparation. PR #159's CI
 is intentionally cancelled while the capacity work proceeds, so its docs-only
 merge remains pending a later green check.

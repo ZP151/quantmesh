@@ -6,14 +6,20 @@ from dataclasses import dataclass
 
 import pytest
 
-from quantmesh.moomoo.opend import OpenDCapabilities, OpenDUnavailableError
+from quantmesh.moomoo.opend import (
+    OpenDAuthRequiredError,
+    OpenDCapabilities,
+    OpenDProtocolError,
+    OpenDSdkMissingError,
+    OpenDUnavailableError,
+)
 from quantmesh.moomoo.readiness import run_readiness
 
 CAPABILITIES = OpenDCapabilities(
     quote=True,
     history_kline=True,
-    order=True,
-    order_query=True,
+    order=False,
+    order_query=False,
     auth_required=False,
 )
 
@@ -63,7 +69,7 @@ class StubClient:
         self.history_calls: list[str] = []
         self.order_calls = 0
 
-    def probe(self) -> OpenDCapabilities:
+    def probe_market_data(self) -> OpenDCapabilities:
         return self.capabilities
 
     def stock_quote(self, codes: list[str]) -> dict:
@@ -109,7 +115,7 @@ def test_readiness_preserves_partial_symbol_failure() -> None:
     assert report.symbols[0].status == "ready"
     assert report.symbols[1].status == "partial"
     assert report.symbols[1].history_status == "unavailable"
-    assert "entitlement denied" in (report.symbols[1].history_detail or "")
+    assert "entitlement denied" not in (report.symbols[1].history_detail or "")
 
 
 def test_empty_history_is_unavailable() -> None:
@@ -178,5 +184,45 @@ def test_readiness_never_calls_order_operations() -> None:
 
     assert report.status == "ready"
     assert client.order_calls == 0
-    assert report.capabilities.order is True
+    assert report.capabilities.order is False
     assert report.order_checked is False
+
+
+@pytest.mark.parametrize("error, status", [
+    (OpenDAuthRequiredError, "auth_required"),
+    (OpenDSdkMissingError, "sdk_missing"),
+    (OpenDProtocolError, "protocol_error"),
+    (OpenDUnavailableError, "unavailable"),
+])
+def test_operation_failure_is_typed_and_redacted(error, status):
+    report = run_readiness(
+        StubClient(history_errors={"US.AAPL": error("SECRET_SENTINEL")}), ["US.AAPL"]
+    )
+    assert report.symbols[0].history_status == status
+    assert "SECRET_SENTINEL" not in str(report.as_dict())
+    assert report.status == ("partial" if status == "unavailable" else status)
+
+
+def test_malformed_provider_values_are_redacted():
+    report = run_readiness(
+        StubClient(quote_payloads={"US.AAPL": _quote("SECRET_SENTINEL")}), ["US.AAPL"]
+    )
+    assert report.status == "protocol_error"
+    assert "SECRET_SENTINEL" not in str(report.as_dict())
+
+
+@pytest.mark.parametrize("codes, interval", [(["INVALID"], "1d"), (["US.AAPL"], "oops")])
+def test_invalid_request_is_rejected_before_provider(codes, interval):
+    class NoNetwork:
+        def probe_market_data(self):
+            pytest.fail("invalid request must not contact provider")
+
+    with pytest.raises(ValueError):
+        run_readiness(NoNetwork(), codes, interval=interval)
+
+
+@pytest.mark.parametrize("field, value", [("interval", "1m"), ("autype", "qfq")])
+def test_history_must_match_requested_interval_and_adjustment(field, value):
+    payload = {**_history("US.AAPL"), field: value}
+    report = run_readiness(StubClient(history_payloads={"US.AAPL": payload}), ["US.AAPL"])
+    assert report.status == "protocol_error"

@@ -10,13 +10,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.moomoo.market_data import MoomooDataAdapter, market_zone
 from quantmesh.moomoo.opend import (
     MoomooOpenDClient,
+    OpenDAuthRequiredError,
     OpenDCapabilities,
     OpenDError,
     OpenDProtocolError,
+    OpenDSdkMissingError,
 )
 
 __all__ = ["ReadinessReport", "SymbolReadiness", "run_readiness"]
@@ -25,7 +28,7 @@ __all__ = ["ReadinessReport", "SymbolReadiness", "run_readiness"]
 class ReadinessClient(Protocol):
     """The read-only portion of :class:`MoomooOpenDClient`."""
 
-    def probe(self) -> OpenDCapabilities: ...
+    def probe_market_data(self) -> OpenDCapabilities: ...
 
     def stock_quote(self, codes: list[str]) -> dict: ...
 
@@ -108,21 +111,16 @@ def run_readiness(
     if not isinstance(interval, str) or not interval:
         raise ValueError("interval must be a non-empty string")
 
-    capabilities = client.probe()
+    interval_to_timedelta(interval)
+    for code in codes:
+        _instrument_for_code(code)
+    capabilities = client.probe_market_data()
     adapter = MoomooDataAdapter()
     results = tuple(
         _probe_symbol(client, adapter, code, capabilities, interval) for code in codes
     )
-    if all(symbol.status == "protocol_error" for symbol in results):
-        status = "protocol_error"
-    elif all(symbol.status == "ready" for symbol in results):
-        status = "ready"
-    elif any(symbol.status in {"ready", "partial"} for symbol in results):
-        status = "partial"
-    else:
-        status = "unavailable"
     return ReadinessReport(
-        status=status,
+        status=_aggregate_status({symbol.status for symbol in results}),
         capabilities=capabilities,
         symbols=results,
         interval=interval,
@@ -152,18 +150,9 @@ def _probe_symbol(
             0,
         )
 
-    statuses = {quote_status, history_status}
-    if "protocol_error" in statuses:
-        status = "protocol_error"
-    elif quote_status == "ready" and history_status == "ready":
-        status = "ready"
-    elif "ready" in statuses:
-        status = "partial"
-    else:
-        status = "unavailable"
     return SymbolReadiness(
         code=code,
-        status=status,
+        status=_aggregate_status({quote_status, history_status}),
         quote_status=quote_status,
         history_status=history_status,
         quote_detail=quote_detail,
@@ -182,10 +171,8 @@ def _probe_quote(
         payload = client.stock_quote([code])
         _assert_payload_code(payload, code)
         adapter.stock_quote_to_quote(instrument, payload)
-    except OpenDProtocolError as error:
-        return "protocol_error", str(error)
     except (OpenDError, NotImplementedError) as error:
-        return "unavailable", _error_detail(error)
+        return readiness_failure(error)
     return "ready", None
 
 
@@ -199,11 +186,14 @@ def _probe_history(
     try:
         payload = client.history_kline(code, interval=interval)
         _assert_payload_code(payload, code)
+        if isinstance(payload, dict) and (
+            payload.get("interval") != interval or payload.get("autype") != "None"
+        ):
+            raise OpenDProtocolError("history interval or adjustment differs from request")
         bars = adapter.history_kline_to_bars(instrument, payload)
-    except OpenDProtocolError as error:
-        return "protocol_error", str(error), 0
     except (OpenDError, NotImplementedError) as error:
-        return "unavailable", _error_detail(error), 0
+        status, detail = readiness_failure(error)
+        return status, detail, 0
     if not bars:
         return "unavailable", "OpenD returned no history rows", 0
     return "ready", None, len(bars)
@@ -248,5 +238,24 @@ def _assert_payload_code(payload: object, code: str) -> None:
             )
 
 
-def _error_detail(error: Exception) -> str:
-    return f"{type(error).__name__}: {error}"
+def readiness_failure(error: Exception) -> tuple[str, str]:
+    """Allowlisted operator diagnostics; never serialize vendor/payload text."""
+    if isinstance(error, OpenDProtocolError):
+        return "protocol_error", "OpenD returned an invalid or mismatched market-data payload"
+    if isinstance(error, OpenDSdkMissingError):
+        return "sdk_missing", "An audited compatible Moomoo SDK is required"
+    if isinstance(error, OpenDAuthRequiredError):
+        return "auth_required", "OpenD rejected market-data authentication; no unlock attempted"
+    return "unavailable", "OpenD market data unavailable; check connection, subscription and rights"
+
+
+def _aggregate_status(statuses: set[str]) -> str:
+    # Typed failures must survive even if another symbol/surface succeeds.
+    for failure in ("protocol_error", "sdk_missing", "auth_required"):
+        if failure in statuses:
+            return failure
+    if statuses == {"ready"}:
+        return "ready"
+    if statuses & {"ready", "partial"}:
+        return "partial"
+    return "unavailable"
