@@ -17,10 +17,10 @@ python -m quantmesh.moomoo.cli readiness --symbols AAPL,NVDA --market US --json 
 $LASTEXITCODE
 ```
 
-在 AWS 的 Linux SSH 终端中，使用部署环境的 `quantmesh-moomoo` 命令：
+在 AWS 的 Linux SSH 终端中，使用部署虚拟环境的绝对路径，无需激活环境：
 
 ```sh
-quantmesh-moomoo readiness --symbols AAPL,NVDA --market US --json --timeout-seconds 30
+/opt/quantmesh/current/.venv/bin/quantmesh-moomoo readiness --symbols AAPL,NVDA --market US --json --timeout-seconds 30
 echo $?
 ```
 

@@ -117,6 +117,22 @@ def test_malformed_subscription_is_protocol_error_and_closes(sdk, monkeypatch, r
     assert events == ["open", "close"]
 
 
+@pytest.mark.parametrize("status", [False, 0.0, "0", None])
+def test_malformed_quote_status_cannot_report_ready(sdk, monkeypatch, status):
+    module, events = sdk
+    original = module.OpenQuoteContext.get_stock_quote
+
+    def malformed_quote(self, codes):
+        _, table = original(self, codes)
+        return status, table
+
+    monkeypatch.setattr(module.OpenQuoteContext, "get_stock_quote", malformed_quote)
+    report = run_readiness(MoomooOpenDClient(transport()), ["US.AAPL"])
+    assert report.status == "protocol_error"
+    assert "trade" not in events
+    assert events.count("open") == events.count("close")
+
+
 @pytest.mark.parametrize("malformed", [False, True])
 def test_worker_report_uses_real_quote_only_chain(sdk, monkeypatch, tmp_path, malformed):
     _, events = sdk

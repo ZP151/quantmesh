@@ -461,7 +461,9 @@ class SdkTransport:
             )
             if ret != 0:
                 raise self._classify(RuntimeError(message))
-            ret, table = context.get_stock_quote(codes)
+            ret, table = _sdk_result(
+                context.get_stock_quote(codes), "get_stock_quote", arity=2,
+            )
         except OpenDError:
             raise
         except Exception as error:  # noqa: BLE001 - classify, never leak

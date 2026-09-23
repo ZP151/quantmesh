@@ -247,3 +247,20 @@ iteration 0036 for later operational acceptance, without blocking development.
   in `output/0037-polling-verification-final.json`. Whole-tree Ruff (including
   deploy code), diff check and submodule-pin inspection pass. Slow demo tests
   completed normally; no test was removed or relaxed to obtain this result.
+
+## PR #161 review follow-up — 2026-09-23 UTC
+
+- **Reviewer/Implementer:** two automated inline findings were verified against
+  the source. `stock_quote()` now validates the read result with `_sdk_result`,
+  not only the preceding subscription. Boolean, floating-point, string and null
+  statuses must be protocol errors even with valid quote rows; none can report
+  readiness. The AWS runbook now invokes the deployed virtualenv executable by
+  absolute path, matching the bootstrap/service layout.
+- **Verifier:** all four new readiness-chain regressions failed before the fix;
+  the seven-file provider/readiness/live group passes **123, 1 skipped** after
+  it. Whole-tree Ruff and whitespace checks pass. The previous 149-file broad
+  checkpoint remains recorded above; a new PR CI run must verify this final
+  commit before merge. This is a bounded correction, not a structural redesign.
+- **Release authority:** the user explicitly restored CI and authorized merge
+  and private deployment after checks pass. PR #161 is the reviewed release;
+  the equity candle/chart acceptance and deferred 8 GB soak remain open.
