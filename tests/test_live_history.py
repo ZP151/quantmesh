@@ -23,6 +23,7 @@ from quantmesh.live.contract import (
 )
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.hyperliquid import HyperliquidVenueSupervisor, ScriptedHyperliquidTransport
+from tests.live_clock import freeze_buffer_clock
 
 
 def _candle(
@@ -531,8 +532,12 @@ def test_minute_replay_live_append_after_replay_capture_keeps_exact_coverage(
 
 
 @pytest.mark.parametrize("symbol", ["BTC", "ETH", "SOL"])
-def test_production_minute_candles_revise_append_and_survive_reopen(tmp_path: Path, symbol):
+def test_production_minute_candles_revise_append_and_survive_reopen(
+    tmp_path: Path, symbol, monkeypatch: pytest.MonkeyPatch
+):
     anchor = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
+
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=2))
     root = tmp_path / "replay"
     with LiveBuffer(root) as buffer:
         feed = LiveFeed(lake=buffer)

@@ -1,6 +1,6 @@
 # Iteration 0036 — Private staging recovery and equity readiness
 
-- Status: ACTIVE, 2026-09-17. The private recovery gate closed after the existing Lightsail node was cold-started and its service was made healthy. This iteration remains active for the lake-retention guard and the separate Moomoo/OpenD readiness slice.
+- Status: ACTIVE, 2026-09-23. The original private recovery gate and the 8 GB migration short acceptance are closed. This iteration remains active for the sustained capacity observation, rollback/reboot decision and the separate Moomoo/OpenD readiness slice.
 - Linked issue: [#135 — Private AWS staging workstation](https://github.com/ZP151/quantmesh/issues/135).
 - Review PR: [#154 — private staging recovery](https://github.com/ZP151/quantmesh/pull/154).
 - Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
@@ -8,8 +8,9 @@
 
 ## User action and measurable outcome
 
-Open the existing private AWS workstation and see the accepted exact build
-`76203e03476b120e149a0c06d9932849bb4d8e14`, live Hyperliquid BTC/ETH/SOL
+Open the new private AWS workstation at
+`quantmesh-staging-8gb.tail99d23c.ts.net` and see exact merged build
+`33aa0521da8305001e0bd62b377c53738c85e11d`, live Hyperliquid BTC/ETH/SOL
 observations and paper-only safety state. Moomoo/OpenD host and entitlement
 readiness is tracked by a separate follow-up and is not part of this outcome.
 
@@ -95,18 +96,19 @@ re-established the same real-data path without claiming a new sustained
 witness. Status rows may age independently while the live market kinds stay
 fresh.
 
-The swap is a host mitigation, not the durable fix. `LiveBuffer.prune()` exists
-but production startup has no bounded-lake sweep, and the current service
-constructs the buffer with its default retention. A follow-up implementation
-slice must make retention configurable, invoke it on a safe cadence, and prove
-startup behavior against a growing lake before this iteration can be closed.
+The swap was a host mitigation, not the durable fix. The subsequent retention
+release and bounded latest-state correction are now merged in `33aa0521`, and
+the new host completed the representative restore/startup/restart path without
+swap. The sustained observation below is the remaining evidence gate; it must
+review the larger host under continuing ingestion rather than infer safety from
+the former swapfile.
 
 Issue #135 remains open for the operator-deferred Lightsail firewall acceptance
 recorded in its existing ledger. This recovery did not inspect, remove or add
 public HTTP/SSH rules, and closing the service/reachability gate must not be
 read as closing that issue.
 
-## Recovery exit criteria
+## Historical recovery exit criteria — closed 2026-09-17
 
 - The existing peer is online, responds to three pings and accepts private TCP 443.
 - `/health` reports build `76203e03476b120e149a0c06d9932849bb4d8e14`, live runtime, paper enabled and live trading disabled, with visible staging environment and exact build metadata.
@@ -117,7 +119,7 @@ read as closing that issue.
 - Existing public firewall acceptance for issue #135 remains an explicit open
   operator item; no firewall rule was changed by this recovery.
 
-## Explicit non-goals
+## Historical recovery non-goals
 
 Do not redeploy a new build, change the lake, repair the 168-hour soak, expose
 OpenD, add prediction credentials, claim all-market coverage, or repeat the full
@@ -125,13 +127,13 @@ OpenD, add prediction credentials, claim all-market coverage, or repeat the full
 
 ## Current stop condition
 
-The AWS/Tailscale recovery gate is closed, but iteration closeout is held by the
-unbounded-lake risk identified during recovery. The next bounded slice must
-ship the retention guard and repeat the health, live-smoke and browser gates
-without relying on another OOM recovery. The separate Moomoo/OpenD route and
-quote-entitlement work remains deferred as described below. No credentials are
-needed in chat; only connection results and redacted host/status evidence are
-needed.
+The 8 GB migration is serving the new private origin, but iteration closeout is
+held by the 24-hour capacity/freshness log and the operator's decision on a
+rollback rehearsal and host reboot. The September 17–22 source gap and the old
+90-second shutdown timeout remain explicit limitations. The separate
+Moomoo/OpenD route and quote-entitlement work remains deferred until this gate
+closes. No credentials are needed in chat; only connection results and redacted
+host/status evidence are needed.
 
 ## OpenD preflight evidence — deferred follow-up, 2026-09-17
 
@@ -211,4 +213,40 @@ selection to a bounded grouped `MAX(local_seq)` lookup, adds a 100,000-row
 regression under a 32 MiB DuckDB limit, and makes the 420-attempt health gate a
 seven-minute elapsed deadline. Focused local tests are green; the exact merged
 head still requires full CI and a fresh AWS health, read-only live-smoke and
-browser chart witness before this checkpoint can close.
+browser chart witness before this checkpoint can close. The later exact merged
+`33aa0521` and the 8 GB migration evidence supersede that pending witness;
+the sustained capacity gate is recorded below.
+
+## 8 GB migration and sustained-observation handoff — 2026-09-23
+
+The operator completed the move to the private
+`quantmesh-staging-8gb.tail99d23c.ts.net` origin. PR [#159](https://github.com/ZP151/quantmesh/pull/159)
+records the verified 4,434,759,680-byte archive, WAL recovery, JSON validation
+for 6,535,216 records, exact merged build `33aa0521`, 13-check smoke, current
+real BTC/ETH/SOL charts, and a controlled restart. The new host is active with
+about 6.0 GiB available RAM, no swap and zero automatic restarts at the first
+capacity sample. The old application is stopped and disabled; its instance,
+source data and verified backups remain for rollback. The old origin returns
+502 because its application process is stopped.
+
+The five-minute acceptance is therefore a completed migration checkpoint, not
+the iteration exit. The source archive ends at 2026-09-17 19:45:23 UTC and new
+observations resume around 2026-09-22 15:53 UTC. This historical gap is kept
+explicit; no synthetic bars or unverified backfill are accepted.
+
+A read-only observer started at 2026-09-22 16:21:42 UTC and samples every five
+minutes. It records the exact build and paper/live safety flags, BTC/ETH/SOL
+quote and candle age (60-second ceiling), smoke checks, service restart count,
+memory, swap, disk and recent journal lines. The local evidence is under
+`output/lightsail-8gb-migration/`; the durable observer manifest records the
+expected 24-hour end at 2026-09-23 16:21:42 UTC. The first samples are green,
+but the 24-hour gate remains open until the complete log is reviewed.
+
+Before iteration 0036 closeout, the operator must separately decide whether to
+run the disruptive old-host rollback rehearsal and new-host reboot test. Both
+must preserve the new observations and re-check exact health, real-source
+freshness, paper mode and disabled live execution. The user's subsequent
+instruction defers these drills and observation review to later acceptance;
+they must not block iteration 0037 development or private route preparation. PR #159's CI
+is intentionally cancelled while the capacity work proceeds, so its docs-only
+merge remains pending a later green check.

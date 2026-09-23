@@ -47,13 +47,21 @@ This scope covers those three crypto instruments only. Next: private Moomoo/
 OpenD reachability and entitlements for AAPL/NVDA, followed by prediction
 venues and trusted history. See `docs/ITERATION_PLAN.md` for delivery order.
 
-Iteration 0036 is the current recovery gate as of 2026-09-17. The accepted
-release is unchanged, but the private `quantmesh-staging` Tailscale peer was
-offline from the Windows probe (last seen 2026-09-14; no handshake; private
-443 and `/health` timed out). Local Tailscale and Singapore DERP were healthy,
-so this is recorded as a host/network blocker. Restore the existing node and
-re-run the exact health, read-only smoke and short chart checks before starting
-Moomoo/OpenD readiness. No deployment or live-execution change is implied.
+As of 2026-09-23, the active private host is `quantmesh-staging-8gb` at
+`https://quantmesh-staging-8gb.tail99d23c.ts.net`, running merged `33aa0521`.
+Migration restore, short smoke, BTC/ETH/SOL charts and controlled restart
+passed; the old service is stopped and retained for rollback (PR #159).
+Iteration 0036's 24-hour observation and remaining operational drills belong
+to later acceptance, not a prerequisite to development, per the user's latest
+instruction. Iteration 0037 is the active product slice: quote-only Moomoo
+readiness, SDK subscription, typed diagnostics and a bounded worker. Private
+OpenD now has a private loopback SSH route and actual AAPL/NVDA source-time
+progression evidence from an isolated AWS candidate on 2026-09-23. The running
+site still uses `33aa0521`; equity candle delivery and browser acceptance are
+open. The polling repair includes quote-only connect, TICKER registration,
+Linux worker startup and an optional deployment profile for the locked SDK.
+The user has now restored CI and authorized checked merge/private deployment;
+actual release evidence is still required. Live execution remains disabled.
 
 ## Bounded context
 

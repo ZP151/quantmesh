@@ -2,7 +2,7 @@
 supervisor and its poll transport.
 
 OpenD is request/response, so the wire here is the poll transport
-itself — a stub local daemon answers ``probe``/``stock_quote``/
+itself — a stub local daemon answers ``probe_market_data``/``stock_quote``/
 ``rt_ticker`` exactly like the M4 client boundary, with the venue's
 own wall-clock timestamps. The drills pin:
 
@@ -70,7 +70,7 @@ class _StubOpenD:
         self.calls = {"probe": 0, "quote": 0, "ticker": 0}
         self.ticker_sequences = {"US.AAPL": 0, "US.NVDA": 0}
 
-    def probe(self) -> OpenDCapabilities:
+    def probe_market_data(self) -> OpenDCapabilities:
         self.calls["probe"] += 1
         if not self.probe_ok:
             raise OpenDUnavailableError("OpenD at 127.0.0.1:11111 is unavailable: simulated")

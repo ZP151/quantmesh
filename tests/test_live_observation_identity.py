@@ -11,6 +11,7 @@ from quantmesh.live.buffer import LiveBuffer, LiveIdentityConflictError
 from quantmesh.live.contract import MarketUpdate, UpdateKind
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.hyperliquid import HyperliquidVenueSupervisor, ScriptedHyperliquidTransport
+from tests.live_clock import freeze_buffer_clock
 
 OBSERVED = datetime(2026, 9, 12, 15, 45, 47, 265680, tzinfo=UTC)
 CHANNELS = ("activeAssetCtx", "allMids")
@@ -79,7 +80,10 @@ def test_metric_observations_survive_real_feed_buffer(
 
 
 @pytest.mark.parametrize("channel", CHANNELS)
-def test_legacy_reopen_and_exact_receipt_replay_preserve_evidence_and_conflicts(tmp_path, channel):
+def test_legacy_reopen_and_exact_receipt_replay_preserve_evidence_and_conflicts(
+    tmp_path, channel, monkeypatch
+):
+    freeze_buffer_clock(monkeypatch, OBSERVED + timedelta(minutes=1))
     supervisor = _supervisor()
     current = _observed(supervisor, channel)
     legacy_id = hashlib.sha256(

@@ -158,6 +158,31 @@ Official surfaces rechecked for this extension:
 - [Stock splits](https://openapi.moomoo.com/moomoo-api-doc/en/quote/get-corporate-actions-stock-splits.html)
 - [Dividends](https://openapi.moomoo.com/moomoo-api-doc/en/quote/get-corporate-actions-dividends.html)
 
+## Readiness extension (iteration 0037)
+
+- The operator readiness path uses `probe_market_data()` rather than the
+  general probe. It may create only `OpenQuoteContext`; order capabilities
+  are unexamined and false. Tests exercise the actual client/transport chain.
+- `get_stock_quote` requires a QUOTE subscription on the same context before
+  reading. Register with `subscribe_push=False`, validate the tuple/status
+  through `_sdk_result`, and close the context on all paths. SDK registration
+  is not a purchase or proof of licensed real-time rights. See the official
+  [quote contract](https://openapi.moomoo.com/moomoo-api-doc/en/quote/get-stock-quote.html).
+- The readiness CLI reuses the bounded JSON collection process runner; a hard
+  whole-worker deadline contains synchronous SDK waits. It is separate from
+  TCP preflight and bounded process cleanup. The worker receives only endpoint
+  metadata, emits sanitized status/row-count reports, and does not persist
+  quote or account rows. Raw SDK output does not enter CLI JSON.
+- `ready` certifies readable, schema-valid data only. It does not establish
+  source freshness, session progression, full history or order authority.
+  Market-session and AWS entry-path evidence remain separate acceptance gates.
+- The live poll transport uses the same quote-only discovery. Ticker reads
+  register `SubType.TICKER` on their own quote context before reading, with
+  `subscribe_push=False` and strict subscription-result validation. The
+  application still polls every five seconds; no native push or hard live-call
+  deadline is implied. See the official
+  [ticker contract](https://openapi.moomoo.com/moomoo-api-doc/en/quote/get-ticker.html).
+
 ## Consequences
 
 - Unit tests run with neither OpenD nor the SDK (26 Phase A tests).

@@ -1,9 +1,90 @@
 # Active Goal
 
-Status: iteration0036 ACTIVE, 2026-09-17. The 0035 AWS real-chart acceptance
-and documentation closeout are complete. The existing private AWS endpoint has
-now recovered and the deployed real-data chart is accepted; this goal remains
-active for the lake-retention guard and the separate Moomoo/OpenD route.
+Status: iteration0037 ACTIVE, 2026-09-23. The 0035 AWS real-chart acceptance
+and the 8 GB migration's short acceptance are complete; this goal remains
+active until the new host's sustained capacity gate is closed and the separate
+Moomoo/OpenD route is ready. A code-only iteration 0037 readiness slice is now
+locally verified. The user explicitly prioritized development and deferred observation
+to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
+explicitly restored CI and authorized merge/private deployment after all checks pass.
+
+## 8 GB capacity handoff — later acceptance work
+
+The authoritative private origin is now
+`https://quantmesh-staging-8gb.tail99d23c.ts.net`, serving exact merged build
+`33aa0521da8305001e0bd62b377c53738c85e11d`. The restored dataset passed archive
+hash, WAL recovery, JSON payload validation, 13-check read-only smoke, chart
+entry-path, and controlled restart checks. The host currently reports about
+6.0 GiB available RAM, no swap, an active service and zero automatic restarts.
+These are the completed migration facts recorded in [PR #159](https://github.com/ZP151/quantmesh/pull/159);
+the PR remains open after its earlier CI cancellation. Resuming CI for the
+equity repair does not itself merge this separate migration-evidence PR.
+
+The migration did not fill the old collection gap (the stopped source ends on
+2026-09-17 and the new collector resumes on 2026-09-22), and it did not prove
+the old 90-second shutdown behavior. A local, read-only observer started on
+2026-09-22 16:21:42 UTC records five-minute smoke, quote/candle freshness,
+health safety flags, service restarts, memory, swap, disk and recent journal
+lines for 24 hours. The observation gate remains open until the complete log
+is reviewed. No later provider or UI acceptance may treat this short sample as
+indefinite availability.
+
+The later operational acceptance checklist retains the following; these are
+not prerequisites to developing the next provider slice:
+
+- every sample keeps build `33aa0521`, `paper_mode=true` and
+  `live_trading=false`;
+- BTC, ETH and SOL quote/candle observations remain real and under the
+  observer's 60-second freshness limit;
+- the service stays active with no automatic restarts, OOM evidence or swap
+  activity, and capacity/disk trends are reviewed;
+- an operator-approved old-host rollback rehearsal and a new-host reboot test
+  are separately completed or explicitly deferred with a recorded reason;
+- the evidence is mirrored into iteration 0036 before its closeout.
+
+The old origin is retained as a rollback resource and is not deleted. The
+historical gap remains an explicit limitation; any backfill must use a
+source-backed, lineage-preserving dataset and cannot be inferred from the
+live replay.
+
+## Iteration 0037 development checkpoint — private Moomoo/OpenD readiness
+
+The current feature branch repairs and extends `quantmesh-moomoo readiness
+--json` command for issue [#156](https://github.com/ZP151/quantmesh/issues/156).
+It checks the private TCP route before SDK use, uses dedicated quote-only
+capability discovery, subscribes to SDK QUOTE data before snapshot reads,
+and validates daily history for `US.AAPL` and `US.NVDA`. A hard worker deadline
+and allowlisted typed diagnostics protect the operator command. It never
+opens an order context or persists quote/account rows. Plan and acceptance
+details are in [iteration 0037](../iterations/0037-moomoo-opend-readiness.md).
+
+The direct AWS-to-Windows OpenD port was closed. On 2026-09-23 the user
+completed SSH revalidation and OpenD login. A reverse Tailscale SSH tunnel now
+connects AWS `127.0.0.1:11111` to Windows `127.0.0.1:11111`; both listeners
+remain loopback-only. Isolated AWS readiness and actual polling pass, with
+AAPL/NVDA source clocks advancing at 15:46 UTC. The active AWS release lacks
+the SDK/watchlist configuration and has not been changed. The tunnel requires
+the Windows machine, OpenD and SSH process to remain running; it is not yet
+a reboot-persistent service. Previous readiness-only local verification is
+green (`121 passed, 1 skipped`); complete file coverage after corrective
+reruns totals `3567 passed, 61 skipped`. Ruff, diff checks and independent
+review pass, as recorded in iteration 0037. This earlier code checkpoint was not a
+deployment, merge or real-equity acceptance claim.
+
+The [live-polling follow-up](../superpowers/plans/2026-09-23-moomoo-live-polling-repair.md)
+now fixes quote-only connect, TICKER subscription, Linux worker HOME restoration
+and an opt-in, constrained SDK deployment profile. Its two independent review
+rounds have no actionable findings; final broad verification covers all 149
+files with 3582 passed and 61 skipped. Ruff and diff checks pass.
+Next sequence: close this local checkpoint; implement source-backed equity
+candles for Markets/Watchlist (the existing poller emits metrics/trades only);
+run the newly authorized CI, merge/deploy the reviewed exact release,
+and verify the actual page loop and truthful session/delay labels; then review
+the deferred 8 GB observation and operational drills with deployment evidence.
+The prior Basic-data error is not proof of a paid entitlement requirement:
+the old transport omitted the SDK subscription call. Actual subscription
+acceptance is now proven for these two symbols in the recorded open-session
+sample. It is not evidence of broader rights, every session or all markets.
 
 ## Accepted user loop
 
@@ -65,9 +146,9 @@ tick-by-tick rendering. Automatic workspace reads wait5s after completion.
 - Active iteration: [0036 staging recovery](../iterations/0036-staging-recovery.md).
 - Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
 
-The recovery gate is now closed with the evidence above. The next operator
-acceptance must repeat the same checks after the retention guard is deployed;
-the agent must not treat swap alone as a permanent lake-safety fix.
+The recovery gate is now superseded operationally by the 8 GB host, but the
+capacity observation above is still open. The agent must not treat a short
+smoke, extra RAM or the former swap mitigation as a permanent stability claim.
 
 Local OpenD is available on Windows at `127.0.0.1:11111`; the read-only probe
 reported quote/history capability and `auth_required=false`. This is local
@@ -94,30 +175,23 @@ and two review rounds resolved it. The passing actual run censored zero requests
 A ten-minute witness does not certify indefinite availability.
 
 The recovery found the production failure mode behind that limit: the running
-service opens the full DuckDB lake before any production prune call, and the
-host had no swap. The follow-up slice must add an explicit retention setting,
-safe pruning cadence and startup/soak evidence. Until then, the swapfile is
-documented as a reversible host mitigation only.
+service opened the full DuckDB lake before any production prune call, and the
+old host had no swap. The retention setting, bounded latest-state lookup and
+startup deadline are now in merged `33aa0521`; the new host's sustained
+observation is the remaining evidence gate. The old swapfile remains a
+reversible host mitigation and is not part of the new-host acceptance.
 
-## Next frontier after recovery
+## Next frontier after migration
 
-Current branch: `docs/135-staging-recovery` from `origin/main@c74ea03`;
-review PR: [#154](https://github.com/ZP151/quantmesh/pull/154).
-Complete the recovery gate with the normal reviewed PR workflow. Preserve
-divergent local `main`; new branches start from `origin/main`. Retain `e185c3b`
-and `4022942` rollback releases; do not change infrastructure or execution.
-
-After recovery, the next bounded slice is the live-lake retention guard: add a
-configurable retention window, safe pruning cadence and deployment evidence
-against the existing BTC/ETH/SOL feed. Then continue with Moomoo/OpenD
-readiness for AAPL/NVDA: identify the existing
-licensed host, approved private AWS route and actual quote entitlement. The
-operator connection-information question is pending; no credentials are needed
-in chat. Windows localhost probes cannot establish remote absence. Only after
-readiness is established, write the exact-file plan and issue. An open-session
-real-data witness and truthful delayed/closed/unavailable labels are required;
-existing five-second polling is not native tick push. Then prediction venues
-and qualified historical evidence follow sequentially in docs/ITERATION_PLAN.md.
+Proceed with the current product development slice while observation, rollback
+and reboot work stays in later acceptance. Preserve the old release and
+verified backups. Identify the existing licensed host, private AWS route and
+actual quote entitlement, then run the probe during an open session. No
+credentials are needed in chat. Windows localhost probes cannot establish remote absence. An
+open-session real-data witness and truthful delayed/closed/unavailable labels
+are required; existing five-second polling is not native tick push. Then
+prediction venues and qualified historical evidence follow sequentially in
+docs/ITERATION_PLAN.md.
 
 Keep0021soak and issues135/132/127 independent. No public OpenD exposure, paid
 subscriptions, orders, strategy promotion or opportunistic maintenance changes.

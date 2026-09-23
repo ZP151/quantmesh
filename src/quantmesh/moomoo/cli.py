@@ -15,6 +15,9 @@ does not name a ``--fixture`` script.
 """
 
 import argparse
+import json
+import math
+import socket
 import sys
 import uuid
 from collections.abc import Sequence
@@ -44,6 +47,7 @@ from quantmesh.moomoo.opend import (
     OpenDAuthRequiredError,
     OpenDSdkMissingError,
 )
+from quantmesh.moomoo.readiness_process import run_readiness_process
 from quantmesh.settings import Settings, settings
 
 _EXIT_OK = 0
@@ -55,6 +59,113 @@ _EXIT_GATED = 3  # paper-order/reconcile: live path locked behind the Phase E ga
 
 def _build_client(config: Settings) -> MoomooOpenDClient:
     return MoomooOpenDClient.from_settings(config)
+
+
+def _check_opend_route(config: Settings) -> tuple[bool, str | None]:
+    """Check the private TCP route without importing or invoking the SDK."""
+    try:
+        connection = socket.create_connection(
+            (config.moomoo_opend_host, config.moomoo_opend_port),
+            timeout=config.moomoo_opend_connect_timeout_s,
+        )
+    except OSError:
+        return False, "OpenD TCP connection failed; check the private endpoint and route"
+    connection.close()
+    return True, None
+
+
+def _readiness_codes(value: str, market: str) -> list[str]:
+    symbols = [part.strip().upper() for part in value.split(",") if part.strip()]
+    if not symbols:
+        raise ValueError("--symbols must contain at least one symbol")
+    market = market.strip().upper()
+    market_zone(market)
+    codes: list[str] = []
+    for symbol in symbols:
+        if "." in symbol:
+            prefix, bare = symbol.split(".", 1)
+            if prefix != market or not bare:
+                raise ValueError(f"symbol {symbol!r} does not match market {market!r}")
+            codes.append(symbol)
+        else:
+            codes.append(f"{market}.{symbol}")
+    return codes
+
+
+def _readiness_error_payload(
+    status: str, config: Settings, codes: list[str], detail: str
+) -> dict[str, object]:
+    return {
+        "status": status,
+        "endpoint": {
+            "host": config.moomoo_opend_host,
+            "port": config.moomoo_opend_port,
+        },
+        "requested_symbols": codes,
+        "interval": "1d",
+        "capabilities": None,
+        "symbols": [],
+        "order_checked": False,
+        "detail": detail,
+    }
+
+
+def _render_readiness(payload: dict[str, object], *, as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(payload, sort_keys=True))
+        return
+    endpoint = payload["endpoint"]
+    print(f"OpenD readiness: {payload['status']} ({endpoint})")
+    detail = payload.get("detail")
+    if detail:
+        print(f"  {detail}")
+    for symbol in payload.get("symbols", []):
+        if isinstance(symbol, dict):
+            print(
+                f"  {symbol.get('code')}: {symbol.get('status')} "
+                f"quote={symbol.get('quote_status')} "
+                f"history={symbol.get('history_status')}"
+            )
+
+
+def _readiness(args: argparse.Namespace) -> int:
+    config = settings
+    try:
+        codes = _readiness_codes(args.symbols, args.market)
+    except ValueError as error:
+        payload = _readiness_error_payload("invalid_request", config, [], str(error))
+        _render_readiness(payload, as_json=args.as_json)
+        return _EXIT_UNAVAILABLE
+
+    route_ok, route_detail = _check_opend_route(config)
+    if not route_ok:
+        payload = _readiness_error_payload(
+            "route_unavailable", config, codes, route_detail or "private route is unavailable"
+        )
+        _render_readiness(payload, as_json=args.as_json)
+        return _EXIT_UNAVAILABLE
+
+    report = run_readiness_process(config, codes, timeout_seconds=args.timeout_seconds)
+    payload = {
+        "endpoint": {
+            "host": config.moomoo_opend_host,
+            "port": config.moomoo_opend_port,
+        },
+        "requested_symbols": codes,
+        **report,
+    }
+    exit_code = {
+        "ready": _EXIT_OK, "auth_required": _EXIT_AUTH_REQUIRED, "sdk_missing": _EXIT_SDK_MISSING,
+    }.get(str(report["status"]), _EXIT_UNAVAILABLE)
+    _render_readiness(payload, as_json=args.as_json)
+    return exit_code
+
+
+def _readiness_timeout(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed) or not 0 < parsed <= 300:
+        raise argparse.ArgumentTypeError("must be finite and within (0, 300] seconds")
+    return parsed
 
 
 def _positive_float(value: str) -> float:
@@ -223,6 +334,25 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     subparsers.add_parser("probe", help="capability probe of a local OpenD")
 
+    readiness = subparsers.add_parser(
+        "readiness", help="read-only private route and AAPL/NVDA data readiness probe"
+    )
+    readiness.add_argument(
+        "--symbols",
+        default=settings.moomoo_watchlist or "AAPL,NVDA",
+        help="comma-separated bare symbols (default: AAPL,NVDA)",
+    )
+    readiness.add_argument(
+        "--market",
+        default=settings.moomoo_market,
+        help="market prefix for bare symbols (default: US)",
+    )
+    readiness.add_argument("--json", dest="as_json", action="store_true")
+    readiness.add_argument(
+        "--timeout-seconds", type=_readiness_timeout, default=30,
+        help="SDK worker deadline, excluding TCP preflight and process cleanup (default: 30)",
+    )
+
     paper = subparsers.add_parser(
         "paper-order", help="place a simulated order against a fixture script"
     )
@@ -271,6 +401,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "probe":
         return _probe()
+    if args.command == "readiness":
+        return _readiness(args)
     if args.command == "paper-order":
         return _paper_order(args)
     if args.command == "reconcile":

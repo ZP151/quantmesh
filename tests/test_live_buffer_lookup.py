@@ -10,6 +10,7 @@ import pytest
 from quantmesh.domain.models import Venue
 from quantmesh.live.buffer import LiveBuffer, LiveIdentityConflictError
 from quantmesh.live.contract import MarketUpdate, UpdateKind
+from tests.live_clock import freeze_buffer_clock
 
 NOW = datetime(2026, 9, 13, 10, tzinfo=UTC)
 
@@ -57,7 +58,8 @@ class _LookupProbe:
         return getattr(self.connection, name)
 
 
-def test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss(tmp_path):
+def test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss(tmp_path, monkeypatch):
+    freeze_buffer_clock(monkeypatch, NOW + timedelta(minutes=1))
     rows = [
         _update(
             index,
@@ -135,7 +137,8 @@ def _assert_lookup_index(buffer):
     ).fetchone() == (2,)
 
 
-def test_prior_schema_reopen_adds_lookup_without_changing_rows_or_quarantine(tmp_path):
+def test_prior_schema_reopen_adds_lookup_without_changing_rows_or_quarantine(tmp_path, monkeypatch):
+    freeze_buffer_clock(monkeypatch, NOW + timedelta(minutes=1))
     original = _update(event_id="retained")
     with LiveBuffer(tmp_path) as buffer:
         buffer.append(original)
@@ -151,7 +154,8 @@ def test_prior_schema_reopen_adds_lookup_without_changing_rows_or_quarantine(tmp
             assert buffer.append(original).inserted is False
 
 
-def test_legacy_missing_identity_column_migrates_before_lookup_index(tmp_path):
+def test_legacy_missing_identity_column_migrates_before_lookup_index(tmp_path, monkeypatch):
+    freeze_buffer_clock(monkeypatch, NOW + timedelta(minutes=1))
     path = tmp_path / "live" / "updates.duckdb"
     path.parent.mkdir()
     with duckdb.connect(str(path)) as connection:
