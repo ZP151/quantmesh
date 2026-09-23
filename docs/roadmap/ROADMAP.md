@@ -386,7 +386,7 @@ Sequence for operator review:
    with no timeouts/failures. Other market feeds remain a separate frontier.
    See the [0035 ledger](../iterations/0035-live-instrument-charts.md).
    **Current capacity gate (iteration 0036 / PR #159):** the new 8 GB private
-   Tailscale origin serves exact merged `33aa0521`; archive/WAL/JSON restore,
+   Tailscale origin migrated at `33aa0521`; archive/WAL/JSON restore,
    13-check smoke, real BTC/ETH/SOL chart paths and a controlled restart pass.
    A 24-hour capacity/freshness observation, an operator-approved rollback
    rehearsal and a host reboot test remain in later acceptance while private
@@ -402,10 +402,12 @@ Sequence for operator review:
    quote/history and AAPL/NVDA source-time progression checks in an isolated
    candidate environment. The live poller fixes quote-only discovery and TICKER
    subscription; Linux worker startup and the optional SDK deployment profile
-   are repaired. CI resumption and checked merge/deployment are now authorized;
-   the application has not yet been deployed at this checkpoint.
-   Equity candle delivery to Markets/Watchlist and actual browser acceptance
-   remain next; metrics/trade observations alone do not fill the chart series.
+   are repaired. PR #161 passed full CI, merged and deployed as `db3d18f`.
+   Exact build, 18 smoke checks and five real instruments with advancing source
+   clocks pass. Browser acceptance exposed a metrics-only list-price omission;
+   the bounded Markets/Watchlist display follow-up is locally verified/reviewed
+   and awaits CI/deployment. Source-backed equity minute candles and full chart
+   acceptance follow separately; metrics/trades do not fill the chart series.
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.

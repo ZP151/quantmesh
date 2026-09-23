@@ -3,8 +3,9 @@
 Status: iteration0037 ACTIVE, 2026-09-23. The 0035 AWS real-chart acceptance
 and the 8 GB migration's short acceptance are complete; this goal remains
 active until the new host's sustained capacity gate is closed and the separate
-Moomoo/OpenD route is ready. A code-only iteration 0037 readiness slice is now
-locally verified. The user explicitly prioritized development and deferred observation
+Moomoo/OpenD route is ready. PR #161 is now merged and deployed; its live API acceptance passes.
+The remaining list-price display correction is locally verified and reviewed,
+awaiting its follow-up CI and private deployment; full equity charts remain open. The user explicitly prioritized development and deferred observation
 to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
 explicitly restored CI and authorized merge/private deployment after all checks pass.
 
@@ -12,7 +13,8 @@ explicitly restored CI and authorized merge/private deployment after all checks 
 
 The authoritative private origin is now
 `https://quantmesh-staging-8gb.tail99d23c.ts.net`, serving exact merged build
-`33aa0521da8305001e0bd62b377c53738c85e11d`. The restored dataset passed archive
+`db3d18fdb5a241826c7276760af59a49c2fc679d` after PR #161. The original
+migration checkpoint used retained rollback build `33aa0521`. The restored dataset passed archive
 hash, WAL recovery, JSON payload validation, 13-check read-only smoke, chart
 entry-path, and controlled restart checks. The host currently reports about
 6.0 GiB available RAM, no swap, an active service and zero automatic restarts.
@@ -62,8 +64,9 @@ The direct AWS-to-Windows OpenD port was closed. On 2026-09-23 the user
 completed SSH revalidation and OpenD login. A reverse Tailscale SSH tunnel now
 connects AWS `127.0.0.1:11111` to Windows `127.0.0.1:11111`; both listeners
 remain loopback-only. Isolated AWS readiness and actual polling pass, with
-AAPL/NVDA source clocks advancing at 15:46 UTC. The active AWS release lacks
-the SDK/watchlist configuration and has not been changed. The tunnel requires
+AAPL/NVDA source clocks advancing at 15:46 UTC. PR #161 subsequently enabled
+the reviewed SDK/watchlist profile on AWS at 17:17 UTC; 18 smoke checks and
+four samples of five progressing real source clocks passed at 17:18 UTC. The tunnel requires
 the Windows machine, OpenD and SSH process to remain running; it is not yet
 a reboot-persistent service. Previous readiness-only local verification is
 green (`121 passed, 1 skipped`); complete file coverage after corrective
@@ -76,11 +79,21 @@ now fixes quote-only connect, TICKER subscription, Linux worker HOME restoration
 and an opt-in, constrained SDK deployment profile. Its two independent review
 rounds have no actionable findings; final broad verification covers all 149
 files with 3582 passed and 61 skipped. Ruff and diff checks pass.
-Next sequence: close this local checkpoint; implement source-backed equity
-candles for Markets/Watchlist (the existing poller emits metrics/trades only);
-run the newly authorized CI, merge/deploy the reviewed exact release,
-and verify the actual page loop and truthful session/delay labels; then review
-the deferred 8 GB observation and operational drills with deployment evidence.
+Release checkpoint: PR #161 / CI35887627930 passed 3591 Python tests
+(56 skipped), 365 frontend tests and all preceding gates, then merged as
+`db3d18fdb5a241826c7276760af59a49c2fc679d`; merge and candidate trees match.
+Do not redeploy that completed release. Browser inspection confirmed the real
+BTC chart, but equity list cells omitted metrics.last. The bounded follow-up
+uses Last trade plus its own clock/age in Markets and Watchlist, retaining
+truthful stale/disconnected labels and all order gates. It passed 379 frontend
+tests, type/lint/build consistency, 27 Python asset/identity checks and an
+independent review with no actionable findings. Local browser preview against
+the actual private AWS feed shows both prices and progressing source times;
+this is candidate evidence, not a follow-up production-deployment claim.
+Next: CI the display follow-up, normal match-head squash merge, verify tree,
+deploy the precise merged version and accept both actual AWS list pages.
+Then implement source-backed equity minute candles (existing poller emits
+metrics/trades only). Review the deferred capacity/drill evidence later.
 The prior Basic-data error is not proof of a paid entitlement requirement:
 the old transport omitted the SDK subscription call. Actual subscription
 acceptance is now proven for these two symbols in the recorded open-session
@@ -150,12 +163,11 @@ The recovery gate is now superseded operationally by the 8 GB host, but the
 capacity observation above is still open. The agent must not treat a short
 smoke, extra RAM or the former swap mitigation as a permanent stability claim.
 
-Local OpenD is available on Windows at `127.0.0.1:11111`; the read-only probe
-reported quote/history capability and `auth_required=false`. This is local
-readiness evidence only. AWS still needs an approved private route or an
-AWS-side OpenD placement before AAPL/NVDA can be accepted there. A direct
-read-only AAPL/NVDA quote request was rejected by the vendor because Basic data
-subscription is required; no quote was accepted or persisted.
+Local OpenD and the reverse SSH route are now proven by the PR #161 deployed
+five-instrument witness. The earlier Basic-subscription rejection below was
+resolved by registering the SDK subscription; it did not establish that a paid
+subscription was necessary. The tunnel remains dependent on this Windows host,
+OpenD and SSH process; persistent recovery is still later operational work.
 
 ## Retention evidence and limits
 
@@ -185,8 +197,9 @@ reversible host mitigation and is not part of the new-host acceptance.
 
 Proceed with the current product development slice while observation, rollback
 and reboot work stays in later acceptance. Preserve the old release and
-verified backups. Identify the existing licensed host, private AWS route and
-actual quote entitlement, then run the probe during an open session. No
+verified backups. The existing licensed host, private AWS route and two-symbol open-session
+source progression are now established; finish the visible list-price repair
+and then the separate real-minute-chart slice. No
 credentials are needed in chat. Windows localhost probes cannot establish remote absence. An
 open-session real-data witness and truthful delayed/closed/unavailable labels
 are required; existing five-second polling is not native tick push. Then
