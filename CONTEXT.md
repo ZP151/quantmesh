@@ -48,20 +48,23 @@ OpenD reachability and entitlements for AAPL/NVDA, followed by prediction
 venues and trusted history. See `docs/ITERATION_PLAN.md` for delivery order.
 
 As of 2026-09-23, the active private host is `quantmesh-staging-8gb` at
-`https://quantmesh-staging-8gb.tail99d23c.ts.net`, running merged `33aa0521`.
+`https://quantmesh-staging-8gb.tail99d23c.ts.net`, running merged `db3d18f` (PR #161).
 Migration restore, short smoke, BTC/ETH/SOL charts and controlled restart
 passed; the old service is stopped and retained for rollback (PR #159).
 Iteration 0036's 24-hour observation and remaining operational drills belong
 to later acceptance, not a prerequisite to development, per the user's latest
 instruction. Iteration 0037 is the active product slice: quote-only Moomoo
 readiness, SDK subscription, typed diagnostics and a bounded worker. Private
-OpenD now has a private loopback SSH route and actual AAPL/NVDA source-time
-progression evidence from an isolated AWS candidate on 2026-09-23. The running
-site still uses `33aa0521`; equity candle delivery and browser acceptance are
-open. The polling repair includes quote-only connect, TICKER registration,
-Linux worker startup and an optional deployment profile for the locked SDK.
-The user has now restored CI and authorized checked merge/private deployment;
-actual release evidence is still required. Live execution remains disabled.
+OpenD now has a private loopback SSH route. PR #161 passed full CI and was
+squash-merged/deployed as `db3d18f` on 2026-09-23 UTC. Exact build, 18 smoke
+checks and real BTC/ETH/SOL/AAPL/NVDA source-time progression pass with paper
+mode enabled and live execution disabled. Browser acceptance found that the
+shared Markets/Watchlist table ignored Moomoo metrics.last. A bounded display
+follow-up now shows Last trade and its source time without creating bid/ask or
+order authority; local frontend verification and independent review pass, with
+follow-up CI/private deployment still pending. Source-backed equity minute
+candles and full chart acceptance remain the next separate slice. The Windows
+OpenD process and private reverse SSH tunnel must remain running.
 
 ## Bounded context
 

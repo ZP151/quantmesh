@@ -1,14 +1,15 @@
 # Iteration 0037 — Private Moomoo/OpenD AAPL/NVDA readiness
 
 - Status: ACTIVE, 2026-09-23. The local readiness repair is implemented,
-  reviewed and verified. Live polling follow-up and real equity acceptance
-  remain open; 8 GB observation stays in later operational acceptance.
+  reviewed, merged and deployed through PR #161. Live equity API acceptance
+  passes; list-price rendering and full equity charts remain open. The 8 GB
+  observation stays in later operational acceptance.
 - Linked issue: [#156 — Private Moomoo/OpenD AAPL/NVDA readiness](https://github.com/ZP151/quantmesh/issues/156).
 - Plan: [Moomoo readiness probe plan](../superpowers/plans/2026-09-23-moomoo-readiness-probe.md).
 - Operator steps: [private readiness runbook](../runbooks/moomoo-readiness.md).
 - Later operational acceptance: [iteration 0036](0036-staging-recovery.md).
   The user explicitly deferred observation/drills so development can proceed.
-  CI remains paused; no remote integration or deployment occurs in this slice.
+  The user restored CI and authorized checked merge/private deployment.
 
 ## User action and measurable outcome
 
@@ -264,3 +265,62 @@ iteration 0036 for later operational acceptance, without blocking development.
 - **Release authority:** the user explicitly restored CI and authorized merge
   and private deployment after checks pass. PR #161 is the reviewed release;
   the equity candle/chart acceptance and deferred 8 GB soak remain open.
+
+## PR #161 deployment and list-display follow-up — 2026-09-23 UTC
+
+- **Verifier:** CI [35887627930](https://github.com/ZP151/quantmesh/actions/runs/35887627930)
+  passes on `e2891109ef73807888fd1846dc58f9968e02918e`: Python **3591 passed,
+  56 skipped**, frontend **365 passed**, plus type/lint/audit/bundle gates.
+  Both actionable inline threads were resolved before normal squash merge.
+- **Release:** [PR #161](https://github.com/ZP151/quantmesh/pull/161) merged at
+  17:16:49 UTC as `db3d18fdb5a241826c7276760af59a49c2fc679d`. Candidate and
+  merge share tree `9cb96e7babdfa44f50363a2e74e7da17da1480ca`. The audited
+  release tool activated that exact commit on the private 8 GB host with the
+  optional Moomoo profile. `33aa0521` remains retained for rollback.
+- **API acceptance:** exact health/build, paper=true/live=false, **18 smoke
+  checks** and four samples of progressing real BTC/ETH/SOL/AAPL/NVDA source
+  clocks pass. `output/0037-deployed-market-witness.json` contains metadata.
+  A prior final-candidate local sample ran 306 seconds with 180 frames and
+  3155 accepted updates, with no polling error.
+- **Browser finding:** Markets and Watchlist now list both equities as Real,
+  but price, time and age cells are blank. Their shared `LiveMarketList` reads
+  only `kinds.quote`; Moomoo intentionally supplies `metrics.last`, without
+  bid/ask. This blocks visible quote-list acceptance despite valid live APIs.
+- **Planner/Product:** keep issue #156 and fix only this display loop: both
+  lists render the existing metrics last price and its own source time/age,
+  explicitly distinguish Last trade from Quote price, retain degradation and
+  disconnect labels, and keep chart links. No fabricated bid/ask, order fences,
+  provider changes, new libraries or full chart work in this repair.
+- **Quant Researcher:** the numeric last is an observed trade-price metric,
+  never a spread midpoint or executable quote. Preserve provider source times;
+  data freshness is not trading authority. Keep invalid numbers unavailable.
+- **Implementation/verification plan:** add failing shared-surface regressions
+  in `frontend/src/screens/Markets.test.tsx` for metrics snapshots, streamed
+  revisions, source clocks/age, invalid numbers and disconnects. Change only
+  `components/live-market-list.tsx`, localized messages and the generated bundle.
+  Run focused red/green, full frontend gates and the Python asset check, then
+  independent bounded review and CI before the follow-up merge/deployment.
+  Actual page prices must be verified after that deployment; no completed
+  equity chart claim is implied by this checkpoint.
+
+- **Implementer:** the table now prefers existing quote prices, otherwise uses
+  a finite positive metrics.last. It labels Quote price / Last trade and reads
+  the selected observation's source clock/age. Invalid values remain absent;
+  disconnect/stale labels and chart links remain intact. No order gate changed.
+- **Verifier:** the first metrics-only regressions failed on both surfaces
+  (2 failed/18 passed) before implementation. Final full frontend verification
+  passes **379 tests across 29 files**, typecheck and ESLint (four pre-existing
+  fast-refresh warnings). Build and `tools/build_frontend.py --check` pass;
+  Python security/identity asset checks pass **27 tests**. Whole-tree Ruff,
+  whitespace and submodule-pin inspection pass. Backend source is unchanged
+  from the fully verified PR #161; follow-up CI still gates release.
+- **Reviewer:** independent list_price_review reports no actionable P1/P2
+  findings against origin/main db3d18f. It reviewed scope, source-clock
+  selection, disconnect semantics, non-executable last prices and both pages.
+- **Candidate UI evidence:** local Vite preview uses the real private AWS API
+  and WebSocket with TLS verification. Markets shows AAPL 336.88 / NVDA 224.43
+  as Last trade, Real, with source time 17:29:29 UTC and bounded age. Crypto
+  rows retain Quote price. Watchlist shows the same typed price/time surface.
+  The actual AWS BTC chart was separately inspected at db3d18f: Live proven,
+  observed minute OHLCV and real source. This local preview does not claim the
+  display follow-up is deployed or that stock full charts exist.

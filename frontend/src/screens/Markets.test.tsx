@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { api, type MarketUpdate } from '@/lib/api'
@@ -36,6 +36,41 @@ for (const [name, Component] of [['Markets', MarketsScreen], ['Watchlist', Watch
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(<QueryClientProvider client={client}><PreferencesProvider><MemoryRouter><Component /></MemoryRouter></PreferencesProvider></QueryClientProvider>)
   }
+
+  it(`${name} displays metrics-only equity last prices with their source clock and follows updates`, async () => {
+    vi.mocked(api.markets).mockResolvedValue({ instruments: ['AAPL', 'NVDA'].map(symbol => ({ venue: 'moomoo', symbol, mark: null })) })
+    vi.mocked(api.liveState).mockResolvedValue({ generated_at: at, instruments: Object.fromEntries(['AAPL', 'NVDA'].map(symbol => [`moomoo:${symbol}`, {
+      venue: 'moomoo', instrument: symbol, label: 'real', kinds: { metrics: { kind: 'metrics', provenance: 'real', data_time: at, received_at: at, age_ms: 500, sequence: null, sequence_gap: false, label: 'real', payload: { last: symbol === 'AAPL' ? 336.81 : 224.67, volume: 1000 } } },
+    }])) })
+    renderSurface()
+    const link = await screen.findByRole('link', { name: 'AAPL' })
+    expect(link).toHaveAttribute('href', '/instruments/moomoo/AAPL?range=1d&mode=line')
+    const row = link.closest('tr')!
+    await waitFor(() => expect(within(row).getByText('Real')).toBeInTheDocument())
+    expect(within(row).getByText('$336.81')).toBeInTheDocument()
+    expect(screen.getByText('$224.67')).toBeInTheDocument()
+    expect(within(row).getByText('Last trade')).toBeInTheDocument()
+    expect(within(row).getAllByRole('cell')[5]).toHaveTextContent(/^\d+ (ms|s)$/)
+    expect(row.querySelector('time')).toHaveAttribute('datetime', at)
+    const next = '2026-09-12T12:00:06Z'
+    act(() => publish({ venue: 'moomoo', instrument: 'AAPL', kind: 'metrics', provenance: 'real', data_time: next, received_at: next, sequence: null, sequence_gap: false, payload: { last: 337.25, volume: 1020 }, state: null, state_note: null }))
+    await waitFor(() => expect(within(row).getByText('$337.25')).toBeInTheDocument())
+    expect(row.querySelector('time')).toHaveAttribute('datetime', next)
+    act(() => publish({ venue: 'moomoo', instrument: 'AAPL', kind: 'status', provenance: 'unavailable', data_time: next, received_at: next, sequence: null, sequence_gap: false, payload: {}, state: 'disconnected', state_note: 'connection lost' }))
+    await waitFor(() => expect(within(row).getByText('Unavailable')).toBeInTheDocument())
+    expect(within(row).getByText('$337.25')).toBeInTheDocument()
+  })
+
+  it.each([null, '336.81', Number.NaN, Number.POSITIVE_INFINITY, 0, -1])(`${name} never formats invalid metrics last %s as a price`, async last => {
+    vi.mocked(api.markets).mockResolvedValue({ instruments: [{ venue: 'moomoo', symbol: 'AAPL', mark: null }] })
+    vi.mocked(api.liveState).mockResolvedValue({ generated_at: at, instruments: { 'moomoo:AAPL': {
+      venue: 'moomoo', instrument: 'AAPL', label: 'stale', kinds: { metrics: { kind: 'metrics', provenance: 'real', data_time: at, received_at: at, age_ms: 100_000, sequence: null, sequence_gap: false, label: 'stale', payload: { last } } },
+    } } })
+    renderSurface()
+    const row = (await screen.findByRole('link', { name: 'AAPL' })).closest('tr')!
+    await waitFor(() => expect(within(row).getByText('Stale')).toBeInTheDocument())
+    expect(within(row).queryByText(/\$/)).not.toBeInTheDocument()
+  })
 
   it(`${name} keeps configured chart links before any source observation`, async () => {
     vi.mocked(api.liveState).mockResolvedValue({ generated_at: at, instruments: {} })

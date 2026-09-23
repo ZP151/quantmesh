@@ -43,18 +43,24 @@ export function LiveMarketList() {
     {rows.length === 0 ? <p className="py-6 text-sm text-muted-foreground">{t('liveMarkets.empty')}</p> : <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead><tr className="border-b border-border text-left text-xs text-muted-foreground">
-          {(['table.symbol', 'table.venue', 'liveMarkets.mid', 'liveMarkets.state', 'liveMarkets.event', 'liveMarkets.age'] as const).map(key => <th key={key} className="px-3 py-2 font-medium first:pl-0">{t(key)}</th>)}
+          {(['table.symbol', 'table.venue', 'liveMarkets.price', 'liveMarkets.state', 'liveMarkets.event', 'liveMarkets.age'] as const).map(key => <th key={key} className="px-3 py-2 font-medium first:pl-0">{t(key)}</th>)}
         </tr></thead>
         <tbody>{rows.map(([key, row]) => {
           const quote = row.kinds.quote
+          const quotePrice = midOf(quoteNumbers(quote))
+          const last = row.kinds.metrics?.payload.last
+          const lastPrice = typeof last === 'number' && Number.isFinite(last) && last > 0 ? last : undefined
+          // A displayed last trade is not a bid/ask quote or order authority.
+          const price = quotePrice ?? lastPrice
+          const source = quotePrice !== undefined ? quote : row.kinds.metrics
           const label = instrumentLabel(row)
           return <tr key={key} className="border-b border-border/60">
             <td className="py-3 pr-3 font-mono font-medium"><Link className="underline-offset-4 hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" to={`${instrumentPath(row.venue, row.instrument)}?range=1d&mode=line`}>{row.instrument}</Link></td>
             <td className="px-3 py-3 text-xs">{row.venue}</td>
-            <td className="px-3 py-3 font-mono tabular-nums">{money(midOf(quoteNumbers(quote)), locale)}</td>
+            <td className="px-3 py-3 tabular-nums"><span className="font-mono">{money(price, locale)}</span>{price !== undefined && <span className="block text-xs text-muted-foreground">{t(quotePrice !== undefined ? 'liveMarkets.quotePrice' : 'liveMarkets.lastTrade')}</span>}</td>
             <td className="px-3 py-3"><Badge className={labelTone(label)}>{t(LABEL_TEXT[label])}</Badge></td>
-            <td className="whitespace-nowrap px-3 py-3 font-mono text-xs">{quote ? <time dateTime={quote.data_time} title={dateTime(quote.data_time, locale)}>{timeOfDay(quote.data_time)}</time> : '—'}</td>
-            <td className="whitespace-nowrap px-3 py-3 font-mono text-xs">{quote ? ageText(quote.age_ms, locale) : '—'}</td>
+            <td className="whitespace-nowrap px-3 py-3 font-mono text-xs">{source ? <time dateTime={source.data_time} title={dateTime(source.data_time, locale)}>{timeOfDay(source.data_time)}</time> : '—'}</td>
+            <td className="whitespace-nowrap px-3 py-3 font-mono text-xs">{source ? ageText(source.age_ms, locale) : '—'}</td>
           </tr>
         })}</tbody>
       </table>
