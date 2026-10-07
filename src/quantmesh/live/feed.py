@@ -403,8 +403,9 @@ class LiveFeed:
         kind: UpdateKind,
         *,
         clock: Callable[[], datetime],
+        fallback_kind: UpdateKind | None = None,
     ) -> tuple[datetime, ExactUpdateSnapshot | None]:
-        """Sample a request clock and detach its quote/proof before another ingest.
+        """Sample a request clock and detach its preferred observation/proof atomically.
 
         The clock must be a quick, side-effect-free local read. The lock is released before the
         caller performs history, account or other potentially blocking work.
@@ -412,7 +413,10 @@ class LiveFeed:
         """
         with self._lock:
             as_of = clock()
-            return as_of, self.snapshot_exact(venue, instrument, kind, as_of=as_of)
+            snapshot = self.snapshot_exact(venue, instrument, kind, as_of=as_of)
+            if snapshot is None and fallback_kind is not None:
+                snapshot = self.snapshot_exact(venue, instrument, fallback_kind, as_of=as_of)
+            return as_of, snapshot
 
     def snapshot_exact(
         self,

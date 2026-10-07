@@ -234,3 +234,12 @@ After checked release and four-entry/reload acceptance, proceed to the user's
 requested OpenD self-start and private tunnel recovery. Account authentication
 remains handled in the vendor UI, no password storage or disclosure. The
 old capacity/shutdown and migration PR159 remain outside the product slice.
+
+PR #163 first-head CI37655740964 failed the frontend dependency audit before
+tests. The release gate is retained. Bounded dependency remediation now passes
+the high/critical audit and isolated frontend checks; two automated correctness
+findings were reproduced and fixed (reconnect dedupe, atomic metrics capture),
+with 123 affected tests green. The running broad Python job started before
+these corrective changes and reads this mutable worktree; its result must be
+reported with that limitation. Final new-head CI must verify the complete
+candidate. AWS remains c8e1813 until checked merge and exact deployment.

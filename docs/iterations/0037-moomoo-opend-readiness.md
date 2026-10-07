@@ -429,3 +429,45 @@ iteration 0036 for later operational acceptance, without blocking development.
   closes. Fresh metrics-only headers show real source clocks with evidence
   limitations, not a false stale claim. Paper proposal remains disabled.
   Final AWS acceptance must repeat these paths on the precise merged build.
+
+## PR #163 corrective release checkpoint — October 8 Singapore
+
+- **Verifier:** candidate `88232ff` opened PR #163. CI37655740964 failed at
+  npm's high-severity dependency audit before tests ran: 18 findings, including
+  10 high and 3 critical. Do not disable or bypass this gate; bounded dependency
+  remediation is part of this release because it directly blocks acceptance.
+- **Reviewer/Planner:** automated inline feedback identified two bounded
+  correctness defects, not a new product scope. Disconnect cleared the last
+  candle fingerprint and replayed three unchanged sample bars; the metrics
+  fallback ran outside the request-clock capture and could expose a later
+  receipt/price. Both were reproduced. An initial reconnect regression used an
+  incorrect drain method; after correcting that test fixture, the unchanged
+  window assertion itself failed as required (`0037-minute-reconnect-red.log`).
+- **Implementer:** keep the last source fingerprint across transient reconnects
+  while preserving the existing continuity barrier. Capture the preferred
+  QUOTE or fallback METRICS inside one feed lock with the request timestamp.
+  No quote priority, private rights or execution authority changes.
+- **Verifier:** five affected files passed **123 tests / 6 warnings**, including
+  both new regressions and existing snapshot/continuity/proposal guards.
+  Evidence: `output/0037-minute-review-red.log`,
+  `output/0037-minute-reconnect-red.log`, `output/0037-minute-review-green.log`.
+  The already-running broad Python suite remains in progress; its start
+  predates these changes. Final head CI must cover the complete candidate.
+- **Dependency reviewer/verifier:** isolated clean npm installation keeps the
+  final lock unchanged and the mandatory audit passes with zero high/critical
+  findings (two moderate Vitest findings remain). Remove the unused shadcn CLI
+  closure while retaining its exact stylesheet and full MIT notice. Compatible
+  transitive updates and a Vitest-only tinypool 2.1.2 override retain all direct
+  build-package versions. The unchanged license policy accepts 362 packages,
+  down from 646 after removing 284 CLI-closure entries. The inventory-count
+  regression was updated to the actual smaller lock; asset/security checks
+  pass **27 tests / 2 warnings**. No audit threshold or license gate changed.
+- **Frontend verifier:** the isolated new dependency closure passes **380
+  tests**, typecheck, lint (four existing warnings) and generated API identity.
+  Its build succeeds, but Tailwind's ignored sandbox scan context differs from
+  the actual frontend. Do not publish that sandbox bundle. Canonical build and
+  bundle check at the actual frontend root pass using the existing shared
+  dependency junction; direct build versions are identical and the committed
+  bundle remains byte-identical. The shared junction/other project is untouched.
+  Evidence: `output/0037-minute-npm-*.log`, `0037-minute-npm-audit-final.json`,
+  `0037-minute-audit-bundle-{build,check}.log` and `0037-minute-audit-assets.log`.

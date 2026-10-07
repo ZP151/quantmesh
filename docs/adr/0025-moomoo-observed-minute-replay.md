@@ -14,8 +14,11 @@ not a claim about every vendor interval or market. Validate OHLCV, ordering and
 the pinned XNYS schedule including holidays, DST and early closes.
 
 Polls admit only a changed latest minute or subsequent intervals after the
-initial bounded window. Unchanged cached reads do not produce events. Older
-late corrections do not rewind the current stream; full historical correction
+initial bounded window. Unchanged cached reads do not produce events.
+Last-source fingerprints survive transient disconnects; the existing status
+barrier breaks continuity without replaying an unchanged provider window.
+This deduplication lasts for the supervisor's lifetime, not across process restarts.
+Older late corrections do not rewind the current stream; full historical correction
 ingestion remains a separate qualified-history capability. Sequences describe
 local observation order and are explicitly labelled as such. Exact interval
 adjacency proves a displayed segment; missing minutes, disconnects and session
@@ -30,7 +33,9 @@ unadjusted prices and `moomoo-private-market-data` license. This coverage is not
 a public redistributable dataset or qualified forecast training history.
 
 Show metrics.last when no QUOTE exists, with source clock/age and degraded,
-non-executable evidence. Bid/ask depth remains absent and the existing paper
+non-executable evidence. QUOTE-or-METRICS and the request clock are detached
+under the same feed lock, before account/history work or another ingest.
+Bid/ask depth remains absent and the existing paper
 confirmation and live execution fences remain closed. Fresh data with depth
 limitations is not labelled stale merely because execution is blocked.
 

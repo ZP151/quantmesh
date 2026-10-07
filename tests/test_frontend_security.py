@@ -28,7 +28,7 @@ def test_frozen_frontend_lock_has_only_allowed_licenses() -> None:
 
     inventory = review.review_lock_document(document)
 
-    assert len(inventory) == 646
+    assert len(inventory) == 362
     assert inventory["node_modules/react"]["license"] == "MIT"
 
 

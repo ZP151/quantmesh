@@ -96,6 +96,34 @@ def test_gap_is_not_filled_and_old_revision_cannot_rewind_latest():
     assert [u.data_time.minute for u in gap] == [6, 7]
 
 
+def test_reconnect_does_not_reemit_cached_window_but_keeps_continuity_barrier():
+    s = supervisor()
+    feed = LiveFeed()
+    initial = s.dispatch({"kind": "current_kline", "payload": window()}, NOW)
+    feed.ingest(initial)
+    s.on_disconnect(NOW + timedelta(seconds=1))
+    feed.ingest(s.drain())
+    assert (
+        s.dispatch({"kind": "current_kline", "payload": window()}, NOW + timedelta(seconds=5)) == []
+    )
+    revised = window()
+    revised["rows"][-1]["close"] = 102
+    changed = s.dispatch({"kind": "current_kline", "payload": revised}, NOW + timedelta(seconds=6))
+    assert len(changed) == 1
+    assert changed[0].sequence > initial[-1].sequence
+    feed.ingest(changed)
+    snapshot = feed.snapshot_exact(
+        Venue.MOOMOO, "AAPL", UpdateKind.CANDLE, as_of=NOW + timedelta(seconds=6)
+    )
+    assert not snapshot.continuity_proven
+    appended = s.dispatch(
+        {"kind": "current_kline", "payload": window(("10:04:00",))},
+        NOW + timedelta(minutes=1),
+    )
+    assert len(appended) == 1
+    assert appended[0].data_time == NOW.replace(minute=3, second=0)
+
+
 def test_candle_polling_is_opt_in_and_bounded():
     class Client:
         def probe_market_data(self):

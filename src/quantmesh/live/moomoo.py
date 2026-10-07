@@ -391,7 +391,8 @@ class MoomooVenueSupervisor(VenueSupervisor):
 
     def on_disconnect(self, now: datetime) -> list[GapFinding]:
         self._seen_sequences = {}
-        self._latest_candles = {}
+        # Preserve the last source fingerprint across transient reconnects.
+        # The status barrier breaks continuity without duplicating cached bars.
         # stop the poll task while the pump is out — otherwise it would
         # keep streaming frames into a wire the supervisor no longer
         # drains, and the reconnect's connect() would double-poll behind

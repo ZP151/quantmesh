@@ -357,12 +357,8 @@ class InstrumentWorkspaceService:
             generated_at, live_snapshot = self._now(), None
         else:
             generated_at, live_snapshot = self._live_feed.capture_exact(
-                venue, symbol, UpdateKind.QUOTE, clock=self._now
+                venue, symbol, UpdateKind.QUOTE, clock=self._now, fallback_kind=UpdateKind.METRICS
             )
-            if live_snapshot is None:
-                live_snapshot = self._live_feed.snapshot_exact(
-                    venue, symbol, UpdateKind.METRICS, as_of=generated_at
-                )
         if generated_at.tzinfo is None:
             raise ValueError("workspace clock must be timezone-aware")
         generated_at = generated_at.astimezone(UTC)

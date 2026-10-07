@@ -211,6 +211,48 @@ def test_workspace_quote_retains_priority_over_metrics_last(tmp_path):
     assert response.json()["live"]["last"] == 105
 
 
+def test_workspace_metrics_fallback_is_captured_before_competing_ingest(tmp_path, monkeypatch):
+    feed = LiveFeed()
+    earlier = MarketUpdate(
+        venue=Venue.MOOMOO,
+        instrument="NVDA",
+        kind=UpdateKind.METRICS,
+        provenance=Provenance.REAL,
+        data_time=NOW - timedelta(seconds=2),
+        received_at=NOW - timedelta(seconds=1),
+        sequence=1,
+        payload={"last": 105.5},
+    )
+    feed.ingest([earlier])
+    capture = feed.capture_exact
+
+    def capture_then_ingest(*args, **kwargs):
+        captured = capture(*args, **kwargs)
+        feed.ingest(
+            [
+                earlier.model_copy(
+                    update={
+                        "sequence": 2,
+                        "data_time": NOW + timedelta(seconds=1),
+                        "received_at": NOW + timedelta(seconds=1),
+                        "payload": {"last": 900},
+                    }
+                )
+            ]
+        )
+        return captured
+
+    monkeypatch.setattr(feed, "capture_exact", capture_then_ingest)
+    harness = _harness(tmp_path, live=feed)
+    with TestClient(harness.app) as client:
+        response = client.get("/api/instruments/moomoo/NVDA/workspace?range=6m")
+    body = response.json()
+    assert body["generated_at"] == NOW.isoformat().replace("+00:00", "Z")
+    assert body["live"]["last"] == 105.5
+    assert body["live"]["received_at"] == earlier.received_at.isoformat().replace("+00:00", "Z")
+    assert feed.snapshot_exact(Venue.MOOMOO, "NVDA", UpdateKind.METRICS, as_of=NOW).sequence == 2
+
+
 def test_metrics_payload_cannot_invent_workspace_bidask_depth(tmp_path):
     feed = LiveFeed()
     feed.ingest(
