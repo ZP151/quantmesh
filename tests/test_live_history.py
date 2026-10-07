@@ -426,9 +426,10 @@ def _history_pair(feed: LiveFeed, now: datetime, symbol: str = "BTC"):
 @pytest.mark.parametrize("interval,minutes", [("5m", 5), ("30m", 30)])
 @pytest.mark.parametrize("state", ["single", "gapped", "invalid", "valid"])
 def test_minute_replay_fallback_requires_usable_preferred_candidate(
-    tmp_path: Path, interval, minutes, state
+    tmp_path: Path, monkeypatch, interval, minutes, state
 ):
     anchor = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(seconds=2))
     with LiveBuffer(tmp_path / "replay") as buffer:
         feed = LiveFeed(lake=buffer)
         candidates = []
@@ -459,6 +460,9 @@ def test_minute_replay_fallback_requires_usable_preferred_candidate(
                 _production_candle("BTC", anchor, anchor + timedelta(seconds=1), 101),
             ]
         )
+        # Exercise the same retention sweep that the app's background tick can
+        # run before a slow CI request; replay must survive at the fixture clock.
+        feed.prune_if_due(anchor + timedelta(seconds=2))
         history, workspace = _history_pair(feed, anchor + timedelta(seconds=2))
         assert history.status_code == workspace.status_code == 200
         primary = history.json()["primary"]

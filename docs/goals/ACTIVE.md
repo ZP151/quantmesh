@@ -347,3 +347,18 @@ Final native suite after status-IO isolation passes31/31.88s, Ruff/diff green
 (output/0037-opend-startup/status-green.log/.exit). Two automated findings are
 covered by established-child and status-write regressions. Keep actual Startup
 installation pending final head CI. Windows-only changes need no AWS redeploy.
+
+Startup CI37685852546 completed at 21:49:39 UTC with 3676 passed, 87 skipped,
+one failure in the existing valid-30m replay fixture. The isolated case and
+34-test history file pass without a tick, but an explicit retention sweep
+reproduces deletion of all four September fixture rows and the same 404.
+Planner narrows this CI correction to test clock isolation: reuse the existing
+freeze_buffer_clock helper and explicitly run the actual retention sweep in
+all eight preferred/fallback cases. Retention and application code remain
+unchanged. The forced-sweep test first fails (retention-test-red.log/.exit);
+final targeted history/native verification and new-head CI precede installation.
+
+Verifier: corrected history/native two-file run passes65 / 40.31s, exit0
+(retention-and-native-green.log/.exit); whole-tree Ruff and diff checks pass.
+All eight replay candidates now run real retention at their fixture clock.
+Await the new exact-head full CI; no Startup files have been installed.

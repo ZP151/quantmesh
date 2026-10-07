@@ -90,6 +90,13 @@ and terminate only owned child processes when explicitly shutting itself down.
 
 ## Task 2 — Current-user installation and actual non-destructive witness
 
+CI37685852546 has one existing replay-fixture failure after 3676 passing tests.
+Before Task2, isolate that fixture's retention clock using freeze_buffer_clock
+and explicitly exercise the real sweep in its eight interval/state cases.
+The forced-sweep RED reproduces its 404; targeted history/native GREEN and
+the complete corrected-head CI must pass. This is test-only scope: no runtime
+retention or replay change, repeated full local suite, or new structural review.
+
 **Files:** same installer/runbook, `docs/goals/ACTIVE.md`, iteration0037;
 ignored reports under `output/0037-opend-startup/`.
 

@@ -631,3 +631,18 @@ iteration 0036 for later operational acceptance, without blocking development.
   authority or treat stale on-disk status as source availability. Resolve both
   automated threads only after publishing this tested correction; await final
   head CI before match-head merge and reviewed current-user installation.
+
+- **CI boundary correction / Planner:** CI37685852546 fails one existing
+  valid-30m replay fixture (3676 passed / 87 skipped / 8 warnings, 3050.69s).
+  Independent reproduction passes the original isolated case and all 34
+  history tests; forcing the actual retention sweep deletes its four old rows
+  and reproduces the exact 404. The request clock was fixed but retention's
+  wall clock was not. Scope is only fixture isolation, using the existing
+  freeze_buffer_clock helper plus an explicit sweep in all eight interval/state
+  cases. No production/history algorithm, retention policy or Windows script
+  changes; no third structural review is introduced for this test-only fix.
+  Forced-sweep RED is retained in output/0037-opend-startup/retention-test-red.log.
+- **CI correction verifier:** history plus native startup tests pass **65 /
+  40.31s**, exit0 (retention-and-native-green.log/.exit); whole-tree Ruff and
+  diff pass. The eight fixture combinations explicitly execute retention,
+  rather than suppressing it. New exact-head full CI remains the merge gate.
