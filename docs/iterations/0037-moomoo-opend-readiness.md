@@ -515,3 +515,40 @@ iteration 0036 for later operational acceptance, without blocking development.
   `output/0037-minute-license-{red,green}.log`,
   `0037-simplejson-license-evidence.json`, `0037-simplejson-wheel-review.json`.
   Full final-head CI remains required before release; no repeated local broad run.
+
+## Checked minute-chart release — October 8 Singapore
+
+- **Reviewer/Verifier:** final CI37672213223 completed successfully at 20:03 UTC
+  October 7: **3677 Python passed / 56 skipped / 8 warnings**, plus **380
+  frontend passed** and all audit/type/generated-API/build/lint gates. Both
+  automated correctness findings are resolved. Prior local failed broad results
+  remain documented; final exact-head CI supplies the complete green gate.
+- **Release:** normal match-head squash merged PR #163 at 20:08:37 UTC as
+  `69515b79d2bc67303bfef9dee660dbca9bef41e3`. Candidate `260571e` and merged
+  release have identical full tree `fa470ee5d8737f6822af30df79f85cdfb3f05e37`.
+  Both loopback 11111 endpoints and AWS service were verified, then the reviewed
+  deployment helper activated this exact build. Retained `c8e1813` provides
+  rollback. No admin merge, force push, public port or trading change.
+- **API acceptance:** exact build, paper=true/live=false and **18 smoke checks
+  pass**. BTC/ETH/SOL source times advance. AAPL/NVDA clocks remain near 20:00
+  UTC after regular-session close, with truthful stale/real-source labels.
+  The progression helper exits 1 for those two stocks' freshness/progression;
+  this is explicitly incomplete real-time acceptance, not passed by relabelling.
+- **Source/graph acceptance:** six bracketed samples compare supplier-before,
+  AWS workspace, supplier-after. Both 390-row histories have matching last
+  four closed OHLCV bars. Canonical final interval stays 19:59 UTC; source
+  raw end labels are retained. Helper exits 1: two appends unproven. Its initial
+  JSON strict-validation and missing adapter metadata mistakes were fixed in
+  the ignored verifier, with original error logs preserved.
+- **Operator loop:** actual AWS Markets and Watchlist each open AAPL/NVDA to
+  1D/Line/1m. AAPL reload retains the latest closes 336.74/336.69/336.67 at
+  19:57/58/59 UTC. Stock proposals remain disabled. Original BTC/ETH/SOL
+  chart tables display current observed minutes after the new deployment.
+  New revisions and two new minute boundaries await an actual open session.
+- **Evidence:** `output/0037-minute-ci37672213223-success.log`,
+  `0037-minute-deploy-69515b7.log/.exit`, `0037-deployed-market-witness.json`,
+  `0037-aws-minute-witness/witness.json`, `0037-aws-minute-browser.json`,
+  `0037-aws-aapl-minute-chart*.png`. No repeat deployment or full local suite.
+- **Next:** branch `codex/0037-opend-startup` starts from merged origin/main;
+  local main is preserved. Continue the user's requested startup/private
+  reconnect slice while market-session acceptance waits; defer capacity/drills.

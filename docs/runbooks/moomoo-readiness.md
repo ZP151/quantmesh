@@ -63,7 +63,8 @@ tailscale ssh ubuntu@quantmesh-staging-8gb -N -o ExitOnForwardFailure=yes -o Ser
 的验证链接。`tailscale ssh` 自动校验协调服务提供的主机密钥。不要禁用校验、
 修改 OpenD 为公网监听或为此新增公网防火墙规则。当前隧道未设为开机服务。
 
-AWS 当前运行版本没有安装 Moomoo SDK，也没有股票 watchlist。候选部署脚本的
+以下为最初候选部署步骤；当前 PR #163 已部署 SDK、股票 watchlist 和分钟图。
+部署脚本的
 `--live-market-data --moomoo-market-data` 组合会使用 `requirements-audit.txt`
 约束安装已有 `[moomoo]` extra，并设置 US AAPL/NVDA、回环端口和五秒轮询。
 默认仍不启用 Moomoo；`--activate-existing` 从保留版本恢复其原配置，不能混用
@@ -73,9 +74,9 @@ Linux SDK 在导入时需要真实用户目录；就绪 worker 会恢复被隔�
 标准 HOME 值，不传入凭据。供应商 SDK 仍会在用户目录生成其自身诊断日志；
 不要将这些原始日志直接上传或贴入对话。CLI JSON 仅输出脱敏报告。
 
-验收分开记录：本次 AWS 独立候选已证明报价、日线和两轮逐笔读取，源时间均
-推进；线上服务尚未应用候选。现有 equity poller 只提供指标/逐笔，完整走势图
-还需要真实 K 线接入，不能用报价通过代替图表验收。
+验收分开记录：最初 AWS 独立候选证明报价、日线和两轮逐笔读取；PR #161/#162
+随后完成真实源连通与列表显示。PR #163 已接入供应商常规时段真实分钟 K 线，
+不能用报价通过代替图表动态验收。
 
 ## 后续真实行情验收
 
@@ -88,3 +89,16 @@ Linux SDK 在导入时需要真实用户目录；就绪 worker 会恢复被隔�
 另行验收原有 BTC/ETH/SOL 路径。24 小时容量观察及恢复演练归入后续运维验收，
 不阻塞本地功能开发。2026-09-24（新加坡时间）用户已批准恢复 CI，
 检查全部通过后合并部署；仍须记录精确提交与实际部署/页面证据。
+
+## 2026-10-08 分钟图发布验收 / Minute-chart release acceptance
+
+Release `69515b7` (PR #163) is checked, merged and deployed. Both stocks now
+render actual provider minutes through Markets/Watchlist, with private source,
+observed coverage and local sequence labels. Closed-session OHLCV/reload and
+crypto regressions pass; actual open-session revisions/appends remain pending.
+
+在私有站点 Markets 或 Watchlist 点击 AAPL、NVDA，选择 1D 和 Line，可看到
+已采集的真实 1m 走线图。当前发布后验收发生在收盘之后；股票源时间停在收盘、
+年龄增长并显示 Stale 是正确行为。请勿把页面刷新时间当作行情源时间。
+下一常规开放时段仍需检查同一分钟修订、新分钟连续追加两次、刷新保留、与
+OpenD OHLCV 一致。OpenD 和私有隧道须保持运行；缺 bid/ask 时纸交易仍阻断。

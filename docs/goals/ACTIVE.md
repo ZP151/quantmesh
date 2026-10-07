@@ -6,8 +6,10 @@ active until the new host's sustained capacity gate is closed and the separate
 Moomoo/OpenD route is ready. PR #161 is now merged and deployed; its live API acceptance passes.
 PR #162 also passed CI and is deployed as `c8e1813`; API and list-page
 acceptance pass. Source-backed equity minute charts are implemented on
-`codex/0037-equity-minute-charts` and locally witnessed; full-suite/CI, merge,
-private deployment and final AWS chart acceptance remain pending. The user explicitly prioritized development and deferred observation
+`codex/0037-equity-minute-charts`, checked through PR #163 and deployed at
+`69515b79d2bc67303bfef9dee660dbca9bef41e3`. Four AWS equity entry paths and
+reload pass with supplier-matching closed bars; actual open-session revisions
+and two new minute boundaries remain pending after the market closed. The user explicitly prioritized development and deferred observation
 to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
 explicitly restored CI and authorized merge/private deployment after all checks pass.
 
@@ -15,8 +17,8 @@ explicitly restored CI and authorized merge/private deployment after all checks 
 
 The authoritative private origin is now
 `https://quantmesh-staging-8gb.tail99d23c.ts.net`, serving exact merged build
-`c8e1813c15d4837d8b0a7480ea376bbca5839161` after PR #162.
-Previous `db3d18f` remains retained for rollback. The original
+`69515b79d2bc67303bfef9dee660dbca9bef41e3` after PR #163.
+Previous `c8e1813` and `db3d18f` remain retained for rollback. The original
 migration checkpoint used retained rollback build `33aa0521`. The restored dataset passed archive
 hash, WAL recovery, JSON payload validation, 13-check read-only smoke, chart
 entry-path, and controlled restart checks. The host currently reports about
@@ -261,3 +263,39 @@ hashes; add only the exact 4.2.0 MIT-choice text exception. Safety/license
 regressions pass 29 tests, including unknown-version/changed-license refusals.
 No dependency pin, generic parser, threshold or CI gate changes. Await the next
 complete head CI before merge/deployment; AWS still serves c8e1813.
+
+## Checked minute-chart release — October 8 Singapore
+
+PR #163 is merged at 69515b79d2bc67303bfef9dee660dbca9bef41e3 (20:08:37 UTC
+October 7). Final CI37672213223 passed 3677 Python tests / 56 skipped and
+380 frontend tests; both automated review threads are resolved. Candidate
+260571e and merged release share tree fa470ee5d8737f6822af30df79f85cdfb3f05e37.
+Reviewed exact deployment succeeded; c8e1813 is retained for rollback. Do not
+merge or deploy #163 again. Local main remains preserved; subsequent work
+starts on codex/0037-opend-startup from origin/main.
+
+Exact build, paper=true/live=false and 18 smoke checks pass. BTC/ETH/SOL
+source clocks advance. Both stocks are closed/stale with source time near
+20:00 UTC; the five-symbol progression helper exits nonzero for those two
+stocks only. The minute witness has six source-bracketed samples: both
+390-row histories match recent closed provider OHLCV. It exits nonzero because
+two appends are unproven. This is a pending open-session acceptance gate,
+not a full live-chart success or a reason to roll back a healthy closed session.
+All four actual AWS Markets/Watchlist AAPL/NVDA entries, AAPL reload, disabled
+paper proposal and BTC/ETH/SOL chart regressions pass. Keep real-time revisions
+and two minute boundaries pending until the next regular session.
+
+Evidence: output/0037-minute-ci37672213223-success.log,
+0037-minute-deploy-69515b7.log/.exit, 0037-deployed-market-witness.json,
+0037-aws-minute-witness/witness.json, 0037-aws-minute-browser.json and
+0037-aws-aapl-minute-chart*.png. The ignored acceptance helper's initial
+strict-Python-vs-JSON and missing adapter metadata errors were corrected;
+retain their logs without treating them as product regressions.
+
+Continue the authorized OpenD self-start/private tunnel recovery slice while
+closed-session real-time acceptance waits. The installed vendor-signed GUI
+is 10.10.7008 at C:/Users/15492/AppData/Roaming/moomoo_OpenD/moomoo_OpenD.exe.
+No existing OpenD startup task or Run entry was found; only ChatGPT is in the
+current-user Startup folder. Keep OpenD and reverse tunnel session75590 alive.
+Do not read vendor credential files, change remembered-login settings, restart
+Windows, open public ingress or enable trading.
