@@ -54,6 +54,17 @@ creates one).
 | simplejson | MIT | metadata declares `MIT OR AFL-2.1`; QuantMesh selects the allowed MIT alternative |
 | tzdata | Apache-2.0 | the IANA timezone database under Apache-2.0 |
 
+For simplejson, the selected MIT alternative is limited to inspected versions
+4.1.1, 4.1.2 and the 4.2.0 text metadata `MIT OR AFL-2.1`. The
+[v4.2.0 upstream license](https://github.com/simplejson/simplejson/blob/v4.2.0/LICENSE.txt)
+and CPython 3.13 Linux/Windows wheels were checked on 2026-10-08. Both wheels'
+license files match that upstream text after newline normalization. Their
+SHA256 values match the PyPI registry: Linux
+`a104dace5beae2fcb0f524a0ef4cecf948aa73e4028764914b363bacd7b9b5d0`,
+Windows `ce6ccb058a94f41cec98057b758c0c8ca632a23c1e280bf98a1b18aeadb88549`.
+This exact-version classification does not change the pinned release closure,
+generic SPDX parser or treatment of uninspected versions/other declarations.
+
 ## Security toolchain (outside the release closure)
 
 The advisory scanner is not part of the release install. It runs in a

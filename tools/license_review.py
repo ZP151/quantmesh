@@ -117,6 +117,8 @@ LICENSE_EXPRESSION_EXCEPTIONS = {
 LICENSE_TEXT_EXCEPTIONS = {
     ("simplejson", "4.1.1", "MIT OR AFL-2.1"): "MIT",
     ("simplejson", "4.1.2", "MIT OR AFL-2.1"): "MIT",
+    # Inspected CPython 3.13 Linux/Windows wheels and upstream v4.2.0 license.
+    ("simplejson", "4.2.0", "MIT OR AFL-2.1"): "MIT",
 }
 
 # SPDX expressions sometimes carry a versioned form we do not model.

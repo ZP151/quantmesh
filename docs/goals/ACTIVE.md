@@ -252,3 +252,12 @@ to interval=1m, preserving the previous receipt clock elsewhere. The six-file
 affected suite now passes 162 tests, including every failed file and two new
 nonminute controls. Treat this as consolidated coverage plus targeted recovery,
 not a clean exact-head local full run. Await final new-head CI before release.
+
+Exact-head CI37664362155 completed with 3674 passed / 56 skipped / 2 failed;
+the historical regressions are resolved. Both remaining failures concern the
+installed simplejson 4.2.0 text license, previously inspected only at 4.1.x.
+The official tag license and Linux/Windows wheels were verified against registry
+hashes; add only the exact 4.2.0 MIT-choice text exception. Safety/license
+regressions pass 29 tests, including unknown-version/changed-license refusals.
+No dependency pin, generic parser, threshold or CI gate changes. Await the next
+complete head CI before merge/deployment; AWS still serves c8e1813.

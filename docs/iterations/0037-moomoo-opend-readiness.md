@@ -492,3 +492,26 @@ iteration 0036 for later operational acceptance, without blocking development.
   it is not a clean exact-head local full-run claim. Final new-head CI must
   exercise the complete candidate before match-head merge and AWS deployment.
   Do not start another hours-long local broad run without a new reason.
+
+## CI license-metadata recovery — October 8 Singapore
+
+- **Verifier:** CI37664362155 for `abf99ee` ran the precise candidate and
+  finished at 19:00:53 UTC October 7. All preceding gates passed; Python
+  reported **3674 passed / 56 skipped / 2 failed / 8 warnings**, after
+  3113.24 seconds. The only failures classify installed simplejson 4.2.0 as
+  unknown; the historical chart regressions now pass. Preserve actual logs in
+  `output/0037-minute-ci37664362155-failed.log`.
+- **Reviewer:** downloaded the CPython 3.13 Linux and Windows 4.2.0 wheels
+  without installing or changing ambient dependencies. Wheel hashes match the
+  PyPI registry; normalized bundled licenses exactly match upstream v4.2.0.
+  Both metadata files declare License=`MIT OR AFL-2.1`, with no
+  License-Expression field. Select the same MIT alternative as inspected
+  4.1.x, only for this exact package/version/text. Document hashes and source
+  in licenses.md. Do not broaden the generic parser or change dependency pins.
+- **Implementer/Verifier:** the exact-metadata regression first fails UNKNOWN;
+  add the single text exception. Both security files pass **29 tests**, with
+  negative controls for another package, uninspected version and GPL alternative.
+  Actual wheel metadata also classifies as the documented MIT choice. Evidence:
+  `output/0037-minute-license-{red,green}.log`,
+  `0037-simplejson-license-evidence.json`, `0037-simplejson-wheel-review.json`.
+  Full final-head CI remains required before release; no repeated local broad run.
