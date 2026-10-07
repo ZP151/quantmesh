@@ -56,6 +56,8 @@ runbook `docs/runbooks/moomoo-readiness.md` defines the precise route.
 3. Existing reverse listener: leave original tunnel alive; do not compete or kill.
 4. Tailscale offline/reauth: bounded wait and a redacted needs-user state; no retry storm.
 5. Rollback/uninstall: remove only owned startup/config files; never broad deletion.
+6. Auxiliary status-file locks/missing directory: preserve recovery/connection;
+   persistence cannot become a route-lifecycle dependency.
 
 ## Task 1 — Reviewed supervisor and reversible provisioning
 
@@ -83,7 +85,7 @@ and terminate only owned child processes when explicitly shutting itself down.
 - [x] Run the focused suite green, PowerShell AST parse for both scripts,
   whole-tree Ruff and `git diff --check`. Record native Windows evidence and
   platform-specific skipped tests separately from cross-platform coverage.
-- [ ] Independent spec/standards review, maximum two rounds; resolve executable
+- [x] Independent spec/standards review, maximum two rounds; resolve executable
   findings before installing startup persistence. Commit coherent green slice.
 
 ## Task 2 — Current-user installation and actual non-destructive witness
@@ -91,7 +93,7 @@ and terminate only owned child processes when explicitly shutting itself down.
 **Files:** same installer/runbook, `docs/goals/ACTIVE.md`, iteration0037;
 ignored reports under `output/0037-opend-startup/`.
 
-- [ ] Run `-Status` and `-Once -ObserveOnly` against actual existing processes;
+- [x] Run `-Status` and `-Once -ObserveOnly` against actual existing processes;
   exact local/remote listeners must be healthy before installation.
 - [ ] Install only the named current-user startup shortcut and owned helper
   files. Record target paths and digests; read shortcut back and verify exact

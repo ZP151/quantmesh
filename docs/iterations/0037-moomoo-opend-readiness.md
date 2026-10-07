@@ -611,3 +611,23 @@ iteration 0036 for later operational acceptance, without blocking development.
   check is removed without changing behavior. Logs: established-red.log,
   established-all-green.log, root-established-green.log/.exit and
   native-observe-final.json. Final independent second review/CI remain pending.
+
+- **Spec round2:** no executable P1/P2 at c416513. Established child lifetime
+  and replacement reset satisfy the plan; actual login/outage remain pending.
+- **Standards round2:** no executable P1/P2 at c416513. Independently runs the
+  related native 3-test regression successfully. Both axes remain separate.
+- **Automated supplement / Planner:** comments on old2348d76 reiterate the
+  already-fixed lifecycle defect and identify auxiliary status persistence
+  escaping into connection shutdown. Keep status IO best effort within the
+  current scope; it must never own route lifecycle. No third structural review
+  or architecture expansion. Missing-directory and antivirus-like locked-file
+  cases first fail with escape/owned-child stop; handle only persistence failure
+  inside Write-QmStatus, preserving its redacted output and existing state-change
+  emission rule. Final complete native affected checks and head CI remain gates.
+
+- **Final native verifier:** **31 passed / 31.88s**, exit0 after the status-IO
+  fix, plus Ruff/diff green. Logs status-red.log (2 failed) and
+  status-green.log/.exit. The new safeguard does not change route/process
+  authority or treat stale on-disk status as source availability. Resolve both
+  automated threads only after publishing this tested correction; await final
+  head CI before match-head merge and reviewed current-user installation.

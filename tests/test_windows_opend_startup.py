@@ -490,3 +490,39 @@ $e=Invoke-QmRecoveryStep $state 'fake' 'fake' 211
         "stops": 1,
         "cleared": True,
     }
+
+
+@pytest.mark.parametrize("failure", ["missing_directory", "locked_destination"])
+def test_status_file_failure_does_not_escape_and_stop_recovery(
+    tmp_path: Path, failure: str
+) -> None:
+    root = str(tmp_path).replace("'", "''")
+    result = ps(
+        f"""
+$script:stops=0
+$state=New-QmRecoveryState
+$child=[pscustomobject]@{{HasExited=$false}}
+$child | Add-Member -MemberType ScriptMethod -Name Kill -Value {{
+ $script:stops++; $this.HasExited=$true
+}}
+$state.Child=$child; $state.ChildEstablished=$true
+$directory=Join-Path '{root}' 'status'
+$lock=$null
+if ('{failure}' -eq 'locked_destination') {{
+ New-Item -ItemType Directory -Path $directory | Out-Null
+ $final=Join-Path $directory 'status.json'
+ $lock=[IO.File]::Open($final,[IO.FileMode]::OpenOrCreate,
+  [IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+}}
+$escaped=$false
+try {{
+ Write-QmStatus $state 'managed_private_tunnel' $directory | Out-Null
+}} catch {{
+ $escaped=$true
+ # The entrypoint closes its owned child if an exception escapes the loop.
+ $state.Child.Kill()
+}} finally {{ if ($null -ne $lock) {{ $lock.Dispose() }} }}
+@{{escaped=$escaped; stops=$stops; alive=(-not $child.HasExited)}} | ConvertTo-Json -Compress
+"""
+    )
+    assert result == {"escaped": False, "stops": 0, "alive": True}

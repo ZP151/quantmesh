@@ -333,3 +333,17 @@ launch; uncertain probes never trigger termination. The native affected suite
 passes29, root's targeted reset/transitions pass3, Ruff/diff pass, and actual
 ObserveOnly still returns existing_private_tunnel. Second review remains ahead
 of installation. Corrected CI must complete on the final pushed head.
+
+Final independent Spec/Standards round2 for c416513 has no P1/P2. GitHub's
+automated comments on old2348d76 reiterate the fixed lifecycle issue and add
+auxiliary status-file IO failure escaping recovery. Planner keeps this within
+the existing narrow boundary: status persistence is best effort and never a
+connection-control dependency. Missing-directory and locked-status native
+cases reproduce escape/child stop; catch only auxiliary persistence failures,
+without changing process/route authority. No third structural review or
+architecture expansion is opened; final CI/review-thread gates still apply.
+
+Final native suite after status-IO isolation passes31/31.88s, Ruff/diff green
+(output/0037-opend-startup/status-green.log/.exit). Two automated findings are
+covered by established-child and status-write regressions. Keep actual Startup
+installation pending final head CI. Windows-only changes need no AWS redeploy.

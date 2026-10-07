@@ -196,9 +196,15 @@ function Write-QmStatus($State, [string]$Label, [string]$Directory) {
     $json = $status | ConvertTo-Json -Compress
     Write-Output $json
     if ($Directory) {
-        $temporary = Join-Path $Directory 'status.tmp'
-        [IO.File]::WriteAllText($temporary, $json, (New-Object Text.UTF8Encoding($false)))
-        Move-Item -LiteralPath $temporary -Destination (Join-Path $Directory 'status.json') -Force
+        try {
+            $temporary = Join-Path $Directory 'status.tmp'
+            [IO.File]::WriteAllText($temporary, $json, (New-Object Text.UTF8Encoding($false)))
+            Move-Item -LiteralPath $temporary -Destination (Join-Path $Directory 'status.json') -Force -ErrorAction Stop
+        }
+        catch {
+            # Auxiliary persistence cannot stop recovery or an established route.
+            # The next state change can attempt to persist its own observation.
+        }
     }
 }
 
