@@ -281,7 +281,7 @@ stocks only. The minute witness has six source-bracketed samples: both
 390-row histories match recent closed provider OHLCV. It exits nonzero because
 two appends are unproven. This is a pending open-session acceptance gate,
 not a full live-chart success or a reason to roll back a healthy closed session.
-All four actual AWS Markets/Watchlist AAPL/NVDA entries, AAPL reload, disabled
+All four actual AWS Markets/Watchlist AAPL/NVDA entries, both stock reloads, disabled
 paper proposal and BTC/ETH/SOL chart regressions pass. Keep real-time revisions
 and two minute boundaries pending until the next regular session.
 
@@ -299,3 +299,19 @@ No existing OpenD startup task or Run entry was found; only ChatGPT is in the
 current-user Startup folder. Keep OpenD and reverse tunnel session75590 alive.
 Do not read vendor credential files, change remembered-login settings, restart
 Windows, open public ingress or enable trading.
+
+The startup plan is tracked at `docs/superpowers/plans/2026-10-08-opend-startup.md`.
+Fresh implementer `opend_startup` owns only Task1 scripts/native tests; root
+owns docs/verification. Independent review precedes persistent installation.
+Current-user execution policy remains RemoteSigned through LocalMachine, with
+no Process/User override; local generated files need no policy weakening.
+Actual next-logon/reconnect witness remains separate from installing files.
+
+Startup Task1 now has recovery/provisioning scripts plus 26 native Windows
+PowerShell 5.1 behavior tests. Root's isolated final run passes 26 in 27.23s,
+with whole-tree Ruff/diff clean. Default pytest temp cleanup hit an existing
+pytest-current permission error after the 26 test bodies; original log retained,
+then a fresh workspace-owned --basetemp run exits0. Do not delete global temp
+trees to work around it. Actual ObserveOnly exits0/existing_private_tunnel after
+repairing the Tailscale host-first argument order. Independent review and final
+CI remain ahead of installation; no startup configuration is installed yet.

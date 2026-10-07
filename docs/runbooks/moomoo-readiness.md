@@ -102,3 +102,27 @@ crypto regressions pass; actual open-session revisions/appends remain pending.
 年龄增长并显示 Stale 是正确行为。请勿把页面刷新时间当作行情源时间。
 下一常规开放时段仍需检查同一分钟修订、新分钟连续追加两次、刷新保留、与
 OpenD OHLCV 一致。OpenD 和私有隧道须保持运行；缺 bid/ask 时纸交易仍阻断。
+
+## Windows 登录后启动与私有重连候选
+
+`deploy/windows/opend_recovery.ps1` 复用现有 GUI 和同一条私有隧道。它不读取
+OpenD 配置、密码、账号、日志，也不修改供应商的 Remember Me/Auto Login。
+启动程序不能证明已登录或有实时权限；需要登录时由用户打开供应商界面完成。
+原生只读检查如下，不会启动或停止任何 GUI/隧道，也不写入状态目录：
+
+```powershell
+powershell.exe -NoProfile -NonInteractive -File deploy/windows/opend_recovery.ps1 -Once -ObserveOnly -OpenDPath C:/Users/15492/AppData/Roaming/moomoo_OpenD/moomoo_OpenD.exe -TailscalePath "C:/Program Files/Tailscale/tailscale.exe"
+powershell.exe -NoProfile -NonInteractive -File deploy/windows/install_opend_startup.ps1 -Status
+```
+
+候选当前只完成实现与原生隔离测试，尚未安装。独立审查及发布检查完成后，
+安装器只写当前用户 `%LOCALAPPDATA%/QuantMesh/OpenDRecovery` 和 Startup 中
+`QuantMesh OpenD Recovery.lnk`。不创建管理员服务、不改变执行策略或公网入口。
+已有 OpenD/隧道保留；远端监听状态无法确定时等待，避免重复创建转发。
+状态会区分 `needs_opend_login`、`needs_tailscale_or_ssh` 与实际已有的私有隧道。
+
+安装器 `-Uninstall` 只移除校验为本工具所有的项目。若 helper 正在运行，先
+移除登录启动快捷方式，返回 `startup_removed_cleanup_deferred` 并保留程序、
+状态和连接；停止后的再次卸载才清理其文件。拒绝修改外来文件/替换快捷方式/
+目录链接。下一次真实 Windows 登录与网络断线恢复仍须单独留证；本任务不
+重启 Windows、退出用户或切断现有源连接来制造验收结果。

@@ -542,7 +542,8 @@ iteration 0036 for later operational acceptance, without blocking development.
   the ignored verifier, with original error logs preserved.
 - **Operator loop:** actual AWS Markets and Watchlist each open AAPL/NVDA to
   1D/Line/1m. AAPL reload retains the latest closes 336.74/336.69/336.67 at
-  19:57/58/59 UTC. Stock proposals remain disabled. Original BTC/ETH/SOL
+  19:57/58/59 UTC; NVDA reload retains 237.5456/237.38/237.47 at the same
+  intervals. Stock proposals remain disabled. Original BTC/ETH/SOL
   chart tables display current observed minutes after the new deployment.
   New revisions and two new minute boundaries await an actual open session.
 - **Evidence:** `output/0037-minute-ci37672213223-success.log`,
@@ -552,3 +553,38 @@ iteration 0036 for later operational acceptance, without blocking development.
 - **Next:** branch `codex/0037-opend-startup` starts from merged origin/main;
   local main is preserved. Continue the user's requested startup/private
   reconnect slice while market-session acceptance waits; defer capacity/drills.
+
+## Startup slice intake — October 8 Singapore
+
+- **Planner:** use the existing interactive Windows user's startup folder and
+  installed GUI, with a singleton helper for the unchanged private SSH route.
+  Existing OpenD/tunnel are preserved. Exact plan:
+  `../superpowers/plans/2026-10-08-opend-startup.md`, under issue #156.
+- **Researcher:** existing executable is vendor-signed (Moomoo Technologies Inc.)
+  and version10.10.7008. No OpenD Run/task/Startup entry exists. Vendor official
+  GUI documentation exposes Remember Me/Auto Login; configuring or reading
+  stored authentication is excluded. Application startup does not establish
+  authentication, entitlement or open-session freshness.
+- **Implementer handoff:** fresh `opend_startup` agent owns only two Windows
+  scripts and isolated tests. No actual installation or process/tunnel mutations
+  until independent review. Root retains iteration/plan and native acceptance.
+  No global or process execution-policy bypass; current local RemoteSigned
+  permits local generated scripts. Do not touch unrelated maintenance tasks.
+
+- **Task1 verifier:** root's isolated final native PowerShell5.1 suite passes
+  **26 tests / 27.23 seconds**, whole-tree Ruff and diff checks pass. Initial
+  missing-behavior RED plus real boundary failures are retained. A default pytest
+  temporary-root cleanup raises an unrelated pytest-current permission error
+  after all 26 test bodies; retain that exit1 log, then use a fresh workspace-owned
+  --basetemp directory for a clean exit0. No global temp deletion or gate skip.
+- **Task1 corrections:** an alive owned SSH child cannot suppress recovery of
+  a dead GUI; active-helper uninstall removes only Startup and defers file
+  cleanup, preserving the connection. Unknown listener/child state does not
+  claim success; unestablished owned child gets a bounded startup timeout.
+  The first real ObserveOnly found a host-order error in the Tailscale wrapper,
+  fixed with a native fake-CLI argument test. Actual observation now exits0 as
+  `existing_private_tunnel`, without launching or stopping a source process.
+- **Ownership:** foreign files/shortcut and linked target directories fail
+  closed; cleanup is exact and nonrecursive. Test/observer reports live in
+  `output/0037-opend-startup/`. Independent review and final CI precede installing
+  the current-user startup shortcut; next-login/outage evidence remains pending.

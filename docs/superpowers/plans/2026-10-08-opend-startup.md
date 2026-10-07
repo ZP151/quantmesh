@@ -70,17 +70,17 @@ OpenD/Tailscale paths, owned target directory and a fixed shortcut name.
 The loop must bound connection/probe waits, emit status only when changed,
 and terminate only owned child processes when explicitly shutting itself down.
 
-- [ ] Write behavior tests first: duplicate helper is suppressed; already-running
+- [x] Write behavior tests first: duplicate helper is suppressed; already-running
   OpenD is not relaunched; absent port waits for login; existing remote listener
   avoids child launch; failed/unknown probe waits; owned child exit causes bounded
   retry; uninstall refuses foreign targets and preserves unrelated files/tasks.
   Mock OS process/socket boundaries without a vendor account or remote machine.
-- [ ] Run `python -m pytest tests/test_windows_opend_startup.py -q` red, ensuring
+- [x] Run `python -m pytest tests/test_windows_opend_startup.py -q` red, ensuring
   failures name missing recovery/provisioning behavior rather than fixture errors.
-- [ ] Implement only those states using native tools. Bind both endpoints to
+- [x] Implement only those states using native tools. Bind both endpoints to
   loopback. Use hidden child windows; never store or expose credentials, and
   never disable host-key verification. Respect existing SSH revalidation.
-- [ ] Run the focused suite green, PowerShell AST parse for both scripts,
+- [x] Run the focused suite green, PowerShell AST parse for both scripts,
   whole-tree Ruff and `git diff --check`. Record native Windows evidence and
   platform-specific skipped tests separately from cross-platform coverage.
 - [ ] Independent spec/standards review, maximum two rounds; resolve executable
