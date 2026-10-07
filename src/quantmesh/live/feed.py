@@ -182,7 +182,11 @@ _CLOCK_SKEW = timedelta(seconds=5)
 
 
 def _freshness_time(update: MarketUpdate) -> datetime:
-    if update.venue is Venue.MOOMOO and update.kind is UpdateKind.CANDLE:
+    if (
+        update.venue is Venue.MOOMOO
+        and update.kind is UpdateKind.CANDLE
+        and update.payload.get("interval") == "1m"
+    ):
         # OpenD returns cached windows: receipt cannot renew an old bar's age.
         value = update.payload.get("provider_end")
         if isinstance(value, str):

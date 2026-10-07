@@ -226,8 +226,8 @@ Execute the tracked `2026-10-08-moomoo-minute-charts.md` plan. SDK, polling,
 private replay and metrics-only workspace display are implemented, with source
 samples across two real minute boundaries. Independent review resolved the
 one mixed-watchlist compatibility finding; no trading authority changed.
-Full Python run is active (output/0037-minute-full-suite.log and .exit), with
-final affected reruns recorded separately. Never repeat the full run without a
+Full Python run completed (output/0037-minute-full-suite.log and .exit), with
+17 failures diagnosed and final affected reruns recorded separately. Never repeat the full run without a
 new failure/changed boundary. Existing reverse Tailscale SSH tunnel is running;
 keep it and user OpenD alive. AWS still serves c8e1813, not the candidate.
 After checked release and four-entry/reload acceptance, proceed to the user's
@@ -239,7 +239,16 @@ PR #163 first-head CI37655740964 failed the frontend dependency audit before
 tests. The release gate is retained. Bounded dependency remediation now passes
 the high/critical audit and isolated frontend checks; two automated correctness
 findings were reproduced and fixed (reconnect dedupe, atomic metrics capture),
-with 123 affected tests green. The running broad Python job started before
+with 123 affected tests green. The completed broad Python job started before
 these corrective changes and reads this mutable worktree; its result must be
 reported with that limitation. Final new-head CI must verify the complete
 candidate. AWS remains c8e1813 until checked merge and exact deployment.
+
+The broad run finished with 3649 passed / 61 skipped / 17 failed. One failure
+is the old in-memory 646-entry assertion against the corrected 362-entry lock.
+The other 16 exposed a real scope regression: the private 1m freshness clock
+also affected existing daily/other-interval Moomoo candles. Restrict the rule
+to interval=1m, preserving the previous receipt clock elsewhere. The six-file
+affected suite now passes 162 tests, including every failed file and two new
+nonminute controls. Treat this as consolidated coverage plus targeted recovery,
+not a clean exact-head local full run. Await final new-head CI before release.

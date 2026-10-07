@@ -24,10 +24,10 @@ local observation order and are explicitly labelled as such. Exact interval
 adjacency proves a displayed segment; missing minutes, disconnects and session
 boundaries reset it without inventing bars or exchange sequence continuity.
 
-Moomoo candle freshness uses min(provider end, receipt), validated against the
+Scoped Moomoo 1m candle freshness uses min(provider end, receipt), validated against the
 canonical start. Receiving a closed or cached old window cannot rejuvenate it.
 The optional live-tail lineage records this clock and raw vendor labels; other
-venues retain their existing receipt-based candle rules. History uses the
+venues and existing nonminute Moomoo intervals retain their receipt-based candle rules. History uses the
 bounded AAPL/NVDA 1D 5m->1m replay exception with exact observed coverage, XNYS,
 unadjusted prices and `moomoo-private-market-data` license. This coverage is not
 a public redistributable dataset or qualified forecast training history.

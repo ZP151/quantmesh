@@ -471,3 +471,24 @@ iteration 0036 for later operational acceptance, without blocking development.
   bundle remains byte-identical. The shared junction/other project is untouched.
   Evidence: `output/0037-minute-npm-*.log`, `0037-minute-npm-audit-final.json`,
   `0037-minute-audit-bundle-{build,check}.log` and `0037-minute-audit-assets.log`.
+
+## Broad-check recovery — October 8 Singapore
+
+- **Verifier:** the local broad run completed after 4961.88 seconds with
+  **3649 passed / 61 skipped / 17 failed / 8 warnings**. Its process began
+  before the corrective commits. One failure is the old collected 646-package
+  count against the new 362-package lock, already corrected and retested. The
+  other 16 are real historical API regressions, not dismissed as test timing.
+- **Planner/Implementer:** keep the original scope narrow. The private 1m
+  source clock inadvertently applied to all Moomoo candle intervals; restrict
+  it to `payload.interval == 1m`, keeping existing daily and other-period
+  receipt-clock semantics. No historical adapter or execution gate changes.
+- **Red/green:** two existing append cases and two new daily/5m clock controls
+  fail before this fix. The final six-file affected run passes **162 tests /
+  6 warnings**, including all historical API cases, private minute history,
+  feed continuity, workspace fences and license checks. Whole-tree Ruff and
+  diff checks pass. Evidence: `output/0037-minute-scope-{red,green}.log`.
+- **Release:** this is the original broad coverage plus verified recovery;
+  it is not a clean exact-head local full-run claim. Final new-head CI must
+  exercise the complete candidate before match-head merge and AWS deployment.
+  Do not start another hours-long local broad run without a new reason.

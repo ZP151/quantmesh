@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from quantmesh.domain.models import Venue
-from quantmesh.live.contract import UpdateKind
+from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
 from quantmesh.live.feed import LiveFeed, label
 from quantmesh.live.moomoo import MoomooVenueSupervisor, MoomooVenueTransport
 from quantmesh.moomoo.opend import OpenDCapabilities
@@ -94,6 +94,32 @@ def test_gap_is_not_filled_and_old_revision_cannot_rewind_latest():
         NOW + timedelta(minutes=5),
     )
     assert [u.data_time.minute for u in gap] == [6, 7]
+
+
+@pytest.mark.parametrize("interval", ["1d", "5m"])
+def test_existing_nonminute_equity_candles_keep_receipt_clock(interval):
+    update = MarketUpdate(
+        venue=Venue.MOOMOO,
+        instrument="NVDA",
+        kind=UpdateKind.CANDLE,
+        provenance=Provenance.REAL,
+        data_time=NOW - timedelta(days=1),
+        received_at=NOW - timedelta(seconds=1),
+        sequence=1,
+        payload={
+            "interval": interval,
+            "open": 100,
+            "high": 102,
+            "low": 99,
+            "close": 101,
+            "volume": 100,
+        },
+    )
+    feed = LiveFeed()
+    feed.ingest([update])
+    snapshot = feed.snapshot_exact(Venue.MOOMOO, "NVDA", UpdateKind.CANDLE, as_of=NOW)
+    assert snapshot.freshness_label == "real"
+    assert snapshot.age_ms == 1000
 
 
 def test_reconnect_does_not_reemit_cached_window_but_keeps_continuity_barrier():
