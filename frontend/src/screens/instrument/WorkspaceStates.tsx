@@ -33,12 +33,12 @@ export function WorkspaceError({
   )
 }
 
-export function WorkspaceDegraded({ rawReason, reason }: { rawReason?: string; reason: string }) {
+export function WorkspaceDegraded({ rawReason, reason, isStale = true }: { rawReason?: string; reason: string; isStale?: boolean }) {
   const { t } = usePreferences()
   return (
     <div className="border-l-2 border-amber-500 bg-amber-500/5 px-3 py-2" role="status">
       <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-        {t('screen.workspace.stale')}
+        {t(isStale ? 'screen.workspace.stale' : 'screen.workspace.limited')}
       </p>
       <p className="mt-1 text-xs text-muted-foreground" title={rawReason}>{reason}</p>
     </div>

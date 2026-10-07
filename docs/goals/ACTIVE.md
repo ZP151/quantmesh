@@ -1,11 +1,13 @@
 # Active Goal
 
-Status: iteration0037 ACTIVE, 2026-09-23. The 0035 AWS real-chart acceptance
+Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance
 and the 8 GB migration's short acceptance are complete; this goal remains
 active until the new host's sustained capacity gate is closed and the separate
 Moomoo/OpenD route is ready. PR #161 is now merged and deployed; its live API acceptance passes.
 PR #162 also passed CI and is deployed as `c8e1813`; API and list-page
-acceptance pass. Full equity minute charts remain the next product slice. The user explicitly prioritized development and deferred observation
+acceptance pass. Source-backed equity minute charts are implemented on
+`codex/0037-equity-minute-charts` and locally witnessed; full-suite/CI, merge,
+private deployment and final AWS chart acceptance remain pending. The user explicitly prioritized development and deferred observation
 to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
 explicitly restored CI and authorized merge/private deployment after all checks pass.
 
@@ -216,3 +218,19 @@ Keep0021soak and issues135/132/127 independent. No public OpenD exposure, paid
 subscriptions, orders, strategy promotion or opportunistic maintenance changes.
 Standing reviewed merge/private-deployment authority remains in the user's
 request and .codex/prompts/goal.md; no further confirmation for this scope.
+
+
+## October 8 continuation
+
+Execute the tracked `2026-10-08-moomoo-minute-charts.md` plan. SDK, polling,
+private replay and metrics-only workspace display are implemented, with source
+samples across two real minute boundaries. Independent review resolved the
+one mixed-watchlist compatibility finding; no trading authority changed.
+Full Python run is active (output/0037-minute-full-suite.log and .exit), with
+final affected reruns recorded separately. Never repeat the full run without a
+new failure/changed boundary. Existing reverse Tailscale SSH tunnel is running;
+keep it and user OpenD alive. AWS still serves c8e1813, not the candidate.
+After checked release and four-entry/reload acceptance, proceed to the user's
+requested OpenD self-start and private tunnel recovery. Account authentication
+remains handled in the vendor UI, no password storage or disclosure. The
+old capacity/shutdown and migration PR159 remain outside the product slice.

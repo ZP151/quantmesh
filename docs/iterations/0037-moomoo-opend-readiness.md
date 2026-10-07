@@ -370,3 +370,62 @@ iteration 0036 for later operational acceptance, without blocking development.
   feasibility plan and raw timestamp samples are preserved in output; turn
   them into the next tracked slice plan before implementation. Keep the
   deferred capacity/shutdown issue and migration-evidence PR #159 separate.
+
+
+## Minute-chart development resume — 2026-10-08 Singapore
+
+- **Planner/Product:** continue issue #156 with the existing four Markets/
+  Watchlist AAPL/NVDA paths, 1D/Line, raw regular-session 1m candles. Success
+  means observed revisions/appends and reload retention with visible private
+  rights/coverage. Plan: `../superpowers/plans/2026-10-08-moomoo-minute-charts.md`.
+  Expansion prohibitions include other symbols/intervals, synthetic prices,
+  paid rights, public ingress and order capabilities.
+- **Quant Researcher:** vendor subscription defaults require explicit raw/RTH
+  settings. Prior end-label evidence remains narrowly scoped; the new actual
+  sample also retains raw labels. CalendarService filters regular sessions and
+  early closes; no cross-gap fill or inference of paid entitlement delay.
+  ADR0025 records source clocks, local sequence and private replay semantics.
+- **Implementers:** quote-only bounded current_kline and minute normalization;
+  opt-in 390-bar polling, changed/new-only events, honest cached-candle age;
+  exact Moomoo 1D private replay; metrics-only workspace display with existing
+  execution fences; updated generated API. The actual UI exposed an existing
+  generic stale heading for fresh depth-limited data, corrected with a distinct
+  limitation heading and regression. Existing chart components are reused.
+- **Red/green:** SDK/adapter first 53 failed/8 passed then 61 passed; live minute
+  boundary first 3 failed then 3 passed; workspace first 10 failed/6 passed,
+  strengthened four-file group passed 170 tests. Consolidated nine-file targeted group
+  passed 315 tests before review; review found unsupported symbols could kill
+  the optional poller, reproduced with a mixed AAPL/MSFT timeout. The guard
+  now calls scoped candles only for AAPL/NVDA; final affected group 25 passed.
+  UI limitation headline failed before the fix; final two-file group 37 passed.
+- **Reviewer:** correctness/spec review has no actionable P1/P2 findings.
+  Standards review's mixed-watchlist P2 is resolved and its bounded second
+  review has no new findings. Whole-tree Ruff and whitespace pass. Impeccable
+  mechanical scan reports no findings for the changed UI surface. Bundle and
+  generated-client checks pass. Full Python suite is running, not yet a release
+  acceptance claim; final frontend run passed 380 tests across 30 files.
+- **Actual local source witness:** five reads at 35-second spacing, 16:39:51 to
+  16:42:14 UTC October 7 (October 8 Singapore), both symbols show canonical
+  latest minutes 16:39, 16:40, 16:41, 16:42. Source-matching OHLCV, private
+  license and continuity-safe replay pass. Initial returned window has 390
+  rows, while the current contiguous chart segment grows 190 to 193; this
+  explicitly demonstrates bounded session coverage. Evidence:
+  `output/0037-minute-source-witness/witness.json` and its log. No account/order
+  API was called. This is candidate evidence, not deployed AWS chart acceptance.
+- **Operations:** initial private site health returned 502 while the existing
+  service repeatedly failed OpenD connects and its loopback listener was absent.
+  User reopened/logged in OpenD; root restored the previously approved reverse
+  SSH tunnel and exact c8e1813 health recovered without restarting/deploying.
+  User asks for later OpenD self-start. Add local logon startup and private
+  tunnel reconnection as the next bounded operational slice, verifying actual
+  vendor login restoration without storing account secrets. Capacity/shutdown
+  work and unrelated PR159 remain separate.
+- **Candidate browser witness:** actual local app on loopback8766 uses the
+  existing bundled React chart and real OpenD/Hyperliquid sources. Markets and
+  Watchlist each open both AAPL/NVDA at 1D/Line; the observed table contains
+  regular-session 1m OHLCV and source/private-rights limitations. AAPL reload
+  retained about 205 covered minutes and advanced from 16:45 to 16:54 UTC;
+  NVDA market and watchlist reads included 16:56/57 and 16:58/59 UTC observed
+  closes. Fresh metrics-only headers show real source clocks with evidence
+  limitations, not a false stale claim. Paper proposal remains disabled.
+  Final AWS acceptance must repeat these paths on the precise merged build.

@@ -159,6 +159,9 @@ class OpenDTransport(Protocol):
     def rt_ticker(self, code: str, *, num: int) -> dict:
         raise NotImplementedError("this transport does not serve real-time tickers")
 
+    def current_kline(self, code: str, *, num: int = 390) -> dict:
+        raise NotImplementedError("this transport does not serve current minute klines")
+
     def stock_quote(self, codes: list[str]) -> dict:
         raise NotImplementedError("this transport does not serve stock quotes")
 
@@ -410,6 +413,41 @@ class SdkTransport:
             "code": code,
             "rows": _mapping_rows(payload["dividend_list"], "dividend"),
         }
+
+    def current_kline(self, code: str, *, num: int = 390) -> dict:
+        """Read bounded raw US minute candles on a quote-only regular subscription."""
+        _current_kline_request(code, num)
+        context = self._open_quote_ctx()
+        try:
+            from moomoo import AuType, KLType, Session, SubType  # type: ignore[import-not-found]
+
+            ret, message = _sdk_result(
+                _sdk_method(context, "subscribe", "current-kline")(
+                    [code], [SubType.K_1M], subscribe_push=False, session=Session.RTH,
+                ),
+                "current-kline subscribe", arity=2,
+            )
+            if ret != 0:
+                raise self._classify(RuntimeError(message))
+            ret, table = _sdk_result(
+                _sdk_method(context, "get_cur_kline", "current-kline")(
+                    code, num=num, ktype=KLType.K_1M, autype=AuType.NONE,
+                ),
+                "get_cur_kline", arity=2,
+            )
+        except OpenDError:
+            raise
+        except Exception as error:  # noqa: BLE001 - SDK failures cross a typed boundary
+            raise self._classify(error) from error
+        finally:
+            context.close()
+        if ret != 0:
+            message = table if isinstance(table, str) else f"get_cur_kline returned {ret}"
+            raise self._classify(RuntimeError(message))
+        return _current_kline_payload({
+            "code": code, "interval": "1m", "autype": "None", "session": "regular",
+            "rows": _table_records(table, "current-kline"),
+        }, code=code, num=num)
 
     def rt_ticker(self, code: str, *, num: int) -> dict:
         """Recent real-time tickers as a pandas-free payload."""
@@ -801,6 +839,14 @@ class MoomooOpenDClient:
             "dividend",
         )
 
+    def current_kline(self, code: str, *, num: int = 390) -> dict:
+        """Read the scoped current-minute surface without changing history semantics."""
+        _current_kline_request(code, num)
+        method = getattr(self._transport, "current_kline", None)
+        if not callable(method):
+            raise OpenDProtocolError("transport exposes no current_kline method")
+        return _current_kline_payload(method(code, num=num), code=code, num=num)
+
     def rt_ticker(self, code: str, *, num: int = 500) -> dict:
         """Recent real-time tickers for ``code`` as a wire payload (Phase B)."""
         if not isinstance(num, int) or not 1 <= num <= 1000:
@@ -819,6 +865,23 @@ class MoomooOpenDClient:
 
     def close(self) -> None:
         self._transport.close()
+
+
+def _current_kline_request(code: object, num: object) -> None:
+    if not isinstance(code, str) or code not in {"US.AAPL", "US.NVDA"}:
+        raise ValueError("current minute candles support only US.AAPL and US.NVDA")
+    _bounded_int(num, "num", minimum=1, maximum=390)
+
+
+def _current_kline_payload(value: object, *, code: str, num: int) -> dict:
+    page = _validate_action_payload(
+        value, contract="current-kline", code=code, required=("interval", "autype", "session"),
+    )
+    if (page["interval"], page["autype"], page["session"]) != ("1m", "None", "regular"):
+        raise OpenDProtocolError("current-kline interval/adjustment/session disagrees")
+    if len(page["rows"]) > num:
+        raise OpenDProtocolError("current-kline response exceeds requested num")
+    return _plain_mapping(page, "current-kline")
 
 
 def _legacy_history_page(

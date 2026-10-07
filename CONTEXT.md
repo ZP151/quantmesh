@@ -63,7 +63,8 @@ shared Markets/Watchlist table ignored Moomoo metrics.last. A bounded display
 follow-up now shows Last trade and its source time without creating bid/ask or
 order authority; PR #162 passed full CI and independent review, merged and deployed as
 `c8e1813`. Both actual list pages show real prices and advancing source clocks. Source-backed equity minute
-candles and full chart acceptance remain the next separate slice. The Windows
+candles are implemented and locally witnessed in the October 8 continuation;
+full CI and private AWS chart release acceptance remain pending. The Windows
 OpenD process and private reverse SSH tunnel must remain running.
 
 ## Bounded context

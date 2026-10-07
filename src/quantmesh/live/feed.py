@@ -182,6 +182,17 @@ _CLOCK_SKEW = timedelta(seconds=5)
 
 
 def _freshness_time(update: MarketUpdate) -> datetime:
+    if update.venue is Venue.MOOMOO and update.kind is UpdateKind.CANDLE:
+        # OpenD returns cached windows: receipt cannot renew an old bar's age.
+        value = update.payload.get("provider_end")
+        if isinstance(value, str):
+            try:
+                end = datetime.fromisoformat(value)
+                if end.tzinfo is not None and end == update.data_time + timedelta(minutes=1):
+                    return min(end, update.received_at)
+            except ValueError:
+                pass
+        return min(update.data_time, update.received_at)
     # Candle time identifies its interval, and metrics may be receipt-timed.
     # Neither can be treated as an exchange quote timestamp.
     if update.kind in _SOURCE_TIMED_KINDS:

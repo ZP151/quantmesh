@@ -213,6 +213,7 @@ def _environment_text(
             "QUANTMESH_MOOMOO_OPEND_HOST=127.0.0.1\n"
             "QUANTMESH_MOOMOO_OPEND_PORT=11111\n"
             "QUANTMESH_MOOMOO_POLL_INTERVAL_S=5\n"
+            "QUANTMESH_MOOMOO_CANDLE_NUM=390\n"
         )
     return environment
 
@@ -229,9 +230,13 @@ def _retained_runtime_mode(commit: str, release: Path, staging_origin: str) -> s
         return "demo"
     if environment == _environment_text(commit, staging_origin, live_market_data=True):
         return "live"
-    if environment == _environment_text(
+    equity_environment = _environment_text(
         commit, staging_origin, live_market_data=True, moomoo_market_data=True,
-    ):
+    )
+    if environment in {
+        equity_environment,
+        equity_environment.replace("QUANTMESH_MOOMOO_CANDLE_NUM=390\n", ""),
+    }:
         return "live"
     raise DeploymentError(f"release identity does not match: {release}")
 

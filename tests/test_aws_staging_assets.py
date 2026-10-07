@@ -493,7 +493,9 @@ def test_moomoo_deployment_installs_sdk_and_keeps_profile_reactivatable(tmp_path
         service=FakeService(), read_active=read_active, activate=activate,
         read_health=lambda: _healthy(GOOD_REF, "live"), health_attempts=1,
     )
-    assert (result.release / ".staging.env").read_text().endswith(LIVE_PROFILE + MOOMOO_PROFILE)
+    assert (result.release / ".staging.env").read_text().endswith(
+        LIVE_PROFILE + MOOMOO_PROFILE + "QUANTMESH_MOOMOO_CANDLE_NUM=390\n"
+    )
     installs = [call for call, _ in commands.calls if "pip" in call]
     assert len(installs) == 1
     assert installs[0][-1] == f"{result.release}[moomoo]"
@@ -827,3 +829,18 @@ def test_automatic_rollback_checks_retained_identity_profile_and_health(
         assert history == [candidate, previous]
     assert environment_file.read_bytes() == original_bytes
     assert environment_file.stat().st_mtime_ns == original_mtime
+
+def test_equity_profile_enables_bounded_minute_history_and_accepts_old_rollback(tmp_path):
+    deploy = _load_deploy_program()
+    env = deploy._environment_text(GOOD_REF, STAGING_ORIGIN,
+                                   live_market_data=True, moomoo_market_data=True)
+    assert 'QUANTMESH_MOOMOO_CANDLE_NUM=390\n' in env
+    assert 'QUANTMESH_MOOMOO_CANDLE_NUM' not in deploy._environment_text(
+        GOOD_REF, STAGING_ORIGIN, live_market_data=True)
+    retained = tmp_path / OLD_REF
+    retained.mkdir()
+    old_env = deploy._environment_text(OLD_REF, STAGING_ORIGIN,
+                                      live_market_data=True, moomoo_market_data=True)
+    old_env = old_env.replace('QUANTMESH_MOOMOO_CANDLE_NUM=390\n', '')
+    (retained / '.staging.env').write_text(old_env, encoding='utf-8')
+    assert deploy._retained_runtime_mode(OLD_REF, retained, STAGING_ORIGIN) == 'live'

@@ -64,6 +64,8 @@ class _PollClient(Protocol):
 
     def rt_ticker(self, code: str, *, num: int) -> dict: ...
 
+    def current_kline(self, code: str, *, num: int) -> dict: ...
+
 
 class MoomooVenueTransport:
     """Poll-driven venue wire over a local OpenD client.
@@ -84,10 +86,14 @@ class MoomooVenueTransport:
         *,
         poll_interval: timedelta = DEFAULT_POLL_INTERVAL,
         ticker_num: int = 100,
+        candle_num: int = 0,
     ) -> None:
+        if type(candle_num) is not int or not 0 <= candle_num <= 390:
+            raise ValueError("candle_num must be an integer in 0..390")
         self._client = client
         self._poll_interval = poll_interval
         self._ticker_num = ticker_num
+        self._candle_num = candle_num
         self._frames: asyncio.Queue[object] | None = None
         self._codes: dict[str, str] = {}  # symbol -> sdk code
         self._codes_ready = asyncio.Event()
@@ -147,6 +153,11 @@ class MoomooVenueTransport:
                         self._client.rt_ticker, code, num=self._ticker_num
                     )
                     await self._frames.put({"kind": "rt_ticker", "payload": ticker})
+                    if self._candle_num and code in {"US.AAPL", "US.NVDA"}:
+                        candles = await asyncio.to_thread(
+                            self._client.current_kline, code, num=self._candle_num
+                        )
+                        await self._frames.put({"kind": "current_kline", "payload": candles})
             except OpenDError as error:
                 await self._frames.put({"kind": "poll_error", "message": str(error)})
             await asyncio.sleep(self._poll_interval.total_seconds())
@@ -176,6 +187,8 @@ class MoomooVenueSupervisor(VenueSupervisor):
         # ticker rows are polled repeatedly; venue sequences dedupe the
         # overlapping windows so the tape never replays the same tick.
         self._seen_sequences: dict[str, set[int]] = {}
+        self._latest_candles: dict[str, tuple[datetime, tuple[object, ...]]] = {}
+        self._candle_sequence = 0
 
     @property
     def venue(self) -> Venue:
@@ -232,10 +245,59 @@ class MoomooVenueSupervisor(VenueSupervisor):
             return self._on_stock_quote(frame.get("payload"), now)
         if kind == "rt_ticker":
             return self._on_rt_ticker(frame.get("payload"), now)
+        if kind == "current_kline":
+            return self._on_current_kline(frame.get("payload"), now)
         if kind == "poll_error":
             message = frame.get("message")
             raise MoomooProtocolError(f"OpenD poll failed: {message!r}")
         raise MoomooProtocolError(f"unknown poll frame kind {kind!r}")
+
+    def _on_current_kline(self, payload: object, now: datetime) -> list[MarketUpdate]:
+        from quantmesh.moomoo.minute_candles import minute_candles
+
+        if not isinstance(payload, dict):
+            raise MoomooProtocolError("current candle payload must be an object")
+        symbol = _split_code(payload.get("code"))[1]
+        if symbol not in self._watchlist:
+            raise MoomooProtocolError("current candle symbol is not subscribed")
+        bars = minute_candles(self._instrument(symbol), payload)
+        updates = []
+        for bar in bars:
+            timestamp = bar["timestamp"]
+            # A future interval is not an observation of the current market.
+            if timestamp > now:
+                continue
+            fingerprint = tuple(bar[key] for key in ("open", "high", "low", "close", "volume"))
+            previous = self._latest_candles.get(symbol)
+            if previous and (
+                timestamp < previous[0] or (timestamp == previous[0] and fingerprint == previous[1])
+            ):
+                continue
+            self._candle_sequence = max(self._candle_sequence + 1, int(now.timestamp() * 1_000_000))
+            values = {key: bar[key] for key in ("open", "high", "low", "close", "volume")}
+            values.update(
+                {
+                    "interval": "1m",
+                    "session": "regular",
+                    "adjustment": "unadjusted",
+                    "license": "moomoo-private-market-data",
+                    "sequence_origin": "local-observation",
+                    "provider_time_key": bar["provider_time_key"],
+                    "provider_end": bar["provider_end"].isoformat(),
+                }
+            )
+            updates.append(
+                self._update(
+                    symbol,
+                    UpdateKind.CANDLE,
+                    timestamp,
+                    now,
+                    values,
+                    sequence=self._candle_sequence,
+                )
+            )
+            self._latest_candles[symbol] = (timestamp, fingerprint)
+        return updates
 
     def _on_stock_quote(self, payload: object, now: datetime) -> list[MarketUpdate]:
         """Quote snapshot rows → one METRICS update (last + volume)
@@ -269,9 +331,7 @@ class MoomooVenueSupervisor(VenueSupervisor):
             metrics: dict[str, object] = {"last": quote.last}
             if quote.volume is not None:
                 metrics["volume"] = quote.volume
-            updates.append(
-                self._update(symbol, UpdateKind.METRICS, quote.timestamp, now, metrics)
-            )
+            updates.append(self._update(symbol, UpdateKind.METRICS, quote.timestamp, now, metrics))
         return updates
 
     def _on_rt_ticker(self, payload: object, now: datetime) -> list[MarketUpdate]:
@@ -331,6 +391,7 @@ class MoomooVenueSupervisor(VenueSupervisor):
 
     def on_disconnect(self, now: datetime) -> list[GapFinding]:
         self._seen_sequences = {}
+        self._latest_candles = {}
         # stop the poll task while the pump is out — otherwise it would
         # keep streaming frames into a wire the supervisor no longer
         # drains, and the reconnect's connect() would double-poll behind

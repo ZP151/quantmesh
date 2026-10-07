@@ -319,7 +319,7 @@ function LegacyInstrumentWorkspaceScreen() {
         </p>
       )}
       {workspace.live.status !== 'available' && (
-        <WorkspaceDegraded rawReason={liveReasonRaw} reason={liveReason} />
+        <WorkspaceDegraded rawReason={liveReasonRaw} reason={liveReason} isStale={workspace.live.label === 'stale'} />
       )}
       {qualityWarnings.length > 0 && (
         <section
