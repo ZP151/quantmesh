@@ -63,7 +63,8 @@ tailscale ssh ubuntu@quantmesh-staging-8gb -N -o ExitOnForwardFailure=yes -o Ser
 的验证链接。`tailscale ssh` 自动校验协调服务提供的主机密钥。不要禁用校验、
 修改 OpenD 为公网监听或为此新增公网防火墙规则。当前隧道未设为开机服务。
 
-AWS 当前运行版本没有安装 Moomoo SDK，也没有股票 watchlist。候选部署脚本的
+以下为最初候选部署步骤；当前 PR #163 已部署 SDK、股票 watchlist 和分钟图。
+部署脚本的
 `--live-market-data --moomoo-market-data` 组合会使用 `requirements-audit.txt`
 约束安装已有 `[moomoo]` extra，并设置 US AAPL/NVDA、回环端口和五秒轮询。
 默认仍不启用 Moomoo；`--activate-existing` 从保留版本恢复其原配置，不能混用
@@ -73,9 +74,9 @@ Linux SDK 在导入时需要真实用户目录；就绪 worker 会恢复被隔�
 标准 HOME 值，不传入凭据。供应商 SDK 仍会在用户目录生成其自身诊断日志；
 不要将这些原始日志直接上传或贴入对话。CLI JSON 仅输出脱敏报告。
 
-验收分开记录：本次 AWS 独立候选已证明报价、日线和两轮逐笔读取，源时间均
-推进；线上服务尚未应用候选。现有 equity poller 只提供指标/逐笔，完整走势图
-还需要真实 K 线接入，不能用报价通过代替图表验收。
+验收分开记录：最初 AWS 独立候选证明报价、日线和两轮逐笔读取；PR #161/#162
+随后完成真实源连通与列表显示。PR #163 已接入供应商常规时段真实分钟 K 线，
+不能用报价通过代替图表动态验收。
 
 ## 后续真实行情验收
 
@@ -88,3 +89,40 @@ Linux SDK 在导入时需要真实用户目录；就绪 worker 会恢复被隔�
 另行验收原有 BTC/ETH/SOL 路径。24 小时容量观察及恢复演练归入后续运维验收，
 不阻塞本地功能开发。2026-09-24（新加坡时间）用户已批准恢复 CI，
 检查全部通过后合并部署；仍须记录精确提交与实际部署/页面证据。
+
+## 2026-10-08 分钟图发布验收 / Minute-chart release acceptance
+
+Release `69515b7` (PR #163) is checked, merged and deployed. Both stocks now
+render actual provider minutes through Markets/Watchlist, with private source,
+observed coverage and local sequence labels. Closed-session OHLCV/reload and
+crypto regressions pass; actual open-session revisions/appends remain pending.
+
+在私有站点 Markets 或 Watchlist 点击 AAPL、NVDA，选择 1D 和 Line，可看到
+已采集的真实 1m 走线图。当前发布后验收发生在收盘之后；股票源时间停在收盘、
+年龄增长并显示 Stale 是正确行为。请勿把页面刷新时间当作行情源时间。
+下一常规开放时段仍需检查同一分钟修订、新分钟连续追加两次、刷新保留、与
+OpenD OHLCV 一致。OpenD 和私有隧道须保持运行；缺 bid/ask 时纸交易仍阻断。
+
+## Windows 登录后启动与私有重连候选
+
+`deploy/windows/opend_recovery.ps1` 复用现有 GUI 和同一条私有隧道。它不读取
+OpenD 配置、密码、账号、日志，也不修改供应商的 Remember Me/Auto Login。
+启动程序不能证明已登录或有实时权限；需要登录时由用户打开供应商界面完成。
+原生只读检查如下，不会启动或停止任何 GUI/隧道，也不写入状态目录：
+
+```powershell
+powershell.exe -NoProfile -NonInteractive -File deploy/windows/opend_recovery.ps1 -Once -ObserveOnly -OpenDPath C:/Users/15492/AppData/Roaming/moomoo_OpenD/moomoo_OpenD.exe -TailscalePath "C:/Program Files/Tailscale/tailscale.exe"
+powershell.exe -NoProfile -NonInteractive -File deploy/windows/install_opend_startup.ps1 -Status
+```
+
+候选当前只完成实现与原生隔离测试，尚未安装。独立审查及发布检查完成后，
+安装器只写当前用户 `%LOCALAPPDATA%/QuantMesh/OpenDRecovery` 和 Startup 中
+`QuantMesh OpenD Recovery.lnk`。不创建管理员服务、不改变执行策略或公网入口。
+已有 OpenD/隧道保留；远端监听状态无法确定时等待，避免重复创建转发。
+状态会区分 `needs_opend_login`、`needs_tailscale_or_ssh` 与实际已有的私有隧道。
+
+安装器 `-Uninstall` 只移除校验为本工具所有的项目。若 helper 正在运行，先
+移除登录启动快捷方式，返回 `startup_removed_cleanup_deferred` 并保留程序、
+状态和连接；停止后的再次卸载才清理其文件。拒绝修改外来文件/替换快捷方式/
+目录链接。下一次真实 Windows 登录与网络断线恢复仍须单独留证；本任务不
+重启 Windows、退出用户或切断现有源连接来制造验收结果。

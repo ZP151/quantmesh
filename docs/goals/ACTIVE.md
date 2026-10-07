@@ -6,8 +6,10 @@ active until the new host's sustained capacity gate is closed and the separate
 Moomoo/OpenD route is ready. PR #161 is now merged and deployed; its live API acceptance passes.
 PR #162 also passed CI and is deployed as `c8e1813`; API and list-page
 acceptance pass. Source-backed equity minute charts are implemented on
-`codex/0037-equity-minute-charts` and locally witnessed; full-suite/CI, merge,
-private deployment and final AWS chart acceptance remain pending. The user explicitly prioritized development and deferred observation
+`codex/0037-equity-minute-charts`, checked through PR #163 and deployed at
+`69515b79d2bc67303bfef9dee660dbca9bef41e3`. Four AWS equity entry paths and
+reload pass with supplier-matching closed bars; actual open-session revisions
+and two new minute boundaries remain pending after the market closed. The user explicitly prioritized development and deferred observation
 to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
 explicitly restored CI and authorized merge/private deployment after all checks pass.
 
@@ -15,8 +17,8 @@ explicitly restored CI and authorized merge/private deployment after all checks 
 
 The authoritative private origin is now
 `https://quantmesh-staging-8gb.tail99d23c.ts.net`, serving exact merged build
-`c8e1813c15d4837d8b0a7480ea376bbca5839161` after PR #162.
-Previous `db3d18f` remains retained for rollback. The original
+`69515b79d2bc67303bfef9dee660dbca9bef41e3` after PR #163.
+Previous `c8e1813` and `db3d18f` remain retained for rollback. The original
 migration checkpoint used retained rollback build `33aa0521`. The restored dataset passed archive
 hash, WAL recovery, JSON payload validation, 13-check read-only smoke, chart
 entry-path, and controlled restart checks. The host currently reports about
@@ -261,3 +263,102 @@ hashes; add only the exact 4.2.0 MIT-choice text exception. Safety/license
 regressions pass 29 tests, including unknown-version/changed-license refusals.
 No dependency pin, generic parser, threshold or CI gate changes. Await the next
 complete head CI before merge/deployment; AWS still serves c8e1813.
+
+## Checked minute-chart release — October 8 Singapore
+
+PR #163 is merged at 69515b79d2bc67303bfef9dee660dbca9bef41e3 (20:08:37 UTC
+October 7). Final CI37672213223 passed 3677 Python tests / 56 skipped and
+380 frontend tests; both automated review threads are resolved. Candidate
+260571e and merged release share tree fa470ee5d8737f6822af30df79f85cdfb3f05e37.
+Reviewed exact deployment succeeded; c8e1813 is retained for rollback. Do not
+merge or deploy #163 again. Local main remains preserved; subsequent work
+starts on codex/0037-opend-startup from origin/main.
+
+Exact build, paper=true/live=false and 18 smoke checks pass. BTC/ETH/SOL
+source clocks advance. Both stocks are closed/stale with source time near
+20:00 UTC; the five-symbol progression helper exits nonzero for those two
+stocks only. The minute witness has six source-bracketed samples: both
+390-row histories match recent closed provider OHLCV. It exits nonzero because
+two appends are unproven. This is a pending open-session acceptance gate,
+not a full live-chart success or a reason to roll back a healthy closed session.
+All four actual AWS Markets/Watchlist AAPL/NVDA entries, both stock reloads, disabled
+paper proposal and BTC/ETH/SOL chart regressions pass. Keep real-time revisions
+and two minute boundaries pending until the next regular session.
+
+Evidence: output/0037-minute-ci37672213223-success.log,
+0037-minute-deploy-69515b7.log/.exit, 0037-deployed-market-witness.json,
+0037-aws-minute-witness/witness.json, 0037-aws-minute-browser.json and
+0037-aws-aapl-minute-chart*.png. The ignored acceptance helper's initial
+strict-Python-vs-JSON and missing adapter metadata errors were corrected;
+retain their logs without treating them as product regressions.
+
+Continue the authorized OpenD self-start/private tunnel recovery slice while
+closed-session real-time acceptance waits. The installed vendor-signed GUI
+is 10.10.7008 at C:/Users/15492/AppData/Roaming/moomoo_OpenD/moomoo_OpenD.exe.
+No existing OpenD startup task or Run entry was found; only ChatGPT is in the
+current-user Startup folder. Keep OpenD and reverse tunnel session75590 alive.
+Do not read vendor credential files, change remembered-login settings, restart
+Windows, open public ingress or enable trading.
+
+The startup plan is tracked at `docs/superpowers/plans/2026-10-08-opend-startup.md`.
+Fresh implementer `opend_startup` owns only Task1 scripts/native tests; root
+owns docs/verification. Independent review precedes persistent installation.
+Current-user execution policy remains RemoteSigned through LocalMachine, with
+no Process/User override; local generated files need no policy weakening.
+Actual next-logon/reconnect witness remains separate from installing files.
+
+Startup Task1 now has recovery/provisioning scripts plus 26 native Windows
+PowerShell 5.1 behavior tests. Root's isolated final run passes 26 in 27.23s,
+with whole-tree Ruff/diff clean. Default pytest temp cleanup hit an existing
+pytest-current permission error after the 26 test bodies; original log retained,
+then a fresh workspace-owned --basetemp run exits0. Do not delete global temp
+trees to work around it. Actual ObserveOnly exits0/existing_private_tunnel after
+repairing the Tailscale host-first argument order. Independent review and final
+CI remain ahead of installation; no startup configuration is installed yet.
+
+Startup PR #164 is open at 2348d76, with first CI37684316455 in progress.
+Independent Spec and Standards round1 each reports one P2 (the same defect):
+an established owned tunnel can be killed after a subsequent unknown probe,
+because startup timeout only remembers start time. The fresh implementer is
+reproducing and fixing it with ChildEstablished lifetime state, retaining
+established children on unknown/absent probes and resetting on a new child.
+Installation stays blocked on this finding and final new-head CI. No changes
+to the existing actual OpenD or tunnel have been made. After targeted green,
+push the corrected head and cancel the superseded first CI; second independent
+review is the final structural round. No repeated full local Python suite.
+
+The P2 is reproduced with two failing native transitions (unknown/absent).
+ChildEstablished now preserves an established child and resets after exit/new
+launch; uncertain probes never trigger termination. The native affected suite
+passes29, root's targeted reset/transitions pass3, Ruff/diff pass, and actual
+ObserveOnly still returns existing_private_tunnel. Second review remains ahead
+of installation. Corrected CI must complete on the final pushed head.
+
+Final independent Spec/Standards round2 for c416513 has no P1/P2. GitHub's
+automated comments on old2348d76 reiterate the fixed lifecycle issue and add
+auxiliary status-file IO failure escaping recovery. Planner keeps this within
+the existing narrow boundary: status persistence is best effort and never a
+connection-control dependency. Missing-directory and locked-status native
+cases reproduce escape/child stop; catch only auxiliary persistence failures,
+without changing process/route authority. No third structural review or
+architecture expansion is opened; final CI/review-thread gates still apply.
+
+Final native suite after status-IO isolation passes31/31.88s, Ruff/diff green
+(output/0037-opend-startup/status-green.log/.exit). Two automated findings are
+covered by established-child and status-write regressions. Keep actual Startup
+installation pending final head CI. Windows-only changes need no AWS redeploy.
+
+Startup CI37685852546 completed at 21:49:39 UTC with 3676 passed, 87 skipped,
+one failure in the existing valid-30m replay fixture. The isolated case and
+34-test history file pass without a tick, but an explicit retention sweep
+reproduces deletion of all four September fixture rows and the same 404.
+Planner narrows this CI correction to test clock isolation: reuse the existing
+freeze_buffer_clock helper and explicitly run the actual retention sweep in
+all eight preferred/fallback cases. Retention and application code remain
+unchanged. The forced-sweep test first fails (retention-test-red.log/.exit);
+final targeted history/native verification and new-head CI precede installation.
+
+Verifier: corrected history/native two-file run passes65 / 40.31s, exit0
+(retention-and-native-green.log/.exit); whole-tree Ruff and diff checks pass.
+All eight replay candidates now run real retention at their fixture clock.
+Await the new exact-head full CI; no Startup files have been installed.

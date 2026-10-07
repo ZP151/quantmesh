@@ -51,9 +51,9 @@ Files: `src/quantmesh/instruments/live_history.py`, `src/quantmesh/instruments/w
 
 ## Release and acceptance
 
-- [ ] Record role outputs and targeted red/green evidence; run whole-tree Ruff/diff and relevant broad suite once at final boundary, frontend gates if touched.
-- [ ] Independent specification/standards review, at most two rounds; create one PR, await required green CI and no unresolved actionable review.
-- [ ] Match-head squash, compare trees, deploy exact merged commit through reviewed release tool; keep previous c8e1813 retained for rollback.
+- [x] Record role outputs and targeted red/green evidence; run whole-tree Ruff/diff and relevant broad suite once at final boundary, frontend gates if touched. Final exact-head CI: 3677 Python passed / 56 skipped; 380 frontend passed.
+- [x] Independent specification/standards review, at most two rounds; create one PR, await required green CI and no unresolved actionable review.
+- [x] Match-head squash, compare trees, deploy exact merged commit through reviewed release tool; keep previous c8e1813 retained for rollback. PR #163 merged/deployed 69515b7; candidate/merge tree fa470ee5d8737f6822af30df79f85cdfb3f05e37 matches.
 - [ ] Verify API plus all four Markets/Watchlist entry paths and reload; actual provider candles across two minute boundaries must match chart values. Verify crypto chart regression, paper=true/live=false. If the US session is closed, report that gate pending and continue with authorized development; do not fabricate live evidence.
 
 Operational follow-up: user requested OpenD self-start; first verify vendor support and existing login behavior, then set up bounded local startup/private tunnel recovery with a reversible configuration and actual restart witness. Never store credentials in source or prompts.

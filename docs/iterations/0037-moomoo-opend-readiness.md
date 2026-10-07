@@ -515,3 +515,134 @@ iteration 0036 for later operational acceptance, without blocking development.
   `output/0037-minute-license-{red,green}.log`,
   `0037-simplejson-license-evidence.json`, `0037-simplejson-wheel-review.json`.
   Full final-head CI remains required before release; no repeated local broad run.
+
+## Checked minute-chart release — October 8 Singapore
+
+- **Reviewer/Verifier:** final CI37672213223 completed successfully at 20:03 UTC
+  October 7: **3677 Python passed / 56 skipped / 8 warnings**, plus **380
+  frontend passed** and all audit/type/generated-API/build/lint gates. Both
+  automated correctness findings are resolved. Prior local failed broad results
+  remain documented; final exact-head CI supplies the complete green gate.
+- **Release:** normal match-head squash merged PR #163 at 20:08:37 UTC as
+  `69515b79d2bc67303bfef9dee660dbca9bef41e3`. Candidate `260571e` and merged
+  release have identical full tree `fa470ee5d8737f6822af30df79f85cdfb3f05e37`.
+  Both loopback 11111 endpoints and AWS service were verified, then the reviewed
+  deployment helper activated this exact build. Retained `c8e1813` provides
+  rollback. No admin merge, force push, public port or trading change.
+- **API acceptance:** exact build, paper=true/live=false and **18 smoke checks
+  pass**. BTC/ETH/SOL source times advance. AAPL/NVDA clocks remain near 20:00
+  UTC after regular-session close, with truthful stale/real-source labels.
+  The progression helper exits 1 for those two stocks' freshness/progression;
+  this is explicitly incomplete real-time acceptance, not passed by relabelling.
+- **Source/graph acceptance:** six bracketed samples compare supplier-before,
+  AWS workspace, supplier-after. Both 390-row histories have matching last
+  four closed OHLCV bars. Canonical final interval stays 19:59 UTC; source
+  raw end labels are retained. Helper exits 1: two appends unproven. Its initial
+  JSON strict-validation and missing adapter metadata mistakes were fixed in
+  the ignored verifier, with original error logs preserved.
+- **Operator loop:** actual AWS Markets and Watchlist each open AAPL/NVDA to
+  1D/Line/1m. AAPL reload retains the latest closes 336.74/336.69/336.67 at
+  19:57/58/59 UTC; NVDA reload retains 237.5456/237.38/237.47 at the same
+  intervals. Stock proposals remain disabled. Original BTC/ETH/SOL
+  chart tables display current observed minutes after the new deployment.
+  New revisions and two new minute boundaries await an actual open session.
+- **Evidence:** `output/0037-minute-ci37672213223-success.log`,
+  `0037-minute-deploy-69515b7.log/.exit`, `0037-deployed-market-witness.json`,
+  `0037-aws-minute-witness/witness.json`, `0037-aws-minute-browser.json`,
+  `0037-aws-aapl-minute-chart*.png`. No repeat deployment or full local suite.
+- **Next:** branch `codex/0037-opend-startup` starts from merged origin/main;
+  local main is preserved. Continue the user's requested startup/private
+  reconnect slice while market-session acceptance waits; defer capacity/drills.
+
+## Startup slice intake — October 8 Singapore
+
+- **Planner:** use the existing interactive Windows user's startup folder and
+  installed GUI, with a singleton helper for the unchanged private SSH route.
+  Existing OpenD/tunnel are preserved. Exact plan:
+  `../superpowers/plans/2026-10-08-opend-startup.md`, under issue #156.
+- **Researcher:** existing executable is vendor-signed (Moomoo Technologies Inc.)
+  and version10.10.7008. No OpenD Run/task/Startup entry exists. Vendor official
+  GUI documentation exposes Remember Me/Auto Login; configuring or reading
+  stored authentication is excluded. Application startup does not establish
+  authentication, entitlement or open-session freshness.
+- **Implementer handoff:** fresh `opend_startup` agent owns only two Windows
+  scripts and isolated tests. No actual installation or process/tunnel mutations
+  until independent review. Root retains iteration/plan and native acceptance.
+  No global or process execution-policy bypass; current local RemoteSigned
+  permits local generated scripts. Do not touch unrelated maintenance tasks.
+
+- **Task1 verifier:** root's isolated final native PowerShell5.1 suite passes
+  **26 tests / 27.23 seconds**, whole-tree Ruff and diff checks pass. Initial
+  missing-behavior RED plus real boundary failures are retained. A default pytest
+  temporary-root cleanup raises an unrelated pytest-current permission error
+  after all 26 test bodies; retain that exit1 log, then use a fresh workspace-owned
+  --basetemp directory for a clean exit0. No global temp deletion or gate skip.
+- **Task1 corrections:** an alive owned SSH child cannot suppress recovery of
+  a dead GUI; active-helper uninstall removes only Startup and defers file
+  cleanup, preserving the connection. Unknown listener/child state does not
+  claim success; unestablished owned child gets a bounded startup timeout.
+  The first real ObserveOnly found a host-order error in the Tailscale wrapper,
+  fixed with a native fake-CLI argument test. Actual observation now exits0 as
+  `existing_private_tunnel`, without launching or stopping a source process.
+- **Ownership:** foreign files/shortcut and linked target directories fail
+  closed; cleanup is exact and nonrecursive. Test/observer reports live in
+  `output/0037-opend-startup/`. Independent review and final CI precede installing
+  the current-user startup shortcut; next-login/outage evidence remains pending.
+
+- **Integration:** PR #164 at `2348d76` is open; first CI37684316455 started
+  20:44:30 UTC. No Windows persistence has been installed.
+- **Spec review round1:** one P2: 100s child start, 110s present/managed, 170s
+  unknown incorrectly kills the established child through startup timeout.
+  This violates the plan's unknown-probe wait and connection-preservation rule.
+- **Standards review round1:** one P2, the same reproduced state transition;
+  no other executable finding. Preserve the two axes separately. Fix only
+  established-child lifetime/reset and its regressions, then focused native
+  verification and final second review. Superseded CI cancellation follows
+  the corrected push. The original source/tunnel remain healthy and untouched.
+
+- **Review recovery:** two native cases first fail with stops=1 and child
+  cleared after established->unknown/absent. ChildEstablished now records prior
+  successful connection; unknown waits truthfully, confirmed absent retains an
+  established child pending its own SSH exit. New/exit children reset the flag.
+  The startup timeout still cleans only never-established owned children.
+- **Verifier:** affected native suite **29 passed / 29.88s**; root fresh targeted
+  transitions/reset **3 passed / 26 deselected**, Ruff/diff clean, actual final
+  ObserveOnly exits0 as existing_private_tunnel. A duplicate unreachable unknown
+  check is removed without changing behavior. Logs: established-red.log,
+  established-all-green.log, root-established-green.log/.exit and
+  native-observe-final.json. Final independent second review/CI remain pending.
+
+- **Spec round2:** no executable P1/P2 at c416513. Established child lifetime
+  and replacement reset satisfy the plan; actual login/outage remain pending.
+- **Standards round2:** no executable P1/P2 at c416513. Independently runs the
+  related native 3-test regression successfully. Both axes remain separate.
+- **Automated supplement / Planner:** comments on old2348d76 reiterate the
+  already-fixed lifecycle defect and identify auxiliary status persistence
+  escaping into connection shutdown. Keep status IO best effort within the
+  current scope; it must never own route lifecycle. No third structural review
+  or architecture expansion. Missing-directory and antivirus-like locked-file
+  cases first fail with escape/owned-child stop; handle only persistence failure
+  inside Write-QmStatus, preserving its redacted output and existing state-change
+  emission rule. Final complete native affected checks and head CI remain gates.
+
+- **Final native verifier:** **31 passed / 31.88s**, exit0 after the status-IO
+  fix, plus Ruff/diff green. Logs status-red.log (2 failed) and
+  status-green.log/.exit. The new safeguard does not change route/process
+  authority or treat stale on-disk status as source availability. Resolve both
+  automated threads only after publishing this tested correction; await final
+  head CI before match-head merge and reviewed current-user installation.
+
+- **CI boundary correction / Planner:** CI37685852546 fails one existing
+  valid-30m replay fixture (3676 passed / 87 skipped / 8 warnings, 3050.69s).
+  Independent reproduction passes the original isolated case and all 34
+  history tests; forcing the actual retention sweep deletes its four old rows
+  and reproduces the exact 404. The request clock was fixed but retention's
+  wall clock was not. Scope is only fixture isolation, using the existing
+  freeze_buffer_clock helper plus an explicit sweep in all eight interval/state
+  cases. No production/history algorithm, retention policy or Windows script
+  changes; no third structural review is introduced for this test-only fix.
+  Forced-sweep RED is retained in output/0037-opend-startup/retention-test-red.log.
+- **CI correction verifier:** history plus native startup tests pass **65 /
+  40.31s**, exit0 (retention-and-native-green.log/.exit); whole-tree Ruff and
+  diff pass. The eight fixture combinations explicitly execute retention,
+  rather than suppressing it. New exact-head full CI remains the merge gate.
