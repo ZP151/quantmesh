@@ -407,3 +407,86 @@ $result=Invoke-QmBoundedProbe $path
     assert arguments[:2] == ["ssh", "ubuntu@quantmesh-staging-8gb"]
     assert arguments[-1].startswith("echo ")
     assert arguments[-1].endswith(" | base64 -d | python3")
+
+
+@pytest.mark.parametrize(
+    ("observed", "wanted"),
+    [("unknown", "needs_tailscale_or_ssh"), ("absent", "private_tunnel_unavailable")],
+)
+def test_established_child_survives_later_unknown_or_absent_probe(
+    observed: str, wanted: str
+) -> None:
+    result = ps(
+        f"""
+$script:remote='absent'; $script:stops=0; $script:starts=0
+function Get-QmObservation {{
+ @{{OpenDRunning=$true; LocalReady=$true; RemoteListener=$script:remote}}
+}}
+function Start-QmTunnel {{
+ $script:starts++
+ $child=[pscustomobject]@{{HasExited=$false}}
+ $child | Add-Member -MemberType ScriptMethod -Name Kill -Value {{
+  $script:stops++; $this.HasExited=$true
+ }}
+ $child | Add-Member -MemberType ScriptMethod -Name WaitForExit -Value {{}}
+ return $child
+}}
+$state=New-QmRecoveryState
+$started=Invoke-QmRecoveryStep $state 'fake' 'fake' 100
+$script:remote='present'
+$established=Invoke-QmRecoveryStep $state 'fake' 'fake' 110
+$original=$state.Child
+$script:remote='{observed}'
+$later=Invoke-QmRecoveryStep $state 'fake' 'fake' 170
+@{{labels=@($started,$established,$later); stops=$stops; starts=$starts;
+ retained=[object]::ReferenceEquals($original,$state.Child)}} | ConvertTo-Json -Compress
+"""
+    )
+    assert result == {
+        "labels": ["private_tunnel_started", "managed_private_tunnel", wanted],
+        "stops": 0,
+        "starts": 1,
+        "retained": True,
+    }
+
+
+def test_replacement_child_has_its_own_startup_timeout_after_established_child_exits() -> None:
+    result = ps(
+        """
+$script:remote='absent'; $script:stops=0; $script:starts=0
+function Get-QmObservation {
+ @{OpenDRunning=$true; LocalReady=$true; RemoteListener=$script:remote}
+}
+function Start-QmTunnel {
+ $script:starts++
+ $child=[pscustomobject]@{HasExited=$false}
+ $child | Add-Member -MemberType ScriptMethod -Name Kill -Value {
+  $script:stops++; $this.HasExited=$true
+ }
+ $child | Add-Member -MemberType ScriptMethod -Name WaitForExit -Value {}
+ return $child
+}
+$state=New-QmRecoveryState
+$a=Invoke-QmRecoveryStep $state 'fake' 'fake' 100
+$script:remote='present'
+$b=Invoke-QmRecoveryStep $state 'fake' 'fake' 110
+$state.Child.HasExited=$true; $script:remote='absent'
+$c=Invoke-QmRecoveryStep $state 'fake' 'fake' 120
+$d=Invoke-QmRecoveryStep $state 'fake' 'fake' 150
+$e=Invoke-QmRecoveryStep $state 'fake' 'fake' 211
+@{labels=@($a,$b,$c,$d,$e); starts=$starts; stops=$stops;
+ cleared=($null -eq $state.Child)} | ConvertTo-Json -Compress
+"""
+    )
+    assert result == {
+        "labels": [
+            "private_tunnel_started",
+            "managed_private_tunnel",
+            "retry_wait",
+            "private_tunnel_started",
+            "retry_wait",
+        ],
+        "starts": 2,
+        "stops": 1,
+        "cleared": True,
+    }

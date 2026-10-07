@@ -588,3 +588,26 @@ iteration 0036 for later operational acceptance, without blocking development.
   closed; cleanup is exact and nonrecursive. Test/observer reports live in
   `output/0037-opend-startup/`. Independent review and final CI precede installing
   the current-user startup shortcut; next-login/outage evidence remains pending.
+
+- **Integration:** PR #164 at `2348d76` is open; first CI37684316455 started
+  20:44:30 UTC. No Windows persistence has been installed.
+- **Spec review round1:** one P2: 100s child start, 110s present/managed, 170s
+  unknown incorrectly kills the established child through startup timeout.
+  This violates the plan's unknown-probe wait and connection-preservation rule.
+- **Standards review round1:** one P2, the same reproduced state transition;
+  no other executable finding. Preserve the two axes separately. Fix only
+  established-child lifetime/reset and its regressions, then focused native
+  verification and final second review. Superseded CI cancellation follows
+  the corrected push. The original source/tunnel remain healthy and untouched.
+
+- **Review recovery:** two native cases first fail with stops=1 and child
+  cleared after established->unknown/absent. ChildEstablished now records prior
+  successful connection; unknown waits truthfully, confirmed absent retains an
+  established child pending its own SSH exit. New/exit children reset the flag.
+  The startup timeout still cleans only never-established owned children.
+- **Verifier:** affected native suite **29 passed / 29.88s**; root fresh targeted
+  transitions/reset **3 passed / 26 deselected**, Ruff/diff clean, actual final
+  ObserveOnly exits0 as existing_private_tunnel. A duplicate unreachable unknown
+  check is removed without changing behavior. Logs: established-red.log,
+  established-all-green.log, root-established-green.log/.exit and
+  native-observe-final.json. Final independent second review/CI remain pending.

@@ -315,3 +315,21 @@ then a fresh workspace-owned --basetemp run exits0. Do not delete global temp
 trees to work around it. Actual ObserveOnly exits0/existing_private_tunnel after
 repairing the Tailscale host-first argument order. Independent review and final
 CI remain ahead of installation; no startup configuration is installed yet.
+
+Startup PR #164 is open at 2348d76, with first CI37684316455 in progress.
+Independent Spec and Standards round1 each reports one P2 (the same defect):
+an established owned tunnel can be killed after a subsequent unknown probe,
+because startup timeout only remembers start time. The fresh implementer is
+reproducing and fixing it with ChildEstablished lifetime state, retaining
+established children on unknown/absent probes and resetting on a new child.
+Installation stays blocked on this finding and final new-head CI. No changes
+to the existing actual OpenD or tunnel have been made. After targeted green,
+push the corrected head and cancel the superseded first CI; second independent
+review is the final structural round. No repeated full local Python suite.
+
+The P2 is reproduced with two failing native transitions (unknown/absent).
+ChildEstablished now preserves an established child and resets after exit/new
+launch; uncertain probes never trigger termination. The native affected suite
+passes29, root's targeted reset/transitions pass3, Ruff/diff pass, and actual
+ObserveOnly still returns existing_private_tunnel. Second review remains ahead
+of installation. Corrected CI must complete on the final pushed head.

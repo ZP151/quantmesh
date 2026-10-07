@@ -10,7 +10,8 @@ param(
 )
 
 function New-QmRecoveryState {
-    return @{ Child = $null; ChildStartedAt = 0; NextAttempt = 0; Failures = 0; LastStatus = '' }
+    return @{ Child = $null; ChildStartedAt = 0; ChildEstablished = $false;
+        NextAttempt = 0; Failures = 0; LastStatus = '' }
 }
 
 function Enter-QmSingleton([string]$Name) {
@@ -156,13 +157,15 @@ function Invoke-QmRecoveryStep($State, [string]$OpenD, [string]$Tailscale, [long
     if ($null -ne $State.Child) {
         if (-not $State.Child.HasExited) {
             if ($observation.RemoteListener -eq 'present') {
+                $State.ChildEstablished = $true
                 $State.Failures = 0
                 if (-not $observation.LocalReady) { return 'needs_opend_login' }
                 return 'managed_private_tunnel'
             }
+            if ($observation.RemoteListener -eq 'unknown') { return 'needs_tailscale_or_ssh' }
+            if ($State.ChildEstablished) { return 'private_tunnel_unavailable' }
             if ($Now - $State.ChildStartedAt -lt 60) {
                 if (-not $observation.LocalReady) { return 'needs_opend_login' }
-                if ($observation.RemoteListener -eq 'unknown') { return 'needs_tailscale_or_ssh' }
                 return 'private_tunnel_connecting'
             }
             $State.Child.Kill() # Only an owned child that never established its route.
@@ -170,6 +173,7 @@ function Invoke-QmRecoveryStep($State, [string]$OpenD, [string]$Tailscale, [long
         }
         if ($State.Child -is [IDisposable]) { $State.Child.Dispose() }
         $State.Child = $null
+        $State.ChildEstablished = $false
         $State.Failures++
         $State.NextAttempt = $Now + [Math]::Min(300, 30 * [Math]::Pow(2, [Math]::Min($State.Failures - 1, 4)))
     }
@@ -177,6 +181,7 @@ function Invoke-QmRecoveryStep($State, [string]$OpenD, [string]$Tailscale, [long
     if ($observation.RemoteListener -ne 'absent') { return 'needs_tailscale_or_ssh' }
     if ($Now -lt $State.NextAttempt) { return 'retry_wait' }
     $State.Child = Start-QmTunnel $Tailscale
+    $State.ChildEstablished = $false
     $State.ChildStartedAt = $Now
     $State.NextAttempt = $Now + 30
     if ($null -ne $State.Child) { return 'private_tunnel_started' }
