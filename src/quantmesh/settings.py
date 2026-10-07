@@ -119,6 +119,7 @@ class Settings(BaseSettings):
     moomoo_watchlist: str = ""
     moomoo_market: str = "US"
     moomoo_poll_interval_s: float = Field(default=5.0, gt=0)
+    moomoo_candle_num: int = Field(default=0, ge=0, le=390)
 
     model_config = SettingsConfigDict(
         env_file=".env",

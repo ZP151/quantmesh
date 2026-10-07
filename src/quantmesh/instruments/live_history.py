@@ -48,6 +48,29 @@ _PREFERRED_INTERVAL = {
 }
 
 
+def _private_minute_metadata(payload: Mapping[str, object], data_time: datetime) -> datetime | None:
+    """Admit only the scoped private, raw, regular-session minute observations."""
+    if any(
+        payload.get(key) != value
+        for key, value in (
+            ("license", "moomoo-private-market-data"),
+            ("session", "regular"),
+            ("adjustment", "unadjusted"),
+            ("sequence_origin", "local-observation"),
+        )
+    ):
+        return None
+    if not isinstance(payload.get("provider_time_key"), str) or not payload["provider_time_key"]:
+        return None
+    try:
+        end = datetime.fromisoformat(str(payload.get("provider_end")))
+    except ValueError:
+        return None
+    if end.tzinfo is None or end != data_time + timedelta(minutes=1):
+        return None
+    return end.astimezone(UTC)
+
+
 def discover_history_bindings(lake_root: Path) -> tuple[DatasetBinding, ...]:
     """Discover only explicitly observed manifest-gated datasets."""
     lake = Lake(Path(lake_root))
@@ -161,6 +184,11 @@ def join_live_tail(
         return series
     if snapshot.provenance not in (Provenance.REAL, Provenance.DELAYED):
         return _append_limitation(series, "provenance is not real or delayed")
+    provider_end = None
+    if series.instrument.venue is Venue.MOOMOO and series.interval == "1m":
+        provider_end = _private_minute_metadata(snapshot.payload, snapshot.data_time)
+        if provider_end is None or series.license != "moomoo-private-market-data":
+            return _append_limitation(series, "private minute supplier metadata is invalid")
     received_at = snapshot.received_at
     if received_at.tzinfo is None:
         return _append_limitation(series, "received_at must be timezone-aware")
@@ -169,6 +197,9 @@ def join_live_tail(
         return _append_limitation(series, "received_at is later than the request time")
     if as_of - received_at > feed.lag:
         return _append_limitation(series, "received_at is outside the live freshness horizon")
+    freshness_time = min(provider_end, received_at) if provider_end is not None else received_at
+    if as_of - freshness_time > feed.lag:
+        return _append_limitation(series, "provider candle is outside the live freshness horizon")
     if snapshot.age_ms is None or snapshot.freshness_label not in ("real", "delayed"):
         return _append_limitation(series, "freshness evidence is absent or invalid")
     payload_interval = snapshot.payload.get("interval")
@@ -246,6 +277,16 @@ def join_live_tail(
             continuity_proven=True,
             freshness_label=snapshot.freshness_label,
             age_ms=snapshot.age_ms,
+            **(
+                {
+                    "freshness_time": freshness_time,
+                    "sequence_origin": "local-observation",
+                    "provider_time_key": snapshot.payload["provider_time_key"],
+                    "provider_end": provider_end,
+                }
+                if provider_end is not None
+                else {}
+            ),
         ),
     )
     coverage_note = (
@@ -320,11 +361,11 @@ def _replay_series(
             value,
         ),
     )
-    # Hyperliquid's live runtime records 1m observations. Expose that actual
-    # resolution for the bounded 1D chart only when no usable preferred/coarser
-    # replay exists; every candidate must pass the same continuity/price gates.
+    # Scoped crypto and private US equity runtimes record 1m observations.
+    # Expose that actual resolution for 1D only when no usable preferred/coarser
+    # replay exists; every candidate passes continuity/price and supplier gates.
     if (
-        venue is Venue.HYPERLIQUID
+        (venue is Venue.HYPERLIQUID or (venue is Venue.MOOMOO and symbol in {"AAPL", "NVDA"}))
         and selected_range is HistoryRange.ONE_DAY
         and "1m" in by_interval
     ):
@@ -351,6 +392,11 @@ def _replay_series(
                 or update.provenance not in (Provenance.REAL, Provenance.DELAYED)
                 or update.sequence_gap
                 or type(update.sequence) is not int
+                or (
+                    venue is Venue.MOOMOO
+                    and interval == "1m"
+                    and _private_minute_metadata(update.payload, update.data_time) is None
+                )
             ):
                 segment = []
                 continue
@@ -398,7 +444,9 @@ def _replay_series(
         dataset_id=f"live-replay-{venue.value}-{symbol.lower()}",
         dataset_revision=1,
         source=f"{venue.value}-live-replay",
-        license="venue-public-market-data",
+        license="moomoo-private-market-data"
+        if venue is Venue.MOOMOO
+        else "venue-public-market-data",
         generated_at=generated_at,
         interval=interval,
         calendar="XNYS" if venue is Venue.MOOMOO else "24/7",
@@ -413,6 +461,16 @@ def _replay_series(
         ),
         limitations=(
             "Manifest history unavailable; showing continuity-checked local live replay only.",
+            *(
+                (
+                    "Limited observed regular-session US equity minute coverage; "
+                    "missing intervals and session gaps are not filled.",
+                    "Sequences describe local observation order, not exchange sequence "
+                    "or current feed availability.",
+                )
+                if venue is Venue.MOOMOO
+                else ()
+            ),
         ),
         resolution_fallback=(
             None

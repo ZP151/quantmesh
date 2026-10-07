@@ -2,7 +2,7 @@
 
 - Status: ACTIVE, 2026-09-23. The local readiness repair is implemented,
   reviewed, merged and deployed through PR #161. Live equity API acceptance
-  passes; list-price rendering and full equity charts remain open. The 8 GB
+  and real list-price rendering pass through PR #162; full equity charts remain open. The 8 GB
   observation stays in later operational acceptance.
 - Linked issue: [#156 — Private Moomoo/OpenD AAPL/NVDA readiness](https://github.com/ZP151/quantmesh/issues/156).
 - Plan: [Moomoo readiness probe plan](../superpowers/plans/2026-09-23-moomoo-readiness-probe.md).
@@ -324,3 +324,194 @@ iteration 0036 for later operational acceptance, without blocking development.
   The actual AWS BTC chart was separately inspected at db3d18f: Live proven,
   observed minute OHLCV and real source. This local preview does not claim the
   display follow-up is deployed or that stock full charts exist.
+
+
+## PR #162 release acceptance — 2026-09-23 UTC
+
+- **Release/Verifier:** final candidate `8229a7ea95bde55d971f49677b6689e2da1c9200`
+  passed [CI35896206023](https://github.com/ZP151/quantmesh/actions/runs/35896206023):
+  **3591 Python passed / 56 skipped**, **379 frontend passed**, all other gates
+  green, no unresolved inline review. Normal match-head squash at 18:27:52 UTC
+  merged [PR #162](https://github.com/ZP151/quantmesh/pull/162) as
+  `c8e1813c15d4837d8b0a7480ea376bbca5839161`. Both trees are
+  `b96aae511fa48b15a62ee6bfaf1559b0cac26e2e`.
+- **Deployment:** existing private loopback:11111 listener and TCP route pass.
+  The reviewed tool activated exact c8e1813, exit 0. Previous db3d18f and
+  33aa0521 remain retained. No public exposure or trading changes occurred.
+- **Operational limitation:** the old process reached systemd's 90-second
+  stop deadline and was killed at 18:30:34 UTC. Its recorded memory peak was
+  6.2 GiB, swap peak zero. After activation, the first external health request
+  exceeded 15 seconds and browser navigation timed out. Later loopback and
+  private HTTPS probes recovered; no repair or rollback was applied. These
+  failed attempts remain evidence, not a claim of seamless restart. Long-run
+  capacity and graceful shutdown remain the deferred iteration0036 gate.
+- **API acceptance:** retry after response recovery passed **18 checks**, exact
+  c8e1813 identity, paper=true/live=false, and four samples of real progressing
+  BTC/ETH/SOL/AAPL/NVDA source clocks. Evidence is in
+  `output/0037-deployed-market-witness.json` and
+  `output/0037-pr162-deployed-market-witness.log`; the previous release report
+  was preserved as `output/0037-pr161-deployed-market-witness.json`.
+- **Browser acceptance:** actual AWS Markets displayed AAPL 336.99 / NVDA
+  225.36, Last trade, Real, source clocks 18:35:03 / 18:35:02 UTC, age 4s.
+  Its next read showed NVDA 225.37 and clocks 18:35:14 / 18:35:12 UTC.
+  Watchlist opened with the same live last-price, label and clock surface.
+  Watchlist's later read showed AAPL 336.95 / NVDA 225.47, clocks
+  18:36:14 / 18:36:13 UTC and sub-second age. Both actual pages therefore
+  exhibited price/time changes from real source observations.
+- **Crypto regression:** Watchlist's BTC link opened the 1D/Line workspace on
+  exact c8e1813, Live proven, real Hyperliquid source and WebSocket, with
+  observed 1m OHLCV through 18:36 UTC. Existing coverage/fallback warnings stay
+  visible. This confirms the bounded chart entry, not uninterrupted history
+  across the restart or complete equity charts.
+- **Handoff:** list release is accepted and its CI/deployment heartbeat may now
+  pause to prevent duplicate activation. Next product work is source-backed
+  AAPL/NVDA regular-session 1m charts, current-minute revisions, new-minute
+  appends and reload retention without changing quote/order authority. The
+  feasibility plan and raw timestamp samples are preserved in output; turn
+  them into the next tracked slice plan before implementation. Keep the
+  deferred capacity/shutdown issue and migration-evidence PR #159 separate.
+
+
+## Minute-chart development resume — 2026-10-08 Singapore
+
+- **Planner/Product:** continue issue #156 with the existing four Markets/
+  Watchlist AAPL/NVDA paths, 1D/Line, raw regular-session 1m candles. Success
+  means observed revisions/appends and reload retention with visible private
+  rights/coverage. Plan: `../superpowers/plans/2026-10-08-moomoo-minute-charts.md`.
+  Expansion prohibitions include other symbols/intervals, synthetic prices,
+  paid rights, public ingress and order capabilities.
+- **Quant Researcher:** vendor subscription defaults require explicit raw/RTH
+  settings. Prior end-label evidence remains narrowly scoped; the new actual
+  sample also retains raw labels. CalendarService filters regular sessions and
+  early closes; no cross-gap fill or inference of paid entitlement delay.
+  ADR0025 records source clocks, local sequence and private replay semantics.
+- **Implementers:** quote-only bounded current_kline and minute normalization;
+  opt-in 390-bar polling, changed/new-only events, honest cached-candle age;
+  exact Moomoo 1D private replay; metrics-only workspace display with existing
+  execution fences; updated generated API. The actual UI exposed an existing
+  generic stale heading for fresh depth-limited data, corrected with a distinct
+  limitation heading and regression. Existing chart components are reused.
+- **Red/green:** SDK/adapter first 53 failed/8 passed then 61 passed; live minute
+  boundary first 3 failed then 3 passed; workspace first 10 failed/6 passed,
+  strengthened four-file group passed 170 tests. Consolidated nine-file targeted group
+  passed 315 tests before review; review found unsupported symbols could kill
+  the optional poller, reproduced with a mixed AAPL/MSFT timeout. The guard
+  now calls scoped candles only for AAPL/NVDA; final affected group 25 passed.
+  UI limitation headline failed before the fix; final two-file group 37 passed.
+- **Reviewer:** correctness/spec review has no actionable P1/P2 findings.
+  Standards review's mixed-watchlist P2 is resolved and its bounded second
+  review has no new findings. Whole-tree Ruff and whitespace pass. Impeccable
+  mechanical scan reports no findings for the changed UI surface. Bundle and
+  generated-client checks pass. Full Python suite is running, not yet a release
+  acceptance claim; final frontend run passed 380 tests across 30 files.
+- **Actual local source witness:** five reads at 35-second spacing, 16:39:51 to
+  16:42:14 UTC October 7 (October 8 Singapore), both symbols show canonical
+  latest minutes 16:39, 16:40, 16:41, 16:42. Source-matching OHLCV, private
+  license and continuity-safe replay pass. Initial returned window has 390
+  rows, while the current contiguous chart segment grows 190 to 193; this
+  explicitly demonstrates bounded session coverage. Evidence:
+  `output/0037-minute-source-witness/witness.json` and its log. No account/order
+  API was called. This is candidate evidence, not deployed AWS chart acceptance.
+- **Operations:** initial private site health returned 502 while the existing
+  service repeatedly failed OpenD connects and its loopback listener was absent.
+  User reopened/logged in OpenD; root restored the previously approved reverse
+  SSH tunnel and exact c8e1813 health recovered without restarting/deploying.
+  User asks for later OpenD self-start. Add local logon startup and private
+  tunnel reconnection as the next bounded operational slice, verifying actual
+  vendor login restoration without storing account secrets. Capacity/shutdown
+  work and unrelated PR159 remain separate.
+- **Candidate browser witness:** actual local app on loopback8766 uses the
+  existing bundled React chart and real OpenD/Hyperliquid sources. Markets and
+  Watchlist each open both AAPL/NVDA at 1D/Line; the observed table contains
+  regular-session 1m OHLCV and source/private-rights limitations. AAPL reload
+  retained about 205 covered minutes and advanced from 16:45 to 16:54 UTC;
+  NVDA market and watchlist reads included 16:56/57 and 16:58/59 UTC observed
+  closes. Fresh metrics-only headers show real source clocks with evidence
+  limitations, not a false stale claim. Paper proposal remains disabled.
+  Final AWS acceptance must repeat these paths on the precise merged build.
+
+## PR #163 corrective release checkpoint — October 8 Singapore
+
+- **Verifier:** candidate `88232ff` opened PR #163. CI37655740964 failed at
+  npm's high-severity dependency audit before tests ran: 18 findings, including
+  10 high and 3 critical. Do not disable or bypass this gate; bounded dependency
+  remediation is part of this release because it directly blocks acceptance.
+- **Reviewer/Planner:** automated inline feedback identified two bounded
+  correctness defects, not a new product scope. Disconnect cleared the last
+  candle fingerprint and replayed three unchanged sample bars; the metrics
+  fallback ran outside the request-clock capture and could expose a later
+  receipt/price. Both were reproduced. An initial reconnect regression used an
+  incorrect drain method; after correcting that test fixture, the unchanged
+  window assertion itself failed as required (`0037-minute-reconnect-red.log`).
+- **Implementer:** keep the last source fingerprint across transient reconnects
+  while preserving the existing continuity barrier. Capture the preferred
+  QUOTE or fallback METRICS inside one feed lock with the request timestamp.
+  No quote priority, private rights or execution authority changes.
+- **Verifier:** five affected files passed **123 tests / 6 warnings**, including
+  both new regressions and existing snapshot/continuity/proposal guards.
+  Evidence: `output/0037-minute-review-red.log`,
+  `output/0037-minute-reconnect-red.log`, `output/0037-minute-review-green.log`.
+  The already-running broad Python suite remains in progress; its start
+  predates these changes. Final head CI must cover the complete candidate.
+- **Dependency reviewer/verifier:** isolated clean npm installation keeps the
+  final lock unchanged and the mandatory audit passes with zero high/critical
+  findings (two moderate Vitest findings remain). Remove the unused shadcn CLI
+  closure while retaining its exact stylesheet and full MIT notice. Compatible
+  transitive updates and a Vitest-only tinypool 2.1.2 override retain all direct
+  build-package versions. The unchanged license policy accepts 362 packages,
+  down from 646 after removing 284 CLI-closure entries. The inventory-count
+  regression was updated to the actual smaller lock; asset/security checks
+  pass **27 tests / 2 warnings**. No audit threshold or license gate changed.
+- **Frontend verifier:** the isolated new dependency closure passes **380
+  tests**, typecheck, lint (four existing warnings) and generated API identity.
+  Its build succeeds, but Tailwind's ignored sandbox scan context differs from
+  the actual frontend. Do not publish that sandbox bundle. Canonical build and
+  bundle check at the actual frontend root pass using the existing shared
+  dependency junction; direct build versions are identical and the committed
+  bundle remains byte-identical. The shared junction/other project is untouched.
+  Evidence: `output/0037-minute-npm-*.log`, `0037-minute-npm-audit-final.json`,
+  `0037-minute-audit-bundle-{build,check}.log` and `0037-minute-audit-assets.log`.
+
+## Broad-check recovery — October 8 Singapore
+
+- **Verifier:** the local broad run completed after 4961.88 seconds with
+  **3649 passed / 61 skipped / 17 failed / 8 warnings**. Its process began
+  before the corrective commits. One failure is the old collected 646-package
+  count against the new 362-package lock, already corrected and retested. The
+  other 16 are real historical API regressions, not dismissed as test timing.
+- **Planner/Implementer:** keep the original scope narrow. The private 1m
+  source clock inadvertently applied to all Moomoo candle intervals; restrict
+  it to `payload.interval == 1m`, keeping existing daily and other-period
+  receipt-clock semantics. No historical adapter or execution gate changes.
+- **Red/green:** two existing append cases and two new daily/5m clock controls
+  fail before this fix. The final six-file affected run passes **162 tests /
+  6 warnings**, including all historical API cases, private minute history,
+  feed continuity, workspace fences and license checks. Whole-tree Ruff and
+  diff checks pass. Evidence: `output/0037-minute-scope-{red,green}.log`.
+- **Release:** this is the original broad coverage plus verified recovery;
+  it is not a clean exact-head local full-run claim. Final new-head CI must
+  exercise the complete candidate before match-head merge and AWS deployment.
+  Do not start another hours-long local broad run without a new reason.
+
+## CI license-metadata recovery — October 8 Singapore
+
+- **Verifier:** CI37664362155 for `abf99ee` ran the precise candidate and
+  finished at 19:00:53 UTC October 7. All preceding gates passed; Python
+  reported **3674 passed / 56 skipped / 2 failed / 8 warnings**, after
+  3113.24 seconds. The only failures classify installed simplejson 4.2.0 as
+  unknown; the historical chart regressions now pass. Preserve actual logs in
+  `output/0037-minute-ci37664362155-failed.log`.
+- **Reviewer:** downloaded the CPython 3.13 Linux and Windows 4.2.0 wheels
+  without installing or changing ambient dependencies. Wheel hashes match the
+  PyPI registry; normalized bundled licenses exactly match upstream v4.2.0.
+  Both metadata files declare License=`MIT OR AFL-2.1`, with no
+  License-Expression field. Select the same MIT alternative as inspected
+  4.1.x, only for this exact package/version/text. Document hashes and source
+  in licenses.md. Do not broaden the generic parser or change dependency pins.
+- **Implementer/Verifier:** the exact-metadata regression first fails UNKNOWN;
+  add the single text exception. Both security files pass **29 tests**, with
+  negative controls for another package, uninspected version and GPL alternative.
+  Actual wheel metadata also classifies as the documented MIT choice. Evidence:
+  `output/0037-minute-license-{red,green}.log`,
+  `0037-simplejson-license-evidence.json`, `0037-simplejson-wheel-review.json`.
+  Full final-head CI remains required before release; no repeated local broad run.

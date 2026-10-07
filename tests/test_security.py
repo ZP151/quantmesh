@@ -166,6 +166,17 @@ class TestLicenseReview:
         )
         assert review.classify(previous_simplejson) == "MIT (documented exception)"
 
+    def test_inspected_simplejson_420_text_selects_mit_only_for_exact_metadata(self) -> None:
+        review = _load_license_review()
+        known = _FakeDist("simplejson", "4.2.0", License="MIT OR AFL-2.1")
+        assert review.classify(known) == "MIT (documented exception)"
+        for unknown in (
+            _FakeDist("simplejson", "4.2.1", License="MIT OR AFL-2.1"),
+            _FakeDist("simplejson", "4.2.0", License="MIT OR GPL-3.0-only"),
+            _FakeDist("another-package", "4.2.0", License="MIT OR AFL-2.1"),
+        ):
+            assert review.classify(unknown).startswith("UNKNOWN")
+
     def test_every_installed_closure_member_classifies_allowed(
         self,
     ) -> None:

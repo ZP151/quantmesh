@@ -3,7 +3,7 @@
 import math
 import re
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Literal
@@ -190,6 +190,12 @@ class LiveTailLineage(StrictContract):
     continuity_proven: Literal[True]
     freshness_label: Literal["real", "delayed"]
     age_ms: int = Field(ge=0)
+    freshness_time: datetime | None = Field(default=None, exclude_if=lambda value: value is None)
+    sequence_origin: Literal["local-observation"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    provider_time_key: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    provider_end: datetime | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @field_validator("source")
     @classmethod
@@ -215,8 +221,23 @@ class LiveTailLineage(StrictContract):
         interval_to_timedelta(value)
         return value
 
+    @field_validator("freshness_time", "provider_end")
+    @classmethod
+    def source_times_are_utc(cls, value: datetime | None, info) -> datetime | None:
+        return None if value is None else _utc(value, info.field_name)
+
     @model_validator(mode="after")
     def freshness_matches_provenance(self) -> "LiveTailLineage":
+        if self.freshness_time is not None and not (
+            self.venue is Venue.MOOMOO
+            and self.instrument in {"AAPL", "NVDA"}
+            and self.interval == "1m"
+            and self.sequence_origin == "local-observation"
+            and self.provider_time_key
+            and self.provider_end == self.data_time + timedelta(minutes=1)
+            and self.freshness_time == min(self.provider_end, self.received_at)
+        ):
+            raise ValueError("source freshness clock requires exact private Moomoo minute lineage")
         if self.freshness_label != self.provenance.value:
             raise ValueError("freshness_label must match live provenance")
         duration = interval_to_timedelta(self.interval)
@@ -369,20 +390,31 @@ class HistoricalSeries(StrictContract):
     @model_validator(mode="after")
     def observed_series_is_self_consistent(self) -> "HistoricalSeries":
         if self.resolution_fallback == "5m->1m" and not (
-            self.instrument.venue is Venue.HYPERLIQUID
+            (
+                (self.instrument.venue is Venue.HYPERLIQUID and self.calendar == "24/7")
+                or (
+                    self.instrument.venue is Venue.MOOMOO
+                    and self.instrument.symbol in {"AAPL", "NVDA"}
+                    and self.calendar == "XNYS"
+                    and self.license == "moomoo-private-market-data"
+                )
+            )
             and self.range is HistoryRange.ONE_DAY
-            and self.source == "hyperliquid-live-replay"
-            and self.dataset_id == f"live-replay-hyperliquid-{self.instrument.symbol.lower()}"
+            and self.source == f"{self.instrument.venue.value}-live-replay"
+            and self.dataset_id
+            == f"live-replay-{self.instrument.venue.value}-{self.instrument.symbol.lower()}"
             and self.manifest_id is None
             and self.quality_evaluation_id is None
             and self.interval == "1m"
-            and self.calendar == "24/7"
             and self.adjustment == "unadjusted"
             and self.coverage.start == self.bars[0].timestamp
             and self.coverage.end == self.bars[-1].timestamp
             and self.coverage.rows == len(self.bars)
         ):
-            raise ValueError("5m->1m fallback requires exact Hyperliquid 1D local replay coverage")
+            venue_name = "Moomoo" if self.instrument.venue is Venue.MOOMOO else "Hyperliquid"
+            raise ValueError(
+                f"5m->1m fallback requires exact {venue_name} 1D local replay coverage"
+            )
         if (self.manifest_id is None) != (self.quality_evaluation_id is None):
             raise ValueError("manifest_id and quality_evaluation_id must be present together")
         identity = (self.instrument.venue, self.instrument.symbol)
@@ -418,10 +450,16 @@ class HistoricalSeries(StrictContract):
             if item.live_lineage.received_at > self.as_of:
                 raise ValueError("live lineage received_at must not exceed series as_of")
             expected_age_ms = int(
-                (self.as_of - item.live_lineage.received_at).total_seconds() * 1000
+                (
+                    self.as_of - (item.live_lineage.freshness_time or item.live_lineage.received_at)
+                ).total_seconds()
+                * 1000
             )
             if item.live_lineage.age_ms != expected_age_ms:
-                raise ValueError("live lineage age_ms must exactly equal as_of minus received_at")
+                raise ValueError(
+                    "live lineage age_ms must exactly equal as_of minus its freshness clock "
+                    "(received_at by default)"
+                )
         return self
 
 
@@ -1039,7 +1077,7 @@ class ProposalConfirmation(StrictContract):
 
 
 class WorkspaceLiveEvidence(StrictContract):
-    """One truthful latest quote view; absent data stays explicitly absent."""
+    """Latest quote or degraded last trade; absent depth never gains authority."""
 
     status: Literal["available", "degraded", "unavailable"]
     reason: str | None = None

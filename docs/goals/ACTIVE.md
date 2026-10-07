@@ -1,11 +1,13 @@
 # Active Goal
 
-Status: iteration0037 ACTIVE, 2026-09-23. The 0035 AWS real-chart acceptance
+Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance
 and the 8 GB migration's short acceptance are complete; this goal remains
 active until the new host's sustained capacity gate is closed and the separate
 Moomoo/OpenD route is ready. PR #161 is now merged and deployed; its live API acceptance passes.
-The remaining list-price display correction is locally verified and reviewed,
-awaiting its follow-up CI and private deployment; full equity charts remain open. The user explicitly prioritized development and deferred observation
+PR #162 also passed CI and is deployed as `c8e1813`; API and list-page
+acceptance pass. Source-backed equity minute charts are implemented on
+`codex/0037-equity-minute-charts` and locally witnessed; full-suite/CI, merge,
+private deployment and final AWS chart acceptance remain pending. The user explicitly prioritized development and deferred observation
 to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
 explicitly restored CI and authorized merge/private deployment after all checks pass.
 
@@ -13,7 +15,8 @@ explicitly restored CI and authorized merge/private deployment after all checks 
 
 The authoritative private origin is now
 `https://quantmesh-staging-8gb.tail99d23c.ts.net`, serving exact merged build
-`db3d18fdb5a241826c7276760af59a49c2fc679d` after PR #161. The original
+`c8e1813c15d4837d8b0a7480ea376bbca5839161` after PR #162.
+Previous `db3d18f` remains retained for rollback. The original
 migration checkpoint used retained rollback build `33aa0521`. The restored dataset passed archive
 hash, WAL recovery, JSON payload validation, 13-check read-only smoke, chart
 entry-path, and controlled restart checks. The host currently reports about
@@ -90,9 +93,14 @@ tests, type/lint/build consistency, 27 Python asset/identity checks and an
 independent review with no actionable findings. Local browser preview against
 the actual private AWS feed shows both prices and progressing source times;
 this is candidate evidence, not a follow-up production-deployment claim.
-Next: CI the display follow-up, normal match-head squash merge, verify tree,
-deploy the precise merged version and accept both actual AWS list pages.
-Then implement source-backed equity minute candles (existing poller emits
+Release follow-up: PR #162 / CI35896206023 passed 3591 Python tests
+(56 skipped) and 379 frontend tests. Normal squash merge at 18:27:52 UTC
+produced `c8e1813c15d4837d8b0a7480ea376bbca5839161`, with the same tree
+`b96aae511fa48b15a62ee6bfaf1559b0cac26e2e` as candidate `8229a7e`.
+The exact release was deployed and passed 18 API checks plus five advancing
+real sources. Markets/Watchlist now show Last trade, Real and moving source
+clocks for AAPL/NVDA. Do not redeploy either completed release.
+Next implement source-backed equity minute candles (existing poller emits
 metrics/trades only). Review the deferred capacity/drill evidence later.
 The prior Basic-data error is not proof of a paid entitlement requirement:
 the old transport omitted the SDK subscription call. Actual subscription
@@ -210,3 +218,46 @@ Keep0021soak and issues135/132/127 independent. No public OpenD exposure, paid
 subscriptions, orders, strategy promotion or opportunistic maintenance changes.
 Standing reviewed merge/private-deployment authority remains in the user's
 request and .codex/prompts/goal.md; no further confirmation for this scope.
+
+
+## October 8 continuation
+
+Execute the tracked `2026-10-08-moomoo-minute-charts.md` plan. SDK, polling,
+private replay and metrics-only workspace display are implemented, with source
+samples across two real minute boundaries. Independent review resolved the
+one mixed-watchlist compatibility finding; no trading authority changed.
+Full Python run completed (output/0037-minute-full-suite.log and .exit), with
+17 failures diagnosed and final affected reruns recorded separately. Never repeat the full run without a
+new failure/changed boundary. Existing reverse Tailscale SSH tunnel is running;
+keep it and user OpenD alive. AWS still serves c8e1813, not the candidate.
+After checked release and four-entry/reload acceptance, proceed to the user's
+requested OpenD self-start and private tunnel recovery. Account authentication
+remains handled in the vendor UI, no password storage or disclosure. The
+old capacity/shutdown and migration PR159 remain outside the product slice.
+
+PR #163 first-head CI37655740964 failed the frontend dependency audit before
+tests. The release gate is retained. Bounded dependency remediation now passes
+the high/critical audit and isolated frontend checks; two automated correctness
+findings were reproduced and fixed (reconnect dedupe, atomic metrics capture),
+with 123 affected tests green. The completed broad Python job started before
+these corrective changes and reads this mutable worktree; its result must be
+reported with that limitation. Final new-head CI must verify the complete
+candidate. AWS remains c8e1813 until checked merge and exact deployment.
+
+The broad run finished with 3649 passed / 61 skipped / 17 failed. One failure
+is the old in-memory 646-entry assertion against the corrected 362-entry lock.
+The other 16 exposed a real scope regression: the private 1m freshness clock
+also affected existing daily/other-interval Moomoo candles. Restrict the rule
+to interval=1m, preserving the previous receipt clock elsewhere. The six-file
+affected suite now passes 162 tests, including every failed file and two new
+nonminute controls. Treat this as consolidated coverage plus targeted recovery,
+not a clean exact-head local full run. Await final new-head CI before release.
+
+Exact-head CI37664362155 completed with 3674 passed / 56 skipped / 2 failed;
+the historical regressions are resolved. Both remaining failures concern the
+installed simplejson 4.2.0 text license, previously inspected only at 4.1.x.
+The official tag license and Linux/Windows wheels were verified against registry
+hashes; add only the exact 4.2.0 MIT-choice text exception. Safety/license
+regressions pass 29 tests, including unknown-version/changed-license refusals.
+No dependency pin, generic parser, threshold or CI gate changes. Await the next
+complete head CI before merge/deployment; AWS still serves c8e1813.

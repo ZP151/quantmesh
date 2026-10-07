@@ -73,10 +73,16 @@ def _live_evidence(
     ask = _positive(snapshot.payload, "ask")
     bid_size = _positive(snapshot.payload, "bid_size")
     ask_size = _positive(snapshot.payload, "ask_size")
+    if snapshot.kind is not UpdateKind.QUOTE:
+        bid = ask = bid_size = ask_size = None
     last = _positive(snapshot.payload, "last")
     if last is None and bid is not None and ask is not None:
         last = (bid + ask) / 2
     reasons: list[str] = []
+    if snapshot.kind is UpdateKind.METRICS:
+        reasons.append(
+            "last trade is display-only, not an executable quote; bid/ask depth is absent"
+        )
     if snapshot.provenance not in {Provenance.REAL, Provenance.DELAYED}:
         reasons.append(f"quote provenance is {snapshot.provenance.value}")
     if snapshot.freshness_label not in {"real", "delayed"}:
@@ -351,7 +357,7 @@ class InstrumentWorkspaceService:
             generated_at, live_snapshot = self._now(), None
         else:
             generated_at, live_snapshot = self._live_feed.capture_exact(
-                venue, symbol, UpdateKind.QUOTE, clock=self._now
+                venue, symbol, UpdateKind.QUOTE, clock=self._now, fallback_kind=UpdateKind.METRICS
             )
         if generated_at.tzinfo is None:
             raise ValueError("workspace clock must be timezone-aware")

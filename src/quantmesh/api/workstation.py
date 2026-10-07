@@ -1837,6 +1837,7 @@ def main(argv: list[str] | None = None) -> None:
                     MoomooVenueTransport(
                         MoomooOpenDClient.from_settings(settings),
                         poll_interval=timedelta(seconds=settings.moomoo_poll_interval_s),
+                        candle_num=settings.moomoo_candle_num,
                     ),
                     market=settings.moomoo_market,
                 )

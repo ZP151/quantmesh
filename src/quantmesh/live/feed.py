@@ -182,6 +182,21 @@ _CLOCK_SKEW = timedelta(seconds=5)
 
 
 def _freshness_time(update: MarketUpdate) -> datetime:
+    if (
+        update.venue is Venue.MOOMOO
+        and update.kind is UpdateKind.CANDLE
+        and update.payload.get("interval") == "1m"
+    ):
+        # OpenD returns cached windows: receipt cannot renew an old bar's age.
+        value = update.payload.get("provider_end")
+        if isinstance(value, str):
+            try:
+                end = datetime.fromisoformat(value)
+                if end.tzinfo is not None and end == update.data_time + timedelta(minutes=1):
+                    return min(end, update.received_at)
+            except ValueError:
+                pass
+        return min(update.data_time, update.received_at)
     # Candle time identifies its interval, and metrics may be receipt-timed.
     # Neither can be treated as an exchange quote timestamp.
     if update.kind in _SOURCE_TIMED_KINDS:
@@ -392,8 +407,9 @@ class LiveFeed:
         kind: UpdateKind,
         *,
         clock: Callable[[], datetime],
+        fallback_kind: UpdateKind | None = None,
     ) -> tuple[datetime, ExactUpdateSnapshot | None]:
-        """Sample a request clock and detach its quote/proof before another ingest.
+        """Sample a request clock and detach its preferred observation/proof atomically.
 
         The clock must be a quick, side-effect-free local read. The lock is released before the
         caller performs history, account or other potentially blocking work.
@@ -401,7 +417,10 @@ class LiveFeed:
         """
         with self._lock:
             as_of = clock()
-            return as_of, self.snapshot_exact(venue, instrument, kind, as_of=as_of)
+            snapshot = self.snapshot_exact(venue, instrument, kind, as_of=as_of)
+            if snapshot is None and fallback_kind is not None:
+                snapshot = self.snapshot_exact(venue, instrument, fallback_kind, as_of=as_of)
+            return as_of, snapshot
 
     def snapshot_exact(
         self,

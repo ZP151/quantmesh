@@ -54,6 +54,17 @@ creates one).
 | simplejson | MIT | metadata declares `MIT OR AFL-2.1`; QuantMesh selects the allowed MIT alternative |
 | tzdata | Apache-2.0 | the IANA timezone database under Apache-2.0 |
 
+For simplejson, the selected MIT alternative is limited to inspected versions
+4.1.1, 4.1.2 and the 4.2.0 text metadata `MIT OR AFL-2.1`. The
+[v4.2.0 upstream license](https://github.com/simplejson/simplejson/blob/v4.2.0/LICENSE.txt)
+and CPython 3.13 Linux/Windows wheels were checked on 2026-10-08. Both wheels'
+license files match that upstream text after newline normalization. Their
+SHA256 values match the PyPI registry: Linux
+`a104dace5beae2fcb0f524a0ef4cecf948aa73e4028764914b363bacd7b9b5d0`,
+Windows `ce6ccb058a94f41cec98057b758c0c8ca632a23c1e280bf98a1b18aeadb88549`.
+This exact-version classification does not change the pinned release closure,
+generic SPDX parser or treatment of uninspected versions/other declarations.
+
 ## Security toolchain (outside the release closure)
 
 The advisory scanner is not part of the release install. It runs in a
@@ -215,7 +226,7 @@ source-available restriction, no untracked package.
   `react-router-dom` 7.18.2, `@tanstack/react-query` 5.101.4,
   `@base-ui/react` 1.7.0, `tailwindcss` 4.3.3 + `@tailwindcss/vite`,
   `tw-animate-css`, `class-variance-authority`, `clsx`,
-  `tailwind-merge`, `lucide-react`, `shadcn` 4.16.2 (CLI),
+  `tailwind-merge`, `lucide-react`,
   `openapi-fetch` 0.17.0, `lightweight-charts` 5.2.0,
   `@fontsource-variable/geist`, `@rolldown/binding-win32-x64-msvc`
   (Vite's bundler binary) — all permissive (MIT / Apache-2.0 /
@@ -224,6 +235,25 @@ source-available restriction, no untracked package.
   package/lock changes also trigger the Security workflow. A dependency
   change beyond patch level requires a re-check of this section and the
   explicit SPDX allowlist.
+
+### Iteration 0037 dependency-audit repair (2026-10-08)
+
+The workstation used only the stylesheet from `shadcn` 4.16.2, not its CLI.
+That CLI's unpatched transitive `braces` dependency blocked the required
+high-severity audit. Preserve the exact stylesheet body in
+`frontend/src/styles/shadcn.css` with its full upstream MIT copyright/license;
+the sole import now points there. Source and SHA256 are recorded in the file.
+The original components and visual behavior remain unchanged. No upstream CLI
+implementation was copied.
+
+Remove the unnecessary CLI dependency closure, refresh vulnerable compatible
+transitive patches, and scope `tinypool` 2.1.2 to Vitest. Its Node 20+ minimum
+fits this repository's Node 20.19 / 22.12 minimum; the isolated test run verifies
+compatibility while keeping Vitest 3.2.7. The current lock passes the unchanged
+SPDX/registry/integrity policy for 362 entries. Unchanged Tailwind WASI bundles
+retain the original parent tarball's integrity and bundled-dependency metadata,
+without inventing standalone registry hashes. npm's mandatory high-severity
+audit is retained; moderate-only findings remain separately visible.
 
 ## Inventory (generated 2026-09-03; 76 packages in the release
 closure `.[dev,research,e2e,moomoo]`)

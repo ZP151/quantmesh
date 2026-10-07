@@ -2740,6 +2740,8 @@ export interface components {
              * @enum {string}
              */
             freshness_label: "real" | "delayed";
+            /** Freshness Time */
+            freshness_time?: string | null;
             /** Instrument */
             instrument: string;
             /** Interval */
@@ -2756,6 +2758,10 @@ export interface components {
              * @enum {string}
              */
             provenance: "real" | "delayed";
+            /** Provider End */
+            provider_end?: string | null;
+            /** Provider Time Key */
+            provider_time_key?: string | null;
             /**
              * Received At
              * Format: date-time
@@ -2768,6 +2774,8 @@ export interface components {
              * @constant
              */
             sequence_gap: false;
+            /** Sequence Origin */
+            sequence_origin?: "local-observation" | null;
             /** Source */
             source: string;
             venue: components["schemas"]["Venue"];
@@ -3415,7 +3423,7 @@ export interface components {
         };
         /**
          * WorkspaceLiveEvidence
-         * @description One truthful latest quote view; absent data stays explicitly absent.
+         * @description Latest quote or degraded last trade; absent depth never gains authority.
          */
         WorkspaceLiveEvidence: {
             /** Age Ms */
