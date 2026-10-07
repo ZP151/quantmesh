@@ -646,3 +646,29 @@ iteration 0036 for later operational acceptance, without blocking development.
   40.31s**, exit0 (retention-and-native-green.log/.exit); whole-tree Ruff and
   diff pass. The eight fixture combinations explicitly execute retention,
   rather than suppressing it. New exact-head full CI remains the merge gate.
+
+- **Release verifier:** final CI37692512030 is SUCCESS at22:47:02 UTC,
+  **3677 Python passed /87 skipped /8 warnings /3113.60s**, plus **380 frontend
+  passed** and all preceding checks. Linux explicitly skips31 Windows cases;
+  separate native Windows31 and final combined65 remain the native evidence.
+  Normal match-head squash PR #164 merges22:50:18 UTC as c4ebee4. Candidate
+  00be634 and merged tree both47407bc9ad88f300e8a57f2a56865dbc6d5ad462.
+- **Operational configuration acceptance:** exact merged scripts install the
+  current-user LocalAppData helper and fixed Startup shortcut. Installed digest
+  9D9E19F735096EF32A3BA28B816ED348CC20D127029CCC97ECE24DF9CD20DE9B
+  matches committed bytes; executable, arguments and working directory readback
+  match. Hidden helper53020 remains alive with singleton held, repeated launch
+  exits0/duplicate_helper. The first Start-Process witness lacked an observable
+  exit code; direct .NET Process handle confirms it without runtime changes.
+- **Preservation:** actual OpenD28036 and existing CLI process IDs/path are
+  unchanged, original tunnel session75590 remains running, and ObserveOnly
+  confirms AWS loopback11111. Health remains exact69515b7, paper=true/live=false.
+  No AWS app redeployment, policy, login, public port or live trading change.
+  Native real-shortcut temp install/uninstall/reinstall/removal passes; only
+  the isolated helper-absence boundary is mocked, and active user config stays.
+- **Handoff:** configuration done; next actual Windows login/outage and equity
+  open-session revision/two-minute boundaries remain pending. Do not invent
+  evidence or repeat released changes. Reports under output/0037-opend-startup/
+  include reviewed-merge, actual-installed/launch/startup-witness/aws-after and
+  isolated-reinstall-witness JSON plus final CI log. New evidence branch
+  codex/0037-release-acceptance starts from origin/main c4ebee4; local main stays.

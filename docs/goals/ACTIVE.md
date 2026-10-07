@@ -13,6 +13,15 @@ and two new minute boundaries remain pending after the market closed. The user e
 to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
 explicitly restored CI and authorized merge/private deployment after all checks pass.
 
+PR #164 is checked and merged as `c4ebee4d80c7c3cd162a1f5b3d17ba5553f21f2d`.
+The exact reviewed Windows startup helper is installed for the current user;
+hidden helper PID53020 holds the singleton and duplicate launch exits0.
+OpenD PID28036 and original tunnel session75590 remain alive. AWS continues
+to serve `69515b7`, paper=true/live=false; Windows changes need no app redeploy.
+Next actual Windows login/outage and open-session equity minute witnesses remain
+pending. The evidence branch `codex/0037-release-acceptance` starts from
+origin/main c4ebee4, preserving divergent local main.
+
 ## 8 GB capacity handoff — later acceptance work
 
 The authoritative private origin is now
@@ -362,3 +371,38 @@ Verifier: corrected history/native two-file run passes65 / 40.31s, exit0
 (retention-and-native-green.log/.exit); whole-tree Ruff and diff checks pass.
 All eight replay candidates now run real retention at their fixture clock.
 Await the new exact-head full CI; no Startup files have been installed.
+
+## Windows startup release and configuration acceptance — 2026-10-07 UTC
+
+Final CI37692512030 completes successfully at 22:47:02 UTC: 3677 Python
+passed/87 skipped/8 warnings, 3113.60s, and380 frontend passed. Linux skips
+31 native Windows cases; the actual Windows run above passed31 and final
+history/native run passed65. Normal match-head squash merges PR #164 at
+22:50:18 UTC as c4ebee4. Candidate00be634 and merged trees both equal
+47407bc9ad88f300e8a57f2a56865dbc6d5ad462; no force/admin merge.
+
+Only exact committed scripts are extracted to an ignored reviewed directory.
+Installation verifies signed existing GUI and writes current-user
+LocalAppData/QuantMesh/OpenDRecovery plus the fixed Startup shortcut.
+Installed supervisor SHA256:
+9D9E19F735096EF32A3BA28B816ED348CC20D127029CCC97ECE24DF9CD20DE9B.
+Shortcut executable/arguments/working directory match the owned manifest.
+The hidden helper stays alive with mutex held; a second launch returns
+duplicate_helper/exit0. Initial Start-Process witness could not observe the
+exit code; direct owned .NET Process observation corrects the fixture without
+changing runtime scripts or launching another long-running helper.
+
+Actual OpenD PID28036 and all pre-existing CLI processes are preserved;
+session75590 remains running. ObserveOnly confirms AWS loopback11111 and
+health confirms exact69515b7/paper=true/live=false after installation.
+An isolated real-shortcut install/uninstall/reinstall/removal witness passes,
+mocking only its lack of a helper; actual current-user Startup stays installed.
+Vendor auto-login is unchanged; a future human login may still be required.
+No Windows logoff/reboot or true network outage is manufactured.
+
+Evidence under output/0037-opend-startup/: ci37692512030-success.log,
+reviewed-merge.json, actual-installed.json, actual-launch.json,
+actual-startup-witness.json, actual-aws-after.json and
+isolated-reinstall-witness.json. Configuration acceptance is complete;
+actual next-login/outage and equity open-session revisions/two new minute
+boundaries are pending. Do not repeat merge/install/deploy while waiting.

@@ -411,7 +411,9 @@ Sequence for operator review:
    final CI and deployed as `69515b7`; four AWS equity paths and reload render
    supplier-matching closed minutes. Open-session revisions/appends remain in
    later acceptance because deployment followed the regular-session close.
-   OpenD self-start/private tunnel recovery is the next authorized slice.
+   PR #164 passed CI and installed current-user OpenD startup/private tunnel
+   recovery after mergec4ebee4. Exact-script and singleton acceptance pass;
+   next real Windows login/outage and equity open-session witnesses remain.
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
