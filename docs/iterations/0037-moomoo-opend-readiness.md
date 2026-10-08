@@ -1,9 +1,12 @@
 # Iteration 0037 — Private Moomoo/OpenD AAPL/NVDA readiness
 
-- Status: ACTIVE, 2026-09-23. The local readiness repair is implemented,
-  reviewed, merged and deployed through PR #161. Live equity API acceptance
-  and real list-price rendering pass through PR #162; full equity charts remain open. The 8 GB
-  observation stays in later operational acceptance.
+- Status: ACTIVE, updated 2026-10-08. Readiness and list-price rendering are
+  released through PR #161/#162. PR #163's equity minute charts pass actual
+  regular-session API/browser acceptance, including revisions, two minute
+  appends, reload retention and supplier-matching closed OHLCV. PR #164's
+  Windows startup configuration is installed and accepted. Only actual Windows
+  login/outage and later operational gates (8 GB observation, capacity and
+  shutdown/reboot drills) remain pending; the overall long goal stays ACTIVE.
 - Linked issue: [#156 — Private Moomoo/OpenD AAPL/NVDA readiness](https://github.com/ZP151/quantmesh/issues/156).
 - Plan: [Moomoo readiness probe plan](../superpowers/plans/2026-09-23-moomoo-readiness-probe.md).
 - Operator steps: [private readiness runbook](../runbooks/moomoo-readiness.md).
