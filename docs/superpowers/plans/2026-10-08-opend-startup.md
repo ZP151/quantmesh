@@ -127,8 +127,10 @@ acceptance. See the iteration ledger and output/0037-opend-startup witnesses.
 ## Remaining chart acceptance
 
 PR #163 is already merged/deployed as `69515b7`; never repeat deployment.
-Four AWS equity paths/reload and supplier-matching closed OHLCV pass, but
+Four AWS equity paths/reload and supplier-matching closed OHLCV pass;
 open-session source progression, revisions and two new minute boundaries
-remain pending. The startup slice may proceed while markets are closed. When
-the next regular session is actually open, complete those read-only witnesses
-and update the durable records. Capacity and shutdown drills remain later work.
+pass in the October 8 13:56–14:03 UTC API/browser witness. Both charts retain
+30 closed bars after reload and their recent four closed OHLCV match source
+brackets. Four stock entry paths and crypto regressions pass. Evidence is under
+output/0037-open-session-20261008/. Next actual Windows login/outage, capacity
+and shutdown drills remain later work.

@@ -95,13 +95,18 @@ Linux SDK 在导入时需要真实用户目录；就绪 worker 会恢复被隔�
 Release `69515b7` (PR #163) is checked, merged and deployed. Both stocks now
 render actual provider minutes through Markets/Watchlist, with private source,
 observed coverage and local sequence labels. Closed-session OHLCV/reload and
-crypto regressions pass; actual open-session revisions/appends remain pending.
+crypto regressions pass. October 8 regular-session API/browser witnesses also
+pass actual revisions, two new minute appends and source-matching OHLCV.
 
 在私有站点 Markets 或 Watchlist 点击 AAPL、NVDA，选择 1D 和 Line，可看到
-已采集的真实 1m 走线图。当前发布后验收发生在收盘之后；股票源时间停在收盘、
+已采集的真实 1m 走线图。首次发布后验收发生在收盘之后；股票源时间停在收盘、
 年龄增长并显示 Stale 是正确行为。请勿把页面刷新时间当作行情源时间。
-下一常规开放时段仍需检查同一分钟修订、新分钟连续追加两次、刷新保留、与
-OpenD OHLCV 一致。OpenD 和私有隧道须保持运行；缺 bid/ask 时纸交易仍阻断。
+2026-10-08 13:56–14:03 UTC（新加坡 21:56–22:03）的真实开市验收已通过：
+两股票同分钟修订、13:58→13:59→14:00 连续追加、刷新保留 30 条已收盘分钟，
+以及最近四条已收盘 OHLCV 与供应商前后采样一致。四个股票入口及 BTC/ETH/SOL
+图回归通过。原始供应商标签保存在 API live_lineage.provider_time_key，
+sequence_origin 明确为 local-observation；页面显示私有许可与本地序号限制。
+OpenD 和私有隧道须保持运行；缺 bid/ask 时纸交易仍阻断。
 
 ## Windows 登录后启动与私有重连
 

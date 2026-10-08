@@ -65,7 +65,8 @@ order authority; PR #162 passed full CI and independent review, merged and deplo
 `c8e1813`. Both actual list pages show real prices and advancing source clocks. Source-backed equity minute
 candles are implemented and locally witnessed in the October 8 continuation;
 PR #163 passed full CI and deployed as `69515b7`; actual AWS closed-minute
-charts/reload pass while open-session revisions/appends remain pending.
+charts/reload pass; October 8 regular-session API/browser witnesses now prove
+revisions, two new minute boundaries and provider-matching closed OHLCV.
 PR #164 passed CI, merged as `c4ebee4`, and installed current-user OpenD startup
 and private tunnel recovery. Exact-script/shortcut/singleton acceptance passes;
 next actual Windows login/outage remains pending. The existing Windows OpenD

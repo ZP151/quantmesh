@@ -672,3 +672,48 @@ iteration 0036 for later operational acceptance, without blocking development.
   include reviewed-merge, actual-installed/launch/startup-witness/aws-after and
   isolated-reinstall-witness JSON plus final CI log. New evidence branch
   codex/0037-release-acceptance starts from origin/main c4ebee4; local main stays.
+
+## Regular-session minute acceptance — 2026-10-08 13:56–14:03 UTC
+
+- **Planner / scope:** finish issue #156's remaining stock-chart read-only
+  loop on already-deployed69515b7. No runtime change, deployment, startup
+  reinstall, artificial outage, credentials or trading action.
+- **Researcher / source:** XNYS regular session is actually open13:30–20:00
+  UTC. Six before/AWS/after samples per stock verify closed OHLCV and actual
+  source progression independently of price changes. Raw supplier10:01 Eastern
+  maps to canonical14:00 UTC start /14:01 end in scoped US1m live_lineage;
+  sequence_origin remains local-observation. No exchange sequence, public
+  redistribution rights or paid entitlement is claimed.
+- **Verifier / route:** installed helper53020/OpenD28036 are alive at intake;
+  reviewed ObserveOnly returns existing_private_tunnel. The original external
+  route is respected; no source/helper/tunnel is restarted.
+- **API:** verify_moomoo_deployment.py exact69515b7 exits0, all18smoke checks
+  plus five real/fresh source clocks advance. verify_aws_moomoo_minutes.py
+  exits0: six source brackets, current-minute revisions and two new minute
+  boundaries for both stocks. Private license/degraded workspace gates pass.
+- **Browser:** four actual Markets/Watchlist AAPL/NVDA entry paths render
+  1D/Line/1m. Two concurrent pages observe13:58→13:59→14:00 and within-minute
+  OHLCV changes without reload; NVDA also observes13:57. Reload retains all30
+  already-closed bars per chart. Recent four closed bars13:56–13:59 match OHLCV
+  from supplier-bracketed AWS samples. Screenshots confirm real line charts,
+  private license and local-observation limitations; raw labels remain in API
+  live_lineage, without an exchange-sequence claim in the page.
+- **Safety / regression:** stocks remain Live degraded, bid/ask absent and
+  Create paper proposal disabled. Exactbuild/paper=true/live=false unchanged.
+  Actual BTC/ETH/SOL1DLine charts render14:03 observed minutes. No orders or
+  paper writes are issued.
+- **Evidence:** output/0037-open-session-20261008/ contains progression and
+  minutes.log/.exit/.json, browser.json, checked-summary.json, initial/reload
+  DOM files, AAPL/NVDA PNGs and crypto DOMs. Both helper exits0 and independent
+  saved-evidence checker exit0. Initial checker selector mistakes (last-four
+  overlap, Z/+00:00 spelling, nested live_lineage) are corrected only in that
+  ignored checker; runtime and observations stay unchanged. Previous closed
+  evidence is copied to previous-closed-progression/minutes.json first; its
+  failed gate remains truthful.
+- **Reviewer / class A:** acceptance Markdown only. Whitespace, required PR
+  CI and unresolved-review gates precede integration; no application redeploy.
+  Preserve pending actual Windows login/outage,24hcapacity,shutdown/reboot
+  drills and separate PR #159. Overall long goal remains ACTIVE.
+- **Operator / 中文:** 两股票真实开市分钟修订、连续两次追加、刷新保留与供应商
+  OHLCV一致已通过；OpenD自启动配置已安装。真实Windows登录/断线、容量和
+  停机演练仍后置。文档PR检查通过后合并并暂停本条发布续跑。
