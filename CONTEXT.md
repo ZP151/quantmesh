@@ -64,8 +64,14 @@ follow-up now shows Last trade and its source time without creating bid/ask or
 order authority; PR #162 passed full CI and independent review, merged and deployed as
 `c8e1813`. Both actual list pages show real prices and advancing source clocks. Source-backed equity minute
 candles are implemented and locally witnessed in the October 8 continuation;
-full CI and private AWS chart release acceptance remain pending. The Windows
-OpenD process and private reverse SSH tunnel must remain running.
+PR #163 passed full CI and deployed as `69515b7`; actual AWS closed-minute
+charts/reload pass; October 8 regular-session API/browser witnesses now prove
+revisions, two new minute boundaries and provider-matching closed OHLCV.
+PR #164 passed CI, merged as `c4ebee4`, and installed current-user OpenD startup
+and private tunnel recovery. Exact-script/shortcut/singleton acceptance passes;
+next actual Windows login/outage remains pending. The existing Windows OpenD
+process and private reverse SSH tunnel stay running; vendor authentication
+settings are unchanged. Windows-only startup changes require no AWS redeploy.
 
 ## Bounded context
 

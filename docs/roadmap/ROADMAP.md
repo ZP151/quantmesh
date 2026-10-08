@@ -409,9 +409,12 @@ Sequence for operator review:
    through PR #162 at `c8e1813`, with actual list price/time updates verified. Source-backed equity minute candles are now implemented on the October 8
    candidate, with actual local source-backed revisions/appends. PR #163 passed
    final CI and deployed as `69515b7`; four AWS equity paths and reload render
-   supplier-matching closed minutes. Open-session revisions/appends remain in
-   later acceptance because deployment followed the regular-session close.
-   OpenD self-start/private tunnel recovery is the next authorized slice.
+   supplier-matching closed minutes. October 8 regular-session API/browser
+   acceptance proves revisions, two minute appends, reload retention and
+   supplier-matching OHLCV for both stocks; crypto chart regression passes.
+   PR #164 passed CI and installed current-user OpenD startup/private tunnel
+   recovery after mergec4ebee4. Exact-script and singleton acceptance pass;
+   next real Windows login/outage remains pending.
 8. Expand datasets, baselines or selected Qlib/Darts adapters only where a
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.

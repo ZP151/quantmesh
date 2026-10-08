@@ -95,15 +95,20 @@ Linux SDK 在导入时需要真实用户目录；就绪 worker 会恢复被隔�
 Release `69515b7` (PR #163) is checked, merged and deployed. Both stocks now
 render actual provider minutes through Markets/Watchlist, with private source,
 observed coverage and local sequence labels. Closed-session OHLCV/reload and
-crypto regressions pass; actual open-session revisions/appends remain pending.
+crypto regressions pass. October 8 regular-session API/browser witnesses also
+pass actual revisions, two new minute appends and source-matching OHLCV.
 
 在私有站点 Markets 或 Watchlist 点击 AAPL、NVDA，选择 1D 和 Line，可看到
-已采集的真实 1m 走线图。当前发布后验收发生在收盘之后；股票源时间停在收盘、
+已采集的真实 1m 走线图。首次发布后验收发生在收盘之后；股票源时间停在收盘、
 年龄增长并显示 Stale 是正确行为。请勿把页面刷新时间当作行情源时间。
-下一常规开放时段仍需检查同一分钟修订、新分钟连续追加两次、刷新保留、与
-OpenD OHLCV 一致。OpenD 和私有隧道须保持运行；缺 bid/ask 时纸交易仍阻断。
+2026-10-08 13:56–14:03 UTC（新加坡 21:56–22:03）的真实开市验收已通过：
+两股票同分钟修订、13:58→13:59→14:00 连续追加、刷新保留 30 条已收盘分钟，
+以及最近四条已收盘 OHLCV 与供应商前后采样一致。四个股票入口及 BTC/ETH/SOL
+图回归通过。原始供应商标签保存在 API live_lineage.provider_time_key，
+sequence_origin 明确为 local-observation；页面显示私有许可与本地序号限制。
+OpenD 和私有隧道须保持运行；缺 bid/ask 时纸交易仍阻断。
 
-## Windows 登录后启动与私有重连候选
+## Windows 登录后启动与私有重连
 
 `deploy/windows/opend_recovery.ps1` 复用现有 GUI 和同一条私有隧道。它不读取
 OpenD 配置、密码、账号、日志，也不修改供应商的 Remember Me/Auto Login。
@@ -115,11 +120,17 @@ powershell.exe -NoProfile -NonInteractive -File deploy/windows/opend_recovery.ps
 powershell.exe -NoProfile -NonInteractive -File deploy/windows/install_opend_startup.ps1 -Status
 ```
 
-候选当前只完成实现与原生隔离测试，尚未安装。独立审查及发布检查完成后，
+PR #164 已通过检查并合并为 `c4ebee4`，2026-10-08 已安装当前用户启动配置。
+隐藏 helper 保持运行，重复启动退出 0；现有 OpenD 和原私有隧道保持正常。
 安装器只写当前用户 `%LOCALAPPDATA%/QuantMesh/OpenDRecovery` 和 Startup 中
 `QuantMesh OpenD Recovery.lnk`。不创建管理员服务、不改变执行策略或公网入口。
 已有 OpenD/隧道保留；远端监听状态无法确定时等待，避免重复创建转发。
 状态会区分 `needs_opend_login`、`needs_tailscale_or_ssh` 与实际已有的私有隧道。
+
+Configuration acceptance passed with exact merged scripts, shortcut/digest
+readback and duplicate suppression. Next-login and a real outage recovery
+remain pending. Source authentication is still the vendor's UI responsibility;
+starting the GUI does not prove remembered login or real-time entitlement.
 
 安装器 `-Uninstall` 只移除校验为本工具所有的项目。若 helper 正在运行，先
 移除登录启动快捷方式，返回 `startup_removed_cleanup_deferred` 并保留程序、

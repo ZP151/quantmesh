@@ -8,10 +8,21 @@ PR #162 also passed CI and is deployed as `c8e1813`; API and list-page
 acceptance pass. Source-backed equity minute charts are implemented on
 `codex/0037-equity-minute-charts`, checked through PR #163 and deployed at
 `69515b79d2bc67303bfef9dee660dbca9bef41e3`. Four AWS equity entry paths and
-reload pass with supplier-matching closed bars; actual open-session revisions
-and two new minute boundaries remain pending after the market closed. The user explicitly prioritized development and deferred observation
+reload pass with supplier-matching closed bars. The October 8 regular-session
+acceptance now proves actual revisions and two new minute boundaries in both
+the API and browser; all four stock entry paths and crypto regressions pass.
+The user explicitly prioritized development and deferred observation
 to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
 explicitly restored CI and authorized merge/private deployment after all checks pass.
+
+PR #164 is checked and merged as `c4ebee4d80c7c3cd162a1f5b3d17ba5553f21f2d`.
+The exact reviewed Windows startup helper is installed for the current user;
+hidden helper PID53020 holds the singleton and duplicate launch exits0.
+OpenD PID28036 and original tunnel session75590 remain alive. AWS continues
+to serve `69515b7`, paper=true/live=false; Windows changes need no app redeploy.
+Next actual Windows login/outage remains pending; equity open-session acceptance
+is complete. The evidence branch `codex/0037-release-acceptance` starts from
+origin/main c4ebee4, preserving divergent local main.
 
 ## 8 GB capacity handoff — later acceptance work
 
@@ -362,3 +373,57 @@ Verifier: corrected history/native two-file run passes65 / 40.31s, exit0
 (retention-and-native-green.log/.exit); whole-tree Ruff and diff checks pass.
 All eight replay candidates now run real retention at their fixture clock.
 Await the new exact-head full CI; no Startup files have been installed.
+
+## Windows startup release and configuration acceptance — 2026-10-07 UTC
+
+Final CI37692512030 completes successfully at 22:47:02 UTC: 3677 Python
+passed/87 skipped/8 warnings, 3113.60s, and380 frontend passed. Linux skips
+31 native Windows cases; the actual Windows run above passed31 and final
+history/native run passed65. Normal match-head squash merges PR #164 at
+22:50:18 UTC as c4ebee4. Candidate00be634 and merged trees both equal
+47407bc9ad88f300e8a57f2a56865dbc6d5ad462; no force/admin merge.
+
+Only exact committed scripts are extracted to an ignored reviewed directory.
+Installation verifies signed existing GUI and writes current-user
+LocalAppData/QuantMesh/OpenDRecovery plus the fixed Startup shortcut.
+Installed supervisor SHA256:
+9D9E19F735096EF32A3BA28B816ED348CC20D127029CCC97ECE24DF9CD20DE9B.
+Shortcut executable/arguments/working directory match the owned manifest.
+The hidden helper stays alive with mutex held; a second launch returns
+duplicate_helper/exit0. Initial Start-Process witness could not observe the
+exit code; direct owned .NET Process observation corrects the fixture without
+changing runtime scripts or launching another long-running helper.
+
+Actual OpenD PID28036 and all pre-existing CLI processes are preserved;
+session75590 remains running. ObserveOnly confirms AWS loopback11111 and
+health confirms exact69515b7/paper=true/live=false after installation.
+An isolated real-shortcut install/uninstall/reinstall/removal witness passes,
+mocking only its lack of a helper; actual current-user Startup stays installed.
+Vendor auto-login is unchanged; a future human login may still be required.
+No Windows logoff/reboot or true network outage is manufactured.
+
+Evidence under output/0037-opend-startup/: ci37692512030-success.log,
+reviewed-merge.json, actual-installed.json, actual-launch.json,
+actual-startup-witness.json, actual-aws-after.json and
+isolated-reinstall-witness.json. Configuration acceptance is complete;
+actual next-login/outage and equity open-session revisions/two new minute
+boundaries are pending. Do not repeat merge/install/deploy while waiting.
+
+## October 8 regular-session acceptance — complete user loop
+
+The13:56–14:03 UTC witness completes stock minute acceptance on exact
+69515b79d2bc67303bfef9dee660dbca9bef41e3. Both read-only helpers exit0:
+18smoke/five real advancing source clocks and six source-bracketed minute
+samples. Browser Markets/Watchlist AAPL/NVDA1DLine1m paths, same-minute
+revisions,13:58→13:59→14:00 appends and reload retention pass. Thirty closed
+bars survive each reload; recent four closed OHLCV match supplier brackets.
+Raw labels remain in API live_lineage; private license/local sequence limits
+are visible. No bid/ask keeps stocks degraded and paper proposal disabled.
+BTC/ETH/SOL current charts pass; paper=true/live=false.
+
+Evidence: output/0037-open-session-20261008/ progression/minutes logs and
+exit0, raw JSON, browser.json, checked-summary.json, DOMs and PNGs. Earlier
+closed-session failures remain preserved. Integrate the documentation-only
+evidence PR after required CI/review gates, then pause the release heartbeat.
+Do not redeploy the app or mark the whole goal complete. Actual Windows
+login/outage,24hcapacity,shutdown/reboot drills and PR #159 remain separate.

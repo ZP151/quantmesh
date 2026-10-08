@@ -102,26 +102,35 @@ ignored reports under `output/0037-opend-startup/`.
 
 - [x] Run `-Status` and `-Once -ObserveOnly` against actual existing processes;
   exact local/remote listeners must be healthy before installation.
-- [ ] Install only the named current-user startup shortcut and owned helper
+- [x] Install only the named current-user startup shortcut and owned helper
   files. Record target paths and digests; read shortcut back and verify exact
   executable/arguments/working directory. No account credentials or admin task.
-- [ ] Launch hidden helper now; launch a second copy and prove singleton exit,
+- [x] Launch hidden helper now; launch a second copy and prove singleton exit,
   with existing OpenD PID and original tunnel still present. Verify AWS
   localhost11111 and exact app build/paper=true/live=false afterward.
-- [ ] Verify uninstall/reinstall only in an isolated test-owned temp directory.
+- [x] Verify uninstall/reinstall only in an isolated test-owned temp directory.
   Do not uninstall the user's active helper or close existing source/tunnel.
-- [ ] Record configuration done separately from next-login/reboot and real
+- [x] Record configuration done separately from next-login/reboot and real
   reconnect witnesses. Do not claim automatic vendor authentication. If login
   is needed, give the user the specific vendor-UI step; never request credentials.
-- [ ] One PR for reviewed scripts/runbook evidence; follow standing green-CI
+- [x] One PR for reviewed scripts/runbook evidence; follow standing green-CI
   merge authority. These Windows changes do not require an AWS application
   redeploy. Preserve pending open-session minute-chart acceptance independently.
+
+Task2 configuration passes after CI37692512030 and normal mergec4ebee4:
+exact-byte digest/shortcut readback, hidden singleton53020, duplicateexit0,
+OpenD28036/original session75590 preserved, AWS69515b7/paper=true/live=false.
+Native temporary real-shortcut uninstall/reinstall passes with isolated
+helper-absence boundary. No actual login/outage is claimed; those remain later
+acceptance. See the iteration ledger and output/0037-opend-startup witnesses.
 
 ## Remaining chart acceptance
 
 PR #163 is already merged/deployed as `69515b7`; never repeat deployment.
-Four AWS equity paths/reload and supplier-matching closed OHLCV pass, but
+Four AWS equity paths/reload and supplier-matching closed OHLCV pass;
 open-session source progression, revisions and two new minute boundaries
-remain pending. The startup slice may proceed while markets are closed. When
-the next regular session is actually open, complete those read-only witnesses
-and update the durable records. Capacity and shutdown drills remain later work.
+pass in the October 8 13:56–14:03 UTC API/browser witness. Both charts retain
+30 closed bars after reload and their recent four closed OHLCV match source
+brackets. Four stock entry paths and crypto regressions pass. Evidence is under
+output/0037-open-session-20261008/. Next actual Windows login/outage, capacity
+and shutdown drills remain later work.
