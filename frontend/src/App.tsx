@@ -15,6 +15,7 @@ import { EnablementScreen, KillSwitchScreen } from '@/screens/Ops'
 import { PredictionScreen } from '@/screens/Prediction'
 import { OverviewScreen } from '@/screens/Overview'
 import { ExperimentsScreen, ForecastsScreen, PromotionsScreen } from '@/screens/Research'
+import { ResearchJobsScreen } from '@/screens/ResearchJobs'
 import { RiskScreen } from '@/screens/Risk'
 import { SettingsScreen } from '@/screens/Settings'
 import { OrdersScreen, PnLScreen, PositionsScreen } from '@/screens/Trading'
@@ -60,6 +61,7 @@ export default function App() {
           }
         />
         <Route path="prediction" element={<PredictionScreen />} />
+        <Route path="research/jobs" element={<ResearchJobsScreen />} />
         <Route path="research/experiments" element={<ExperimentsScreen />} />
         <Route path="research/promotions" element={<PromotionsScreen />} />
         <Route path="research/forecasts" element={<ForecastsScreen />} />

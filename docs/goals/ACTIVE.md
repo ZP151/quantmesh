@@ -152,6 +152,12 @@ service admission, and accepted same-key replay survives disappeared bytes.
 UI/browser/review remain active in the same#173 chat. No new native session or
 whole-product completion; existing operator/Engine/provider gates stay pending.
 
+UI source ed04f24 integrates7e5834b; root App/nav/messages now expose the real
+research job page. Full frontend413pass/14.27s, typecheck/lint/build green,
+schema current. Native#173 continues actual LOCAL_FIXTURE_ONLY browser loop and
+two final boundary reviews after syncing root shared wiring; no duplicated
+session/review or new strategy/deployment/paid API call is needed.
+
 ## Historical delivery checkpoint — retained, superseded priority
 
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance

@@ -492,3 +492,15 @@ upstream deprecation warnings. Generated API check/typecheck/lint exit0 (existin
 React fast-refresh lint warnings); Ruff/diff green. Logs/exit under ignored
 output/173-workstation. No UI/browser/full product/server acceptance is implied;
 child UI checkpoint and final two-axis API–UI review remain the next boundary.
+
+Root reads UI checkpoint ed04f241609d8ad108aeab4228d6c7b09d988318 and its
+handoff:8 leaf component tests green. Integrates as7e5834b and applies reviewed
+shared proposal for /app/research/jobs, navigation and English/Chinese nav labels.
+Fresh complete frontend33files/413tests pass/14.27s exit0; typecheck/lint/build
+also succeed (existing fast-refresh warnings and >500kB bundle warning).
+The attempted npm test command exits1 because this package has no test script;
+its original log is retained, then the actual repository Vitest entrypoint
+`npx vitest run` executes all tests and exits0. No script/package change.
+Shared route/schema/client/UI candidate is now wired, but actual fixture browser
+submit/report/reload/cancel/unavailable and the two final Spec/Standards reviews
+remain pending in the same#173 session. This is a local candidate, not deployed.
