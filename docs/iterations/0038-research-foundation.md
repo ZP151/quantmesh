@@ -348,3 +348,9 @@ crypto frame unknown between HTTP snapshots without inventing current policy.
 Evidence frontend-final-cache.log/.exit and frontend-final-cache-build.log/.exit;
 no production UI release is implied. Linux owned-worker containment is a named
 server-delivery follow-up after#170/#171, with native fixture readiness pending.
+That follow-up is [#172](https://github.com/ZP151/quantmesh/issues/172); its
+containment design and native fixture must be qualified before Linux execution.
+Final read-only current-user global singleton inspection reports absent
+(helper-mutex-followup.txt). It opens an existing handle only, never creates a
+mutex/helper or changes source processes; this corroborates the missing helper
+finding independently of PID/command-line matching.
