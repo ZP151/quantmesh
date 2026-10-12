@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react'
+import { createHash, webcrypto } from 'node:crypto'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ResearchJobsScreen } from './ResearchJobs'
@@ -24,26 +25,30 @@ const request = { schema_version: 1, strategy_id: 'momentum', strategy_version: 
   window_spec: { train_bars: 10, test_bars: 5, step_bars: 5 }, analysis_requested: true,
   budget: { timeout_seconds: 900, memory_mib: 2048, cpu_limit: 1,
     max_model_calls: 12, max_estimated_model_usd: 1 } }
+const reportText = JSON.stringify({ schema_version: 1, result: { metrics: {
+  total_return: 0.01, total_cost: 0.003 }, evidence: { build_digest: 'f'.repeat(64) } } })
+const reportDigest = createHash('sha256').update(reportText).digest('hex')
 function job(state = 'queued') {
   return { job_id: 'fixture-job', operator_id: 'local', idempotency_key: 'saved-key', request,
     request_digest: 'd'.repeat(64), implementation_digest: 'c'.repeat(64), state, attempt: 0,
     cancel_requested: false, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z',
-    artifacts: state === 'succeeded' ? [{ kind: 'report', artifact_id: 'e'.repeat(64),
-      sha256: 'e'.repeat(64), byte_size: 12, schema_version: 1, object_key: 'fixture-job/report.json' }] : [],
+    artifacts: state === 'succeeded' ? [{ kind: 'report', artifact_id: reportDigest,
+      sha256: reportDigest, byte_size: Buffer.byteLength(reportText), schema_version: 1,
+      object_key: `fixture-job/${reportDigest}.json` }] : [],
     usage: {}, analysis_state: state === 'succeeded' ? 'unavailable' : 'pending', analysis: null }
 }
 
 beforeEach(() => {
+  vi.stubGlobal('crypto', webcrypto)
   localStorage.clear()
   vi.clearAllMocks()
   mocks.options.mockResolvedValue(options)
   mocks.submit.mockImplementation(async (_request, key) => ({ ...job(), idempotency_key: key }))
   mocks.get.mockResolvedValue(job('succeeded'))
   mocks.cancel.mockResolvedValue(job('cancelled'))
-  mocks.artifact.mockResolvedValue(JSON.stringify({ schema_version: 1, result: { metrics: {
-    total_return: 0.01, total_cost: 0.003 }, evidence: { build_digest: 'f'.repeat(64) } } }))
+  mocks.artifact.mockResolvedValue(reportText)
 })
-afterEach(() => { vi.useRealTimers() })
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals() })
 
 describe('fixture research loop', () => {
   it('submits pinned setup, reaches report, reloads and keeps Agent unavailable independent', async () => {
@@ -157,5 +162,17 @@ describe('fixture research loop', () => {
     expect(screen.getByLabelText('Registered baseline')).toHaveValue('risk_parity')
     expect(screen.getByLabelText('Fee (bps)')).toHaveValue(7)
     expect(screen.getByLabelText('Train bars')).toHaveValue(20)
+  })
+
+  it('rejects tampered retained report bytes after reload', async () => {
+    localStorage.setItem('quantmesh.research-job.v1', JSON.stringify({
+      submission: { key: 'saved-key', request }, job: job('succeeded'),
+    }))
+    localStorage.setItem('quantmesh.research-job.v1.report.fixture-job', JSON.stringify({
+      jobId: 'fixture-job', artifactId: reportDigest, text: reportText.replace('0.01', '9.99'),
+    }))
+    render(<ResearchJobsScreen />)
+    await screen.findByText(/Retained report integrity verification failed/)
+    expect(screen.queryByText('Canonical report')).not.toBeInTheDocument()
   })
 })
