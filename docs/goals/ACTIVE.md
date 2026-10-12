@@ -1,5 +1,15 @@
 # Active Goal
 
+Current dispatch2026-10-13: Task3 source witness preparation is ACTIVE in
+`QuantMesh #169 — 服务器行情真实来源验收工具`, thread01a131f6-ec78-7b21-a156-e1a30e041c43,
+managed4a9b, frozen9ff1f22. Narrow plan2026-10-13-server-source-witness.md;
+new read-only verifier/tests/runbook only. No real gateway/network/login/cutover
+operations in that implementation session. Current profile remains blocked.
+The other active implementation session is owned PG#171/c7be; its first real
+30/0skip gate passes, final admission fixes/fresh proof are under round2 review.
+Root has not yet integrated or certified that pending final handoff. No third
+writer, repeat completed reviews, source independence or whole-goal pass.
+
 Current resume anchor2026-10-13 Singapore: #173 local fixture user loop is
 integrated/reviewed, two axes clear after2rounds; source ed5c12e/b9daa42 map to
 bc0d7a4/9fac9bf. Root47backend/1skip,14UI/typecheck green; child full419frontend
