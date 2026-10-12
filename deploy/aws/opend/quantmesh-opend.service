@@ -1,0 +1,44 @@
+# Inert candidate template. Do not install/enable before qualification and operator approval.
+[Unit]
+Description=QuantMesh private operator-authenticated OpenD candidate
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/quantmesh/opend/operator-approved
+
+[Service]
+Type=simple
+User=quantmesh-opend
+Group=quantmesh-opend
+WorkingDirectory=/opt/quantmesh/opend/10.10.7008
+Environment=HOME=/var/lib/quantmesh-opend
+Environment=LD_LIBRARY_PATH=/opt/quantmesh/opend/10.10.7008
+ExecCondition=/usr/bin/python3 /opt/quantmesh/opend/validate_profile.py --profile /etc/quantmesh/opend/gateway-profile.json --require-qualified --verify-executable
+ExecStart=/opt/quantmesh/opend/10.10.7008/OpenD -cfg_file=/etc/quantmesh/opend/OpenD.xml -api_ip=127.0.0.1 -api_port=11112 -auto_hold_quote_right=0 -no_monitor=1 -simulate_trade=disable -console=1 -log_level=no
+StandardInput=tty
+StandardOutput=tty
+StandardError=tty
+TTYPath=/run/quantmesh-opend/operator-tty
+TTYReset=yes
+TTYVHangup=no
+TTYVTDisallocate=no
+StateDirectory=quantmesh-opend
+StateDirectoryMode=0700
+RuntimeDirectory=quantmesh-opend
+RuntimeDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+ReadWritePaths=/var/lib/quantmesh-opend /run/quantmesh-opend
+KillMode=control-group
+Restart=no
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

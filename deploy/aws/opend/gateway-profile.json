@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "artifact": {
+    "url": "https://softwaredownload.moomoo.com/moomoo_OpenD_10.10.7008_Ubuntu18.04.tar.gz",
+    "version": "10.10.7008",
+    "sha256": "72eaa6e47b5cb8905306427b5e3679d591408243492e3e7acbc3a7d46f09a0aa",
+    "size_bytes": 466932458,
+    "executable_sha256": "e05b901dbe9107061b954a7fe3c059916c4a1e580d8f0a57277d402438898601",
+    "platform": "linux-x86_64",
+    "distribution_target": "Ubuntu18.04"
+  },
+  "sdk": {
+    "package": "moomoo-api",
+    "version": "10.10.7008",
+    "vendor_minimum_opend": "10.10.7008",
+    "version_floor_verified": true,
+    "wire_compatibility_verified": false
+  },
+  "endpoint": {
+    "host": "127.0.0.1",
+    "port": 11112
+  },
+  "runtime": {
+    "user": "quantmesh-opend",
+    "install_dir": "/opt/quantmesh/opend/10.10.7008",
+    "executable": "/opt/quantmesh/opend/10.10.7008/OpenD",
+    "home": "/var/lib/quantmesh-opend",
+    "state_dir": "/var/lib/quantmesh-opend/.com.moomoo.OpenD",
+    "config_file": "/etc/quantmesh/opend/OpenD.xml",
+    "inherit_windows_state": false,
+    "auto_hold_quote_right": false,
+    "trade_enabled": false,
+    "auto_login": false,
+    "argv": [
+      "-cfg_file=/etc/quantmesh/opend/OpenD.xml",
+      "-api_ip=127.0.0.1",
+      "-api_port=11112",
+      "-auto_hold_quote_right=0",
+      "-no_monitor=1",
+      "-simulate_trade=disable",
+      "-console=1",
+      "-log_level=no"
+    ],
+    "config_sha256": "d6c9c112004bd0866dacc5d0e4fae4d715fcd6db250cd68cae859f787583bffb"
+  },
+  "authentication": {
+    "method": "operator_private_pty",
+    "capture_session": false,
+    "tty_path": "/run/quantmesh-opend/operator-tty",
+    "new_device_approval_required": true,
+    "market_right_transfer_approval_required": true,
+    "private_input_verified": false
+  },
+  "qualification": {
+    "state": "blocked",
+    "install_allowed": false,
+    "reason": "private_authentication_and_sdk_wire_unverified",
+    "isolated_platform": "Ubuntu24.04.3-WSL-x86_64",
+    "operator_approved": false,
+    "server_startup_verified": false
+  }
+}
