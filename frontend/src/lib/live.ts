@@ -118,6 +118,13 @@ function retainedSessionCoverage(
   const end = Date.parse(previous.expected_last_bar_end ?? '')
   const data = Object.values(incoming).filter(view => view.kind !== 'status')
   if (data.length === 0 || previous.data_state === 'unknown') return previous
+  if (previous.market_state === 'open' && previous.data_state === 'fresh'
+    && data.every(view => isSourceBacked(view.provenance)
+      && Number.isFinite(Date.parse(view.data_time)) && Number.isFinite(Date.parse(view.received_at))
+      && Date.parse(view.data_time) <= Date.parse(view.received_at) + 1000)) {
+    // Keep the server's short-lived evaluation; streamed receipt never renews it.
+    return previous
+  }
   if (previous.market_state === 'closed' && previous.data_state === 'latest_session'
     && Number.isFinite(end) && data.every(view => isSourceBacked(view.provenance)
     && Number.isFinite(Date.parse(view.data_time)) && Date.parse(view.data_time) <= end + 1000)) {

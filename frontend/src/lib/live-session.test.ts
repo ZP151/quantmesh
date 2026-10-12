@@ -69,4 +69,20 @@ describe('server session coverage survives client state handling', () => {
     expect(same.session_freshness?.data_state).toBe('latest_session')
     expect(same.kinds.metrics.provenance).toBe('delayed')
   })
+
+  it('retains a recent open evaluation through real updates without renewing its expiry', () => {
+    const evaluated = '2026-10-12T13:37:20Z'
+    const previous = { ...row(), session_freshness: { ...session, market_state: 'open' as const,
+      data_state: 'fresh' as const, evaluated_at: evaluated, provider_delay_seconds: 0,
+      last_source_at: '2026-10-12T13:37:00Z', next_open_at: null } }
+    const merged = mergeUpdate({ 'moomoo:AAPL': previous }, { venue: 'moomoo', instrument: 'AAPL',
+      kind: 'metrics', provenance: 'real', data_time: '2026-10-12T13:37:21Z',
+      received_at: '2026-10-12T13:37:21Z', payload: { last: 301 },
+      sequence: null, sequence_gap: false, state: null, state_note: null })['moomoo:AAPL']
+    expect(liveDataPresentation(merged.session_freshness, 'real', Date.parse('2026-10-12T13:37:21Z')).key)
+      .toBe('live.session.open')
+    expect(merged.session_freshness?.evaluated_at).toBe(evaluated)
+    expect(liveDataPresentation(merged.session_freshness, 'real', Date.parse('2026-10-12T13:37:51Z')).key)
+      .toBe('live.session.refresh')
+  })
 })

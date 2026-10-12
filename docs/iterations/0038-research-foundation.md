@@ -337,3 +337,14 @@ provider/baseURL/model/pricing metadata. No key/password is requested in chat.
 Next bounded work ports owned Worker/model-effect containment to qualified Linux,
 then ResearchJobs workstation/Eval; core and independent-service release gates
 remain open. Formal168h remains unnecessary; current goal ACTIVE.
+
+Final UI reconciliation ruling: valid open server evaluations remain visible
+through source-backed frames only for their original30s lifetime. Streaming
+does not renew evaluated_at; undeclared latency stays unknown, invalid/new closed
+session input invalidates to unknown and source failures remain separate. A
+specific premature-invalidation RED1/5pass becomes GREEN; final frontend suite
+405pass/32files/13.46s and build/typecheck exit0. This avoids marking every fresh
+crypto frame unknown between HTTP snapshots without inventing current policy.
+Evidence frontend-final-cache.log/.exit and frontend-final-cache-build.log/.exit;
+no production UI release is implied. Linux owned-worker containment is a named
+server-delivery follow-up after#170/#171, with native fixture readiness pending.
