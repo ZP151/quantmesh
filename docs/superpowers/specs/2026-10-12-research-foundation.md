@@ -111,7 +111,8 @@ stale app values remain a diagnosis candidate pending delay/lifecycle evidence.
 - `ArtifactRef`: `artifact_id`, `kind`, `schema_version`, `sha256`, byte size,
   immutable relative object key. Paths, secrets and arbitrary URLs are not refs.
 - `AnalysisRecord`: job/report digest, model/provider identity, prompt digest,
-  output digest, citations, verdict, usage and estimated price version. It has
+  output digest, output_artifact (required for succeeded, absent when no output),
+  resolved citations, verdict, usage and estimated price version. It has
   no order, broker token or execution authority.
 
 Idempotency is `(operator_id, idempotency_key)`: same digest returns the same

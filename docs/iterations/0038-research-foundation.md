@@ -143,3 +143,20 @@ validation; no fabricated all-zero prompt/output hashes. Submitted engine digest
 covers baseline/reports source only, not a full runtime fingerprint. Root clarified
 one relevant domain broad boundary per session and a single final combined-head
 fresh release gate; mandatory PR CI/review gates remain intact.
+
+#168 first two-axis review identifies unresolved published-citation references;
+accepted for RED/GREEN repair. Proposed optional output_artifact is required on
+successful analysis to make output replay verifiable; unavailable-before-call
+remains None. Ambient license_review exited1 due installed-version/closure mismatch
+and missing packages; no lock/dependency change, and no license-green claim.
+Root's eventual fresh audited integration gate must close this before promotion.
+Two independent CLI submit processes return same job and reopen/status pass;
+1.197s/1.183s are only two measured samples, not a p95 acceptance result.
+
+#169 current reviewer3P2/closed-positive case has RED6failed/31passed and
+GREEN37passed/6warnings/1.86s. Closed full-session coverage with undeclared
+latency now reports latest_session without assuming latency zero. Top summary
+excludes status and preserves verified completed-minute coverage instead of a
+partial candle; absent provider end is not replaced with candle open. Root
+clarifies relevant broad regressions per slice, one final combined full gate;
+the interrupted old full run remains incomplete, not a green certification.

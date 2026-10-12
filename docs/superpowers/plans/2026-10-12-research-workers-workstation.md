@@ -105,6 +105,10 @@ Interfaces:
   resume without recalling that completed call. Unknown price rejects paid call.
 - Real-provider metadata includes usage availability and a versioned price table;
   actual response is replayed, not regenerated for an old report.
+  Archive validated analysis output as a job-owned kind=analysis artifact;
+  AnalysisRecord.output_artifact binds output_digest to verified bytes. Successful
+  citations resolve to the job's published evidence, not arbitrary claimed refs.
+  Unavailable-before-call metadata/output remains None rather than invented hashes.
 
 - [ ] Audit a pinned LangGraph OSS closure and Python compatibility in the
   independent environment, record license decision and lock digests. Use a

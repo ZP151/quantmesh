@@ -59,6 +59,14 @@ analysis needs actual schema-valid output, cited report evidence and no error;
 failure never rewrites a valid backtest as failed or grants order authority.
 Errors crossing CLI/API are fixed allowlisted codes, never vendor raw payloads.
 
+Success additionally requires output_artifact (optional/None before a model
+produces output) with kind=analysis and SHA256 equal to output_digest. Its
+owned immutable bytes/size are verified; an isolated digest is not archived
+output. Citations must resolve exactly to this job's published artifact refs
+and bytes, not merely be a nonempty list. Output model/pipeline/schema validation
+remains the Agent Worker's responsibility. First independent review exposed
+this evidence-resolution gap; RED/GREEN and final contract freeze are pending.
+
 ## Admission scope and consequences
 
 The first Task2 slice admits existing legacy-v1 fixture/test manifests only.
