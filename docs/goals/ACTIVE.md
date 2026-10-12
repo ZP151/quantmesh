@@ -1,5 +1,17 @@
 # Active Goal
 
+Next bootstrap dispatch2026-10-13: native chat01a131ff-9a11-76f1-ba24-292774894c10,
+managed5bc4, starts frozen d351c3a. Tracked plan
+2026-10-13-research-service-bootstrap.md refines the unfinished#171 startup/
+Task4 preparation: four new runtime/CLI/test/runbook files, default no-effect
+preflight, fixed loopback8110, explicit private credentials and real new owned
+SQL/HTTP restart/idempotency/cancel proof. Root owns shared app/health integration.
+It runs alongside source witness4a9b; PG c7be is stopped and must not redispatch.
+Actual Oct12 21:19UTC Docker info still exit1/Engine unavailable. No production
+host/model/Worker is started; PR166 actualOPEN/da6e8c7/reviews[] remains under
+the pending human review/recovery request. No paid resource or repeated source
+requests/old CI. Bootstrap API queueing is not Linux execution/report acceptance.
+
 Current dispatch2026-10-13: Task3 source witness preparation is ACTIVE in
 `QuantMesh #169 — 服务器行情真实来源验收工具`, thread01a131f6-ec78-7b21-a156-e1a30e041c43,
 managed4a9b, frozen9ff1f22. Narrow plan2026-10-13-server-source-witness.md;
@@ -9,8 +21,8 @@ Owned PG#171/c7be completes atf525d91, integrated8166b03. Two final review axes
 clear; actual Linux qualifier33/0skip and genuine default service30/0skip gate
 exit0, owned shutdown verified. Root integration34pass/7Linux-only skips/Ruff0;
 69 raw receipts are archived with independent SQL/JUnit/import/hash consistency
-checks. No service/store/lock drift from frozen42fbfa5. Source witness4a9b is
-the remaining active implementation session. Production PG/TLS/HA/backup,
+checks. No service/store/lock drift from frozen42fbfa5. Source witness4a9b and
+new bootstrap5bc4 are the two active implementation sessions. Production PG/TLS/HA/backup,
 OCI/Worker/model/source/deployment gates remain open; no whole-goal pass.
 
 Current resume anchor2026-10-13 Singapore: #173 local fixture user loop is

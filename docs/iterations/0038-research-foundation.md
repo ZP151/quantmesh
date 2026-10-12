@@ -606,3 +606,16 @@ not copied upstream code or core closure admission; REUSE updated. Local
 fixture omitsTLS/ICU/readline/zlib and grants no production PG/HA/backup,
 OCI/model/real90sWorker/source/deployment certification. Source witness4a9b
 continues; formal168h remains on-demand, fullA goal ACTIVE.
+
+Root current actual Docker info returns exit1/no server version: native#172
+Engine/image qualification remains pending, not restarted or declared passed.
+PR166 exactda6e8c7 is stillOPEN/CLEAN/reviews[]/mergeCommitnull; no new oldCI,
+helper/source or paid operation. Approved Task2/4 startup preparation is refined
+by2026-10-13-research-service-bootstrap.md (d351c3a). Native chat
+01a131ff-9a11-76f1-ba24-292774894c10, managed5bc4, ACTIVE fromexactd351c3a,
+owns runtime.py/__main__.py/test_runtime.py/new bootstrap runbook only. Deliver
+fixed private explicit startup plus genuine new owned HTTP/SQL/auth/replay/
+cancel/restart/503 witness; no Worker/model/server launch. Root owns shared
+health/app integration and final deployment gates. Other active writer is
+source witness4a9b; PGc7be completed/idle. No third writer or completed-review
+redispatch. First plan/dispatch evidence is not completed runtime acceptance.

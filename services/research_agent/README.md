@@ -2,8 +2,12 @@
 
 Task 2 of the approved iteration0038 [plan](../../docs/superpowers/plans/2026-10-12-research-workers-workstation.md), based on exact
 `0a7ae862f5a7e29bccf3b307c2507f424c81e092`. Advisory output cannot place orders.
-This checkpoint is **offline scripted acceptance only**. Real PostgreSQL and
-Linux runtime acceptance are pending; no server was provisioned or deployed.
+The original scripted checkpoint is now accompanied by measured Linux
+dependency/offline-service and genuine owned PostgreSQL acceptance. Final
+local SQL gate:30 passed, zero skips/failures/errors, exit0 on frozen42fbfa5;
+see [raw SQL proof](../../docs/evidence/research-foundation/owned-postgresql/README.md).
+Production runtime/containment, private deployment, backup/restore and real
+provider acceptance remain pending; no server was provisioned or deployed.
 
 ## Scope and integration
 
@@ -105,7 +109,13 @@ Use hash-enforced installation in a fresh owned Linux venv and the same two
 `--no-deps --no-build-isolation` editable project installs. Actual clean
 9d5b3fa native-filesystem WSL acceptance passes81 licenses/no unknowns,
 8 runtime tests and25 scripted service tests/5 real-PG skips, offline exit0.
-Default gate exits1 solely for the missing actual disposable PostgreSQL proof.
+That historical default gate exits1 solely for the missing actual disposable
+PostgreSQL proof. The subsequent owned PG18.6 native fixture at42fbfa5 executes
+all30 service tests, including all5 genuine PG cases, zero skips/failures/errors,
+exit0. Final qualifier33native tests and two-axis reviews pass; the owned cluster
+stops safely. Original failed/default receipts stay archived, not overwritten.
+This C/UTF8 local fixture without TLS/ICU/readline/zlib does not certify the
+production database, HA/backup, Linux Worker or model containment.
 Fresh Windows gate remains25pass/5skip/exit0. Retain the mounted-drive capture,
 Git-pointer and300s-expiry attempts; none is a successful qualification.
 Raw durable evidence and actual-import paths are in

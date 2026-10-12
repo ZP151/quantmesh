@@ -19,9 +19,12 @@ unchanged in the audited pinnedPydantic2.13.5 environment; local v1 admits only
 fixture/test datasets and explicitly rejects unsupportedv2/rights before work.
 Do not reinterpret export_digest as an existing remote export object. Numerical
 report validation and full runtime fingerprint belong to Worker, not JobStore.
-Docker's Linux engine is currently absent; actual PostgreSQL acceptance remains
-pending until a disposable database is available. Scripted gateway is labelled;
-provider metadata/egress/key approval precedes real calls.
+Docker's Linux engine is currently absent. Subsequent owned PG18.6 qualification
+on42fbfa5 executes30actual service tests/0skip/exit0, archived separately; that
+local fixture does not certify production PG or changed future service trees.
+Scripted gateway is labelled; provider metadata/egress/key approval precedes
+real calls. Current startup refinement is
+[research-service-bootstrap](2026-10-13-research-service-bootstrap.md).
 
 ## Global Constraints
 
@@ -149,7 +152,7 @@ Interfaces:
   does not enlarge core release dependencies. A separate gated real API run
   waits for operator provider/model/price/egress approval and records actual cost.
 
-## Task 3 — Workstation submit/status/report loop (#173, active)
+## Task 3 — Workstation submit/status/report loop (#173, local fixture complete)
 
 Files: create `src/quantmesh/api/research_jobs.py`,
 `src/quantmesh/research/service_client.py`, `tests/test_research_jobs_api.py`,
