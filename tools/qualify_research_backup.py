@@ -434,23 +434,73 @@ def backup_receipt(root, manifest_sha, encrypted):
     }
 
 
-def bounded_process(argv, environment, cwd, timeout, log=None):
+@dataclass(repr=False)
+class CommandProcess:
+    process: subprocess.Popen
+    executable: Path
+    binary_sha: str
+    argv: list
+    nonce: str
+    ticks: str | None = None
+    stopped: bool = False
+
+    def close(self):
+        process = self.process
+        if process.poll() is None:
+            if self.ticks is None:
+                raise ValueError("fixed command kernel identity unknown; cleanup pending")
+            proc = Path("/proc") / str(process.pid)
+            if (
+                process_ticks(process.pid) != self.ticks
+                or proc.stat().st_uid != os.getuid()
+                or (proc / "exe").resolve() != self.executable
+                or digest(proc / "exe") != self.binary_sha
+                or (proc / "cmdline").read_bytes().split(b"\0")[:-1]
+                != list(map(os.fsencode, self.argv))
+                or b"QM_BACKUP_COMMAND_OWNER=" + self.nonce.encode()
+                not in (proc / "environ").read_bytes().split(b"\0")
+            ):
+                raise ValueError("fixed command cleanup ownership pending")
+            process.terminate()
+            try:
+                process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                if process_ticks(process.pid) != self.ticks:
+                    raise ValueError("fixed command PID identity changed") from None
+                process.kill()
+                process.wait(timeout=2)
+        process.stdout.close()
+        self.stopped = process.poll() is not None
+
+
+def bounded_process(argv, environment, cwd, timeout, log=None, *, owner=None):
     """Limit the output stream, not PostgreSQL WAL/data writes."""
     nonce = secrets.token_hex(24)
     executable = Path(argv[0]).resolve()
     binary_sha = digest(executable)
-    process = subprocess.Popen(
-        argv,
-        cwd=cwd,
-        env={**environment, "QM_BACKUP_COMMAND_OWNER": nonce},
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    ticks = process_ticks(process.pid)
     deadline = time.monotonic() + timeout
     output = bytearray()
+    handle = None
     try:
+        if owner:
+            owner.registering = True
+        try:
+            process = subprocess.Popen(
+                argv,
+                cwd=cwd,
+                env={**environment, "QM_BACKUP_COMMAND_OWNER": nonce},
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            handle = CommandProcess(process, executable, binary_sha, argv, nonce)
+            if owner:
+                owner.command_processes.append(handle)
+            handle.ticks = process_ticks(process.pid)
+        finally:
+            if owner:
+                owner.registering = False
+                owner.check_deadline()
         with selectors.DefaultSelector() as selector:
             selector.register(process.stdout, selectors.EVENT_READ)
             while selector.get_map():
@@ -468,27 +518,8 @@ def bounded_process(argv, environment, cwd, timeout, log=None):
                         log.write(chunk)
         return process.wait(timeout=max(0.01, deadline - time.monotonic())), bytes(output)
     finally:
-        if process.poll() is None:
-            proc = Path("/proc") / str(process.pid)
-            if (
-                process_ticks(process.pid) != ticks
-                or proc.stat().st_uid != os.getuid()
-                or (proc / "exe").resolve() != executable
-                or digest(proc / "exe") != binary_sha
-                or (proc / "cmdline").read_bytes().split(b"\0")[:-1] != list(map(os.fsencode, argv))
-                or b"QM_BACKUP_COMMAND_OWNER=" + nonce.encode()
-                not in (proc / "environ").read_bytes().split(b"\0")
-            ):
-                raise ValueError("fixed command cleanup ownership pending")
-            process.terminate()
-            try:
-                process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                if process_ticks(process.pid) != ticks:
-                    raise ValueError("fixed command PID identity changed") from None
-                process.kill()
-                process.wait(timeout=2)
-        process.stdout.close()
+        if handle:
+            handle.close()
 
 
 class Commands:
@@ -499,6 +530,7 @@ class Commands:
         self.deadline = time.monotonic() + 240
         self.receipts = []
         self.clusters = []
+        self.command_processes = []
         self.guard = None
         self.registering = False
 
@@ -525,6 +557,7 @@ class Commands:
                     cwd or self.root,
                     max(0.1, min(40, self.deadline - time.monotonic())),
                     log,
+                    owner=self,
                 )
             except (ValueError, OSError, subprocess.SubprocessError):
                 self.receipts.append(
@@ -1150,6 +1183,21 @@ def run_fixture(profile, output):
     finally:
         guard.close()  # Cleanup has its own bounded stop/join deadlines.
         failures = []
+        receipt["command_processes"] = []
+        for handle in reversed(commands.command_processes):
+            try:
+                handle.close()
+            except (ValueError, OSError, subprocess.SubprocessError):
+                failures.append("owned_command_cleanup_pending")
+            receipt["command_processes"].append(
+                {
+                    "pid": handle.process.pid,
+                    "start_ticks": handle.ticks,
+                    "executable": str(handle.executable),
+                    "sha256": handle.binary_sha,
+                    "stopped": handle.stopped,
+                }
+            )
         for cluster in reversed(clusters):
             try:
                 cluster.stop()

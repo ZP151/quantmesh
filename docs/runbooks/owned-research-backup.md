@@ -137,8 +137,10 @@ UID, argv/data path and private nonce handle. Generated private inputs are
 removed even on failed spawn or refused process cleanup; unknown process
 identity still grants no stop authority. A known sibling PG process must
 survive individual restore/source shutdown; close only these NEW owned processes.
-During the small spawn/handle-registration window, deadline delivery is deferred
-until the owned child is recorded; an expired deadline then fails immediately.
+During the small spawn/handle-registration window for both postmasters and
+fixed-command children, deadline delivery is deferred until the owned child is
+recorded; an expired deadline then fails immediately. Fixed-command handles
+also appear in cleanup evidence and have terminal exits in a successful run.
 Unavailable kernel start identity remains registered as pending and grants no
 stop authority. It cannot disappear from cleanup evidence or qualify as success.
 

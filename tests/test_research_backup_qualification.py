@@ -397,3 +397,106 @@ def test_deadline_interrupt_waits_for_process_handle_registration(tmp_path, monk
         commands.guard.close()
     assert stopped == [process]
     assert not (tmp_path / "deadline-start" / "pgpass").exists()
+
+
+def test_command_kernel_identity_failure_is_registered_pending(tmp_path, monkeypatch):
+    import sys
+
+    commands = backup.Commands(tmp_path, tmp_path)
+    process = SimpleNamespace(
+        pid=123456,
+        poll=lambda: None,
+        terminate=lambda: pytest.fail("unknown command identity cannot stop"),
+    )
+    monkeypatch.setattr(backup.subprocess, "Popen", lambda *a, **k: process)
+
+    def unknown(pid):
+        raise OSError("kernel identity unavailable")
+
+    monkeypatch.setattr(backup, "process_ticks", unknown)
+    with pytest.raises((OSError, ValueError)):
+        backup.bounded_process([sys.executable, "-c", "pass"], {}, tmp_path, 5, owner=commands)
+    assert len(commands.command_processes) == 1
+    assert commands.command_processes[0].process is process
+
+
+def test_command_deadline_waits_for_registered_kernel_handle(tmp_path, monkeypatch):
+    import os
+    import signal
+    import sys
+
+    if sys.platform != "linux":
+        pytest.skip("native owned process timer")
+    commands = backup.Commands(tmp_path, tmp_path)
+    process = SimpleNamespace(pid=123456, poll=lambda: None)
+    monkeypatch.setattr(backup.subprocess, "Popen", lambda *a, **k: process)
+
+    def interrupted(pid):
+        os.kill(os.getpid(), signal.SIGALRM)
+        return "known-ticks"
+
+    monkeypatch.setattr(backup, "process_ticks", interrupted)
+    stopped = []
+
+    def stop(handle):
+        assert commands.command_processes == [handle]
+        stopped.append(handle.process)
+
+    monkeypatch.setattr(backup.CommandProcess, "close", stop)
+    commands.guard = backup.FixtureDeadline(1, defer=lambda: commands.registering)
+    try:
+        with pytest.raises(ValueError):
+            backup.bounded_process([sys.executable, "-c", "pass"], {}, tmp_path, 5, owner=commands)
+    finally:
+        commands.guard.close()
+    assert stopped == [process]
+
+
+def test_real_owned_command_deadline_interruption_is_terminal(tmp_path, monkeypatch):
+    import os
+    import signal
+    import sys
+
+    if sys.platform != "linux":
+        pytest.skip("native owned process interruption")
+    commands = backup.Commands(tmp_path, tmp_path)
+    real_ticks = backup.process_ticks
+    observed = {}
+
+    def interrupted(pid):
+        ticks = real_ticks(pid)
+        if not observed:
+            observed.update(pid=pid, start_ticks=ticks)
+            os.kill(os.getpid(), signal.SIGALRM)
+        return ticks
+
+    monkeypatch.setattr(backup, "process_ticks", interrupted)
+    commands.guard = backup.FixtureDeadline(5, defer=lambda: commands.registering)
+    try:
+        with pytest.raises(ValueError, match="whole fixture deadline"):
+            backup.bounded_process(
+                [sys.executable, "-B", "-c", "import time; time.sleep(10)"],
+                backup.bare_environment(tmp_path),
+                tmp_path,
+                15,
+                owner=commands,
+            )
+    finally:
+        commands.guard.close()
+        for handle in commands.command_processes:
+            handle.close()
+    assert len(commands.command_processes) == 1
+    handle = commands.command_processes[0]
+    assert handle.process.pid == observed["pid"] and handle.ticks == observed["start_ticks"]
+    assert handle.stopped and handle.process.returncode is not None
+    assert not (Path("/proc") / str(observed["pid"])).exists()
+    observed.update(
+        executable=str(handle.executable),
+        sha256=handle.binary_sha,
+        stopped=handle.stopped,
+        exit=handle.process.returncode,
+        nonce_checked=True,
+        kernel_uid_checked=True,
+        argv_checked=True,
+    )
+    backup.write_private(tmp_path / "actual-command-interruption.json", backup.canonical(observed))
