@@ -241,3 +241,102 @@ def test_stale_pid_cannot_stop_an_owned_or_borrowed_process(tmp_path, monkeypatc
     monkeypatch.setattr(backup, "process_ticks", lambda pid: "different-ticks")
     with pytest.raises(ValueError):
         cluster.stop()
+
+
+@pytest.mark.parametrize("error", [ValueError("pin"), OSError("file"), TimeoutError("wall")])
+def test_infrastructure_failure_is_not_a_negative_witness(tmp_path, monkeypatch, error):
+    source = SimpleNamespace()
+    receipt = {"negative_witnesses": {}}
+    monkeypatch.setattr(backup, "current_state", lambda source: {})
+
+    def action():
+        raise error
+
+    with pytest.raises(type(error)):
+        backup.expect_failure("wrong_key", action, receipt, source, {})
+    assert receipt["negative_witnesses"] == {}
+
+
+def test_expected_crypto_refusal_requires_exit_and_matching_tool_evidence():
+    with pytest.raises(ValueError):
+        backup.crypto_refusal("wrong_key", 12, b"unrelated error")
+    with pytest.raises(ValueError):
+        backup.crypto_refusal("wrong_key", 1, b"wrong password")
+    with pytest.raises(backup.NegativeRefused):
+        backup.crypto_refusal(
+            "wrong_key",
+            12,
+            b'{"message_type":"exit_error","code":12,"message":"wrong password or no key found"}',
+        )
+
+
+def test_whole_fixture_deadline_covers_noncommand_work():
+    import sys
+    import time
+
+    if sys.platform != "linux":
+        pytest.skip("native owned process timer")
+    guard = backup.FixtureDeadline(0.02)
+    try:
+        with pytest.raises(ValueError):
+            time.sleep(0.2)
+    finally:
+        guard.close()
+
+
+def test_server_log_is_drained_but_capped_without_limiting_data_files(tmp_path):
+    import subprocess
+    import sys
+
+    if sys.platform != "linux":
+        pytest.skip("native owned log pipe")
+    process = subprocess.Popen(
+        [sys.executable, "-c", "import os; os.write(1,b'x'*3000000)"], stdout=subprocess.PIPE
+    )
+    collector = backup.ServerLog(process.stdout, tmp_path / "server.log")
+    assert process.wait(timeout=5) == 0
+    collector.finish()
+    assert collector.failed
+    assert (tmp_path / "server.log").stat().st_size <= backup.MAX_OUTPUT
+
+
+def test_refused_stop_still_removes_generated_pgpass(tmp_path, monkeypatch):
+    backup.write_private(tmp_path / "pgpass", b"private-marker")
+    process = SimpleNamespace(
+        pid=123456, poll=lambda: None, send_signal=lambda _: pytest.fail("unverified stop")
+    )
+    cluster = backup.Cluster(
+        SimpleNamespace(root=tmp_path),
+        tmp_path,
+        tmp_path / "data",
+        "fixture",
+        "secret",
+        "nonce",
+        54321,
+        process,
+        "old-ticks",
+    )
+    monkeypatch.setattr(backup, "process_ticks", lambda pid: "different-ticks")
+    with pytest.raises(ValueError):
+        cluster.stop()
+    assert not (tmp_path / "pgpass").exists()
+
+
+def test_failed_server_spawn_removes_generated_private_inputs(tmp_path, monkeypatch):
+    import time
+
+    def initdb(tool, argv):
+        Path(argv[1]).mkdir()
+
+    commands = SimpleNamespace(
+        root=tmp_path, output=tmp_path, run=initdb, deadline=time.monotonic() + 10
+    )
+
+    def fail(*args, **kwargs):
+        raise OSError("synthetic spawn refusal")
+
+    monkeypatch.setattr(backup.subprocess, "Popen", fail)
+    with pytest.raises(OSError):
+        backup.Cluster.start(commands, "new-cluster")
+    assert not (tmp_path / "new-cluster" / "pgpass").exists()
+    assert not (tmp_path / "new-cluster" / "init-password").exists()

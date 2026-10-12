@@ -20,6 +20,7 @@ import socket
 import stat
 import subprocess
 import sys
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -46,6 +47,79 @@ OWNED_FILES = {
     "tests/test_research_backup_qualification.py",
     "docs/runbooks/owned-research-backup.md",
 }
+
+
+class NegativeRefused(ValueError):
+    """Only a deliberately observed, attributed negative can qualify."""
+
+
+class FixtureDeadline:
+    """Own process wall timer covers SQL/filesystem work as well as commands."""
+
+    def __init__(self, seconds):
+        if sys.platform != "linux" or signal.getitimer(signal.ITIMER_REAL)[0]:
+            raise ValueError("owned wall timer unavailable")
+        self.previous = signal.getsignal(signal.SIGALRM)
+        self.closed = False
+
+        def expired(signum, frame):
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            raise ValueError("whole fixture deadline")
+
+        signal.signal(signal.SIGALRM, expired)
+        signal.setitimer(signal.ITIMER_REAL, seconds)
+
+    def close(self):
+        if not self.closed:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, self.previous)
+            self.closed = True
+
+
+class ServerLog:
+    """Drain a known child's log pipe; never cap its WAL/data files."""
+
+    def __init__(self, source, path):
+        self.failed = False
+        self.size = 0
+
+        def drain():
+            try:
+                fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                with os.fdopen(fd, "wb") as stream:
+                    while chunk := os.read(source.fileno(), 65536):
+                        accepted = chunk[: max(0, MAX_OUTPUT - self.size)]
+                        stream.write(accepted)
+                        self.size += len(accepted)
+                        if len(accepted) != len(chunk):
+                            self.failed = True
+            except OSError:
+                self.failed = True
+            finally:
+                source.close()
+
+        self.thread = threading.Thread(target=drain, daemon=True)
+        self.thread.start()
+
+    def finish(self):
+        self.thread.join(timeout=2)
+        if self.thread.is_alive():
+            self.failed = True
+
+
+def crypto_refusal(kind, code, raw):
+    expected = {
+        "wrong_key": (12, b"wrong password or no key found"),
+        "corrupt_cipher_copy": (1, b"ciphertext verification failed"),
+    }
+    if kind not in expected or code != expected[kind][0] or expected[kind][1] not in raw.lower():
+        raise ValueError("crypto failure not attributed")
+    events = [decode(line) for line in raw.splitlines()]
+    if not any(
+        event.get("message_type") == "exit_error" and event.get("code") == code for event in events
+    ):
+        raise ValueError("actual crypto exit evidence required")
+    raise NegativeRefused(kind)
 
 
 def canonical(raw):
@@ -420,6 +494,13 @@ class Commands:
         self.root, self.output = root, output
         self.deadline = time.monotonic() + 240
         self.receipts = []
+        self.clusters = []
+
+    def check_deadline(self):
+        if time.monotonic() >= self.deadline:
+            raise ValueError("whole fixture deadline")
+        if any(cluster.server_log and cluster.server_log.failed for cluster in self.clusters):
+            raise ValueError("owned server output cap")
 
     def run(self, tool, args, *, env_extra=None, cwd=None, failure=False):
         if tool not in {*PG_HASHES, "restic"}:
@@ -427,8 +508,7 @@ class Commands:
         binary = self.root / ("restic" if tool == "restic" else "prefix/bin/" + tool)
         if digest(binary) != (RESTIC_SHA if tool == "restic" else PG_HASHES[tool]):
             raise ValueError("binary changed before execution")
-        if time.monotonic() >= self.deadline:
-            raise ValueError("whole fixture deadline")
+        self.check_deadline()
 
         path = self.output / f"command-{len(self.receipts) + 1:03d}.log"
         with path.open("xb") as log:
@@ -475,6 +555,7 @@ class Cluster:
     ticks: str
     system_id: str = ""
     stopped: bool = False
+    server_log: ServerLog | None = field(default=None, repr=False)
 
     @classmethod
     def start(cls, commands, name):
@@ -512,18 +593,30 @@ class Cluster:
                 "ssl=off\nlog_statement='none'\nlog_min_error_statement=panic\n"
             )
         write_private(home / "pgpass", f"127.0.0.1:{port}:postgres:{role}:{password}\n".encode())
-        with (home / "postgres.log").open("xb") as log:
+        cluster = None
+        ready = False
+        try:
             process = subprocess.Popen(
                 [str(commands.root / "prefix/bin/postgres"), "-D", str(data)],
                 env={**bare_environment(commands.root), "QM_BACKUP_OWNER": nonce},
                 cwd=home,
-                stdout=log,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
-        cluster = cls(
-            commands, home, data, role, password, nonce, port, process, process_ticks(process.pid)
-        )
-        try:
+            cluster = cls(
+                commands,
+                home,
+                data,
+                role,
+                password,
+                nonce,
+                port,
+                process,
+                process_ticks(process.pid),
+            )
+            if hasattr(commands, "clusters"):
+                commands.clusters.append(cluster)
+            cluster.server_log = ServerLog(process.stdout, home / "postgres.log")
             deadline = min(commands.deadline, time.monotonic() + 15)
             while time.monotonic() < deadline:
                 if process.poll() is not None:
@@ -546,10 +639,15 @@ class Cluster:
                 if line.startswith("Database system identifier:")
             )
             cluster.verify_sql()
+            ready = True
             return cluster
         except BaseException:
-            cluster.stop()
+            if cluster:
+                cluster.stop()
             raise
+        finally:
+            if not ready:
+                (home / "pgpass").unlink(missing_ok=True)
 
     def verify(self):
         proc = Path("/proc") / str(self.process.pid)
@@ -574,6 +672,7 @@ class Cluster:
     def connection(self):
         import pg8000.dbapi
 
+        self.commands.check_deadline()
         self.verify()
         return pg8000.dbapi.connect(
             user=self.role,
@@ -632,12 +731,16 @@ class Cluster:
     def stop(self):
         if self.stopped:
             return
-        if self.process.poll() is None:
-            self.verify()
-            self.process.send_signal(signal.SIGINT)
-            self.process.wait(timeout=15)
-        (self.home / "pgpass").unlink(missing_ok=True)
-        self.stopped = self.process.poll() is not None
+        try:
+            if self.process.poll() is None:
+                self.verify()
+                self.process.send_signal(signal.SIGINT)
+                self.process.wait(timeout=15)
+            self.stopped = self.process.poll() is not None
+        finally:
+            (self.home / "pgpass").unlink(missing_ok=True)
+            if self.server_log:
+                self.server_log.finish()
 
 
 def sql_state(connection):
@@ -794,7 +897,9 @@ def restic(commands, repo, key, args, *, failure=False):
 def expect_failure(name, action, receipt, source, unchanged):
     try:
         action()
-    except (ValueError, OSError):
+    except NegativeRefused as error:
+        if str(error) != name:
+            raise ValueError("negative attribution mismatch") from None
         if current_state(source) != unchanged:
             raise ValueError("negative witness changed source") from None
         receipt["negative_witnesses"][name] = {"refused": True, "source_unchanged": True}
@@ -835,14 +940,13 @@ def run_fixture(profile, output):
         "clusters": [],
         "passed": False,
     }
-    clusters = []
+    clusters = commands.clusters
+    guard = FixtureDeadline(max(0.01, commands.deadline - time.monotonic()))
     try:
         lake = fresh_directory(output, output / "lake")
         artifacts = fresh_directory(output, output / "source-artifacts")
         source = Cluster.start(commands, "source")
-        clusters.append(source)
         sibling = Cluster.start(commands, "sibling")
-        clusters.append(sibling)
         request_for, publish = fixture_inputs(profile.root / "checkout", lake)
         store = source.store(lake, artifacts)
         effects = EffectLedger(store)
@@ -890,6 +994,7 @@ def run_fixture(profile, output):
         store.request_cancel("operator", queued.job_id)
         store.submit("operator", "after-snapshot", request_for(lake))
         advanced = current_state(source)
+        write_private(output / "source-state-after.json", canonical(advanced))
         if advanced == captured["state"]:
             raise ValueError("source did not advance after capture")
         recovered = fresh_directory(output, output / "recovered")
@@ -897,7 +1002,6 @@ def run_fixture(profile, output):
         restored_payload = recovered / "payload"
         manifest = validate_bundle(restored_payload, anchor)
         target = Cluster.start(commands, "restore")
-        clusters.append(target)
         commands.run(
             "pg_restore",
             [
@@ -910,7 +1014,9 @@ def run_fixture(profile, output):
             ],
             env_extra={"PGPASSFILE": str(target.home / "pgpass")},
         )
-        if current_state(target) != manifest["state"] or current_state(source) != advanced:
+        restored_state = current_state(target)
+        write_private(output / "restore-state-before-replay.json", canonical(restored_state))
+        if restored_state != manifest["state"] or current_state(source) != advanced:
             raise ValueError("restored SQL differs from snapshot or source changed")
         restored_store = target.store(lake, restored_payload / "artifacts")
         checked_references(restored_store, manifest["state"])
@@ -948,9 +1054,8 @@ def run_fixture(profile, output):
         write_private(wrong_key, secrets.token_hex(32).encode())
 
         def wrong():
-            rc, _ = restic(commands, repo, wrong_key, ["snapshots"], failure=True)
-            if rc == 12:
-                raise ValueError("actual wrong-key refusal")
+            rc, raw = restic(commands, repo, wrong_key, ["snapshots"], failure=True)
+            crypto_refusal("wrong_key", rc, raw)
 
         expect_failure("wrong_key", wrong, receipt, source, advanced)
         wrong_key.unlink()
@@ -959,9 +1064,8 @@ def run_fixture(profile, output):
         corrupt, changed = corrupt_copy(output, repo)
 
         def corrupted():
-            rc, _ = restic(commands, corrupt, key, ["check", "--read-data"], failure=True)
-            if rc == 1:
-                raise ValueError("actual corrupt-cipher refusal")
+            rc, raw = restic(commands, corrupt, key, ["check", "--read-data"], failure=True)
+            crypto_refusal("corrupt_cipher_copy", rc, raw)
 
         expect_failure("corrupt_cipher_copy", corrupted, receipt, source, advanced)
         receipt["corrupt_object"] = changed
@@ -982,7 +1086,6 @@ def run_fixture(profile, output):
                 (negative / "manifest.json").write_bytes(b"{}")
             else:
                 bad = Cluster.start(commands, "unknown-schema-cluster")
-                clusters.append(bad)
                 commands.run(
                     "pg_restore",
                     [
@@ -1001,28 +1104,51 @@ def run_fixture(profile, output):
                     con.commit()
                 finally:
                     con.close()
-                expect_failure(
-                    name, lambda: bad.store(lake, negative / "artifacts"), receipt, source, advanced
-                )
+
+                def unknown_schema():
+                    try:
+                        bad.store(lake, negative / "artifacts")
+                    except ValueError as error:
+                        if str(error) == "unsupported service schema":
+                            raise NegativeRefused("unknown_schema") from None
+                        raise
+
+                expect_failure(name, unknown_schema, receipt, source, advanced)
                 bad.stop()
                 continue
-            expect_failure(
-                name, lambda p=negative: validate_bundle(p, anchor), receipt, source, advanced
-            )
+
+            def invalid_bundle():
+                expected = {
+                    "missing_artifact": "owned bytes unavailable",
+                    "substituted_artifact": "artifact substitution refused",
+                    "substituted_manifest": "manifest substitution refused",
+                }[name]
+                try:
+                    validate_bundle(negative, anchor)
+                except ValueError as error:
+                    if str(error) == expected:
+                        raise NegativeRefused(name) from None
+                    raise
+
+            expect_failure(name, invalid_bundle, receipt, source, advanced)
         target.stop()
         sibling.verify_sql()
         source.stop()
         sibling.verify_sql()
         receipt["sibling_survived_individual_cleanup"] = True
+        commands.check_deadline()
         receipt["passed"] = True
         return 0
     finally:
+        guard.close()  # Cleanup has its own bounded stop/join deadlines.
         failures = []
         for cluster in reversed(clusters):
             try:
                 cluster.stop()
             except (ValueError, OSError, subprocess.SubprocessError):
                 failures.append("owned_cleanup_pending")
+            if cluster.server_log and cluster.server_log.failed:
+                failures.append("server_log_bound_or_drain_failed")
             receipt["clusters"].append(
                 {
                     "pid": cluster.process.pid,
@@ -1036,6 +1162,7 @@ def run_fixture(profile, output):
             (output / name).unlink(missing_ok=True)
         receipt["commands"] = commands.receipts
         receipt["cleanup_failures"] = failures
+        receipt["passed"] = receipt["passed"] and not failures
         receipt["duration_seconds"] = round(240 - (commands.deadline - time.monotonic()), 3)
         write_private(output / "witness.json", canonical(receipt))
         os.umask(old_umask)

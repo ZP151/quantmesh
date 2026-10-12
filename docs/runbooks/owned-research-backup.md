@@ -92,9 +92,11 @@ DSNs, cloud URLs, credentials, alternate commands and ambient configuration
 are refused. Passwords enter fixed tools through0600 files and never argv;
 all subprocesses receive a bare environment. Secret input files are removed.
 
-The whole fixture is bounded to240seconds plus bounded ownership-checked
-cleanup. External commands each have≤40seconds and≤2MiB output; SQL and startup
-have shorter deadlines. No global package/user/daemon/Docker operations,
+The whole fixture has an owned process wall timer of240seconds, including
+SQL and filesystem stages, plus bounded ownership-checked cleanup. External
+commands each have≤40seconds and≤2MiB output; independent pipe collectors drain
+PG logs while saving at most2MiB per server. WAL/data writes are not capped by
+the log limit. SQL and startup have shorter deadlines. No global package/user/daemon/Docker operations,
 production overwrites, repository pruning, cloud account or old service stops
 are performed.
 
@@ -122,15 +124,23 @@ and cancel. Completed/reserved effects must refuse another reservation without
 calling any model. Restoration must preserve the old queued state and exclude
 the new source job.
 
-Require real wrong-key refusal, corrupt encrypted-object refusal in a newly
+Require real wrong-key refusal (actual exit12 and matching JSON error),
+corrupt encrypted-object refusal (actual exit1 plus ciphertext-verification
+error) in a newly
 owned repository COPY, missing/substituted artifact and manifest refusal, and
 actual incompatible restored SQL schema rejection. Each negative witness checks
-the advanced source SQL is unchanged. Retain the clean success and failures
+the advanced source SQL is unchanged. Infrastructure/admission/ownership/timer
+failures propagate as failures; they cannot qualify as expected negatives.
+Retain the clean success and failures
 separately. Before cleanup, verify kernel PID/start ticks, executable path/hash,
-UID, argv/data path and private nonce handle. A known sibling PG process must
+UID, argv/data path and private nonce handle. Generated private inputs are
+removed even on failed spawn or refused process cleanup; unknown process
+identity still grants no stop authority. A known sibling PG process must
 survive individual restore/source shutdown; close only these NEW owned processes.
 
-Read `witness.json`, `backup-receipt.json` and raw command exits, not just flags.
+Read `witness.json`, `backup-receipt.json`, captured/restored payloads,
+`source-state-after.json`, `restore-state-before-replay.json` and raw command
+exits, not just flags.
 Successful qualification requires all six negatives, actual decrypted-byte and
 SQL continuity, zero cleanup failures and exit0. The final clean candidate gets
 fresh native evidence after review fixes. Root independently verifies and
