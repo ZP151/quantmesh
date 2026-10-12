@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_live_buffer_lookup.py::test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002347299945540726,
+      "location": [
+        "tests\\test_live_buffer_lookup.py",
+        60,
+        "test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_buffer_lookup.py::test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 3.959316399996169,
+      "location": [
+        "tests\\test_live_buffer_lookup.py",
+        60,
+        "test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_buffer_lookup.py::test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00016639998648315668,
+      "location": [
+        "tests\\test_live_buffer_lookup.py",
+        60,
+        "test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_live_buffer_lookup.py::test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\output\\174-safety\\eval-clean-checkout\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

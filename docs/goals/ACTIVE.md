@@ -128,6 +128,15 @@ claiming direct compatible improvement. Next#173 uses the authoritative input
 options contract. Final combined release, real DB/Linux/server/model and the
 existing PR166 recovery authorization still need their actual evidence/actions.
 
+Post-174 Eval completes24/24cases/64verifiers, exit0 from a clean d6cefb8 checkout.
+Actual imported source/stability and all271 old evidence hashes independently
+verified. New catalog content hash1e82d31...bf3921d, strict format2.0.0;
+old comparison deliberately exit2/incompatible, never a silent score improvement.
+Separate new archived evidence is docs/evidence/research-foundation/post174.
+This is offline scripted workflow proof only, not full final core certification.
+Next authorized slice is#173 submit/status/report/reload, with authoritative
+fixture options; source/PG/Linux/model/human/paid deployment prerequisites remain.
+
 ## Historical delivery checkpoint — retained, superseded priority
 
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance

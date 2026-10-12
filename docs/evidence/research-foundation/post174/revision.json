@@ -1,0 +1,8 @@
+{
+  "revision": "post-174",
+  "format_version": "2.0.0",
+  "dataset_hash": "1e82d31bd42c3cb751ea88b00abff2487e5c5d5767e183e2a8362c414bf3921d",
+  "code_commit": "d6cefb8f91e22f29898e1fd0f1d9deab4bb39463",
+  "compatible_with_old_baseline": false,
+  "reason": "fixture and verifier byte pins changed; old failing catalog is immutable"
+}

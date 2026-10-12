@@ -1,0 +1,93 @@
+{
+  "reports": [
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.000215600011870265,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        46,
+        "test_generic_pipeline_refuses_fabricated_citation"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0024735000915825367,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        46,
+        "test_generic_pipeline_refuses_fabricated_citation"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00011060002725571394,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        46,
+        "test_generic_pipeline_refuses_fabricated_citation"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [
+    {
+      "sequence": 0,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.0010625000577419996
+    },
+    {
+      "sequence": 1,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.0003274999326094985
+    },
+    {
+      "sequence": 2,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.00047400000039488077
+    },
+    {
+      "sequence": 3,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.0001775999553501606
+    }
+  ],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\output\\174-safety\\eval-clean-checkout\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

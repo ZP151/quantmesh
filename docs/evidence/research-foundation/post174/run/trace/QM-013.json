@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002154499990865588,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        135,
+        "test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.07676089997403324,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        135,
+        "test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001401999033987522,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        135,
+        "test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\output\\174-safety\\eval-clean-checkout\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

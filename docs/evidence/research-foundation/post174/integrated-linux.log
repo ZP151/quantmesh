@@ -1,0 +1,8 @@
+...............................s....ssssss                               [100%]
+============================== warnings summary ===============================
+output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+35 passed, 7 skipped, 1 warning in 1.20s

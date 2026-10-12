@@ -1,0 +1,37 @@
+........................................................................ [ 17%]
+........................................................................ [ 35%]
+........................................................................ [ 53%]
+........................................................................ [ 71%]
+........................................................................ [ 89%]
+............................................                             [100%]
+============================== warnings summary ===============================
+output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\utils\pandas_utils.py:60: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    delta = pd.Timedelta(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 8 durations =============================
+10.93s call     tests/test_eval_harness.py::test_skip_timeout_not_pass
+8.42s call     tests/test_eval_harness.py::test_timeout_retains_full_collected_denominator
+5.98s call     tests/test_eval_harness.py::test_frozen_badcase_imports_candidate_source
+5.06s call     tests/test_eval_harness.py::test_runner_persists_trace_logs_and_refuses_overwrite
+5.00s teardown tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+4.97s call     tests/test_eval_harness.py::test_candidate_cannot_supply_unpinned_plugin
+4.89s call     tests/test_eval_harness.py::test_known_bad_fixture_fails
+0.85s call     tests/test_workstation.py::TestConsoleScript::test_main_live_wires_workspace_forecasts_and_paper_services
+404 passed, 7 warnings in 74.03s (0:01:14)

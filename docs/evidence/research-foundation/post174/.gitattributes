@@ -1,0 +1,3 @@
+* -text whitespace=cr-at-eol
+# Captured pytest stdout includes padded E lines; preserve raw evidence bytes.
+*.log whitespace=-blank-at-eol,cr-at-eol

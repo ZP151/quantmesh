@@ -1,0 +1,19 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____________ test_duplicate_claims_preserve_indexed_critic_blocks _____________
+tests\test_ai_citation_safety.py:69: in test_duplicate_claims_preserve_indexed_critic_blocks
+    assert critic.refusal == "critic gate blocked 1 claim(s): indices [0]"
+E   AssertionError: assert 'critic gate ...ndices [0, 1]' == 'critic gate ...: indices [0]'
+E     
+E     - critic gate blocked 1 claim(s): indices [0]
+E     + critic gate blocked 1 claim(s): indices [0, 1]
+E     ?                                           +++
+============================== warnings summary ===============================
+output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_ai_citation_safety.py::test_duplicate_claims_preserve_indexed_critic_blocks
+1 failed, 1 warning in 1.12s

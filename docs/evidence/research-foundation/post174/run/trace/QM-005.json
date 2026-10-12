@@ -1,0 +1,73 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002162100048735738,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        476,
+        "test_secret_is_redacted_before_analyst_and_critic_calls"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.022623299970291555,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        476,
+        "test_secret_is_redacted_before_analyst_and_critic_calls"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00017560005653649569,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        476,
+        "test_secret_is_redacted_before_analyst_and_critic_calls"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [
+    {
+      "sequence": 0,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.0016389999072998762
+    },
+    {
+      "sequence": 1,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.00044430000707507133
+    }
+  ],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\output\\174-safety\\eval-clean-checkout\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

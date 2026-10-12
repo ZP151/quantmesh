@@ -450,3 +450,18 @@ or new package/Engine/image was copied, installed or admitted. Both native
 sessions remain idle; next product work is#173 after the post-repair Eval
 revision. True Linux, PostgreSQL, source recovery and provider prerequisites
 remain separate. Goal stays ACTIVE; no whole-product availability claim.
+
+Post-174 independent Eval revision executes once from an owned clean checkout
+of d6cefb8f91e22f29898e1fd0f1d9deab4bb39463:24/24 cases and64/64 verifiers pass,
+exit0, actual imports point at that checkout/src and all stability flags are true.
+Content revision hash1e82d31bd42c3cb751ea88b00abff2487e5c5d5767e183e2a8362c414bf3921d
+keeps strict format2.0.0; changed fixture/verifier pins explicitly refuse old
+comparison with exit2/incompatible dataset_hash. Independent saved-byte check
+also verifies all271 old evidence hashes and their three original failures.
+Scripted model calls18/tools6, token/cost null; no investment/model-quality claim.
+Raw new evidence plus RED/GREEN is archived separately under
+docs/evidence/research-foundation/post174 (137 SHA-pinned raw files, no old overwrite).
+Catalog portability preflight found12 workspace LF/stat-cache discrepancies;
+only Git-equivalent line endings were restored/refreshed, leaving no content,
+test or global Git setting change. All new pins match committed blobs before
+execution. This clean-checkout Eval is not the full final core/service certificate.
