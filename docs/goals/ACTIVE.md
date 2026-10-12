@@ -87,8 +87,6 @@ workstation submit/reload/report and recovered24-case Eval. Final combined
 clean-checkout/core + independent service gates, human review and private
 deployment remain open. Formal168h stays not required and the goal stays ACTIVE.
 
-## Historical delivery checkpoint — retained, superseded priority
-
 Latest continuation: Eval#160 thread01a13145-6eb6-7a80-bfcf-24f4a245d4af in e549
 is ACTIVE from2f424d0; do not redispatch its pending client ID. Its known-bad
 assertions remain failures, not relaxed for a passing score. Approved-A Linux
@@ -99,6 +97,14 @@ runtime/native tree evidence. Two-session cap stays in force. PR166 human
 review/recovery authorization, local Docker Engine and model-provider metadata
 remain existing pending questions; don't repeat them or completed BatchB work.
 No global/production/paid change has occurred.
+
+Linux Task1 is actually dispatched as native
+thread01a13153-55c8-7c72-8460-15cfbe61fe34, managed worktreea718 from5267611,
+title `QuantMesh #172 — Linux Worker 隔离与原生验收`. It owns only its new
+adapter/bootstrap/tests/qualification/runbook; no runner integration before
+native qualification. Both current implementation slots are occupied.
+
+## Historical delivery checkpoint — retained, superseded priority
 
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance
 and the 8 GB migration's short acceptance are complete; this goal remains

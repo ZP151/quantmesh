@@ -376,3 +376,9 @@ Read-only WSL intake finds Linux6.6.87.2/cgroup-v2 controllers and a Docker CLI;
 Engine/native qualification is pending the existing operator request. PR166
 remains OPEN/exactda6e8c7/reviews[]; no new auth URL or helper restart is issued.
 Completed BatchB sessions stay idle.
+
+The second slot is now native thread01a13153-55c8-7c72-8460-15cfbe61fe34
+(`QuantMesh #172 — Linux Worker 隔离与原生验收`), managed worktreea718 from5267611.
+Its exclusive Task1 files and explicit stop before Task2 protect the already
+reviewed Worker/service contracts. Both slots are occupied; root coordinates
+shared documentation and next-user-loop acceptance without a third implementer.
