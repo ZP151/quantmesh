@@ -663,8 +663,16 @@ def _check_sample(sample: dict, expected_build: str) -> dict:
                     raise WitnessError("application_sequence_lineage_invalid")
         if len(completed) < 4:
             raise WitnessError("completed_bars_missing")
+        coverage_clock = max(completed)
+        latest = bars[-1]
+        if latest.get("live_lineage") is not None:
+            # A matching provider end cannot rejuvenate an older actual receipt.
+            # Only completed source minutes at/before min(end, receipt) may
+            # certify coverage; use the shared bar-end grid after that cap.
+            source_clock = _clock(latest["live_lineage"]["freshness_time"])
+            coverage_clock = min(coverage_clock, source_clock.replace(second=0, microsecond=0))
         policy = evaluate_session_freshness(
-            app["calendar"], SessionPolicy.REGULAR, app_at, max(completed), "1m", delay
+            app["calendar"], SessionPolicy.REGULAR, app_at, coverage_clock, "1m", delay
         )
         quote_policy = evaluate_session_freshness(
             app["calendar"],
@@ -684,7 +692,6 @@ def _check_sample(sample: dict, expected_build: str) -> dict:
             delay,
             source_kind="observation",
         )
-        latest = bars[-1]
         # Partial app values must be an observed supplier value, never interpolated.
         latest_at = _clock(latest["timestamp"])
         if not any(

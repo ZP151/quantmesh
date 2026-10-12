@@ -869,3 +869,36 @@ def test_market_projection_refuses_non_us_instrument_identity():
     }
     with pytest.raises(tool().WitnessError):
         tool()._application(state, history, "AAPL")
+
+
+def test_scoped_candle_receipt_clock_caps_completed_bar_freshness():
+    value = samples()
+    for sample in value["samples"]:
+        for symbol in ("AAPL", "NVDA"):
+            evidence = sample["symbols"][symbol]
+            for side in ("before", "after"):
+                for row in evidence[side]["rows"]:
+                    row["time_key"] = (
+                        datetime.strptime(row["time_key"], "%Y-%m-%d %H:%M:%S")
+                        - timedelta(minutes=1)
+                    ).strftime("%Y-%m-%d %H:%M:%S")
+            for bar in evidence["app"]["bars"]:
+                stamp = datetime.fromisoformat(bar["timestamp"]) - timedelta(minutes=1)
+                bar["timestamp"] = stamp.isoformat()
+                if bar["live_lineage"]:
+                    lineage = bar["live_lineage"]
+                    for key in (
+                        "data_time",
+                        "predecessor_data_time",
+                        "received_at",
+                        "freshness_time",
+                    ):
+                        lineage[key] = stamp.isoformat()
+                    lineage["provider_end"] = (stamp + timedelta(minutes=1)).isoformat()
+                    lineage["provider_time_key"] = evidence["before"]["rows"][-1]["time_key"]
+                    lineage["age_ms"] = int(
+                        (datetime.fromisoformat(sample["app_at"]) - stamp).total_seconds() * 1000
+                    )
+    result = tool().evaluate_samples(value)
+    assert result["status"] == "failed"
+    assert result["reason"] == "source_coverage_missing_or_delayed"
