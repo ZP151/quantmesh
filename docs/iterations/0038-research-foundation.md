@@ -439,3 +439,14 @@ Linux#172 Task1 stops at0e5fb0e with73pass/7skip/1deselected and actual standalo
 WSL watchdog5.134s. Engine/qualified image absent means qualification exit2/
 native_qualified=false. Task2/numerical Linux job/aggregate OCI proof are pending.
 Root must read its handoff and integrate only its five owned Task1 files.
+
+Root reads complete#172 handoff and integrates0e5fb0e as2c4a792. Fresh integrated
+new-file tests pass35/7skip/1.20s, exit0; skipped native conditions stay pending.
+The child explicitly reports final coalesced go/pulse repair as author-verified
+after round2, not re-reviewed. Matching controller bytes alone is not a full
+image/source/dependency qualification. No runner/store/math/advisory changes.
+Its external CLI reuse boundary is recorded in REUSE_MATRIX; no upstream code
+or new package/Engine/image was copied, installed or admitted. Both native
+sessions remain idle; next product work is#173 after the post-repair Eval
+revision. True Linux, PostgreSQL, source recovery and provider prerequisites
+remain separate. Goal stays ACTIVE; no whole-product availability claim.

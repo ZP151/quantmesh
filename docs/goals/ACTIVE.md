@@ -121,6 +121,13 @@ content revision; strict format2.0.0 stays, hashes/comparison incompatibility
 carry fixture changes. Linux#172 stops at0e5fb0e Task1 software only; actual
 Engine/image/OCI and Task2 remain pending. Both native sessions are now idle.
 
+Safety candidate is pushed618bb8d; Linux Task1 integrates2c4a792. Fresh Linux
+adapter check35pass/7skip/1.20s exit0, not native qualification. Root is recording
+a separate post-repair Eval revision without altering old271 evidence files or
+claiming direct compatible improvement. Next#173 uses the authoritative input
+options contract. Final combined release, real DB/Linux/server/model and the
+existing PR166 recovery authorization still need their actual evidence/actions.
+
 ## Historical delivery checkpoint — retained, superseded priority
 
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance

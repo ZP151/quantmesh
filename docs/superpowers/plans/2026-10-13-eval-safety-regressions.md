@@ -42,15 +42,15 @@ Files: root owns `src/quantmesh/api/workstation.py`; focused new
 Interfaces: retain `_is_loopback(host: str) -> bool` and
 `_is_allowed_browser_origin(origin: str) -> bool`.
 
-- [ ] RED `test_dns_127_prefix_is_not_loopback` with127.attacker.example;
+- [x] RED `test_dns_127_prefix_is_not_loopback` with127.attacker.example;
   `test_noncanonical_browser_origins_refused` covers schemes, userinfo,
   invalid ports, path/query/fragment and malformed/bracketed hosts.
   Run focused pytest with a new workspace-owned basetemp and retain exit1.
-- [ ] Use exact localhost/::1 and parsed IPv4 literal loopback127/8, no DNS
+- [x] Use exact localhost/::1 and parsed IPv4 literal loopback127/8, no DNS
   prefix/resolution or shorthand numerical hosts. Browser origins require
   HTTP(S), authority only and a valid port; exact configured private staging
   origin is still admitted by its existing configuration boundary.
-- [ ] GREEN literal localhost/::1/127/8 and private staging cases. Verify a
+- [x] GREEN literal localhost/::1/127/8 and private staging cases. Verify a
   real TestClient write surface returns the existing refusal for a hostile
   Origin, without changing absent-Origin CLI policy or enabling staging by default.
 
@@ -65,22 +65,22 @@ unsupported-source indices before building risk/portfolio prompts.
 Eligible citation IDs are exact supplied context keys of the supported
 `document:id`, `experiment:id`, `audit:id` forms with nonempty IDs.
 
-- [ ] RED `test_critic_pass_cannot_allow_unknown_citation`,
+- [x] RED `test_critic_pass_cannot_allow_unknown_citation`,
   `test_mixed_or_malformed_claim_sources_block`,
   `test_text_mentions_do_not_register_citation_authority`,
   `test_duplicate_claims_preserve_indexed_critic_blocks` and
   `test_unknown_claim_excluded_downstream_and_refusal_archived`.
   Four scripted calls remain four; raw analyst/critic results are retained.
-- [ ] Implement pure index-based intersection with the supplied typed-key
+- [x] Implement pure index-based intersection with the supplied typed-key
   set. Never regex-extract source IDs from arbitrary context content or from
   the model's own claims. A model may block additional claims, not register a
   source. One unresolvable citation blocks that claim. Preserve original
   malformed critic rejection and empty-report behavior.
-- [ ] Migrate older positive fixtures to explicitly supply their existing
+- [x] Migrate older positive fixtures to explicitly supply their existing
   document/experiment/audit data under the exact citation keys. Keep original
   raw evidence text and downstream assertions; fabricated fixture IDs remain
   rejected. This does not establish factual truth or report publication rights.
-- [ ] GREEN focused cases plus AI roles/acceptance and relevant citation/audit
+- [x] GREEN focused cases plus AI roles/acceptance and relevant citation/audit
   regressions. Explicitly distinguish raw model pass from deterministic blocked
   claims in the archived refusal and resulting gate.
 
@@ -93,29 +93,29 @@ Interfaces: retain QuoteFence.evaluate/resolve and FenceDecision. `resolve`
 passes snapshot.data_time along with received_at. The blessed Quote timestamp
 is validated source time, not the local delivery time.
 
-- [ ] RED `test_old_source_new_receipt_is_rejected_without_fills` retains
+- [x] RED `test_old_source_new_receipt_is_rejected_without_fills` retains
   the original one-hour-old fixture. Parameterize missing/malformed/naive/future
   source and receipt clocks, source-age30s boundary and stale receipt/new source.
-- [ ] Validate timezone-aware source and receipt clocks against explicit now
+- [x] Validate timezone-aware source and receipt clocks against explicit now
   and the existing max_age (default30s). Missing/invalid/future clocks refuse
   with a fixed reason; no naive-aware TypeError escapes. Both clocks must be
   within the horizon. Pass source time to the existing matcher Quote.
-- [ ] GREEN actual PaperAccount zero fills for old source and a fresh-source
+- [x] GREEN actual PaperAccount zero fills for old source and a fresh-source
   valid fill, exact instrument/kind/continuity/depth regression and no-fence demo.
   Closed latest-session chart/metrics state never changes this order boundary.
 
 ## Slice verification, review and integration
 
-- [ ] Run all three original desired Eval assertions against the repaired
+- [x] Run all three original desired Eval assertions against the repaired
   candidate, without editing/xfailing them. Archive exact imported source bytes
   and RED/GREEN; preserve the old failed run. Do not rerun all24 cases until
   the Eval implementer freezes a compatible post-fix catalog deliberately.
-- [ ] Run focused origin/roles/acceptance/quote/paper and related workstation
+- [x] Run focused origin/roles/acceptance/quote/paper and related workstation
   boundary checks, Ruff, formatting/diff. Broad relevant gate runs once at the
   coherent slice boundary; no hourly full suite or existing native owner-crash rerun.
-- [ ] Two-axis fresh review, at most two rounds. Record any residual issue
+- [x] Two-axis fresh review, at most two rounds. Record any residual issue
   without absorbing unrelated feature or architecture changes.
-- [ ] One reviewed coherent commit and iteration/ACTIVE checkpoint, push the
+- [x] One reviewed coherent commit and iteration/ACTIVE checkpoint, push the
   integration branch. Final milestone PR/clean-checkout/required CI/human
   reviews/private deployment stay open. No failed baseline is overwritten.
 
