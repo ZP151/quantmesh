@@ -483,3 +483,46 @@ def test_dependency_admission_rejects_bytecode_and_unrecorded_shadow(installed_d
     (lazy.parent / "shadow.py").write_text("value = 3\n")
     with pytest.raises(ValueError):
         module._admit_dependencies(prefix, {"fixture": "1.0"})
+
+
+def test_source_admission_rejects_untracked_directory_symlink(tmp_path):
+    module = runtime_module()
+    repo = tmp_path / "repo"
+    repo.mkdir(mode=0o700)
+    target = tmp_path / "unmeasured"
+    target.mkdir()
+    (target / "__init__.py").write_text("value = 1\n")
+
+    def git(*args):
+        return (
+            subprocess.check_output(["git", "-C", str(repo), *args], stderr=subprocess.DEVNULL)
+            .decode()
+            .strip()
+        )
+
+    git("init")
+    (repo / "tracked.py").write_text("value = 1\n")
+    git("add", ".")
+    git(
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "commit",
+        "-m",
+        "fixture",
+    )
+    head = git("rev-parse", "HEAD")
+    (repo / "httptools").symlink_to(target, target_is_directory=True)
+    with pytest.raises(ValueError):
+        module._admit_source(repo, head)
+
+
+def test_dependency_admission_rejects_linked_package_directory(installed_dependency):
+    module, prefix, lazy = installed_dependency
+    external = prefix.parent / "unmeasured"
+    external.mkdir()
+    (external / "__init__.py").write_text("value = 1\n")
+    (lazy.parent.parent / "httptools").symlink_to(external, target_is_directory=True)
+    with pytest.raises(ValueError):
+        module._admit_dependencies(prefix, {"fixture": "1.0"})
