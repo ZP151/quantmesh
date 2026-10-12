@@ -405,3 +405,24 @@ def test_successful_analysis_replays_archived_reference(setup):
     assert reopened.analysis == record and reopened.state == "succeeded"
     assert reopened.analysis_state == "succeeded"
     assert store.claim_analysis("again", now[0]) is None
+
+
+def test_v2_manifest_has_explicit_unsupported_reason(setup):
+    store, lake, _, _ = setup
+    request = request_for(lake)
+    (lake / "equities" / "manifest.json").write_text(json.dumps({"schema_version": 2}))
+    with pytest.raises(DatasetRejected) as exc:
+        store.submit("local", "v2", request)
+    assert exc.value.reason == "manifest_schema_unsupported"
+
+
+def test_missing_rights_has_explicit_permission_reason(setup):
+    store, lake, _, _ = setup
+    request = request_for(lake)
+    path = lake / "equities" / "manifest.json"
+    manifest = json.loads(path.read_text())
+    del manifest["license"]
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(DatasetRejected) as exc:
+        store.submit("local", "unknown-rights", request)
+    assert exc.value.reason == "permission_unsupported"

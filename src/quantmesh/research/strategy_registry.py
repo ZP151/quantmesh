@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from quantmesh.data.lake import Lake
-from quantmesh.data.layout import shards_in
+from quantmesh.data.layout import shards_in, validate_dataset_name
 from quantmesh.domain.market_data import interval_to_timedelta, monotonic_violations
 from quantmesh.research import baselines
 from quantmesh.research.jobs import DatasetRef, DatasetRejected, ResearchJobRequest, StrategySpec
@@ -49,14 +49,22 @@ def get_strategy(strategy_id: str, version: str) -> StrategySpec:
 
 def _fixture_pin(root: Path, name: str) -> tuple[DatasetRef, object]:
     try:
+        validate_dataset_name(name)
+        manifest_path = root / name / "manifest.json"
+        if manifest_path.is_symlink():
+            raise DatasetRejected("manifest_invalid")
+        declared = json.loads(manifest_path.read_bytes())
+        if not isinstance(declared, dict):
+            raise DatasetRejected("manifest_invalid")
+        if declared.get("schema_version", 1) != 1:
+            raise DatasetRejected("manifest_schema_unsupported")
+        if declared.get("source") != "fixture" or declared.get("license") != "test":
+            raise DatasetRejected("permission_unsupported")
         dataset = Lake(root).dataset(name)
         manifest = dataset.manifest
         # Legacy manifests have no rights object. Only explicit test declarations are admitted.
         if manifest.source != "fixture" or manifest.license != "test":
             raise DatasetRejected("permission_unsupported")
-        manifest_path = root / name / "manifest.json"
-        if manifest_path.is_symlink():
-            raise DatasetRejected("manifest_invalid")
         entries = []
         for coverage in manifest.coverage:
             partition = root / name / coverage.interval / coverage.venue.value / coverage.symbol

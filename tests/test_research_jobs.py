@@ -173,3 +173,16 @@ def test_successful_analysis_requires_generated_metadata_and_citations(updates):
     valid.update(updates)
     with pytest.raises(ValueError):
         AnalysisRecord(**valid)
+
+
+def test_fixture_pin_rejects_paths_before_read(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from quantmesh.research.jobs import DatasetRejected
+
+    def forbidden_read(path):
+        pytest.fail("unsafe dataset name reached file I/O")
+
+    monkeypatch.setattr(Path, "read_bytes", forbidden_read)
+    with pytest.raises(DatasetRejected):
+        pin_fixture_dataset(tmp_path, "../outside")
