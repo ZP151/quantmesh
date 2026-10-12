@@ -129,7 +129,7 @@ def test_executor_removes_the_owned_pytest_basetemp_after_exit(
     )
 
     try:
-        assert execute_commands((command,)) == expected_returncode
+        assert execute_commands((command,), logs=tmp_path / "logs") == expected_returncode
         assert not basetemp.exists()
     finally:
         shutil.rmtree(basetemp, ignore_errors=True)
@@ -494,7 +494,7 @@ def test_executor_timeout_reaps_a_real_grandchild(tmp_path: Path) -> None:
     command = GateCommand(
         "timeout probe", (sys.executable, "-c", parent, str(started), str(finished)), tmp_path, 1
     )
-    result = execute_commands((command,))
+    result = execute_commands((command,), logs=tmp_path / "logs")
 
     assert result == 1
     assert started.exists(), "the grandchild must have started before the timeout"
@@ -554,7 +554,7 @@ def test_posix_timeout_reaps_a_sigterm_resistant_grandchild(tmp_path: Path) -> N
         1,
     )
 
-    assert execute_commands((command,)) == 1
+    assert execute_commands((command,), logs=tmp_path / "logs") == 1
     assert started.exists()
     time.sleep(3.2)
     assert not finished.exists(), "SIGKILL must reap a TERM-resistant descendant"
@@ -593,7 +593,7 @@ def test_executor_stops_after_the_first_failed_command(
         ),
     )
 
-    assert execute_commands(commands) == 3
+    assert execute_commands(commands, logs=tmp_path / "logs") == 3
     assert not second_ran.exists()
 
 
