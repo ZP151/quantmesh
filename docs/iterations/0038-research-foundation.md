@@ -634,3 +634,23 @@ exact synchronization and new bootstrap two-axis/nativeSQLHTTP acceptance.
 No third oldservice architecture review, production store change or paid call.
 Historical realPG30/0skip at42fbfa5 cannot certify this newly changed app;
 fresh native/runtime/HTTP/PG/user-loop acceptance is explicitly still pending.
+
+Coordinator performs one actual read-only SSH system resource intake on the
+existing private AWS host at2026-10-12T21:31:06Z: SSH passes without new auth,
+Linux/x86_64/CPython3.12.3/2visibleCPUs,8003864KiB total/3128128KiB available
+memory,142649958400filesystem free bytes. Fixed candidate OpenD/profile paths,
+Docker CLI andpg_dump are absent. No broker/app source request, vendor state,
+cmdline/env, service/OS change or paid action. This is resource observation
+only; source-host-intake raw receipt retains runtime_and_source_acceptance=false.
+Task4 review preparation creates docs/runbooks/research-service.md: distinct
+Singapore8GB2vCPU160GB research host, official44USD/month compute,10backup
+estimate,50modelallowance→104/120USD envelope; no purchase or new host. Concrete
+release/image/production-PG/backup pins, actualnativeproof and applicable human/
+CI/resource approval remain required before execution. PublicIPv4 pricing does
+not authorize public ingress. Proposed external restic0.19.1/BSD2 release asset
+metadata is archived but no binary downloaded/installed/admitted. REUSE records
+candidate boundary. Coordinator specifies consistent schema snapshot then
+referenced immutable artifacts/SHA manifests, encrypted off-host scope and
+fresh isolated restore/idempotency/effect fences. No self-managed crypto/code
+copy or backup success inferred. Vendor officialinteractive-login/remember-no/
+market-right transfer docs verified; private human authentication still pending.

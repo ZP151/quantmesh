@@ -16,10 +16,22 @@ Task4 preparation: four new runtime/CLI/test/runbook files, default no-effect
 preflight, fixed loopback8110, explicit private credentials and real new owned
 SQL/HTTP restart/idempotency/cancel proof. Root owns shared app/health integration.
 It runs alongside source witness4a9b; PG c7be is stopped and must not redispatch.
-Actual Oct12 21:19UTC Docker info still exit1/Engine unavailable. No production
+Current actual Docker info still exit1/Engine unavailable. No production
 host/model/Worker is started; PR166 actualOPEN/da6e8c7/reviews[] remains under
 the pending human review/recovery request. No paid resource or repeated source
 requests/old CI. Bootstrap API queueing is not Linux execution/report acceptance.
+
+Actual read-only private source-host intakeOct12 21:31:06UTC passes SSH:
+Linux/x86_64/CPython3.12.3/2CPUs,8003864KiB total and3128128KiB available
+memory; reviewed candidate OpenD/profile, Docker CLI/pg_dump absent at checked
+paths. No app/market/vendor state or process cmdline/env request, install or
+restart. Raw receipt is archived in source-host-intake. New research-service
+runbook prepares Option A's distinct8GB host/$44+backup estimate$10+model
+allowance$50=$104/month, within$120 ceiling; no resource purchase requested.
+External restic0.19.1 backup candidate is public metadata only, uninstalled;
+actual binary/restore/production package and native image pins remain pending.
+The DB-snapshot→referenced immutable artifact consistency rule and new-target
+restore/secret/rollback/human window are explicit, never a passing backup claim.
 
 Current dispatch2026-10-13: Task3 source witness preparation is ACTIVE in
 `QuantMesh #169 — 服务器行情真实来源验收工具`, thread01a131f6-ec78-7b21-a156-e1a30e041c43,
