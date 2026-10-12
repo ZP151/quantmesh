@@ -1,0 +1,3 @@
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-018\\18-QM-018.log","name":"QM-018","pid":61772,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:24.033Z"}
+{"elapsed_seconds":2.016,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-018\\18-QM-018.log","name":"QM-018","timestamp":"2026-10-12T18:25:26.053Z"}
+{"elapsed_seconds":2.036,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-018\\18-QM-018.log","name":"QM-018","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:26.054Z"}

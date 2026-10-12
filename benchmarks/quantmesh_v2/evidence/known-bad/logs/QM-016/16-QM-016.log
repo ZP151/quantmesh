@@ -1,0 +1,167 @@
+FFFFFFFFFFFFFFFFFFFF
+================================== FAILURES ===================================
+_ test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(5 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]
+20 failed in 0.33s

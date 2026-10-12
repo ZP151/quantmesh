@@ -1,0 +1,15 @@
+F
+================================== FAILURES ===================================
+____ test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running _____
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_live_candle_revisions.py::test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running
+1 failed in 0.35s

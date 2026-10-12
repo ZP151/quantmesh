@@ -1,0 +1,3 @@
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-021\\21-QM-021.log","name":"QM-021","pid":43180,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:30.282Z"}
+{"elapsed_seconds":2.025,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-021\\21-QM-021.log","name":"QM-021","timestamp":"2026-10-12T18:25:32.305Z"}
+{"elapsed_seconds":2.047,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-021\\21-QM-021.log","name":"QM-021","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:32.306Z"}

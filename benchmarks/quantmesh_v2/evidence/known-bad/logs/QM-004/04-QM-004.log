@@ -1,0 +1,89 @@
+FFFFFFFFF
+================================== FAILURES ===================================
+_ test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+__ test_failures_degrade_without_persisting_or_mutating_packet[unavailable] ___
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+____ test_failures_degrade_without_persisting_or_mutating_packet[timeout] _____
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+____ test_failures_degrade_without_persisting_or_mutating_packet[non-json] ____
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_failures_degrade_without_persisting_or_mutating_packet[authority-field] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+__ test_failures_degrade_without_persisting_or_mutating_packet[bad-citation] __
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+__ test_failures_degrade_without_persisting_or_mutating_packet[critic-flag] ___
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(5 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]
+9 failed, 2 warnings in 0.82s

@@ -1,0 +1,15 @@
+F
+================================== FAILURES ===================================
+______________ test_generic_pipeline_refuses_fabricated_citation ______________
+benchmarks\quantmesh_v2\test_audit_badcases.py:84: in test_generic_pipeline_refuses_fabricated_citation
+    assert not result.critic.allowed, (
+E   AssertionError: Unresolvable citations must be blocked even when the scripted critic says pass
+E   assert not (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),)
+E    +  where (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),) = CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()).allowed
+E    +    where CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()) = ResearchResult(run_id='2f2c9ec3f2f82909', analyst_report=AnalystReport(claims=[Claim(statement='Synthetic unsupported ...ortfolio_review=PortfolioReview(posture='within_constraints', referenced_inputs=['portfolio-fixture'], suggestions=[])).critic
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation
+1 failed in 0.55s
