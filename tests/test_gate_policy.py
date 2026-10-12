@@ -708,3 +708,11 @@ def test_select_tier_has_four_public_tiers(paths, expected):
 )
 def test_malformed_path_input_cannot_select_fast(paths):
     assert decide_paths(paths).tier is GateTier.RELEASE
+
+
+def test_mapping_input_cannot_hide_safety_values():
+    from tools.gate_policy import select_tier
+
+    paths = {"docs/guide.md": "src/quantmesh/risk/guard.py"}
+    assert decide_paths(paths).tier is GateTier.RELEASE
+    assert select_tier(paths, "pull_request") == "release"

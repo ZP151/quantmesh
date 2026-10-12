@@ -102,6 +102,12 @@ def _venv_script(venv: Path, name: str) -> Path:
     return venv / "bin" / name
 
 
+def _node_command(argv: list[str], *, platform: str | None = None) -> list[str]:
+    """Use Windows batch dispatch only on Windows; Linux runs native Node CLIs."""
+    platform = os.name if platform is None else platform
+    return (["cmd", "/c"] if platform == "nt" else []) + argv
+
+
 def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8")
 
@@ -243,14 +249,6 @@ def run_step(
             env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"},
             start_new_session=os.name != "nt",
         ) as proc:
-            _emit_event(
-                events_path,
-                "step_started",
-                name=name,
-                pid=proc.pid,
-                timeout_seconds=timeout,
-                log_path=str(log_path),
-            )
             last_progress_at = started
             last_progress_size = 0
             last_progress_percentage: int | None = None
@@ -290,6 +288,14 @@ def run_step(
                     last_progress_percentage = percentage
 
             try:
+                _emit_event(
+                    events_path,
+                    "step_started",
+                    name=name,
+                    pid=proc.pid,
+                    timeout_seconds=timeout,
+                    log_path=str(log_path),
+                )
                 while True:
                     returncode = proc.poll()
                     if returncode is not None:
@@ -489,7 +495,7 @@ def main() -> int:
         ),
         step(
             "npm ci (frontend deps)",
-            ["cmd", "/c", "npm", "ci"],
+            _node_command(["npm", "ci"]),
             checkout / "frontend",
             1800,
         ),
@@ -501,7 +507,7 @@ def main() -> int:
         ),
         step(
             "npm audit --audit-level=high",
-            ["cmd", "/c", "npm", "audit", "--audit-level=high"],
+            _node_command(["npm", "audit", "--audit-level=high"]),
             checkout / "frontend",
             600,
         ),
@@ -513,7 +519,7 @@ def main() -> int:
         ),
         step(
             "frontend unit tests (vitest)",
-            ["cmd", "/c", "npx", "vitest", "run"],
+            _node_command(["npx", "vitest", "run"]),
             checkout / "frontend",
             900,
         ),

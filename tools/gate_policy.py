@@ -11,7 +11,7 @@ import json
 import re
 import subprocess
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import PurePosixPath, PureWindowsPath
@@ -478,7 +478,7 @@ def decide_paths(paths: Iterable[str]) -> GateDecision:
     executable path is deliberately left unmapped and selects ``release``.
     """
 
-    if paths is None or isinstance(paths, (str, bytes)):
+    if paths is None or isinstance(paths, (str, bytes, Mapping)):
         return GateDecision(GateTier.RELEASE, reasons=("malformed-path-input",))
     normalized: list[str] = []
     invalid_paths: list[str] = []

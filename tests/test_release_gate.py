@@ -74,9 +74,11 @@ def test_full_pytest_timeout_exceeds_measured_baseline() -> None:
     assert release_gate.FULL_PYTEST_TIMEOUT_SECONDS >= 10800
 
 
+@pytest.mark.parametrize("platform", ["nt", "posix"])
 def test_full_pytest_command_is_exhaustive_with_duration_reporting(
     tmp_path: Path,
     monkeypatch,
+    platform,
 ) -> None:
     gate_root = tmp_path / "gate-root"
     gate_root.mkdir()
@@ -105,8 +107,20 @@ def test_full_pytest_command_is_exhaustive_with_duration_reporting(
     monkeypatch.setattr(release_gate, "_git", fake_git)
     monkeypatch.setattr(release_gate, "run_step", fake_run_step)
     monkeypatch.setattr(sys, "argv", ["release_gate.py", "--keep"])
+    node_command = release_gate._node_command
+    monkeypatch.setattr(
+        release_gate, "_node_command", lambda argv: node_command(argv, platform=platform)
+    )
 
     assert release_gate.main() == 0
+    prefix = ["cmd", "/c"] if platform == "nt" else []
+    assert commands["npm ci (frontend deps)"] == prefix + ["npm", "ci"]
+    assert commands["npm audit --audit-level=high"] == prefix + [
+        "npm",
+        "audit",
+        "--audit-level=high",
+    ]
+    assert commands["frontend unit tests (vitest)"] == prefix + ["npx", "vitest", "run"]
     full_pytest = commands["full pytest suite"]
     pytest_index = full_pytest.index("pytest")
     assert full_pytest[pytest_index:] == [
@@ -519,3 +533,40 @@ def test_run_step_detects_marker_before_large_log_tail(tmp_path: Path, monkeypat
 
     assert ok is False
     assert [event["event"] for event in _events(tmp_path)].count("step_failure_seen") == 1
+
+
+def test_initial_event_failure_reaps_owned_tree(tmp_path, monkeypatch):
+    monkeypatch.setattr(release_gate, "STEPS", [])
+    ready = tmp_path / "ready"
+    finished = tmp_path / "finished"
+    child = (
+        "import pathlib, sys, time; pathlib.Path(sys.argv[1]).touch(); "
+        "time.sleep(1.5); pathlib.Path(sys.argv[2]).touch()"
+    )
+    parent = (
+        "import subprocess, sys, time; "
+        + f"subprocess.Popen([sys.executable, '-c', {child!r}, sys.argv[1], sys.argv[2]]); "
+        "time.sleep(1.2)"
+    )
+    emit = release_gate._emit_event
+
+    def fail_initial(path, event, **fields):
+        if event == "step_started":
+            deadline = time.monotonic() + 1
+            while not ready.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            assert ready.exists()
+            raise OSError("injected evidence write failure")
+        emit(path, event, **fields)
+
+    monkeypatch.setattr(release_gate, "_emit_event", fail_initial)
+    with pytest.raises(OSError, match="injected evidence"):
+        release_gate.run_step(
+            "evidence failure",
+            [sys.executable, "-c", parent, str(ready), str(finished)],
+            tmp_path,
+            tmp_path,
+            timeout=0.5,
+        )
+    time.sleep(0.6)
+    assert not finished.exists(), "evidence failure must stop the owned descendants"
