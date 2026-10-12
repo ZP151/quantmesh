@@ -1,5 +1,6 @@
 """Private authenticated API, with fixed construction-time operator identity."""
 
+import re
 import secrets
 from typing import Annotated
 
@@ -24,12 +25,19 @@ def create_app(
     operator_id: str,
     token: SecretStr,
     configured_dataset_ids: tuple[str, ...] = (),
+    actual_build: str | None = None,
 ) -> FastAPI:
     from quantmesh.research.job_store import _identifier
 
     _identifier(operator_id)
     if not isinstance(token, SecretStr) or len(token.get_secret_value()) < 16:
         raise ValueError("private authentication required")
+    # The bootstrap supplies a measured pin after source admission. Direct
+    # fixture callers remain unqualified; no expected/configured SHA is guessed.
+    if actual_build is not None and (
+        not isinstance(actual_build, str) or re.fullmatch(r"[0-9a-f]{40}", actual_build) is None
+    ):
+        raise ValueError("invalid actual build")
 
     def authenticate(authorization: Annotated[str | None, Header()] = None):
         expected = "Bearer " + token.get_secret_value()
@@ -116,6 +124,13 @@ def create_app(
             store.get(operator_id, "health-nonexistent")
         except KeyError:
             pass
-        return {"schema_version": 1, "advisory_only": True}
+        return {
+            "schema_version": 1,
+            "advisory_only": True,
+            "actual_build": actual_build,
+            # This API starts neither execution loop. Native containment and
+            # configured real-model evidence are separate deployment gates.
+            "capabilities": {"worker": "pending_containment", "model": "unavailable"},
+        }
 
     return app
