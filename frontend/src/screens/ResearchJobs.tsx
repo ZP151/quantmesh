@@ -52,6 +52,14 @@ async function reportCache(jobId: string, value?: ReportCache): Promise<ReportCa
   } finally { database.close() }
 }
 
+async function verifyReport(value: ReportCache, ref: ResearchJobRecord['artifacts'][number]): Promise<void> {
+  const bytes = new TextEncoder().encode(value.text)
+  if (bytes.byteLength > 16 * 1024 * 1024 || bytes.byteLength !== ref.byte_size) throw new Error('artifact_invalid')
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  const hex = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
+  if (hex !== ref.sha256 || value.artifactId !== ref.artifact_id) throw new Error('artifact_invalid')
+}
+
 function active(job: ResearchJobRecord | null): boolean {
   return !!job && (job.state === 'queued' || job.state === 'running'
     || (job.state === 'succeeded'
@@ -102,10 +110,14 @@ export function ResearchJobsScreen() {
       if (!cancelled) setOptions(value)
     }).catch(() => { if (!cancelled) setOptionsError(true) })
     const retainedJob = current.current?.job
-    if (retainedJob) reportCache(retainedJob.job_id).then(value => {
+    if (retainedJob) reportCache(retainedJob.job_id).then(async value => {
       const ref = retainedJob.artifacts.find(item => item.kind === 'report')
-      if (!cancelled && value && ref && value.artifactId === ref.artifact_id) setReport(value)
-    }).catch(() => { if (!cancelled) setError('Retained report storage is unavailable.') })
+      if (value && ref) {
+        if (value.jobId !== retainedJob.job_id) throw new Error('artifact_invalid')
+        await verifyReport(value, ref)
+        if (!cancelled) setReport(value)
+      }
+    }).catch(() => { if (!cancelled) setError('Retained report integrity verification failed or storage is unavailable.') })
     return () => { cancelled = true; mounted.current = false }
   }, [])
 
@@ -192,6 +204,7 @@ export function ResearchJobsScreen() {
     try {
       const text = await api.researchJobArtifact(job.job_id, ref.artifact_id)
       const value = { jobId: job.job_id, artifactId: ref.artifact_id, text }
+      await verifyReport(value, ref)
       if (mounted.current) setReport(value)
       try { await reportCache(job.job_id, value) }
       catch { if (mounted.current) setError('Report opened; browser retention failed. Download it before leaving.') }
@@ -228,7 +241,7 @@ export function ResearchJobsScreen() {
   ]
 
   return <Page title="Research jobs" description="Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.">
-    <p className="text-sm text-muted-foreground"><Badge variant="outline">LOCAL_FIXTURE_ONLY / v1 fixture research</Badge>{' '}
+    <p className="text-sm text-muted-foreground"><Badge variant="outline">FIXTURE_ONLY / v1 research</Badge>{' '}
       Workflow evidence only. Synthetic results do not establish investment performance.</p>
     {error && <p role="alert" className="rounded-md border border-border p-3 text-sm">{error}</p>}
     <div className="grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]">
@@ -279,8 +292,9 @@ export function ResearchJobsScreen() {
             <span className="break-all font-mono text-xs">{job.job_id}</span>
             {job.cancel_requested && <span className="text-xs">Cancellation requested</span>}
           </div>
-          <p className="text-sm">{job.analysis_state === 'unavailable' || job.analysis_state === 'not_requested'
-            ? 'Agent unavailable' : `Advisory Agent: ${job.analysis_state}`} · Deterministic backtest: {job.state}</p>
+          <p className="text-sm">{job.analysis_state === 'unavailable' ? 'Agent unavailable'
+            : job.analysis_state === 'not_requested' ? 'Agent not requested'
+              : `Advisory Agent: ${job.analysis_state}`} · Deterministic backtest: {job.state}</p>
           {job.error_code && <p className="text-sm">Recorded failure: {job.error_code}</p>}
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
             <dt className="text-muted-foreground">Model calls</dt><dd>{unavailable(job.analysis?.usage?.model_calls ?? job.usage.model_calls)}</dd>
