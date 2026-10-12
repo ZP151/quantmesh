@@ -619,3 +619,18 @@ cancel/restart/503 witness; no Worker/model/server launch. Root owns shared
 health/app integration and final deployment gates. Other active writer is
 source witness4a9b; PGc7be completed/idle. No third writer or completed-review
 redispatch. First plan/dispatch evidence is not completed runtime acceptance.
+
+Bootstrap5bc4 supplies exact sharedhealth proposal; root adds authenticated
+actual_build (None for unqualified factory callers; strict lowercaseSHA40)
+plus truthful pending_containment/unavailable Worker/model capability labels.
+The existing health still executes store.get transaction and preserves401/
+scrubbed503. Root-owned nine new behavior cases RED9fail/7.31s/exit1 then
+GREEN10includingoldAPI/1.76s/exit0; format/Ruff/diff0. Fresh full separate
+Windows gate34pass/5actual-PGskip/39total/exit0 on original77-package lock,
+schema/protocol unchanged, output/171-root-bootstrap-health plus original
+service-build-health-{red,green,boundary}.log/.exit. Shared app/test commit
+18ff2f1daf22d84a701ca069753291410aed3bdc pushed and handed to active5bc4 for
+exact synchronization and new bootstrap two-axis/nativeSQLHTTP acceptance.
+No third oldservice architecture review, production store change or paid call.
+Historical realPG30/0skip at42fbfa5 cannot certify this newly changed app;
+fresh native/runtime/HTTP/PG/user-loop acceptance is explicitly still pending.

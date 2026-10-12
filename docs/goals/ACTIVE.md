@@ -1,5 +1,14 @@
 # Active Goal
 
+Shared bootstrap health candidate18ff2f1 is integrated: optional measured actual
+build pin, authenticated real store probe, pending_containment Worker and
+unavailable model labels. Root9RED→10focusedGREEN; separate Windows service
+gate34pass/5PGskip/39total/exit0, Ruff/format/diff0. It changes app/test only,
+no store/lock/schema/protocol. The previous real30/0skip gate remains historical
+42fbfa5 proof, not acceptance of this new app. Bootstrap5bc4 must synchronize
+18ff2f1 and cover it in its fresh nativeSQL/HTTP and new two-axis review. Root
+does not claim complete native/deployed source, worker or model acceptance.
+
 Next bootstrap dispatch2026-10-13: native chat01a131ff-9a11-76f1-ba24-292774894c10,
 managed5bc4, starts frozen d351c3a. Tracked plan
 2026-10-13-research-service-bootstrap.md refines the unfinished#171 startup/
@@ -21,7 +30,8 @@ Owned PG#171/c7be completes atf525d91, integrated8166b03. Two final review axes
 clear; actual Linux qualifier33/0skip and genuine default service30/0skip gate
 exit0, owned shutdown verified. Root integration34pass/7Linux-only skips/Ruff0;
 69 raw receipts are archived with independent SQL/JUnit/import/hash consistency
-checks. No service/store/lock drift from frozen42fbfa5. Source witness4a9b and
+checks. That receipt has no drift from frozen42fbfa5; new health changes are
+separately unqualified on native SQL until bootstrap proof. Source witness4a9b and
 new bootstrap5bc4 are the two active implementation sessions. Production PG/TLS/HA/backup,
 OCI/Worker/model/source/deployment gates remain open; no whole-goal pass.
 
