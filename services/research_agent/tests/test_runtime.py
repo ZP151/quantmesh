@@ -1,5 +1,7 @@
 """Bootstrap boundaries; native cases run in the owned CPython 3.12 environment."""
 
+import base64
+import hashlib
 import importlib
 import json
 import os
@@ -435,3 +437,49 @@ def test_explicit_serve_fixes_single_private_listener(owned, monkeypatch):
             },
         )
     ]
+
+
+@pytest.fixture
+def installed_dependency(tmp_path, monkeypatch):
+    module = runtime_module()
+    prefix = tmp_path / "venv"
+    site = prefix / "lib/python3.12/site-packages"
+    package = site / "fixture"
+    package.mkdir(parents=True)
+    lazy = package / "lazy.py"
+    lazy.write_text("value = 1\n")
+    info = site / "fixture-1.0.dist-info"
+    info.mkdir()
+    (info / "METADATA").write_text("Name: fixture\nVersion: 1.0\n")
+    digest = (
+        base64.urlsafe_b64encode(hashlib.sha256(lazy.read_bytes()).digest()).decode().rstrip("=")
+    )
+    (info / "RECORD").write_text(
+        f"fixture/lazy.py,sha256={digest},10\nfixture-1.0.dist-info/RECORD,,\n"
+    )
+    distribution = module.metadata.Distribution.at(info)
+    monkeypatch.setattr(module.metadata, "distribution", lambda name: distribution)
+    return module, prefix, lazy
+
+
+def test_dependency_admission_measures_unloaded_code(installed_dependency):
+    module, prefix, lazy = installed_dependency
+    assert hasattr(module, "_admit_dependencies")
+    module._admit_dependencies(prefix, {"fixture": "1.0"})
+    lazy.write_text("value = 2\n")
+    with pytest.raises(ValueError):
+        module._admit_dependencies(prefix, {"fixture": "1.0"})
+
+
+def test_dependency_admission_rejects_bytecode_and_unrecorded_shadow(installed_dependency):
+    module, prefix, lazy = installed_dependency
+    assert hasattr(module, "_admit_dependencies")
+    cache = lazy.parent / "__pycache__"
+    cache.mkdir()
+    (cache / "lazy.cpython-312.pyc").write_bytes(b"shadow")
+    with pytest.raises(ValueError):
+        module._admit_dependencies(prefix, {"fixture": "1.0"})
+    (cache / "lazy.cpython-312.pyc").unlink()
+    (lazy.parent / "shadow.py").write_text("value = 3\n")
+    with pytest.raises(ValueError):
+        module._admit_dependencies(prefix, {"fixture": "1.0"})
