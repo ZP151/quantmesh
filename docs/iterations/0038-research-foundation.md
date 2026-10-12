@@ -465,3 +465,14 @@ Catalog portability preflight found12 workspace LF/stat-cache discrepancies;
 only Git-equivalent line endings were restored/refreshed, leaving no content,
 test or global Git setting change. All new pins match committed blobs before
 execution. This clean-checkout Eval is not the full final core/service certificate.
+
+Next authorized user loop#173 is ACTIVE in native thread
+01a13192-f183-7573-9590-79201634ee32 (`QuantMesh #173 — 持久研究任务与报告工作台`),
+managed worktree5f7a from1fde6dcde715011cbfcc2bfff56f665dd66c85ea. Its bounded
+leaf API/options/client/ResearchJobs screen ownership follows Task3. Root owns
+shared workstation/service-options/schema/client/nav wiring; the child publishes
+an interim READY-FOR-WIRING.md and shared patch proposal in its ignored
+output/173-workstation before the browser/build boundary. Do not count an
+unwired page as complete or reopen stopped#160/#172 work. At most two current
+implementers (child plus root shared integration), one product slice, two review
+rounds. No new strategy/paid/model/source/global operation is dispatched.
