@@ -40,5 +40,7 @@ This file is the append-only ledger of QuantMesh delivery iterations. Use `quant
 | 0034 | completed | 2026-09-12 | 2026-09-12 | Deployed read-only live market data | [Issue #140](https://github.com/ZP151/quantmesh/issues/140) / [PR #142](https://github.com/ZP151/quantmesh/pull/142) / [Ledger](0034-live-data-delivery.md) |
 | 0035 | completed; bounded AWS acceptance | 2026-09-12 | 2026-09-13 | Real streaming instrument charts and sustained-operation recovery | [Issue #144](https://github.com/ZP151/quantmesh/issues/144) / [PR #149](https://github.com/ZP151/quantmesh/pull/149) / [PR #150](https://github.com/ZP151/quantmesh/pull/150) / [Ledger](0035-live-instrument-charts.md) |
 | 0036 | active; recovery gate passed, lake-retention guard open | 2026-09-17 | — | Private AWS staging recovery and equity readiness | [Issue #135](https://github.com/ZP151/quantmesh/issues/135) / [Plan](../superpowers/plans/2026-09-17-staging-recovery.md) / [Ledger](0036-staging-recovery.md) |
+| 0037 | deployed chart/startup loops accepted; probe follow-up open | 2026-09-23 | — | Private Moomoo/OpenD readiness | [Issue #156](https://github.com/ZP151/quantmesh/issues/156) / [Ledger](0037-moomoo-opend-readiness.md) |
+| 0038 | active; Option A approved | 2026-10-12 | — | Recoverable research foundation and server market sources | [Issue #167](https://github.com/ZP151/quantmesh/issues/167) / [Ledger](0038-research-foundation.md) |
 
 <!-- quantmesh-iterations:append-above -->

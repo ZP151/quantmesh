@@ -1,11 +1,24 @@
 # QuantMesh Iteration Plan
 
-Updated: 2026-09-23. This replaces the original conceptual iterations 0–5;
+Updated: 2026-10-12. This replaces the original conceptual iterations 0–5;
 historical delivery IDs and evidence remain in the [iteration index](iterations/INDEX.md).
 Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 [ACTIVE](goals/ACTIVE.md) for the resumable frontier.
 
 ## Current resumable goal
+
+Authoritative current priority is [iteration0038](iterations/0038-research-foundation.md)
+and [approved Option A plan](superpowers/plans/2026-10-12-research-portfolio.md).
+Deliver one persistent research-job/report loop with an independent advisory
+Agent service; freeze contracts before parallel workers. Server-owned market
+sources are a requirement, not fulfilled by SDK registration alone: Windows
+OpenD migration and stale application ingestion are tracked in issue#169.
+Server/calendar#169 and contracts#168 form the first parallel batch after
+operator freshness steering; validation#132 and Eval#160 follow.
+Formal168h is NOT REQUIRED/on-demand. Capacity and disruptive operational drills
+are later acceptance, not the development frontier. PR166 CI passed but remains
+open; original installation and personal-PC gateway are not relabelled cloud.
+The dated checkpoints below are historical, not instructions to restart old work.
 
 Iteration 0035 is complete. Iteration 0036 remains active after the 8 GB
 private AWS migration passed its bounded restore, smoke, chart and restart

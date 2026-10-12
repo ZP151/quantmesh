@@ -1,5 +1,12 @@
 # QuantMesh Product Roadmap
 
+Current operator decision2026-10-12: [iteration0038](../iterations/0038-research-foundation.md)
+is ACTIVE, approved Option A recoverable research infrastructure before strategy
+expansion. Persistent jobs/reports, advisory Agent service and evaluation gates
+are the next product loop. Server market sources must not depend on the operator's
+personal PC; OpenD gateway migration remains distinct from the AWS SDK already
+registered. Formal168h is NOT REQUIRED/on-demand; no uptime pass is inferred.
+
 Last updated: 2026-09-23
 
 ## Status legend

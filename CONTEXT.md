@@ -6,6 +6,16 @@ QuantMesh is a local-first workstation for cross-market quantitative research, f
 
 ## Current stage
 
+Current operator priority2026-10-12: iteration0038 / issue#167, approved
+recoverable research foundation Option A. Build persistent tasks, isolated
+backtest/report and advisory Agent user loops before new strategy families;
+reserve custom-strategy contracts but no untrusted Python execution. Real
+market gateways must run server-side: AWS already runs Hyperliquid and the
+Moomoo SDK, but Windows OpenD remains upstream. Issue#169 diagnoses current
+stale app ingestion and qualifies server gateway migration. Formal168h is not
+required now, on-demand only. Historical failures remain unaccepted. Read
+ACTIVE and iteration0038 before interpreting the historical stage notes below.
+
 M0 through M13 and iterations 0014–0020 are implemented and merged.
 `v0.1.1-rc1` is the immutable accepted prototype baseline. It includes the
 React workstation, deterministic demo and paper authority, read-only live

@@ -1,5 +1,43 @@
 # Active Goal
 
+Status: iteration0038 ACTIVE, operator-approved Option A on2026-10-12 Singapore.
+The stale tool goal for AWS/chart/readiness delivery is closed; its accepted
+October8 evidence remains historical. The new goal delivers persistent research
+jobs, isolated backtests/reports, advisory Agent integration and server-owned
+market sources. Formal168h is NOT REQUIRED/on-demand only; do not revive retired
+soak tasks. Deferred login/outage/capacity/shutdown evidence is not declared passed.
+
+Parent issue: [#167](https://github.com/ZP151/quantmesh/issues/167).
+Active ledger: [iteration0038](../iterations/0038-research-foundation.md).
+Plan: [approved A portfolio](../superpowers/plans/2026-10-12-research-portfolio.md).
+Budget: incremental operating ceiling $120/month, development API allowance
+$200 under the selected A plan. Notify the operator before authentication,
+payment and AI key configuration; no paid resources or calls created yet.
+One product iteration, at most two implementation sessions with isolated
+worktrees and one shared-file coordinator. Soak is inactive, not a third track.
+
+PR #166 exact candidate da6e8c7 CI38248602251 succeeded2026-10-12 13:15:58UTC.
+Actual GitHub PR remains OPEN, reviews list empty; no merge/install is claimed.
+Its branch and installed Windows helper are preserved. New integration branch
+codex/0038-research-foundation starts from origin/main745a231, not local main.
+Native probe tests33 passed; do not repeat them merely to refresh planning state.
+
+Actual server intake2026-10-12 13:37UTC: AWS69515b7/paper=true/live=false,
+Hyperliquid BTC/ETH/SOL current. Moomoo SDK/watchlist are on AWS, but loopback
+11111 is tailscaled's forward to Windows OpenD, not a server gateway. Independent
+AWS readiness succeeds while app equity observations remain Oct9/stale in the
+calendar-confirmed Oct12 regular session. This remains a diagnosis candidate:
+verify declared provider delay/opening grace and lifecycle before calling it a
+failure. Globally, closed latest-session data is expected and cannot fail on age
+alone. #169 covers calendar semantics, ingestion diagnosis and gateway migration;
+source readiness is not proof of application freshness. No personal-PC independence
+claim until server-owned gateway and source-backed session evidence pass.
+First parallel batch is server/calendar#169 plus contracts#168 after the user's
+freshness steering. Validation#132 follows the first source slice, not a third
+concurrent implementation session.
+
+## Historical delivery checkpoint — retained, superseded priority
+
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance
 and the 8 GB migration's short acceptance are complete; this goal remains
 active until the new host's sustained capacity gate is closed and the separate
