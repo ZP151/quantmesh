@@ -37,31 +37,31 @@ starts only the qualified binary/new data directory and records ownership.
 
 ## Required acceptance
 
-- [ ] Qualify source checksum, compiler/build tool versions/licenses and actual
+- [x] Qualify source checksum, compiler/build tool versions/licenses and actual
   binary version/digests; preserve install receipt and license. No package/core
   dependency change. Build limitations (for example local-fixture TLS/collation
   options) are explicit and never certify a production deployment profile.
-- [ ] TDD ownership/admission: reject public bind, borrowed paths/cluster, raw
+- [x] TDD ownership/admission: reject public bind, borrowed paths/cluster, raw
   external DSNs, credential argv/output, wrong binary/source identity and
   cleanup target mismatch. Use actual helper behavior, no source-text tests.
-- [ ] Create a unique owned cluster/user/password without displaying/saving the
+- [x] Create a unique owned cluster/user/password without displaying/saving the
   DSN in evidence or prompts. Private temporary credential input is0600; no
   password CLI arguments or account/environment discovery. Verify actual
   cluster identity/data path and server PID before running SQL. A port race
   must fail, never redirect testing into another database.
-- [ ] Start the native service's default gate with explicit owned-disposable
+- [x] Start the native service's default gate with explicit owned-disposable
   acknowledgment and an in-process SecretStr DSN. All30 service tests run,
   including five real PostgreSQL cases, zero skips/errors/failures, exit0.
   Archive SQL-driver/source/runtime/cluster identity and authoritative gate
   logs/JUnit. Same published schema/nine-method digests and license gate apply.
-- [ ] Prove real concurrency/idempotency, shared slots, fencing, reopen,
+- [x] Prove real concurrency/idempotency, shared slots, fencing, reopen,
   cancellation and effect-reservation behavior covered by the actual tests.
   Distinguish their simulated lease-clock checks from a real≤90s Worker crash
   recovery witness, which remains #172/private deployment acceptance.
-- [ ] Stop only the verified owned server/cluster. Preserve evidence and safe
+- [x] Stop only the verified owned server/cluster. Preserve evidence and safe
   source/install artifacts; no global processes/prune/temp cleanup. No system
   service or persistent public listener remains.
-- [ ] Run targeted checks/Ruff/diff and at most two independent Spec/Standards
+- [x] Run targeted checks/Ruff/diff and at most two independent Spec/Standards
   rounds for the new qualifier; do not repeat the original #171 architecture
   review. Commit/push bounded files and hand off exact source/evidence to root.
 

@@ -1,0 +1,66 @@
+..............................FFF                                        [100%]
+=================================== FAILURES ===================================
+_____________ test_runtime_paths_reject_borrowed_symlink[checkout] _____________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-owned-pg-0ue7gicj/admission-red-tmp/test_runtime_paths_reject_borr0')
+name = 'checkout'
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="native symlink admission requires Linux")
+    @pytest.mark.parametrize("name", ["checkout", "venv"])
+    def test_runtime_paths_reject_borrowed_symlink(tmp_path, name):
+        root = tmp_path / "owned"
+        root.mkdir()
+        borrowed = tmp_path / "borrowed"
+        borrowed.mkdir()
+        (root / name).symlink_to(borrowed, target_is_directory=True)
+        with pytest.raises(ValueError, match="owned path"):
+>           helper().validate_runtime_paths(root)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'tools.qualify_owned_postgres' has no attribute 'validate_runtime_paths'
+
+tests/test_owned_postgres_fixture.py:189: AttributeError
+_______________ test_runtime_paths_reject_borrowed_symlink[venv] _______________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-owned-pg-0ue7gicj/admission-red-tmp/test_runtime_paths_reject_borr1')
+name = 'venv'
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="native symlink admission requires Linux")
+    @pytest.mark.parametrize("name", ["checkout", "venv"])
+    def test_runtime_paths_reject_borrowed_symlink(tmp_path, name):
+        root = tmp_path / "owned"
+        root.mkdir()
+        borrowed = tmp_path / "borrowed"
+        borrowed.mkdir()
+        (root / name).symlink_to(borrowed, target_is_directory=True)
+        with pytest.raises(ValueError, match="owned path"):
+>           helper().validate_runtime_paths(root)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'tools.qualify_owned_postgres' has no attribute 'validate_runtime_paths'
+
+tests/test_owned_postgres_fixture.py:189: AttributeError
+____________ test_source_admission_allows_only_qualifier_additions _____________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-owned-pg-0ue7gicj/admission-red-tmp/test_source_admission_allows_o0')
+
+    def test_source_admission_allows_only_qualifier_additions(tmp_path):
+        subprocess.run(["git", "init", str(tmp_path)], capture_output=True, check=True)
+        (tmp_path / "baseline.txt").write_text("frozen source")
+        subprocess.run(["git", "add", "baseline.txt"], cwd=tmp_path, check=True)
+        subprocess.run(
+            ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+             "commit", "-m", "fixture baseline"],
+            cwd=tmp_path, capture_output=True, check=True,
+        )
+        env = helper().private_environment(tmp_path)
+        (tmp_path / "tools").mkdir()
+        (tmp_path / "tools/qualify_owned_postgres.py").write_text("fixture qualifier")
+>       helper().validate_source_contents(tmp_path, env)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'tools.qualify_owned_postgres' has no attribute 'validate_source_contents'
+
+tests/test_owned_postgres_fixture.py:204: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_owned_postgres_fixture.py::test_runtime_paths_reject_borrowed_symlink[checkout]
+FAILED tests/test_owned_postgres_fixture.py::test_runtime_paths_reject_borrowed_symlink[venv]
+FAILED tests/test_owned_postgres_fixture.py::test_source_admission_allows_only_qualifier_additions
+3 failed, 30 passed in 0.28s

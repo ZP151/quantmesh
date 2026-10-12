@@ -5,32 +5,37 @@ Current dispatch2026-10-13: Task3 source witness preparation is ACTIVE in
 managed4a9b, frozen9ff1f22. Narrow plan2026-10-13-server-source-witness.md;
 new read-only verifier/tests/runbook only. No real gateway/network/login/cutover
 operations in that implementation session. Current profile remains blocked.
-The other active implementation session is owned PG#171/c7be; its first real
-30/0skip gate passes, final admission fixes/fresh proof are under round2 review.
-Root has not yet integrated or certified that pending final handoff. No third
-writer, repeat completed reviews, source independence or whole-goal pass.
+Owned PG#171/c7be completes atf525d91, integrated8166b03. Two final review axes
+clear; actual Linux qualifier33/0skip and genuine default service30/0skip gate
+exit0, owned shutdown verified. Root integration34pass/7Linux-only skips/Ruff0;
+69 raw receipts are archived with independent SQL/JUnit/import/hash consistency
+checks. No service/store/lock drift from frozen42fbfa5. Source witness4a9b is
+the remaining active implementation session. Production PG/TLS/HA/backup,
+OCI/Worker/model/source/deployment gates remain open; no whole-goal pass.
 
 Current resume anchor2026-10-13 Singapore: #173 local fixture user loop is
 integrated/reviewed, two axes clear after2rounds; source ed5c12e/b9daa42 map to
 bc0d7a4/9fac9bf. Root47backend/1skip,14UI/typecheck green; child full419frontend
 and exact fixture/browser report/reload/cancel/outage/mobile witnesses pass.
-New Linux dependency/offline service qualification on clean9d5b3fa passes81
-licenses,8 runtime checks,25service/5actual-PG skips; defaultgate1 only missingPG.
+Linux dependency/offline service qualification on clean9d5b3fa passes81
+licenses,8 runtime checks,25service/5actual-PG skips; its historical defaultgate1
+is superseded for the owned DB fixture by final real30/0skip gate on42fbfa5.
 Native raw receipts/actual imports are archived separately; failed mounted-drive
 trials remain failures. No qualified OCI/model aggregate caps, Linux Worker
-integration/recovery, real PG/model, server market independence or release yet.
-Next close existing Engine/PG/source-human/provider prerequisites and prepare
+integration/recovery, production PG/model, server market independence or release yet.
+Next close existing Engine/source-human/provider prerequisites and prepare
 the qualified runtime/private deployment/recovery boundary. Don't redispatch
 stopped#160/#172/#173 or re-run completed review cycles. Formal168h stays on-demand.
 
-Actual next native verifier is ACTIVE: thread01a131e6-80e4-7b41-8a38-289864305d15,
+Owned native PG verifier completes: thread01a131e6-80e4-7b41-8a38-289864305d15,
 `QuantMesh #171 — 真实 PostgreSQL 隔离验收`, managedc7be. Frozen baseline42fbfa5,
-plan2026-10-13-owned-postgresql-qualification.md. It owns new qualifier/tests/
+plan2026-10-13-owned-postgresql-qualification.md. It delivered new qualifier/tests/
 runbook and test-owned Linux build/cluster only; root owns shared store/gate/
 locks and integration. Genuine PG may be qualified without Docker using an
 official-source/private-prefix fixture, never existing credentials/global daemon.
 Do not redispatch its pending client ID. Worker OCI still needs Engine/native
-proof; provider/source-human questions remain pending. No whole-goal pass.
+proof; provider/source-human questions remain pending. Do not redispatch PG.
+Final actual30/0skip evidence is archived; no whole-goal pass.
 
 Status: iteration0038 ACTIVE, operator-approved Option A on2026-10-12 Singapore.
 The stale tool goal for AWS/chart/readiness delivery is closed; its accepted

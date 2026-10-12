@@ -585,3 +585,24 @@ and no newline conversion. Actual immutable3641-byte report matches the
 browser witness SHA124f692...db2566 and exact b9daa42 Worker runtime; all copied
 bytes equal original managed5f7a records. This is durable local fixture proof,
 not a rerun or new PG/Linux/model/market/deployment certification.
+
+Owned PostgreSQL#171 final sourcef525d91065616d3c4f2cce9cd97cdc9fd53cbf5c
+integrates8166b03 (three new qualifier/test/runbook files only). Both new
+Spec/Standards round2 axes clear; original service architecture not re-reviewed.
+Genuine PostgreSQL18.6/CPython3.12.3/81 unchanged wheels on owned persistent WSL
+prefix: final qualifier33pass/0skip and actual default gate30pass/0skip/0fail/
+0error/exit0. All five named PG cases are present in original JUnit. Fresh SQL
+data/listener/port/role/system ID agree with actual owned process and binary
+pins; stopped cluster/PID-file absence/private port closure/password input
+removal are recorded. No production store bug or shared production change.
+Root integration34pass/7Linux-only skips/0.73s exit0, Ruff/diff0; actual native
+coverage is separately recorded, never inferred from Windows skips.
+Root archives69 raw receipts/notices/reviews/RED/GREEN/JUnit/imports under
+docs/evidence/research-foundation/owned-postgresql and independently checks
+30/0/0/0 counts, all5PG cases, SQL identity and committed import/helper SHA.
+Service/store/contract/gate have no drift from frozen42fbfa5. Build tools are
+privately extracted external dependencies, source/license identity pinned,
+not copied upstream code or core closure admission; REUSE updated. Local
+fixture omitsTLS/ICU/readline/zlib and grants no production PG/HA/backup,
+OCI/model/real90sWorker/source/deployment certification. Source witness4a9b
+continues; formal168h remains on-demand, fullA goal ACTIVE.

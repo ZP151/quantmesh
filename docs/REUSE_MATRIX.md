@@ -37,6 +37,7 @@ This document records which open-source projects are reused, why they are used, 
 | Typed OpenAPI transport | `openapi-fetch` 0.17.0 | Execute the generated Task 6 history path without handwritten URL or DTO shapes | Exact runtime dependency behind `api.history` | Light | MIT |
 | Private host network | `tailscale/tailscale` stable client + Tailscale Serve | Tailnet-only HTTPS proxy to the loopback staging workstation | Host-managed external service; no Python/frontend dependency and no Funnel | None in application | BSD-3-Clause client; hosted-service terms apply separately |
 | Linux Worker containment candidate | `docker/cli` with an operator-managed local OCI Engine | Per-attempt cgroup/namespace controls behind `LinuxOwnedProcess` | External CLI adapter only; no copied upstream code, package, image or daemon admitted yet | None in core closure | CLI [Apache-2.0](https://github.com/docker/cli/blob/master/LICENSE); exact Engine/image/OS rights and native capability qualification remain deployment gates; Desktop is not bundled |
+| Owned database fixture | PostgreSQL18.6 official source | Genuine disposable local service/store acceptance | Privately built external test server only; no source/binary embedding or system install | None in application closure | Permissive PostgreSQL license/COPYRIGHT preserved with SHA-pinned source; separately extracted Bison/Flex/m4 build tools retain notices outside runtime; TLS/HA/backup production qualification remains open |
 
 ## Selection rule
 

@@ -1,0 +1,50 @@
+...........F.F....                                                       [100%]
+================================== FAILURES ===================================
+___________ test_owned_path_refuses_borrowed_directory_and_symlink ____________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/c7be/QuantMesh/output/171-owned-postgres/pytest-green/test_owned_path_refuses_borrow0')
+
+    def test_owned_path_refuses_borrowed_directory_and_symlink(tmp_path):
+        owned = tmp_path / "owned"
+        borrowed = tmp_path / "borrowed"
+        owned.mkdir()
+        borrowed.mkdir()
+        with pytest.raises(ValueError, match="owned path"):
+            helper().owned_child(owned, borrowed)
+        link = owned / "link"
+>       link.symlink_to(borrowed, target_is_directory=True)
+
+tests\test_owned_postgres_fixture.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/15492/.codex-clean/worktrees/c7be/QuantMesh/output/171-owned-postgres/pytest-green/test_owned_path_refuses_borrow0/owned/link')
+target = WindowsPath('C:/Users/15492/.codex-clean/worktrees/c7be/QuantMesh/output/171-owned-postgres/pytest-green/test_owned_path_refuses_borrow0/borrowed')
+target_is_directory = True
+
+    def symlink_to(self, target, target_is_directory=False):
+        """
+        Make this path a symlink pointing to the target path.
+        Note the order of arguments (link, target) is the reverse of os.symlink.
+        """
+>       os.symlink(target, self, target_is_directory)
+E       OSError: [WinError 1314] A required privilege is not held by the client: 'C:\\Users\\15492\\.codex-clean\\worktrees\\c7be\\QuantMesh\\output\\171-owned-postgres\\pytest-green\\test_owned_path_refuses_borrow0\\borrowed' -> 'C:\\Users\\15492\\.codex-clean\\worktrees\\c7be\\QuantMesh\\output\\171-owned-postgres\\pytest-green\\test_owned_path_refuses_borrow0\\owned\\link'
+
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\pathlib\_local.py:789: OSError
+______________ test_password_file_private_and_removed_after_use _______________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/c7be/QuantMesh/output/171-owned-postgres/pytest-green/test_password_file_private_and0')
+
+    def test_password_file_private_and_removed_after_use(tmp_path):
+        with helper().password_input(tmp_path, "synthetic-password") as path:
+            assert path.read_text() == "synthetic-password\n"
+>           assert path.stat().st_mode & 0o777 == 0o600
+E           AssertionError: assert (33206 & 511) == 384
+E            +  where 33206 = os.stat_result(st_mode=33206, st_ino=562949964131797, st_dev=2377478236142544932, st_nlink=1, st_uid=0, st_gid=0, st_size=20, st_atime=1791839108, st_mtime=1791839108, st_ctime=1791839108).st_mode
+E            +    where os.stat_result(st_mode=33206, st_ino=562949964131797, st_dev=2377478236142544932, st_nlink=1, st_uid=0, st_gid=0, st_size=20, st_atime=1791839108, st_mtime=1791839108, st_ctime=1791839108) = stat()
+E            +      where stat = WindowsPath('C:/Users/15492/.codex-clean/worktrees/c7be/QuantMesh/output/171-owned-postgres/pytest-green/test_password_file_private_and0/pw-_qt7mayi').stat
+
+tests\test_owned_postgres_fixture.py:72: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_owned_postgres_fixture.py::test_owned_path_refuses_borrowed_directory_and_symlink
+FAILED tests/test_owned_postgres_fixture.py::test_password_file_private_and_removed_after_use
+2 failed, 16 passed in 0.33s

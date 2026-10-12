@@ -1,0 +1,22 @@
+{
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "prefix": "/var/tmp/quantmesh-owned-pg-0ue7gicj/venv",
+  "modules": {
+    "qm_research_agent.store": {
+      "path": "/var/tmp/quantmesh-owned-pg-0ue7gicj/checkout/services/research_agent/src/qm_research_agent/store.py",
+      "sha256": "bbce6bc86098e6890653d8861b69f197ab3c5344f124a887f4699012ac7a16e2"
+    },
+    "quantmesh.research.job_store": {
+      "path": "/var/tmp/quantmesh-owned-pg-0ue7gicj/checkout/src/quantmesh/research/job_store.py",
+      "sha256": "3d56ded5118da9a1783481bfb769853a4f2def4545fd40a635950e78e6d3a989"
+    },
+    "quantmesh.research.jobs": {
+      "path": "/var/tmp/quantmesh-owned-pg-0ue7gicj/checkout/src/quantmesh/research/jobs.py",
+      "sha256": "fd6abdb293a8092fba65b5239abdf4410ebb2e0cf4b8e5294f9c21dd53981812"
+    },
+    "pg8000": {
+      "path": "/var/tmp/quantmesh-owned-pg-0ue7gicj/venv/lib/python3.12/site-packages/pg8000/__init__.py",
+      "sha256": "d4820a08c270b227d1b6b8f0bc844694a56fb7983d535b72e72194c84ba51fd0"
+    }
+  }
+}
