@@ -241,6 +241,8 @@ def _admit_source(root: Path, expected: str) -> str:
         others = _git(root, "ls-files", "--others", "-z").decode().split("\0")
         for name in others:
             path = Path(name)
+            if (root / path).is_symlink():
+                raise ValueError
             if path.name == ".env" or path.suffix in {".py", ".pth", ".so", ".pyd", ".pyc"}:
                 raise ValueError
         for name in tracked - {""}:
@@ -308,6 +310,8 @@ def _admit_dependencies(prefix: Path, pins: dict[str, str]) -> dict:
                 elif path.suffix in {".py", ".so", ".pyd", ".pth", ".pyc"}:
                     raise ValueError
         for path in site.rglob("*"):
+            if path.is_symlink():
+                raise ValueError
             if path.suffix == ".pyc":
                 raise ValueError
             if path.suffix in {".py", ".so", ".pyd", ".pth"} and path not in records:
