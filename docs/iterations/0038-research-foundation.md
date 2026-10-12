@@ -671,3 +671,39 @@ scope_complete=false. No global absence assertion/cleanup or raw vendor
 output/state archive. Eight own diagnostic/raw receipts are preserved under
 docs/evidence/research-foundation/opend-zero-input withSHA; profile flags remain
 false/blocked/uninstalled. Existing source/Windows/staging/credentials untouched.
+
+Root integrates final source-tool handoffd8b69651d492bed4880b0c61f94d7367848e8d8f
+through7db172e/ee2c176/1ff3fad, only3newfiles. Both axes close R1 plus the same
+R2 scoped-candle finding through directRED1/GREEN74 and targeted disposition,
+not a third structural review. Root new242relatedpass/12.57s/7existing warnings/
+exit0, Ruff/diff0; actualCLI expecting deployed69515b7 still returns
+pending/profile_blocked/exit2 before requests. Archive35raw receipts under
+server-witness-tool; original45RED, lifecycle/deadline/allbar/candleclock REDs,
+review reports, final242, currentblocked JSON and root integration logs retained.
+Source4a9b idle; no actual SDK/host/auth/routing/browser/PC-independent claim.
+
+Root integrates bootstrap97f53d046faaa6293edea2497836d1ed69819637 via
+b8f771c/9591e0d/93810b8/8e72a7b,4newfiles; sharedhealth634e54c is equivalent
+to already-integrated18ff2f1 and is not reapplied. Runtime admits exact native
+source/81wheel executable closure, refuses unrecorded bytecode/directory links,
+explicit config and named private0600API/DSN inputs; no ambient credential
+discovery. Default preflight createsnoDB/listener/effects, explicitserve fixes
+loopback8110/oneworker/noaccesslogs/reload/proxytrust. Both new review axes
+max2rounds; R1dep/cache and R2dirlink have directRED/GREEN and final actualproof,
+no third oldservice structure review. Session5bc4 is terminal/idle/clean/pushed.
+Exact97f53d0 new nativeHTTP/SQL37checks pass with measured auth/build, fixture
+submit/idempotent replay/get/APIrestart queued+cancelled durability, oneSQLjob,
+DBoutage503 and knownsibling survival; queued/cancelled does not mean report.
+Independent fullservice/JUnit and original POSTGRES_REQUIRED gate85/0skip/
+0fail/0error/exit0, all5realPG cases;81licenses/lock/schema/protocol unchanged.
+Five test-owned processes stop with identity checks, originalPG/env untouched;
+realpip26.2.1 is gate-only externalbuildtool, outside API81closure. Earlier
+failed proofs remain failures. Root independent byte/JUnit/SQL/37check/cleanup/
+import consistency passes; candidate import source equals current integrated
+blobs, relevant source diff only serviceREADME. Root Windows10pass/46Linux-only
+skips/1.57s, fullserviceoffline34pass/51skips/85total/exit0,77closure, Ruff/diff0;
+Windows skips cannot replace native proof. Archive65raw streams (59native plus
+handoff/reviews/progress/inventory/rootchecks) under service-bootstrap withSHA.
+First root archive checker assumed loaded_modules was a mapping; actual list
+shape fixed without modifying proof/product. No nativeWorker/model/report/
+productionTLS/HA/backup/server/source/paid certification or fullA completion.

@@ -1,0 +1,97 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+__ test_proc_identity_read_failure_never_leaves_owned_child_running[initial] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000023DDE9E1CD0>
+stage = 'initial'
+
+    @pytest.mark.parametrize("stage", ["initial", "cleanup"])
+    def test_proc_identity_read_failure_never_leaves_owned_child_running(monkeypatch, stage):
+        import multiprocessing
+    
+        before = {child.pid for child in multiprocessing.active_children()}
+        calls = [0]
+    
+        def denied(pid):
+            calls[0] += 1
+            if stage == "initial" or calls[0] > 1:
+                raise PermissionError("SECRET")
+            return None
+    
+        monkeypatch.setattr(tool(), "_child_ticks", denied)
+        try:
+            with pytest.raises(Exception):
+                tool()._run_owned_child(hanging_child, (), timeout=0.5)
+>           assert not [child for child in multiprocessing.active_children()
+                        if child.pid not in before and child.is_alive()]
+E                       AssertionError: assert not [<SpawnProcess name='SpawnProcess-1' pid=11760 parent=61428 started>]
+
+tests\test_server_market_witness.py:733: AssertionError
+__ test_proc_identity_read_failure_never_leaves_owned_child_running[cleanup] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000023D88D0C9D0>
+stage = 'cleanup'
+
+    @pytest.mark.parametrize("stage", ["initial", "cleanup"])
+    def test_proc_identity_read_failure_never_leaves_owned_child_running(monkeypatch, stage):
+        import multiprocessing
+    
+        before = {child.pid for child in multiprocessing.active_children()}
+        calls = [0]
+    
+        def denied(pid):
+            calls[0] += 1
+            if stage == "initial" or calls[0] > 1:
+                raise PermissionError("SECRET")
+            return None
+    
+        monkeypatch.setattr(tool(), "_child_ticks", denied)
+        try:
+            with pytest.raises(Exception):
+                tool()._run_owned_child(hanging_child, (), timeout=0.5)
+>           assert not [child for child in multiprocessing.active_children()
+                        if child.pid not in before and child.is_alive()]
+E                       AssertionError: assert not [<SpawnProcess name='SpawnProcess-2' pid=14604 parent=61428 started>]
+
+tests\test_server_market_witness.py:733: AssertionError
+_________ test_linux_cleanup_uses_owned_pidfd_when_proc_recheck_fails _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000023D88D01250>
+
+    def test_linux_cleanup_uses_owned_pidfd_when_proc_recheck_fails(monkeypatch):
+        import signal
+    
+        events = []
+    
+        class Child:
+            pid = 42
+            alive = True
+            def is_alive(self):
+                return self.alive
+            def kill(self):
+                pytest.fail("Linux must not send an unverified bare PID signal")
+            def join(self, timeout):
+                self.alive = False
+    
+        child = Child()
+        monkeypatch.setattr(tool().sys, "platform", "linux")
+        monkeypatch.setattr(tool(), "_child_ticks", lambda pid: (_ for _ in ()).throw(PermissionError()))
+        monkeypatch.setattr(signal, "pidfd_send_signal", lambda fd, sig: events.append((fd, sig)),
+                            raising=False)
+        with pytest.raises(tool().WitnessError, match="owned_child_identity_unavailable"):
+>           tool()._terminate_owned_child(child, 17, 12345)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'tools.verify_server_market_source' has no attribute '_terminate_owned_child'
+
+tests\test_server_market_witness.py:764: AttributeError
+============================== warnings summary ===============================
+tests/test_server_market_witness.py::test_proc_identity_read_failure_never_leaves_owned_child_running[initial]
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_server_market_witness.py::test_proc_identity_read_failure_never_leaves_owned_child_running[initial]
+FAILED tests/test_server_market_witness.py::test_proc_identity_read_failure_never_leaves_owned_child_running[cleanup]
+FAILED tests/test_server_market_witness.py::test_linux_cleanup_uses_owned_pidfd_when_proc_recheck_fails
+3 failed, 64 deselected, 1 warning in 1.93s

@@ -1,0 +1,34 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_______________ test_dependency_admission_measures_unloaded_code _______________
+
+installed_dependency = (<module 'qm_research_agent.runtime' from '/var/tmp/quantmesh-bootstrap-krfg8kx6/checkout/services/research_agent/src/...tstrap-krfg8kx6/dependency-red-tmp/test_dependency_admission_meas0/venv/lib/python3.12/site-packages/fixture/lazy.py'))
+
+    def test_dependency_admission_measures_unloaded_code(installed_dependency):
+        module, prefix, lazy = installed_dependency
+>       assert hasattr(module, "_admit_dependencies")
+E       AssertionError: assert False
+E        +  where False = hasattr(<module 'qm_research_agent.runtime' from '/var/tmp/quantmesh-bootstrap-krfg8kx6/checkout/services/research_agent/src/qm_research_agent/runtime.py'>, '_admit_dependencies')
+
+services/research_agent/tests/test_runtime.py:463: AssertionError
+_______ test_dependency_admission_rejects_bytecode_and_unrecorded_shadow _______
+
+installed_dependency = (<module 'qm_research_agent.runtime' from '/var/tmp/quantmesh-bootstrap-krfg8kx6/checkout/services/research_agent/src/...tstrap-krfg8kx6/dependency-red-tmp/test_dependency_admission_reje0/venv/lib/python3.12/site-packages/fixture/lazy.py'))
+
+    def test_dependency_admission_rejects_bytecode_and_unrecorded_shadow(installed_dependency):
+        module, prefix, lazy = installed_dependency
+>       assert hasattr(module, "_admit_dependencies")
+E       AssertionError: assert False
+E        +  where False = hasattr(<module 'qm_research_agent.runtime' from '/var/tmp/quantmesh-bootstrap-krfg8kx6/checkout/services/research_agent/src/qm_research_agent/runtime.py'>, '_admit_dependencies')
+
+services/research_agent/tests/test_runtime.py:472: AssertionError
+=============================== warnings summary ===============================
+../venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-bootstrap-krfg8kx6/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/research_agent/tests/test_runtime.py::test_dependency_admission_measures_unloaded_code
+FAILED services/research_agent/tests/test_runtime.py::test_dependency_admission_rejects_bytecode_and_unrecorded_shadow
+2 failed, 42 deselected, 1 warning in 0.09s

@@ -1,0 +1,16 @@
+{
+  "actual_build": "0f8b71e16cc09d416030448bec8852d7ea18cc80",
+  "checks": {
+    "preflight_exit": {
+      "detail": 2,
+      "passed": false
+    }
+  },
+  "cleanup": [],
+  "failure_category": "AssertionError",
+  "processes": [],
+  "proof": "/var/tmp/quantmesh-bootstrap-krfg8kx6/proof-d16f9bf454f1",
+  "root": "/var/tmp/quantmesh-bootstrap-krfg8kx6",
+  "schema_version": 1,
+  "status": "FAIL"
+}

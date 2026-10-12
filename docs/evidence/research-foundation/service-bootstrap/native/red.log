@@ -1,0 +1,1032 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                    [100%]
+=================================== FAILURES ===================================
+__________ test_bootstrap_exists_and_default_has_no_dataset_discovery __________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_bootstrap_exists_and_defa0/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_bootstrap_exists_and_defa0/owned/artifacts', ...})
+
+    def test_bootstrap_exists_and_default_has_no_dataset_discovery(owned):
+        _, data = owned
+>       config = runtime_module().ServiceRuntimeConfig.model_validate(data)
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update0] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_0/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_0/owned/artifacts', ...})
+update = {'host': '0.0.0.0'}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update1] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_1/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_1/owned/artifacts', ...})
+update = {'host': 'localhost'}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update2] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_2/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_2/owned/artifacts', ...})
+update = {'port': 8111}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update3] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_3/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_3/owned/artifacts', ...})
+update = {'schema_version': 2}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update4] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_4/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_4/owned/artifacts', ...})
+update = {'expected_build': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update5] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_5/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_5/owned/artifacts', ...})
+update = {'operator_id': '../operator'}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update6] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_6/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_6/owned/artifacts', ...})
+update = {'model_endpoint': 'https://invalid'}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update7] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_7/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_7/owned/artifacts', ...})
+update = {'configured_dataset_ids': ['equities', 'equities']}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update8] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_8/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_8/owned/artifacts', ...})
+update = {'configured_dataset_ids': ['../equities']}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______________ test_config_rejects_authority_expansion[update9] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_9/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_9/owned/artifacts', ...})
+update = {'lake_root': 'relative'}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+______________ test_config_rejects_authority_expansion[update10] _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_10/owned'), {'operator_id': 'o...artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_config_rejects_authority_10/owned/artifacts', ...})
+update = {'port': True}
+
+    @pytest.mark.parametrize("update", [
+        {"host": "0.0.0.0"}, {"host": "localhost"}, {"port": 8111},
+        {"schema_version": 2}, {"expected_build": "A" * 40},
+        {"operator_id": "../operator"}, {"model_endpoint": "https://invalid"},
+        {"configured_dataset_ids": ["equities", "equities"]},
+        {"configured_dataset_ids": ["../equities"]},
+        {"lake_root": "relative"}, {"port": True},
+    ])
+    def test_config_rejects_authority_expansion(owned, update):
+        _, data = owned
+        with pytest.raises((ValidationError, ValueError)):
+>           runtime_module().ServiceRuntimeConfig.model_validate({**data, **update})
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+______________ test_roots_reject_link_missing_shared_and_overlap _______________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_roots_reject_link_missing0/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_roots_reject_link_missing0/owned/artifacts', ...})
+
+    def test_roots_reject_link_missing_shared_and_overlap(owned):
+        root, data = owned
+>       module = runtime_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_ test_dsn_accepts_literal_local_or_verified_tls[postgresql://fixture:password@127.0.0.1:55432/fixture?sslmode=disable] _
+
+dsn = 'postgresql://fixture:password@127.0.0.1:55432/fixture?sslmode=disable'
+
+    @pytest.mark.parametrize("dsn", [
+        "postgresql://fixture:password@127.0.0.1:55432/fixture?sslmode=disable",
+        "postgresql://fixture:password@[::1]:55432/fixture?sslmode=disable",
+        "postgresql://fixture:password@private.example/fixture",
+        "postgresql://fixture:password@private.example/fixture?sslmode=verify-full",
+    ])
+    def test_dsn_accepts_literal_local_or_verified_tls(dsn):
+>       assert runtime_module()._validate_dsn(dsn).get_secret_value() == dsn
+               ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_ test_dsn_accepts_literal_local_or_verified_tls[postgresql://fixture:password@[::1]:55432/fixture?sslmode=disable] _
+
+dsn = 'postgresql://fixture:password@[::1]:55432/fixture?sslmode=disable'
+
+    @pytest.mark.parametrize("dsn", [
+        "postgresql://fixture:password@127.0.0.1:55432/fixture?sslmode=disable",
+        "postgresql://fixture:password@[::1]:55432/fixture?sslmode=disable",
+        "postgresql://fixture:password@private.example/fixture",
+        "postgresql://fixture:password@private.example/fixture?sslmode=verify-full",
+    ])
+    def test_dsn_accepts_literal_local_or_verified_tls(dsn):
+>       assert runtime_module()._validate_dsn(dsn).get_secret_value() == dsn
+               ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_ test_dsn_accepts_literal_local_or_verified_tls[postgresql://fixture:password@private.example/fixture] _
+
+dsn = 'postgresql://fixture:password@private.example/fixture'
+
+    @pytest.mark.parametrize("dsn", [
+        "postgresql://fixture:password@127.0.0.1:55432/fixture?sslmode=disable",
+        "postgresql://fixture:password@[::1]:55432/fixture?sslmode=disable",
+        "postgresql://fixture:password@private.example/fixture",
+        "postgresql://fixture:password@private.example/fixture?sslmode=verify-full",
+    ])
+    def test_dsn_accepts_literal_local_or_verified_tls(dsn):
+>       assert runtime_module()._validate_dsn(dsn).get_secret_value() == dsn
+               ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_ test_dsn_accepts_literal_local_or_verified_tls[postgresql://fixture:password@private.example/fixture?sslmode=verify-full] _
+
+dsn = 'postgresql://fixture:password@private.example/fixture?sslmode=verify-full'
+
+    @pytest.mark.parametrize("dsn", [
+        "postgresql://fixture:password@127.0.0.1:55432/fixture?sslmode=disable",
+        "postgresql://fixture:password@[::1]:55432/fixture?sslmode=disable",
+        "postgresql://fixture:password@private.example/fixture",
+        "postgresql://fixture:password@private.example/fixture?sslmode=verify-full",
+    ])
+    def test_dsn_accepts_literal_local_or_verified_tls(dsn):
+>       assert runtime_module()._validate_dsn(dsn).get_secret_value() == dsn
+               ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_____ test_dsn_rejections_do_not_leak[@localhost/fixture?sslmode=disable] ______
+
+suffix = '@localhost/fixture?sslmode=disable'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______ test_dsn_rejections_do_not_leak[@127.1/fixture?sslmode=disable] ________
+
+suffix = '@127.1/fixture?sslmode=disable'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+__ test_dsn_rejections_do_not_leak[@private.example/fixture?sslmode=disable] ___
+
+suffix = '@private.example/fixture?sslmode=disable'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_____ test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?sslmode=require] ______
+
+suffix = '@127.0.0.1/fixture?sslmode=require'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_ test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?sslmode=disable&sslmode=disable] _
+
+suffix = '@127.0.0.1/fixture?sslmode=disable&sslmode=disable'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_________ test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?sslmode=] _________
+
+suffix = '@127.0.0.1/fixture?sslmode='
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_____ test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?options=anything] _____
+
+suffix = '@127.0.0.1/fixture?options=anything'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+__________ test_dsn_rejections_do_not_leak[@127.0.0.1/fixture#secret] __________
+
+suffix = '@127.0.0.1/fixture#secret'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+___________ test_dsn_rejections_do_not_leak[@127.0.0.1:bad/fixture] ____________
+
+suffix = '@127.0.0.1:bad/fixture'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_________________ test_dsn_rejections_do_not_leak[@127.0.0.1/] _________________
+
+suffix = '@127.0.0.1/'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_____ test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?sslmode=disable&] _____
+
+suffix = '@127.0.0.1/fixture?sslmode=disable&'
+
+    @pytest.mark.parametrize("suffix", [
+        "@localhost/fixture?sslmode=disable", "@127.1/fixture?sslmode=disable",
+        "@private.example/fixture?sslmode=disable", "@127.0.0.1/fixture?sslmode=require",
+        "@127.0.0.1/fixture?sslmode=disable&sslmode=disable",
+        "@127.0.0.1/fixture?sslmode=", "@127.0.0.1/fixture?options=anything",
+        "@127.0.0.1/fixture#secret", "@127.0.0.1:bad/fixture",
+        "@127.0.0.1/", "@127.0.0.1/fixture?sslmode=disable&",
+    ])
+    def test_dsn_rejections_do_not_leak(suffix):
+        with pytest.raises(ValueError) as error:
+>           runtime_module()._validate_dsn("postgresql://fixture:private-marker" + suffix)
+            ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+___ test_private_reader_refuses_links_fifo_devices_modes_size_and_hardlinks ____
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_private_reader_refuses_li0/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_private_reader_refuses_li0/owned/artifacts', ...})
+
+    def test_private_reader_refuses_links_fifo_devices_modes_size_and_hardlinks(owned):
+        root, _ = owned
+>       module = runtime_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+___________________ test_private_reader_detects_replacement ____________________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_private_reader_detects_re0/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_private_reader_detects_re0/owned/artifacts', ...})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x784ec7f583b0>
+
+    def test_private_reader_detects_replacement(owned, monkeypatch):
+        root, _ = owned
+>       module = runtime_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+____________ test_load_requires_actual_admission_before_credentials ____________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_load_requires_actual_admi0/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_load_requires_actual_admi0/owned/artifacts', ...})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x784ec7f5bf50>
+
+    def test_load_requires_actual_admission_before_credentials(owned, monkeypatch):
+        root, data = owned
+>       module = runtime_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+____________ test_load_uses_only_explicit_files_and_redacts_runtime ____________
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_load_uses_only_explicit_f0/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_load_uses_only_explicit_f0/owned/artifacts', ...})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x784f5b6aad50>
+
+    def test_load_uses_only_explicit_files_and_redacts_runtime(owned, monkeypatch):
+        root, data = owned
+>       module = runtime_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+_______ test_default_cli_preflight_never_builds_database_app_or_listener _______
+
+owned = (PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_default_cli_preflight_nev0/owned'), {'operator_id': 'op...'artifact_root': '/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_default_cli_preflight_nev0/owned/artifacts', ...})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x784ec7f13e00>
+capsys = <_pytest.capture.CaptureFixture object at 0x784ec7f108c0>
+
+    def test_default_cli_preflight_never_builds_database_app_or_listener(owned, monkeypatch, capsys):
+        root, data = owned
+>       module = runtime_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:176: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+________________ test_cli_errors_never_echo_input_or_traceback _________________
+
+capsys = <_pytest.capture.CaptureFixture object at 0x784f1401fef0>
+
+    def test_cli_errors_never_echo_input_or_traceback(capsys):
+>       module = runtime_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+__________ test_source_admission_rejects_wrong_head_dirty_and_shadow ___________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/red-tmp/test_source_admission_rejects_0')
+
+    def test_source_admission_rejects_wrong_head_dirty_and_shadow(tmp_path):
+>       module = runtime_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+____________ test_unqualified_platform_rejects_before_any_database _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x784ec7f143e0>
+
+    def test_unqualified_platform_rejects_before_any_database(monkeypatch):
+>       module = runtime_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests/test_runtime.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def runtime_module():
+        # Missing bootstrap is an explicit RED assertion, not a collection error.
+>       assert importlib.util.find_spec("qm_research_agent.runtime") is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function find_spec at 0x784f5e0977e0>('qm_research_agent.runtime')
+E        +    where <function find_spec at 0x784f5e0977e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_runtime.py:16: AssertionError
+______________ test_module_entrypoint_help_has_no_secret_options _______________
+
+    def test_module_entrypoint_help_has_no_secret_options():
+        result = subprocess.run([sys.executable, "-m", "qm_research_agent", "--help"], capture_output=True, text=True)
+>       assert result.returncode == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python', '-m', 'qm_research_agent', '--help'], ...code=1, stdout='', stderr='/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python: No module named qm_research_agent\n').returncode
+
+tests/test_runtime.py:245: AssertionError
+=============================== warnings summary ===============================
+../../../venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-bootstrap-krfg8kx6/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_runtime.py::test_bootstrap_exists_and_default_has_no_dataset_discovery
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update0]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update1]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update2]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update3]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update4]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update5]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update6]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update7]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update8]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update9]
+FAILED tests/test_runtime.py::test_config_rejects_authority_expansion[update10]
+FAILED tests/test_runtime.py::test_roots_reject_link_missing_shared_and_overlap
+FAILED tests/test_runtime.py::test_dsn_accepts_literal_local_or_verified_tls[postgresql://fixture:password@127.0.0.1:55432/fixture?sslmode=disable]
+FAILED tests/test_runtime.py::test_dsn_accepts_literal_local_or_verified_tls[postgresql://fixture:password@[::1]:55432/fixture?sslmode=disable]
+FAILED tests/test_runtime.py::test_dsn_accepts_literal_local_or_verified_tls[postgresql://fixture:password@private.example/fixture]
+FAILED tests/test_runtime.py::test_dsn_accepts_literal_local_or_verified_tls[postgresql://fixture:password@private.example/fixture?sslmode=verify-full]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@localhost/fixture?sslmode=disable]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@127.1/fixture?sslmode=disable]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@private.example/fixture?sslmode=disable]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?sslmode=require]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?sslmode=disable&sslmode=disable]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?sslmode=]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?options=anything]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@127.0.0.1/fixture#secret]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@127.0.0.1:bad/fixture]
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@127.0.0.1/] - ...
+FAILED tests/test_runtime.py::test_dsn_rejections_do_not_leak[@127.0.0.1/fixture?sslmode=disable&]
+FAILED tests/test_runtime.py::test_private_reader_refuses_links_fifo_devices_modes_size_and_hardlinks
+FAILED tests/test_runtime.py::test_private_reader_detects_replacement - Asser...
+FAILED tests/test_runtime.py::test_load_requires_actual_admission_before_credentials
+FAILED tests/test_runtime.py::test_load_uses_only_explicit_files_and_redacts_runtime
+FAILED tests/test_runtime.py::test_default_cli_preflight_never_builds_database_app_or_listener
+FAILED tests/test_runtime.py::test_cli_errors_never_echo_input_or_traceback
+FAILED tests/test_runtime.py::test_source_admission_rejects_wrong_head_dirty_and_shadow
+FAILED tests/test_runtime.py::test_unqualified_platform_rejects_before_any_database
+FAILED tests/test_runtime.py::test_module_entrypoint_help_has_no_secret_options
+37 failed, 1 warning in 0.36s

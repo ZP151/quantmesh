@@ -9,6 +9,18 @@ see [raw SQL proof](../../docs/evidence/research-foundation/owned-postgresql/REA
 Production runtime/containment, private deployment, backup/restore and real
 provider acceptance remain pending; no server was provisioned or deployed.
 
+Subsequent explicit bootstrap is integrated from97f53d0 (new runtime/CLI/test/
+runbook; existing health already root18ff2f1). On exact native97f53d0, genuine
+HTTP/SQL37checks and independent fullservice/defaultgate85tests/0skip/exit0
+pass. Actual auth/build/fixture replay/cancel/APIrestart/DB503/sibling and
+owned cleanup are witnessed; no Worker/model runs. See
+[bootstrap raw proof](../../docs/evidence/research-foundation/service-bootstrap/README.md)
+and [startup runbook](../../docs/runbooks/research-service-bootstrap.md).
+Use explicit reviewed configuration/0600named private files, measured source/
+runtime/lock admission and `python -B -m qm_research_agent`; default preflight
+has no SQL/listener/effects. Serving is fixed loopback8110/oneworker. This
+local SQL/API proof is separate from production/Worker/model acceptance.
+
 ## Scope and integration
 
 The authenticated API admits a frozen registered-baseline request and exposes

@@ -1,0 +1,1 @@
+{"actual_build": "97f53d046faaa6293edea2497836d1ed69819637", "advisory_only": true, "capabilities": {"model": "unavailable", "worker": "pending_containment"}, "live": false, "lock_sha256": "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a", "mode": "preflight", "paper": true, "runtime": "linux-cp312-x86_64", "schema_version": 1}

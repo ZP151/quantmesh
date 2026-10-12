@@ -67,37 +67,37 @@ build with actual Git HEAD. It is not a full signed release certificate. Native
 proof uses a clean committed candidate on native persistent filesystem, not a
 mounted-drive/editable parent. Do not claim a raw configuredSHA is actual build.
 
-- [ ] Write RED runtime tests: fixed bind/runtime/build, unknown/duplicated IDs,
+- [x] Write RED runtime tests: fixed bind/runtime/build, unknown/duplicated IDs,
   explicit secret authority/no ambient detection, external/insecure DSN, symlink/
   FIFO/oversize/mode/file replacement refusals, safe repr/errors and default
   preflight has no DB/network/Worker/model calls. Use unique owned --basetemp.
-- [ ] Implement minimal config/secret/source admission and CLI, GREEN focused tests,
+- [x] Implement minimal config/secret/source admission and CLI, GREEN focused tests,
   Ruff/format/diff. Keep tests meaningful; fixture injected platform does not
   qualify native permissions. Preserve RED/GREEN logs/exits.
-- [ ] Propose shared actual-build health extension and tests to root. Wait for
+- [x] Propose shared actual-build health extension and tests to root. Wait for
   coordinator integration, then synchronize exact source. Do not edit shared
   store/leases/model limits/source adapters or original gate tests.
-- [ ] Run native Linux permissions/preflight checks, using existing audit closure
+- [x] Run native Linux permissions/preflight checks, using existing audit closure
   read-only only if exact version/import matches. For actual SQL/HTTP, build a NEW
   owned prefix/clean checkout and fresh cluster from already verified PG18.6
   binaries copied/read-only with full rehash; never reuse running/old cluster or
   credentials. No global install. Preserve build-tool/runtime notices; instantiate
   fresh loopback credentials only through0600 temporary input, never argv/logs.
-- [ ] Actual bounded test-owned server at8110: unauthenticated401; authenticated
+- [x] Actual bounded test-owned server at8110: unauthenticated401; authenticated
   real-DB health/build identity; configured options; fixture submit/idempotent
   replay/get/cancel survives API process restart with same DB; unavailable DB
   returns503 without leaking DSN. Only fixture jobs, no claimed success without
   executing Worker. Owned PID/start/path/nonce checks before stop; unrelated
   sibling and current vendor/Windows resources untouched. Do not kill DB while
   an actual external service uses it; this cluster must be newly owned.
-- [ ] At coherent boundary run all separate-service tests in owned Linux env,
+- [x] At coherent boundary run all separate-service tests in owned Linux env,
   including real fivePG cases on new cluster: zero skips/errors/failures. Record
   actual new counts rather than assuming30. License/lock/schema/protocol unchanged.
   Avoid entire core/hourly gates; final clean-checkout/full milestone comes later.
-- [ ] Fresh Spec/Standards on new bootstrap only, max2rounds; no third original
+- [x] Fresh Spec/Standards on new bootstrap only, max2rounds; no third original
   service architecture review. Fix RED/GREEN within scope, run fresh native
   final-candidate proof if admitted code changes. Commit/push only owned files.
-- [ ] Stop at clean reviewed commit with HANDOFF.md (SHA/files/tests/raw receipts/
+- [x] Stop at clean reviewed commit with HANDOFF.md (SHA/files/tests/raw receipts/
   exact invocation/remaining operator deployment and containment gates). Root
   updates shared ledgers, archives evidence and decides integration. No paid
   resource, API key configuration, production deploy or PR merge in child.

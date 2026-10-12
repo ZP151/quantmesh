@@ -1,0 +1,48 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar] _
+
+change = 'intermediate_bar'
+
+    @pytest.mark.parametrize("change", ["intermediate_bar", "old_lineage_receipt", "missing_freshness"])
+    def test_review_invalid_partial_or_receipt_lineage_cannot_pass(change):
+        value = samples()
+        for sample in value["samples"]:
+            bars = sample["symbols"]["AAPL"]["app"]["bars"]
+            if change == "intermediate_bar":
+                if sample is not value["samples"][0]:
+                    continue
+                extra = copy.deepcopy(bars[-2])
+                extra["timestamp"] = (
+                    datetime.fromisoformat(extra["timestamp"]) + timedelta(seconds=30)
+                ).isoformat()
+                extra["close"] = 102
+                bars.insert(-1, extra)
+            elif change == "old_lineage_receipt":
+                bars[-1]["live_lineage"]["received_at"] = "2020-01-01T00:00:00Z"
+                bars[-1]["live_lineage"]["freshness_time"] = None
+            else:
+                bars[-1]["live_lineage"]["freshness_time"] = None
+>       assert tool().evaluate_samples(value)["provider_application"] == "failed"
+E       AssertionError: assert 'passed' == 'failed'
+E         
+E         - failed
+E         + passed
+
+tests\test_server_market_witness.py:788: AssertionError
+============================== warnings summary ===============================
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\utils\pandas_utils.py:60: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    delta = pd.Timedelta(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+1 failed, 71 deselected, 5 warnings in 1.84s

@@ -1,5 +1,23 @@
 # Active Goal
 
+Current integrated checkpoint: source witnessd8b6965 maps7db172e/ee2c176/
+1ff3fad, completed/idle4a9b, only3newfiles/two axes resolved; root242pass/12.57s,
+Ruff/diff0 and actualblockedCLI pending/exit2. This is tool software only.
+Bootstrap97f53d0 mapsb8f771c/9591e0d/93810b8/8e72a7b, completed/idle5bc4,
+4newfiles/shared18ff2f1 already present. Genuine nativeHTTP37checks and both
+fullservice/JUnit/defaultgate85tests/0skip/0fail/0error/exit0 pass on exact97f53d0;
+owned5process cleanup/sibling/import/hash/81license/lock/schema/protocol proof
+matches. Root10pass/46Linux-only skips, fullWindowsgate34pass/51skips/85total/
+exit0, original77closure; these Windows skips do not certify native behavior.
+Root compares imported candidate source to integrated blobs (only serviceREADME
+differs) and archives35source/65bootstrap raw streams with SHA. Two review rounds
+and direct R2-fix regressions close findings; no third old architecture review.
+No active implementation session remains from these handoffs; do not redispatch.
+Actual nativeWorker/image/model caps, source SDK/auth/host/cutover, production
+PG/backup/private deployment/final CI-human-operator gates remain open. Next
+qualify unresolved LinuxSDK wire before human gateway login; Engine/provider/
+PR166 recovery approvals remain pending. Whole A goal ACTIVE,168h on-demand.
+
 Root longer unresolved Task2 diagnosticOct12 21:41UTC: same official OpenD
 archive/executable rehashed, fresh native owned home/user+network+mount+PID
 namespaces, loopback only, zero input/no internet.30s shows login keywords and
@@ -14,8 +32,9 @@ build pin, authenticated real store probe, pending_containment Worker and
 unavailable model labels. Root9RED→10focusedGREEN; separate Windows service
 gate34pass/5PGskip/39total/exit0, Ruff/format/diff0. It changes app/test only,
 no store/lock/schema/protocol. The previous real30/0skip gate remains historical
-42fbfa5 proof, not acceptance of this new app. Bootstrap5bc4 must synchronize
-18ff2f1 and cover it in its fresh nativeSQL/HTTP and new two-axis review. Root
+42fbfa5 proof is superseded for bootstrap by separate97f53d0 native proof.
+Bootstrap5bc4 synchronized18ff2f1 and covered it in fresh nativeSQL/HTTP and
+its new two-axis review. Root
 does not claim complete native/deployed source, worker or model acceptance.
 
 Next bootstrap dispatch2026-10-13: native chat01a131ff-9a11-76f1-ba24-292774894c10,
@@ -24,7 +43,7 @@ managed5bc4, starts frozen d351c3a. Tracked plan
 Task4 preparation: four new runtime/CLI/test/runbook files, default no-effect
 preflight, fixed loopback8110, explicit private credentials and real new owned
 SQL/HTTP restart/idempotency/cancel proof. Root owns shared app/health integration.
-It runs alongside source witness4a9b; PG c7be is stopped and must not redispatch.
+It completed alongside source witness4a9b; both are idle. PG c7be is stopped and must not redispatch.
 Current actual Docker info still exit1/Engine unavailable. No production
 host/model/Worker is started; PR166 actualOPEN/da6e8c7/reviews[] remains under
 the pending human review/recovery request. No paid resource or repeated source
@@ -42,7 +61,7 @@ actual binary/restore/production package and native image pins remain pending.
 The DB-snapshot→referenced immutable artifact consistency rule and new-target
 restore/secret/rollback/human window are explicit, never a passing backup claim.
 
-Current dispatch2026-10-13: Task3 source witness preparation is ACTIVE in
+Completed dispatch2026-10-13: Task3 source witness preparation was implemented in
 `QuantMesh #169 — 服务器行情真实来源验收工具`, thread01a131f6-ec78-7b21-a156-e1a30e041c43,
 managed4a9b, frozen9ff1f22. Narrow plan2026-10-13-server-source-witness.md;
 new read-only verifier/tests/runbook only. No real gateway/network/login/cutover
@@ -53,7 +72,7 @@ exit0, owned shutdown verified. Root integration34pass/7Linux-only skips/Ruff0;
 69 raw receipts are archived with independent SQL/JUnit/import/hash consistency
 checks. That receipt has no drift from frozen42fbfa5; new health changes are
 separately unqualified on native SQL until bootstrap proof. Source witness4a9b and
-new bootstrap5bc4 are the two active implementation sessions. Production PG/TLS/HA/backup,
+new bootstrap5bc4 have completed their bounded software/native handoffs. Production PG/TLS/HA/backup,
 OCI/Worker/model/source/deployment gates remain open; no whole-goal pass.
 
 Current resume anchor2026-10-13 Singapore: #173 local fixture user loop is
