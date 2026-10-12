@@ -85,5 +85,15 @@ Preserve current OpenD/GUI/helper/tunnel while qualifying alternate source.
 
 ## Session handoff
 
-First-batch session IDs and durable branch results are appended by coordinator
-after actual dispatch. No session is described as launched from a proposal alone.
+First-batch native session creation dispatched after approved planning commit
+5cfb0d48c464fe5609f5d837d7902808cd285c49,2026-10-12. At dispatch the app returns
+pending client IDs, not ready thread IDs:
+
+- Server/calendar#169: client-new-thread:cc61b3b1-0952-4d92-a7c5-9e09523edd1e.
+- Contracts#168: client-new-thread:c357c7e4-fa74-447a-9f5f-a0c888204e2d.
+
+Both use project QuantMesh8343f0fa-6518-4566-b490-f84e21ca03ca and managed
+worktrees from the approved plan branch. Do not pass pending client IDs into
+tools requiring ready thread IDs or redispatch duplicate sessions. Root owns
+shared-file integration and records actual ready IDs/branches after setup.
+No runtime completion or paid resource follows from dispatch alone.
