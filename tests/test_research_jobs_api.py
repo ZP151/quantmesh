@@ -200,6 +200,46 @@ def test_api_validation_never_echoes_secret(local):
         assert "private-test-secret-123" not in response.text
 
 
+def test_local_options_must_use_authoritative_worker_root(local, tmp_path):
+    store, _, _ = local
+    with pytest.raises(ValueError, match="worker_inputs_mismatch"):
+        LocalResearchClient(
+            store,
+            operator_id="local",
+            lake_root=tmp_path / "other",
+            configured_dataset_ids=("equities",),
+        )
+
+
+def test_historical_report_and_same_key_replay_survive_engine_upgrade(result, monkeypatch):
+    from quantmesh.research import service_client, strategy_registry
+    from quantmesh.research.job_artifacts import canonical_result, publish_result
+
+    store, job, report = result
+    claimed = store.claim("owned", job.created_at)
+    ref = publish_result(job, canonical_result(report), store.artifact_root)
+    assert store.finish(job.job_id, "owned", claimed.attempt, "succeeded", [ref], None)
+    old_registry = strategy_registry.get_strategy
+
+    def upgraded(name, version):
+        return old_registry(name, version).model_copy(update={"implementation_digest": "a" * 64})
+
+    monkeypatch.setattr(strategy_registry, "get_strategy", upgraded)
+    monkeypatch.setattr(service_client, "get_strategy", upgraded, raising=False)
+    client = LocalResearchClient(
+        store, operator_id="local", lake_root=store.lake_root, configured_dataset_ids=("equities",)
+    )
+    completed = client.get(job.job_id)
+    assert completed.implementation_digest == job.implementation_digest
+    assert client.submit(job.request, job.idempotency_key).job_id == job.job_id
+    assert (
+        client.artifact(job.job_id, ref.artifact_id)
+        == (store.artifact_root / ref.object_key).read_bytes()
+    )
+    with remote(lambda _: httpx.Response(200, json=completed.model_dump(mode="json"))) as service:
+        assert service.get(job.job_id).implementation_digest == job.implementation_digest
+
+
 def test_remote_conflict_stays_409(local):
     with remote(lambda _: httpx.Response(409, json={"detail": "secret"})) as client:
         with api(client) as app:

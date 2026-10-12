@@ -12,7 +12,7 @@ const STORAGE = 'quantmesh.research-job.v1'
 const POLL_LIMIT = 60
 const POLL_MS = 3000
 type Submission = { key: string; request: ResearchJobRequest }
-type Saved = { submission: Submission; job?: ResearchJobRecord }
+type Saved = { submission: Submission; job?: ResearchJobRecord; refusedStatus?: 409 | 422 }
 type ReportCache = { jobId: string; artifactId: string; text: string }
 
 function readSaved(): Saved | null {
@@ -91,7 +91,10 @@ export function ResearchJobsScreen() {
   const [error, setError] = useState<string | null>(null)
   const [report, setReport] = useState<ReportCache | null>(null)
   const [pollStopped, setPollStopped] = useState(false)
+  const [refusedStatus, setRefusedStatus] = useState<409 | 422 | null>(() => readSaved()?.refusedStatus ?? null)
+  const [statusSource, setStatusSource] = useState<'retained' | 'authoritative'>('retained')
   const pollCount = useRef(0)
+  const statusRead = useRef(0)
   const current = useRef<Saved | null>(saved)
   const mounted = useRef(true)
   const selected = options?.datasets[datasetIndex]
@@ -115,7 +118,7 @@ export function ResearchJobsScreen() {
       if (value && ref) {
         if (value.jobId !== retainedJob.job_id) throw new Error('artifact_invalid')
         await verifyReport(value, ref)
-        if (!cancelled) setReport(value)
+        if (!cancelled && current.current?.job?.job_id === retainedJob.job_id) setReport(value)
       }
     }).catch(() => { if (!cancelled) setError('Retained report integrity verification failed or storage is unavailable.') })
     return () => { cancelled = true; mounted.current = false }
@@ -124,23 +127,36 @@ export function ResearchJobsScreen() {
   function accept(next: ResearchJobRecord, submission: Submission) {
     if (!mounted.current) return
     if (current.current?.submission.key !== submission.key) return
+    const previous = current.current.job
+    if (previous && (next.job_id !== previous.job_id
+      || next.request_digest !== previous.request_digest
+      || next.implementation_digest !== previous.implementation_digest)) {
+      setError('Returned job identity did not match the retained job.')
+      return
+    }
+    if (previous && (Date.parse(next.updated_at) < Date.parse(previous.updated_at)
+      || (previous.cancel_requested && !next.cancel_requested)
+      || (!['queued', 'running'].includes(previous.state) && next.state !== previous.state))) return
     const value = { submission, job: next }
     current.current = value
     setSaved(value)
     setJob(next)
+    setStatusSource('authoritative')
     if (!remember(value)) setError('Job accepted; browser retention failed. Save the job ID before leaving.')
   }
 
   async function refresh() {
     const retained = current.current
     if (!retained?.job) return
+    const sequence = ++statusRead.current
     try {
       const next = await api.researchJob(retained.job.job_id)
-      accept(next, retained.submission)
+      if (sequence === statusRead.current) accept(next, retained.submission)
     } catch {
-      if (mounted.current) {
+      if (mounted.current && sequence === statusRead.current) {
         setError('Research service unavailable. Retained status and report remain available.')
         setPollStopped(true)
+        setStatusSource('retained')
       }
     }
   }
@@ -168,27 +184,43 @@ export function ResearchJobsScreen() {
         budget: { timeout_seconds: 900, memory_mib: 2048, cpu_limit: 1,
           max_model_calls: 12, max_estimated_model_usd: 1 }, analysis_requested: analysis,
       } }
-      if (!remember({ submission })) {
-        setError('Browser storage unavailable. Submission was not sent; restore storage before trying again.')
-        return
-      }
-      current.current = { submission }
-      setSaved({ submission })
     }
+    // Clear a prior refusal durably before a retry: a lost new response must not
+    // retain a safe-reset affordance from an earlier rejected attempt.
+    if (!remember({ submission })) {
+      setError('Browser storage unavailable. Submission was not sent; restore storage before trying again.')
+      return
+    }
+    current.current = { submission }
+    setSaved({ submission })
+    setRefusedStatus(null)
+    statusRead.current += 1
     setBusy(true)
     setError(null)
     try {
       accept(await api.submitResearchJob(submission.request, submission.key), submission)
       pollCount.current = 0
       setPollStopped(false)
-    } catch {
-      if (mounted.current) setError('Submission response unavailable or refused. The saved request and key are preserved; retry explicitly.')
+    } catch (failure) {
+      if (mounted.current) {
+        const status = typeof failure === 'object' && failure !== null && 'status' in failure ? failure.status : null
+        if (status === 409 || status === 422) {
+          const refused = { submission, refusedStatus: status }
+          current.current = refused
+          setSaved(refused)
+          setRefusedStatus(status)
+          if (!remember(refused)) setError('Refusal confirmed; browser retention failed. Keep the original key before leaving.')
+          else setError(status === 409 ? 'Idempotency conflict: this key belongs to a different request. Retry the saved request or explicitly reconfigure.'
+            : 'Pinned request refused. Refresh qualified choices by explicitly reconfiguring.')
+        } else setError('Submission response unavailable. The saved request and key are preserved; retry explicitly.')
+      }
     } finally { if (mounted.current) setBusy(false) }
   }
 
   async function cancel() {
     const retained = current.current
     if (!retained?.job || busy) return
+    statusRead.current += 1
     setBusy(true)
     setError(null)
     try { accept(await api.cancelResearchJob(retained.job.job_id), retained.submission) }
@@ -205,7 +237,7 @@ export function ResearchJobsScreen() {
       const text = await api.researchJobArtifact(job.job_id, ref.artifact_id)
       const value = { jobId: job.job_id, artifactId: ref.artifact_id, text }
       await verifyReport(value, ref)
-      if (mounted.current) setReport(value)
+      if (mounted.current && current.current?.job?.job_id === value.jobId) setReport(value)
       try { await reportCache(job.job_id, value) }
       catch { if (mounted.current) setError('Report opened; browser retention failed. Download it before leaving.') }
     } catch { if (mounted.current) setError('Report unavailable or integrity verification failed. Retained report remains available.') }
@@ -222,12 +254,27 @@ export function ResearchJobsScreen() {
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
-  function newJob() {
-    if (!job || active(job) || busy) return
+  function clearSaved() {
     localStorage.removeItem(STORAGE)
+    statusRead.current += 1
     current.current = null
     setSaved(null); setJob(null); setReport(null); setError(null)
+    setRefusedStatus(null)
     setPollStopped(false); pollCount.current = 0
+  }
+
+  function newJob() {
+    if (!job || active(job) || busy) return
+    clearSaved()
+  }
+
+  function reconfigure() {
+    if (job || !refusedStatus || busy) return
+    clearSaved()
+    setOptions(null); setOptionsError(false)
+    api.researchJobOptions().then(value => {
+      if (mounted.current) { setOptions(value); setDatasetIndex(0) }
+    }).catch(() => { if (mounted.current) setOptionsError(true) })
   }
 
   const pinnedRequest = job?.request ?? saved?.submission.request
@@ -283,9 +330,11 @@ export function ResearchJobsScreen() {
         <h3 id="research-status" className="font-semibold">Durable job</h3>
         {!saved && <p className="text-sm text-muted-foreground">Choose qualified inputs and submit once. The saved job and report reopen here.</p>}
         {saved && !job && <div className="space-y-3 rounded-lg border border-border p-4">
-          <p className="text-sm">Submission not confirmed. The original key and payload are retained.</p>
+          <p className="text-sm">{refusedStatus ? `Submission refused (${refusedStatus}). The original key and payload are retained.`
+            : 'Submission not confirmed. The original key and payload are retained.'}</p>
           <p className="break-all font-mono text-xs">Key {saved.submission.key}</p>
           <Button disabled={busy} onClick={() => void submit(saved.submission)}>Retry saved submission</Button>
+          {refusedStatus && <Button variant="outline" disabled={busy} onClick={reconfigure}>Reconfigure refused request</Button>}
         </div>}
         {job && <>
           <div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{job.state}</Badge>
@@ -295,6 +344,7 @@ export function ResearchJobsScreen() {
           <p className="text-sm">{job.analysis_state === 'unavailable' ? 'Agent unavailable'
             : job.analysis_state === 'not_requested' ? 'Agent not requested'
               : `Advisory Agent: ${job.analysis_state}`} · Deterministic backtest: {job.state}</p>
+          <p className="text-xs text-muted-foreground">{statusSource === 'retained' ? 'Retained browser status' : 'Authoritative research status'} · Job updated {job.updated_at}</p>
           {job.error_code && <p className="text-sm">Recorded failure: {job.error_code}</p>}
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
             <dt className="text-muted-foreground">Model calls</dt><dd>{unavailable(job.analysis?.usage?.model_calls ?? job.usage.model_calls)}</dd>
