@@ -1,0 +1,181 @@
+"""New backup boundary: refused authority and exact nonempty snapshot bytes."""
+
+import hashlib
+import json
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from tools import qualify_research_backup as backup
+
+
+@pytest.mark.parametrize("field", ["dsn", "repository", "password", "command", "host", "port"])
+def test_profile_never_accepts_borrowed_authority(field):
+    with pytest.raises(ValueError):
+        backup.Profile.from_mapping({field: "private-marker"})
+
+
+@pytest.mark.parametrize("key", ["schema_version", "root", "expected_build"])
+def test_profile_requires_exact_fields(key):
+    raw = {"schema_version": 1, "root": "/var/tmp/borrowed", "expected_build": "a" * 40}
+    raw.pop(key)
+    with pytest.raises(ValueError):
+        backup.Profile.from_mapping(raw)
+
+
+def test_default_cli_preflight_has_no_database_repository_or_output(tmp_path, monkeypatch, capsys):
+    profile = tmp_path / "profile.json"
+    profile.write_text("{}")
+    stub = SimpleNamespace(root=tmp_path, expected_build="a" * 40)
+    monkeypatch.setattr(backup.Profile, "from_mapping", lambda raw: stub)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("preflight side effect")
+
+    monkeypatch.setattr(backup, "run_fixture", forbidden)
+    monkeypatch.setattr(backup, "admit_runtime", lambda p: {"actual_build": p.expected_build})
+    output = tmp_path / "not-created"
+    assert backup.main(["--profile", str(profile), "--output", str(output)]) == 0
+    assert not output.exists()
+    assert "private-marker" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("value", ["../escape", "/outside", "a/../../escape"])
+def test_containment_rejects_escape(tmp_path, value):
+    with pytest.raises(ValueError):
+        backup.owned_path(tmp_path, Path(value))
+
+
+def test_containment_rejects_existing_restore_target_and_links(tmp_path):
+    existing = tmp_path / "restore"
+    existing.mkdir()
+    with pytest.raises(ValueError):
+        backup.fresh_directory(tmp_path, existing)
+    linked = tmp_path / "link"
+    try:
+        linked.symlink_to(existing, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlink permission unavailable")
+    with pytest.raises(ValueError):
+        backup.owned_path(tmp_path, linked / "file")
+
+
+def test_private_reader_refuses_links_hardlinks_modes(tmp_path):
+    import os
+    import sys
+
+    if sys.platform != "linux":
+        pytest.skip("native permission refusal")
+    tmp_path.chmod(0o700)
+    path = tmp_path / "file"
+    backup.write_private(path, b"data")
+    assert backup.read_owned(tmp_path, path) == b"data"
+    path.chmod(0o644)
+    with pytest.raises(ValueError):
+        backup.read_owned(tmp_path, path)
+    path.chmod(0o600)
+    os.link(path, tmp_path / "second")
+    with pytest.raises(ValueError):
+        backup.read_owned(tmp_path, path)
+
+
+@pytest.fixture
+def bundle(tmp_path):
+    root = tmp_path / "payload"
+    root.mkdir(mode=0o700)
+    backup.write_private(root / "research.dump", b"bounded-dump")
+    artifact = b'{"fixture":true}'
+    sha = hashlib.sha256(artifact).hexdigest()
+    (root / "artifacts" / "job").mkdir(parents=True, mode=0o700)
+    (root / "artifacts").chmod(0o700)
+    backup.write_private(root / "artifacts" / "job" / f"{sha}.json", artifact)
+    manifest = {
+        "schema_version": 1,
+        "schema_digest": backup.SCHEMA,
+        "protocol_digest": backup.PROTOCOL,
+        "research_schema": "qm_research",
+        "dump_sha256": hashlib.sha256(b"bounded-dump").hexdigest(),
+        "dump_size": 12,
+        "state": {"versions": [[1]], "jobs": [["job"]], "outbox": [], "effects": []},
+        "artifacts": [
+            {
+                "job_id": "job",
+                "object_key": f"job/{sha}.json",
+                "sha256": sha,
+                "byte_size": len(artifact),
+            }
+        ],
+    }
+    backup.write_private(root / "manifest.json", backup.canonical(manifest))
+    return root, manifest, backup.digest(root / "manifest.json")
+
+
+def test_exact_nonempty_manifest_and_bytes_validate(bundle):
+    root, manifest, anchor = bundle
+    assert backup.validate_bundle(root, anchor) == manifest
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "missing",
+        "substitution",
+        "manifest",
+        "schema",
+        "protocol",
+        "empty",
+        "ownership",
+        "dump",
+        "extra",
+    ],
+)
+def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+    root, manifest, anchor = bundle
+    ref = manifest["artifacts"][0]
+    path = root / "artifacts" / ref["object_key"]
+    if mutation == "missing":
+        path.unlink()
+    elif mutation == "substitution":
+        path.write_bytes(b"substituted")
+    elif mutation == "dump":
+        (root / "research.dump").write_bytes(b"different")
+    elif mutation == "manifest":
+        (root / "manifest.json").write_bytes(b"{}")
+    elif mutation == "extra":
+        backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+    else:
+        if mutation == "schema":
+            manifest["state"]["versions"] = [[999]]
+        elif mutation == "protocol":
+            manifest["protocol_digest"] = "0" * 64
+        elif mutation == "empty":
+            manifest["artifacts"] = []
+        elif mutation == "ownership":
+            ref["job_id"] = "other-job"
+        (root / "manifest.json").write_bytes(backup.canonical(manifest))
+        anchor = backup.digest(root / "manifest.json")
+    with pytest.raises(ValueError):
+        backup.validate_bundle(root, anchor)
+
+
+def test_receipt_requires_actual_encrypted_snapshot_and_checked_bundle(bundle):
+    root, _, anchor = bundle
+    with pytest.raises(ValueError):
+        backup.backup_receipt(root, anchor, {"snapshot_id": ""})
+    with pytest.raises(ValueError):
+        backup.backup_receipt(root, anchor, {"snapshot_id": "a" * 64, "check_exit": 1})
+
+
+def test_wrong_signing_notice_or_tool_pin_is_not_an_admitted_tool(tmp_path):
+    for name in ["restic", "prefix", "audit"]:
+        (tmp_path / name).mkdir()
+    with pytest.raises(ValueError):
+        backup.admit_tools(tmp_path)
+
+
+def test_cli_refusal_scrubs_configuration(tmp_path, capsys):
+    path = tmp_path / "profile.json"
+    path.write_text(json.dumps({"dsn": "private-marker"}))
+    assert backup.main(["--profile", str(path), "--output", str(tmp_path / "out")]) == 2
+    assert "private-marker" not in capsys.readouterr().out
