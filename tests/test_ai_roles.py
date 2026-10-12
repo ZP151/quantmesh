@@ -41,6 +41,7 @@ MODEL = "fixture-model"
 CONTEXT = {
     "market_notes": "AAA rallied 8% on volume twice its 20-day average.",
     "universe": "AAA, BBB, CCC (equities, USD, daily bars).",
+    "document:doc-1": "Explicit synthetic support: AAA rallied 8% on doubled volume.",
 }
 RISK_VERDICTS = {
     "gate-1": "risk decision allowed: AAA long within the leverage bound",
@@ -67,7 +68,7 @@ def _claim(
         "statement": statement,
         "confidence": confidence,
         "direction": direction,
-        "evidence_citations": citations if citations is not None else ["doc-1"],
+        "evidence_citations": citations if citations is not None else ["document:doc-1"],
     }
 
 
@@ -114,9 +115,7 @@ def _portfolio_json(
 
 
 def _script(*contents: str) -> ScriptedModelTransport:
-    return ScriptedModelTransport(
-        [{"content": content, "model": MODEL} for content in contents]
-    )
+    return ScriptedModelTransport([{"content": content, "model": MODEL} for content in contents])
 
 
 def _pipeline(transport: ScriptedModelTransport) -> ResearchPipeline:

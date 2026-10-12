@@ -404,3 +404,38 @@ and failed baseline. No score/gate weakening, extra writer or third completed
 Worker/service review is authorized. Origin/trading changes retain applicable
 human release gates. Closed latest-session display data remains expected;
 it never becomes a fresh executable quote.
+
+### Reviewed safety candidate and Eval integration — Oct13 Singapore
+
+Eval#160 stops at3ee49ae; root integrates its four coherent commits as
+42c1fe8/1170678/0b134c7/9f83e24. Two offline24-case runs remain21pass/3fail,
+exit1, comparison0regressions/0improvements; injected negative control0/24pass
+and64 verifier failures exits1. All271 archived raw evidence hashes are retained,
+actual imports aree549/src and usage/cost are null. Its two review rounds and
+40 harness tests are read, not mistaken for a passing production catalog.
+
+Root then implements#174 inline while Linux#172 occupies the other slot.
+Planner/Quant: literal operator Origin, explicit supplied context citation IDs,
+and independent quote source/receipt horizons are deterministic safety inputs;
+normal closed chart coverage cannot confer execution authority. Implementer:
+Origin IP parser plus canonical URL checks; critic/source index intersection
+before downstream prompts; source-time Quote plus existing receipt fence.
+Old positive fixtures now actually supply their cited data and healthy source
+clock. Original three benchmark assertions and old failing evidence are untouched.
+
+Verifier: RED35fail/14pass/6.39s; duplicate-value audit indices RED1 and empty
+Origin delimiter RED2 get separate GREEN. The healthy-source fixture and
+candidate-import self-test required legitimate input repair, not relaxed safety
+assertions. Relevant13-file API/AI/paper/live/Eval run passes404/74.03s/7warnings,
+exit0 (output/174-safety/broad-green.log/.exit); whole src/tests/tools Ruff and
+diff checks pass. Reviewer: fresh Spec/Standards each two rounds; no final
+actionable findings. IPv6 suffix was already refused by the audited parser;
+only empty delimiters reproduced the final Origin gap. No third structural review.
+This is a tested reviewed candidate, not deployed remediation or the final core
+clean-checkout/CI/human safety acceptance. A separate post-repair catalog/hash
+is required; the old failing baseline stays immutable and incompatible.
+
+Linux#172 Task1 stops at0e5fb0e with73pass/7skip/1deselected and actual standalone
+WSL watchdog5.134s. Engine/qualified image absent means qualification exit2/
+native_qualified=false. Task2/numerical Linux job/aggregate OCI proof are pending.
+Root must read its handoff and integrate only its five owned Task1 files.

@@ -62,8 +62,8 @@ class QuoteFence:
     """Provenance + age + sequence-continuity gate over quote consumption.
 
     ``max_age`` is the freshness horizon: a quote older than it (age
-    measured from the local ``received_at`` anchor, the same anchor the
-    feed's label and the matcher's ``max_quote_age`` use) is stale.
+    measured independently from source ``data_time`` and local ``received_at``)
+    is stale. Delivery cannot renew executable source evidence.
     """
 
     def __init__(self, *, max_age: timedelta = FENCE_DEFAULT_MAX_AGE) -> None:
@@ -77,7 +77,7 @@ class QuoteFence:
         """One latest QUOTE view -> allow (with a blessed Quote) or reject.
 
         The view is exactly the feed's per-kind view (provenance,
-        received_at, sequence, sequence_gap, payload). ``now`` is the
+        data_time, received_at, sequence, sequence_gap, payload). ``now`` is the
         submission instant; the age is computed from it so the fence
         never depends on when the snapshot was rendered.
         """
@@ -112,6 +112,8 @@ class QuoteFence:
             return FenceDecision(
                 False, "quote has no local receipt time — it cannot be age-validated"
             )
+        if anchored.utcoffset() is None or now.utcoffset() is None:
+            return FenceDecision(False, "quote receipt/submission time is not timezone-aware")
         age = now - anchored
         if age < timedelta(0):
             return FenceDecision(False, "quote receipt time is in the future")
@@ -122,7 +124,19 @@ class QuoteFence:
                 f"quote is {seconds} s old; the fence horizon is "
                 f"{self.max_age.total_seconds():g} s",
             )
-        quote = self._blessed_quote(view, instrument, anchored)
+        source = view.get("data_time")
+        try:
+            source_at = datetime.fromisoformat(source) if isinstance(source, str) else None
+        except ValueError:
+            source_at = None
+        if source_at is None or source_at.utcoffset() is None:
+            return FenceDecision(False, "quote has no valid timezone-aware source time")
+        source_age = now - source_at
+        if source_age < timedelta(0):
+            return FenceDecision(False, "quote source time is in the future")
+        if source_age > self.max_age:
+            return FenceDecision(False, "quote source time exceeds the fence horizon")
+        quote = self._blessed_quote(view, instrument, source_at)
         if quote is None:
             return FenceDecision(
                 False, "quote has no usable depth (bid/ask/sizes) for a paper order"
@@ -151,14 +165,14 @@ class QuoteFence:
         ):
             return FenceDecision(
                 False,
-                f"exact quote snapshot does not match "
-                f"{instrument.venue.value}:{instrument.symbol}",
+                f"exact quote snapshot does not match {instrument.venue.value}:{instrument.symbol}",
             )
         return self.evaluate(
             {
                 "kind": snapshot.kind.value,
                 "provenance": snapshot.provenance.value,
                 "received_at": snapshot.received_at.isoformat(),
+                "data_time": snapshot.data_time.isoformat(),
                 "sequence_gap": snapshot.sequence_gap,
                 "continuity_proven": snapshot.continuity_proven,
                 "payload": snapshot.payload,
@@ -169,7 +183,7 @@ class QuoteFence:
 
     @staticmethod
     def _blessed_quote(
-        view: Mapping[str, object], instrument: Instrument, received_at: datetime
+        view: Mapping[str, object], instrument: Instrument, source_at: datetime
     ) -> Quote | None:
         """The domain Quote the matcher can consume, or None (no depth).
 
@@ -191,7 +205,7 @@ class QuoteFence:
         mid = (bid + ask) / 2 if bid is not None and ask is not None else bid
         return Quote(
             instrument=instrument,
-            timestamp=received_at,
+            timestamp=source_at,
             bid=bid,
             ask=ask,
             last=mid,

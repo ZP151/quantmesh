@@ -10,8 +10,8 @@
 
 **Spec:** [#174](https://github.com/ZP151/quantmesh/issues/174); approved A research safety invariants in `docs/superpowers/specs/2026-10-12-research-foundation.md`, ADR-0010 and ADR-0014. Operator already authorized current high-blocker repairs.
 
-Status: queued ahead of workstation#173 after Eval#160 or Linux#172 stops.
-Root may implement when one slot is free; no third implementer. Original RED:
+Status: implemented/reviewed candidate, ahead of workstation#173. Root began
+after Eval#160 stopped, preserving the two-implementer cap. Original RED:
 e549 `output/eval-160/legacy-assertions-audit.log/.exit=1`,3failed/3.78s on
 integration2f424d0. Traced code confirms all three causes. This is a repair
 refinement within existing authority, not an extension to live trading.
@@ -118,3 +118,30 @@ is validated source time, not the local delivery time.
 - [ ] One reviewed coherent commit and iteration/ACTIVE checkpoint, push the
   integration branch. Final milestone PR/clean-checkout/required CI/human
   reviews/private deployment stay open. No failed baseline is overwritten.
+
+## Candidate checkpoint — Oct13 Singapore
+
+All three implementation tasks and the first three slice checks above are
+verified: RED35failed/14passed/6.39s; duplicate-claim audit index RED1 then GREEN;
+empty Origin delimiter RED2 then GREEN. Related API/AI/paper/live/Eval boundary
+passes404/74.03s with7 retained upstream warnings, exit0. Ruff/diff clean. Spec
+and Standards each have two rounds; final round has no actionable findings.
+Round1's only confirmed remaining defect was raw empty ?/# delimiters; malformed
+IPv6 suffixes already refused in the audited runtime, not an extra reproduced
+vulnerability. Original desired benchmark and historical evidence bytes remain
+unchanged. No deployment or release-completion claim follows this checkpoint.
+
+Ruling: the healthy network fixture must provide current source time, using its
+existing synthetic frame clock hook. Its2025 source/current receipt combination
+was never healthy under the documented source-time fence. The independent old
+source/no-fill assertion remains unchanged and now passes.
+
+Ruling: candidate-import self-test now AST-corrupts only its owned tempcandidate
+and requires the unchanged desired benchmark to fail, instead of requiring the
+production file to retain a vulnerable startswith expression. Actual old test
+RED is retained; test-only repair passes and grader code is unchanged.
+
+Ruling: catalog2.0.0 is the frozen format understood by the recovered harness.
+A distinct post-repair catalog path/content hash records changed fixture pins;
+it is explicitly incompatible with the old failing baseline. Do not expand the
+grader or silently rewrite its old catalog to obtain a numerical improvement.

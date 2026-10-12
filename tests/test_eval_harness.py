@@ -1,5 +1,6 @@
 """Eval evidence must preserve failures, unknown usage and immutable inputs."""
 
+import ast
 import copy
 import json
 import shutil
@@ -266,15 +267,24 @@ def test_frozen_badcase_imports_candidate_source(candidate):
     )
     origin = candidate / "src/quantmesh/api/workstation.py"
     source = origin.read_text(encoding="utf-8")
-    assert 'host.startswith("127.")' in source
-    origin.write_text(
-        source.replace('host.startswith("127.")', 'host == "127.0.0.1"'), encoding="utf-8"
+    # Intentionally corrupt only the owned candidate. The healthy harness
+    # checkout must not mask that corruption by supplying its own imports.
+    function = next(
+        node
+        for node in ast.parse(source).body
+        if isinstance(node, ast.FunctionDef) and node.name == "_is_loopback"
     )
+    lines = source.splitlines(keepends=True)
+    lines[function.lineno - 1 : function.end_lineno] = [
+        "def _is_loopback(host: str) -> bool:\n    return True\n"
+    ]
+    origin.write_text("".join(lines), encoding="utf-8")
     probe = case(
         "benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused"
     )
     result = runner.execute(candidate, catalog(candidate, [probe]), candidate / "cross", timeout=30)
-    assert result["results"][0]["status"] == "passed"
+    assert result["results"][0]["status"] == "failed"
+    assert result["results"][0]["verifiers_passed"] == 0
 
 
 def test_model_trace_and_network_block():

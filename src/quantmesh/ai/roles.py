@@ -285,9 +285,7 @@ _StageT = TypeVar("_StageT", bound=BaseModel)
 def _format_context(context: Mapping[str, str]) -> str:
     """Canonical context block: sorted by name, so insertion order never
     changes the prompt (and therefore never changes model outputs)."""
-    return "\n\n".join(
-        f"## {name}\n{context[name]}" for name in sorted(context)
-    )
+    return "\n\n".join(f"## {name}\n{context[name]}" for name in sorted(context))
 
 
 _CITATION_KINDS = ("document", "experiment", "audit")
@@ -310,7 +308,27 @@ def _claim_citations(claims: tuple[Claim, ...]) -> list[Citation]:
     return citations
 
 
-def _apply_critic_gate(verdict: CriticVerdict, report: AnalystReport) -> CriticGateResult:
+def _unsupported_claim_indices(report: AnalystReport, context: Mapping[str, str]) -> set[int]:
+    """Only explicit nonempty supported source keys register citation authority."""
+    supplied = {
+        name
+        for name, content in context.items()
+        if name.partition(":")[0] in _CITATION_KINDS
+        and name.partition(":")[1]
+        and name.partition(":")[2].strip()
+        and not any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in name)
+        and content.strip()
+    }
+    return {
+        index
+        for index, claim in enumerate(report.claims)
+        if any(citation not in supplied for citation in claim.evidence_citations)
+    }
+
+
+def _apply_critic_gate(
+    verdict: CriticVerdict, report: AnalystReport, context: Mapping[str, str]
+) -> CriticGateResult:
     """Resolve the critic's verdict against the analyst report in code.
 
     Fail-closed: 'pass' with flagged claims, 'flag' with none, and any
@@ -319,8 +337,7 @@ def _apply_critic_gate(verdict: CriticVerdict, report: AnalystReport) -> CriticG
     if verdict.verdict == "pass":
         if verdict.flagged_claims:
             raise PipelineError("critic verdict 'pass' carries flagged claims")
-        return CriticGateResult(verdict=verdict, allowed=tuple(report.claims), blocked=())
-    if not verdict.flagged_claims:
+    elif not verdict.flagged_claims:
         raise PipelineError("critic verdict 'flag' names no flagged claims")
     claim_count = len(report.claims)
     blocked_indices: set[int] = set()
@@ -331,6 +348,9 @@ def _apply_critic_gate(verdict: CriticVerdict, report: AnalystReport) -> CriticG
                 f"(report has {claim_count} claims)"
             )
         blocked_indices.add(flagged.claim_index)
+    # Sources are registered by trusted context keys, never by model output or
+    # a citation-looking token in arbitrary source text. Preserve raw verdict.
+    blocked_indices.update(_unsupported_claim_indices(report, context))
     allowed = tuple(
         claim for index, claim in enumerate(report.claims) if index not in blocked_indices
     )
@@ -349,12 +369,17 @@ class ResearchPipeline:
     unknown roles, and empty supplies; ``run_id`` is setup-only over
     role set + charter digests + context digests, never model outputs.
 
+    Citable sources must be explicit context keys of the supported kind:id
+    forms, with nonempty redacted content. Mentioning a citation inside text
+    or a model critic's pass cannot register that source. The deterministic
+    gate blocks claims with any unsupported citation before downstream stages.
+
     When ``decision_log`` is supplied, every stage records a
     content-addressed ``DecisionRecord`` (model metadata required at
     construction — never fabricated) whose citations come from the
     analyst claims' ``kind:id`` citation ids (kind one of
     document/experiment/audit — recorded as audit entries even when a
-    citation does not resolve; resolution is the drill's job) and whose
+    citation is blocked; full source resolution remains the consumer's job) and whose
     critic record carries the gate's refusal when claims were blocked.
     ``recorded_at`` pins the audit timestamp for byte-deterministic
     drills; decision identity excludes it, so pinning never changes
@@ -396,9 +421,7 @@ class ResearchPipeline:
                 "the portfolio stage requires supplied constraint/optimizer outputs"
             )
         if decision_log is not None and model_meta is None:
-            raise PipelineError(
-                "decision-log recording requires model metadata (model_meta)"
-            )
+            raise PipelineError("decision-log recording requires model metadata (model_meta)")
         self._gateway = gateway
         self._context = dict(context)
         self._risk_verdicts = dict(risk_verdicts)
@@ -414,12 +437,8 @@ class ResearchPipeline:
         material = {
             "version": _PIPELINE_VERSION,
             "roles": list(ROLE_ORDER),
-            "charter_digests": {
-                role: self._charters[role].digest for role in ROLE_ORDER
-            },
-            "context": {
-                name: _sha256(self._context[name]) for name in sorted(self._context)
-            },
+            "charter_digests": {role: self._charters[role].digest for role in ROLE_ORDER},
+            "context": {name: _sha256(self._context[name]) for name in sorted(self._context)},
         }
         return _sha256(_canonical_json(material))[:16]
 
@@ -498,17 +517,15 @@ class ResearchPipeline:
             "if every claim survives."
         )
         verdict = self._stage("critic", critic_prompt, CriticVerdict)
-        gate = _apply_critic_gate(verdict, analyst_report)
+        gate = _apply_critic_gate(verdict, analyst_report, self._context)
         gate_refusal = None
         if gate.blocked:
             blocked_indices = sorted(
-                index
-                for index, claim in enumerate(analyst_report.claims)
-                if claim in gate.blocked
+                {flag.claim_index for flag in verdict.flagged_claims}
+                | _unsupported_claim_indices(analyst_report, self._context)
             )
             gate_refusal = (
-                f"critic gate blocked {len(gate.blocked)} claim(s): "
-                f"indices {blocked_indices}"
+                f"critic gate blocked {len(gate.blocked)} claim(s): indices {blocked_indices}"
             )
         self._record("critic", critic_prompt, verdict, refusal=gate_refusal)
 

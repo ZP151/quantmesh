@@ -142,9 +142,7 @@ def test_rejects_when_there_is_no_quote_view(view: dict[str, object] | None) -> 
 
 @pytest.mark.parametrize("provenance", ["delayed", "synthetic", "unavailable"])
 def test_rejects_anything_that_is_not_real(provenance: str) -> None:
-    decision = QuoteFence().evaluate(
-        _view(provenance=provenance), instrument=BTC, now=T0
-    )
+    decision = QuoteFence().evaluate(_view(provenance=provenance), instrument=BTC, now=T0)
 
     assert not decision.allowed
     assert decision.reason == (
@@ -173,9 +171,7 @@ def test_rejects_missing_positive_continuity_evidence() -> None:
 
 
 def test_rejects_a_stale_quote_with_the_explicit_age() -> None:
-    decision = QuoteFence().evaluate(
-        _view(), instrument=BTC, now=T0 + timedelta(seconds=31)
-    )
+    decision = QuoteFence().evaluate(_view(), instrument=BTC, now=T0 + timedelta(seconds=31))
 
     assert not decision.allowed
     assert decision.reason == "quote is 31 s old; the fence horizon is 30 s"
@@ -187,13 +183,9 @@ def test_rejects_a_quote_without_usable_depth() -> None:
         {"bid": 100.0, "ask": 100.5, "bid_size": 0.0, "ask_size": 0.0},  # zero depth
         {"bid": 101.0, "ask": 100.5, "bid_size": 1.0, "ask_size": 2.0},  # crossed
     ):
-        decision = QuoteFence().evaluate(
-            _view(payload=payload), instrument=BTC, now=T0
-        )
+        decision = QuoteFence().evaluate(_view(payload=payload), instrument=BTC, now=T0)
         assert not decision.allowed
-        assert decision.reason == (
-            "quote has no usable depth (bid/ask/sizes) for a paper order"
-        )
+        assert decision.reason == ("quote has no usable depth (bid/ask/sizes) for a paper order")
 
 
 def test_rejects_a_quote_without_a_receipt_anchor() -> None:
@@ -236,9 +228,7 @@ def test_resolve_pulls_the_quote_view_from_the_snapshot() -> None:
     assert healthy.quote is not None
 
     wrong_symbol = _snapshot()
-    wrong_symbol = ExactUpdateSnapshot(
-        **{**wrong_symbol.__dict__, "instrument": "ETH"}
-    )
+    wrong_symbol = ExactUpdateSnapshot(**{**wrong_symbol.__dict__, "instrument": "ETH"})
     wrong_venue = _snapshot()
     wrong_venue = ExactUpdateSnapshot(
         **{**wrong_venue.__dict__, "venue": Venue.MOOMOO, "source": "moomoo"}
@@ -277,8 +267,7 @@ def test_submit_records_the_fence_rejection_with_the_explicit_reason() -> None:
         (
             _view(provenance="delayed"),
             T0,
-            "quote provenance is delayed; only locally validated real quotes "
-            "may feed paper orders",
+            "quote provenance is delayed; only locally validated real quotes may feed paper orders",
         ),
         (
             _view(sequence_gap=True),
@@ -317,9 +306,7 @@ def test_idempotency_replay_bypasses_the_fence() -> None:
     """A keyed retry returns the original order even when the fence would
     now reject — replay is not a re-submission (M10 Phase B semantics)."""
     account_ = _account()
-    request = OrderRequest(
-        instrument=BTC, side=Side.BUY, quantity=1.0, idempotency_key="k-1"
-    )
+    request = OrderRequest(instrument=BTC, side=Side.BUY, quantity=1.0, idempotency_key="k-1")
     first = account_.submit(
         request, now=T0 + timedelta(seconds=2), quote_fence=QuoteFence(), snapshot=_snapshot()
     )
@@ -340,9 +327,7 @@ def test_idempotency_replay_bypasses_the_fence() -> None:
 
 def test_fence_requires_a_snapshot_and_submit_requires_a_quote_or_fence() -> None:
     with pytest.raises(ValueError, match="snapshot is required"):
-        _account().submit(
-            _request(), now=T0, quote_fence=QuoteFence(), snapshot=None
-        )
+        _account().submit(_request(), now=T0, quote_fence=QuoteFence(), snapshot=None)
     with pytest.raises(ValueError, match="quote or a quote_fence"):
         _account().submit(_request(), quote=None, now=T0)
 
@@ -394,6 +379,20 @@ def _plan() -> list[tuple[float, object]]:
     ]
 
 
+def _fresh_fixture_frame(frame: object) -> object:
+    """Bind synthetic source time at send, alongside the real-stack receipt clock.
+
+    The literal June2025 frame used to pass on receipt age alone. This healthy
+    fixture must provide a fresh source; stale-source refusal has its own RED.
+    """
+    if isinstance(frame, dict) and frame.get("channel") == "bbo":
+        return {
+            **frame,
+            "data": {**frame["data"], "time": int(datetime.now(UTC).timestamp() * 1000)},
+        }
+    return frame
+
+
 @pytest.fixture(scope="module")
 def live_quote_anchor() -> tuple[LiveFeed, datetime]:
     """The scripted venue + live supervisor + feed pump on one daemon
@@ -406,11 +405,9 @@ def live_quote_anchor() -> tuple[LiveFeed, datetime]:
         asyncio.set_event_loop(loop)
 
         async def serve() -> None:
-            async with ScriptedVenue(plan=_plan()) as venue:
+            async with ScriptedVenue(plan=_plan(), transform_frame=_fresh_fixture_frame) as venue:
                 feed = LiveFeed(lag=timedelta(seconds=5), stale=timedelta(seconds=10))
-                supervisor = HyperliquidVenueSupervisor(
-                    LiveHyperliquidTransport(str(venue.url))
-                )
+                supervisor = HyperliquidVenueSupervisor(LiveHyperliquidTransport(str(venue.url)))
                 supervisor.subscribe(["BTC"])
                 feed.attach(supervisor)
                 holder["feed"] = feed
@@ -430,10 +427,7 @@ def live_quote_anchor() -> tuple[LiveFeed, datetime]:
     for _ in range(150):
         state = feed.latest_state()
         view = (
-            state.get("instruments", {})
-            .get("hyperliquid:BTC", {})
-            .get("kinds", {})
-            .get("quote")
+            state.get("instruments", {}).get("hyperliquid:BTC", {}).get("kinds", {}).get("quote")
             if isinstance(state.get("instruments"), dict)
             else None
         )

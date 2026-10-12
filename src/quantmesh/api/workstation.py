@@ -188,12 +188,39 @@ class WorkstationConfigError(ValueError):
 
 def _is_loopback(host: str) -> bool:
     """Loopback only: localhost, IPv6 ::1, and the whole 127.0.0.0/8."""
-    return host in {"localhost", "::1"} or host.startswith("127.")
+    from ipaddress import IPv4Address
+
+    if host in {"localhost", "::1"}:
+        return True
+    try:
+        return IPv4Address(host).is_loopback
+    except ValueError:
+        return False
 
 
 def _is_allowed_browser_origin(origin: str) -> bool:
+    # urlsplit strips controls and accepts URL forms that are not browser Origins.
+    if (
+        "?" in origin
+        or "#" in origin
+        or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in origin)
+    ):
+        return False
     try:
-        hostname = urlsplit(origin).hostname
+        parsed = urlsplit(origin)
+        hostname = parsed.hostname
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.netloc
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.path
+            or parsed.query
+            or parsed.fragment
+            or parsed.netloc.endswith(":")
+            or parsed.port == 0
+        ):
+            return False
     except ValueError:
         return False
     if hostname is not None and _is_loopback(hostname):

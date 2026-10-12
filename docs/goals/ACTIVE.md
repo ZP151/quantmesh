@@ -111,6 +111,16 @@ is separate from Eval and starts only after a slot stops. Keep failed catalog
 and logs immutable; post-fix code/fixture/verifier identities must be explicit.
 No closed-session freshness regression or real exploit/trade is inferred.
 
+Latest: Eval#160 stopped at3ee49ae; root integrated42c1fe8/1170678/0b134c7/9f83e24
+including271 immutable evidence files. Old24-case baseline21pass/3fail exits1;
+comparison0/0, known-bad0/24pass. Root#174 candidate repairs all three original
+assertions; API/AI/paper/live/Eval boundary404pass/74.03s exit0, Ruff/diff pass,
+two final Spec/Standards rounds clear. No deployment/human/CI release is implied.
+Keep oldfailed catalog/evidence immutable and freeze a distinct post-repair
+content revision; strict format2.0.0 stays, hashes/comparison incompatibility
+carry fixture changes. Linux#172 stops at0e5fb0e Task1 software only; actual
+Engine/image/OCI and Task2 remain pending. Both native sessions are now idle.
+
 ## Historical delivery checkpoint — retained, superseded priority
 
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance
