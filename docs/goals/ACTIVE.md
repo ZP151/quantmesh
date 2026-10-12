@@ -1,9 +1,11 @@
 # Active Goal
 
-Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance
-and the 8 GB migration's short acceptance are complete; this goal remains
-active until the new host's sustained capacity gate is closed and the separate
-Moomoo/OpenD route is ready. PR #161 is now merged and deployed; its live API acceptance passes.
+Status: product development ACTIVE, updated2026-10-12 Singapore. The user
+explicitly makes formal168h NOT REQUIRED for current work, on-demand only.
+Preserve historical failures; this does not mark the soak passed. Prioritize
+feature iterations. Capacity/recovery drills stay in later acceptance, not
+the current development frontier. The 0035 AWS real-chart and 8 GB migration's
+short acceptance are complete. PR #161 is merged/deployed; live API passes.
 PR #162 also passed CI and is deployed as `c8e1813`; API and list-page
 acceptance pass. Source-backed equity minute charts are implemented on
 `codex/0037-equity-minute-charts`, checked through PR #163 and deployed at
@@ -434,7 +436,12 @@ The user now authorizes repair of the current high-priority blockers, with no
 live trading. Read-only health confirms deployed69515b7, paper=true/live=false
 and fresh crypto. Both installed source/helper processes are alive. A fresh
 SSH attempt actually requests Tailscale human check-mode authentication; do
-not reuse old URLs or change authentication policy. That human step is pending.
+not reuse old URLs or change authentication policy. The user subsequently
+completed that check: actual ObserveOnly existing_private_tunnel and AWS
+quote-only readiness exit0/ready,250 daily rows per stock/order_checked=false.
+OpenD28036/helper53020 and installed digest stay unchanged; no exact orphan
+probe roots remain after scoped cleanup. One host sample shows4705MiB available
+RAM, no swap and NRestarts0; it does not establish sustained capacity.
 
 New branch codex/0037-opend-probe-cleanup starts from origin/main745a231,
 preserving local main. Native RED reproduces orphaned probe descendants and
@@ -452,3 +459,8 @@ The old24h observer has only51 freshness samples over4h10m on33aa0521 and
 one missing host metric sample. Preserve it as partial evidence; start a new
 current-build observer only after connection/source preflight. These elapsed
 time gates, disruptive operator acceptance and firewall review remain open.
+
+Subsequent explicit operator priority: formal168h is NOT REQUIRED / ON DEMAND.
+Do not start v5, enable/publish retired soak cadence or revive its heartbeat
+implicitly. Keep partial evidence unaccepted. Feature development takes
+priority; strategy simulation is the next proposed bounded research loop.

@@ -141,6 +141,12 @@ extras, verification counts, known limitations and external gates.
 
 ## The human gate checklist (live operation — THE gate)
 
+Operator scope update,2026-10-12: formal168h is currently not required, with
+reactivation only on request. Historical failed/partial witnesses stay
+unaccepted and retired cadence stays disabled. This removes the soak from the
+current feature/private-prototype frontier; it does not grant live execution,
+qualify incomplete datasets or remove CI, source-lineage and safety gates below.
+
 The following are **forbidden without explicit human approval**, and
 no M10 code path can perform them at all:
 

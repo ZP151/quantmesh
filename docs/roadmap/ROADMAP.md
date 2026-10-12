@@ -1,6 +1,6 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-09-23
+Last updated: 2026-10-12
 
 ## Status legend
 
@@ -338,8 +338,9 @@ Sequence for operator review:
 
 1. **Done as iteration 0021 (merged PR #120):** trusted data fabric: provider
    registry, symbol/calendar/corporate-action normalization, raw/normalized/
-   feature layers, manifests, source rights and quality SLAs. Its 168-hour soak
-   continues as a non-blocking maintenance/release-confidence track. See
+   feature layers, manifests, source rights and quality SLAs. Formal168h is
+   not required for current work per the October12 operator decision, on-demand
+   only; historical failed evidence stays unaccepted. See
    [issue #110](https://github.com/ZP151/quantmesh/issues/110),
    `docs/iterations/0021-trusted-data-fabric.md` and
    `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`.

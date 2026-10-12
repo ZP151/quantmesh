@@ -42,8 +42,11 @@ public ingress, vendor configuration, trading or AWS runtime.
 - [ ] Install only merged reviewed bytes. Replacing a running helper requires
   a concrete operator handoff that preserves any active owned/external tunnel;
   do not stop it implicitly. Existing installation stays untouched meanwhile.
-- [ ] After human SSH authentication, prove remote loopback/source reachability
+- [x] After human SSH authentication, prove remote loopback/source reachability
   and exact AWS build69515b7/paper=true/live=false. No AWS redeployment.
+  Actual ObserveOnly existing_private_tunnel and quote-only readiness exit0,
+  both stocks ready/250 daily rows/order_checked=false. Installed bytes stay
+  unchanged; probe fix still requires CI/integration and safe installation.
 
 Evidence: `output/0037-probe-cleanup/`. The initial RED invocation had a missing
 basetemp parent; the first fixture revision hit a C# constant-branch compiler
@@ -58,3 +61,7 @@ old negative witnesses. No 168-hour clock has started; do not enable old tasks
 or reuse past elapsed time. The old capacity observer contains only 51 samples
 over 4h10m on build33aa0521, not 24h. Capacity/recovery/firewall acceptance cannot
 be claimed complete from this probe repair. Never manufacture an outage/reboot.
+
+Subsequent operator instruction makes formal168h **not required now**, future
+on-demand only. Stop the v5 restart proposal; disabled tasks and negative
+evidence stay unchanged. Diagnosis remains for any future requested resumption.

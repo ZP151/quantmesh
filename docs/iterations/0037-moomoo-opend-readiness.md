@@ -748,3 +748,15 @@ iteration 0036 for later operational acceptance, without blocking development.
   evidence and perform the independent v5 admission plan, not blind enabling.
   No formal168h run started. Old AWS capacity evidence covers4h10m/51 samples
   on33aa0521, not24h and not the current build. These gates remain open.
+
+- **Actual recovery after authentication:** ObserveOnly returns
+  existing_private_tunnel at12:12 UTC. AWS quote-only readiness exits0/ready for
+  both stocks,250 daily bars each/auth_required=false/order_checked=false.
+  GUI/helper and installed digest stay unchanged. Scoped orphan-probe cleanup
+  leaves zero exact probe roots. Current4705MiB available RAM/no swap/NRestarts0
+  is one host sample, not sustained acceptance. A15s live/status timeout is
+  preserved as a transient observation; a later request completes in0.283s.
+- **Operator priority:** formal168h is explicitly NOT REQUIRED now, future
+  on-demand only. Keep negative evidence, leave tasks disabled, and do not start
+  v5 or its publisher. Feature development takes priority. Strategy simulation
+  is proposed research work, with no live-money or promotion authorization.

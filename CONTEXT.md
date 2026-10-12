@@ -13,8 +13,9 @@ cockpit, venue-aware history, integrated instrument decision workspace,
 reproducible research evidence, local AI boundaries and guarded execution
 controls.
 
-Iteration 0021, Trusted Data Fabric, is merged; its real 168-hour soak continues
-as an independent maintenance and release-confidence track. Iteration 0027,
+Iteration 0021, Trusted Data Fabric, is merged. On2026-10-12 the operator made
+formal168h not required for current work, on-demand only. Historical failures
+remain unaccepted and feature development takes priority. Iteration 0027,
 Evidence-backed Decision Copilot, is merged through PR #128. Iteration 0028,
 Decision Inbox & Bounded Paper Shadow Portfolio, is merged through PR #130.
 Iteration 0029, Decision Readiness Session, is merged through PR #133.
