@@ -3,6 +3,18 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
+Coordinator recoveredOct13 to C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh
+after original6e1e lostGit registration/trackedfiles (causeunknown); ignoredfiles
+remainuntouched. Nativeworktree tools couldnotoperate on originalbrokenGitcwd;
+standardGit fallback at exactpushed5788cf7 is clean, appattach refusesnotmanaged.
+No mainreset/delete/deploy. Resumecommands useexplicitnewworkdir.
+Nativeprivate-terminal Task2 leaf ACTIVE in2088/chat01a13259-ae57-7010-945d-2470f3b902cd,
+exact5788cf7/plan2026-10-13-opend-private-terminal.md; threefilesonly, newowned
+PTY/kernel/cleanup proof, no realvendor/auth/host/network. Backup a391 remains
+otherliveimplementation. Root verified samealreadyreportedround2 fixedcommand
+registrationwindow stillneededfix after349d969; a391 nowcoversit plusrealnative
+interruption proof. No thirdstructuralreview or prematurebackupintegration.
+
 Current root diagnosticOct13: nativeSDK attempts6/7 send84bytes successfully
 but no observed receive callback/init handler;25s CONNECTED/serverID0/queryret-1,
 closeCLOSING. Console1→0 alone unchanged; exits2,81.083/82.125s, namespacePID1

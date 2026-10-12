@@ -1,5 +1,29 @@
 # Active Goal
 
+Coordinator workspace recoveryOct13: original6e1e no longer has .git/tracked
+docs and is absent from actual gitworktreelist; remainingignored files are left
+untouched, causeunknown. Exact pushed5788cf7 exists on sharedGit integrationbranch.
+Nativecreate_worktree fails callingcwd-not-Git; attach_worktree refuses fallback
+asnotmanaged. StandardGit fallback nowchecksout codex/0038-research-foundation at
+C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh, clean
+sameSHA; useexplicitworkdir there on resume. Preservedivergentmain c74ea03 and all
+otherworktrees. No reset/delete or newdeployment. Appownership remainsunregistered.
+
+Task2 private-terminal prerequisite ACTIVE in nativechat
+01a13259-ae57-7010-945d-2470f3b902cd, managed2088, exact5788cf7 confirmed,
+branchcodex/0038-opend-private-terminal. Narrowplan2026-10-13-opend-private-terminal.md;
+onlythreeleaf qualifier/test/runbook files, realownednativePTY/lifecycle fixture,
+no inputrelay/auth/vendor/network/hostinstall. Allproduction/privateinput flags
+remainfalse. This andbackup a391 are the two active implementations; rootowns
+sharedintegration. ActualDockerinfo still exit1/Engineunavailable thisturn;
+existing humanEngine/provider/PR166 requests remainpending, no repeated request.
+
+Root directly checks round2 samebackupP2 disposition:349d969 fixedcluster
+registration but bounded_process still had Popen→ticks beforetry, as already
+named byround2. Sent exactsamefinding to activea391, no thirdstructure review;
+session nowcoversfixedcommands and realnativechild interruption evidence before
+finalcommit/gate/HANDOFF. No oldcandidateintegration accepted.
+
 Root#169 boundary diagnosisOct13: freshattempt6/7 originalSDK packret0 and
 socket-send84bytes/ret0; no observed receive/initialization-handler, queryret-1,
 CONNECTED/serverID0 after25s and closeCLOSING. Changing only console1→0 did not
