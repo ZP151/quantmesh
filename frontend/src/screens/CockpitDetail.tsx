@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { Badge } from '@/components/ui/badge'
+import { LiveDataBadge } from '@/components/live-data-badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Page } from '@/components/page'
 import {
@@ -10,10 +10,10 @@ import {
   bookSide,
   candleCloses,
   candleReturn,
-  LABEL_TEXT,
+  dataViews,
   instrumentLabel,
+  isSourceBacked,
   latestCompleteBookSides,
-  labelTone,
   liveInstrumentKey,
   markIndexDivergence,
   mergeUpdate,
@@ -379,7 +379,9 @@ export function CockpitDetailScreen({
       }
     >
       <div className="flex flex-wrap items-center gap-3">
-        <Badge className={labelTone(badgeLabel)}>{t(LABEL_TEXT[badgeLabel])}</Badge>
+        <LiveDataBadge session={instrument?.session_freshness} fallback={badgeLabel}
+          sourceUnavailable={instrument?.kinds.status?.label === 'unavailable'}
+          realEvidence={instrument !== undefined && dataViews(instrument).some(view => isSourceBacked(view.provenance))} />
         <span className="text-xs text-muted-foreground">
           {newest
             ? t('screen.cockpitDetail.lastUpdate', { time: dateTime(newest.received_at) })
@@ -460,7 +462,8 @@ export function CockpitDetailScreen({
                 <div>
                   <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.freshness')}</dt>
                   <dd className="mt-0.5">
-                    <Badge className={labelTone(evidence.label)}>{t(LABEL_TEXT[evidence.label])}</Badge>
+                    <LiveDataBadge session={evidence.session_freshness} fallback={evidence.label}
+                      realEvidence={isSourceBacked(evidence.provenance)} />
                   </dd>
                 </div>
                 <div>

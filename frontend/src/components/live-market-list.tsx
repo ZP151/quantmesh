@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { api, type LiveInstrumentState, type MarketUpdate } from '@/lib/api'
-import { ageText, instrumentLabel, LABEL_TEXT, labelTone, liveInstrumentKey, mergeUpdate, midOf, normalizeLiveInstruments, quoteNumbers, reconcileInstrumentState, useAgedInstruments, useLiveConnection } from '@/lib/live'
+import { ageText, dataViews, instrumentLabel, isSourceBacked, liveInstrumentKey, mergeUpdate, midOf, normalizeLiveInstruments, quoteNumbers, reconcileInstrumentState, useAgedInstruments, useLiveConnection } from '@/lib/live'
 import { dateTime, money, timeOfDay } from '@/lib/format'
 import { instrumentPath } from '@/lib/instrument-route'
 import { usePreferences } from '@/lib/preferences'
-import { Badge } from '@/components/ui/badge'
+import { LiveDataBadge } from '@/components/live-data-badge'
 import { ErrorState, LoadingState } from '@/components/state'
 
 /** Configured live feeds are separate from registered decision watches. */
@@ -58,7 +58,9 @@ export function LiveMarketList() {
             <td className="py-3 pr-3 font-mono font-medium"><Link className="underline-offset-4 hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" to={`${instrumentPath(row.venue, row.instrument)}?range=1d&mode=line`}>{row.instrument}</Link></td>
             <td className="px-3 py-3 text-xs">{row.venue}</td>
             <td className="px-3 py-3 tabular-nums"><span className="font-mono">{money(price, locale)}</span>{price !== undefined && <span className="block text-xs text-muted-foreground">{t(quotePrice !== undefined ? 'liveMarkets.quotePrice' : 'liveMarkets.lastTrade')}</span>}</td>
-            <td className="px-3 py-3"><Badge className={labelTone(label)}>{t(LABEL_TEXT[label])}</Badge></td>
+            <td className="px-3 py-3"><LiveDataBadge session={row.session_freshness} fallback={label}
+              sourceUnavailable={row.kinds.status?.label === 'unavailable'}
+              realEvidence={dataViews(row).some(view => isSourceBacked(view.provenance))} /></td>
             <td className="whitespace-nowrap px-3 py-3 font-mono text-xs">{source ? <time dateTime={source.data_time} title={dateTime(source.data_time, locale)}>{timeOfDay(source.data_time)}</time> : '—'}</td>
             <td className="whitespace-nowrap px-3 py-3 font-mono text-xs">{source ? ageText(source.age_ms, locale) : '—'}</td>
           </tr>

@@ -1,7 +1,9 @@
 # ADR-0026 — Research job publication and advisory boundary
 
-Status: proposed; operator approved Option A architecture, implementation
-schema/protocol freeze awaits bounded independent reviews and integration.
+Status: accepted for Batch-B implementation; operator approved Option A
+architecture. Two bounded independent review rounds and audited contract tests
+freeze the local schema/protocol. This does not approve deployment or certify
+the unfinished Worker, remote store or Agent service.
 Date: 2026-10-12, Asia/Singapore.
 Issues: #167/#168. Preserve ADR-0010/0015 and all order/risk authority boundaries.
 
@@ -14,7 +16,7 @@ Conversely, numerical validation belongs to the deterministic Worker, not
 the durable job store. Optional Agent outcomes must remain distinguishable
 from deterministic results, including when no model call was made.
 
-## Proposed decision
+## Decision
 
 One configured JobStore is authoritative per mode: local SQLite and later
 isolated PostgreSQL implement the same versioned nine-method protocol. Request

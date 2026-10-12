@@ -15,6 +15,9 @@ $200 under the selected A plan. Notify the operator before authentication,
 payment and AI key configuration; no paid resources or calls created yet.
 One product iteration, at most two implementation sessions with isolated
 worktrees and one shared-file coordinator. Soak is inactive, not a third track.
+Iteration0038 is the solo milestone fast lane: one integration branch and one
+final milestone PR, with tested/reviewed commits per issue and all applicable
+human, CI and release gates retained. This does not waive PR166's separate gate.
 
 PR #166 exact candidate da6e8c7 CI38248602251 succeeded2026-10-12 13:15:58UTC.
 Actual GitHub PR remains OPEN, reviews list empty; no merge/install is claimed.
@@ -35,6 +38,20 @@ claim until server-owned gateway and source-backed session evidence pass.
 First parallel batch is server/calendar#169 plus contracts#168 after the user's
 freshness steering. Validation#132 follows the first source slice, not a third
 concurrent implementation session.
+
+Continuation2026-10-13 Singapore: first source/calendar and job contracts are
+integrated at69dcd7f/cced45d/55c6431. The shared UI integration now distinguishes
+closed latest-session data from source unavailability, preserves unknown policy
+through streamed frames and expires cached open evaluations; raw clocks/order
+fences remain unchanged.404 frontend tests and119 audited related backend tests
+pass. A workspace-owned audited release-extras environment passes70-package
+license closure; schema/protocol hashes match the original freeze on pinned
+Pydantic2.13.5. No full clean-checkout certification or production UI deployment
+is claimed. Next batch: isolated baseline Worker and independent service.
+Validation#132 recovered6bfe279 and server OpenD qualification191975a are ready
+for sequential integration. Source profile remains blocked/uninstalled: actual
+Linux SDK wire/private input/server startup and operator authentication remain
+unproved. PR166 remains OPEN atda6e8c7, not installed. No paid calls/resources.
 
 ## Historical delivery checkpoint — retained, superseded priority
 

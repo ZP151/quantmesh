@@ -179,3 +179,77 @@ coverage; report unknown, not failure/false latest_session. Browser/API reload
 in the same process is distinct. A bounded selective rehydration follow-up is
 needed before claiming final source recovery coverage; no broad lake scan or
 storage migration was added to this current review slice.
+
+### Integrated contracts, calendar UI and audited environment — Oct13 Singapore
+
+Planner: the solo milestone uses one integration branch/final milestone PR;
+per-issue reviewed commits and all human/CI/release gates remain mandatory.
+First source3f4863e is integrated as69dcd7f; jobs747524e/f78c995 integrate as
+cced45d/55c6431. Both original implementation sessions stopped at handoff.
+Source's two domain groups total518 passing; jobs final focused52 and related
+327/3 skipped are retained evidence, not full release certification.
+
+Verifier: root created output/0038-research-foundation/audited-venv with root
+requirements-audit constraints and release extras, without mutating ambient
+Python. Pinned Pydantic2.13.5;70 platform closure packages pass license_review
+exit0. Jobs/source/workspace related119 pass/7 warnings/32.01s, exit0 in
+audited-boundary.log/.exit. Original ambient license failures remain retained.
+Schema a645a8bde2b439587f736a6a6875e4ffae77265cdcc2900d0b2def43f5f0de18 and
+nine-method protocol454cce6bd355465e48a59cb61fbbacb775776cb28c41826e54aff554cf2ccae1
+match the first freeze. audited-contract-freeze.json records the qualified env.
+ADR0026 accepts this contract for Batch B, not an unimplemented remote runtime.
+
+Implementer: optional server evaluation timestamp and exact instrument coverage
+query wire the same policy into the workspace; generated OpenAPI client is
+updated. Markets/Watchlist/Cockpit/detail/workspace badges distinguish normal
+closed coverage, missing/unknown coverage, expired policy and real transport
+unavailability. Raw age/source clocks/provenance and existing quote authority
+remain unchanged; metrics-only/no-depth workspace remains degraded and Paper
+disabled. Server calendar owns holidays/early closes/DST; client does not infer
+coverage from unchanged prices or invent an undeclared provider delay.
+
+Reviewer: fresh Spec/Standards on the UI boundary identify two overlapping P2s
+(stream dropped open unknown policy, delayed source-backed coverage excluded),
+plus one P2 masking vendor unavailability on closed list/detail. Reproduced
+6-failure policy/provenance RED and2-failure source-status RED, then fixed in one
+bounded pass. Unknown policy persists through metrics/status frames; new-session
+frames invalidate to explicit unknown until authoritative policy refresh; delayed
+provenance/candle-only coverage remain source-backed; source failure is displayed
+independently. No third jobs/core structure review. Backend additive schema does
+not change deterministic quote fences. Minor nonblocking Fast Refresh helper
+export warning remains consistent with existing shared components.
+
+Verifier: frontend-reviewed-domain.log/.exit404 pass/32 files/13.83s, exit0;
+frontend-reviewed-build.log/.exit build/typecheck exit0, incumbent chunk warning;
+generated API check exit0, Ruff/diff green. UI detector returns[]/exit0. Browser
+desktop/mobile fixture screenshots inspect neutral closed coverage and separate
+source failure, including wrapped mobile source/age. These are explicitly
+LOCAL_UI_FIXTURE_ONLY, never current AWS/vendor evidence. One transient HMR blank
+capture was rejected and replaced by loaded ui-cockpit-mobile-final.png. Local
+dev shared-node_modules fonts hit Vite allow-list warnings; clean build/real
+deployment typography and source UI acceptance still require final gate. Owned
+browser/dev server were stopped, original OpenD/helper/tunnel untouched.
+
+### Further reviewed subsystem handoffs
+
+#132 session01a130b3-06db-70a2-a723-60164835fff8 recovered existing b36a552 into
+7b450b1/0b7ac9b/6bfe279 on codex/0132-gate-recovery-0038. No duplicate framework
+or legacy dirty observer changes imported. Focused193 pass/2 skip/25.90s and
+FAST466 pass/2 skip/22.28s; top-level24.15s, exit0. Two independent rounds end
+without remaining Spec/Standards findings. Evidence is in its actual worktree
+.superpowers/sdd/gate-recovery/review-green.log and owned-final-fast-logs/.
+Root must sequentially integrate and run one final combined clean-checkout gate;
+this diagnostic does not certify a release. Session stopped.
+
+#169 Task2 source191975a pins official10.10.7008 Ubuntu archive (466932458bytes,
+SHA72eaa6e47b5cb8905306427b5e3679d591408243492e3e7acbc3a7d46f09a0aa) and
+CLI executable e05b901dbe9107061b954a7fe3c059916c4a1e580d8f0a57277d402438898601.
+Blocked candidate is loopback11112/dedicated identity/private TTY, no auto-login,
+automatic restart, auto-grab or inherited Windows state. One bounded review P2
+missing actual XML-byte admission reproduces6RED;27GREEN/0.08s follows exact
+configuration digest enforcement. No vendored binary or dependency admitted.
+Local fresh-home/network-namespace help execution does not prove server startup;
+Linux SDK handshake, private terminal safety, actual server and human login remain
+blocked. Require proprietary vendor distribution terms and applicable human
+infra review before install. Existing11111 remains intact; PC independence is
+not achieved by package download/profile tests. Session stopped at handoff.

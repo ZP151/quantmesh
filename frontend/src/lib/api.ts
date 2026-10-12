@@ -408,6 +408,7 @@ export interface LiveContinuityEvidence {
 }
 
 export interface LiveView {
+  session_freshness?: SessionFreshness
   kind: LiveKind
   provenance: string
   data_time: string
@@ -425,6 +426,7 @@ export interface LiveView {
 }
 
 export interface LiveInstrumentState {
+  session_freshness?: SessionFreshness
   venue: string
   instrument: string
   label: LiveLabel
@@ -440,6 +442,7 @@ export interface LiveState {
 }
 
 export interface LiveSource {
+  session_freshness?: SessionFreshness
   instrument: string
   state: LiveSourceState
   note: string | null
@@ -458,6 +461,9 @@ export interface LiveStatus {
   generated_at: string
   venues: LiveVenueStatus[]
 }
+
+/** Server calendar evidence; never changes quote/order authority. */
+export type SessionFreshness = DeepReadonly<components['schemas']['SessionFreshness']>
 
 // --- Phase E (iteration 0015): the prediction comparison surface --------
 

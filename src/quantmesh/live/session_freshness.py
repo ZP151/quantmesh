@@ -22,6 +22,7 @@ class SessionFreshness(BaseModel):
     market_state: Literal["open", "closed", "unknown"]
     data_state: Literal["fresh", "latest_session", "delayed", "missing", "unknown"]
     last_source_at: datetime | None
+    evaluated_at: datetime | None = None
     expected_last_bar_end: datetime | None = None
     next_open_at: datetime | None = None
     calendar_version: str | None = None
@@ -65,6 +66,7 @@ def evaluate_session_freshness(
         market_state="unknown",
         data_state="unknown",
         last_source_at=last_source_time,
+        evaluated_at=now,
         reason="unknown_calendar_or_policy",
         provider_delay_seconds=provider_delay_seconds,
         opening_grace_seconds=opening_grace_seconds,

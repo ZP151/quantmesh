@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'react-router-dom'
 
 import { WorkspaceLoading } from '@/components/workspace-loading'
+import { liveDataPresentation } from '@/components/live-data-badge'
 import {
   ApiError,
   api,
@@ -11,7 +12,7 @@ import {
   type HistoryRange,
   type MarketUpdate,
 } from '@/lib/api'
-import { useLiveConnection } from '@/lib/live'
+import { isSourceBacked, useLiveConnection } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
 import { WorkspaceHeader } from './instrument/WorkspaceHeader'
 import { CockpitDetailScreen } from './CockpitDetail'
@@ -319,7 +320,12 @@ function LegacyInstrumentWorkspaceScreen() {
         </p>
       )}
       {workspace.live.status !== 'available' && (
-        <WorkspaceDegraded rawReason={liveReasonRaw} reason={liveReason} isStale={workspace.live.label === 'stale'} />
+        <WorkspaceDegraded rawReason={liveReasonRaw} reason={liveReason}
+          isStale={workspace.live.label === 'stale'
+            && liveDataPresentation(workspace.live.session_freshness, 'stale', Date.now(),
+              isSourceBacked(workspace.live.provenance)
+                || (workspace.live.provenance === null && workspace.live.session_freshness?.last_source_at != null))
+              .key !== 'live.session.closedLatest'} />
       )}
       {qualityWarnings.length > 0 && (
         <section

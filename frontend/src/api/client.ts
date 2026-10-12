@@ -3275,6 +3275,43 @@ export interface components {
              */
             threshold_state: "observed" | "not_observed" | "unavailable";
         };
+        /** SessionFreshness */
+        SessionFreshness: {
+            /** Calendar Version */
+            calendar_version?: string | null;
+            /**
+             * Data State
+             * @enum {string}
+             */
+            data_state: "fresh" | "latest_session" | "delayed" | "missing" | "unknown";
+            /** Evaluated At */
+            evaluated_at?: string | null;
+            /** Expected Last Bar End */
+            expected_last_bar_end?: string | null;
+            /** Last Source At */
+            last_source_at: string | null;
+            /**
+             * Market State
+             * @enum {string}
+             */
+            market_state: "open" | "closed" | "unknown";
+            /** Next Open At */
+            next_open_at?: string | null;
+            /**
+             * Opening Grace Seconds
+             * @default 120
+             */
+            opening_grace_seconds: number;
+            /**
+             * Policy Version
+             * @default quantmesh:session-freshness:1
+             */
+            policy_version: string;
+            /** Provider Delay Seconds */
+            provider_delay_seconds?: number | null;
+            /** Reason */
+            reason: string;
+        };
         /**
          * SessionPolicy
          * @description Trading-session boundaries admitted by a calendar request.
@@ -3448,6 +3485,7 @@ export interface components {
             sequence?: number | null;
             /** Sequence Gap */
             sequence_gap?: boolean | null;
+            session_freshness?: components["schemas"]["SessionFreshness"] | null;
             /** Source */
             source?: string | null;
             /**

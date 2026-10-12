@@ -37,6 +37,41 @@ for (const [name, Component] of [['Markets', MarketsScreen], ['Watchlist', Watch
     render(<QueryClientProvider client={client}><PreferencesProvider><MemoryRouter><Component /></MemoryRouter></PreferencesProvider></QueryClientProvider>)
   }
 
+  it.each([['real', false], ['delayed', false], ['real', true]] as const)(`${name} shows covered closed-session %s data with source-down=%s`, async (provenance, sourceDown) => {
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-11T12:00:00Z'))
+    try {
+      const coverage = {
+        market_state: 'closed' as const, data_state: 'latest_session' as const,
+        last_source_at: '2026-10-09T20:00:00Z', expected_last_bar_end: '2026-10-09T20:00:00Z',
+        next_open_at: '2026-10-12T13:30:00Z', calendar_version: 'exchange-calendars:4.13.2:XNYS',
+        reason: 'closed_latest_session_covered_without_latency_assumption',
+        policy_version: 'quantmesh:session-freshness:1', provider_delay_seconds: null,
+        opening_grace_seconds: 120,
+      }
+      vi.mocked(api.markets).mockResolvedValue({ instruments: [{ venue: 'moomoo', symbol: 'AAPL', mark: null }] })
+      vi.mocked(api.liveState).mockResolvedValue({ generated_at: '2026-10-11T12:00:00Z', instruments: {
+        'moomoo:AAPL': { venue: 'moomoo', instrument: 'AAPL', label: 'stale',
+          ...{ session_freshness: coverage }, kinds: { ...(sourceDown ? { status: {
+            kind: 'status' as const, provenance: 'real', data_time: '2026-10-11T12:00:00Z',
+            received_at: '2026-10-11T12:00:00Z', age_ms: 0, sequence: null,
+            sequence_gap: false, label: 'unavailable' as const, payload: {},
+          } } : {}), metrics: {
+            kind: 'metrics', provenance, data_time: '2026-10-09T20:00:00Z',
+            received_at: '2026-10-09T20:00:01Z', age_ms: 172800000, sequence: null,
+            sequence_gap: false, label: 'stale', payload: { last: 300 },
+          } } },
+      } })
+      renderSurface()
+      const row = (await screen.findByRole('link', { name: 'AAPL' })).closest('tr')!
+      await waitFor(() => expect(within(row).getByText('Market closed · Last session')).toBeInTheDocument())
+      expect(within(row).queryByText('Stale')).not.toBeInTheDocument()
+      expect(within(row).queryByText('Real')).not.toBeInTheDocument()
+      expect(within(row).getByText('$300.00')).toBeInTheDocument()
+      expect(row.querySelector('time')).toHaveAttribute('datetime', '2026-10-09T20:00:00Z')
+      if (sourceDown) expect(within(row).getByText('Source unavailable')).toBeInTheDocument()
+    } finally { clock.mockRestore() }
+  })
+
   it(`${name} displays metrics-only equity last prices with their source clock and follows updates`, async () => {
     vi.mocked(api.markets).mockResolvedValue({ instruments: ['AAPL', 'NVDA'].map(symbol => ({ venue: 'moomoo', symbol, mark: null })) })
     vi.mocked(api.liveState).mockResolvedValue({ generated_at: at, instruments: Object.fromEntries(['AAPL', 'NVDA'].map(symbol => [`moomoo:${symbol}`, {

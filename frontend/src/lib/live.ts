@@ -16,6 +16,7 @@ import type {
   LiveLabel,
   LiveView,
   MarketUpdate,
+  SessionFreshness,
 } from '@/lib/api'
 import type { MessageKey } from '@/lib/messages'
 
@@ -109,6 +110,23 @@ function newestView(current: LiveView | undefined, candidate: LiveView): LiveVie
   return liveViewInstant(candidate) >= liveViewInstant(current) ? candidate : current
 }
 
+function retainedSessionCoverage(
+  previous: SessionFreshness | undefined,
+  incoming: Record<string, LiveView>,
+): SessionFreshness | undefined {
+  if (!previous) return
+  const end = Date.parse(previous.expected_last_bar_end ?? '')
+  const data = Object.values(incoming).filter(view => view.kind !== 'status')
+  if (data.length === 0 || previous.data_state === 'unknown') return previous
+  if (previous.market_state === 'closed' && previous.data_state === 'latest_session'
+    && Number.isFinite(end) && data.every(view => isSourceBacked(view.provenance)
+    && Number.isFinite(Date.parse(view.data_time)) && Date.parse(view.data_time) <= end + 1000)) {
+    return previous
+  }
+  return { ...previous, market_state: 'unknown', data_state: 'unknown',
+    reason: 'client_policy_refresh_required' }
+}
+
 export function reconcileInstrumentState(
   previous: LiveInstrumentState | undefined,
   incoming: LiveInstrumentState,
@@ -134,6 +152,8 @@ export function reconcileInstrumentState(
     label: incoming.label,
     kinds,
     book_sides,
+    session_freshness: incoming.session_freshness
+      ?? retainedSessionCoverage(previous.session_freshness, incoming.kinds),
   }
   reconciled.label = instrumentLabel(reconciled)
   return reconciled
@@ -143,6 +163,10 @@ export function dataViews(instrument: LiveInstrumentState): LiveView[] {
   return DATA_KINDS.filter((kind) => kind in instrument.kinds)
     .map((kind) => instrument.kinds[kind])
     .sort((a, b) => LABEL_RANK[a.label] - LABEL_RANK[b.label])
+}
+
+export function isSourceBacked(provenance: string | null | undefined): boolean {
+  return provenance === 'real' || provenance === 'delayed'
 }
 
 /** The instrument badge: the most degraded data kind's label. */

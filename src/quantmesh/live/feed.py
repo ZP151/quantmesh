@@ -45,7 +45,7 @@ from quantmesh.live.contract import (
     SourceState,
     UpdateKind,
 )
-from quantmesh.live.session_freshness import evaluate_session_freshness
+from quantmesh.live.session_freshness import SessionFreshness, evaluate_session_freshness
 from quantmesh.live.supervisor import VenueSupervisor
 
 _POLL_SECONDS = 0.05  # supervisor outbox poll cadence (drain loop)
@@ -561,6 +561,24 @@ class LiveFeed:
         return {
             key: self._session_view(*key, update, now, completed) for key, update in grouped.items()
         }
+
+    def session_coverage(
+        self, venue: Venue, instrument: str, *, now: datetime | None = None
+    ) -> SessionFreshness:
+        """Read-only exact chart coverage, independent from executable quote evidence."""
+        now = now if now is not None else datetime.now(UTC)
+        identity = (venue.value, instrument)
+        with self._lock:
+            completed = {identity: self._session_candles.get(identity)}
+            latest = [
+                (key, update.model_copy(deep=True))
+                for key, update in self._latest.items()
+                if key[:2] == identity
+            ]
+        summary = self._session_summaries(latest, now, completed).get(identity)
+        return SessionFreshness.model_validate(
+            summary or self._session_view(*identity, None, now, completed)
+        )
 
     def latest_state(self, *, now: datetime | None = None) -> dict[str, object]:
         """One entry per venue/instrument identity with latest views by kind.
