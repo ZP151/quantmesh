@@ -1,0 +1,9 @@
+gpg: keybox '/var/tmp/quantmesh-backup-gnel0hd8/gnupg/pubring.kbx' created
+gpg: key 141138DDA3E45D66: 192 signatures not checked due to missing keys
+gpg: /var/tmp/quantmesh-backup-gnel0hd8/gnupg/trustdb.gpg: trustdb created
+gpg: key 141138DDA3E45D66: public key "Alexander Neumann <alexander@lochraster.org>" imported
+gpg: key 91A6868BD3F7A907: 6 signatures not checked due to missing keys
+gpg: key 91A6868BD3F7A907: public key "Alexander Neumann <alexander@bumpern.de>" imported
+gpg: Total number processed: 2
+gpg:               imported: 2
+gpg: no ultimately trusted keys found

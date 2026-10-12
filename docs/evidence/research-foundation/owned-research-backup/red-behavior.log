@@ -1,0 +1,76 @@
+.........F....FF............                                             [100%]
+=================================== FAILURES ===================================
+_______ test_default_cli_preflight_has_no_database_repository_or_output ________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/red-behavior-temp/test_default_cli_preflight_has0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72c6ab27f050>
+capsys = <_pytest.capture.CaptureFixture object at 0x72c6ab27f110>
+
+    def test_default_cli_preflight_has_no_database_repository_or_output(tmp_path, monkeypatch, capsys):
+        profile = tmp_path / "profile.json"
+        profile.write_text("{}")
+        stub = SimpleNamespace(root=tmp_path, expected_build="a" * 40)
+        monkeypatch.setattr(backup.Profile, "from_mapping", lambda raw: stub)
+    
+        def forbidden(*args, **kwargs):
+            pytest.fail("preflight side effect")
+    
+        monkeypatch.setattr(backup, "run_fixture", forbidden)
+        monkeypatch.setattr(backup, "admit_runtime", lambda p: {"actual_build": p.expected_build})
+        output = tmp_path / "not-created"
+>       assert backup.main(["--profile", str(profile), "--output", str(output)]) == 0
+E       AssertionError: assert 2 == 0
+E        +  where 2 = <function main at 0x72c6ab2f2340>(['--profile', '/var/tmp/quantmesh-backup-gnel0hd8/red-behavior-temp/test_default_cli_preflight_has0/profile.json', '--output', '/var/tmp/quantmesh-backup-gnel0hd8/red-behavior-temp/test_default_cli_preflight_has0/not-created'])
+E        +    where <function main at 0x72c6ab2f2340> = backup.main
+
+tests/test_research_backup_qualification.py:39: AssertionError
+______________ test_private_reader_refuses_links_hardlinks_modes _______________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/red-behavior-temp/test_private_reader_refuses_li0')
+
+    def test_private_reader_refuses_links_hardlinks_modes(tmp_path):
+        import os
+        import sys
+    
+        if sys.platform != "linux":
+            pytest.skip("native permission refusal")
+        tmp_path.chmod(0o700)
+        path = tmp_path / "file"
+        backup.write_private(path, b"data")
+>       assert backup.read_owned(tmp_path, path) == b"data"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_research_backup_qualification.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/red-behavior-temp/test_private_reader_refuses_li0'), PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/red-behavior-temp/test_private_reader_refuses_li0/file'))
+
+    def read_owned(*args):
+>       raise ValueError("not implemented")
+E       ValueError: not implemented
+
+tools/qualify_research_backup.py:39: ValueError
+_______________ test_exact_nonempty_manifest_and_bytes_validate ________________
+
+bundle = (PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/red-behavior-temp/test_exact_nonempty_manifest_a0/payload'), {'schema_v...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+
+    def test_exact_nonempty_manifest_and_bytes_validate(bundle):
+        root, manifest, anchor = bundle
+>       assert backup.validate_bundle(root, anchor) == manifest
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_research_backup_qualification.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/red-behavior-temp/test_exact_nonempty_manifest_a0/payload'), 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+
+    def validate_bundle(*args):
+>       raise ValueError("not implemented")
+E       ValueError: not implemented
+
+tools/qualify_research_backup.py:43: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_research_backup_qualification.py::test_default_cli_preflight_has_no_database_repository_or_output
+FAILED tests/test_research_backup_qualification.py::test_private_reader_refuses_links_hardlinks_modes
+FAILED tests/test_research_backup_qualification.py::test_exact_nonempty_manifest_and_bytes_validate
+3 failed, 25 passed in 1.74s

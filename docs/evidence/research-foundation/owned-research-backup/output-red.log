@@ -1,0 +1,39 @@
+............................FF                                           [100%]
+=================================== FAILURES ===================================
+________ test_command_output_bound_does_not_limit_owned_database_files _________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/output-red-temp/test_command_output_bound_does0')
+
+    def test_command_output_bound_does_not_limit_owned_database_files(tmp_path):
+        import sys
+    
+        if sys.platform != "linux":
+            pytest.skip("native bounded subprocess")
+        data = tmp_path / "wal"
+        program = "import pathlib; pathlib.Path('wal').write_bytes(b'x' * 16777216); print('ok')"
+>       code, raw = backup.bounded_process([sys.executable, "-c", program], {}, tmp_path, 10)
+                    ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'tools.qualify_research_backup' has no attribute 'bounded_process'
+
+tests/test_research_backup_qualification.py:191: AttributeError
+____________ test_bounded_command_refuses_output_flood_and_timeout _____________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/output-red-temp/test_bounded_command_refuses_o0')
+
+    def test_bounded_command_refuses_output_flood_and_timeout(tmp_path):
+        import sys
+    
+        if sys.platform != "linux":
+            pytest.skip("native bounded subprocess")
+        for program, deadline in [("import time; time.sleep(2)", 0.05),
+                                   ("import os; os.write(1,b'x'*3000000)", 5)]:
+            with pytest.raises(ValueError):
+>               backup.bounded_process([sys.executable, "-c", program], {}, tmp_path, deadline)
+                ^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: module 'tools.qualify_research_backup' has no attribute 'bounded_process'
+
+tests/test_research_backup_qualification.py:204: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_research_backup_qualification.py::test_command_output_bound_does_not_limit_owned_database_files
+FAILED tests/test_research_backup_qualification.py::test_bounded_command_refuses_output_flood_and_timeout
+2 failed, 28 passed in 1.64s

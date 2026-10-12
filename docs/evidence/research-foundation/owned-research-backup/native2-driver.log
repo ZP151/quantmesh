@@ -1,0 +1,8 @@
+From /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/output/171-owned-backup/source2.bundle
+ * branch            HEAD       -> FETCH_HEAD
+Previous HEAD position was 431000f feat: qualify owned local encrypted research backup and recovery
+HEAD is now at 1f97102 fix: bound backup tool output without capping PostgreSQL WAL
+{"log": "1f9710266ee5-native-tests.log", "exit": 0}
+{"log": "1f9710266ee5-preflight.log", "exit": 0}
+{"log": "1f9710266ee5-fixture.log", "exit": 2}
+{"passed": false, "negatives": {"wrong_key": {"refused": true, "source_unchanged": true}}, "clusters": [{"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-1f9710266ee5/restore/data", "pid": 2277, "start_ticks": "105203", "stopped": true, "system_id": "7695914431095507168"}, {"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-1f9710266ee5/sibling/data", "pid": 1795, "start_ticks": "104582", "stopped": true, "system_id": "7695914404462503678"}, {"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-1f9710266ee5/source/data", "pid": 1770, "start_ticks": "104526", "stopped": true, "system_id": "7695914402026923749"}]}

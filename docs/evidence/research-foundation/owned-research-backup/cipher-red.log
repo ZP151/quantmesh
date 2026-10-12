@@ -1,0 +1,25 @@
+..............................F.                                         [100%]
+=================================== FAILURES ===================================
+_________________ test_only_new_corrupt_copy_is_made_writable __________________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/cipher-red-temp/test_only_new_corrupt_copy_is_0')
+
+    def test_only_new_corrupt_copy_is_made_writable(tmp_path):
+        import sys
+    
+        if sys.platform != "linux":
+            pytest.skip("native encrypted pack permissions")
+        repo = tmp_path / "repository"
+        (repo / "data" / "ab").mkdir(parents=True)
+        pack = repo / "data" / "ab" / ("a" * 64)
+        pack.write_bytes(b"ciphertext")
+        pack.chmod(0o444)
+        before = pack.read_bytes()
+>       clone, changed = backup.corrupt_copy(tmp_path, repo)
+                         ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'tools.qualify_research_backup' has no attribute 'corrupt_copy'
+
+tests/test_research_backup_qualification.py:220: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_research_backup_qualification.py::test_only_new_corrupt_copy_is_made_writable
+1 failed, 31 passed in 1.78s

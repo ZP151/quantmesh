@@ -1,0 +1,6 @@
+From /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/output/171-owned-backup/source2.bundle
+ * branch              HEAD       -> FETCH_HEAD
+Previous HEAD position was 3b3c2b72 fix: fail closed on backup attribution and lifecycle bounds
+HEAD is now at 349d9695 fix: register owned backup children before deadline interruption
+{"log": "349d9695fd80-native-tests.log", "exit": 0}
+{"log": "349d9695fd80-preflight.log", "exit": 2}

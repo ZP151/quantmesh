@@ -1,0 +1,19 @@
+# Owned research backup review — round 1
+
+Candidate: `cfad34dced214343e29eec50132f0f9cc0b55f8a`. Compared `0503d49a51fdd20b08c809f4289092fbac01ebf9...HEAD`; exactly the three permitted additions. Read-only review; no native resource operations or new executions.
+
+## Spec
+
+- **P2 — Infrastructure failures count as genuine negative witnesses** (`tools/qualify_research_backup.py:794–802`, callers at 950–967). `expect_failure` accepts any `ValueError`/`OSError` from an action. Thus a missing key, changed binary pin, command output cap, command deadline, or cleanup-identity refusal inside `restic()` becomes a successful wrong-key/corrupt-cipher witness even without the required actual exit 12/1. This contradicts the plan's “actual negative witnesses” requirement. Catch a dedicated expected-refusal exception emitted only after validating the actual tool exit and corresponding error evidence; propagate execution/admission/ownership failures. Add tests showing those failures cannot populate a successful witness. The current raw proof really does contain wrong-password exit 12 and ciphertext-verification exit 1; this finding concerns future false qualification, not this observed run.
+
+- **P2 — The promised whole-fixture bound is not enforced across all work** (`tools/qualify_research_backup.py:421–440`, `515–524`, `973–1039`). The 240-second deadline is checked only at external-command dispatch/startup. Following the final `pg_restore`, SQL negative validation, reference/file work and success publication can continue past it; `passed=true` has no final deadline guard. The long-lived PostgreSQL processes also write directly to `postgres.log`, bypassing the 2 MiB output cap. Enforce a fixture-level deadline through non-command stages, fail before success publication when it expires, and bound/drain server logs independently of WAL/data files. Add targeted expired-deadline/server-log tests. This implements the plan's bounded “overall witness,” rather than inferring it from the observed 11.673 seconds.
+
+Observed acceptance: actual nonempty snapshot (three jobs, one labelled report), encrypted restore after source advancement, anchored dump/manifest/bytes, six negative witnesses, unchanged advanced source, effect/idempotency replay, sibling survival and four stopped owned clusters. Default preflight exits 0 without output/DB/repository creation. Audit/signature/license admission precedes restic. No production/off-host/real Worker qualification is claimed.
+
+## Standards
+
+- **P2 — Failed cluster startup can retain the private password input** (`tools/qualify_research_backup.py:514–526`, `553–557`, `1019–1035`). `pgpass` is created before `Popen` and before the guarded startup block. If spawning fails, the cluster is never appended to the fixture cleanup list, and its `pgpass` survives. If guarded startup cleanup itself refuses ownership, `stop()` likewise raises before unlinking `pgpass`; the unreturned cluster cannot be retried by outer cleanup. Put secret-input removal in a startup-failure `finally` independent of process-stop authorization, while preserving refused process identity and pending cleanup evidence. Add refusal tests proving no signal is issued and the temporary credential file is removed. The plan explicitly requires secret input files removed.
+
+Minor notes: retained RED/GREEN logs and the fresh native 32/32 test result support targeted TDD. Scope and trading invariants are respected; upstream assets remain outside Git and license provenance is pinned. Admission tests currently exercise missing evidence, not distinct wrong signature/notice/pin cases; strengthen them alongside the failure-attribution tests. Root still owns durable iteration integration and final gates.
+
+Totals: Spec 2 P2 findings; Standards 1 P2 finding. No P1 findings.

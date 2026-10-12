@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/output/171-owned-backup/native_gate.py", line 17, in <module>
+    runtime=b.admit_runtime(profile)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/tmp/quantmesh-backup-gnel0hd8/checkout/tools/qualify_research_backup.py", line 267, in admit_runtime
+    actual, lock = _admit_runtime(profile.expected_build)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/tmp/quantmesh-backup-gnel0hd8/checkout/services/research_agent/src/qm_research_agent/runtime.py", line 415, in _admit_runtime
+    raise RuntimeRejected("runtime_unqualified") from None
+qm_research_agent.runtime.RuntimeRejected: runtime_unqualified

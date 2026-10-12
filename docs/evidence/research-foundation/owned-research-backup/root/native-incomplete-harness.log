@@ -1,0 +1,127 @@
+.......................................FFF...                            [100%]
+=================================== FAILURES ===================================
+__________ test_failed_server_spawn_removes_generated_private_inputs ___________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-root-backup-tests-aw52bi20/pytest/test_failed_server_spawn_remov0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d5d24476090>
+
+    def test_failed_server_spawn_removes_generated_private_inputs(tmp_path, monkeypatch):
+        import time
+    
+        def initdb(tool, argv):
+            Path(argv[1]).mkdir()
+    
+        commands = SimpleNamespace(
+            root=tmp_path, output=tmp_path, run=initdb, deadline=time.monotonic() + 10
+        )
+    
+        def fail(*args, **kwargs):
+            raise OSError("synthetic spawn refusal")
+    
+        monkeypatch.setattr(backup.subprocess, "Popen", fail)
+        with pytest.raises(OSError):
+>           backup.Cluster.start(commands, "new-cluster")
+
+tests/test_research_backup_qualification.py:345: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'tools.qualify_research_backup.Cluster'>
+commands = namespace(root=PosixPath('/var/tmp/quantmesh-root-backup-tests-aw52bi20/pytest/test_failed_server_spawn_remov0'), outp... test_failed_server_spawn_removes_generated_private_inputs.<locals>.initdb at 0x7d5d23ed6160>, deadline=3345.821261767)
+name = 'new-cluster'
+
+    @classmethod
+    def start(cls, commands, name):
+>       from tools.qualify_owned_postgres import verify_process_identity
+E       ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+tools/qualify_research_backup.py:601: ModuleNotFoundError
+_________ test_kernel_identity_failure_keeps_spawned_handle_registered _________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-root-backup-tests-aw52bi20/pytest/test_kernel_identity_failure_k0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d5d244770e0>
+
+    def test_kernel_identity_failure_keeps_spawned_handle_registered(tmp_path, monkeypatch):
+        process = SimpleNamespace(
+            pid=123456,
+            poll=lambda: None,
+            send_signal=lambda _: pytest.fail("unknown start cannot authorize stop"),
+        )
+    
+        def initdb(tool, argv):
+            Path(argv[1]).mkdir()
+    
+        commands = SimpleNamespace(root=tmp_path, output=tmp_path, run=initdb, clusters=[])
+        monkeypatch.setattr(backup.subprocess, "Popen", lambda *a, **k: process)
+    
+        def unknown(pid):
+            raise OSError("kernel identity unavailable")
+    
+        monkeypatch.setattr(backup, "process_ticks", unknown)
+        with pytest.raises((OSError, ValueError)):
+>           backup.Cluster.start(commands, "pending-start")
+
+tests/test_research_backup_qualification.py:368: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'tools.qualify_research_backup.Cluster'>
+commands = namespace(root=PosixPath('/var/tmp/quantmesh-root-backup-tests-aw52bi20/pytest/test_kernel_identity_failure_k0'), outp...<function test_kernel_identity_failure_keeps_spawned_handle_registered.<locals>.initdb at 0x7d5d24507100>, clusters=[])
+name = 'pending-start'
+
+    @classmethod
+    def start(cls, commands, name):
+>       from tools.qualify_owned_postgres import verify_process_identity
+E       ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+tools/qualify_research_backup.py:601: ModuleNotFoundError
+________ test_deadline_interrupt_waits_for_process_handle_registration _________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-root-backup-tests-aw52bi20/pytest/test_deadline_interrupt_waits_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d5d24477da0>
+
+    def test_deadline_interrupt_waits_for_process_handle_registration(tmp_path, monkeypatch):
+        import os
+        import signal
+        import sys
+    
+        if sys.platform != "linux":
+            pytest.skip("native owned process timer")
+        commands = backup.Commands(tmp_path, tmp_path)
+        commands.run = lambda tool, argv: Path(argv[1]).mkdir()
+        process = SimpleNamespace(pid=123456, poll=lambda: None)
+        monkeypatch.setattr(backup.subprocess, "Popen", lambda *a, **k: process)
+    
+        def interrupted(pid):
+            os.kill(os.getpid(), signal.SIGALRM)
+            return "known-ticks"
+    
+        monkeypatch.setattr(backup, "process_ticks", interrupted)
+        stopped = []
+    
+        def stop(cluster):
+            assert commands.clusters == [cluster]
+            stopped.append(cluster.process)
+    
+        monkeypatch.setattr(backup.Cluster, "stop", stop)
+        commands.guard = backup.FixtureDeadline(1, defer=lambda: commands.registering)
+        try:
+            with pytest.raises(ValueError):
+>               backup.Cluster.start(commands, "deadline-start")
+
+tests/test_research_backup_qualification.py:400: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'tools.qualify_research_backup.Cluster'>
+commands = <tools.qualify_research_backup.Commands object at 0x7d5d244779b0>
+name = 'deadline-start'
+
+    @classmethod
+    def start(cls, commands, name):
+>       from tools.qualify_owned_postgres import verify_process_identity
+E       ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+tools/qualify_research_backup.py:601: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_research_backup_qualification.py::test_failed_server_spawn_removes_generated_private_inputs
+FAILED tests/test_research_backup_qualification.py::test_kernel_identity_failure_keeps_spawned_handle_registered
+FAILED tests/test_research_backup_qualification.py::test_deadline_interrupt_waits_for_process_handle_registration
+3 failed, 42 passed in 0.36s

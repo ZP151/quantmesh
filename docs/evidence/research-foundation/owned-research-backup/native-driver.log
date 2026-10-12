@@ -1,0 +1,8 @@
+Cloning into '/var/tmp/quantmesh-backup-gnel0hd8/checkout'...
+From /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/output/171-owned-backup/source.bundle
+ * branch            HEAD       -> FETCH_HEAD
+HEAD is now at 431000f feat: qualify owned local encrypted research backup and recovery
+{"log": "431000f46525-native-tests.log", "exit": 0}
+{"log": "431000f46525-preflight.log", "exit": 0}
+{"log": "431000f46525-fixture.log", "exit": 2}
+{"passed": false, "negatives": {}, "clusters": []}

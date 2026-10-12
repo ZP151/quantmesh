@@ -83,3 +83,25 @@ This record does not approve deployment, model calls, dependency admission,
 real-data performance or final schema compatibility. Schema/protocol digests,
 review results, final tests and actual user-loop evidence are recorded in
 iteration0038 before changing this ADR's status to accepted.
+
+## Snapshot consistency decision — 2026-10-13
+
+Research recovery pairs captured tables and pg_dump through one exported
+read-only repeatable-read PostgreSQL snapshot. After that snapshot is captured,
+only its referenced immutable job-owned artifact bytes enter a SHA/size manifest.
+Dump, schema/protocol, artifact ownership and complete reference-set validation
+precede external restic encryption/check and publication of a backup receipt.
+A restore targets a new isolated cluster/artifact root and must match captured
+SQL/bytes even when source jobs advance afterward. Infrastructure failures do
+not count as intentional corruption/key/schema refusals.
+
+The new owned-local qualifier proves this rule on genuine PG18.6/restic0.19.1
+and explicitly synthetic contract reports. It refuses arbitrary existing DSNs,
+repositories or restore targets. The frozen candidate's source admission is
+purposefully narrower than a general production backup utility; do not widen
+its baseline to manufacture qualification of a later integration tree.
+Production/off-host execution, vault custody and actual Worker-generated report
+recovery need their own reviewed adapter/profile and observed acceptance.
+Local proof does not promote host redundancy, numerical research or model
+authority. Exact receipts and review disposition are in iteration0038 and
+docs/evidence/research-foundation/owned-research-backup.

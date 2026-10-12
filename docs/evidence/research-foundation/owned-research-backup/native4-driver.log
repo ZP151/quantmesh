@@ -1,0 +1,8 @@
+From /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/output/171-owned-backup/source2.bundle
+ * branch            HEAD       -> FETCH_HEAD
+Previous HEAD position was cfad34dc fix: corrupt only a fresh encrypted repository copy
+HEAD is now at 3b3c2b72 fix: fail closed on backup attribution and lifecycle bounds
+{"log": "3b3c2b72eb30-native-tests.log", "exit": 0}
+{"log": "3b3c2b72eb30-preflight.log", "exit": 0}
+{"log": "3b3c2b72eb30-fixture.log", "exit": 0}
+{"passed": true, "negatives": {"corrupt_cipher_copy": {"refused": true, "source_unchanged": true}, "missing_artifact": {"refused": true, "source_unchanged": true}, "substituted_artifact": {"refused": true, "source_unchanged": true}, "substituted_manifest": {"refused": true, "source_unchanged": true}, "unknown_schema": {"refused": true, "source_unchanged": true}, "wrong_key": {"refused": true, "source_unchanged": true}}, "clusters": [{"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-3b3c2b72eb30/unknown-schema-cluster/data", "pid": 4812, "start_ticks": "156281", "stopped": true, "system_id": "7695916623727858375"}, {"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-3b3c2b72eb30/restore/data", "pid": 4734, "start_ticks": "156050", "stopped": true, "system_id": "7695916613718131321"}, {"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-3b3c2b72eb30/sibling/data", "pid": 4251, "start_ticks": "155386", "stopped": true, "system_id": "7695916585625940118"}, {"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-3b3c2b72eb30/source/data", "pid": 4225, "start_ticks": "155309", "stopped": true, "system_id": "7695916581160738940"}]}

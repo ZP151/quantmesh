@@ -1,5 +1,20 @@
 # Active Goal
 
+Latest accepted backup#171: a391 completed/idle4fceaf21af3fbe513fc1b02b210d2305112bfca7;
+sixleafcommits integrated7bbe883/6f6cef3/a77ec77/516d2c3/90ebec1/6e25532.
+Root2dd5f4a onlyclassifiesLinuxdescriptor tests: Windows23pass/22native skips,
+freshnative45pass/0skip; originalWindows11fail and incompleteharness3fail remain
+rawfailures. Qualifier/runbook byteequalcandidate; sharedprod/store/gate/locks
+unchanged. Actual10.011s PG/restic proof:3captured jobs/257bytefixture report,
+sourceadvances4, restoreexactcapturedSQL/report/manifest/dump;6attributednegatives,
+4clusters/17commands closed,23knownPIDsabsent, sibling/privateinputs verified.
+Originalservice85/0skip/81licences green, externalrestic79modules/98notices/
+950entryaudit verified.198selectedrawstreams/SHA archivedowned-research-backup;
+fullignored output/nativeassets leftintact. Round2 sameP2bothbranches disposition
+closed at4fce, genuinechildRED/GREEN, no thirdreview. ScopeLOCALfixtureonly,
+productionfalse; offhost/realWorker/model/p95/CI/human/deployremainpending.
+Onlyprivate-terminal2088 implementation remainsACTIVE; do notredispatchbackup.
+
 Coordinator workspace recoveryOct13: original6e1e no longer has .git/tracked
 docs and is absent from actual gitworktreelist; remainingignored files are left
 untouched, causeunknown. Exact pushed5788cf7 exists on sharedGit integrationbranch.

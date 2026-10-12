@@ -1,0 +1,688 @@
+.............ssFFFFFFFFFF.F.sss.....ss...s.ss                            [100%]
+================================== FAILURES ===================================
+_______________ test_exact_nonempty_manifest_and_bytes_validate _______________
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+
+    def test_exact_nonempty_manifest_and_bytes_validate(bundle):
+        root, manifest, anchor = bundle
+>       assert backup.validate_bundle(root, anchor) == manifest
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_research_backup_qualification.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_exact_nonempty_manifest_a0/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_exact_nonempty_manifest_a0/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+______ test_incomplete_or_changed_bundle_cannot_publish_receipt[missing] ______
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+mutation = 'missing'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "missing",
+            "substitution",
+            "manifest",
+            "schema",
+            "protocol",
+            "empty",
+            "ownership",
+            "dump",
+            "extra",
+        ],
+    )
+    def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+        root, manifest, anchor = bundle
+        ref = manifest["artifacts"][0]
+        path = root / "artifacts" / ref["object_key"]
+        if mutation == "missing":
+            path.unlink()
+        elif mutation == "substitution":
+            path.write_bytes(b"substituted")
+        elif mutation == "dump":
+            (root / "research.dump").write_bytes(b"different")
+        elif mutation == "manifest":
+            (root / "manifest.json").write_bytes(b"{}")
+        elif mutation == "extra":
+            backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+        else:
+            if mutation == "schema":
+                manifest["state"]["versions"] = [[999]]
+            elif mutation == "protocol":
+                manifest["protocol_digest"] = "0" * 64
+            elif mutation == "empty":
+                manifest["artifacts"] = []
+            elif mutation == "ownership":
+                ref["job_id"] = "other-job"
+            (root / "manifest.json").write_bytes(backup.canonical(manifest))
+            anchor = backup.digest(root / "manifest.json")
+        with pytest.raises(ValueError):
+>           backup.validate_bundle(root, anchor)
+
+tests\test_research_backup_qualification.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun0/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun0/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+___ test_incomplete_or_changed_bundle_cannot_publish_receipt[substitution] ____
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+mutation = 'substitution'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "missing",
+            "substitution",
+            "manifest",
+            "schema",
+            "protocol",
+            "empty",
+            "ownership",
+            "dump",
+            "extra",
+        ],
+    )
+    def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+        root, manifest, anchor = bundle
+        ref = manifest["artifacts"][0]
+        path = root / "artifacts" / ref["object_key"]
+        if mutation == "missing":
+            path.unlink()
+        elif mutation == "substitution":
+            path.write_bytes(b"substituted")
+        elif mutation == "dump":
+            (root / "research.dump").write_bytes(b"different")
+        elif mutation == "manifest":
+            (root / "manifest.json").write_bytes(b"{}")
+        elif mutation == "extra":
+            backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+        else:
+            if mutation == "schema":
+                manifest["state"]["versions"] = [[999]]
+            elif mutation == "protocol":
+                manifest["protocol_digest"] = "0" * 64
+            elif mutation == "empty":
+                manifest["artifacts"] = []
+            elif mutation == "ownership":
+                ref["job_id"] = "other-job"
+            (root / "manifest.json").write_bytes(backup.canonical(manifest))
+            anchor = backup.digest(root / "manifest.json")
+        with pytest.raises(ValueError):
+>           backup.validate_bundle(root, anchor)
+
+tests\test_research_backup_qualification.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun1/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun1/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+_____ test_incomplete_or_changed_bundle_cannot_publish_receipt[manifest] ______
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+mutation = 'manifest'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "missing",
+            "substitution",
+            "manifest",
+            "schema",
+            "protocol",
+            "empty",
+            "ownership",
+            "dump",
+            "extra",
+        ],
+    )
+    def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+        root, manifest, anchor = bundle
+        ref = manifest["artifacts"][0]
+        path = root / "artifacts" / ref["object_key"]
+        if mutation == "missing":
+            path.unlink()
+        elif mutation == "substitution":
+            path.write_bytes(b"substituted")
+        elif mutation == "dump":
+            (root / "research.dump").write_bytes(b"different")
+        elif mutation == "manifest":
+            (root / "manifest.json").write_bytes(b"{}")
+        elif mutation == "extra":
+            backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+        else:
+            if mutation == "schema":
+                manifest["state"]["versions"] = [[999]]
+            elif mutation == "protocol":
+                manifest["protocol_digest"] = "0" * 64
+            elif mutation == "empty":
+                manifest["artifacts"] = []
+            elif mutation == "ownership":
+                ref["job_id"] = "other-job"
+            (root / "manifest.json").write_bytes(backup.canonical(manifest))
+            anchor = backup.digest(root / "manifest.json")
+        with pytest.raises(ValueError):
+>           backup.validate_bundle(root, anchor)
+
+tests\test_research_backup_qualification.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun2/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun2/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+______ test_incomplete_or_changed_bundle_cannot_publish_receipt[schema] _______
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+mutation = 'schema'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "missing",
+            "substitution",
+            "manifest",
+            "schema",
+            "protocol",
+            "empty",
+            "ownership",
+            "dump",
+            "extra",
+        ],
+    )
+    def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+        root, manifest, anchor = bundle
+        ref = manifest["artifacts"][0]
+        path = root / "artifacts" / ref["object_key"]
+        if mutation == "missing":
+            path.unlink()
+        elif mutation == "substitution":
+            path.write_bytes(b"substituted")
+        elif mutation == "dump":
+            (root / "research.dump").write_bytes(b"different")
+        elif mutation == "manifest":
+            (root / "manifest.json").write_bytes(b"{}")
+        elif mutation == "extra":
+            backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+        else:
+            if mutation == "schema":
+                manifest["state"]["versions"] = [[999]]
+            elif mutation == "protocol":
+                manifest["protocol_digest"] = "0" * 64
+            elif mutation == "empty":
+                manifest["artifacts"] = []
+            elif mutation == "ownership":
+                ref["job_id"] = "other-job"
+            (root / "manifest.json").write_bytes(backup.canonical(manifest))
+            anchor = backup.digest(root / "manifest.json")
+        with pytest.raises(ValueError):
+>           backup.validate_bundle(root, anchor)
+
+tests\test_research_backup_qualification.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun3/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun3/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+_____ test_incomplete_or_changed_bundle_cannot_publish_receipt[protocol] ______
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...000000000', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+mutation = 'protocol'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "missing",
+            "substitution",
+            "manifest",
+            "schema",
+            "protocol",
+            "empty",
+            "ownership",
+            "dump",
+            "extra",
+        ],
+    )
+    def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+        root, manifest, anchor = bundle
+        ref = manifest["artifacts"][0]
+        path = root / "artifacts" / ref["object_key"]
+        if mutation == "missing":
+            path.unlink()
+        elif mutation == "substitution":
+            path.write_bytes(b"substituted")
+        elif mutation == "dump":
+            (root / "research.dump").write_bytes(b"different")
+        elif mutation == "manifest":
+            (root / "manifest.json").write_bytes(b"{}")
+        elif mutation == "extra":
+            backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+        else:
+            if mutation == "schema":
+                manifest["state"]["versions"] = [[999]]
+            elif mutation == "protocol":
+                manifest["protocol_digest"] = "0" * 64
+            elif mutation == "empty":
+                manifest["artifacts"] = []
+            elif mutation == "ownership":
+                ref["job_id"] = "other-job"
+            (root / "manifest.json").write_bytes(backup.canonical(manifest))
+            anchor = backup.digest(root / "manifest.json")
+        with pytest.raises(ValueError):
+>           backup.validate_bundle(root, anchor)
+
+tests\test_research_backup_qualification.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun4/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun4/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+_______ test_incomplete_or_changed_bundle_cannot_publish_receipt[empty] _______
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+mutation = 'empty'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "missing",
+            "substitution",
+            "manifest",
+            "schema",
+            "protocol",
+            "empty",
+            "ownership",
+            "dump",
+            "extra",
+        ],
+    )
+    def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+        root, manifest, anchor = bundle
+        ref = manifest["artifacts"][0]
+        path = root / "artifacts" / ref["object_key"]
+        if mutation == "missing":
+            path.unlink()
+        elif mutation == "substitution":
+            path.write_bytes(b"substituted")
+        elif mutation == "dump":
+            (root / "research.dump").write_bytes(b"different")
+        elif mutation == "manifest":
+            (root / "manifest.json").write_bytes(b"{}")
+        elif mutation == "extra":
+            backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+        else:
+            if mutation == "schema":
+                manifest["state"]["versions"] = [[999]]
+            elif mutation == "protocol":
+                manifest["protocol_digest"] = "0" * 64
+            elif mutation == "empty":
+                manifest["artifacts"] = []
+            elif mutation == "ownership":
+                ref["job_id"] = "other-job"
+            (root / "manifest.json").write_bytes(backup.canonical(manifest))
+            anchor = backup.digest(root / "manifest.json")
+        with pytest.raises(ValueError):
+>           backup.validate_bundle(root, anchor)
+
+tests\test_research_backup_qualification.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun5/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun5/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+_____ test_incomplete_or_changed_bundle_cannot_publish_receipt[ownership] _____
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+mutation = 'ownership'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "missing",
+            "substitution",
+            "manifest",
+            "schema",
+            "protocol",
+            "empty",
+            "ownership",
+            "dump",
+            "extra",
+        ],
+    )
+    def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+        root, manifest, anchor = bundle
+        ref = manifest["artifacts"][0]
+        path = root / "artifacts" / ref["object_key"]
+        if mutation == "missing":
+            path.unlink()
+        elif mutation == "substitution":
+            path.write_bytes(b"substituted")
+        elif mutation == "dump":
+            (root / "research.dump").write_bytes(b"different")
+        elif mutation == "manifest":
+            (root / "manifest.json").write_bytes(b"{}")
+        elif mutation == "extra":
+            backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+        else:
+            if mutation == "schema":
+                manifest["state"]["versions"] = [[999]]
+            elif mutation == "protocol":
+                manifest["protocol_digest"] = "0" * 64
+            elif mutation == "empty":
+                manifest["artifacts"] = []
+            elif mutation == "ownership":
+                ref["job_id"] = "other-job"
+            (root / "manifest.json").write_bytes(backup.canonical(manifest))
+            anchor = backup.digest(root / "manifest.json")
+        with pytest.raises(ValueError):
+>           backup.validate_bundle(root, anchor)
+
+tests\test_research_backup_qualification.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun6/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun6/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+_______ test_incomplete_or_changed_bundle_cannot_publish_receipt[dump] ________
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+mutation = 'dump'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "missing",
+            "substitution",
+            "manifest",
+            "schema",
+            "protocol",
+            "empty",
+            "ownership",
+            "dump",
+            "extra",
+        ],
+    )
+    def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+        root, manifest, anchor = bundle
+        ref = manifest["artifacts"][0]
+        path = root / "artifacts" / ref["object_key"]
+        if mutation == "missing":
+            path.unlink()
+        elif mutation == "substitution":
+            path.write_bytes(b"substituted")
+        elif mutation == "dump":
+            (root / "research.dump").write_bytes(b"different")
+        elif mutation == "manifest":
+            (root / "manifest.json").write_bytes(b"{}")
+        elif mutation == "extra":
+            backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+        else:
+            if mutation == "schema":
+                manifest["state"]["versions"] = [[999]]
+            elif mutation == "protocol":
+                manifest["protocol_digest"] = "0" * 64
+            elif mutation == "empty":
+                manifest["artifacts"] = []
+            elif mutation == "ownership":
+                ref["job_id"] = "other-job"
+            (root / "manifest.json").write_bytes(backup.canonical(manifest))
+            anchor = backup.digest(root / "manifest.json")
+        with pytest.raises(ValueError):
+>           backup.validate_bundle(root, anchor)
+
+tests\test_research_backup_qualification.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun7/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun7/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+_______ test_incomplete_or_changed_bundle_cannot_publish_receipt[extra] _______
+
+bundle = (WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qual...4cf2ccae1', 'research_schema': 'qm_research', ...}, 'ff2cecffa54e64027da298e35ab4b55751fe68e0111a4e23d83623c07bed8fed')
+mutation = 'extra'
+
+    @pytest.mark.parametrize(
+        "mutation",
+        [
+            "missing",
+            "substitution",
+            "manifest",
+            "schema",
+            "protocol",
+            "empty",
+            "ownership",
+            "dump",
+            "extra",
+        ],
+    )
+    def test_incomplete_or_changed_bundle_cannot_publish_receipt(bundle, mutation):
+        root, manifest, anchor = bundle
+        ref = manifest["artifacts"][0]
+        path = root / "artifacts" / ref["object_key"]
+        if mutation == "missing":
+            path.unlink()
+        elif mutation == "substitution":
+            path.write_bytes(b"substituted")
+        elif mutation == "dump":
+            (root / "research.dump").write_bytes(b"different")
+        elif mutation == "manifest":
+            (root / "manifest.json").write_bytes(b"{}")
+        elif mutation == "extra":
+            backup.write_private(root / "artifacts" / "extra", b"not-referenced")
+        else:
+            if mutation == "schema":
+                manifest["state"]["versions"] = [[999]]
+            elif mutation == "protocol":
+                manifest["protocol_digest"] = "0" * 64
+            elif mutation == "empty":
+                manifest["artifacts"] = []
+            elif mutation == "ownership":
+                ref["job_id"] = "other-job"
+            (root / "manifest.json").write_bytes(backup.canonical(manifest))
+            anchor = backup.digest(root / "manifest.json")
+        with pytest.raises(ValueError):
+>           backup.validate_bundle(root, anchor)
+
+tests\test_research_backup_qualification.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:361: in validate_bundle
+    raw = read_owned(root, root / "manifest.json")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun8/payload')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_incomplete_or_changed_bun8/payload/manifest.json')
+private = True, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+________ test_wrong_signing_notice_or_tool_pin_is_not_an_admitted_tool ________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_wrong_signing_notice_or_t0')
+
+    def test_wrong_signing_notice_or_tool_pin_is_not_an_admitted_tool(tmp_path):
+        for name in ["restic", "prefix", "audit"]:
+            (tmp_path / name).mkdir()
+        with pytest.raises(ValueError):
+>           backup.admit_tools(tmp_path)
+
+tests\test_research_backup_qualification.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\qualify_research_backup.py:286: in admit_tools
+    raw = read_owned(root, root / "tool-admission.json", private=False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_wrong_signing_notice_or_t0')
+path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/pytest-root-backup-qualification/test_wrong_signing_notice_or_t0/tool-admission.json')
+private = False, limit = 33554432
+
+    def read_owned(root: Path, path: Path, *, private=True, limit=MAX_FILE) -> bytes:
+        """No-follow descriptor walk, owner/link/mode/size/replacement checks."""
+        path = owned_path(root, path)
+        directory_fd = fd = None
+        try:
+>           directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                                                       ^^^^^^^^^^^^^^
+E           AttributeError: module 'os' has no attribute 'O_DIRECTORY'
+
+tools\qualify_research_backup.py:183: AttributeError
+=========================== short test summary info ===========================
+FAILED tests/test_research_backup_qualification.py::test_exact_nonempty_manifest_and_bytes_validate
+FAILED tests/test_research_backup_qualification.py::test_incomplete_or_changed_bundle_cannot_publish_receipt[missing]
+FAILED tests/test_research_backup_qualification.py::test_incomplete_or_changed_bundle_cannot_publish_receipt[substitution]
+FAILED tests/test_research_backup_qualification.py::test_incomplete_or_changed_bundle_cannot_publish_receipt[manifest]
+FAILED tests/test_research_backup_qualification.py::test_incomplete_or_changed_bundle_cannot_publish_receipt[schema]
+FAILED tests/test_research_backup_qualification.py::test_incomplete_or_changed_bundle_cannot_publish_receipt[protocol]
+FAILED tests/test_research_backup_qualification.py::test_incomplete_or_changed_bundle_cannot_publish_receipt[empty]
+FAILED tests/test_research_backup_qualification.py::test_incomplete_or_changed_bundle_cannot_publish_receipt[ownership]
+FAILED tests/test_research_backup_qualification.py::test_incomplete_or_changed_bundle_cannot_publish_receipt[dump]
+FAILED tests/test_research_backup_qualification.py::test_incomplete_or_changed_bundle_cannot_publish_receipt[extra]
+FAILED tests/test_research_backup_qualification.py::test_wrong_signing_notice_or_tool_pin_is_not_an_admitted_tool
+11 failed, 24 passed, 10 skipped in 0.80s

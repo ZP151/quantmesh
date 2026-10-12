@@ -3,6 +3,21 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
+Backup#171 acceptedlocalfixture: completed/idle a391/4fceaf21af3f integrates six
+leafcommits7bbe883/6f6cef3/a77ec77/516d2c3/90ebec1/6e25532; root2dd5f4a
+marks Linuxdescriptor test dependencies only. RootWindows23pass/22native skips,
+freshLinux45pass/0skip; initial11Windowsfail and3incompleteharnessfail retained.
+ActualPG/restic10.011s recovery captures3jobs/257bytefixture report, then source
+advances4; restoreSQL/manifest/dump/ref bytesexact,6attributednegative refusals,
+4clusters/17commands closed/23PIDsabsent/sibling/privateinputs verified. Frozen
+service85/0skip/81licences and restic79modules/98notices/950auditentries verified.
+198rawstreams/SHA/HANDOFF/twoaxes and sameR2P2genuinechildRED/GREEN archived in
+owned-research-backup; no thirdstructural review. NumericalWorker/offhost/model/
+p95/productionPG/TLS/human/CI/deployment unaccepted, wholeA ACTIVE. Planner owns
+future offhost/actualreport phase; researcher retains result.fixture=true;
+implementer changedthreeleaf files; reviewer/verifier evidence matches above.
+Private-terminal2088 remainsonlyACTIVEimplementation, backup notredispatched.
+
 Coordinator recoveredOct13 to C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh
 after original6e1e lostGit registration/trackedfiles (causeunknown); ignoredfiles
 remainuntouched. Nativeworktree tools couldnotoperate on originalbrokenGitcwd;
