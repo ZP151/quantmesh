@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Two sessions maximum: this backup plus the new LinuxSDK69d3 verifier; completed source/service/PG/Eval/Worker stay idle. Root owns shared app/store/gate/locks/REUSE/ADR/ACTIVE/iteration and integration.
-- No AWS/S3/billing/account/network/auth/vendor/source/Windows/helper/tunnel/global package/user/daemon/Docker/production operation. This CLI cannot target an existing or remote repository/database. No real model, strategy or Worker execution; no retired168h.
+- No operational AWS/S3/billing/account/auth/vendor/source/Windows/helper/tunnel/global package/user/daemon/Docker/production operation. Runtime network is local loopback only; official public artifact/signing/licence downloads for build qualification are allowed. This CLI cannot target an existing or remote repository/database. No real model, strategy or Worker execution; no retired168h.
 - Official restic compressed asset size10107515/SHAf415415624dcc452f2a02b8c33641791a8c6d6d3b65bbb3543fcf9a25151585c; verify downloaded bytes plus official checksum/signature/signing-key provenance and licences before execution. Do not silently drop signature/audit on failure. No upstream source/binary is committed.
 - Read-only verified PG binaries/source build/notice may be reused from /var/tmp/quantmesh-owned-pg-0ue7gicj, but never its old cluster/env/state. Measure pg_dump/pg_restore against that known build before copying to new owned prefix. No system package install or weaker DB version.
 - Only new files: tools/qualify_research_backup.py, tests/test_research_backup_qualification.py, docs/runbooks/owned-research-backup.md. Scripts/raw proof/notices in ignored output/171-owned-backup. Do not modify other tracked paths.
