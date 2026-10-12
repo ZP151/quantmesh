@@ -43,3 +43,40 @@ authentication window. Researcher: no prices/returns/dataset/model efficacy.
 Verifier: pinned SDK server-produced protocol evidence, not a rewritten protocol
 or a socket fixture. Actual AWS installation, vendor rights, private human input,
 market sessions, deployment/recovery and full A acceptance remain mandatory.
+
+## Root diagnostic refinement after the stopped verifier
+
+The retained attempt4 is RED: 25-second CONNECTED without READY/server ID,
+public close CLOSING, checker22/25. Do not rerun that attempt or infer an
+authentication requirement from a missing response. Official InitConnect docs
+identify server-produced connID; command-line docs describe interactive login
+from10.10, but neither inspected statement establishes anonymous RPC behavior.
+
+One fresh attempt5 may retain the exact offline/zero-input configuration and
+25-second observation while adding read-only Python profile counters: original
+pack return code, original socket-send byte count/return code, received byte
+count, initialization-handler invocation and SDK-only function/line stacks.
+No payload, response object, account ID, AES key, vendor output, environment,
+credentials or vendor state is read or archived. This distinguishes packaging,
+send, receive and handler boundaries without patching SDK implementation or
+changing protocol/network/auth/version. Fresh extraction/home/namespaces,
+pidfd release/cleanup, sibling survival and90-second total deadline remain.
+Scripts and receipts live in ignored output/169-sdk-boundary-diagnostic; this
+is diagnostic evidence, never source-host or production admission.
+
+Actual attempt5 had a verifier Windows/WSL output-path substitution fault and
+selected the old observer; preserve it as diagnostic-invalid, restore the
+overwritten mutable old receipt byte-for-byte from the tracked archive, and do
+not use it as new instrumentation evidence. Corrected fresh attempt6 records
+one successful original pack, one original socket send84bytes/ret0, no observed
+context receive or initialization handler, and init-query ret-1 after25seconds.
+READY/serverID and public close still fail; cleanup81.083seconds/owned namespace
+terminal/sibling survival pass. No SDK decode failure is established.
+
+One fresh attempt7 may change ONLY documented `-console=1` to `-console=0`
+against identical pristine SDK/vendor/config/home/network isolation. The
+prediction is that an interactive-console startup block will change the gateway
+response or startup result. Keep the same counters and timers, no input/login,
+no external network or inherited state. This is not a supported authenticated
+deployment proposal. Preserve both exact scripts/receipts and all negative
+results; do not infer login-required from a second absent response.

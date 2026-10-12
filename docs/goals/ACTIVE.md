@@ -1,5 +1,23 @@
 # Active Goal
 
+Root#169 boundary diagnosisOct13: freshattempt6/7 originalSDK packret0 and
+socket-send84bytes/ret0; no observed receive/initialization-handler, queryret-1,
+CONNECTED/serverID0 after25s and closeCLOSING. Changing only console1→0 did not
+resolve it. Both nativeexit2,81.083/82.125s<90, ownednamespacePID1terminal and
+sibling survives; no auth/network/market/profile operation.19rawfiles archived
+sdk-boundary-diagnostic with checked SHA/counter/script equivalence. Attempt5
+verifier path-routing error selectedoldobserver, retaineddiagnostic-invalid;
+old mutable native receipt restoredbyteidenticalfromtrackedarchive. Cause of
+offline/pre-login gateway initialization remains unknown, not proof of required
+login/Internet or version incompatibility. Stop unchangedanonymous retries;
+next prepare concrete privateoperator-start/login/init review packet while all
+deployment qualification flags stayfalse. No new credential request yet.
+
+Backup#171/a391 finalcandidate3b3c2b72eb30 reports40native backup tests, genuine
+newtarget encrypted restore/sixnegative checks,85zero-skip independent service
+gate and81license checks passed; finalsecondround is stillinprogress. Root has
+not accepted/integrated that candidate or claimed production/offhost recovery.
+
 Current next verifier: owned local encrypted backup#171 ACTIVE in manageda391,
 thread01a13233-670d-7202-bdce-88f0f6d0486a, frozen0503d49. Narrow plan
 2026-10-13-owned-research-backup.md, onlynew qualifier/test/runbook; source and

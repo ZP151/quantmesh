@@ -1,0 +1,8 @@
+{
+  "attempt5_diagnostic_valid": false,
+  "reason": "Windows-to-WSL path substitution missed /mnt/c prefix; old observer selected",
+  "original_mutable_receipt_restored_from_tracked_archive": true,
+  "original_sha256": "3e80bc9fee113610268ad8fd04b048a6115ac56678b5f4de9b35b6fe1150da2c",
+  "raw_attempt5_retained": true,
+  "source_production_flags_unchanged": true
+}

@@ -3,6 +3,18 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
+Current root diagnosticOct13: nativeSDK attempts6/7 send84bytes successfully
+but no observed receive callback/init handler;25s CONNECTED/serverID0/queryret-1,
+closeCLOSING. Console1→0 alone unchanged; exits2,81.083/82.125s, namespacePID1
+terminal/knownsibling survival pass. No authentication, externalnetwork, market
+or deployment-profile operation.19rawstreams/SHA/scripts and precise limits in
+sdk-boundary-diagnostic; attempt5pathroutingharnessmistake is retainedinvalid and
+old mutable receipt restored from trackedarchive. Planner stops anonymousrepeat,
+prepares actualprivateoperator-start/login/init review rather than inventing a
+login-required/version diagnosis. Actualserver/auth/source acceptance pending.
+Backup3b3c2b72eb30/a391 reports40native and85realservice/0skip tests plus actual
+encryptedrestore/negative checks; secondreview pending, notrootaccepted yet.
+
 Parent [#167](https://github.com/ZP151/quantmesh/issues/167);
 contracts [#168](https://github.com/ZP151/quantmesh/issues/168);
 server sources [#169](https://github.com/ZP151/quantmesh/issues/169).
