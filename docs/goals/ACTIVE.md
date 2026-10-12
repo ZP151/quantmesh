@@ -60,6 +60,33 @@ no key is requested in chat and offline work can proceed. Docker CLI exists
 but its Linux engine is not running; real disposable PostgreSQL evidence
 remains a prerequisite, never a mocked pass.
 
+## Latest resumable checkpoint — Oct13 Singapore
+
+Worker#170 source57820f3 is integrated asb5ee874; Windows local fixture
+submit/report/reopen and native61.86s owner-loss recovery are witnessed. Root
+fresh integrated runner/artifact check passes38/1 deselected/27.83s. Linux
+containment remains unsupported/fail-closed, not ready for the A Linux host.
+Service#171 source251a329 is integrated as2af7f4a. Two rounds of review and an
+independent77-package closure qualify its offline scripted checkpoint only:
+21pass/5 real PostgreSQL skips; default service gate exit1. Both Batch B
+sessions stopped at handoff. Do not redispatch or declare server/Eval/UI finished.
+
+New actionable source issue: actual17:00UTC AWS11111 listener is absent and
+the long-lived helper/forward process is not found, while Windows OpenD28036
+returns currentOct12 quote clocks and AWS remains69515b7/paper=true/live=false.
+This is distinct from normal closed-session coverage. Preserve the installed
+reviewed helper bytes and current OpenD; don't restart under the prior
+no-repeat constraint until the pending human review/recovery authorization.
+PR166 remains OPEN/green, its concrete diff is opened. Docker Linux-engine
+activation and model-provider metadata are also requested; no secrets in chat.
+No paid resource/call, source configuration switch or app deploy has occurred.
+
+Next: close source recovery authorization and PostgreSQL fixture prerequisite;
+qualify Linux worker/model-effect containment and Linux service lock; then
+workstation submit/reload/report and recovered24-case Eval. Final combined
+clean-checkout/core + independent service gates, human review and private
+deployment remain open. Formal168h stays not required and the goal stays ACTIVE.
+
 ## Historical delivery checkpoint — retained, superseded priority
 
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance

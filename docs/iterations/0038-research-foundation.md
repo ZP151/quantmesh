@@ -283,3 +283,57 @@ New Worker/service cases and verifier pins must be reviewed before freezing a
 comparable24-case baseline. No third implementation session or legacy Eval run
 was started while Batch B occupies two slots. Next Eval slice follows these
 workers and the original #160 acceptance, not a parallel duplicate harness.
+
+### Worker and actual route checkpoint — Oct13 Singapore
+
+#170 stopped at reviewed57820f3, integrated asb5ee874. Actual durable fixture
+submit/claim/baseline/immutable-report/reopen and owner-crash recovery pass.
+Final related159/112.05s and data120/3 skip/4.18s logs were read by root;
+70-package audited closure allowed. Two native active-job leases recover the
+crashed attempt in61.8590273s; an independent sibling survives, one authoritative
+report wins. Numerical canonical bytes match the existing engine; receipts and
+full runtime/dependency inventory are separate from the frozen two-file engine
+digest. This is a Windows local fixture slice, not Linux/server execution or
+real-market strategy performance. Linux and fractional CPU currently refuse
+execution explicitly; server Linux containment/native evidence must be added
+before deploying the A research host. Snapshot256MiB/report16MiB bounds and
+receipt/abandoned-object retention limits remain explicit in HANDOFF.md.
+
+Actual source intake17:00:48UTC (Oct13 01:00Singapore) keeps AWS69515b7,
+paper=true/live=false and current BTC/ETH/SOL. Equity app still retains Oct9
+observations. Independent Windows read-only quote clocks17:03UTC return Oct12
+13:03Eastern for both AAPL/NVDA; only source clocks are archived, not vendor
+logs/accounts/prices. This distinguishes the new real open-session issue from
+the user's correct weekend/closed-session freshness rule. Unknown declared
+latency remains unknown; no empirical sample is turned into a permanent0s SLA.
+
+AWS fresh SDK quote probe under owned20s timeout exits124; actual listener
+inspection confirms11111 absent. No long-lived forwarding helper/SSH instance
+is found; installed helper digest remains9D9E19...DE9B and its last status is
+managed_private_tunnel at12:11:38UTC. OpenD28036 remains alive. Initial SSH
+attempts with optional arguments emitted no JSON, despite exit0, and are not
+counted as successful probes; unambiguous command/time/listener checks establish
+the route conclusion. No existing process was stopped/reinstalled/restarted.
+PR166 exact da6e8c7 remains OPEN/CI successful but human review is missing. Its
+concrete script diff is opened for the operator; human review and explicit
+authorization to restore the actually absent helper are requested, respecting
+the previous no-repeat-restart constraint. Source recovery remains PENDING.
+Evidence: source-followup.json/.log/.exit, sdk-source-clock.json,
+aws-sdk-source-clock3.log/.exit124, route-listener-followup.log/.exit0.
+
+Root integrated Worker check38pass/1 ninety-second case deselected/27.83s exits0
+(integrated-worker.log/.exit). The actual ninety-second recovery witness above
+was read, not repeated. Service#171 source251a329 is integrated as2af7f4a after
+two bounded reviews. Its tracked independent evidence records21pass/5 real DB
+skips and77-package licensed closure; default PostgreSQL-required gate exits1,
+not a release pass. Core related118 pass is child evidence. Root has not yet
+certified a combined service installation/database or Linux executor. Both
+Batch B sessions are stopped. No service/API/infra/strategy deployment is inferred.
+
+The operator has three pending prerequisites: concrete PR166 human review and
+explicit recovery authorization (previous no-repeat constraint), activate local
+Docker Linux engine for disposable PostgreSQL native tests, and later model
+provider/baseURL/model/pricing metadata. No key/password is requested in chat.
+Next bounded work ports owned Worker/model-effect containment to qualified Linux,
+then ResearchJobs workstation/Eval; core and independent-service release gates
+remain open. Formal168h remains unnecessary; current goal ACTIVE.
