@@ -1,5 +1,25 @@
 # Active Goal
 
+Current next verifier: owned local encrypted backup#171 ACTIVE in manageda391,
+thread01a13233-670d-7202-bdce-88f0f6d0486a, frozen0503d49. Narrow plan
+2026-10-13-owned-research-backup.md, onlynew qualifier/test/runbook; source and
+restore are new owned PG/local restic fixture resources. No cloud/paid/production
+or numericalWorker/model/source operation; real off-host/Worker report recovery
+remains pending. Official tool audit downloads are allowed, runtime local only.
+
+New SDK69d3 verifier stopped at accurate blocker, unchanged9b72aa4/no tracked
+lock/commit.10package SHA/license/import audit passes, but official InitConnect
+pack1001 has no acknowledged READY/nonzero serverID after25s; close remains
+CLOSING. Own pidfd SDK/vendor/namespace cleanup and sibling proof81.355s<90s;
+nativeexit1, finalchecker22/25 with3requiredfailures.30raw receipts archived in
+linux-sdk-wire-blocker, full123inventory/notice/artifacts remain ignored69d3.
+SDK source was official sdist and locally built unmodified wheel, not vendorwheel.
+Offline/zero-login test cause unresolved: cannot assert login-required or
+version-incompatible, ask credentials or promote profile. No SDK/account/quote/
+history/auth/paid/source call or rawvendoroutput; flags unchanged/uninstalled.
+Next root examines official initialization/setup before a bounded next action,
+not repeating the existing failed attempt or redispatching completed69d3.
+
 Current integrated checkpoint: source witnessd8b6965 maps7db172e/ee2c176/
 1ff3fad, completed/idle4a9b, only3newfiles/two axes resolved; root242pass/12.57s,
 Ruff/diff0 and actualblockedCLI pending/exit2. This is tool software only.
@@ -12,7 +32,7 @@ exit0, original77closure; these Windows skips do not certify native behavior.
 Root compares imported candidate source to integrated blobs (only serviceREADME
 differs) and archives35source/65bootstrap raw streams with SHA. Two review rounds
 and direct R2-fix regressions close findings; no third old architecture review.
-No active implementation session remains from these handoffs; do not redispatch.
+No active implementation session remains from these completed handoffs; do not redispatch.
 Actual nativeWorker/image/model caps, source SDK/auth/host/cutover, production
 PG/backup/private deployment/final CI-human-operator gates remain open. Next
 qualify unresolved LinuxSDK wire before human gateway login; Engine/provider/

@@ -1,0 +1,10 @@
+moomoo_api==10.10.7008
+numpy==2.5.2
+pandas==2.3.3
+protobuf==7.36.1
+pycryptodome==3.23.0
+python-dateutil==2.9.0.post0
+pytz==2026.3.post1
+simplejson==4.1.2
+six==1.17.0
+tzdata==2026.3

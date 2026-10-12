@@ -707,3 +707,36 @@ handoff/reviews/progress/inventory/rootchecks) under service-bootstrap withSHA.
 First root archive checker assumed loaded_modules was a mapping; actual list
 shape fixed without modifying proof/product. No nativeWorker/model/report/
 productionTLS/HA/backup/server/source/paid certification or fullA completion.
+
+Root dispatches unresolvedSDK Task2 verifier on9b72aa4, nativechat
+01a13228-320f-7ed3-bbc6-d521c0f5faa4, managed69d3. It stops/idle without code,
+lock or commit: officialmoomoo-api10.10.7008 source-only6435262bytes/SHA2c721a...
+85c7 locally built unmodified wheel1b52a6...e891; separate10package current-core
+versions SHA/license/import/noindex install/pipcheck pass, no runtime/corelock
+admission. Final newly owned offline/loopback/zeroinput same-namespace SDK and
+vendor observe onlyoriginal1001pack,25.007s CONNECTED/notREADY/serverID0.
+Publicclose CLOSING after3s; actualSDKexit-9 via ownedpidfd/vendor-15/controller0,
+PID1terminal and sibling survives,81.355s<90s. Nativewrapperexit1/RED,
+finalchecker22/25 with3handshake/normalclose/normalSDKexit failures. Source
+provenance distinguishes server _opend_conn_id from localNetManager counter;
+packcall is not proven send/response. No upstreampatch/rawproto substitution,
+rawvendoroutput/account/quote/history/auth/trade/paid/actualhost operation.
+Root independently verifies30selectedrawSHA against original123inventory and
+preserves auditsGREEN/wireRED under linux-sdk-wire-blocker. All originalfailed
+attempts/notices/artifacts remain ignored69d3. Flagsblocked/uninstalled unchanged.
+Missing reply cause remains unresolved; not proof of requiredlogin or version
+mismatch. Root checks official initialization/setup before newcontrolled action;
+does not ask for credentials or promote installation from this failure.
+
+Parallel-safe Task4 backup preparation is dispatched on0503d49 via
+2026-10-13-owned-research-backup.md: nativechat01a13233-670d-7202-bdce-88f0f6d0486a,
+manageda391, ACTIVE, onlynew tools/qualify_research_backup.py/test/runbook.
+One deliverable is real local encrypted PG/schema/nonemptyfixtureartifact
+snapshot→freshtarget restore consistency and wrongkey/corruption/schema/byte
+negative refusal. Artifacts explicitlyresult.fixture=true; no containedWorker,
+ROI/offhost/production success substitute. Officialrestic bytes/signature/licence
+audit beforeexecution, rehashedreadonlyPGsource/newclusters/keys/roles/roots,
+bounded only-owned cleanup. No cloud/S3/paid/networkruntime/global/source/model
+action; root ownssharedledgers/integration. SDK69d3/source4a9b/bootstrap5bc4/PGc7be
+idle; backup is onlycurrentimplementation. Finalsource/auth/Engine/provider/
+production/release/human/CI/usergates remain open; fullgoalACTIVE,168h on-demand.

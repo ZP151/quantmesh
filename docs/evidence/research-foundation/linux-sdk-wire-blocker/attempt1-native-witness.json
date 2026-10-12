@@ -1,0 +1,44 @@
+{
+  "baseline": "9b72aa4bf324021b81ec76e071c07b3125e6ee47",
+  "native_uid": 1000,
+  "owned_root": "/var/tmp/quantmesh-sdk-wire-zz47gnjl",
+  "archive_sha256": "72eaa6e47b5cb8905306427b5e3679d591408243492e3e7acbc3a7d46f09a0aa",
+  "archive_bytes": 466932458,
+  "executable_sha256": "e05b901dbe9107061b954a7fe3c059916c4a1e580d8f0a57277d402438898601",
+  "configuration_sha256": "d6c9c112004bd0866dacc5d0e4fae4d715fcd6db250cd68cae859f787583bffb",
+  "protocol_handshake": false,
+  "deadline_seconds": 90,
+  "controller_pid": 614,
+  "controller_pidfd_before_release": true,
+  "sdk_vendor_raw_output_archived": false,
+  "namespace_pid1_host_pid": 615,
+  "namespace_pid1_start_ticks": "3152",
+  "namespace_pid1_pidfd_before_release": true,
+  "namespace_handles_before_release": true,
+  "namespace_identity": {
+    "user": "user:[4026532229]",
+    "net": "net:[4026532232]",
+    "mnt": "mnt:[4026532230]",
+    "pid": "pid:[4026532231]"
+  },
+  "controller_exit": 1,
+  "namespace_pid1_terminal": true,
+  "known_sibling_survived": true,
+  "owned_sibling_cleanup_exit": -15,
+  "events": [
+    {
+      "gate_waiting": true,
+      "pid": 1,
+      "namespaces": {
+        "user": "user:[4026532229]",
+        "net": "net:[4026532232]",
+        "mnt": "mnt:[4026532230]",
+        "pid": "pid:[4026532231]"
+      }
+    }
+  ],
+  "elapsed_seconds": 17.244,
+  "within_deadline": true,
+  "shared_profile_changed": false,
+  "actual_host_auth_source_qualified": false
+}

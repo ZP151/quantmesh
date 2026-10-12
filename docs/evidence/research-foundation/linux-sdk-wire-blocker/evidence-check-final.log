@@ -1,0 +1,9 @@
+{
+  "passed": 22,
+  "total": 25,
+  "failed": [
+    "SDK normal exit",
+    "public SDK close reaches CLOSED",
+    "original status and positive server minted connection ID"
+  ]
+}

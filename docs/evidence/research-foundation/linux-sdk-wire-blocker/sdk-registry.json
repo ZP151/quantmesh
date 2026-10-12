@@ -1,0 +1,93 @@
+{
+  "info": {
+    "author": "Moomoo, Inc.",
+    "author_email": "openapi@moomoo.com",
+    "bugtrack_url": null,
+    "classifiers": [],
+    "description": "# moomoo API\r\n\r\n### Introduction\r\n\r\n[**moomoo API**](https://openapi.moomoo.com/moomoo-api-doc/) is an open-source project for quantitative investment using [**moomoo API**](https://www.moomoo.com/OpenAPI), providing market data and trading interfaces via Python and Json/Protobuf protocols.\r\n\r\n- [Official Documentation](https://openapi.moomoo.com/moomoo-api-doc/)\r\n\r\n-------------------\r\n\r\n### Installation\r\n```\r\npip install moomoo-api\r\n```\r\n\r\n###### Note: This API supports Python 2.7/Python 3.x.\r\n\r\n---\r\n\r\n### Quick Start\r\n```\r\n\r\n# Import moomoo-api\r\nimport moomoo as ft\r\n\r\n# Create a quote context object\r\nquote_ctx = ft.OpenQuoteContext(host=\"127.0.0.1\", port=11111)\r\n\r\n# Context control\r\nquote_ctx.start()              # Start asynchronous data reception\r\nquote_ctx.set_handler(ft.TickerHandlerBase())  # Set callback handler for async data processing (subclass to customize)\r\n\r\n# Low-frequency data interfaces\r\nmarket = ft.Market.HK\r\ncode = 'HK.00123'\r\ncode_list = [code]\r\nplate = 'HK.BK1107'\r\nprint(quote_ctx.get_stock_basicinfo(market, stock_type=ft.SecurityType.STOCK))   # Get stock basic info\r\nprint(quote_ctx.get_market_snapshot(code_list))                              # Get market snapshot\r\nprint(quote_ctx.get_plate_list(market, ft.Plate.ALL))                         # Get sub-plate list\r\nprint(quote_ctx.get_plate_stock(plate))                         # Get stocks under a plate\r\n\r\n# High-frequency data interfaces\r\nquote_ctx.subscribe(code, [ft.SubType.QUOTE, ft.SubType.TICKER, ft.SubType.K_DAY, ft.SubType.ORDER_BOOK, ft.SubType.RT_DATA, ft.SubType.BROKER])\r\nprint(quote_ctx.get_stock_quote(code))  # Get quote\r\nprint(quote_ctx.get_rt_ticker(code))   # Get ticker\r\nprint(quote_ctx.get_cur_kline(code, num=100, ktype=ft.KLType.K_DAY))   # Get current K-line\r\nprint(quote_ctx.get_order_book(code))       # Get order book\r\nprint(quote_ctx.get_rt_data(code))          # Get real-time data\r\nprint(quote_ctx.get_broker_queue(code))     # Get broker queue\r\n\r\n# Stop asynchronous data reception\r\nquote_ctx.stop()\r\n\r\n# Close the context\r\nquote_ctx.close()\r\n\r\n# Create an HK trade context object\r\ntrade_hk_ctx = ft.OpenSecTradeContext(host=\"127.0.0.1\", port=11111)\r\n\r\n# Trading interfaces\r\nprint(trade_hk_ctx.unlock_trade(password='123456'))                # Unlock trading\r\nprint(trade_hk_ctx.accinfo_query(trd_env=ft.TrdEnv.SIMULATE))      # Query account info\r\nprint(trade_hk_ctx.place_order(price=1.1, qty=2000, code=code, trd_side=ft.TrdSide.BUY, order_type=ft.OrderType.NORMAL, trd_env=ft.TrdEnv.SIMULATE))  # Place order\r\nprint(trade_hk_ctx.order_list_query(trd_env=ft.TrdEnv.SIMULATE))      # Query order list\r\nprint(trade_hk_ctx.position_list_query(trd_env=ft.TrdEnv.SIMULATE))    # Query position list\r\n\r\ntrade_hk_ctx.close()\r\n\r\n```\r\n\r\n---\r\n\r\n### Example Strategies\r\n\r\n- Example strategy files are located at: (moomoo-api install directory)/py-moomoo-api/examples. You can refer to these examples to learn how to use the API.\r\n\r\n---\r\n\r\n### Debug Switch and Push Logs\r\n\r\n- The `set_futu_debug_model` function can enable or disable debug-level logging.\r\n- When enabled, it records info-level logs along with all ticker, order book, and broker push records for troubleshooting. Log files are stored in %appdata%(%HOME%)\\com.moomoonn.FutuOpenD\\Log.\r\n- Analysis scripts for ticker, order book, and broker push records are available in moomoo/tools/analysis. Contact us to obtain raw exchange data for comparison (beta feature).\r\n\r\n---\r\n\r\n### Project Structure\r\n\r\n```\r\nmoomoo/\r\n\u251c\u2500\u2500 common/              # Core module (networking, constants, Protobuf, etc.)\r\n\u2502   \u2514\u2500\u2500 pb/              # Protobuf definitions and generated files\r\n\u251c\u2500\u2500 quote/               # Market data module\r\n\u251c\u2500\u2500 trade/               # Trading module\r\n\u251c\u2500\u2500 tools/               # Utility tools\r\n\u2502   \u2514\u2500\u2500 analysis/        # Push log analysis scripts\r\n\u2514\u2500\u2500 examples/            # Example code\r\n```\r\n\r\n---\r\n\r\n### Prerequisites\r\n\r\n- Before running Python scripts, you must first start the [moomoo OpenD](https://openapi.moomoo.com/moomoo-api-doc/en/quick/opend-base.html) gateway client.\r\n\r\n### API and moomoo OpenD Gateway Architecture\r\n\r\n- [Architecture Overview](https://openapi.moomoo.com/futu-api-doc/en/intro/intro.html)\r\n\r\n***\r\n\r\n### Usage\r\n\r\n* Feel free to submit questions via Issues and we will respond promptly.\r\n* Please read the API documentation carefully when using a new version. Most questions can be answered there.\r\n* Suggestions and feature requests are welcome. We will do our best to meet your needs.\r\n\r\n---\r\n",
+    "description_content_type": "text/markdown",
+    "docs_url": null,
+    "download_url": null,
+    "downloads": {
+      "last_day": -1,
+      "last_month": -1,
+      "last_week": -1
+    },
+    "dynamic": [
+      "Author",
+      "Author-Email",
+      "Description",
+      "Description-Content-Type",
+      "Home-Page",
+      "Keywords",
+      "License",
+      "License-File",
+      "Requires-Dist",
+      "Summary"
+    ],
+    "home_page": "https://github.com/MoomooOpen/py-moomoo-api",
+    "keywords": "Moomoo Stock Quant Trading API",
+    "license": "Apache License 2.0",
+    "license_expression": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "maintainer": null,
+    "maintainer_email": null,
+    "name": "moomoo-api",
+    "package_url": "https://pypi.org/project/moomoo-api/",
+    "platform": null,
+    "project_url": "https://pypi.org/project/moomoo-api/",
+    "project_urls": {
+      "Homepage": "https://github.com/MoomooOpen/py-moomoo-api"
+    },
+    "provides_extra": null,
+    "release_url": "https://pypi.org/project/moomoo-api/10.10.7008/",
+    "requires_dist": [
+      "pandas",
+      "simplejson",
+      "protobuf>=3.20.0",
+      "PyCryptodome"
+    ],
+    "requires_python": null,
+    "summary": "Moomoo Quantitative Trading API",
+    "version": "10.10.7008",
+    "yanked": false,
+    "yanked_reason": null
+  },
+  "last_serial": 41159923,
+  "ownership": {
+    "organization": null,
+    "roles": [
+      {
+        "role": "Owner",
+        "user": "MoomooOpen"
+      }
+    ]
+  },
+  "urls": [
+    {
+      "comment_text": null,
+      "core-metadata": false,
+      "digests": {
+        "blake2b_256": "fd9041bac41995adf406840c44873589e0eb8bc715c86f096ba4efe7bd1f3f97",
+        "md5": "a69e56ae1001e3d1c0de4895152039d9",
+        "sha256": "2c721a9b8daeb141f77408300056a7b398ff252ac06d35bad6dd3b21489185c7"
+      },
+      "downloads": -1,
+      "filename": "moomoo_api-10.10.7008.tar.gz",
+      "has_sig": false,
+      "md5_digest": "a69e56ae1001e3d1c0de4895152039d9",
+      "packagetype": "sdist",
+      "python_version": "source",
+      "requires_python": null,
+      "size": 6435262,
+      "upload_time": "2026-08-13T09:16:19",
+      "upload_time_iso_8601": "2026-08-13T09:16:19.633096Z",
+      "url": "https://files.pythonhosted.org/packages/fd/90/41bac41995adf406840c44873589e0eb8bc715c86f096ba4efe7bd1f3f97/moomoo_api-10.10.7008.tar.gz",
+      "yanked": false,
+      "yanked_reason": null
+    }
+  ],
+  "vulnerabilities": []
+}
