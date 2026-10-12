@@ -56,15 +56,19 @@ class NegativeRefused(ValueError):
 class FixtureDeadline:
     """Own process wall timer covers SQL/filesystem work as well as commands."""
 
-    def __init__(self, seconds):
+    def __init__(self, seconds, *, defer=lambda: False):
         if sys.platform != "linux" or signal.getitimer(signal.ITIMER_REAL)[0]:
             raise ValueError("owned wall timer unavailable")
         self.previous = signal.getsignal(signal.SIGALRM)
         self.closed = False
+        self.expired = False
 
         def expired(signum, frame):
             signal.setitimer(signal.ITIMER_REAL, 0)
-            raise ValueError("whole fixture deadline")
+            self.expired = True
+            # A spawned child must be registered before an interruption escapes.
+            if not defer():
+                raise ValueError("whole fixture deadline")
 
         signal.signal(signal.SIGALRM, expired)
         signal.setitimer(signal.ITIMER_REAL, seconds)
@@ -495,9 +499,11 @@ class Commands:
         self.deadline = time.monotonic() + 240
         self.receipts = []
         self.clusters = []
+        self.guard = None
+        self.registering = False
 
     def check_deadline(self):
-        if time.monotonic() >= self.deadline:
+        if (self.guard and self.guard.expired) or time.monotonic() >= self.deadline:
             raise ValueError("whole fixture deadline")
         if any(cluster.server_log and cluster.server_log.failed for cluster in self.clusters):
             raise ValueError("owned server output cap")
@@ -552,7 +558,7 @@ class Cluster:
     nonce: str = field(repr=False)
     port: int
     process: subprocess.Popen = field(repr=False)
-    ticks: str
+    ticks: str | None
     system_id: str = ""
     stopped: bool = False
     server_log: ServerLog | None = field(default=None, repr=False)
@@ -596,26 +602,23 @@ class Cluster:
         cluster = None
         ready = False
         try:
-            process = subprocess.Popen(
-                [str(commands.root / "prefix/bin/postgres"), "-D", str(data)],
-                env={**bare_environment(commands.root), "QM_BACKUP_OWNER": nonce},
-                cwd=home,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            )
-            cluster = cls(
-                commands,
-                home,
-                data,
-                role,
-                password,
-                nonce,
-                port,
-                process,
-                process_ticks(process.pid),
-            )
-            if hasattr(commands, "clusters"):
-                commands.clusters.append(cluster)
+            commands.registering = True
+            try:
+                process = subprocess.Popen(
+                    [str(commands.root / "prefix/bin/postgres"), "-D", str(data)],
+                    env={**bare_environment(commands.root), "QM_BACKUP_OWNER": nonce},
+                    cwd=home,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
+                cluster = cls(commands, home, data, role, password, nonce, port, process, None)
+                if hasattr(commands, "clusters"):
+                    commands.clusters.append(cluster)
+                cluster.ticks = process_ticks(process.pid)
+            finally:
+                commands.registering = False
+                if hasattr(commands, "check_deadline"):
+                    commands.check_deadline()
             cluster.server_log = ServerLog(process.stdout, home / "postgres.log")
             deadline = min(commands.deadline, time.monotonic() + 15)
             while time.monotonic() < deadline:
@@ -650,6 +653,8 @@ class Cluster:
                 (home / "pgpass").unlink(missing_ok=True)
 
     def verify(self):
+        if self.ticks is None:
+            raise ValueError("kernel start identity unknown; cleanup pending")
         proc = Path("/proc") / str(self.process.pid)
         if (
             self.process.poll() is not None
@@ -941,7 +946,10 @@ def run_fixture(profile, output):
         "passed": False,
     }
     clusters = commands.clusters
-    guard = FixtureDeadline(max(0.01, commands.deadline - time.monotonic()))
+    guard = FixtureDeadline(
+        max(0.01, commands.deadline - time.monotonic()), defer=lambda: commands.registering
+    )
+    commands.guard = guard
     try:
         lake = fresh_directory(output, output / "lake")
         artifacts = fresh_directory(output, output / "source-artifacts")

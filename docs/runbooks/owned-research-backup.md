@@ -137,6 +137,10 @@ UID, argv/data path and private nonce handle. Generated private inputs are
 removed even on failed spawn or refused process cleanup; unknown process
 identity still grants no stop authority. A known sibling PG process must
 survive individual restore/source shutdown; close only these NEW owned processes.
+During the small spawn/handle-registration window, deadline delivery is deferred
+until the owned child is recorded; an expired deadline then fails immediately.
+Unavailable kernel start identity remains registered as pending and grants no
+stop authority. It cannot disappear from cleanup evidence or qualify as success.
 
 Read `witness.json`, `backup-receipt.json`, captured/restored payloads,
 `source-state-after.json`, `restore-state-before-replay.json` and raw command

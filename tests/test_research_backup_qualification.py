@@ -340,3 +340,60 @@ def test_failed_server_spawn_removes_generated_private_inputs(tmp_path, monkeypa
         backup.Cluster.start(commands, "new-cluster")
     assert not (tmp_path / "new-cluster" / "pgpass").exists()
     assert not (tmp_path / "new-cluster" / "init-password").exists()
+
+
+def test_kernel_identity_failure_keeps_spawned_handle_registered(tmp_path, monkeypatch):
+    process = SimpleNamespace(
+        pid=123456,
+        poll=lambda: None,
+        send_signal=lambda _: pytest.fail("unknown start cannot authorize stop"),
+    )
+
+    def initdb(tool, argv):
+        Path(argv[1]).mkdir()
+
+    commands = SimpleNamespace(root=tmp_path, output=tmp_path, run=initdb, clusters=[])
+    monkeypatch.setattr(backup.subprocess, "Popen", lambda *a, **k: process)
+
+    def unknown(pid):
+        raise OSError("kernel identity unavailable")
+
+    monkeypatch.setattr(backup, "process_ticks", unknown)
+    with pytest.raises((OSError, ValueError)):
+        backup.Cluster.start(commands, "pending-start")
+    assert len(commands.clusters) == 1 and commands.clusters[0].process is process
+    assert not (tmp_path / "pending-start" / "pgpass").exists()
+
+
+def test_deadline_interrupt_waits_for_process_handle_registration(tmp_path, monkeypatch):
+    import os
+    import signal
+    import sys
+
+    if sys.platform != "linux":
+        pytest.skip("native owned process timer")
+    commands = backup.Commands(tmp_path, tmp_path)
+    commands.run = lambda tool, argv: Path(argv[1]).mkdir()
+    process = SimpleNamespace(pid=123456, poll=lambda: None)
+    monkeypatch.setattr(backup.subprocess, "Popen", lambda *a, **k: process)
+
+    def interrupted(pid):
+        os.kill(os.getpid(), signal.SIGALRM)
+        return "known-ticks"
+
+    monkeypatch.setattr(backup, "process_ticks", interrupted)
+    stopped = []
+
+    def stop(cluster):
+        assert commands.clusters == [cluster]
+        stopped.append(cluster.process)
+
+    monkeypatch.setattr(backup.Cluster, "stop", stop)
+    commands.guard = backup.FixtureDeadline(1, defer=lambda: commands.registering)
+    try:
+        with pytest.raises(ValueError):
+            backup.Cluster.start(commands, "deadline-start")
+    finally:
+        commands.guard.close()
+    assert stopped == [process]
+    assert not (tmp_path / "deadline-start" / "pgpass").exists()
