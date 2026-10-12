@@ -14,6 +14,11 @@ prepares actualprivateoperator-start/login/init review rather than inventing a
 login-required/version diagnosis. Actualserver/auth/source acceptance pending.
 Backup3b3c2b72eb30/a391 reports40native and85realservice/0skip tests plus actual
 encryptedrestore/negative checks; secondreview pending, notrootaccepted yet.
+Secondround then findsPopen→handle-registration interruptionwindow; implementation
+fixes thisexactfinding beforefinalproof, no thirdstructuralreview. Rootprepared
+docs/runbooks/opend-authentication-review.md withprivatehost/artifact/input/
+one-shotstagingauthority/CI-two-humanreview/login/ACK/source/rollback sequence;
+this records readiness work only, no new install/auth or productionguard bypass.
 
 Parent [#167](https://github.com/ZP151/quantmesh/issues/167);
 contracts [#168](https://github.com/ZP151/quantmesh/issues/168);

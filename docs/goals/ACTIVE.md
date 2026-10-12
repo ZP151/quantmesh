@@ -12,11 +12,20 @@ offline/pre-login gateway initialization remains unknown, not proof of required
 login/Internet or version incompatibility. Stop unchangedanonymous retries;
 next prepare concrete privateoperator-start/login/init review packet while all
 deployment qualification flags stayfalse. No new credential request yet.
+Concrete preparation packet docs/runbooks/opend-authentication-review.md now
+names existingprivatehost/pinnedpaths/artifacts, syntheticprivateTTY/lifecycle
+qualification, explicit reviewedone-shotstagingauthority beforehumanlogin,
+ClassCtwo-human/CI gate, actualauthenticatedSDK/source proof androllback.
+It removes anonymousofflineACK as a preparation prerequisite, not the actual
+ACK/source acceptance gate. No bypass/script/install/login is authorized.
 
 Backup#171/a391 finalcandidate3b3c2b72eb30 reports40native backup tests, genuine
 newtarget encrypted restore/sixnegative checks,85zero-skip independent service
 gate and81license checks passed; finalsecondround is stillinprogress. Root has
 not accepted/integrated that candidate or claimed production/offhost recovery.
+Secondround identifies startup-interruption betweenPopen andhandle registration;
+a391 is fixing onlythat exactfinding withRED/GREEN/freshnative proof. No third
+structuralreview and no integration beforethefinal lifecycle regression passes.
 
 Current next verifier: owned local encrypted backup#171 ACTIVE in manageda391,
 thread01a13233-670d-7202-bdce-88f0f6d0486a, frozen0503d49. Narrow plan
