@@ -802,6 +802,23 @@ def expect_failure(name, action, receipt, source, unchanged):
     raise ValueError("negative witness unexpectedly accepted")
 
 
+def corrupt_copy(root, repository):
+    """Mutate one encrypted object only in a freshly allocated owned copy."""
+    import shutil
+
+    owned_path(root, repository)
+    for path in repository.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("linked repository refused")
+    clone = owned_path(root, root / "corrupt-repository")
+    shutil.copytree(repository, clone)  # Fails if target already exists.
+    pack = next(path for path in sorted((clone / "data").rglob("*")) if path.is_file())
+    raw = read_owned(clone, pack, private=False)
+    pack.chmod(0o600)  # Restic's immutable originals stay untouched/read-only.
+    pack.write_bytes(bytes([raw[0] ^ 1]) + raw[1:])
+    return clone, pack.relative_to(clone).as_posix()
+
+
 def run_fixture(profile, output):
     from decimal import Decimal
 
@@ -932,26 +949,22 @@ def run_fixture(profile, output):
 
         def wrong():
             rc, _ = restic(commands, repo, wrong_key, ["snapshots"], failure=True)
-            if rc:
+            if rc == 12:
                 raise ValueError("actual wrong-key refusal")
 
         expect_failure("wrong_key", wrong, receipt, source, advanced)
         wrong_key.unlink()
         import shutil
 
-        corrupt = output / "corrupt-repository"
-        shutil.copytree(repo, corrupt)
-        pack = next(path for path in sorted((corrupt / "data").rglob("*")) if path.is_file())
-        raw = read_owned(corrupt, pack, private=False)
-        pack.write_bytes(bytes([raw[0] ^ 1]) + raw[1:])
+        corrupt, changed = corrupt_copy(output, repo)
 
         def corrupted():
             rc, _ = restic(commands, corrupt, key, ["check", "--read-data"], failure=True)
-            if rc:
+            if rc == 1:
                 raise ValueError("actual corrupt-cipher refusal")
 
         expect_failure("corrupt_cipher_copy", corrupted, receipt, source, advanced)
-        receipt["corrupt_object"] = pack.relative_to(corrupt).as_posix()
+        receipt["corrupt_object"] = changed
         for name in (
             "missing_artifact",
             "substituted_artifact",

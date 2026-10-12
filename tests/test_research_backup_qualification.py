@@ -204,3 +204,40 @@ def test_bounded_command_refuses_output_flood_and_timeout(tmp_path):
     ]:
         with pytest.raises(ValueError):
             backup.bounded_process([sys.executable, "-c", program], {}, tmp_path, deadline)
+
+
+def test_only_new_corrupt_copy_is_made_writable(tmp_path):
+    import sys
+
+    if sys.platform != "linux":
+        pytest.skip("native encrypted pack permissions")
+    repo = tmp_path / "repository"
+    (repo / "data" / "ab").mkdir(parents=True)
+    pack = repo / "data" / "ab" / ("a" * 64)
+    pack.write_bytes(b"ciphertext")
+    pack.chmod(0o444)
+    before = pack.read_bytes()
+    clone, changed = backup.corrupt_copy(tmp_path, repo)
+    assert pack.read_bytes() == before and pack.stat().st_mode & 0o777 == 0o444
+    assert (clone / changed).read_bytes() != before
+
+
+def test_stale_pid_cannot_stop_an_owned_or_borrowed_process(tmp_path, monkeypatch):
+    process = SimpleNamespace(
+        pid=123456, poll=lambda: None, send_signal=lambda _: pytest.fail("unverified stop")
+    )
+    commands = SimpleNamespace(root=tmp_path)
+    cluster = backup.Cluster(
+        commands,
+        tmp_path,
+        tmp_path / "data",
+        "fixture",
+        "secret",
+        "nonce",
+        54321,
+        process,
+        "old-ticks",
+    )
+    monkeypatch.setattr(backup, "process_ticks", lambda pid: "different-ticks")
+    with pytest.raises(ValueError):
+        cluster.stop()
