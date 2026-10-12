@@ -1,5 +1,29 @@
 # Active Goal
 
+Current sourceTask2 batch: expiring staging software ACTIVE in managed4836,
+chat01a13286-d034-7222-a79d-88cd9c9a08b6, frozenb9d7b5d, plan
+2026-10-13-opend-staging-window.md. Fournewstage guard/template/test/runbook
+files only; prodprofile/unit unchanged, root-owned <=900s stage authority,
+privateforegroundterminal backend and owncgroup lifetime avoidSSHclientdependence.
+Actual--start/vendor/auth/host/systemd/tmux execution notauthorizedinthat session;
+nativefixedsynthetic proof separatesmockedmanager/root checks fromkernelfacts.
+Officialtmux3.4 docs reject-Dwithcommand; implementer usesfixedconfig/paneordering
+withinthesamefourfiles, no shell interpolation or fifthhelper guessed.
+
+Independent terminalbackend audit ACTIVE in managed13a1,
+chat01a1328a-154c-7ff3-b870-4deb9926723f, frozen5aab234, plan
+2026-10-13-terminal-backend-audit.md. No trackedfiles; officialsignedUbuntu
+package/source/executionclosure/licence notices beforefreshownednamespace tmux
+foreground/clientdetach proof <=90s, no global/vendor/credentials/market calls.
+Installedlocaltmux read-only observation3.4-1ubuntu0.1 amd64,
+binary034b15c64035f783d43862f2775eb4828f61571ca62c8199796000b97d556ecd,
+copyright9c587ac09a351692c23a910e4e59008d4a5ce66125c7aad1279065f3a272a3e1;
+theseareNOTsignedorigin/closedlicence/productionadmission. Rootnotexecbackend.
+Twoactiveindependentsessions; allolder handoffs remaincompleted. Rootowns
+sharedpins/REUSE/ADR/ACTIVE/iteration and actualhuman/CI/install/release gates.
+No source/privateinput/auth/wire/install/market flags promoted, no new user
+credential request, paidresource/APIcall or repeatedanonymousSDK/source tests.
+
 Latest accepted private-terminal#169: managed2088/chat01a13259-ae57-7010-945d-2470f3b902cd
 completed/idlef99b020153a31d7d8a5265c9795edbd5a7884ddb, root83517eb threeleaf
 filesbyteequal. Childandroot freshnative38/0skip, defaultpreflight2, fixture0,

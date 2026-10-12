@@ -3,6 +3,20 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
+Current Task2 refinement: b9d7b5d stagewindow plan dispatchedmanaged4836/
+01a13286-d034-7222-a79d-88cd9c9a08b6; fournewstage guard/unit/test/runbook,
+root-protected max900s authority distinctfromproductionqualification, private
+server-owned terminal/cgroup lifetime independentofoperatorSSHclient. No actual
+vendor/host/manager/backend execution inimplementation. Exacttmux-Dcannotappend
+command perupstreammanual; fixedconfigordering stayswithinapprovedfourfiles.
+Independent5aab234 backend audit dispatchedmanaged13a1/
+01a1328a-154c-7ff3-b870-4deb9926723f; officialsignedtmux3.4Ubuntu/source/closure/
+licences first, thenfreshownednamespace detachedlifetime/cleanup <=90s, metadata
+only/no secrets/globalservice. Installed3.4-1ubuntu0.1 byteobservations are not
+origin/admission proof. Onlytwoactiveimplementation/verifier sessions; allolder
+completed work staysidle. Rootintegration/pins/human/CI/auth/install gates retained;
+wholeA ACTIVE, no newcredential/paid/source operation or qualificationflagchange.
+
 Private-terminal#169 localprerequisite accepted:2088 idle/completedf99b020→root83517eb,
 3filesbyteequal, originalandrootnative38/0skip/defaultpreflight2/fixture0.
 Independentkernelwitness8reaped/private0600/echooff/input65noecho/4ACK/6cases/
