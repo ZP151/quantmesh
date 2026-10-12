@@ -147,6 +147,12 @@ framework. Its unmerged file calls itself iteration0038; that is not the current
 canonical iteration ID or accepted evidence. Mirror validated results under the
 current0038 ledger and avoid duplicate index entries. Tests/release acceptance
 must be rerun only for the actual adapted candidate, never inferred from dirty files.
+Read-only recovery audit confirms the legacy catalog has24 cases and a seven-name
+taxonomy different from this approved plan. Adopt a new catalog version/hash for
+that migration; retain existing case IDs where acceptance is unchanged. Never
+silently relabel an old run or compare incompatible catalogs/verifier bytes.
+Retain truthful nullable usage already present in the original scorer. Reuse
+tools/eval_harness and its qualified entry points rather than duplicating them.
 
 Files: create `tools/workflow_eval.py`, `tests/test_workflow_eval.py`,
 `tests/workflow_eval/cases.json`, `tests/workflow_eval/fixtures/`,

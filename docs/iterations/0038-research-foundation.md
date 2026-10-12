@@ -264,3 +264,22 @@ running Linux engine; a real PostgreSQL disposable fixture must be supplied
 before marking store/service integration accepted. No engine/global OS change
 or paid resource has been made. Model-provider metadata is requested ahead of
 paid integration; key stays out of chat. Planning and scripted work can proceed.
+
+Batch B is actually ready/ACTIVE from0a7ae862f5a7e29bccf3b307c2507f424c81e092:
+Worker#170 thread01a13100-8710-7c72-b0af-fc85d63691be in managed19c1 worktree;
+service#171 thread01a13100-8721-71e2-8f43-087f8a1608de in manageded95 worktree.
+Both compact snapshots confirm startup/intake, not implementation completion.
+Each owns only its assigned files and stops at reviewed green handoff; no source,
+paid/model, merge/deployment or shared-file changes are dispatched. Do not create
+duplicate sessions from their earlier pending client IDs.
+
+Root read-only Eval#160 recovery audit: legacy24-case catalog/scorer/runner exist,
+with seven historical category names differing from the approved new taxonomy.
+Reuse implementation entry points; any taxonomy/catalog/fixture/verifier change
+requires a new catalog version/hash and incompatible-baseline refusal. Preserve
+old dirty files/runs; do not silently rename labels to claim score improvement.
+Unknown usage already remains None in legacy aggregate and must stay unknown.
+New Worker/service cases and verifier pins must be reviewed before freezing a
+comparable24-case baseline. No third implementation session or legacy Eval run
+was started while Batch B occupies two slots. Next Eval slice follows these
+workers and the original #160 acceptance, not a parallel duplicate harness.
