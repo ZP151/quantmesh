@@ -354,3 +354,25 @@ Final read-only current-user global singleton inspection reports absent
 (helper-mutex-followup.txt). It opens an existing handle only, never creates a
 mutex/helper or changes source processes; this corroborates the missing helper
 finding independently of PID/command-line matching.
+
+### Eval and Linux boundary continuation — Oct13 Singapore
+
+Eval#160 is dispatched once as native thread01a13145-6eb6-7a80-bfcf-24f4a245d4af
+(`QuantMesh #160 — 恢复可复现工作流 Eval`), managed worktreee549, from
+integration2f424d0. Recover the existing dirty legacy harness read-only into its
+owned files; version taxonomy/catalog/verifier pins and retain known-bad safety
+assertions as real failures. Unknown token/cost remains unknown; scripted
+fixtures are not investment skill. This is active work, not accepted completion.
+
+Planner freezes the bounded [Linux plan](../superpowers/plans/2026-10-13-linux-worker-containment.md)
+under already-approved A Worker isolation. Task1 qualifies a removable OCI
+boundary without changing store/math/Windows behavior; Task2 integration waits
+for a measured immutable Linux image and actual process-tree evidence. Engine
+limits are inspected inside the container before go; a pulse watchdog handles
+owner loss rather than assuming CLI death kills a daemon-owned workload. No
+new package, global daemon/WSL setup, cloud resource or model call is authorized
+by this refinement. Second implementation slot is reserved for#172.
+Read-only WSL intake finds Linux6.6.87.2/cgroup-v2 controllers and a Docker CLI;
+Engine/native qualification is pending the existing operator request. PR166
+remains OPEN/exactda6e8c7/reviews[]; no new auth URL or helper restart is issued.
+Completed BatchB sessions stay idle.

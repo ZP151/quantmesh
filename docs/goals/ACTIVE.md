@@ -89,6 +89,17 @@ deployment remain open. Formal168h stays not required and the goal stays ACTIVE.
 
 ## Historical delivery checkpoint — retained, superseded priority
 
+Latest continuation: Eval#160 thread01a13145-6eb6-7a80-bfcf-24f4a245d4af in e549
+is ACTIVE from2f424d0; do not redispatch its pending client ID. Its known-bad
+assertions remain failures, not relaxed for a passing score. Approved-A Linux
+Worker refinement is tracked in
+docs/superpowers/plans/2026-10-13-linux-worker-containment.md (#172). Task1 is a
+bounded OCI adapter/qualification; Task2/server execution waits for immutable
+runtime/native tree evidence. Two-session cap stays in force. PR166 human
+review/recovery authorization, local Docker Engine and model-provider metadata
+remain existing pending questions; don't repeat them or completed BatchB work.
+No global/production/paid change has occurred.
+
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance
 and the 8 GB migration's short acceptance are complete; this goal remains
 active until the new host's sustained capacity gate is closed and the separate
