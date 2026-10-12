@@ -46,7 +46,12 @@ Interfaces:
   metrics/windows, strategy/code/config/input digests; excludes wall-clock
   created_at and worker receipt IDs. Full receipt remains separately archived.
 - `publish_result(job: JobRecord, canonical_bytes: bytes, root: Path) -> ArtifactRef`;
-  relative content-addressed paths, atomic writes, manifest digests.
+  wrap canonical numerical JSON as a report envelope with schema_version=1,
+  request_digest=job.request_digest and result. Write atomically under
+  `<job_id>/<sha256-of-envelope>.json`; ArtifactRef byte_size/SHA256 describe
+  envelope bytes. Store verifies every ref and exactly one report with matching
+  request_digest; Worker owns numerical schema validation. Full receipt remains
+  separately archived. See proposed ADR-0026; final contract digests await review.
 - Per-attempt report registries are isolated to avoid concurrent writes to
   existing append-only JSONL. Only current lease can `JobStore.finish` success.
 

@@ -118,3 +118,20 @@ with precise typed reasons; no fixture fallback or provider-name license inferen
 Existing initial baseline parameter schemas explicitly admit only empty objects;
 later versioned strategies extend their own schemas. Optional lake_root constructor
 injection preserves path-only compatibility and existing baseline math.
+
+### First GREEN / proposed publication contract
+
+#168 first focused suite24 passed/17.93s, exit0; root read the saved GREEN log.
+RED missing contracts/store exited2; this is a module/collection RED, not a
+reproduced pre-existing runtime fault. Boundary strengthening and independent
+Spec/Standards review remain underway, so no schema/protocol freeze or completion.
+Proposed [ADR-0026](../adr/0026-research-job-publication-and-advisory-boundary.md)
+records job-owned digest-verified report envelopes bound to request_digest,
+separate numerical Worker validation and truthful unavailable analysis metadata.
+
+#169 reports focused calendar coverage and API wiring green while first bounded
+review continues. Its additive SessionFreshness contract is ready for root's
+later shared UI integration, raw clocks/order fences retained. Root verified
+an uncovered current-default case: closed/latest-session coverage with unknown
+provider latency must not be forced to unknown merely because delay is undeclared.
+Requested meaningful RED/GREEN within the ongoing review, no third structural review.
