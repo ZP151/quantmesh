@@ -1,0 +1,26 @@
+{
+  "src/quantmesh/__init__.py": {
+    "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+    "sha256": "6e280cd52704e5ee0a0d8509e978820431bffb760892dd1e1da73db5947918c5"
+  },
+  "src/quantmesh/api/workstation.py": {
+    "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\api\\workstation.py",
+    "sha256": "fd676896e7bcb8a5e9afe83d96865672bda4e2af53c900cc3857b15f82b8df0a"
+  },
+  "src/quantmesh/ai/roles.py": {
+    "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\ai\\roles.py",
+    "sha256": "be1d3eb691ac1af754f26c8eda778ad242ed30571ea359bd74b0a2b37c5b740b"
+  },
+  "src/quantmesh/live/fence.py": {
+    "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\live\\fence.py",
+    "sha256": "68b5f8396d9ee4d812ccc443001fc756ecc2f56f967fea995d740081289fa646"
+  },
+  "benchmarks/quantmesh_v2/test_audit_badcases.py": {
+    "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+    "sha256": "944b012181b5dbe859c486e3f19a8c9b7c0a01ca82883e2d24e832b4b914d51f"
+  },
+  "tools/eval_harness/pytest_plugin.py": {
+    "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+    "sha256": "a6937d3af375d4582afc6ec3d3733527cfca7840bd4a0671cd8c4f6118ee69cb"
+  }
+}

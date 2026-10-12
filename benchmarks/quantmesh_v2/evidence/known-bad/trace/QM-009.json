@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.003125299932435155,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        390,
+        "test_later_retry_recovers_after_order_was_journaled_before_proposal_transition"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.119999594986439e-05,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        390,
+        "test_later_retry_recovers_after_order_was_journaled_before_proposal_transition"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001463999506086111,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        390,
+        "test_later_retry_recovers_after_order_was_journaled_before_proposal_transition"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002472400083206594,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        390,
+        "test_later_retry_recovers_after_order_was_journaled_before_proposal_transition"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.16288740001618862,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        390,
+        "test_later_retry_recovers_after_order_was_journaled_before_proposal_transition"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.000156699912622571,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        390,
+        "test_later_retry_recovers_after_order_was_journaled_before_proposal_transition"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

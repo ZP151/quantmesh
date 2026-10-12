@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0019874999998137355,
+      "location": [
+        "tests\\test_live_buffer.py",
+        667,
+        "TestLatest.test_latest_uses_bounded_memory_for_a_large_lake"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.6504261000081897,
+      "location": [
+        "tests\\test_live_buffer.py",
+        667,
+        "TestLatest.test_latest_uses_bounded_memory_for_a_large_lake"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001572000328451395,
+      "location": [
+        "tests\\test_live_buffer.py",
+        667,
+        "TestLatest.test_latest_uses_bounded_memory_for_a_large_lake"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

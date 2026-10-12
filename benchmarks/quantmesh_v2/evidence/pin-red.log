@@ -1,0 +1,15 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+___________________ test_missing_usage_is_unknown_not_zero ____________________
+tests\test_eval_harness.py:85: in test_missing_usage_is_unknown_not_zero
+    assert metrics[field] is None
+E   assert 0 is None
+______________________ test_freeze_rejects_invalid_cases ______________________
+tests\test_eval_harness.py:383: in test_freeze_rejects_invalid_cases
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+=========================== short test summary info ===========================
+FAILED tests/test_eval_harness.py::test_missing_usage_is_unknown_not_zero - a...
+FAILED tests/test_eval_harness.py::test_freeze_rejects_invalid_cases - Failed...
+2 failed, 38 deselected in 0.47s

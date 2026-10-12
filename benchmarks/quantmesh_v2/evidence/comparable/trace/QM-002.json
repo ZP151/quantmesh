@@ -1,0 +1,212 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0025351999793201685,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.007863900042138994,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001439000479876995,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0015025000320747495,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.005357800051569939,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00011779996566474438,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0012526999926194549,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0037482999032363296,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012010009959340096,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001291800057515502,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.004097500001080334,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012420001439750195,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0014588000485673547,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.00442689994815737,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014779996126890182,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]",
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]",
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]",
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]",
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

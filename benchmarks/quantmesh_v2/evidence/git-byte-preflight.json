@@ -1,0 +1,6 @@
+{
+  "git_blob_pin_mismatches": [
+    "benchmarks/quantmesh_v2/cases.json"
+  ],
+  "reason": "Git eol normalization of recovered seed metadata; no catalog executed"
+}

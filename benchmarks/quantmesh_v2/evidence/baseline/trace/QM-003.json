@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_contracts_refuse_cross_packet_and_authority_shaped_output",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00019249995239078999,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        355,
+        "test_contracts_refuse_cross_packet_and_authority_shaped_output"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_contracts_refuse_cross_packet_and_authority_shaped_output",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0008435000199824572,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        355,
+        "test_contracts_refuse_cross_packet_and_authority_shaped_output"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_contracts_refuse_cross_packet_and_authority_shaped_output",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010579999070614576,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        355,
+        "test_contracts_refuse_cross_packet_and_authority_shaped_output"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_packet_copilot.py::test_contracts_refuse_cross_packet_and_authority_shaped_output"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

@@ -1,0 +1,56 @@
+FFFFFF                                                                   [100%]
+================================== FAILURES ===================================
+____________ test_real_failure_precedes_sibling_xfail[call-failed] ____________
+tests\test_eval_harness.py:317: in test_real_failure_precedes_sibling_xfail
+    assert core.verdict(1, evidence) == expected
+E   AssertionError: assert 'skipped' == 'failed'
+E     
+E     - failed
+E     + skipped
+____________ test_real_failure_precedes_sibling_xfail[setup-error] ____________
+tests\test_eval_harness.py:317: in test_real_failure_precedes_sibling_xfail
+    assert core.verdict(1, evidence) == expected
+E   AssertionError: assert 'skipped' == 'error'
+E     
+E     - error
+E     + skipped
+__________ test_real_failure_precedes_sibling_xfail[teardown-error] ___________
+tests\test_eval_harness.py:317: in test_real_failure_precedes_sibling_xfail
+    assert core.verdict(1, evidence) == expected
+E   AssertionError: assert 'skipped' == 'error'
+E     
+E     - error
+E     + skipped
+________________ test_comparison_requires_explicit_completion _________________
+tests\test_eval_harness.py:324: in test_comparison_requires_explicit_completion
+    with pytest.raises(ValueError, match="incomplete"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_______________ test_timeout_retains_full_collected_denominator _______________
+tests\test_eval_harness.py:336: in test_timeout_retains_full_collected_denominator
+    assert result["results"][0]["verifiers_total"] == 3
+E   assert 1 == 3
+---------------------------- Captured stdout call -----------------------------
+== probe ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\review-red-tmp\\test_timeout_retains_full_coll0\\candidate with space\\many\\logs\\probe\\01-probe.log","name":"probe","pid":35192,"timeout_seconds":5,"timestamp":"2026-10-12T18:13:52.399Z"}
+{"elapsed_seconds":5.479,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\review-red-tmp\\test_timeout_retains_full_coll0\\candidate with space\\many\\logs\\probe\\01-probe.log","name":"probe","slow_tests":[],"timed_out":true,"timestamp":"2026-10-12T18:13:57.870Z"}
+FAILED after 0:05; exit code 1; last output:
+
+TIMEOUT after 5s
+probe: failed (5.48s)
+________________ test_unknown_verifier_denominator_is_unknown _________________
+tests\test_eval_harness.py:342: in test_unknown_verifier_denominator_is_unknown
+    metrics = core.aggregate([row(verifiers_total=None, verifiers_passed=None)])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\eval_harness\core.py:250: in aggregate
+    sum(r["verifiers_passed"] for r in rows), sum(r["verifiers_total"] for r in rows)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'
+=========================== short test summary info ===========================
+FAILED tests/test_eval_harness.py::test_real_failure_precedes_sibling_xfail[call-failed]
+FAILED tests/test_eval_harness.py::test_real_failure_precedes_sibling_xfail[setup-error]
+FAILED tests/test_eval_harness.py::test_real_failure_precedes_sibling_xfail[teardown-error]
+FAILED tests/test_eval_harness.py::test_comparison_requires_explicit_completion
+FAILED tests/test_eval_harness.py::test_timeout_retains_full_collected_denominator
+FAILED tests/test_eval_harness.py::test_unknown_verifier_denominator_is_unknown
+6 failed, 31 deselected in 8.70s

@@ -68,3 +68,60 @@ metadata relative to its byte pin. A benchmark-local .gitattributes keeps that
 recovered seed byte-identical (-text); no catalog rewrite, re-freeze or experiment
 was performed. After restaging, all183 verifier/fixture pins and harness Python
 bytes match committed Git blobs. This guards replay from a fresh checkout.
+
+Final replay evidence (2026-10-13 Singapore): all three runs use committed
+candidate c134e8ede92c1158f3e70f8dd11ab0dbbf1e7155. The final evidence commit
+changes only benchmark metadata/attributes/evidence, not executed code/verifiers.
+Catalog2.0.0/db180bb4ba137cf89a93ef038536281362ec247320efbd401a8c0a77c6e60e9c
+was frozen once, never rewritten. Verifier fingerprint:
+49a94adf840c244667940c5597972532a07a789692f9075a43c2214d41deba4a.
+Actual full candidate src-byte hash:
+9ebe3d82343838af865a4506bfc3ad3df4eb219fe8eaaa663526f1dd79549116.
+
+| Evidence | Exit | Task passes | Verifier passes | Subprocess seconds |
+| --- | --- | --- | --- | --- |
+| baseline | 1 | 21/24 | 61/64 | 57.025 |
+| comparable (same frozen catalog) | 1 | 21/24 | 61/64 | 59.921 |
+| inject-known-bad (verifier fault) | 1 expected | 0/24 | 0/64 | 53.011 |
+
+Both normal runs have no skips, xfail or timeouts; failed IDs remain QM-022/023/024.
+Task/first-pass success87.5%, verifier95.3125%; regression rate0 with no improvements,
+not a green workflow baseline. Scenario/difficulty/task-type aggregates are in
+run.json and summary.md. Measured scripted model calls18, ToolRegistry calls6,
+errors4 (intentional refusals included); declared human intervention rate0.
+Tokens/cost null. p95 subprocess latency4.049s/4.038s for the normal runs, including
+startup; no SLA/speedup claim. Negative control is a labelled injected verifier
+fault before test bodies, not evidence of model or production financial behavior.
+
+All72 records were checked against actual traces: imported source is exactly
+C:/Users/15492/.codex-clean/worktrees/e549/QuantMesh/src/quantmesh/__init__.py;
+imported plugin is the pinned e549/tools/eval_harness/pytest_plugin.py.
+Audited Python's editable root is6e1e, but children explicitly place candidate
+src/repo on PYTHONPATH and refuse a noncandidate package. Actual module absolute
+paths and SHA256 values (workstation/roles/fence/package/plugin/audit verifier)
+are in evidence/candidate-source-imports.json. Source/verifier/catalog stability
+flags are all true. Case IDs and acceptance remain exactly legacy24; audit source
+is byte-identical SHA944b012181b5dbe859c486e3f19a8c9b7c0a01ca82883e2d24e832b4b914d51f.
+
+The evidence directory archives unchanged complete raw child stdout/stderr,
+progress events, metadata traces, summaries, dataset snapshots and result JSONL,
+plus full RED/GREEN/domain/license logs and command/exit ledger. Owned scratch
+(test databases/datasets) stays only in output/eval-160. Evidence attributes keep
+original captured bytes through Git checkout, including CRLF; they are treated as
+immutable artifacts rather than mergeable source. The seed's CR-at-eol attribute
+makes Git whitespace checks recognize its intentionally preserved line endings.
+
+Root has now created [#174](https://github.com/ZP151/quantmesh/issues/174) for
+confirmed production origin/citation/source-time failures, ahead of the UI slice.
+Do not repair these in Eval scope. #174's legitimate production/fixture/verifier
+changes require a new catalog/version/hash and explicit incompatibility; preserve
+this failing baseline and never silently claim an improvement after changed tests.
+The legacy schema1.x comparison refusal is saved in evidence/legacy-comparison-refusal.txt.
+
+Operator needs: none for this offline checkpoint. Existing real DB/Linux/model API
+prerequisites remain pending under their owners; no mocked substitute was used.
+No new paid calls/resources, production account access, tunnel/helper mutation,
+PR/merge/deploy or force push. Final whole-project release gate/CI/human acceptance
+remain root's combined-integration gates. Stop at this reviewed tested pushed
+checkpoint and mirror the role/evidence record into iteration0038; do not rerun
+the entire boundary solely for a coordinator status update.

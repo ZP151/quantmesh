@@ -1,0 +1,96 @@
+{
+  "reports": [
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00018049997743219137,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        46,
+        "test_generic_pipeline_refuses_fabricated_citation"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 0.0025228000013157725,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        46,
+        "test_generic_pipeline_refuses_fabricated_citation"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "Unresolvable citations must be blocked even when the scripted critic says pass\nassert not (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),)\n +  where (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),) = CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()).allowed\n +    where CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()) = ResearchResult(run_id='2f2c9ec3f2f82909', analyst_report=AnalystReport(claims=[Claim(statement='Synthetic unsupported ...ortfolio_review=PortfolioReview(posture='within_constraints', referenced_inputs=['portfolio-fixture'], suggestions=[])).critic"
+      }
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013269996270537376,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        46,
+        "test_generic_pipeline_refuses_fabricated_citation"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [
+    {
+      "sequence": 0,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.000997799914330244
+    },
+    {
+      "sequence": 1,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.00031849998049438
+    },
+    {
+      "sequence": 2,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.000421699951402843
+    },
+    {
+      "sequence": 3,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.0002308000111952424
+    }
+  ],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

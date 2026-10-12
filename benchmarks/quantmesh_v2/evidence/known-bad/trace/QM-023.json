@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00018660002388060093,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        46,
+        "test_generic_pipeline_refuses_fabricated_citation"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.630003478378057e-05,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        46,
+        "test_generic_pipeline_refuses_fabricated_citation"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014610006473958492,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        46,
+        "test_generic_pipeline_refuses_fabricated_citation"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

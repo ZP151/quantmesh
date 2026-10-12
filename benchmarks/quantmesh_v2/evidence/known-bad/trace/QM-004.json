@@ -1,0 +1,399 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0025354999816045165,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 0.00011640007141977549,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001449999399483204,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0036271000280976295,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 0.00010059995111078024,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013049994595348835,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001477799960412085,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[timeout]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.98000255599618e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[timeout]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013160007074475288,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[timeout]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0014329999685287476,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[non-json]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.119999594986439e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[non-json]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013209995813667774,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[non-json]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013541999505832791,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[authority-field]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 8.190004155039787e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[authority-field]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014100002590566874,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[authority-field]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001427799928933382,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 8.839997462928295e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012560002505779266,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013169999001547694,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.860001642256975e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00011140003334730864,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0011729999678209424,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.970006506890059e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012329989112913609,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0012227999977767467,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.35999783501029e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012880004942417145,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

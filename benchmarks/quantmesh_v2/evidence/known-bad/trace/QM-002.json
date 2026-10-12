@@ -1,0 +1,227 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0023314999416470528,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 0.00010220007970929146,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00017550005577504635,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0027821999974548817,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.540002793073654e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001354999840259552,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013677000533789396,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.730000652372837e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013499998021870852,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001427799928933382,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 8.519995026290417e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012930005323141813,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0017202000599354506,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.910002022981644e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001596999354660511,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        306,
+        "test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]",
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]",
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]",
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]",
+    "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

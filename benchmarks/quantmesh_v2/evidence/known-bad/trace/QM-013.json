@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0021459999261423945,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        135,
+        "test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 8.940009865909815e-05,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        135,
+        "test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0002764000091701746,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        135,
+        "test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

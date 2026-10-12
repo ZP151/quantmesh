@@ -1,0 +1,132 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002617600024677813,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.07423160003963858,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0002077000681310892,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0017470000311732292,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.07310459995642304,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00015570002142339945,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0014909999445080757,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.08242320001590997,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00015620002523064613,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]",
+    "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]",
+    "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

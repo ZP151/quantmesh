@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_old_source_quote_never_fills_paper_order",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00019419996533542871,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        88,
+        "test_old_source_quote_never_fills_paper_order"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_old_source_quote_never_fills_paper_order",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 8.830009028315544e-05,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        88,
+        "test_old_source_quote_never_fills_paper_order"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_old_source_quote_never_fills_paper_order",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013940001372247934,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        88,
+        "test_old_source_quote_never_fills_paper_order"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "benchmarks/quantmesh_v2/test_audit_badcases.py::test_old_source_quote_never_fills_paper_order"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

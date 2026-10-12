@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_two_service_instances_share_one_exactly_once_confirmation_boundary",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0020933999912813306,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        276,
+        "test_two_service_instances_share_one_exactly_once_confirmation_boundary"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_two_service_instances_share_one_exactly_once_confirmation_boundary",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.869993664324284e-05,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        276,
+        "test_two_service_instances_share_one_exactly_once_confirmation_boundary"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_two_service_instances_share_one_exactly_once_confirmation_boundary",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014239992015063763,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        276,
+        "test_two_service_instances_share_one_exactly_once_confirmation_boundary"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_paper_proposals.py::test_two_service_instances_share_one_exactly_once_confirmation_boundary"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

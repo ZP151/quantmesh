@@ -1,0 +1,81 @@
+{
+  "python": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe",
+  "cwd": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh",
+  "commands": [
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m pytest benchmarks/quantmesh_v2/test_audit_badcases.py -q --tb=short --basetemp=output/eval-160/audit-tmp",
+      "log": "legacy-assertions-audit.log",
+      "exit": 1
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m pytest tests/test_eval_harness.py -q --tb=short --basetemp=output/eval-160/red-tmp",
+      "log": "focused-red.log",
+      "exit": 1
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m pytest tests/test_eval_harness.py -q --tb=short --basetemp=output/eval-160/green-tmp",
+      "log": "focused-green.log",
+      "exit": 0
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m pytest tests/test_eval_harness.py tests/test_ai_gateway.py tests/test_ai_tools.py tests/test_live_fence.py tests/test_packet_copilot.py tests/test_paper_proposals.py tests/test_forecast_outcomes.py -q --tb=short --durations=10 --basetemp=output/eval-160/boundary-tmp",
+      "log": "boundary.log",
+      "exit": 0
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m pytest tests/test_eval_harness.py -q --tb=short -k 'real_failure_precedes or explicit_completion or full_collected or unknown_verifier' --basetemp=output/eval-160/review-red-tmp",
+      "log": "review-red.log",
+      "exit": 1
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m pytest tests/test_eval_harness.py -q --tb=short -k 'unstable_catalog or unpinned_plugin' --basetemp=output/eval-160/spec-red-tmp",
+      "log": "spec-red.log",
+      "exit": 1
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m pytest tests/test_eval_harness.py -q --tb=short --basetemp=output/eval-160/review-green-tmp",
+      "log": "review-green.log",
+      "exit": 0
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m pytest tests/test_eval_harness.py -q --tb=short -k 'missing_usage or freeze_rejects' --basetemp=output/eval-160/pin-red-tmp",
+      "log": "pin-red.log",
+      "exit": 1
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m pytest tests/test_eval_harness.py -q --tb=short --basetemp=output/eval-160/final-green-tmp",
+      "log": "final-green.log",
+      "exit": 0
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m ruff check src tests tools benchmarks/quantmesh_v2",
+      "log": "ruff.log",
+      "exit": 0
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe tools/license_review.py",
+      "log": "license.log",
+      "exit": 0
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m tools.eval_harness freeze --cases benchmarks/quantmesh_v2/cases.json --output benchmarks/quantmesh_v2/dataset.json",
+      "log": "freeze.log",
+      "exit": 0
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m tools.eval_harness run --output output/eval-160/baseline --timeout 120",
+      "log": "baseline-command.log",
+      "exit": 1
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m tools.eval_harness run --output output/eval-160/comparable --timeout 120 --baseline output/eval-160/baseline/run.json",
+      "log": "comparable-command.log",
+      "exit": 1
+    },
+    {
+      "command": "C:/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/0038-research-foundation/audited-venv/Scripts/python.exe -m tools.eval_harness run --output output/eval-160/known-bad --timeout 120 --inject-known-bad",
+      "log": "known-bad-command.log",
+      "exit": 1
+    }
+  ]
+}

@@ -1,0 +1,356 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00020869995933026075,
+      "location": [
+        "tests\\test_ai_tools.py",
+        113,
+        "TestDispatch.test_allowed_role_dispatch_calls_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.870005305856466e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        113,
+        "TestDispatch.test_allowed_role_dispatch_calls_surface"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010609999299049377,
+      "location": [
+        "tests\\test_ai_tools.py",
+        113,
+        "TestDispatch.test_allowed_role_dispatch_calls_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_analyst",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00010579999070614576,
+      "location": [
+        "tests\\test_ai_tools.py",
+        120,
+        "TestDispatch.test_permission_matrix_analyst"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_analyst",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.700000423938036e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        120,
+        "TestDispatch.test_permission_matrix_analyst"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_analyst",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010930001735687256,
+      "location": [
+        "tests\\test_ai_tools.py",
+        120,
+        "TestDispatch.test_permission_matrix_analyst"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_critic",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 9.93999419733882e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        128,
+        "TestDispatch.test_permission_matrix_critic"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_critic",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.910006050020456e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        128,
+        "TestDispatch.test_permission_matrix_critic"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_critic",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 8.580007124692202e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        128,
+        "TestDispatch.test_permission_matrix_critic"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_risk_and_portfolio",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 8.839997462928295e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        134,
+        "TestDispatch.test_permission_matrix_risk_and_portfolio"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_risk_and_portfolio",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.060007192194462e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        134,
+        "TestDispatch.test_permission_matrix_risk_and_portfolio"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_risk_and_portfolio",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010639999527484179,
+      "location": [
+        "tests\\test_ai_tools.py",
+        134,
+        "TestDispatch.test_permission_matrix_risk_and_portfolio"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 9.950005915015936e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        141,
+        "TestDispatch.test_forbidden_call_refuses_naming_role_and_tool"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.429998368024826e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        141,
+        "TestDispatch.test_forbidden_call_refuses_naming_role_and_tool"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.059999138116837e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        141,
+        "TestDispatch.test_forbidden_call_refuses_naming_role_and_tool"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 8.829997386783361e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        146,
+        "TestDispatch.test_unknown_tool_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.589991971850395e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        146,
+        "TestDispatch.test_unknown_tool_refused"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.029998909682035e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        146,
+        "TestDispatch.test_unknown_tool_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 8.559995330870152e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        151,
+        "TestDispatch.test_unknown_role_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.759993266314268e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        151,
+        "TestDispatch.test_unknown_role_refused"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.920005686581135e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        151,
+        "TestDispatch.test_unknown_role_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00010869989637285471,
+      "location": [
+        "tests\\test_ai_tools.py",
+        156,
+        "TestDispatch.test_forbidden_call_never_touches_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.109995931386948e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        156,
+        "TestDispatch.test_forbidden_call_never_touches_surface"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010449998080730438,
+      "location": [
+        "tests\\test_ai_tools.py",
+        156,
+        "TestDispatch.test_forbidden_call_never_touches_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface",
+    "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_analyst",
+    "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_critic",
+    "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_risk_and_portfolio",
+    "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool",
+    "tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused",
+    "tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused",
+    "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}
