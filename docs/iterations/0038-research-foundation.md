@@ -538,3 +538,17 @@ whole suite is inferred. Next: fresh native Linux-filesystem checkout/venv,
 same locked deps/unchanged tests; preserve expired trials and don't weaken gates.
 Ignored raw evidence: output/175-linux-service. No system/daemon/production,
 paid call/resource, core lock or Windows/vendor/helper operation changed.
+
+Linux dependency/offline service follow-up succeeds on clean detached9d5b3fa
+native Linux filesystem/CPython3.12.3 x86_64:81 SHA-installed/licensed wheels,
+no unknown licenses,8 actual runtime tests; offline25pass/5real-PG skip/11.08s
+exit0. Default25pass/5skip/10.14s exit1 solely for missing owned PostgreSQL.
+Final Windows77-package gate also25pass/5skip exit0 after the implementation
+metadata field. Frozen schema/protocol unchanged on both measured platforms.
+Actual imports bind the native checkout. First /tmp source directory expired
+between WSL invocations; original successful summary and failed subsequent
+inspection remain visible. Reproduction on owned persistent /var/tmp collects
+all raw receipts before exit; no test/constraint/deadline is loosened. Selected
+47 raw files with SHA256 archive under docs/evidence/research-foundation/
+linux-service-cp312; sparse review#171 delta R1 bothclear, no third architecture
+review. No full Linux/OCI/model-limit/PG/server or financial-performance claim.

@@ -1,0 +1,12 @@
+.........................sssss                                           [100%]
+=============================== warnings summary ===============================
+../venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-service-native-yxk1ppm2/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+../venv/lib/python3.12/site-packages/starlette/testclient.py:53
+  /var/tmp/quantmesh-service-native-yxk1ppm2/venv/lib/python3.12/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+25 passed, 5 skipped, 2 warnings in 11.08s

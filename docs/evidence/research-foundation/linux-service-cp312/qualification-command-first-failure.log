@@ -1,0 +1,11 @@
+fatal: not a git repository: /mnt/c/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/C:/Users/15492/Develop/QuantMesh/.git/worktrees/QuantMesh
+Traceback (most recent call last):
+  File "/mnt/c/Users/15492/.codex-clean/worktrees/6e1e/QuantMesh/output/175-linux-service/qualify-environment.py", line 45, in <module>
+    "source_head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['git', 'rev-parse', 'HEAD']' returned non-zero exit status 128.

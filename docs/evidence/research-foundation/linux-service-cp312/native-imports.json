@@ -1,0 +1,2 @@
+<3>WSL (348 - Relay) ERROR: CreateProcessCommon:790: chdir(/tmp/quantmesh-service-native-sqxnkk4a/checkout) failed 2
+env: ‘/tmp/quantmesh-service-native-sqxnkk4a/venv/bin/python’: No such file or directory

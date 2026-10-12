@@ -86,3 +86,12 @@ closure or required by the registered baseline/report API. Resolve core dev
 plus service dev instead, retaining all existing admitted version constraints;
 do not expand the advisory service with unrelated research extras. The first
 resolver receipt remains an unadmitted diagnostic, not a shipping lock.
+
+Observed boundary2026-10-13: clean9d5b3fa/native Linux filesystem passes81-wheel
+hash installation/license audit,8 runtime tests and25 offline service checks
+with5 actual-PG skips. Default gate exits1 only for real-PG absence. Original
+mounted-drive capture/Git-pointer failure and300s expiry remain unaccepted;
+owned persistent native filesystem fixes the environment, not test assertions
+or admission limits. Imports and raw receipts are archived before WSL exit.
+New delta Spec/Standards R1 clear; actual OCI/aggregate effects/Worker/PG/model/
+private deployment remain the unfinished boundaries in the parent plans.

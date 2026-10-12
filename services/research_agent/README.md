@@ -95,20 +95,23 @@ services/research_agent/.venv/Scripts/python -m pip install --no-deps --no-build
 services/research_agent/.venv/Scripts/python tools/research_service_gate.py --offline
 ```
 
-Linux qualification candidate (iteration0038):
+Linux dependency/offline-service qualification (iteration0038):
 `requirements.linux-cp312.lock` binds81 selected external wheels for CPython3.12
 x86_64. Shared Windows versions are unchanged; Linux adds SecretStorage,
 jeepney, cryptography, cffi, pycparser and uvloop, and omits colorama and
 pywin32-ctypes. The gate selects a fixed lock using measured implementation,
 OS, Python minor and architecture; an unsupported runtime exits1 before checks.
 Use hash-enforced installation in a fresh owned Linux venv and the same two
-`--no-deps --no-build-isolation` editable project installs. This is a candidate,
-not Linux production certification: the WSL mounted-drive trial installed all
-81 wheels and passed8 runtime checks, but its service suite expired at the
-owned300-second driver deadline. Preserve that failed/incomplete receipt.
-A native Linux filesystem checkout is the next qualification target; no test
-assertion, package constraint or real-PG requirement is relaxed. WSL results
-cannot certify the OCI image, aggregate process caps or actual PostgreSQL/server.
+`--no-deps --no-build-isolation` editable project installs. Actual clean
+9d5b3fa native-filesystem WSL acceptance passes81 licenses/no unknowns,
+8 runtime tests and25 scripted service tests/5 real-PG skips, offline exit0.
+Default gate exits1 solely for the missing actual disposable PostgreSQL proof.
+Fresh Windows gate remains25pass/5skip/exit0. Retain the mounted-drive capture,
+Git-pointer and300s-expiry attempts; none is a successful qualification.
+Raw durable evidence and actual-import paths are in
+`docs/evidence/research-foundation/linux-service-cp312`. This is not Linux
+production certification: OCI/image/aggregate model caps, Linux Worker recovery,
+real PostgreSQL/model calls and server acceptance remain unfinished.
 
 Pydantic2.13.5 reproduces the frozen schema/protocol hashes. LangGraph1.2.12 and
 its OSS closure are MIT; no LangSmith hosted service, CLI/platform/server or

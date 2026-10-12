@@ -1,5 +1,18 @@
 # Active Goal
 
+Current resume anchor2026-10-13 Singapore: #173 local fixture user loop is
+integrated/reviewed, two axes clear after2rounds; source ed5c12e/b9daa42 map to
+bc0d7a4/9fac9bf. Root47backend/1skip,14UI/typecheck green; child full419frontend
+and exact fixture/browser report/reload/cancel/outage/mobile witnesses pass.
+New Linux dependency/offline service qualification on clean9d5b3fa passes81
+licenses,8 runtime checks,25service/5actual-PG skips; defaultgate1 only missingPG.
+Native raw receipts/actual imports are archived separately; failed mounted-drive
+trials remain failures. No qualified OCI/model aggregate caps, Linux Worker
+integration/recovery, real PG/model, server market independence or release yet.
+Next close existing Engine/PG/source-human/provider prerequisites and prepare
+the qualified runtime/private deployment/recovery boundary. Don't redispatch
+stopped#160/#172/#173 or re-run completed review cycles. Formal168h stays on-demand.
+
 Status: iteration0038 ACTIVE, operator-approved Option A on2026-10-12 Singapore.
 The stale tool goal for AWS/chart/readiness delivery is closed; its accepted
 October8 evidence remains historical. The new goal delivers persistent research

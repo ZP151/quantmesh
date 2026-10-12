@@ -1,0 +1,14 @@
+{
+  "head": "9d5b3fab3bda0182663b1494865db298d6f3685f",
+  "offline_exit": 0,
+  "offline_tests": {
+    "tests": 30,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5
+  },
+  "default_exit": 1,
+  "default_failures": [
+    "real owned disposable PostgreSQL evidence pending"
+  ]
+}

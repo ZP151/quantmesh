@@ -1,0 +1,52 @@
+[
+  {
+    "name": "clone",
+    "exit": 0,
+    "seconds": 0.1732790070000001
+  },
+  {
+    "name": "checkout",
+    "exit": 0,
+    "seconds": 0.7773100689999999
+  },
+  {
+    "name": "bootstrap",
+    "exit": 0,
+    "seconds": 4.0454798069999995
+  },
+  {
+    "name": "tooling",
+    "exit": 0,
+    "seconds": 1.6842172160000004
+  },
+  {
+    "name": "install",
+    "exit": 0,
+    "seconds": 17.96281338
+  },
+  {
+    "name": "projects",
+    "exit": 0,
+    "seconds": 1.337386904999999
+  },
+  {
+    "name": "runtime",
+    "exit": 0,
+    "seconds": 0.9839340710000002
+  },
+  {
+    "name": "imports",
+    "exit": 0,
+    "seconds": 0.7893549439999994
+  },
+  {
+    "name": "offline",
+    "exit": 0,
+    "seconds": 13.535776971000004
+  },
+  {
+    "name": "postgres-required",
+    "exit": 1,
+    "seconds": 12.532821592999994
+  }
+]
