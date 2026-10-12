@@ -1,0 +1,12 @@
+.venv/
+evidence/*.log
+evidence/*.exit
+evidence/**/*.log
+evidence/**/*.exit
+evidence/**/pytest*/
+evidence/**/pytest*.xml
+evidence/review*-tmp/
+evidence/pytest*/
+evidence/pytest*.xml
+requirements.pins
+.child-home/
