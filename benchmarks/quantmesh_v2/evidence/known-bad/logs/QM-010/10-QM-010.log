@@ -1,0 +1,15 @@
+F
+================================== FAILURES ===================================
+____ test_journal_recovery_closes_the_append_before_snapshot_crash_window _____
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window
+1 failed in 0.18s

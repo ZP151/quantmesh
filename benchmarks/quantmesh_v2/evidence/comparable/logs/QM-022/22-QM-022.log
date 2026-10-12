@@ -1,0 +1,15 @@
+F
+================================== FAILURES ===================================
+__________________ test_disguised_loopback_origin_is_refused __________________
+benchmarks\quantmesh_v2\test_audit_badcases.py:42: in test_disguised_loopback_origin_is_refused
+    assert not workstation._is_allowed_browser_origin(origin), (
+E   AssertionError: A DNS hostname beginning with 127. must not pass the browser-origin guard
+E   assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001A47156E3E0>('https://127.attacker.example')
+E    +    where <function _is_allowed_browser_origin at 0x000001A47156E3E0> = workstation._is_allowed_browser_origin
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused
+1 failed in 0.59s
