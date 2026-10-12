@@ -179,3 +179,28 @@ def test_cli_refusal_scrubs_configuration(tmp_path, capsys):
     path.write_text(json.dumps({"dsn": "private-marker"}))
     assert backup.main(["--profile", str(path), "--output", str(tmp_path / "out")]) == 2
     assert "private-marker" not in capsys.readouterr().out
+
+
+def test_command_output_bound_does_not_limit_owned_database_files(tmp_path):
+    import sys
+
+    if sys.platform != "linux":
+        pytest.skip("native bounded subprocess")
+    data = tmp_path / "wal"
+    program = "import pathlib; pathlib.Path('wal').write_bytes(b'x' * 16777216); print('ok')"
+    code, raw = backup.bounded_process([sys.executable, "-c", program], {}, tmp_path, 10)
+    assert code == 0 and raw == b"ok\n"
+    assert data.stat().st_size == 16777216
+
+
+def test_bounded_command_refuses_output_flood_and_timeout(tmp_path):
+    import sys
+
+    if sys.platform != "linux":
+        pytest.skip("native bounded subprocess")
+    for program, deadline in [
+        ("import time; time.sleep(2)", 0.05),
+        ("import os; os.write(1,b'x'*3000000)", 5),
+    ]:
+        with pytest.raises(ValueError):
+            backup.bounded_process([sys.executable, "-c", program], {}, tmp_path, deadline)

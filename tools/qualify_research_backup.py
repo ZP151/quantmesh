@@ -14,6 +14,7 @@ import json
 import os
 import re
 import secrets
+import selectors
 import signal
 import socket
 import stat
@@ -355,6 +356,63 @@ def backup_receipt(root, manifest_sha, encrypted):
     }
 
 
+def bounded_process(argv, environment, cwd, timeout, log=None):
+    """Limit the output stream, not PostgreSQL WAL/data writes."""
+    nonce = secrets.token_hex(24)
+    executable = Path(argv[0]).resolve()
+    binary_sha = digest(executable)
+    process = subprocess.Popen(
+        argv,
+        cwd=cwd,
+        env={**environment, "QM_BACKUP_COMMAND_OWNER": nonce},
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    ticks = process_ticks(process.pid)
+    deadline = time.monotonic() + timeout
+    output = bytearray()
+    try:
+        with selectors.DefaultSelector() as selector:
+            selector.register(process.stdout, selectors.EVENT_READ)
+            while selector.get_map():
+                if time.monotonic() >= deadline:
+                    raise ValueError("fixed command deadline")
+                for key, _ in selector.select(min(0.1, deadline - time.monotonic())):
+                    chunk = os.read(key.fd, min(65536, MAX_OUTPUT + 1 - len(output)))
+                    if not chunk:
+                        selector.unregister(key.fileobj)
+                        continue
+                    if len(output) + len(chunk) > MAX_OUTPUT:
+                        raise ValueError("fixed command output cap")
+                    output.extend(chunk)
+                    if log:
+                        log.write(chunk)
+        return process.wait(timeout=max(0.01, deadline - time.monotonic())), bytes(output)
+    finally:
+        if process.poll() is None:
+            proc = Path("/proc") / str(process.pid)
+            if (
+                process_ticks(process.pid) != ticks
+                or proc.stat().st_uid != os.getuid()
+                or (proc / "exe").resolve() != executable
+                or digest(proc / "exe") != binary_sha
+                or (proc / "cmdline").read_bytes().split(b"\0")[:-1] != list(map(os.fsencode, argv))
+                or b"QM_BACKUP_COMMAND_OWNER=" + nonce.encode()
+                not in (proc / "environ").read_bytes().split(b"\0")
+            ):
+                raise ValueError("fixed command cleanup ownership pending")
+            process.terminate()
+            try:
+                process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                if process_ticks(process.pid) != ticks:
+                    raise ValueError("fixed command PID identity changed") from None
+                process.kill()
+                process.wait(timeout=2)
+        process.stdout.close()
+
+
 class Commands:
     """Fixed private binaries, bounded wall/output, no shell or secret output."""
 
@@ -372,30 +430,32 @@ class Commands:
         if time.monotonic() >= self.deadline:
             raise ValueError("whole fixture deadline")
 
-        def limits():
-            import resource
-
-            resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_OUTPUT, MAX_OUTPUT))
-
         path = self.output / f"command-{len(self.receipts) + 1:03d}.log"
         with path.open("xb") as log:
-            result = subprocess.run(
-                [str(binary), *args],
-                env={**bare_environment(self.root), **(env_extra or {})},
-                cwd=cwd or self.root,
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                preexec_fn=limits,
-                timeout=max(0.1, min(40, self.deadline - time.monotonic())),
-                check=False,
-            )
-        raw = path.read_bytes()
+            try:
+                code, raw = bounded_process(
+                    [str(binary), *args],
+                    {**bare_environment(self.root), **(env_extra or {})},
+                    cwd or self.root,
+                    max(0.1, min(40, self.deadline - time.monotonic())),
+                    log,
+                )
+            except (ValueError, OSError, subprocess.SubprocessError):
+                self.receipts.append(
+                    {
+                        "tool": tool,
+                        "exit": None,
+                        "log": path.name,
+                        "failure": "command_bound_or_ownership_refused",
+                    }
+                )
+                raise
         self.receipts.append(
-            {"tool": tool, "exit": result.returncode, "output_size": len(raw), "log": path.name}
+            {"tool": tool, "exit": code, "output_size": len(raw), "log": path.name}
         )
-        if result.returncode and not failure:
+        if code and not failure:
             raise ValueError("fixed external command failed")
-        return result.returncode, raw
+        return code, raw
 
 
 def process_ticks(pid):
