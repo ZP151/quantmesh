@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import SecretStr
 
 from qm_research_agent.artifacts import verified_bytes
+from quantmesh.research.job_options import ResearchJobOptions, job_options
 from quantmesh.research.job_store import JobStore
 from quantmesh.research.jobs import (
     DatasetRejected,
@@ -17,7 +18,13 @@ from quantmesh.research.jobs import (
 )
 
 
-def create_app(store: JobStore, *, operator_id: str, token: SecretStr) -> FastAPI:
+def create_app(
+    store: JobStore,
+    *,
+    operator_id: str,
+    token: SecretStr,
+    configured_dataset_ids: tuple[str, ...] = (),
+) -> FastAPI:
     from quantmesh.research.job_store import _identifier
 
     _identifier(operator_id)
@@ -69,8 +76,14 @@ def create_app(store: JobStore, *, operator_id: str, token: SecretStr) -> FastAP
 
         return JSONResponse({"detail": "invalid_request"}, status_code=422)
 
+    @app.get("/v1/options", response_model=ResearchJobOptions)
+    def options():
+        return job_options(store.lake_root, configured_dataset_ids)
+
     @app.post("/v1/jobs")
     def submit(request: ResearchJobRequest, idempotency_key: Annotated[str, Header()]):
+        if request.dataset.dataset_id not in configured_dataset_ids:
+            raise DatasetRejected("no_qualified_inputs")
         return store.submit(operator_id, idempotency_key, request)
 
     @app.get("/v1/jobs/{job_id}")

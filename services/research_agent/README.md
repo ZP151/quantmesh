@@ -12,6 +12,15 @@ durable status, cancellation and verified artifacts. Authentication token and
 operator identity are mandatory construction arguments; no body-supplied
 identity, endpoint, artifact path, order or credential fields are admitted.
 All routes, including `/health`, require `Authorization: Bearer <server token>`.
+`GET /v1/options` returns registered choices from the store's authoritative
+Worker lake and only explicitly configured dataset IDs. No configured/qualified
+fixture means `unavailable/no_qualified_inputs`; it never falls back to a
+workstation-local lake. New submissions outside that configured list reject.
+Keep the accepted dataset ID configured while its jobs need same-key replay:
+accepted requests still replay if their input files disappear, but removing an
+ID from the construction-time list rejects submissions/replays for that ID.
+Previously accepted jobs remain readable/cancellable by their job ID. This
+version does not add an idempotency-key lookup or a second admission ledger.
 POST `/v1/jobs` additionally requires `Idempotency-Key`. Rejected bodies return
 fixed error codes without echoing validation inputs. A missing store returns503.
 
@@ -20,7 +29,8 @@ fixed error codes without echoing validation inputs. A missing store returns503.
 # This module never searches for existing DSNs, keys or account credentials.
 store = PostgresJobStore(dsn_secret, lake_root=approved_exports,
                          artifact_root=owned_artifacts)
-app = create_app(store, operator_id=configured_identity, token=auth_secret)
+app = create_app(store, operator_id=configured_identity, token=auth_secret,
+                 configured_dataset_ids=approved_fixture_ids)
 ```
 
 `PostgresJobStore` reuses the reviewed `SQLiteJobStore` state machine with a

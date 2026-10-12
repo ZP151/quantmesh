@@ -137,6 +137,21 @@ This is offline scripted workflow proof only, not full final core certification.
 Next authorized slice is#173 submit/status/report/reload, with authoritative
 fixture options; source/PG/Linux/model/human/paid deployment prerequisites remain.
 
+Task#173 is now ACTIVE, native thread01a13192-f183-7573-9590-79201634ee32,
+managed5f7a from1fde6dc. Read its output/173-workstation/READY-FOR-WIRING.md and
+shared-proposal.patch before root's sequential shared wiring. Child owns only
+approved leaf API/options/client/screen/tests; root owns shared service/options,
+workstation/router/schema/client/nav. No unwired UI completion claim or new
+third session. #160/#172 remain stopped; existing human/Engine/provider questions
+stay pending, don't repeat them or manufacture their acceptance.
+
+#173 backend integrates379797d; root shared routes/options/client/schema are
+verified245pass/1symlink skip and service25pass/5real-PG skips, all exit0.
+Unbound research returns503, writes retain Origin fences, configured IDs bind
+service admission, and accepted same-key replay survives disappeared bytes.
+UI/browser/review remain active in the same#173 chat. No new native session or
+whole-product completion; existing operator/Engine/provider gates stay pending.
+
 ## Historical delivery checkpoint — retained, superseded priority
 
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance

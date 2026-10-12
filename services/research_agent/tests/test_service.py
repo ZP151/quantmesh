@@ -7,7 +7,12 @@ from test_research_jobs import request_for
 
 def test_auth_identity_and_artifact_access(local):
     store, lake, _ = local
-    app = create_app(store, operator_id="operator", token=SecretStr("fixture-private-token"))
+    app = create_app(
+        store,
+        operator_id="operator",
+        token=SecretStr("fixture-private-token"),
+        configured_dataset_ids=("equities",),
+    )
     client = TestClient(app)
     headers = {"Authorization": "Bearer fixture-private-token", "Idempotency-Key": "same"}
     req = request_for(lake).model_dump(mode="json")

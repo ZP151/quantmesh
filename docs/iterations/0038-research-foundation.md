@@ -465,3 +465,30 @@ Catalog portability preflight found12 workspace LF/stat-cache discrepancies;
 only Git-equivalent line endings were restored/refreshed, leaving no content,
 test or global Git setting change. All new pins match committed blobs before
 execution. This clean-checkout Eval is not the full final core/service certificate.
+
+Next authorized user loop#173 is ACTIVE in native thread
+01a13192-f183-7573-9590-79201634ee32 (`QuantMesh #173 — 持久研究任务与报告工作台`),
+managed worktree5f7a from1fde6dcde715011cbfcc2bfff56f665dd66c85ea. Its bounded
+leaf API/options/client/ResearchJobs screen ownership follows Task3. Root owns
+shared workstation/service-options/schema/client/nav wiring; the child publishes
+an interim READY-FOR-WIRING.md and shared patch proposal in its ignored
+output/173-workstation before the browser/build boundary. Do not count an
+unwired page as complete or reopen stopped#160/#172 work. At most two current
+implementers (child plus root shared integration), one product slice, two review
+rounds. No new strategy/paid/model/source/global operation is dispatched.
+
+#173 backend checkpoint de9b4438aafbc09acecf54880309c2fe551db26c integrates as
+379797d. Root reads READY-FOR-WIRING and proposal; shared workstation /api
+routes use typed research_jobs_client injection, explicit unbound503 and the
+existing Origin guard for submit/cancel. Generated schema/client is current.
+Planner ruling: configured IDs constrain private-service admission, not only
+option display; removing source bytes preserves same-key accepted replay if
+the ID stays configured. Removing the configured ID explicitly rejects replay
+but never deletes the accepted job. No new JobStore method/second ledger.
+Root options RED2fail, admission RED1fail/3pass; GREEN independent service
+suite25pass/5 actual-PostgreSQL skips/18.51s exit0. Root API/job/store/artifact/
+workstation/Origin boundary245pass/1 native symlink skip/45.32s exit0, seven
+upstream deprecation warnings. Generated API check/typecheck/lint exit0 (existing
+React fast-refresh lint warnings); Ruff/diff green. Logs/exit under ignored
+output/173-workstation. No UI/browser/full product/server acceptance is implied;
+child UI checkpoint and final two-axis API–UI review remain the next boundary.
