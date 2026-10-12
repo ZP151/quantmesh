@@ -80,7 +80,7 @@ bounded ruling before changing an existing admitted version. No image/runner
 integration before #172's genuine native qualification.
 
 Preflight ruling: an initial dry-run with core research extras selected94
-external packages (the77 shared versions were unchanged). Those optional
+external packages (the75 shared versions were unchanged). Those optional
 ML/statistics packages are not in the existing service's77-package Windows
 closure or required by the registered baseline/report API. Resolve core dev
 plus service dev instead, retaining all existing admitted version constraints;

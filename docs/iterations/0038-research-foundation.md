@@ -524,7 +524,7 @@ Root next#171 Linux qualification refinement is tracked in
 2026-10-13-linux-service-qualification.md. Actual Docker Engine is still absent;
 PR166 stillOPEN/exactda6e8c7/reviews[]. No renewed authentication or source reads.
 Owned WSL CPython3.12.3 env installs81 SHA-enforced external wheels, retaining
-all77 shared Windows versions and original Windows lock7a756138...b71a3;
+all75 shared versions and original77-package Windows lock7a756138...b71a3;
 six Linux additions/two Windows omissions are explicit. Runtime selection RED7
 thenGREEN8 on Windows; actual Linux runtime8pass/1.81s. Windows offline service
 gate25pass/5PGskip exit0 before the final implementation metadata field.
