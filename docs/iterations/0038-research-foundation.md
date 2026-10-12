@@ -552,3 +552,15 @@ all raw receipts before exit; no test/constraint/deadline is loosened. Selected
 47 raw files with SHA256 archive under docs/evidence/research-foundation/
 linux-service-cp312; sparse review#171 delta R1 bothclear, no third architecture
 review. No full Linux/OCI/model-limit/PG/server or financial-performance claim.
+
+Planner follows the remaining#171 real-PG gate with an owned native fixture,
+not a Docker-only prerequisite. Official PostgreSQL18.6 source/license/build
+and actual WSL UID1000/GCC/make are checked; PostgreSQL/Bison/Flex/pkg-config
+are absent. Tracked2026-10-13-owned-postgresql-qualification.md defines source
+hash/build-tool audit, no system install, new loopback cluster/credentials,
+identity checks, all30 real service tests/no skips and owned cleanup.
+Actual native chat01a131e6-80e4-7b41-8a38-289864305d15 is ACTIVE in managedc7be
+from42fbfa5 (`QuantMesh #171 — 真实 PostgreSQL 隔离验收`), not merely proposed.
+One deliverable/stop condition/forbidden actions; no shared edits or automatic
+store refactor. Root verifies any actual defect before bounded repair. Existing
+Docker/source-human/provider prerequisites remain; no global/paid/live action.

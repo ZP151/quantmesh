@@ -13,6 +13,15 @@ Next close existing Engine/PG/source-human/provider prerequisites and prepare
 the qualified runtime/private deployment/recovery boundary. Don't redispatch
 stopped#160/#172/#173 or re-run completed review cycles. Formal168h stays on-demand.
 
+Actual next native verifier is ACTIVE: thread01a131e6-80e4-7b41-8a38-289864305d15,
+`QuantMesh #171 — 真实 PostgreSQL 隔离验收`, managedc7be. Frozen baseline42fbfa5,
+plan2026-10-13-owned-postgresql-qualification.md. It owns new qualifier/tests/
+runbook and test-owned Linux build/cluster only; root owns shared store/gate/
+locks and integration. Genuine PG may be qualified without Docker using an
+official-source/private-prefix fixture, never existing credentials/global daemon.
+Do not redispatch its pending client ID. Worker OCI still needs Engine/native
+proof; provider/source-human questions remain pending. No whole-goal pass.
+
 Status: iteration0038 ACTIVE, operator-approved Option A on2026-10-12 Singapore.
 The stale tool goal for AWS/chart/readiness delivery is closed; its accepted
 October8 evidence remains historical. The new goal delivers persistent research
