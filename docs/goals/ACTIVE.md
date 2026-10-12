@@ -8,6 +8,11 @@ asnotmanaged. StandardGit fallback nowchecksout codex/0038-research-foundation a
 C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh, clean
 sameSHA; useexplicitworkdir there on resume. Preservedivergentmain c74ea03 and all
 otherworktrees. No reset/delete or newdeployment. Appownership remainsunregistered.
+Actual raw recovery witness is archived in coordinator-workspace-recovery,
+UTC2026-10-12T23:09:40/SingaporeOct13; c800750 matchespushedintegration and
+5788cf7ancestor, mainc74ea03/originmain745a231 retained. FreshGitHubPR166 remains
+OPEN/exactda6e8c7/reviews[]/mergeCommitnull, no merge/CIrerun. RootglobalPython
+3.13.9 haspytest/Ruff forfocused checks, not a newlyqualified service runtime.
 
 Task2 private-terminal prerequisite ACTIVE in nativechat
 01a13259-ae57-7010-945d-2470f3b902cd, managed2088, exact5788cf7 confirmed,
