@@ -149,7 +149,7 @@ Interfaces:
   does not enlarge core release dependencies. A separate gated real API run
   waits for operator provider/model/price/egress approval and records actual cost.
 
-## Task 3 — Workstation submit/status/report loop (#173, queued)
+## Task 3 — Workstation submit/status/report loop (#173, active)
 
 Files: create `src/quantmesh/api/research_jobs.py`,
 `src/quantmesh/research/service_client.py`, `tests/test_research_jobs_api.py`,
@@ -180,6 +180,12 @@ and its separate-service test. No current active session writes these files.
   coverage validation reused from current code. Reject symlink/path escapes,
   unsupported manifests/rights and incomplete aligned coverage; never scan
   arbitrary host folders or import live minutes into research history.
+- Admission ruling: the private service and local facade both require an
+  explicitly configured dataset ID for submission. A same-key accepted request
+  survives disappeared input files while that ID stays configured; if an
+  operator removes the ID, submission/replay explicitly rejects and existing
+  jobs remain readable by job ID. No new store method/shadow idempotency ledger
+  is introduced. The workstation's new write routes retain its Origin guard.
 - Both local and remote mode get options from the authoritative Worker input
   root. No valid fixture means unavailable/disabled submit. Labels say fixture
   research; nothing here qualifies real investment history or export rights.

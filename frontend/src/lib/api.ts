@@ -2,6 +2,10 @@ import createClient from 'openapi-fetch'
 
 import type { components, paths } from '@/api/client'
 
+export type ResearchJobOptions = components['schemas']['ResearchJobOptions']
+export type ResearchJobRequest = components['schemas']['ResearchJobRequest']
+export type ResearchJobRecord = components['schemas']['JobRecord']
+
 // The JSON surface contract (iteration 0014 Phase C, ADR-0013).
 // One route per screen; every route renders through the exact page
 // providers the RC1 templates use (src/quantmesh/api/workstation.py),
@@ -696,6 +700,40 @@ export const api = {
   enablement: () => request<Enablement>('/api/enablement'),
   killSwitch: () => request<KillSwitch>('/api/kill-switch'),
   demoStatus: () => request<DemoStatus>('/api/demo/status'),
+
+  async researchJobOptions(): Promise<ResearchJobOptions> {
+    const { data, error, response } = await generatedApi.GET('/api/research/job-options')
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+  async submitResearchJob(body: ResearchJobRequest, key: string): Promise<ResearchJobRecord> {
+    const { data, error, response } = await generatedApi.POST('/api/research/jobs', {
+      body, params: { header: { 'idempotency-key': key } },
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+  async researchJob(jobId: string): Promise<ResearchJobRecord> {
+    const { data, error, response } = await generatedApi.GET('/api/research/jobs/{job_id}', {
+      params: { path: { job_id: jobId } },
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+  async cancelResearchJob(jobId: string): Promise<ResearchJobRecord> {
+    const { data, error, response } = await generatedApi.POST('/api/research/jobs/{job_id}/cancel', {
+      params: { path: { job_id: jobId } },
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
+  async researchJobArtifact(jobId: string, artifactId: string): Promise<string> {
+    const { data, error, response } = await generatedApi.GET('/api/research/jobs/{job_id}/artifacts/{artifact_id}', {
+      params: { path: { job_id: jobId, artifact_id: artifactId } }, parseAs: 'text',
+    })
+    if (!response.ok || data === undefined) throw generatedApiError(response, error)
+    return data
+  },
 
   async decisionInbox(): Promise<DecisionInbox> {
     const { data, error, response } = await generatedApi.GET('/api/decision-packets')
