@@ -1,5 +1,18 @@
 # Active Goal
 
+Latest accepted private-terminal#169: managed2088/chat01a13259-ae57-7010-945d-2470f3b902cd
+completed/idlef99b020153a31d7d8a5265c9795edbd5a7884ddb, root83517eb threeleaf
+filesbyteequal. Childandroot freshnative38/0skip, defaultpreflight2, fixture0,
+independentkernelwitness8reapedchildren/private0600/echooff/65bytesnoecho/4ACK,
+6cases/sibling/ownedrootcleanup pass. RootWindows4pass/34explicitLinuxskips,
+wholeRuff/format/diff0; no sharedgatewayprofile/unit/validator changes. First
+Spec/Standards0actionable, no extra reviews.73rawstreams/SHA archivedprivate-terminal.
+Allsource-host/privateinput/auth/wire/installation/marketproduction flagsfalse;
+localdescriptorproof isnotactualhumanlogin. No activeimplementation sessions
+remain; do notredispatcha391/2088/completedSDK. Next root prepares reviewed
+one-shotstagingauthority/expiry and actualsource-host input/lifecycle before
+operatorlogin, without fakingguardflags. Engine/provider/PR166human gatespending.
+
 Latest accepted backup#171: a391 completed/idle4fceaf21af3fbe513fc1b02b210d2305112bfca7;
 sixleafcommits integrated7bbe883/6f6cef3/a77ec77/516d2c3/90ebec1/6e25532.
 Root2dd5f4a onlyclassifiesLinuxdescriptor tests: Windows23pass/22native skips,

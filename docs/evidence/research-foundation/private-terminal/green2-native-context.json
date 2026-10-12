@@ -1,0 +1,20 @@
+{
+  "root": "/var/tmp/quantmesh-terminal-check-79dtp76a",
+  "uid": 1000,
+  "mode": 448,
+  "command": [
+    "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_opend_private_terminal.py",
+    "-q",
+    "--basetemp",
+    "/var/tmp/quantmesh-terminal-check-79dtp76a/pytest-temp"
+  ],
+  "hashes": {
+    "tools/qualify_opend_private_terminal.py": "2c311d7be21e0aa8d2d5d95e1a1a2a5f0e6cdb7ddc71e28c303178eb7e5ba34f",
+    "tests/test_opend_private_terminal.py": "f0b7c2ead81d3547b6cea4271e5abb7f90556fcb731cd7b70effbad37e9460d3"
+  },
+  "test_exit": 0
+}

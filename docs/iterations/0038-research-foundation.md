@@ -3,6 +3,17 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
+Private-terminal#169 localprerequisite accepted:2088 idle/completedf99b020→root83517eb,
+3filesbyteequal, originalandrootnative38/0skip/defaultpreflight2/fixture0.
+Independentkernelwitness8reaped/private0600/echooff/input65noecho/4ACK/6cases/
+sibling/cleanup pass; Windows4pass/34native skips. FirstSpec/Standardsclear,
+Ruff/format/diff0;73rawstreams/SHA archivedprivate-terminal. Planner advances
+one-shotstagingauthority/expiry and actualhost input/lifecycle; researcher no
+market/model/strategy efficacy; implementer no sharedprofile change; verifier
+recordslocalkernel evidence only. Sourcehost/privateinput/auth/wire/install/
+market flagsfalse. Both2088 andbackup a391 stopped; no activeimplementation.
+Whole A ACTIVE, actualauth/Worker/model/offhost/production/release gatespending.
+
 Backup#171 acceptedlocalfixture: completed/idle a391/4fceaf21af3f integrates six
 leafcommits7bbe883/6f6cef3/a77ec77/516d2c3/90ebec1/6e25532; root2dd5f4a
 marks Linuxdescriptor test dependencies only. RootWindows23pass/22native skips,

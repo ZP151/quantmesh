@@ -1,0 +1,71 @@
+....................................FF                                   [100%]
+=================================== FAILURES ===================================
+__________ test_sigint_inside_popen_window_waits_for_the_actual_child __________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-terminal-check-68gvn17l/pytest-temp/test_sigint_inside_popen_windo0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74010137dca0>
+
+    @NATIVE
+    def test_sigint_inside_popen_window_waits_for_the_actual_child(tmp_path, monkeypatch):
+        import signal
+        import subprocess
+    
+        original = subprocess.Popen
+        created = []
+    
+        def interrupt(*args, **kwargs):
+            proc = original(*args, **kwargs)
+            created.append(proc)
+            # A real signal arrives after creation but before Popen returns its handle.
+            signal.raise_signal(signal.SIGINT)
+            return proc
+    
+        monkeypatch.setattr(subprocess, "Popen", interrupt)
+        try:
+            with private_pty() as (_, slave):
+                with pytest.raises(terminal.TerminalQualificationError) as caught:
+                    terminal._spawn(tmp_path, "blocked", slave, terminal._Deadline())
+            assert caught.value.code == "registration_interrupted"
+>           assert caught.value.cleanup["returncode"] == 40
+E           assert None == 40
+
+tests/test_opend_private_terminal.py:296: AssertionError
+_______________ test_second_pipe_failure_closes_first_owned_pair _______________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-terminal-check-68gvn17l/pytest-temp/test_second_pipe_failure_close0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74010137d460>
+
+    @NATIVE
+    def test_second_pipe_failure_closes_first_owned_pair(tmp_path, monkeypatch):
+        original = os.pipe
+        captured = []
+    
+        def fail_second():
+            if captured:
+                raise OSError("synthetic descriptor exhaustion")
+            pair = original()
+            captured.extend(pair)
+            return pair
+    
+        monkeypatch.setattr(os, "pipe", fail_second)
+        with private_pty() as (_, slave):
+            with pytest.raises(terminal.TerminalQualificationError):
+>               terminal._spawn(tmp_path, "blocked", slave, terminal._Deadline())
+
+tests/test_opend_private_terminal.py:319: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/qualify_opend_private_terminal.py:316: in _spawn
+    report_read, report_write = os.pipe()
+                                ^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def fail_second():
+        if captured:
+>           raise OSError("synthetic descriptor exhaustion")
+E           OSError: synthetic descriptor exhaustion
+
+tests/test_opend_private_terminal.py:311: OSError
+=========================== short test summary info ============================
+FAILED tests/test_opend_private_terminal.py::test_sigint_inside_popen_window_waits_for_the_actual_child
+FAILED tests/test_opend_private_terminal.py::test_second_pipe_failure_closes_first_owned_pair
+2 failed, 36 passed in 2.34s

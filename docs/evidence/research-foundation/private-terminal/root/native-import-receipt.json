@@ -1,0 +1,14 @@
+{
+  "root": "/var/tmp/quantmesh-root-terminal-rdmewndy",
+  "files_sha256": {
+    "tools/qualify_opend_private_terminal.py": "c18a81701ce432cb93e1ac2243b31add34f3ec10944dc381b92ff8e1d0133b63",
+    "tests/test_opend_private_terminal.py": "e6705346494dd1cceefa69d9f266c489b48a7451a31dfd834f303e5d6d5f9269"
+  },
+  "exits": {
+    "native-tests": 0,
+    "native-preflight": 2,
+    "native-fixture": 0
+  },
+  "source_host_private_input_verified": false,
+  "production_release_qualified": false
+}
