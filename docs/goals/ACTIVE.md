@@ -104,6 +104,13 @@ title `QuantMesh #172 — Linux Worker 隔离与原生验收`. It owns only its 
 adapter/bootstrap/tests/qualification/runbook; no runner integration before
 native qualification. Both current implementation slots are occupied.
 
+New measured blocker#174 precedes queued UI#173: Eval retains three failing
+desired safety assertions (DNS127-prefix Origin, unresolved generic AI citation,
+old source/new receipt paper fill). Root confirms the production paths; repair
+is separate from Eval and starts only after a slot stops. Keep failed catalog
+and logs immutable; post-fix code/fixture/verifier identities must be explicit.
+No closed-session freshness regression or real exploit/trade is inferred.
+
 ## Historical delivery checkpoint — retained, superseded priority
 
 Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance

@@ -390,3 +390,17 @@ from the authoritative Worker input root, preserving frozen job/store contracts.
 The UI must not imply that a workstation-local pin exists on the remote Worker,
 or that v1 fixture-only data is qualified real history. No new implementation
 session is opened; shared facade/options/schema/navigation stay root-owned.
+
+Eval's preserved desired-safety audit exits1/3failed/3.78s on integration2f424d0.
+Root reads the log and traces three production paths: `_is_loopback` accepts a
+DNS prefix beginning127.; generic ResearchPipeline trusts critic pass without
+supplied citation membership; QuoteFence drops snapshot.data_time and ages/
+blesses received_at, allowing old-source/new-receipt paper fills. Synthetic
+fixtures show real contract failures, not actual attacks, orders or model skill.
+Root opens [#174](https://github.com/ZP151/quantmesh/issues/174) as a separate
+bounded production repair ahead of#173 after an implementation slot stops.
+Current Eval remains read-only to production, preserving all three assertions
+and failed baseline. No score/gate weakening, extra writer or third completed
+Worker/service review is authorized. Origin/trading changes retain applicable
+human release gates. Closed latest-session display data remains expected;
+it never becomes a fresh executable quote.
