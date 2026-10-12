@@ -1,0 +1,161 @@
+- complementary:
+  - generic: QuantMesh
+  - generic: v0.1.1rc1
+  - navigation "Screens":
+    - paragraph: Overview
+    - list:
+      - link "Overview":
+        - /url: /app
+        - text: Overview
+    - paragraph: Markets
+    - list:
+      - link "Markets":
+        - /url: /app/markets
+        - text: Markets
+      - link "Watchlist":
+        - /url: /app/markets/watchlist
+        - text: Watchlist
+      - link "Live cockpit":
+        - /url: /app/cockpit
+        - text: Live cockpit
+      - link "Prediction markets":
+        - /url: /app/prediction
+        - text: Prediction markets
+    - paragraph: Research
+    - list:
+      - link "Research jobs":
+        - /url: /app/research/jobs
+        - text: Research jobs
+      - link "Experiments":
+        - /url: /app/research/experiments
+        - text: Experiments
+      - link "Promotions":
+        - /url: /app/research/promotions
+        - text: Promotions
+      - link "Forecasts":
+        - /url: /app/research/forecasts
+        - text: Forecasts
+    - paragraph: Trading
+    - list:
+      - link "Paper order":
+        - /url: /app/trading/order
+        - text: Paper order
+      - link "Positions":
+        - /url: /app/trading/positions
+        - text: Positions
+      - link "Orders":
+        - /url: /app/trading/orders
+        - text: Orders
+      - link "P&L":
+        - /url: /app/trading/pnl
+        - text: P&L
+    - paragraph: Risk & ops
+    - list:
+      - link "Risk":
+        - /url: /app/risk
+        - text: Risk
+      - link "Data catalog":
+        - /url: /app/ops/data
+        - text: Data catalog
+      - link "Connectors":
+        - /url: /app/ops/connectors
+        - text: Connectors
+      - link "Data imports":
+        - /url: /app/ops/imports
+        - text: Data imports
+      - link "Audit":
+        - /url: /app/ops/audit
+        - text: Audit
+      - link "Kill switch":
+        - /url: /app/ops/kill-switch
+        - text: Kill switch
+      - link "Enablement":
+        - /url: /app/ops/enablement
+        - text: Enablement
+      - link "Settings":
+        - /url: /app/settings
+        - text: Settings
+  - paragraph: Loopback workstation · the kernel gates every write. No live or demo feed is attached.
+- banner:
+  - heading "Research jobs" [level=1]
+  - button "Kill switch off":
+    - generic: Kill switch off
+  - separator
+  - button "Open command palette":
+    - generic: Search…
+    - generic: ⌘K
+  - link "Open global settings":
+    - /url: /app/settings
+- main:
+  - generic: Operator mode — no live or demo feed is attached.
+  - heading "Research jobs" [level=2]
+  - paragraph: Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.
+  - paragraph:
+    - generic: FIXTURE_ONLY / v1 research
+    - text: Workflow evidence only. Synthetic results do not establish investment performance.
+  - region "Fixture configuration":
+    - heading "Fixture configuration" [level=3]
+    - text: Registered baseline
+    - combobox "Registered baseline" [disabled]:
+      - option "risk_parity · v1" [selected]
+    - text: Pinned fixture
+    - combobox "Pinned fixture" [disabled]:
+      - option "equities · r1 · 1h" [selected]
+    - paragraph: Saved fixture/test inputs · moomoo:AAA, moomoo:BBB, moomoo:CCC
+    - text: Train bars
+    - spinbutton "Train bars" [disabled]: "10"
+    - text: Test bars
+    - spinbutton "Test bars" [disabled]: "5"
+    - text: Step bars
+    - spinbutton "Step bars" [disabled]: "5"
+    - text: Fee (bps)
+    - spinbutton "Fee (bps)" [disabled]: "1"
+    - text: Half spread (bps)
+    - spinbutton "Half spread (bps)" [disabled]: "2"
+    - text: Slippage (bps)
+    - spinbutton "Slippage (bps)" [disabled]: "3"
+    - checkbox "Request optional advisory analysis. Provider may be unavailable." [checked] [disabled]
+    - text: Request optional advisory analysis. Provider may be unavailable.
+    - button "Submit fixture job" [disabled]
+    - paragraph: Fees, half spread and slippage must each be positive. Evaluation windows do not overlap. No automatic resubmission after reload.
+  - region "Durable job":
+    - heading "Durable job" [level=3]
+    - generic: succeeded
+    - generic: 71688feb832e4d498ef1324f07ea6647
+    - paragraph: "Agent unavailable · Deterministic backtest: succeeded"
+    - paragraph: Authoritative research status · Job updated 2026-10-12T20:10:08.585880Z
+    - term: Model calls
+    - definition: unavailable
+    - term: Estimated model cost (USD)
+    - definition: unavailable
+    - term: Input / output tokens
+    - definition: unavailable / unavailable
+    - term: Attempt
+    - definition: "1"
+    - button "Refresh status":
+      - text: Refresh status
+    - button "Open immutable report"
+    - button "New fixture job"
+    - paragraph: "Advisory verdict: unavailable. Citations: unavailable. AI has no order or execution authority."
+    - generic "Pinned setup and lineage"
+    - term: Baseline / dataset
+    - definition: risk_parity v1 · equities r1 · 1h
+    - term: "Costs (bps): fee / half spread / slippage"
+    - definition: 1 / 2 / 3
+    - term: "Walk-forward: train / test / step"
+    - definition: 10 / 5 / 5
+    - term: Manifest SHA256
+    - definition: db5b2e8c7cc9c9f622e0a7bbfc0779928d55358f6e516e5e14d76d3eb570da9e
+    - term: Fixture content SHA256
+    - definition: d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501
+    - term: Request/config SHA256
+    - definition: 967a30e60922a195a4956419135d40f0a95b3daf69925521a01ce67b0c0cff57
+    - term: Baseline engine SHA256
+    - definition: 4ad795a698ccbf5737e3730f3821970067d032f991546e5fdc400450b2522824
+    - region "Canonical report":
+      - heading "Canonical report" [level=3]
+      - button "Download report JSON":
+        - text: Download report JSON
+      - paragraph: Retained immutable fixture report. Includes measured numerical windows, costs and source/config/code lineage; workflow proof only.
+      - paragraph: Artifact SHA256 124f692e0bfff4c11fb15e725d800b37dc63052c5c69b2a51ce72d4b35db2566
+      - generic "Inspect canonical JSON"

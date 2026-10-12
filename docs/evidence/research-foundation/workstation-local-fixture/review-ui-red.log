@@ -1,0 +1,1873 @@
+
+ RUN  v3.2.7 C:/Users/15492/.codex-clean/worktrees/5f7a/QuantMesh/frontend
+
+ ❯ src/screens/ResearchJobs.test.tsx (14 tests | 5 failed) 4455ms
+   ✓ fixture research loop > submits pinned setup, reaches report, reloads and keeps Agent unavailable independent  348ms
+   ✓ fixture research loop > preserves ambiguous key and payload across reload and explicitly retries same request 149ms
+   ✓ fixture research loop > cancels active jobs and does not poll terminal states 160ms
+   ✓ fixture research loop > empty or unavailable options disable submission and failures remain explicit 13ms
+   ✓ fixture research loop > restores failed job without resubmitting 13ms
+   ✓ fixture research loop > stops automatic status checks at the bound and never polls a terminal job 297ms
+   ✓ fixture research loop > cannot send when the idempotency payload cannot be retained 75ms
+   ✓ fixture research loop > restores the saved costs and selected baseline in disabled configuration controls 22ms
+   ✓ fixture research loop > rejects tampered retained report bytes after reload 40ms
+   × fixture research loop > does not overwrite confirmed cancellation with an older status response 134ms
+     → Unable to find an element with the text: cancelled. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-5"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-start justify-between gap-3"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-1"[39m
+        [36m>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-xl font-semibold tracking-tight"[39m
+          [36m>[39m
+            [0mResearch jobs[0m
+          [36m</h2>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"max-w-2xl text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0mRun a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"[39m
+          [33mdata-slot[39m=[32m"badge"[39m
+          [33mdata-variant[39m=[32m"outline"[39m
+        [36m>[39m
+          [0mFIXTURE_ONLY / v1 research[0m
+        [36m</span>[39m
+        [0m [0m
+        [0mWorkflow evidence only. Synthetic results do not establish investment performance.[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33maria-labelledby[39m=[32m"research-setup"[39m
+          [33mclass[39m=[32m"space-y-4 rounded-lg border border-border bg-card p-4"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"font-semibold"[39m
+            [33mid[39m=[32m"research-setup"[39m
+          [36m>[39m
+            [0mFixture configuration[0m
+          [36m</h3>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mRegistered baseline[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Registered baseline"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"momentum"[39m
+              [36m>[39m
+                [0mmomentum[0m
+                [0m · v[0m
+                [0m1[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mPinned fixture[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Pinned fixture"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"0"[39m
+              [36m>[39m
+                [0mequities[0m
+                [0m · r[0m
+                [0m1[0m
+                [0m · [0m
+                [0m1h[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0mSaved fixture/test inputs · [0m
+            [0mmoomoo:AAA[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-2 gap-3"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTrain bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Train bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"2"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"10"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTest bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Test bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mStep bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Step bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mFee (bps)[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Fee (bps)"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:...
+   × fixture research loop > cannot restore a previous cached report beneath a newly submitted job 92ms
+     → expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <h3
+  class="font-semibold"
+  id="canonical-report"
+>
+  Canonical report
+</h3> instead
+   × fixture research loop > allows explicit reconfiguration after confirmed 409 refusal 1058ms
+     → Unable to find role="button" and name "Reconfigure refused request"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-5"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-start justify-between gap-3"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-1"[39m
+        [36m>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-xl font-semibold tracking-tight"[39m
+          [36m>[39m
+            [0mResearch jobs[0m
+          [36m</h2>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"max-w-2xl text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0mRun a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"[39m
+          [33mdata-slot[39m=[32m"badge"[39m
+          [33mdata-variant[39m=[32m"outline"[39m
+        [36m>[39m
+          [0mFIXTURE_ONLY / v1 research[0m
+        [36m</span>[39m
+        [0m [0m
+        [0mWorkflow evidence only. Synthetic results do not establish investment performance.[0m
+      [36m</p>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"rounded-md border border-border p-3 text-sm"[39m
+        [33mrole[39m=[32m"alert"[39m
+      [36m>[39m
+        [0mSubmission response unavailable or refused. The saved request and key are preserved; retry explicitly.[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33maria-labelledby[39m=[32m"research-setup"[39m
+          [33mclass[39m=[32m"space-y-4 rounded-lg border border-border bg-card p-4"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"font-semibold"[39m
+            [33mid[39m=[32m"research-setup"[39m
+          [36m>[39m
+            [0mFixture configuration[0m
+          [36m</h3>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mRegistered baseline[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Registered baseline"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"momentum"[39m
+              [36m>[39m
+                [0mmomentum[0m
+                [0m · v[0m
+                [0m1[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mPinned fixture[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Pinned fixture"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"0"[39m
+              [36m>[39m
+                [0mequities[0m
+                [0m · r[0m
+                [0m1[0m
+                [0m · [0m
+                [0m1h[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0mSaved fixture/test inputs · [0m
+            [0mmoomoo:AAA[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-2 gap-3"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTrain bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Train bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"2"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"10"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTest bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Test bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mStep bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Step bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-5"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-start justify-between gap-3"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-1"[39m
+        [36m>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-xl font-semibold tracking-tight"[39m
+          [36m>[39m
+            [0mResearch jobs[0m
+          [36m</h2>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"max-w-2xl text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0mRun a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"[39m
+          [33mdata-slot[39m=[32m"badge"[39m
+          [33mdata-variant[39m=[32m"outline"[39m
+        [36m>[39m
+          [0mFIXTURE_ONLY / v1 research[0m
+        [36m</span>[39m
+        [0m [0m
+        [0mWorkflow evidence only. Synthetic results do not establish investment performance.[0m
+      [36m</p>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"rounded-md border border-border p-3 text-sm"[39m
+        [33mrole[39m=[32m"alert"[39m
+      [36m>[39m
+        [0mSubmission response unavailable or refused. The saved request and key are preserved; retry explicitly.[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33maria-labelledby[39m=[32m"research-setup"[39m
+          [33mclass[39m=[32m"space-y-4 rounded-lg border border-border bg-card p-4"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"font-semibold"[39m
+            [33mid[39m=[32m"research-setup"[39m
+          [36m>[39m
+            [0mFixture configuration[0m
+          [36m</h3>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mRegistered baseline[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Registered baseline"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"momentum"[39m
+              [36m>[39m
+                [0mmomentum[0m
+                [0m · v[0m
+                [0m1[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mPinned fixture[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Pinned fixture"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"0"[39m
+              [36m>[39m
+                [0mequities[0m
+                [0m · r[0m
+                [0m1[0m
+                [0m · [0m
+                [0m1h[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0mSaved fixture/test inputs · [0m
+            [0mmoomoo:AAA[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-2 gap-3"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTrain bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Train bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"2"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"10"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTest bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Test bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mStep bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Step bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m...
+   × fixture research loop > allows explicit reconfiguration after confirmed 422 refusal 1039ms
+     → Unable to find role="button" and name "Reconfigure refused request"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-5"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-start justify-between gap-3"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-1"[39m
+        [36m>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-xl font-semibold tracking-tight"[39m
+          [36m>[39m
+            [0mResearch jobs[0m
+          [36m</h2>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"max-w-2xl text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0mRun a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"[39m
+          [33mdata-slot[39m=[32m"badge"[39m
+          [33mdata-variant[39m=[32m"outline"[39m
+        [36m>[39m
+          [0mFIXTURE_ONLY / v1 research[0m
+        [36m</span>[39m
+        [0m [0m
+        [0mWorkflow evidence only. Synthetic results do not establish investment performance.[0m
+      [36m</p>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"rounded-md border border-border p-3 text-sm"[39m
+        [33mrole[39m=[32m"alert"[39m
+      [36m>[39m
+        [0mSubmission response unavailable or refused. The saved request and key are preserved; retry explicitly.[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33maria-labelledby[39m=[32m"research-setup"[39m
+          [33mclass[39m=[32m"space-y-4 rounded-lg border border-border bg-card p-4"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"font-semibold"[39m
+            [33mid[39m=[32m"research-setup"[39m
+          [36m>[39m
+            [0mFixture configuration[0m
+          [36m</h3>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mRegistered baseline[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Registered baseline"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"momentum"[39m
+              [36m>[39m
+                [0mmomentum[0m
+                [0m · v[0m
+                [0m1[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mPinned fixture[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Pinned fixture"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"0"[39m
+              [36m>[39m
+                [0mequities[0m
+                [0m · r[0m
+                [0m1[0m
+                [0m · [0m
+                [0m1h[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0mSaved fixture/test inputs · [0m
+            [0mmoomoo:AAA[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-2 gap-3"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTrain bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Train bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"2"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"10"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTest bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Test bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mStep bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Step bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-5"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-start justify-between gap-3"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-1"[39m
+        [36m>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-xl font-semibold tracking-tight"[39m
+          [36m>[39m
+            [0mResearch jobs[0m
+          [36m</h2>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"max-w-2xl text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0mRun a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"[39m
+          [33mdata-slot[39m=[32m"badge"[39m
+          [33mdata-variant[39m=[32m"outline"[39m
+        [36m>[39m
+          [0mFIXTURE_ONLY / v1 research[0m
+        [36m</span>[39m
+        [0m [0m
+        [0mWorkflow evidence only. Synthetic results do not establish investment performance.[0m
+      [36m</p>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"rounded-md border border-border p-3 text-sm"[39m
+        [33mrole[39m=[32m"alert"[39m
+      [36m>[39m
+        [0mSubmission response unavailable or refused. The saved request and key are preserved; retry explicitly.[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33maria-labelledby[39m=[32m"research-setup"[39m
+          [33mclass[39m=[32m"space-y-4 rounded-lg border border-border bg-card p-4"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"font-semibold"[39m
+            [33mid[39m=[32m"research-setup"[39m
+          [36m>[39m
+            [0mFixture configuration[0m
+          [36m</h3>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mRegistered baseline[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Registered baseline"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"momentum"[39m
+              [36m>[39m
+                [0mmomentum[0m
+                [0m · v[0m
+                [0m1[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mPinned fixture[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Pinned fixture"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"0"[39m
+              [36m>[39m
+                [0mequities[0m
+                [0m · r[0m
+                [0m1[0m
+                [0m · [0m
+                [0m1h[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0mSaved fixture/test inputs · [0m
+            [0mmoomoo:AAA[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-2 gap-3"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTrain bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Train bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"2"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"10"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTest bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Test bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mStep bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Step bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m...
+   × fixture research loop > labels retained versus freshly fetched status with the authoritative update time 1013ms
+     → Unable to find an element with the text: /Retained browser status/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-5"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-start justify-between gap-3"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-1"[39m
+        [36m>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-xl font-semibold tracking-tight"[39m
+          [36m>[39m
+            [0mResearch jobs[0m
+          [36m</h2>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"max-w-2xl text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0mRun a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"[39m
+          [33mdata-slot[39m=[32m"badge"[39m
+          [33mdata-variant[39m=[32m"outline"[39m
+        [36m>[39m
+          [0mFIXTURE_ONLY / v1 research[0m
+        [36m</span>[39m
+        [0m [0m
+        [0mWorkflow evidence only. Synthetic results do not establish investment performance.[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33maria-labelledby[39m=[32m"research-setup"[39m
+          [33mclass[39m=[32m"space-y-4 rounded-lg border border-border bg-card p-4"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"font-semibold"[39m
+            [33mid[39m=[32m"research-setup"[39m
+          [36m>[39m
+            [0mFixture configuration[0m
+          [36m</h3>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mRegistered baseline[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Registered baseline"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"momentum"[39m
+              [36m>[39m
+                [0mmomentum[0m
+                [0m · v[0m
+                [0m1[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mPinned fixture[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Pinned fixture"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"0"[39m
+              [36m>[39m
+                [0mequities[0m
+                [0m · r[0m
+                [0m1[0m
+                [0m · [0m
+                [0m1h[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0mSaved fixture/test inputs · [0m
+            [0mmoomoo:AAA[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-2 gap-3"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTrain bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Train bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"2"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"10"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTest bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Test bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mStep bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Step bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mFee (bps)[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Fee (bps)"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-5"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-start justify-between gap-3"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-1"[39m
+        [36m>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-xl font-semibold tracking-tight"[39m
+          [36m>[39m
+            [0mResearch jobs[0m
+          [36m</h2>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"max-w-2xl text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0mRun a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"[39m
+          [33mdata-slot[39m=[32m"badge"[39m
+          [33mdata-variant[39m=[32m"outline"[39m
+        [36m>[39m
+          [0mFIXTURE_ONLY / v1 research[0m
+        [36m</span>[39m
+        [0m [0m
+        [0mWorkflow evidence only. Synthetic results do not establish investment performance.[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33maria-labelledby[39m=[32m"research-setup"[39m
+          [33mclass[39m=[32m"space-y-4 rounded-lg border border-border bg-card p-4"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"font-semibold"[39m
+            [33mid[39m=[32m"research-setup"[39m
+          [36m>[39m
+            [0mFixture configuration[0m
+          [36m</h3>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mRegistered baseline[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Registered baseline"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"momentum"[39m
+              [36m>[39m
+                [0mmomentum[0m
+                [0m · v[0m
+                [0m1[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block space-y-1 text-sm"[39m
+          [36m>[39m
+            [0mPinned fixture[0m
+            [36m<select[39m
+              [33maria-label[39m=[32m"Pinned fixture"[39m
+              [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"0"[39m
+              [36m>[39m
+                [0mequities[0m
+                [0m · r[0m
+                [0m1[0m
+                [0m · [0m
+                [0m1h[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</label>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0mSaved fixture/test inputs · [0m
+            [0mmoomoo:AAA[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-2 gap-3"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTrain bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Train bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"2"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"10"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mTest bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Test bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mStep bars[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Step bars"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mstep[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"5"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"space-y-1 text-sm"[39m
+            [36m>[39m
+              [0mFee (bps)[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Fee (bps)"[39m
+                [33mclass[39m=[32m"h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:...
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/screens/ResearchJobs.test.tsx > fixture research loop > does not overwrite confirmed cancellation with an older status response
+TestingLibraryElementError: Unable to find an element with the text: cancelled. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-5"
+    >
+      <div
+        class="flex flex-wrap items-start justify-between gap-3"
+      >
+        <div
+          class="space-y-1"
+        >
+          <h2
+            class="text-xl font-semibold tracking-tight"
+          >
+            Research jobs
+          </h2>
+          <p
+            class="max-w-2xl text-sm text-muted-foreground"
+          >
+            Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.
+          </p>
+        </div>
+      </div>
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        <span
+          class="group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"
+          data-slot="badge"
+          data-variant="outline"
+        >
+          FIXTURE_ONLY / v1 research
+        </span>
+         
+        Workflow evidence only. Synthetic results do not establish investment performance.
+      </p>
+      <div
+        class="grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"
+      >
+        <section
+          aria-labelledby="research-setup"
+          class="space-y-4 rounded-lg border border-border bg-card p-4"
+        >
+          <h3
+            class="font-semibold"
+            id="research-setup"
+          >
+            Fixture configuration
+          </h3>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Registered baseline
+            <select
+              aria-label="Registered baseline"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="momentum"
+              >
+                momentum
+                 · v
+                1
+              </option>
+            </select>
+          </label>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Pinned fixture
+            <select
+              aria-label="Pinned fixture"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="0"
+              >
+                equities
+                 · r
+                1
+                 · 
+                1h
+              </option>
+            </select>
+          </label>
+          <p
+            class="text-xs text-muted-foreground"
+          >
+            Saved fixture/test inputs · 
+            moomoo:AAA
+          </p>
+          <div
+            class="grid grid-cols-2 gap-3"
+          >
+            <label
+              class="space-y-1 text-sm"
+            >
+              Train bars
+              <input
+                aria-label="Train bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="2"
+                step="1"
+                type="number"
+                value="10"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Test bars
+              <input
+                aria-label="Test bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Step bars
+              <input
+                aria-label="Step bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Fee (bps)
+              <input
+                aria-label="Fee (bps)"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:...
+ ❯ Object.getElementError ../../../../../Develop/QuantMesh/frontend/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../../Develop/QuantMesh/frontend/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../../Develop/QuantMesh/frontend/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../../Develop/QuantMesh/frontend/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/screens/ResearchJobs.test.tsx:191:19
+    189|     await screen.findByText('cancelled')
+    190|     await act(async () => { resolve(job()) })
+    191|     expect(screen.getByText('cancelled', { exact: true })).toBeInTheDo…
+       |                   ^
+    192|     expect(JSON.parse(localStorage.getItem('quantmesh.research-job.v1'…
+    193|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/screens/ResearchJobs.test.tsx > fixture research loop > cannot restore a previous cached report beneath a newly submitted job
+Error: expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <h3
+  class="font-semibold"
+  id="canonical-report"
+>
+  Canonical report
+</h3> instead
+ ❯ src/screens/ResearchJobs.test.tsx:214:56
+    212|     await screen.findByText('fixture-b')
+    213|     await act(async () => { resolve(await realDigest('SHA-256', new Te…
+    214|     expect(screen.queryByText('Canonical report')).not.toBeInTheDocume…
+       |                                                        ^
+    215|     digest.mockRestore()
+    216|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/screens/ResearchJobs.test.tsx > fixture research loop > allows explicit reconfiguration after confirmed 409 refusal
+ FAIL  src/screens/ResearchJobs.test.tsx > fixture research loop > allows explicit reconfiguration after confirmed 422 refusal
+TestingLibraryElementError: Unable to find role="button" and name "Reconfigure refused request"
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-5"
+    >
+      <div
+        class="flex flex-wrap items-start justify-between gap-3"
+      >
+        <div
+          class="space-y-1"
+        >
+          <h2
+            class="text-xl font-semibold tracking-tight"
+          >
+            Research jobs
+          </h2>
+          <p
+            class="max-w-2xl text-sm text-muted-foreground"
+          >
+            Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.
+          </p>
+        </div>
+      </div>
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        <span
+          class="group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"
+          data-slot="badge"
+          data-variant="outline"
+        >
+          FIXTURE_ONLY / v1 research
+        </span>
+         
+        Workflow evidence only. Synthetic results do not establish investment performance.
+      </p>
+      <p
+        class="rounded-md border border-border p-3 text-sm"
+        role="alert"
+      >
+        Submission response unavailable or refused. The saved request and key are preserved; retry explicitly.
+      </p>
+      <div
+        class="grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"
+      >
+        <section
+          aria-labelledby="research-setup"
+          class="space-y-4 rounded-lg border border-border bg-card p-4"
+        >
+          <h3
+            class="font-semibold"
+            id="research-setup"
+          >
+            Fixture configuration
+          </h3>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Registered baseline
+            <select
+              aria-label="Registered baseline"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="momentum"
+              >
+                momentum
+                 · v
+                1
+              </option>
+            </select>
+          </label>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Pinned fixture
+            <select
+              aria-label="Pinned fixture"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="0"
+              >
+                equities
+                 · r
+                1
+                 · 
+                1h
+              </option>
+            </select>
+          </label>
+          <p
+            class="text-xs text-muted-foreground"
+          >
+            Saved fixture/test inputs · 
+            moomoo:AAA
+          </p>
+          <div
+            class="grid grid-cols-2 gap-3"
+          >
+            <label
+              class="space-y-1 text-sm"
+            >
+              Train bars
+              <input
+                aria-label="Train bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="2"
+                step="1"
+                type="number"
+                value="10"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Test bars
+              <input
+                aria-label="Test bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Step bars
+              <input
+                aria-label="Step bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class...
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-5"
+    >
+      <div
+        class="flex flex-wrap items-start justify-between gap-3"
+      >
+        <div
+          class="space-y-1"
+        >
+          <h2
+            class="text-xl font-semibold tracking-tight"
+          >
+            Research jobs
+          </h2>
+          <p
+            class="max-w-2xl text-sm text-muted-foreground"
+          >
+            Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.
+          </p>
+        </div>
+      </div>
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        <span
+          class="group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"
+          data-slot="badge"
+          data-variant="outline"
+        >
+          FIXTURE_ONLY / v1 research
+        </span>
+         
+        Workflow evidence only. Synthetic results do not establish investment performance.
+      </p>
+      <p
+        class="rounded-md border border-border p-3 text-sm"
+        role="alert"
+      >
+        Submission response unavailable or refused. The saved request and key are preserved; retry explicitly.
+      </p>
+      <div
+        class="grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"
+      >
+        <section
+          aria-labelledby="research-setup"
+          class="space-y-4 rounded-lg border border-border bg-card p-4"
+        >
+          <h3
+            class="font-semibold"
+            id="research-setup"
+          >
+            Fixture configuration
+          </h3>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Registered baseline
+            <select
+              aria-label="Registered baseline"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="momentum"
+              >
+                momentum
+                 · v
+                1
+              </option>
+            </select>
+          </label>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Pinned fixture
+            <select
+              aria-label="Pinned fixture"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="0"
+              >
+                equities
+                 · r
+                1
+                 · 
+                1h
+              </option>
+            </select>
+          </label>
+          <p
+            class="text-xs text-muted-foreground"
+          >
+            Saved fixture/test inputs · 
+            moomoo:AAA
+          </p>
+          <div
+            class="grid grid-cols-2 gap-3"
+          >
+            <label
+              class="space-y-1 text-sm"
+            >
+              Train bars
+              <input
+                aria-label="Train bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="2"
+                step="1"
+                type="number"
+                value="10"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Test bars
+              <input
+                aria-label="Test bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Step bars
+              <input
+                aria-label="Step bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class...
+ ❯ waitForWrapper ../../../../../Develop/QuantMesh/frontend/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../../Develop/QuantMesh/frontend/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/screens/ResearchJobs.test.tsx:224:35
+    222|     await user.click(await screen.findByRole('button', { name: 'Submit…
+    223|     const original = mocks.submit.mock.calls[0]
+    224|     await user.click(await screen.findByRole('button', { name: 'Reconf…
+       |                                   ^
+    225|     await waitFor(() => expect(screen.getByRole('button', { name: 'Sub…
+    226|     expect(mocks.submit).toHaveBeenCalledTimes(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/screens/ResearchJobs.test.tsx > fixture research loop > labels retained versus freshly fetched status with the authoritative update time
+TestingLibraryElementError: Unable to find an element with the text: /Retained browser status/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-5"
+    >
+      <div
+        class="flex flex-wrap items-start justify-between gap-3"
+      >
+        <div
+          class="space-y-1"
+        >
+          <h2
+            class="text-xl font-semibold tracking-tight"
+          >
+            Research jobs
+          </h2>
+          <p
+            class="max-w-2xl text-sm text-muted-foreground"
+          >
+            Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.
+          </p>
+        </div>
+      </div>
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        <span
+          class="group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"
+          data-slot="badge"
+          data-variant="outline"
+        >
+          FIXTURE_ONLY / v1 research
+        </span>
+         
+        Workflow evidence only. Synthetic results do not establish investment performance.
+      </p>
+      <div
+        class="grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"
+      >
+        <section
+          aria-labelledby="research-setup"
+          class="space-y-4 rounded-lg border border-border bg-card p-4"
+        >
+          <h3
+            class="font-semibold"
+            id="research-setup"
+          >
+            Fixture configuration
+          </h3>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Registered baseline
+            <select
+              aria-label="Registered baseline"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="momentum"
+              >
+                momentum
+                 · v
+                1
+              </option>
+            </select>
+          </label>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Pinned fixture
+            <select
+              aria-label="Pinned fixture"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="0"
+              >
+                equities
+                 · r
+                1
+                 · 
+                1h
+              </option>
+            </select>
+          </label>
+          <p
+            class="text-xs text-muted-foreground"
+          >
+            Saved fixture/test inputs · 
+            moomoo:AAA
+          </p>
+          <div
+            class="grid grid-cols-2 gap-3"
+          >
+            <label
+              class="space-y-1 text-sm"
+            >
+              Train bars
+              <input
+                aria-label="Train bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="2"
+                step="1"
+                type="number"
+                value="10"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Test bars
+              <input
+                aria-label="Test bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Step bars
+              <input
+                aria-label="Step bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Fee (bps)
+              <input
+                aria-label="Fee (bps)"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:...
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-5"
+    >
+      <div
+        class="flex flex-wrap items-start justify-between gap-3"
+      >
+        <div
+          class="space-y-1"
+        >
+          <h2
+            class="text-xl font-semibold tracking-tight"
+          >
+            Research jobs
+          </h2>
+          <p
+            class="max-w-2xl text-sm text-muted-foreground"
+          >
+            Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.
+          </p>
+        </div>
+      </div>
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        <span
+          class="group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground"
+          data-slot="badge"
+          data-variant="outline"
+        >
+          FIXTURE_ONLY / v1 research
+        </span>
+         
+        Workflow evidence only. Synthetic results do not establish investment performance.
+      </p>
+      <div
+        class="grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]"
+      >
+        <section
+          aria-labelledby="research-setup"
+          class="space-y-4 rounded-lg border border-border bg-card p-4"
+        >
+          <h3
+            class="font-semibold"
+            id="research-setup"
+          >
+            Fixture configuration
+          </h3>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Registered baseline
+            <select
+              aria-label="Registered baseline"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="momentum"
+              >
+                momentum
+                 · v
+                1
+              </option>
+            </select>
+          </label>
+          <label
+            class="block space-y-1 text-sm"
+          >
+            Pinned fixture
+            <select
+              aria-label="Pinned fixture"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              disabled=""
+            >
+              <option
+                value="0"
+              >
+                equities
+                 · r
+                1
+                 · 
+                1h
+              </option>
+            </select>
+          </label>
+          <p
+            class="text-xs text-muted-foreground"
+          >
+            Saved fixture/test inputs · 
+            moomoo:AAA
+          </p>
+          <div
+            class="grid grid-cols-2 gap-3"
+          >
+            <label
+              class="space-y-1 text-sm"
+            >
+              Train bars
+              <input
+                aria-label="Train bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="2"
+                step="1"
+                type="number"
+                value="10"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Test bars
+              <input
+                aria-label="Test bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Step bars
+              <input
+                aria-label="Step bars"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                disabled=""
+                min="1"
+                step="1"
+                type="number"
+                value="5"
+              />
+            </label>
+            <label
+              class="space-y-1 text-sm"
+            >
+              Fee (bps)
+              <input
+                aria-label="Fee (bps)"
+                class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:...
+ ❯ waitForWrapper ../../../../../Develop/QuantMesh/frontend/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../../Develop/QuantMesh/frontend/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/screens/ResearchJobs.test.tsx:238:18
+    236|     }))
+    237|     render(<ResearchJobsScreen />)
+    238|     await screen.findByText(/Retained browser status/)
+       |                  ^
+    239|     expect(screen.getByText(/Job updated.*2026-01-01/)).toBeInTheDocum…
+    240|     mocks.get.mockResolvedValue(job('failed'))
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 9 passed (14)
+   Start at  04:04:51
+   Duration  6.12s (transform 147ms, setup 204ms, collect 389ms, tests 4.46s, environment 593ms, prepare 188ms)
+

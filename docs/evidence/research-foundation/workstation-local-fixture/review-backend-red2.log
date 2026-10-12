@@ -1,0 +1,80 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+____________ test_local_options_must_use_authoritative_worker_root ____________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x000001F7D5B7CAD0>, WindowsPath('C:/Users/15492/.codex-clean/...tions_must_use_au0/worker-lake'), <quantmesh.research.service_client.LocalResearchClient object at 0x000001F7D5B7CC20>)
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/5f7a/QuantMesh/output/173-workstation/review-backend-red2-temp/test_local_options_must_use_au0')
+
+    def test_local_options_must_use_authoritative_worker_root(local, tmp_path):
+        store, _, _ = local
+>       with pytest.raises(ValueError, match="worker_inputs_mismatch"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests\test_research_jobs_api.py:205: Failed
+______ test_historical_report_and_same_key_replay_survive_engine_upgrade ______
+
+result = (<quantmesh.research.job_store.SQLiteJobStore object at 0x000001F7D5AC60D0>, JobRecord(job_id='d6219c39d4b74d39833935c...6, 1, 7, 11, 0, tzinfo=datetime.timezone.utc), window_return=0.0425556071913229, turnover=0.0, cost=0.0, n_trades=0)]))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001F7D5C842B0>
+
+    def test_historical_report_and_same_key_replay_survive_engine_upgrade(result, monkeypatch):
+        from quantmesh.research.job_artifacts import canonical_result, publish_result
+        from quantmesh.research import strategy_registry
+        from quantmesh.research import service_client
+        store, job, report = result
+        claimed = store.claim("owned", job.created_at)
+        ref = publish_result(job, canonical_result(report), store.artifact_root)
+        assert store.finish(job.job_id, "owned", claimed.attempt, "succeeded", [ref], None)
+        old_registry = strategy_registry.get_strategy
+        upgraded = lambda name, version: old_registry(name, version).model_copy(
+            update={"implementation_digest": "a" * 64})
+        monkeypatch.setattr(strategy_registry, "get_strategy", upgraded)
+        monkeypatch.setattr(service_client, "get_strategy", upgraded, raising=False)
+        client = LocalResearchClient(store, operator_id="local", lake_root=store.lake_root,
+                                     configured_dataset_ids=("equities",))
+>       completed = client.get(job.job_id)
+                    ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_research_jobs_api.py:225: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\quantmesh\research\service_client.py:143: in get
+    return _job(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+value = {'job_id': 'd6219c39d4b74d39833935c50b78112c', 'operator_id': 'local', 'idempotency_key': 'fixture', 'request': {'sche...t': '6186ded58b3e35f16c73b697ca1167e0335f265ea8b37f07f4a81d67a9ccb938', 'permission_class': 'fixture', ...}, ...}, ...}
+operator_id = 'local', job_id = 'd6219c39d4b74d39833935c50b78112c'
+request = None, key = None
+
+    def _job(value, operator_id, *, job_id=None, request=None, key=None) -> JobRecord:
+        job = JobRecord.model_validate(value)
+        if (
+            job.operator_id != operator_id
+            or canonical_request_digest(job.request) != job.request_digest
+            or (job_id is not None and job.job_id != job_id)
+            or (key is not None and job.idempotency_key != key)
+            or (request is not None and job.request_digest != canonical_request_digest(request))
+            or job.implementation_digest
+            != get_strategy(job.request.strategy_id, job.request.strategy_version).implementation_digest
+        ):
+>           raise StoreUnavailable("service_unavailable")
+E           quantmesh.research.jobs.StoreUnavailable: service_unavailable
+
+src\quantmesh\research\service_client.py:47: StoreUnavailable
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_research_jobs_api.py::test_local_options_must_use_authoritative_worker_root
+FAILED tests/test_research_jobs_api.py::test_historical_report_and_same_key_replay_survive_engine_upgrade
+2 failed, 25 deselected, 3 warnings in 1.99s

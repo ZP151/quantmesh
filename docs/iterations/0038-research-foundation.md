@@ -578,3 +578,10 @@ PG first genuine service run reports30pass/0skip/exit0 and owned clean shutdown;
 new admission gaps from round1 are fixed with native33tests and a fresh actual
 gate, but final round2 review/handoff/root verification remain pending. No
 database production acceptance, live server source or full milestone claim.
+
+Root preserves38 raw#173 witness/review/test/report/DOM/PNG streams under
+docs/evidence/research-foundation/workstation-local-fixture with SHA256.json
+and no newline conversion. Actual immutable3641-byte report matches the
+browser witness SHA124f692...db2566 and exact b9daa42 Worker runtime; all copied
+bytes equal original managed5f7a records. This is durable local fixture proof,
+not a rerun or new PG/Linux/model/market/deployment certification.
