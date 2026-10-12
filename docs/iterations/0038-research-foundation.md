@@ -108,5 +108,13 @@ of origin/main745a231). Its intake confirms existing feed labels use raw age
 and connection status lacks session fields. Implement additive shared
 session_freshness while preserving raw clocks/provenance and order fences;
 root owns final shared UI/OpenAPI integration after the field contract is frozen.
-Contracts#168's ready thread ID is not confirmed yet; keep its creation request,
-do not duplicate it or infer completion from a created worktree.
+Contracts#168 resolved to ready thread01a13061-9cf1-7140-a0b3-ccbd3722ba76.
+Worktree C:/Users/15492/.codex-clean/worktrees/0038-research-jobs/QuantMesh,
+branch codex/0038-research-jobs, approved base5cfb0d4. First Task2 slice admits
+only v1 fixture/test datasets; this is local contract/persistence acceptance,
+not real-data backtest acceptance. Retain permission/export/version fields for
+subsequent qualified-v2 adapter. Unsupported versions or missing rights fail
+with precise typed reasons; no fixture fallback or provider-name license inference.
+Existing initial baseline parameter schemas explicitly admit only empty objects;
+later versioned strategies extend their own schemas. Optional lake_root constructor
+injection preserves path-only compatibility and existing baseline math.
