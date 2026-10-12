@@ -149,7 +149,7 @@ Interfaces:
   does not enlarge core release dependencies. A separate gated real API run
   waits for operator provider/model/price/egress approval and records actual cost.
 
-## Task 3 — Workstation submit/status/report loop
+## Task 3 — Workstation submit/status/report loop (#173, queued)
 
 Files: create `src/quantmesh/api/research_jobs.py`,
 `src/quantmesh/research/service_client.py`, `tests/test_research_jobs_api.py`,
@@ -158,13 +158,45 @@ Root alone modifies `src/quantmesh/api/workstation.py`, frontend `App.tsx`,
 shared API client/generated schema and existing Research navigation.
 Read PRODUCT and invoke project impeccable before shaping this surface.
 
+Intake refinement after the actual service landed: it currently exposes
+`/v1/jobs` submission/status/cancel/artifact, but no choices endpoint. The UI
+cannot choose qualified inputs by pretending the workstation's local lake is
+the remote Worker lake. Add the following bounded metadata contract first;
+it does not change the nine-method store or frozen request/schema digests.
+
+Additional files: `src/quantmesh/research/job_options.py`,
+`tests/test_research_job_options.py`; coordinator alone adds the authenticated
+`GET /v1/options` route in `services/research_agent/src/qm_research_agent/app.py`
+and its separate-service test. No current active session writes these files.
+
+- `DatasetJobOption`: `dataset: DatasetRef`, `interval: str`,
+  `universe: list[UniverseMember]`, `minimum_available_bars: int`.
+- `ResearchJobOptions`: schema_version1, `strategies: list[StrategySpec]`,
+  `datasets: list[DatasetJobOption]`, status `configured|unavailable`, optional
+  fixed reason `no_qualified_inputs|service_unavailable`.
+- `job_options(lake_root: Path, configured_dataset_ids: tuple[str, ...])
+  -> ResearchJobOptions`: only explicit deployment-configured dataset IDs,
+  registered momentum/mean_reversion/risk_parity v1, bounded fixture pin and
+  coverage validation reused from current code. Reject symlink/path escapes,
+  unsupported manifests/rights and incomplete aligned coverage; never scan
+  arbitrary host folders or import live minutes into research history.
+- Both local and remote mode get options from the authoritative Worker input
+  root. No valid fixture means unavailable/disabled submit. Labels say fixture
+  research; nothing here qualifies real investment history or export rights.
+
 Interfaces:
 - `ResearchServiceClient.submit(request: ResearchJobRequest, key: str) -> JobRecord`,
   `.get(job_id: str) -> JobRecord`, `.cancel(job_id: str) -> JobRecord`,
-  `.artifact(job_id: str, artifact_id: str) -> bytes`.
+  `.artifact(job_id: str, artifact_id: str) -> bytes`,
+  `.options() -> ResearchJobOptions`.
 - QuantMesh API routes: `/research/jobs` submit, `/research/jobs/{job_id}` read,
   `/research/jobs/{job_id}/cancel`, `/research/jobs/{job_id}/artifacts/{artifact_id}`;
   local mode binds SQLite/worker adapter, remote mode uses approved private endpoints.
+- `GET /research/job-options` maps to local configured options or private
+  authenticated service `/v1/options`. Backend-only SecretStr bearer, TLS
+  verification, fixed endpoint allowlist, no redirects or request URLs; bound
+  JSON responses to1MiB and artifacts to existing16MiB Worker maximum. Check
+  returned schema/operator/job/config and artifact byte-size/SHA against refs.
 - UI exposes registered strategy/version, pinned data/config/costs, status,
   cancel, canonical report download and optional cited analysis. Advisory versus
   deterministic artifacts and unavailable usage/cost are distinct.
@@ -174,6 +206,10 @@ Interfaces:
   succeeded, failed/cancelled, reload preservation, absent Agent and no order UI.
 - [ ] RED: `python -m pytest tests/test_research_jobs_api.py -q`;
   in frontend run `npx vitest run src/screens/ResearchJobs.test.tsx`.
+- [ ] Add options tests for wrong input root, invalid/changed pin, unsupported
+  dataset permissions, insufficient coverage and no configured input. Include
+  private-service options auth/schema test in its locked gate. Fake service
+  responses and missing fixture inputs cannot enable submission.
 - [ ] Implement typed facade and submit/status/report surface. Bound retries,
   show measured input/code lineage, and poll only active jobs. No synchronous
   backtest in web request and no hidden rerun on refresh.
@@ -183,6 +219,14 @@ Interfaces:
 - [ ] Record actual browser submit → pending → report → reload, cancellation,
   model unavailable and service unavailable. Commit the user loop; root owns
   shared integration edits and the active iteration evidence.
+
+Quant Researcher ruling for this slice: fixture reports demonstrate workflow,
+not profitability. Show costs/time-order/walk-forward lineage and unknown model
+usage plainly; no baseline promotion, strategy expansion or trading authority.
+Keep an ambiguous submission's saved idempotency key on reload; never retry
+with a new key or silently call an unavailable Agent. Source/calendar charts
+stay available while the authoritative research service is down. Dispatch
+#173 only after a current implementation slot reaches handoff.
 
 ## Task 4 — Approved private deployment and recovery acceptance
 

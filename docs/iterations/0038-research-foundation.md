@@ -382,3 +382,11 @@ The second slot is now native thread01a13153-55c8-7c72-8460-15cfbe61fe34
 Its exclusive Task1 files and explicit stop before Task2 protect the already
 reviewed Worker/service contracts. Both slots are occupied; root coordinates
 shared documentation and next-user-loop acceptance without a third implementer.
+
+Next user loop is [#173](https://github.com/ZP151/quantmesh/issues/173), queued
+against workers/workstation Task3. Actual service inspection finds `/v1/jobs`
+but no qualified selection endpoint. Planner adds bounded authenticated options
+from the authoritative Worker input root, preserving frozen job/store contracts.
+The UI must not imply that a workstation-local pin exists on the remote Worker,
+or that v1 fixture-only data is qualified real history. No new implementation
+session is opened; shared facade/options/schema/navigation stay root-owned.
