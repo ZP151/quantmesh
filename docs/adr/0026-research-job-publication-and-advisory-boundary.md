@@ -20,6 +20,11 @@ One configured JobStore is authoritative per mode: local SQLite and later
 isolated PostgreSQL implement the same versioned nine-method protocol. Request
 identity includes validated strategy/data/version/cost/window/configuration;
 same idempotency key/digest means one job and changed digest means conflict.
+JobRecord also freezes an implementation_digest at submission for baseline and
+report-engine source bytes. This limited digest is not a complete dependency,
+image or environment fingerprint. Worker compares it before execution and binds
+the actual full build/dependency fingerprint separately in durable evidence;
+engine changes cannot silently execute an old queued job with different math.
 Owner/attempt/lease fences protect state changes; no stale completion can
 publish. Successful backtest publication and pending advisory outbox creation
 are transactional. Advisory has its own lease and terminal state.
@@ -38,7 +43,8 @@ Other admitted artifact kinds are equity_curve, trades and analysis. The remote
 artifact adapter must provide equivalent verified immutable bytes; it must not
 skip validation because bytes live outside the SQLite host.
 
-The Worker publishes an envelope with schema_version=1, request_digest and
+The Worker publishes an envelope with schema_version=1, request_digest,
+the job's verified implementation_digest and
 result (the parsed canonical numerical JSON). Its object key is
 `<job_id>/<sha256-of-envelope>.json`; whole envelope byte_size/SHA256 identify
 publication. canonical_result excludes wall-clock receipt fields and binds

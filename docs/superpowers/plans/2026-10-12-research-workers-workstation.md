@@ -47,7 +47,10 @@ Interfaces:
   created_at and worker receipt IDs. Full receipt remains separately archived.
 - `publish_result(job: JobRecord, canonical_bytes: bytes, root: Path) -> ArtifactRef`;
   wrap canonical numerical JSON as a report envelope with schema_version=1,
-  request_digest=job.request_digest and result. Write atomically under
+  request_digest=job.request_digest, verified job.implementation_digest and result.
+  Compare queued engine digest before running; bind full actual worker build and
+  dependency fingerprint separately, do not call a two-file SHA the full runtime.
+  Write atomically under
   `<job_id>/<sha256-of-envelope>.json`; ArtifactRef byte_size/SHA256 describe
   envelope bytes. Store verifies every ref and exactly one report with matching
   request_digest; Worker owns numerical schema validation. Full receipt remains

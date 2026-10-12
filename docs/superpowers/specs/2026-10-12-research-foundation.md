@@ -99,6 +99,8 @@ stale app values remain a diagnosis candidate pending delay/lifecycle evidence.
   `parameters`, existing `CostModel` and
   `WalkForwardSpec`, `budget: RunBudget`, `analysis_requested: bool`.
 - `JobRecord`: `job_id`, request/config digest, idempotency key, state,
+  submitted `implementation_digest` for baseline/report-engine source bytes
+  (complete worker build/dependency fingerprint is recorded separately),
   `attempt`, `lease_owner`, `lease_expires_at`, `cancel_requested`, timestamps,
   error code, artifact references and measured/unknown usage. Include
   `analysis_state`: `not_requested`, `pending`, `running`, `succeeded`,

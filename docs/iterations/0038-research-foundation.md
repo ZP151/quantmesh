@@ -135,3 +135,11 @@ later shared UI integration, raw clocks/order fences retained. Root verified
 an uncovered current-default case: closed/latest-session coverage with unknown
 provider latency must not be forced to unknown merely because delay is undeclared.
 Requested meaningful RED/GREEN within the ongoing review, no third structural review.
+
+#168 subsequent boundary suite41 passed/15.81s, exit0; global Ruff green.
+The two read-only Spec/Standards round1 reviewers are running. Unavailable
+analysis metadata is now nullable with success-only completeness/citation/error
+validation; no fabricated all-zero prompt/output hashes. Submitted engine digest
+covers baseline/reports source only, not a full runtime fingerprint. Root clarified
+one relevant domain broad boundary per session and a single final combined-head
+fresh release gate; mandatory PR CI/review gates remain intact.
