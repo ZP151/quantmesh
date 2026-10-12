@@ -32,6 +32,17 @@ Task1#132 follows when a first source/calendar slice frees an implementation slo
 
 ## Task 1 — #132 deterministic validation tiers
 
+Recovery ruling: existing unmerged candidate codex/0132-gate-efficiency at
+b36a5528c489ad92e0aad363a527317e37ad2cd8 already implements gate_policy.py,
+quality_gate.py and related workflow/tests. Its ledger records focused171/1,
+FAST446/1 and an interrupted full release attempt, not release certification.
+The worktree also preserves uncommitted observer follow-ups; do not erase or
+silently absorb them. Start with read-only compatibility/reuse review against
+the current integration tree, adapt the committed implementation rather than
+writing a second gate framework. File/CLI names below are desired boundary
+descriptions; retain the existing qualified entry points instead of creating
+a duplicate validation_gates.py if equivalent behavior is already provided.
+
 Files: create `tools/validation_gates.py`, `tests/test_validation_gates.py`,
 `docs/runbooks/validation-tiers.md`; modify `.github/workflows/ci.yml` only in
 this assigned session. Root reviews workflow/dependency consequences.
@@ -126,6 +137,16 @@ Interfaces (freeze these together before Batch B):
   this commit and exact interface names, not an informal chat paraphrase.
 
 ## Task 3 — #160 offline reproducible workflow Eval
+
+Recovery ruling: legacy worktree
+C:/Users/15492/.codex-clean/worktrees/quantmesh-eval-harness/QuantMesh contains
+uncommitted tools/eval_harness/, tests/test_eval_harness.py, benchmarks and docs.
+Preserve its contents. Inspect/reuse qualified behavior in a new owned worktree;
+do not rerun a completed experiment or build workflow_eval.py as a duplicate
+framework. Its unmerged file calls itself iteration0038; that is not the current
+canonical iteration ID or accepted evidence. Mirror validated results under the
+current0038 ledger and avoid duplicate index entries. Tests/release acceptance
+must be rerun only for the actual adapted candidate, never inferred from dirty files.
 
 Files: create `tools/workflow_eval.py`, `tests/test_workflow_eval.py`,
 `tests/workflow_eval/cases.json`, `tests/workflow_eval/fixtures/`,

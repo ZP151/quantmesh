@@ -160,3 +160,22 @@ excludes status and preserves verified completed-minute coverage instead of a
 partial candle; absent provider end is not replaced with candle open. Root
 clarifies relevant broad regressions per slice, one final combined full gate;
 the interrupted old full run remains incomplete, not a green certification.
+
+### Existing-work recovery before next dispatch
+
+Read-only Git audit finds #132's existing unmerged codex/0132-gate-efficiency
+b36a552 with gate_policy/quality_gate/workflow tests; focused171/1 and FAST446/1
+are historical, full certification interrupted after6772.985s. Its separate
+dirty observer experiments remain preserved. Next#132 session must reuse/adapt,
+not duplicate the implementation or call it released.
+Likewise #160's legacy quantmesh-eval-harness worktree has uncommitted harness,
+tests, benchmarks and an unmerged0038-named ledger; preserve/recover qualified
+work under the current canonical0038 rather than create a second framework.
+
+#169 stable domain182 reported green and remaining domain complement running.
+Conservative residual accepted only for bounded Task1: after process restart,
+latest persisted partial candle may prevent confirmation of older completed
+coverage; report unknown, not failure/false latest_session. Browser/API reload
+in the same process is distinct. A bounded selective rehydration follow-up is
+needed before claiming final source recovery coverage; no broad lake scan or
+storage migration was added to this current review slice.
