@@ -97,3 +97,16 @@ worktrees from the approved plan branch. Do not pass pending client IDs into
 tools requiring ready thread IDs or redispatch duplicate sessions. Root owns
 shared-file integration and records actual ready IDs/branches after setup.
 No runtime completion or paid resource follows from dispatch alone.
+
+### Ready session checkpoint
+
+Server/calendar#169 resolved to ready thread
+01a13061-9cd0-7ff3-9f99-326fd04423ef on local host; compact wait confirms ACTIVE.
+Worktree C:/Users/15492/.codex-clean/worktrees/acf3/QuantMesh,
+branch codex/0038-session-freshness, starting at5cfb0d4 (docs-only continuation
+of origin/main745a231). Its intake confirms existing feed labels use raw age
+and connection status lacks session fields. Implement additive shared
+session_freshness while preserving raw clocks/provenance and order fences;
+root owns final shared UI/OpenAPI integration after the field contract is frozen.
+Contracts#168's ready thread ID is not confirmed yet; keep its creation request,
+do not duplicate it or infer completion from a created worktree.
