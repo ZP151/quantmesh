@@ -427,3 +427,28 @@ closed-session failures remain preserved. Integrate the documentation-only
 evidence PR after required CI/review gates, then pause the release heartbeat.
 Do not redeploy the app or mark the whole goal complete. Actual Windows
 login/outage,24hcapacity,shutdown/reboot drills and PR #159 remain separate.
+
+## October 12 high-priority blocker repair
+
+The user now authorizes repair of the current high-priority blockers, with no
+live trading. Read-only health confirms deployed69515b7, paper=true/live=false
+and fresh crypto. Both installed source/helper processes are alive. A fresh
+SSH attempt actually requests Tailscale human check-mode authentication; do
+not reuse old URLs or change authentication policy. That human step is pending.
+
+New branch codex/0037-opend-probe-cleanup starts from origin/main745a231,
+preserving local main. Native RED reproduces orphaned probe descendants and
+unbounded output draining. Gated anonymous job containment fixes only probe
+ownership; focused3 and complete native33/54.05s pass, Ruff/diff clean. Spec
+and Standards round1 have no P1/P2; CI/install/real-source gates stay open.
+See the tracked2026-10-12-opend-probe-cleanup plan and iteration0037. Do not
+replace/restart the installed helper or affect old tunnels implicitly.
+
+Independent maintenance audit: disabled soak tasks point to a nonexistent
+runner. Maintained candidateb6f5cdb is pushed but has no PR/check runs; v5
+admission must verify the real source, disabled task installation and a full
+fresh daily cycle before enabling cadence. No formal168h clock has started.
+The old24h observer has only51 freshness samples over4h10m on33aa0521 and
+one missing host metric sample. Preserve it as partial evidence; start a new
+current-build observer only after connection/source preflight. These elapsed
+time gates, disruptive operator acceptance and firewall review remain open.

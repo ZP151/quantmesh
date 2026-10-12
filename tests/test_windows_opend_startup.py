@@ -205,6 +205,7 @@ def test_owned_install_is_reversible_and_preserves_unrelated_files(tmp_path: Pat
     result = ps(
         f"""
 $script:links=@{{}}
+function Get-QmHelperActive {{ return $false }}
 function Write-QmShortcut($Path,$Target,$Arguments,$WorkingDirectory) {{
  $script:links[$Path]=@{{TargetPath=$Target; Arguments=$Arguments;
  WorkingDirectory=$WorkingDirectory}}
@@ -407,6 +408,62 @@ $result=Invoke-QmBoundedProbe $path
     assert arguments[:2] == ["ssh", "ubuntu@quantmesh-staging-8gb"]
     assert arguments[-1].startswith("echo ")
     assert arguments[-1].endswith(" | base64 -d | python3")
+
+
+@pytest.mark.parametrize("wrapper_exits", [False, True])
+def test_probe_cleans_its_descendants_without_stopping_an_unrelated_process(
+    tmp_path: Path, wrapper_exits: bool
+) -> None:
+    root = str(tmp_path).replace("'", "''")
+    result = ps(
+        rf"""
+$source=@'
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Threading;
+public class FakeProbe {{
+ public static int Main(string[] args) {{
+  if (args.Length == 1 && args[0] == "child") {{ Thread.Sleep(60000); return 0; }}
+  var path = System.Reflection.Assembly.GetExecutingAssembly().Location;
+  var info = new ProcessStartInfo(path, "child");
+  info.UseShellExecute = false; info.CreateNoWindow = true;
+  info.RedirectStandardOutput = true; info.RedirectStandardError = true;
+  var child = Process.Start(info);
+  File.WriteAllText(Path.Combine(Path.GetDirectoryName(path), "child.pid"), child.Id.ToString());
+  Console.Write("QM_LISTENER_PRESENT");
+  if (Boolean.Parse("{str(not wrapper_exits).lower()}")) Thread.Sleep(60000);
+  return 0;
+ }}
+}}
+'@
+$path=Join-Path '{root}' 'fake-probe.exe'
+Add-Type -TypeDefinition $source -OutputAssembly $path -OutputType ConsoleApplication
+$siblingInfo=New-Object Diagnostics.ProcessStartInfo($path, 'child')
+$siblingInfo.UseShellExecute=$false; $siblingInfo.CreateNoWindow=$true
+$sibling=[Diagnostics.Process]::Start($siblingInfo)
+$child=$null
+try {{
+ $timer=[Diagnostics.Stopwatch]::StartNew()
+ $probe=Invoke-QmBoundedProbe $path
+ $timer.Stop()
+ $childId=[int][IO.File]::ReadAllText((Join-Path '{root}' 'child.pid'))
+ $child=Get-Process -Id $childId -ErrorAction SilentlyContinue
+ @{{code=$probe.ExitCode; childAlive=($null -ne $child -and -not $child.HasExited);
+ siblingAlive=(-not $sibling.HasExited); seconds=$timer.Elapsed.TotalSeconds
+ }} | ConvertTo-Json -Compress
+}}
+finally {{
+ if ($null -ne $child -and -not $child.HasExited) {{ $child.Kill(); $child.WaitForExit() }}
+ if (-not $sibling.HasExited) {{ $sibling.Kill(); $sibling.WaitForExit() }}
+ $sibling.Dispose()
+}}
+"""
+    )
+    assert result["code"] == (0 if wrapper_exits else -1)
+    assert result["childAlive"] is False
+    assert result["siblingAlive"] is True
+    assert result["seconds"] < 18
 
 
 @pytest.mark.parametrize(

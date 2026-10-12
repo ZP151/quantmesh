@@ -720,3 +720,31 @@ iteration 0036 for later operational acceptance, without blocking development.
 - **Operator / 中文:** 两股票真实开市分钟修订、连续两次追加、刷新保留与供应商
   OHLCV一致已通过；OpenD自启动配置已安装。真实Windows登录/断线、容量和
   停机演练仍后置。文档PR检查通过后合并并暂停本条发布续跑。
+
+## October 12 blocker repair — SSH probe ownership
+
+- **Planner:** user requests repair of current high-priority blockers. Scope
+  under #156 is the existing Windows probe's descendant cleanup; follow
+  [the bounded plan](../superpowers/plans/2026-10-12-opend-probe-cleanup.md).
+- **Diagnosis:** AWS health remains69515b7/paper=true/live=false; crypto is
+  fresh. OpenD28036/helper53020 are alive and installed digest matches. Actual
+  SSH requests a new human Tailscale check. No policy or vendor login is changed.
+  Old probes leave orphan native SSH/proxy processes because only their wrapper
+  is killed. An early wrapper exit can also leave output draining unbounded.
+- **Implementer:** a gated bootstrap joins an anonymous kill-on-close Windows
+  job before launching the CLI. Only probe descendants enter it; GUI, helper,
+  managed tunnel and external tunnel are never assigned. Failure stays unknown.
+- **Verifier:** corrected native RED has two failures (leak and outer deadline);
+  focused GREEN passes3/19.50s. Isolated fake child and unrelated live sibling
+  prove actual process ownership. Full affected native/review/CI gates follow.
+  Logs under output/0037-probe-cleanup/. Complete affected native suite passes
+  33/54.05s, exit0; Ruff and diff pass. Its first32/1 run exposed the fake
+  install fixture consulting the active user helper mutex; mock only that
+  isolated helper-absence boundary, retaining the active-helper uninstall test.
+  Spec and Standards round1 have no actionable P1/P2. Installation remains
+  unchanged; exact-head CI and applicable review/install gates remain open.
+- **Independent maintenance audit:** disabled soak tasks reference a missing
+  runner; maintained candidateb6f5cdb exists elsewhere. Preserve v3/v4 negative
+  evidence and perform the independent v5 admission plan, not blind enabling.
+  No formal168h run started. Old AWS capacity evidence covers4h10m/51 samples
+  on33aa0521, not24h and not the current build. These gates remain open.
