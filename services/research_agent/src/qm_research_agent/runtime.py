@@ -79,10 +79,8 @@ class ServiceRuntimeConfig(BaseModel):
     @model_validator(mode="after")
     def qualified_paths_and_ids(self):
         from quantmesh.data.layout import validate_dataset_name
-        from quantmesh.research.job_store import _identifier
 
         try:
-            _identifier(self.operator_id)
             if len(set(self.configured_dataset_ids)) != len(self.configured_dataset_ids):
                 raise ValueError
             for name in self.configured_dataset_ids:
@@ -243,7 +241,7 @@ def _admit_source(root: Path, expected: str) -> str:
         others = _git(root, "ls-files", "--others", "-z").decode().split("\0")
         for name in others:
             path = Path(name)
-            if path.suffix in {".py", ".pth", ".so", ".pyd", ".pyc"}:
+            if path.name == ".env" or path.suffix in {".py", ".pth", ".so", ".pyd", ".pyc"}:
                 raise ValueError
         for name in tracked - {""}:
             path = root / name
@@ -281,6 +279,44 @@ def _native_filesystem(path: Path) -> bool:
     return bool(candidates) and max(candidates)[1] in {"ext4", "xfs", "btrfs"}
 
 
+def _admit_dependencies(prefix: Path, pins: dict[str, str]) -> dict:
+    """Measure the entire executable closure before lazy server imports or SQL."""
+    site = prefix / "lib/python3.12/site-packages"
+    records = {}
+    try:
+        for name, version in pins.items():
+            dist = metadata.distribution(name)
+            if dist.version != version or not dist.files:
+                raise ValueError
+            for item in dist.files:
+                path = Path(os.path.abspath(dist.locate_file(item)))
+                if path.suffix == ".pyc" and not path.exists():
+                    continue  # Removed pip-generated cache entries are not executable.
+                if path.resolve() != path or not path.is_relative_to(prefix):
+                    raise ValueError
+                if item.hash:
+                    if item.hash.mode != "sha256":
+                        raise ValueError
+                    digest = (
+                        base64.urlsafe_b64encode(hashlib.sha256(path.read_bytes()).digest())
+                        .decode()
+                        .rstrip("=")
+                    )
+                    if digest != item.hash.value:
+                        raise ValueError
+                    records[path] = item.hash
+                elif path.suffix in {".py", ".so", ".pyd", ".pth", ".pyc"}:
+                    raise ValueError
+        for path in site.rglob("*"):
+            if path.suffix == ".pyc":
+                raise ValueError
+            if path.suffix in {".py", ".so", ".pyd", ".pth"} and path not in records:
+                raise ValueError
+        return records
+    except (ValueError, OSError, metadata.PackageNotFoundError):
+        raise RuntimeRejected("runtime_unqualified") from None
+
+
 def _admit_runtime(expected: str) -> tuple[str, str]:
     try:
         if (
@@ -316,13 +352,7 @@ def _admit_runtime(expected: str) -> tuple[str, str]:
         if failures:
             raise ValueError
         site = prefix / "lib/python3.12/site-packages"
-        records = {}
-        for name in pins:
-            dist = metadata.distribution(name)
-            for item in dist.files or ():
-                file_path = Path(dist.locate_file(item)).absolute()
-                if item.hash:
-                    records[file_path] = item.hash
+        records = _admit_dependencies(prefix, pins)
         for name in (
             "fastapi",
             "uvicorn",
@@ -336,7 +366,7 @@ def _admit_runtime(expected: str) -> tuple[str, str]:
             if not location or name == "__main__":
                 continue
             path = Path(location).absolute()
-            if name.startswith(
+            if path.is_relative_to(root) or name.startswith(
                 (
                     "quantmesh",
                     "qm_research_agent",
