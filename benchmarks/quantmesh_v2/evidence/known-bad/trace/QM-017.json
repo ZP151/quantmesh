@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_live_candle_revisions.py::test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0033026000019162893,
+      "location": [
+        "tests\\test_live_candle_revisions.py",
+        88,
+        "test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_candle_revisions.py::test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 0.00010720000136643648,
+      "location": [
+        "tests\\test_live_candle_revisions.py",
+        88,
+        "test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_candle_revisions.py::test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0007058000192046165,
+      "location": [
+        "tests\\test_live_candle_revisions.py",
+        88,
+        "test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_live_candle_revisions.py::test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

@@ -1,0 +1,812 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0028756000101566315,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05549679999239743,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00016309996135532856,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0018446000758558512,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0538577000843361,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001444999361410737,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0014386000111699104,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05891320004593581,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00015870004426687956,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0019125000108033419,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05812970001716167,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014549994375556707,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001698700012639165,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05599159991834313,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014279992319643497,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0016814999980852008,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05696489999536425,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00017709995154291391,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0015146000077947974,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05475099990144372,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00015700003132224083,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0015917000127956271,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05473630002234131,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00015660002827644348,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0015553999692201614,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05216169997584075,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00015199999324977398,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0015175000298768282,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05162949999794364,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001569000305607915,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0015054000541567802,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.050255100009962916,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014389993157237768,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001445300062187016,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.055476600071415305,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001501999795436859,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013713999651372433,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0479609000030905,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013310008216649294,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013705999590456486,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.04892680002376437,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013129995204508305,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0015510000521317124,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.04904750001151115,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013529998250305653,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0014131000498309731,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.04879669996444136,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013649999164044857,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001381100038997829,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.04339479992631823,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014160003047436476,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0014895000495016575,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.041816000011749566,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013529998250305653,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0014031999744474888,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.04354740004055202,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013449997641146183,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013883000938221812,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.04333479993510991,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00016020005568861961,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

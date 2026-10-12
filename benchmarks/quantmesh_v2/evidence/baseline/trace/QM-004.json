@@ -1,0 +1,478 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0021306000417098403,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.008291899925097823,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013569998554885387,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0015137000009417534,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.006361099891364574,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010820000898092985,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0011398999486118555,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[timeout]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.007282800041139126,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[timeout]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00011069991160184145,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[timeout]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001146599999628961,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[non-json]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.006256400025449693,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[non-json]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012280000373721123,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[non-json]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001381400041282177,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[authority-field]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.006487499922513962,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[authority-field]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010790000669658184,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[authority-field]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0011919999960809946,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.006641000043600798,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00011120003182440996,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0011765999952331185,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.006834499887190759,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012630003038793802,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013637999072670937,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.04900590004399419,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010929990094155073,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0012165000662207603,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.01004990004003048,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012500002048909664,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        400,
+        "test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [
+    {
+      "sequence": 0,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "error",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "error_type": "ModelUnavailableError",
+      "duration_seconds": 0.0013883999781683087
+    },
+    {
+      "sequence": 1,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "error",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]",
+      "method": "complete_structured",
+      "transport": "TimeoutTransport",
+      "error_type": "TimeoutError",
+      "duration_seconds": 0.0010601000394672155
+    },
+    {
+      "sequence": 2,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "error",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "error_type": "ModelOutputError",
+      "duration_seconds": 0.0011605999898165464
+    },
+    {
+      "sequence": 3,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "error",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "error_type": "ModelOutputError",
+      "duration_seconds": 0.0013485000235959888
+    },
+    {
+      "sequence": 4,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.001138900057412684
+    },
+    {
+      "sequence": 5,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.0011835000477731228
+    },
+    {
+      "sequence": 6,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.0012610999401658773
+    },
+    {
+      "sequence": 7,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "error",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "error_type": "ModelOutputError",
+      "duration_seconds": 0.03880970005411655
+    },
+    {
+      "sequence": 8,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.0013238000683486462
+    },
+    {
+      "sequence": 9,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.00040580006316304207
+    }
+  ],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]",
+    "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

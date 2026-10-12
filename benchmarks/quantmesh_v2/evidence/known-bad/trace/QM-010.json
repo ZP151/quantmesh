@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00018989993259310722,
+      "location": [
+        "tests\\test_account_store.py",
+        37,
+        "test_journal_recovery_closes_the_append_before_snapshot_crash_window"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.300000965595245e-05,
+      "location": [
+        "tests\\test_account_store.py",
+        37,
+        "test_journal_recovery_closes_the_append_before_snapshot_crash_window"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013289996422827244,
+      "location": [
+        "tests\\test_account_store.py",
+        37,
+        "test_journal_recovery_closes_the_append_before_snapshot_crash_window"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

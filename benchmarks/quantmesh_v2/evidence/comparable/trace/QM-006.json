@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_proposal_is_a_preview_and_pins_the_forecast_without_ordering",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.003218500060029328,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        156,
+        "test_proposal_is_a_preview_and_pins_the_forecast_without_ordering"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_proposal_is_a_preview_and_pins_the_forecast_without_ordering",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.16694929997902364,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        156,
+        "test_proposal_is_a_preview_and_pins_the_forecast_without_ordering"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_proposal_is_a_preview_and_pins_the_forecast_without_ordering",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00020279991440474987,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        156,
+        "test_proposal_is_a_preview_and_pins_the_forecast_without_ordering"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_paper_proposals.py::test_proposal_is_a_preview_and_pins_the_forecast_without_ordering"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}
