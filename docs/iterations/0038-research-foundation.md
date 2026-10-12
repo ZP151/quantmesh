@@ -504,3 +504,37 @@ its original log is retained, then the actual repository Vitest entrypoint
 Shared route/schema/client/UI candidate is now wired, but actual fixture browser
 submit/report/reload/cancel/unavailable and the two final Spec/Standards reviews
 remain pending in the same#173 session. This is a local candidate, not deployed.
+
+#173 stops at b9daa42830ac240dc8354e457485a6f0e87ca297, idle/clean. Root reads
+both final Spec/Standards round2 reports and exact browser witness; all six R1
+P2 findings are fixed with retained RED/GREEN. Cache corruption, stale status/
+cancel/cache responses, definite-refusal recovery and historic-engine readability
+are fenced. Child223pass/1skip/78.64s and full frontend419pass/16.41s exit0;
+root integrated47pass/1skip/9.58s,14UI pass/3.19s and typecheck0. Cache/hash fix
+ed5c12e integratesbc0d7a4; final fixesb9daa42 integrate9fac9bf. Actual fixture
+risk_parity report has10 windows, costs1/2/3bps,3641bytes/SHA124f692...db2566,
+exact child build receipt and byte-equal browser download. Earlier momentum
+and cancelled mean_reversion are preserved; total3 explicitly fixture jobs.
+Research503 reload retains hash-verified bytes/source/as-of labels, Markets200;
+mobile390x844/scrollwidth375 and desktop evidence inspected. Agent unavailable
+keeps provider/usage/cost null, no real call. Child owned app/Worker stopped.
+No third review or redispatch; server/PG/Linux/model/final release remain open.
+
+Root next#171 Linux qualification refinement is tracked in
+2026-10-13-linux-service-qualification.md. Actual Docker Engine is still absent;
+PR166 stillOPEN/exactda6e8c7/reviews[]. No renewed authentication or source reads.
+Owned WSL CPython3.12.3 env installs81 SHA-enforced external wheels, retaining
+all77 shared Windows versions and original Windows lock7a756138...b71a3;
+six Linux additions/two Windows omissions are explicit. Runtime selection RED7
+thenGREEN8 on Windows; actual Linux runtime8pass/1.81s. Windows offline service
+gate25pass/5PGskip exit0 before the final implementation metadata field.
+New qualification delta Spec/Standards R1 clear (not a third service architecture
+review). This software/lock checkpoint is a candidate, not a Linux certificate.
+First mounted-drive native trial has pytest capture failure/no tests and Windows
+Git pointer failure, retained. Corrected owned native /tmp and read-only mapped
+Git metadata reaches17 service tests, then driver300s expiry; authoritative
+scope process scan confirms none remain. No failing product assertion or passing
+whole suite is inferred. Next: fresh native Linux-filesystem checkout/venv,
+same locked deps/unchanged tests; preserve expired trials and don't weaken gates.
+Ignored raw evidence: output/175-linux-service. No system/daemon/production,
+paid call/resource, core lock or Windows/vendor/helper operation changed.

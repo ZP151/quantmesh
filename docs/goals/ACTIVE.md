@@ -152,6 +152,18 @@ service admission, and accepted same-key replay survives disappeared bytes.
 UI/browser/review remain active in the same#173 chat. No new native session or
 whole-product completion; existing operator/Engine/provider gates stay pending.
 
+Latest authoritative checkpoint: #173 is idle/clean atb9daa42, two review axes
+clear after2rounds. Root integratesbc0d7a4/9fac9bf, verifies47backend/1skip,
+14UI pass and actual fixture browser/immutable bytes/mobile proof. No redeploy.
+#171 Linux-lock candidate81 SHA-installed/8 actual runtime checks; new delta
+R1Spec/Standards clear. Mounted-drive service trial expires at its owned300s
+deadline after17 tests; no full Linux pass. Both trial driver45455 and any
+matching owned scope processes are now terminal/absent, not a live handle.
+Next use a fresh native Linux filesystem checkout/venv without changing tests
+or constraints, retain all failed logs. Docker Engine remains absent and
+PR166 human review/recovery plus provider metadata remain pending; don't repeat
+requests. A full server/OCI/PG/model/source user loop still needs actual proof.
+
 UI source ed04f24 integrates7e5834b; root App/nav/messages now expose the real
 research job page. Full frontend413pass/14.27s, typecheck/lint/build green,
 schema current. Native#173 continues actual LOCAL_FIXTURE_ONLY browser loop and

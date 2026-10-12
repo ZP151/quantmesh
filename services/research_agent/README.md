@@ -95,6 +95,21 @@ services/research_agent/.venv/Scripts/python -m pip install --no-deps --no-build
 services/research_agent/.venv/Scripts/python tools/research_service_gate.py --offline
 ```
 
+Linux qualification candidate (iteration0038):
+`requirements.linux-cp312.lock` binds81 selected external wheels for CPython3.12
+x86_64. Shared Windows versions are unchanged; Linux adds SecretStorage,
+jeepney, cryptography, cffi, pycparser and uvloop, and omits colorama and
+pywin32-ctypes. The gate selects a fixed lock using measured implementation,
+OS, Python minor and architecture; an unsupported runtime exits1 before checks.
+Use hash-enforced installation in a fresh owned Linux venv and the same two
+`--no-deps --no-build-isolation` editable project installs. This is a candidate,
+not Linux production certification: the WSL mounted-drive trial installed all
+81 wheels and passed8 runtime checks, but its service suite expired at the
+owned300-second driver deadline. Preserve that failed/incomplete receipt.
+A native Linux filesystem checkout is the next qualification target; no test
+assertion, package constraint or real-PG requirement is relaxed. WSL results
+cannot certify the OCI image, aggregate process caps or actual PostgreSQL/server.
+
 Pydantic2.13.5 reproduces the frozen schema/protocol hashes. LangGraph1.2.12 and
 its OSS closure are MIT; no LangSmith hosted service, CLI/platform/server or
 telemetry client is initialized. Official qualification sources:

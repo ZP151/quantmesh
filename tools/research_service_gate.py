@@ -11,6 +11,7 @@ import hashlib
 import importlib.metadata as md
 import json
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -22,6 +23,18 @@ ROOT = Path(__file__).resolve().parents[1]
 SERVICE = ROOT / "services" / "research_agent"
 SCHEMA = "a645a8bde2b439587f736a6a6875e4ffae77265cdcc2900d0b2def43f5f0de18"
 PROTOCOL = "454cce6bd355465e48a59cb61fbbacb775776cb28c41826e54aff554cf2ccae1"
+
+
+def runtime_lock(
+    *, system: str, version: tuple[int, int], machine: str, implementation: str = "CPython"
+) -> tuple[str, Path]:
+    if implementation != "CPython":
+        raise ValueError("unqualified service runtime")
+    if system == "Windows" and version == (3, 13) and machine.lower() in {"amd64", "x86_64"}:
+        return "windows-cp313-x86_64", SERVICE / "requirements.lock"
+    if system == "Linux" and version == (3, 12) and machine.lower() == "x86_64":
+        return "linux-cp312-x86_64", SERVICE / "requirements.linux-cp312.lock"
+    raise ValueError("unqualified service runtime")
 
 
 def normalize(name):
@@ -99,8 +112,36 @@ def main(argv=None):
     parser.add_argument("--evidence-dir", type=Path, default=SERVICE / "evidence")
     args = parser.parse_args(argv)
     args.evidence_dir.mkdir(parents=True, exist_ok=True)
+    runtime = {
+        "system": platform.system(),
+        "implementation": platform.python_implementation(),
+        "python": platform.python_version(),
+        "architecture": platform.machine(),
+        "scope": "dependency-and-service-tests-only",
+    }
+    try:
+        runtime_profile, lock_path = runtime_lock(
+            system=runtime["system"],
+            version=sys.version_info[:2],
+            machine=runtime["architecture"],
+            implementation=runtime["implementation"],
+        )
+    except ValueError:
+        result = {
+            "profile": "UNQUALIFIED_RUNTIME",
+            "runtime": runtime,
+            "postgres": "pending",
+            "failures": ["unqualified service runtime"],
+            "commands": [],
+            "exit": 1,
+        }
+        (args.evidence_dir / "service-gate.json").write_text(
+            json.dumps(result, indent=2), encoding="utf-8"
+        )
+        print(json.dumps(result))
+        return 1
     sys.path[:0] = [str(ROOT), str(ROOT / "src"), str(SERVICE / "src")]
-    pins = read_lock(SERVICE / "requirements.lock")
+    pins = read_lock(lock_path)
     inventory, failures = license_inventory(pins)
     from quantmesh.research.job_store import protocol_digest
     from quantmesh.research.jobs import schema_digest
@@ -109,10 +150,12 @@ def main(argv=None):
         failures.append("frozen contract mismatch")
     result = {
         "profile": "OFFLINE_SCRIPTED_ONLY" if args.offline else "POSTGRES_REQUIRED",
+        "runtime_profile": runtime_profile,
+        "runtime": runtime,
         "postgres": "pending",
         "licenses": inventory,
         "failures": failures,
-        "lock_sha256": hashlib.sha256((SERVICE / "requirements.lock").read_bytes()).hexdigest(),
+        "lock_sha256": hashlib.sha256(lock_path.read_bytes()).hexdigest(),
         "schema_digest": schema_digest(),
         "protocol_digest": protocol_digest(),
         "commands": [],
