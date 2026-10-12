@@ -57,8 +57,14 @@ Real PostgreSQL/Linux/model API acceptance remains pending. Development provider
 token/cost unknown; paid calls0 (none initiated), no model spending/new resource.
 
 Final independent review round2: Spec and Standards each return no remaining
- actionable findings. No third review of jobs/source/Worker/Agent was conducted.
+actionable findings. No third review of jobs/source/Worker/Agent was conducted.
 Final focused GREEN40passed/39.72s exit0, plus previously recorded domain boundary
 and current Ruff/license evidence. Production catalog is frozen only now, after
 these two review rounds. Replay and negative-control evidence follow in a separate
 append-only checkpoint; the three desired production assertions remain red.
+
+Publication preflight found Git's LF normalization changed only cases.json seed
+metadata relative to its byte pin. A benchmark-local .gitattributes keeps that
+recovered seed byte-identical (-text); no catalog rewrite, re-freeze or experiment
+was performed. After restaging, all183 verifier/fixture pins and harness Python
+bytes match committed Git blobs. This guards replay from a fresh checkout.

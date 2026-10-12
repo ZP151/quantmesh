@@ -1,0 +1,2 @@
+# Preserve the recovered seed's byte identity referenced by the frozen catalog.
+cases.json -text
