@@ -253,3 +253,14 @@ Linux SDK handshake, private terminal safety, actual server and human login rema
 blocked. Require proprietary vendor distribution terms and applicable human
 infra review before install. Existing11111 remains intact; PC independence is
 not achieved by package download/profile tests. Session stopped at handoff.
+
+Root integration: UIe3db8a6; gate recoveryb92bc27/a531f4a/5a0a35e; blocked
+OpenD candidatef907600. Fresh integrated gate/profile checks in the audited env
+pass221/1 skipped/34.01s, exit0 (integrated-gates.log/.exit); Ruff green.
+This is the relevant slice boundary, not the final all-suite certification.
+Issue#170 owns isolated baseline Worker;#171 owns independent advisory service.
+Batch B uses the same qualified schema/protocol. Docker CLI intake finds no
+running Linux engine; a real PostgreSQL disposable fixture must be supplied
+before marking store/service integration accepted. No engine/global OS change
+or paid resource has been made. Model-provider metadata is requested ahead of
+paid integration; key stays out of chat. Planning and scripted work can proceed.

@@ -10,8 +10,18 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-12-research-foundation.md`; interfaces in `2026-10-12-research-contracts-eval.md` Task 2; schedule/budget in `2026-10-12-research-portfolio.md`.
 
-Status: APPROVED Option A2026-10-12; execute after contract freeze. No workers
-or paid servers launched at approval checkpoint; announce paid/auth/key steps.
+Status: APPROVED Option A2026-10-12; contract qualified2026-10-13 Singapore.
+Task1 issue#170; Task2 issue#171. No paid servers/calls created; announce auth,
+payment and secret configuration before those boundaries. Source#168 schema
+a645a8bde2b439587f736a6a6875e4ffae77265cdcc2900d0b2def43f5f0de18 and protocol
+454cce6bd355465e48a59cb61fbbacb775776cb28c41826e54aff554cf2ccae1 are verified
+unchanged in the audited pinnedPydantic2.13.5 environment; local v1 admits only
+fixture/test datasets and explicitly rejects unsupportedv2/rights before work.
+Do not reinterpret export_digest as an existing remote export object. Numerical
+report validation and full runtime fingerprint belong to Worker, not JobStore.
+Docker's Linux engine is currently absent; actual PostgreSQL acceptance remains
+pending until a disposable database is available. Scripted gateway is labelled;
+provider metadata/egress/key approval precedes real calls.
 
 ## Global Constraints
 

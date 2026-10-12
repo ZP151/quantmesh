@@ -48,10 +48,17 @@ pass. A workspace-owned audited release-extras environment passes70-package
 license closure; schema/protocol hashes match the original freeze on pinned
 Pydantic2.13.5. No full clean-checkout certification or production UI deployment
 is claimed. Next batch: isolated baseline Worker and independent service.
-Validation#132 recovered6bfe279 and server OpenD qualification191975a are ready
-for sequential integration. Source profile remains blocked/uninstalled: actual
+Validation#132 recovered6bfe279 and server OpenD qualification191975a are
+integrated asb92bc27/a531f4a/5a0a35e andf907600; UI checkpoint ise3db8a6.
+Source profile remains blocked/uninstalled: actual
 Linux SDK wire/private input/server startup and operator authentication remain
 unproved. PR166 remains OPEN atda6e8c7, not installed. No paid calls/resources.
+Next implementation batch is Worker#170 and advisory service#171 from the
+verified integration/contract baseline. #132/#169 sessions have stopped;
+do not redispatch them. Provider/endpoint/model/pricing request is pending;
+no key is requested in chat and offline work can proceed. Docker CLI exists
+but its Linux engine is not running; real disposable PostgreSQL evidence
+remains a prerequisite, never a mocked pass.
 
 ## Historical delivery checkpoint — retained, superseded priority
 
