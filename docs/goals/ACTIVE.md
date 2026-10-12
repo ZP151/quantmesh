@@ -1,5 +1,14 @@
 # Active Goal
 
+Root longer unresolved Task2 diagnosticOct12 21:41UTC: same official OpenD
+archive/executable rehashed, fresh native owned home/user+network+mount+PID
+namespaces, loopback only, zero input/no internet.30s shows login keywords and
+11112 listener/TTY echo off, improving the inconclusive5s sample; SDK wire,
+human private input, actual AWS/auth/source/lifecycle remain unverified. Owned
+parent terminal(exit-9); independent same-UID scope scan is partial(2inaccessible),
+not a global descendant-absence claim. Raw diagnostic scripts/receipts are
+archived under opend-zero-input; profile flags unchanged/blocked/uninstalled.
+
 Shared bootstrap health candidate18ff2f1 is integrated: optional measured actual
 build pin, authenticated real store probe, pending_containment Worker and
 unavailable model labels. Root9RED→10focusedGREEN; separate Windows service

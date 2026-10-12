@@ -654,3 +654,20 @@ referenced immutable artifacts/SHA manifests, encrypted off-host scope and
 fresh isolated restore/idempotency/effect fences. No self-managed crypto/code
 copy or backup success inferred. Vendor officialinteractive-login/remember-no/
 market-right transfer docs verified; private human authentication still pending.
+
+Root Verifier extends the still-unqualified Task2 credential-free local
+observation, not a third implementation/review or production startup. Same
+official466932458-byte archive and pinnedCLI SHA rechecked; pristine CLI
+resources freshly extracted into owned native /var/tmp (no existing state),
+reviewed own XML and user/network/private-mount/PID namespace, isolated
+loopback only. Actual30s sample atOct12 21:41:06UTC detects login/account
+keywords and11112listener, TTY echo off, zero input/auth/SDK/quote/history.
+Parent uses known-own process/start identity and namespace kill-child; TERM
+thenKILL closes it(exit-9/33.195s), diagnostic recorderexit0. This is not a
+graceful-lifecycle, SDK compatibility, private human input or AWS certificate.
+Independent exe scan first fails on non-owned /proc/1 permission; corrected
+same-UID scan has no readable new-root matches but2inaccessible processes,
+scope_complete=false. No global absence assertion/cleanup or raw vendor
+output/state archive. Eight own diagnostic/raw receipts are preserved under
+docs/evidence/research-foundation/opend-zero-input withSHA; profile flags remain
+false/blocked/uninstalled. Existing source/Windows/staging/credentials untouched.

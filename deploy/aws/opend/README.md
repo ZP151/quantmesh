@@ -31,6 +31,16 @@ newer for GUI. This is package guidance, not an actual AWS compatibility witness
 The digest is our reproducible byte pin, not a vendor signature or published
 vendor checksum. If the fixed URL later changes bytes, stop qualification.
 
+Later local observation2026-10-12T21:41:06Z freshly extracts the same verified
+archive on native owned storage and observes30seconds in user/network/mount/
+PID namespaces with loopback only. Login/account keywords and11112 listener
+are observed with zero input; terminal echo is off. No credential, SDK or
+market query is sent. The test-owned parent exits-9 after bounded cleanup;
+later /proc scan is partial because2same-UID processes are inaccessible.
+See [raw bounded observation](../../../docs/evidence/research-foundation/opend-zero-input/README.md).
+This closes neither SDK/private human input nor actual AWS/lifecycle proof;
+the profile stays blocked/uninstalled and no vendor state/output is archived.
+
 ## SDK and startup limits
 
 [Official version history](https://www.moomoo.com/download/OpenAPI) states that

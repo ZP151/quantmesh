@@ -1,0 +1,22 @@
+{
+  "observed_at": "2026-10-12T21:41:06.817715+00:00",
+  "namespace": "user+network+mount+pid",
+  "location": "local-owned-WSL-only",
+  "uid": 1000,
+  "owned_root": "/var/tmp/quantmesh-opend-zero-input-f88g68z1",
+  "executable_sha256": "e05b901dbe9107061b954a7fe3c059916c4a1e580d8f0a57277d402438898601",
+  "loopback_only_namespace": true,
+  "input_bytes_sent": 0,
+  "sample_seconds": 33.195,
+  "exit": -9,
+  "prompt_keywords_observed": true,
+  "permission_error_observed": false,
+  "listener_11112_observed": true,
+  "tty_echo_after_sample": false,
+  "owned_parent_terminal": true,
+  "auth_attempted": false,
+  "sdk_wire_verified": false,
+  "private_input_verified": false,
+  "raw_vendor_output_archived": false,
+  "qualified_profile_changed": false
+}
