@@ -33,7 +33,8 @@ authentication, rights, wire compatibility and reviewed configuration approval.
 Use the pinned10.10.7008 profile and existing validator unchanged. The dedicated
 `quantmesh-opend` process must own127.0.0.1:11112 and run the exact pinned
 `/opt/quantmesh/opend/10.10.7008/OpenD` bytes. The reader needs complete Linux
-procfs visibility; unreadable processes/fds cause refusal. The tool does not
+procfs visibility and Linux kernel/Python pidfd support; unreadable
+processes/fds or unavailable owned-process handles cause refusal. The tool does not
 grant privileges or change permissions. Native identity belongs to the Linux
 network namespace where the tool runs; the coordinator must establish that
 this is the intended source host, not an unrelated namespace or fixture.
@@ -50,8 +51,15 @@ native ownership cannot supply those observations.
 
 Six brackets are scheduled35seconds apart within a240second collection budget.
 Each newly owned child has at most30seconds for synchronous SDK/API work; its
-output is capped at2MiB. Only the owned child can be killed, with Linux start
-ticks checked again. SDK output/tracebacks are suppressed; raw errors are never
+output is capped at2MiB. Reviewed configuration/proc scans/hashes also run in
+owned children, each capped at15seconds within the same overall budget. Fixed
+configuration reads reject symlinks, nonregular files (including FIFOs) and
+oversize content before reading. Three seconds are reserved for bounded cleanup.
+Only the owned child can be killed: Linux pidfds hold kernel process identity
+and start ticks are checked again. An identity-read error cannot leave a child
+running or send a signal to a reused PID. Admission waits for the parent to
+obtain that handle; unavailable handles prevent SDK work. SDK output/tracebacks
+are suppressed; raw errors are never
 archived. The tool touches no Windows GUI/helper/tunnel or production worker.
 
 Provider reads use existing `MoomooOpenDClient`/`SdkTransport` on11112:

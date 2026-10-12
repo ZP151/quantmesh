@@ -15,6 +15,8 @@ import multiprocessing
 import os
 import queue
 import re
+import signal
+import stat
 import sys
 import threading
 import time
@@ -35,6 +37,7 @@ ORIGIN = "https://quantmesh-staging-8gb.tail99d23c.ts.net"
 SYMBOLS = ("AAPL", "NVDA")
 MAX_BYTES = 2 * 1024 * 1024
 DEADLINE_SECONDS = 240
+CLEANUP_RESERVE_SECONDS = 3
 SAMPLE_SPACING = 35
 OHLCV = ("open", "high", "low", "close", "volume")
 _SHA40 = re.compile(r"[0-9a-f]{40}\Z")
@@ -70,9 +73,17 @@ class _Proc:
         return value.decode("ascii")
 
     def entries(self, path: str) -> list[str]:
-        result = [item.name for item in (Path("/proc") / path).iterdir()]
-        if len(result) > 65536:
-            raise WitnessError("proc_output_limit")
+        result = []
+        own_fds = path == f"{os.getpid()}/fd"
+        with os.scandir(Path("/proc") / path) as entries:
+            for item in entries:
+                # /proc/self/fd includes this scandir handle; its disappearance
+                # after listing is ours, not a concurrently replaced gateway.
+                if own_fds and os.readlink(item.path) == f"/proc/{os.getpid()}/fd":
+                    continue
+                result.append(item.name)
+                if len(result) > 65536:
+                    raise WitnessError("proc_output_limit")
         return result
 
     def link(self, path: str) -> str:
@@ -255,6 +266,14 @@ def _application(state: dict, history: dict, symbol: str) -> dict:
     # History is strictly validated using the existing API contract; no account
     # endpoint or workspace/risk/positions/proposals snapshot is requested.
     series = HistoricalSeries.model_validate_json(json.dumps(history["primary"]))
+    if (
+        series.instrument.symbol != symbol
+        or series.instrument.venue != Venue.MOOMOO
+        or series.instrument.instrument_type != InstrumentType.EQUITY
+        or series.instrument.currency != "USD"
+        or series.instrument.metadata.get("market") != "US"
+    ):
+        raise WitnessError("application_identity_mismatch")
     entry = state["instruments"][f"moomoo:{symbol}"]
     if entry["venue"] != "moomoo" or entry["instrument"] != symbol:
         raise WitnessError("application_identity_mismatch")
@@ -369,15 +388,92 @@ def _child_ticks(pid: int) -> int | None:
     return _start_ticks(_Proc().read(f"{pid}/stat")) if sys.platform == "linux" else None
 
 
+def _read_regular(path: Path, limit: int) -> bytes:
+    """Refuse symlinks/devices/FIFOs before reading reviewed noncredential files."""
+    fd = None
+    try:
+        flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
+        fd = os.open(path, flags)
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_size > limit:
+            raise WitnessError("reviewed_file_invalid")
+        with os.fdopen(fd, "rb") as stream:
+            fd = None
+            value = stream.read(limit + 1)
+        if len(value) > limit:
+            raise WitnessError("reviewed_file_invalid")
+        return value
+    except OSError:
+        raise WitnessError("reviewed_file_invalid") from None
+    finally:
+        if fd is not None:
+            os.close(fd)
+
+
+def _identity_child(connection, profile: dict) -> None:
+    _quiet_child()
+    try:
+        configuration = _read_regular(Path(profile["runtime"]["config_file"]), 16384)
+        validate_profile(profile, require_qualified=True, config_bytes=configuration)
+        value = {"identity": collect_gateway_identity(profile)}
+    except Exception:
+        value = {"error": "native_identity_unavailable"}
+    try:
+        connection.send_bytes(json.dumps(value).encode())
+    finally:
+        connection.close()
+
+
+def _owned_entry(connection, target, args: tuple, admission) -> None:
+    # If parent cannot establish owned identity, no SDK/native work starts and
+    # the newly owned child exits itself, including platforms without pidfds.
+    if admission.wait(1):
+        target(connection, *args)
+    else:
+        connection.close()
+
+
+def _terminate_owned_child(child, pidfd: int | None, token: int | None) -> None:
+    if not child.is_alive():
+        return
+    diagnostic = None
+    try:
+        if _child_ticks(child.pid) != token:
+            diagnostic = "owned_child_identity_changed"
+    except (OSError, ValueError, IndexError):
+        diagnostic = "owned_child_identity_unavailable"
+    if sys.platform == "linux":
+        if pidfd is None:
+            # Admission was never released. The child exits its gate itself;
+            # no bare PID or production-process signal is allowed.
+            child.join(2)
+        else:
+            # This kernel handle was captured while the unreaped new child
+            # waited at admission. It cannot signal a reused PID even when
+            # proc permission disappears or start ticks no longer agree.
+            try:
+                signal.pidfd_send_signal(pidfd, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            child.join(2)
+    else:
+        # The native Windows Process object holds the created child's handle.
+        child.kill()
+        child.join(2)
+    if child.is_alive():
+        raise WitnessError("owned_child_cleanup_pending")
+    if diagnostic:
+        raise WitnessError(diagnostic)
+
+
 def _run_owned_child(target, args: tuple, *, timeout: float) -> dict:
     """Bound SDK/API waits. Only this newly spawned Process can be terminated."""
     context = multiprocessing.get_context("spawn")
     reader, writer = context.Pipe(duplex=False)
-    child = context.Process(target=target, args=(writer, *args))
+    admission = context.Event()
+    child = context.Process(target=_owned_entry, args=(writer, target, args, admission))
     started = time.monotonic()
-    child.start()
-    writer.close()
-    token = _child_ticks(child.pid)
+    pidfd = token = receiver = None
     messages = queue.Queue(maxsize=1)
 
     def receive():
@@ -386,9 +482,17 @@ def _run_owned_child(target, args: tuple, *, timeout: float) -> dict:
         except Exception as error:
             messages.put((None, type(error)))
 
-    receiver = threading.Thread(target=receive, daemon=True)
-    receiver.start()
     try:
+        child.start()
+        writer.close()
+        if sys.platform == "linux":
+            if not hasattr(os, "pidfd_open") or not hasattr(signal, "pidfd_send_signal"):
+                raise WitnessError("owned_child_handle_unavailable")
+            pidfd = os.pidfd_open(child.pid)
+        token = _child_ticks(child.pid)
+        admission.set()
+        receiver = threading.Thread(target=receive, daemon=True)
+        receiver.start()
         remaining = max(0, timeout - (time.monotonic() - started))
         try:
             raw, error_type = messages.get(timeout=remaining)
@@ -408,21 +512,28 @@ def _run_owned_child(target, args: tuple, *, timeout: float) -> dict:
         if not isinstance(value, dict):
             raise WitnessError("child_schema_invalid")
         if "error" in value:
-            raise WitnessError("source_or_application_unavailable")
+            code = value["error"]
+            if code not in {
+                "native_identity_unavailable",
+                "source_or_application_unavailable",
+                "output_limit",
+            }:
+                code = "child_failed"
+            raise WitnessError(code)
         return value
     finally:
-        if child.is_alive():
-            # Process on Windows holds an owned handle; Linux additionally checks
-            # start ticks to fence PID reuse. No pgkill or pre-existing process API.
-            if _child_ticks(child.pid) != token:
-                raise WitnessError("owned_child_identity_changed")
-            child.kill()
-            child.join(2)
-            if child.is_alive():
-                raise WitnessError("owned_child_cleanup_pending")
-        reader.close()
-        receiver.join(0.2)
-        child.close()
+        try:
+            if child.pid is not None:
+                _terminate_owned_child(child, pidfd, token)
+        finally:
+            writer.close()
+            reader.close()
+            if receiver is not None:
+                receiver.join(0.2)
+            if pidfd is not None:
+                os.close(pidfd)
+            if not child.is_alive():
+                child.close()
 
 
 def _numbers(bar: dict) -> tuple:
@@ -517,6 +628,10 @@ def _check_sample(sample: dict, expected_build: str) -> dict:
                 raise WitnessError("application_bar_clock_invalid")
             previous = stamp
             prices = _numbers(bar)
+            if not any(
+                stamp in bracket and _numbers(bracket[stamp]) == prices for bracket in provider
+            ):
+                raise WitnessError("provider_ohlcv_mismatch")
             if stamp + timedelta(minutes=1) <= before_at:
                 if any(
                     stamp not in bracket or _numbers(bracket[stamp]) != prices
@@ -535,6 +650,9 @@ def _check_sample(sample: dict, expected_build: str) -> dict:
                     or lineage.venue != Venue.MOOMOO
                     or lineage.interval != "1m"
                     or lineage.received_at > app_at
+                    or lineage.received_at < stamp
+                    or lineage.freshness_time is None
+                    or lineage.provenance != live["provenance"]
                     or lineage.provider_time_key
                     not in {
                         bracket[stamp]["provider_time_key"]
@@ -685,6 +803,13 @@ def collect_samples(profile: dict, expected_build: str, output: Path) -> dict:
         raise WitnessError("output_directory_not_new") from None
     started = time.monotonic()
     collected = {"expected_build": expected_build, "samples": []}
+
+    def native_identity():
+        remaining = started + DEADLINE_SECONDS - time.monotonic() - CLEANUP_RESERVE_SECONDS
+        if remaining <= 0:
+            raise WitnessError("overall_deadline")
+        return _run_owned_child(_identity_child, (profile,), timeout=min(15, remaining))["identity"]
+
     try:
         if not isinstance(expected_build, str) or not _SHA40.fullmatch(expected_build):
             raise WitnessError("expected_build_invalid")
@@ -692,25 +817,26 @@ def collect_samples(profile: dict, expected_build: str, output: Path) -> dict:
         if profile["qualification"]["state"] != "qualified":
             result = _result("pending", "candidate_qualification", "profile_blocked")
         else:
-            config = Path(profile["runtime"]["config_file"]).read_bytes()
-            validate_profile(profile, require_qualified=True, config_bytes=config)
-            identity = collect_gateway_identity(profile)
+            # Qualification flags are validated before any child. Actual owned
+            # config/proc reads happen under the same overall collection budget.
+            validate_profile(profile, require_qualified=True, config_bytes=reviewed_configuration())
+            identity = native_identity()
             _write_json(output / "identity-before.json", identity)
             for index in range(6):
                 due = started + index * SAMPLE_SPACING
-                remaining = started + DEADLINE_SECONDS - time.monotonic()
+                remaining = started + DEADLINE_SECONDS - time.monotonic() - CLEANUP_RESERVE_SECONDS
                 if remaining <= 0:
                     raise WitnessError("overall_deadline")
                 if due > time.monotonic():
                     time.sleep(min(due - time.monotonic(), remaining))
-                current = collect_gateway_identity(profile)
+                current = native_identity() if index else identity
                 if not _same_identity(identity, current):
                     raise WitnessError("gateway_identity_changed")
-                remaining = started + DEADLINE_SECONDS - time.monotonic()
+                remaining = started + DEADLINE_SECONDS - time.monotonic() - CLEANUP_RESERVE_SECONDS
                 sample = _run_owned_child(
                     _sample_child, (expected_build,), timeout=min(30, remaining)
                 )["sample"]
-                after = collect_gateway_identity(profile)
+                after = native_identity()
                 if not _same_identity(identity, after):
                     raise WitnessError("gateway_identity_changed")
                 if time.monotonic() - started > DEADLINE_SECONDS:
@@ -735,9 +861,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
-        if args.profile.stat().st_size > 16384:
-            raise WitnessError("profile_output_limit")
-        profile = json.loads(args.profile.read_text(encoding="utf-8"))
+        profile = json.loads(_read_regular(args.profile, 16384))
         result = collect_samples(profile, args.expected_build, args.output)
     except Exception:
         result = _result("failed", "candidate_qualification", "invocation_invalid")

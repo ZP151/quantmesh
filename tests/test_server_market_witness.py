@@ -2,10 +2,12 @@
 
 import copy
 import json
+import os
 import struct
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -397,7 +399,7 @@ def noisy_child(connection):
 def test_owned_child_deadline_and_output_limit_are_enforced(target, reason):
     started = time.monotonic()
     with pytest.raises(tool().WitnessError, match=reason):
-        tool()._run_owned_child(target, (), timeout=0.5)
+        tool()._run_owned_child(target, (), timeout=3 if target is noisy_child else 0.5)
     assert time.monotonic() - started < 5
 
 
@@ -661,7 +663,15 @@ def prepare_native_collection(monkeypatch):
     identity = tool().collect_gateway_identity(profile(True), _proc=ProcFixture())
     monkeypatch.setattr(tool(), "collect_gateway_identity", lambda profile: identity.copy())
     rows = iter(samples()["samples"])
-    monkeypatch.setattr(tool(), "_run_owned_child", lambda *args, **kwargs: {"sample": next(rows)})
+    monkeypatch.setattr(
+        tool(),
+        "_run_owned_child",
+        lambda target, args, **kwargs: (
+            {"identity": identity.copy()}
+            if target.__name__ == "_identity_child"
+            else {"sample": next(rows)}
+        ),
+    )
     return identity
 
 
@@ -676,9 +686,186 @@ def test_six_native_brackets_are_archived_but_cutover_remains_pending(tmp_path, 
 
 def test_post_sample_identity_replacement_does_not_publish_candidate_sample(tmp_path, monkeypatch):
     identity = prepare_native_collection(monkeypatch)
-    sequence = iter([identity, identity, identity | {"start_ticks": 22222}])
-    monkeypatch.setattr(tool(), "collect_gateway_identity", lambda profile: next(sequence))
+    sequence = iter([identity, identity | {"start_ticks": 22222}])
+    sample = samples()["samples"][0]
+    monkeypatch.setattr(
+        tool(),
+        "_run_owned_child",
+        lambda target, args, **kwargs: (
+            {"identity": next(sequence)}
+            if target.__name__ == "_identity_child"
+            else {"sample": sample}
+        ),
+    )
     result = tool().collect_samples(profile(True), BUILD, tmp_path / "new")
     assert result["status"] == "pending"
     assert result["reason"] == "gateway_identity_changed"
     assert not list((tmp_path / "new").glob("sample-*.json"))
+
+
+def test_native_proc_enumerator_excludes_only_its_own_directory_scan_fd(monkeypatch):
+    directory = f"/proc/{os.getpid()}/fd"
+
+    class Scan:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def __iter__(self):
+            return iter(
+                [
+                    SimpleNamespace(name="3", path=directory + "/3"),
+                    SimpleNamespace(name="4", path=directory + "/4"),
+                ]
+            )
+
+    monkeypatch.setattr(os, "scandir", lambda path: Scan())
+    monkeypatch.setattr(
+        os, "readlink", lambda path: directory if str(path).endswith("/4") else "socket:[6789]"
+    )
+    # Linux exposes scandir's directory fd while listing /proc/self/fd. Returning
+    # it after closing scandir guarantees a false disappearance on every run.
+    assert tool()._Proc().entries(f"{os.getpid()}/fd") == ["3"]
+
+
+@pytest.mark.parametrize("stage", ["initial", "cleanup"])
+def test_proc_identity_read_failure_never_leaves_owned_child_running(monkeypatch, stage):
+    import multiprocessing
+
+    before = {child.pid for child in multiprocessing.active_children()}
+    calls = [0]
+
+    def denied(pid):
+        calls[0] += 1
+        if stage == "initial" or calls[0] > 1:
+            raise PermissionError("SECRET")
+        return None
+
+    monkeypatch.setattr(tool(), "_child_ticks", denied)
+    try:
+        with pytest.raises(Exception):
+            tool()._run_owned_child(hanging_child, (), timeout=0.5)
+        assert not [
+            child
+            for child in multiprocessing.active_children()
+            if child.pid not in before and child.is_alive()
+        ]
+    finally:
+        # Test-only cleanup of a reproduced leak, never an existing process.
+        for child in multiprocessing.active_children():
+            if child.pid not in before:
+                child.kill()
+                child.join(2)
+
+
+def test_linux_cleanup_uses_owned_pidfd_when_proc_recheck_fails(monkeypatch):
+    import signal
+
+    events = []
+
+    class Child:
+        pid = 42
+        alive = True
+
+        def is_alive(self):
+            return self.alive
+
+        def kill(self):
+            pytest.fail("Linux must not send an unverified bare PID signal")
+
+        def join(self, timeout):
+            self.alive = False
+
+    child = Child()
+    monkeypatch.setattr(tool().sys, "platform", "linux")
+    monkeypatch.setattr(
+        tool(), "_child_ticks", lambda pid: (_ for _ in ()).throw(PermissionError())
+    )
+    monkeypatch.setattr(
+        signal, "pidfd_send_signal", lambda fd, sig: events.append((fd, sig)), raising=False
+    )
+    monkeypatch.setattr(signal, "SIGKILL", 9, raising=False)
+    with pytest.raises(tool().WitnessError, match="owned_child_identity_unavailable"):
+        tool()._terminate_owned_child(child, 17, 12345)
+    assert events == [(17, signal.SIGKILL)]
+    assert not child.alive
+
+
+@pytest.mark.parametrize("change", ["intermediate_bar", "old_lineage_receipt", "missing_freshness"])
+def test_review_invalid_partial_or_receipt_lineage_cannot_pass(change):
+    value = samples()
+    for sample in value["samples"]:
+        bars = sample["symbols"]["AAPL"]["app"]["bars"]
+        if change == "intermediate_bar":
+            if sample is not value["samples"][0]:
+                continue
+            extra = copy.deepcopy(bars[-2])
+            extra["timestamp"] = (
+                datetime.fromisoformat(extra["timestamp"]) + timedelta(seconds=30)
+            ).isoformat()
+            extra["close"] = 102
+            bars.insert(-1, extra)
+        elif change == "old_lineage_receipt":
+            bars[-1]["live_lineage"]["received_at"] = "2020-01-01T00:00:00Z"
+            bars[-1]["live_lineage"]["freshness_time"] = None
+        else:
+            bars[-1]["live_lineage"]["freshness_time"] = None
+    assert tool().evaluate_samples(value)["provider_application"] == "failed"
+
+
+def test_configuration_fifo_or_oversize_refused_before_read(tmp_path):
+    file = tmp_path / "reviewed.xml"
+    file.write_bytes(b"x" * 16385)
+    with pytest.raises(tool().WitnessError):
+        tool()._read_regular(file, 16384)
+    directory = tmp_path / "folder"
+    directory.mkdir()
+    with pytest.raises(tool().WitnessError):
+        tool()._read_regular(directory, 16384)
+
+
+def test_runtime_native_reads_run_inside_owned_deadline(tmp_path, monkeypatch):
+    identity = prepare_native_collection(monkeypatch)
+    targets = []
+    rows = iter(samples()["samples"])
+
+    def owned(target, args, *, timeout):
+        targets.append(target.__name__)
+        if target.__name__ == "_identity_child":
+            assert timeout <= 15
+            return {"identity": identity}
+        return {"sample": next(rows)}
+
+    monkeypatch.setattr(tool(), "_run_owned_child", owned)
+    result = tool().collect_samples(profile(True), BUILD, tmp_path / "new")
+    assert result["provider_application"] == "passed"
+    assert targets.count("_identity_child") == 12
+
+
+def test_market_projection_refuses_non_us_instrument_identity():
+    app = samples()["samples"][0]["symbols"]["AAPL"]["app"]
+    history = market_history(app)
+    history["primary"]["instrument"]["metadata"]["market"] = "HK"
+    for bar in history["primary"]["bars"]:
+        bar["instrument"]["metadata"]["market"] = "HK"
+    state = {
+        "instruments": {
+            "moomoo:AAPL": {
+                "venue": "moomoo",
+                "instrument": "AAPL",
+                "kinds": {
+                    "metrics": {
+                        "payload": {"last": 101},
+                        "provenance": "real",
+                        "data_time": "2026-10-12T13:40:10Z",
+                        "received_at": "2026-10-12T13:40:10Z",
+                    }
+                },
+                "session_freshness": {"provider_delay_seconds": None},
+            }
+        }
+    }
+    with pytest.raises(tool().WitnessError):
+        tool()._application(state, history, "AAPL")
