@@ -23,7 +23,6 @@ from quantmesh.research.jobs import (
     StoreUnavailable,
     canonical_request_digest,
 )
-from quantmesh.research.strategy_registry import get_strategy
 
 JSON_LIMIT = 1024 * 1024
 ARTIFACT_LIMIT = 16 * 1024 * 1024
@@ -41,8 +40,6 @@ def _job(value, operator_id, *, job_id=None, request=None, key=None) -> JobRecor
         or (job_id is not None and job.job_id != job_id)
         or (key is not None and job.idempotency_key != key)
         or (request is not None and job.request_digest != canonical_request_digest(request))
-        or job.implementation_digest
-        != get_strategy(job.request.strategy_id, job.request.strategy_version).implementation_digest
     ):
         raise StoreUnavailable("service_unavailable")
     refs = job.artifacts + (
@@ -123,7 +120,13 @@ class LocalResearchClient:
     ):
         self.store = store
         self.operator_id = _identifier(operator_id)
-        self.lake_root = lake_root
+        authoritative_root = getattr(store, "lake_root", None)
+        if (
+            authoritative_root is None
+            or Path(authoritative_root).resolve() != Path(lake_root).resolve()
+        ):
+            raise ValueError("worker_inputs_mismatch")
+        self.lake_root = Path(authoritative_root)
         self.configured_dataset_ids = configured_dataset_ids
 
     def options(self) -> ResearchJobOptions:

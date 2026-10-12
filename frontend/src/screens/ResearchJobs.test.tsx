@@ -175,4 +175,70 @@ describe('fixture research loop', () => {
     await screen.findByText(/Retained report integrity verification failed/)
     expect(screen.queryByText('Canonical report')).not.toBeInTheDocument()
   })
+
+  it('does not overwrite confirmed cancellation with an older status response', async () => {
+    const user = userEvent.setup()
+    let resolve!: (value: ReturnType<typeof job>) => void
+    mocks.get.mockReturnValue(new Promise(resolveJob => { resolve = resolveJob }))
+    localStorage.setItem('quantmesh.research-job.v1', JSON.stringify({
+      submission: { key: 'saved-key', request }, job: job(),
+    }))
+    render(<ResearchJobsScreen />)
+    await user.click(await screen.findByRole('button', { name: 'Refresh status' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel job' }))
+    await screen.findByText('cancelled')
+    await act(async () => { resolve(job()) })
+    expect(screen.getByText('cancelled', { exact: true })).toBeInTheDocument()
+    expect(JSON.parse(localStorage.getItem('quantmesh.research-job.v1')!).job.state).toBe('cancelled')
+  })
+
+  it('cannot restore a previous cached report beneath a newly submitted job', async () => {
+    const user = userEvent.setup()
+    const realDigest = webcrypto.subtle.digest.bind(webcrypto.subtle)
+    let resolve!: (value: ArrayBuffer) => void
+    const digest = vi.spyOn(webcrypto.subtle, 'digest').mockImplementationOnce(() =>
+      new Promise(resolveDigest => { resolve = resolveDigest }))
+    localStorage.setItem('quantmesh.research-job.v1', JSON.stringify({
+      submission: { key: 'saved-key', request }, job: job('succeeded'),
+    }))
+    localStorage.setItem('quantmesh.research-job.v1.report.fixture-job', JSON.stringify({
+      jobId: 'fixture-job', artifactId: reportDigest, text: reportText,
+    }))
+    mocks.submit.mockImplementation(async (_request, key) => ({ ...job(), job_id: 'fixture-b', idempotency_key: key }))
+    render(<ResearchJobsScreen />)
+    await waitFor(() => expect(digest).toHaveBeenCalled())
+    await user.click(screen.getByRole('button', { name: 'New fixture job' }))
+    await user.click(screen.getByRole('button', { name: 'Submit fixture job' }))
+    await screen.findByText('fixture-b')
+    await act(async () => { resolve(await realDigest('SHA-256', new TextEncoder().encode(reportText))) })
+    expect(screen.queryByText('Canonical report')).not.toBeInTheDocument()
+    digest.mockRestore()
+  })
+
+  it.each([409, 422])('allows explicit reconfiguration after confirmed %i refusal', async status => {
+    const user = userEvent.setup()
+    mocks.submit.mockRejectedValueOnce({ status })
+    render(<ResearchJobsScreen />)
+    await user.click(await screen.findByRole('button', { name: 'Submit fixture job' }))
+    const original = mocks.submit.mock.calls[0]
+    await user.click(await screen.findByRole('button', { name: 'Reconfigure refused request' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit fixture job' })).toBeEnabled())
+    expect(mocks.submit).toHaveBeenCalledTimes(1)
+    await user.click(screen.getByRole('button', { name: 'Submit fixture job' }))
+    await waitFor(() => expect(mocks.submit).toHaveBeenCalledTimes(2))
+    expect(mocks.submit.mock.calls[1][1]).not.toBe(original[1])
+  })
+
+  it('labels retained versus freshly fetched status with the authoritative update time', async () => {
+    const user = userEvent.setup()
+    localStorage.setItem('quantmesh.research-job.v1', JSON.stringify({
+      submission: { key: 'saved-key', request }, job: job('failed'),
+    }))
+    render(<ResearchJobsScreen />)
+    await screen.findByText(/Retained browser status/)
+    expect(screen.getByText(/Job updated.*2026-01-01/)).toBeInTheDocument()
+    mocks.get.mockResolvedValue(job('failed'))
+    await user.click(screen.getByRole('button', { name: 'Refresh status' }))
+    await screen.findByText(/Authoritative research status/)
+  })
 })
