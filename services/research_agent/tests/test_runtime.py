@@ -404,8 +404,8 @@ def test_build_app_rechecks_admission_before_sql(owned, monkeypatch):
 def test_explicit_serve_fixes_single_private_listener(owned, monkeypatch):
     _, data = owned
     module = runtime_module()
-    from pydantic import SecretStr
     import uvicorn
+    from pydantic import SecretStr
 
     runtime = module.ServiceRuntime(
         module.ServiceRuntimeConfig.model_validate(data),
