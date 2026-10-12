@@ -1,0 +1,136 @@
+{
+  "issue": "https://github.com/ZP151/quantmesh/issues/171",
+  "date": "2026-10-13 Asia/Singapore",
+  "baseline": "0a7ae862f5a7e29bccf3b307c2507f424c81e092",
+  "branch": "codex/0038-research-service",
+  "acceptance": "OFFLINE_SCRIPTED_CHECKPOINT; POSTGRES_AND_LINUX_PENDING",
+  "owned": [
+    "services/research_agent/**",
+    "tools/research_service_gate.py"
+  ],
+  "planner": {
+    "user_action": "Privately submit a pinned registered-baseline request, reload durable status/report, and inspect independent advisory output.",
+    "success_metric": "Same key/configuration gives one job; old leases cannot publish; completed effects replay original archived output/metadata without another call.",
+    "non_goals": [
+      "workstation client",
+      "new strategies",
+      "real model performance",
+      "cloud provision/deploy",
+      "live execution",
+      "broker/source/helper/tunnel changes"
+    ]
+  },
+  "quant_researcher": {
+    "inputs": "Only existing permission-checked v1 fixture manifests; actual manifest/export bytes reused from frozen admission validators.",
+    "analysis": "Verified immutable report only; exact published citations and owned output bytes. Advisory verdict is not confidence or order authority.",
+    "costs": "Scripted price/usage traces are fixtures, not invoices or real model skill. Unknown price rejects admission; unresolved effect spending is unknown.",
+    "limits": "No qualified real-source history or OOS/paper strategy evidence is claimed. Deterministic report math remains Worker-owned."
+  },
+  "implementer": {
+    "deliverable": "Independent hash lock, PostgreSQL nine-method adapter, authenticated API, LangGraph advisory loop, durable effect/checkpoint ledger, capped gateway process and separate service gate.",
+    "reuse": "Frozen core state machine/contracts/ModelGateway and QuantMesh-owned Windows containment primitives; zero copied upstream source.",
+    "schema": "a645a8bde2b439587f736a6a6875e4ffae77265cdcc2900d0b2def43f5f0de18",
+    "protocol": "454cce6bd355465e48a59cb61fbbacb775776cb28c41826e54aff554cf2ccae1",
+    "pydantic": "2.13.5",
+    "dependencies": "77-package independent Windows CPython3.13 closure. LangGraph1.2.12 MIT; pg8000 BSD. LGPL psycopg candidate removed. Root locks unchanged.",
+    "lock_sha256": "7a756138c304061ab5a2e428dca963cdc2ff314314cfe35fc92c4c0ff66b71a3"
+  },
+  "reviewer": {
+    "rounds": 2,
+    "axes": [
+      "Spec",
+      "Standards"
+    ],
+    "round1": [
+      "Sensitive validation input echo: reproduced two-test hardening RED; fixed RequestValidationError response.",
+      "Price-version change bypassed unresolved reservation: same RED; fixed stable per-report effect identity.",
+      "Deadline ignored: one-test RED; fixed capped owned gateway process and unknown-effect outcome."
+    ],
+    "round2": [
+      "Response-before-checkpoint replay used new invocation metadata: one-test RED; archive and replay original invocation receipt.",
+      "Parent crash left Windows child-owned Job alive: add parent-owned kill-on-close Job before suspended process resume; Linux parent-death signal.",
+      "Linux passwd home fallback: child-only HOME and USERPROFILE explicitly point at owned service home.",
+      "Linux fractional CPU allowance unsupported: reject before reservation, with one-test RED/GREEN coverage."
+    ],
+    "disposition": "Two bounded rounds completed; exact repairs verified by final suite. No third structural review of core jobs/contracts or service.",
+    "residual": "Actual PostgreSQL and Linux witnesses remain required. Reviewer evidence is not substituted for final verifier commands."
+  },
+  "verifier": {
+    "red": [
+      {
+        "log": "red.log",
+        "exit": 2,
+        "reason": "Three absent service modules at collection, after independent dependencies were installed."
+      },
+      {
+        "log": "hardening-red.log",
+        "exit": 1,
+        "result": "2 failed,1 passed: input echo and configuration recall"
+      },
+      {
+        "log": "deadline-red.log",
+        "exit": 1,
+        "result": "1 failed,3 passed: deadline"
+      },
+      {
+        "log": "gate-red.log",
+        "exit": 2,
+        "reason": "Service gate absent at collection"
+      },
+      {
+        "log": "metadata-red.log",
+        "exit": 1,
+        "result": "1 failed: original metadata replay"
+      },
+      {
+        "log": "cpu-red.log",
+        "exit": 1,
+        "result": "1 failed: unsupported execution capability"
+      }
+    ],
+    "final_offline": {
+      "command": "services/research_agent/.venv/Scripts/python tools/research_service_gate.py --offline",
+      "exit": 0,
+      "tests": "21 passed,5 PostgreSQL skipped,2 upstream deprecation warnings; see service-gate-3.log for actual duration",
+      "other_checks": "77-package license/version/extra inventory, frozen schema/protocol, pip check, Ruff lint/format and git diff --check passed.",
+      "record": "service-gate.json"
+    },
+    "default_gate": {
+      "command": "services/research_agent/.venv/Scripts/python tools/research_service_gate.py --evidence-dir services/research_agent/evidence/postgres-required",
+      "exit": 1,
+      "reason": "real owned disposable PostgreSQL evidence pending",
+      "tests": "21 passed,5 PostgreSQL skipped",
+      "record": "postgres-required/service-gate.json"
+    },
+    "core_boundary": {
+      "command": "services/research_agent/.venv/Scripts/python -m pytest tests/test_research_jobs.py tests/test_research_job_store.py tests/test_ai_gateway.py --basetemp services/research_agent/evidence/pytest-core-boundary -q",
+      "exit": 0,
+      "result": "118 passed,1 upstream warning;14.05s"
+    },
+    "retained_failed_runs": [
+      "First premature dependency RED was unrelated missing pydantic; superseded only after install by genuine absent-service RED.",
+      "green-first exited1 in global-temp cleanup PermissionError; owned-basetemp reruns pass, no global directory was deleted.",
+      "First capped child failed at configuration because isolated env lacked a home; restricted owned child home added.",
+      "Broad patch misplaced effect lookup, causing12 NameError failures; corrected before final lint/gate.",
+      "One final gate stopped at test import placement lint; moved imports, then final gate passed."
+    ],
+    "full_release_gate": "Coordinator only, once on final combined integration head; not run in this bounded service session."
+  },
+  "operator_requirements": [
+    "Provide a new owned disposable PostgreSQL fixture through a private secret mechanism; QM_TEST_DISPOSABLE_POSTGRES_ACK=owned-disposable. Never reuse application DSNs.",
+    "Run default service gate for actual concurrency/fencing/reopen/recovery/publication/rollback evidence; five skipped DB tests remain unaccepted.",
+    "Qualify Linux dependency closure, runtime resource caps/parent death and server profile before deployment; Windows tests do not certify Linux.",
+    "Approve real provider/model/HTTPS allowlist/versioned pricing, then configure server secrets outside chat before any real paid call.",
+    "Root integrates #170 Worker, mirrors roles/evidence to active iteration, implements workstation client, and runs final combined release gate."
+  ],
+  "safety": {
+    "paid_model_calls": 0,
+    "new_cloud_resources": 0,
+    "deployed": false,
+    "pr_created": false,
+    "merged": false,
+    "core_or_shared_docs_changed": false,
+    "global_docker_wsl_dependencies_or_user_state_changed": false,
+    "existing_keys_or_dsns_inspected": false
+  }
+}

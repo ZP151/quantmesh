@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qm-research-agent"
+version = "0.1.0"
+description = "Private advisory service over frozen QuantMesh research contracts"
+requires-python = ">=3.11,<3.14"
+dependencies = ["langgraph==1.2.12", "pg8000==1.31.5", "pydantic==2.13.5", "fastapi==0.141.1", "httpx==0.28.1"]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "ruff==0.16.6"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "../../src", "../..", "../../tests"]
+testpaths = ["tests"]
