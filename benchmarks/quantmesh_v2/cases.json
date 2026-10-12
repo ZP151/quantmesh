@@ -1,0 +1,245 @@
+{
+  "version": "2.0.0-seed",
+  "cases": [
+    {
+      "task_id": "QM-001",
+      "scenario": "happy-path",
+      "difficulty": "medium",
+      "task_type": "scripted-ai-contract",
+      "nodeid": "tests/test_packet_copilot.py::test_valid_request_records_both_stages_and_reopens_idempotently",
+      "source": "tests/test_packet_copilot.py:371; existing contract at origin/main 33aa052",
+      "acceptance": "Copilot is ready; analyst and critic each execute once and produce two decision records; repeated request and reopening without gateways return the identical accepted record.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-002",
+      "scenario": "boundary",
+      "difficulty": "medium",
+      "task_type": "retrieval-contract",
+      "nodeid": "tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest",
+      "source": "tests/test_packet_copilot.py:317; existing contract at origin/main 33aa052",
+      "acceptance": "All five invalid citation variants fail with the matching validation error: missing pointer, container value, escaped segment, invalid array index and incorrect value digest.",
+      "failure_category": "data"
+    },
+    {
+      "task_id": "QM-003",
+      "scenario": "security",
+      "difficulty": "medium",
+      "task_type": "scripted-ai-contract",
+      "nodeid": "tests/test_packet_copilot.py::test_contracts_refuse_cross_packet_and_authority_shaped_output",
+      "source": "tests/test_packet_copilot.py:356; existing contract at origin/main 33aa052",
+      "acceptance": "Cross-packet draft identity and unauthorized direction/approval fields are rejected by packet binding or schema validation.",
+      "failure_category": "policy"
+    },
+    {
+      "task_id": "QM-004",
+      "scenario": "recovery",
+      "difficulty": "hard",
+      "task_type": "scripted-ai-contract",
+      "nodeid": "tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet",
+      "source": "tests/test_packet_copilot.py:415; existing nine-case fault-injection contract at origin/main 33aa052",
+      "acceptance": "All nine gateway, timeout, JSON, authority, packet, citation and critic faults produce degraded advisory state, no accepted record and no decision log; packet bytes and parsed packet remain unchanged.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-005",
+      "scenario": "security",
+      "difficulty": "medium",
+      "task_type": "scripted-ai-contract",
+      "nodeid": "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls",
+      "source": "tests/test_packet_copilot.py:477; existing synthetic-secret contract at origin/main 33aa052",
+      "acceptance": "Both captured model request bodies exclude the synthetic environment secret and include a redaction marker; the scripted result still becomes ready.",
+      "failure_category": "policy"
+    },
+    {
+      "task_id": "QM-006",
+      "scenario": "happy-path",
+      "difficulty": "easy",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_paper_proposals.py::test_proposal_is_a_preview_and_pins_the_forecast_without_ordering",
+      "source": "tests/test_paper_proposals.py:157; existing contract at origin/main 33aa052",
+      "acceptance": "Preview is pending and pins forecast, dataset, revision, instrument and confirmation token; account orders and journal remain empty.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-007",
+      "scenario": "security",
+      "difficulty": "medium",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_paper_proposals.py::test_confirm_requires_exact_operator_token_then_crosses_quote_fence",
+      "source": "tests/test_paper_proposals.py:201; existing contract at origin/main 33aa052",
+      "acceptance": "An empty confirmation token produces no order; the exact token produces one journal order with proposal-bound idempotency key and the requested position quantity.",
+      "failure_category": "policy"
+    },
+    {
+      "task_id": "QM-008",
+      "scenario": "high-complexity",
+      "difficulty": "hard",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_paper_proposals.py::test_two_service_instances_share_one_exactly_once_confirmation_boundary",
+      "source": "tests/test_paper_proposals.py:277; existing concurrent-service contract at origin/main 33aa052",
+      "acceptance": "Two service instances confirming concurrently return identical results, create exactly one journal order and two ledger events, and each account view recovers a position quantity of one.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-009",
+      "scenario": "recovery",
+      "difficulty": "hard",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition",
+      "source": "tests/test_paper_proposals.py:391; existing injected ledger-replace failure at origin/main 33aa052",
+      "acceptance": "After a journaled order and failed proposal transition, a later retry with unavailable forecast recovers the original confirmation and timestamp without a second journal order or duplicate position.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-010",
+      "scenario": "recovery",
+      "difficulty": "medium",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window",
+      "source": "tests/test_account_store.py:38; existing crash-window contract at origin/main 33aa052",
+      "acceptance": "Recovering the initial snapshot from the submitted journal order exactly reproduces post-submit cash, positions, orders and order sequence.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-011",
+      "scenario": "boundary",
+      "difficulty": "medium",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_paper_proposals.py::test_forecast_that_ages_after_preview_is_blocked_before_order",
+      "source": "tests/test_paper_proposals.py:375; existing time-of-use freshness contract at origin/main 33aa052",
+      "acceptance": "Confirmation five days after preview is blocked with the forecast freshness reason; neither account nor journal contains an order.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-012",
+      "scenario": "happy-path",
+      "difficulty": "medium",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_forecast_outcomes.py::test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive",
+      "source": "tests/test_forecast_outcomes.py:91; existing hand-calculated exact-close-v1 oracle at origin/main 33aa052",
+      "acceptance": "Seven point errors match the hand calculation, MAE is 39/7, random-walk benchmark MAE is 52/7, coverage is 5/7 and terminal error is -3; interval boundary equality counts as a hit.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-013",
+      "scenario": "boundary",
+      "difficulty": "hard",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores",
+      "source": "tests/test_forecast_outcomes.py:136; existing exact-timestamp alignment contract at origin/main 33aa052",
+      "acceptance": "A missing third session plus an unscheduled bar yields partial status and six observations; the missing row stays null, the fourth row retains its exact timestamp match and aggregate scores remain null.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-014",
+      "scenario": "boundary",
+      "difficulty": "medium",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance",
+      "source": "tests/test_forecast_outcomes.py:156; existing three-case missing-evidence contract at origin/main 33aa052",
+      "acceptance": "All pending, empty and unavailable variants preserve the expected status and observation count, provide a reason and expose null aggregate scores rather than fabricated zero error.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-015",
+      "scenario": "recovery",
+      "difficulty": "hard",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart",
+      "source": "tests/test_forecast_outcomes.py:196; existing real-registry/local-API replay contract at origin/main 33aa052",
+      "acceptance": "After saving the exact forecast comparison, replacing history and reopening the review store must return the frozen saved comparison and leave review JSONL bytes unchanged.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-016",
+      "scenario": "historical-regression",
+      "difficulty": "hard",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer",
+      "source": "tests/test_live_observation_identity.py:60; docs/adr/0024-hyperliquid-candle-observation-identity.md:55; recorded AWS locally-timed metrics identity collision, origin/main 33aa052",
+      "acceptance": "Both metrics channels, batch/sequential persistence and five time/content variants retain distinct observations, deduplicate exact repeats, produce no false quarantine and replay exactly the admitted rows.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-017",
+      "scenario": "historical-regression",
+      "difficulty": "hard",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_live_candle_revisions.py::test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running",
+      "source": "tests/test_live_candle_revisions.py:89; docs/adr/0024-hyperliquid-candle-observation-identity.md:8; recorded AWS closed-candle revision, origin/main 33aa052",
+      "acceptance": "The recorded closed-candle revision retains both volume observations, deduplicates identical redelivery and keeps the actual local async pump alive; BTC, ETH and SOL quotes arrive with no quarantine.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-018",
+      "scenario": "historical-regression",
+      "difficulty": "hard",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_live_buffer_lookup.py::test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss",
+      "source": "tests/test_live_buffer_lookup.py:60; docs/adr/0024-hyperliquid-candle-observation-identity.md:88; retained-lake admission scan regression, origin/main 33aa052",
+      "acceptance": "With 4096 retained rows, both actual append hit and miss query plans contain Index Scan and no Sequential Scan; duplicate sequence is retained, the new sequence advances once and quarantine stays empty.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-019",
+      "scenario": "high-complexity",
+      "difficulty": "hard",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake",
+      "source": "tests/test_live_buffer.py:668; existing 100000-row DuckDB memory-limit regression at origin/main 33aa052",
+      "acceptance": "With 100000 retained rows and DuckDB memory_limit=32MB, latest completes and returns exactly BTC/ETH times quote/trade/metrics: six scopes. This does not claim total process RSS or a latency SLA.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-020",
+      "scenario": "security",
+      "difficulty": "medium",
+      "task_type": "workflow-contract",
+      "nodeid": "tests/test_ai_tools.py::TestDispatch",
+      "source": "tests/test_ai_tools.py:113; Phase D tool registry, issue #48; existing eight-test dispatch class at origin/main 33aa052",
+      "acceptance": "All eight dispatch tests pass: the analyst/critic/risk/portfolio permission matrix matches policy, permitted dispatch reaches the expected surface, forbidden and unknown roles/tools raise typed errors, and a forbidden dispatch never touches its surface.",
+      "failure_category": "tool"
+    },
+    {
+      "task_id": "QM-021",
+      "scenario": "happy-path",
+      "difficulty": "easy",
+      "task_type": "retrieval-contract",
+      "nodeid": "tests/test_ai_tools.py::TestDefaultSurfaces::test_retrieve_documents_renders_passages",
+      "source": "tests/test_ai_tools.py:166; Phase D DocumentIndex/DocumentSource tool surface, issue #48; origin/main 33aa052",
+      "acceptance": "Ingesting document d-1 with BTC rally momentum and dispatching analyst retrieve_documents(query=btc, top_k=2) through the real DocumentSource produces exactly [document:d-1] BTC rally momentum.",
+      "failure_category": "data"
+    },
+    {
+      "task_id": "QM-022",
+      "scenario": "security",
+      "difficulty": "medium",
+      "task_type": "workflow-contract",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused",
+      "source": "audit2026-09-20; local technical-evidence Origin prefix audit of quantmesh.api.workstation; desired safe behavior is frozen even when the baseline fails",
+      "acceptance": "The workstation browser-origin predicate refuses an attacker-controlled hostname beginning with 127. rather than treating a textual prefix as a loopback IP address.",
+      "failure_category": "policy"
+    },
+    {
+      "task_id": "QM-023",
+      "scenario": "security",
+      "difficulty": "hard",
+      "task_type": "scripted-ai-contract",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation",
+      "source": "audit2026-09-20; local technical-evidence generic ResearchPipeline fabricated-citation probe; scripted critic pass is not an independent citation verifier",
+      "acceptance": "The generic research pipeline refuses a scripted analyst citation that is absent from supplied evidence even if its scripted critic returns pass; it must not accept the fabricated evidence as a successful research result.",
+      "failure_category": "verification"
+    },
+    {
+      "task_id": "QM-024",
+      "scenario": "security",
+      "difficulty": "hard",
+      "task_type": "workflow-contract",
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_old_source_quote_never_fills_paper_order",
+      "source": "audit2026-09-20; local technical-evidence source-time versus receipt-time fence probe; a stale snapshot label alone does not prove refusal at the execution boundary",
+      "acceptance": "A continuous real-provenance quote whose source time is stale but whose receipt time is fresh cannot produce a filled paper order through the live quote fence; recent delivery must not erase source age.",
+      "failure_category": "policy"
+    }
+  ]
+}
