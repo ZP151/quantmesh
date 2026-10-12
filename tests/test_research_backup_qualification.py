@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -82,6 +83,8 @@ def test_private_reader_refuses_links_hardlinks_modes(tmp_path):
 
 @pytest.fixture
 def bundle(tmp_path):
+    if sys.platform != "linux":
+        pytest.skip("Linux no-follow descriptor walk, ownership and private file modes")
     root = tmp_path / "payload"
     root.mkdir(mode=0o700)
     backup.write_private(root / "research.dump", b"bounded-dump")
@@ -168,6 +171,8 @@ def test_receipt_requires_actual_encrypted_snapshot_and_checked_bundle(bundle):
 
 
 def test_wrong_signing_notice_or_tool_pin_is_not_an_admitted_tool(tmp_path):
+    if sys.platform != "linux":
+        pytest.skip("Linux native tool admission reads private no-follow descriptors")
     for name in ["restic", "prefix", "audit"]:
         (tmp_path / name).mkdir()
     with pytest.raises(ValueError):
