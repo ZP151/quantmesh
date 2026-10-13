@@ -81,6 +81,11 @@ def validate(con, policy):
         "ON e.job_id=r.job_id AND e.digest=r.digest WHERE r.job_id IS NULL"
     ).fetchone():
         raise ValueError("unattributed model effects")
+    if con.execute(
+        "SELECT 1 FROM qm_portfolio_reservations r LEFT JOIN model_effects e "
+        "ON r.job_id=e.job_id AND r.digest=e.digest WHERE e.job_id IS NULL"
+    ).fetchone():
+        raise ValueError("orphan portfolio reservations")
     return stamp
 
 
