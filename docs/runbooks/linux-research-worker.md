@@ -187,3 +187,60 @@ describe final storage acceptance as green. Native15/15 is the measured local
 Task1 qualification for the exact fixture. Task2 numerical Worker
 integration/image, <=90s two-job recovery,
 provider/service/server/AWS delivery and final release gates remain pending.
+
+## October13 Task2 software checkpoint1
+
+This is a reviewed software checkpoint, not an admitted execution image. The
+second bounded review originally stopped with loaded external dependency code
+unbound to the inventory. Planner/root reproduced five shadow variants and
+fixed that exact P2; a specific corrective review also identified measured
+source-entry and base-stdlib compatibility cases, which were reproduced and
+corrected. The final corrective review has no actionable P1/P2. The original
+review stop and every intermediate failure remain retained as historical evidence.
+
+The [numerical Worker plan](../superpowers/plans/2026-10-13-linux-numerical-worker.md)
+separates read-only byte admission from later image construction and Linux
+activation. `worker_build.measure_worker_runtime` requires an independently
+SHA256-bound manifest and inventory, the frozen81-package Linux lock, actual
+Python/source/distribution/library/notice bytes and the unchanged five runtime
+fields. It refuses undeclared files, bytecode, special files, source aliases,
+out-of-prefix distribution records and loaded QuantMesh modules outside the
+admitted source tree. All other loaded file/spec origins must be in the measured
+inventory; package search paths must be real directories within admitted roots.
+Measured base stdlib outside the venv prefix and measured file/module main entries
+are supported. Unmeasured inline/stdin main code is not an admitted image entry.
+Rejections expose only `worker build rejected`. No Git
+checkout or saved runtime tuple substitutes for those byte checks.
+
+The manifest SHA must come from a later independent immutable-image admission.
+This helper verifies the declared closure; it does not establish complete ELF
+edges, actual OS notice eligibility, image identity or numerical containment.
+The source commit is externally pinned metadata returned after actual source
+verification. No image admission or Linux execution profile is activated by
+this checkpoint. Four-argument `run_next_job` callers and the default host
+fingerprint remain compatible; Linux without crash-safe admission still refuses.
+
+The existing runner now launches Python with `-B` and
+`PYTHONDONTWRITEBYTECODE=1`, obtains exit status through the owned child's actual
+`poll()`, and validates contained, bounded, unchanged regular result/receipt
+files, canonical contents and owner/attempt/runtime identity before the existing
+publication fences. Windows keeps its suspended launch, Job Object assignment
+and go gate. Its pulse method is a no-op; no background pulse thread is added.
+
+Focused RED/GREEN uses synthetic manifest fixtures and existing small receipt
+fixtures on a read-only borrowed81-package Python3.12.3 environment. Only the
+four changed source/test files are overlaid onto the prior owned Task1 clone;
+this is not a clean whole-integration checkout or a CPython3.12.15 image witness.
+Final focused WSL checks pass49 with4 Windows-only skips and17 deselections in
+3.62s. A separate actual Windows ownership/memory/affinity run passes5 with
+zero skips in5.03s on the existing Python3.13.9 host environment; this is not an
+81-package Linux or full Windows runtime admission. Initial harness errors and
+corrected failing test attempts remain retained. The final software resource
+observation is below10MB introduced logical bytes and at least50GB free C; it
+does not waive the prior whole-C5GB attribution gate.
+
+Construction-only ContextVar wiring, complete image producer/admission tooling,
+actual image/ELF/notices, same-image numerical equality and <=90s two-job lease
+recovery remain pending. The original whole-C five-billion-byte storage gate
+also remains pending. Issue#172, server/AWS delivery and release acceptance
+cannot be closed using this software checkpoint.

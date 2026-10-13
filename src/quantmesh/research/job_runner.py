@@ -14,6 +14,7 @@ import importlib.metadata
 import json
 import os
 import platform
+import stat
 import subprocess
 import sys
 import time
@@ -46,12 +47,18 @@ _SOURCE_ROOT = Path(__file__).resolve().parents[2]
 _REPO = _SOURCE_ROOT.parent
 
 
-def runtime_fingerprint() -> dict:
+def runtime_fingerprint(
+    *, manifest_path: Path | None = None, manifest_sha256: str | None = None
+) -> dict:
     """Bind source bytes and installed dependency metadata, independently of engine SHA.
 
     RECORD pins the complete installed distribution inventory. This fingerprint
     identifies the environment; it is not an attestation of every installed byte.
     """
+    if manifest_path is not None or manifest_sha256 is not None:
+        from quantmesh.research.worker_build import measure_worker_runtime
+
+        return measure_worker_runtime(manifest_path, manifest_sha256=manifest_sha256)
     source = [
         (p.relative_to(_SOURCE_ROOT).as_posix(), hashlib.sha256(p.read_bytes()).hexdigest())
         for p in sorted((_SOURCE_ROOT / "quantmesh").rglob("*.py"))
@@ -193,6 +200,7 @@ class _OwnedChild:
         env.update(
             PYTHONPATH=str(_SOURCE_ROOT),
             PYTHONNOUSERSITE="1",
+            PYTHONDONTWRITEBYTECODE="1",
             OPENBLAS_NUM_THREADS="1",
             OMP_NUM_THREADS="1",
             USERPROFILE=str(directory),
@@ -248,6 +256,12 @@ class _OwnedChild:
         if not kernel.AssignProcessToJobObject(ctypes.c_void_p(handle), process_handle):
             raise UnsupportedLimits("cannot assign owned process tree")
 
+    def poll(self) -> int | None:
+        return self.process.poll()
+
+    def pulse(self) -> None:
+        """Windows Job Object lifetime has no owner-pulse channel."""
+
     def close(self):
         if self.job_handle is not None:
             kernel = ctypes.windll.kernel32
@@ -270,7 +284,7 @@ def _child_command(attempt: Path) -> list[str]:
         "sys.exit(3) if token != 'go\\n' else None; "
         "from quantmesh.research.job_runner import _child_main; _child_main(sys.argv[1])"
     )
-    return [sys.executable, "-c", boot, str(attempt)]
+    return [sys.executable, "-B", "-c", boot, str(attempt)]
 
 
 def _child_main(directory: str) -> None:
@@ -331,6 +345,67 @@ def _child_main(directory: str) -> None:
         raise SystemExit(2) from None
 
 
+def _read_child_file(root: Path, path: Path, limit: int) -> bytes:
+    _contained(root, path)
+    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
+    try:
+        before = os.fstat(fd)
+        if (
+            not stat.S_ISREG(before.st_mode)
+            or before.st_nlink != 1
+            or not 0 < before.st_size <= limit
+        ):
+            raise ValueError("invalid child file")
+        chunks, remaining = [], limit + 1
+        while remaining:
+            chunk = os.read(fd, min(remaining, 512 * 1024))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        raw = b"".join(chunks)
+        after, named = os.fstat(fd), path.lstat()
+
+        def identity(info):
+            return (
+                info.st_dev,
+                info.st_ino,
+                info.st_mode,
+                info.st_nlink,
+                info.st_size,
+                info.st_mtime_ns,
+                info.st_ctime_ns,
+            )
+
+        if (
+            identity(before) != identity(after)
+            or identity(after) != identity(named)
+            or len(raw) != before.st_size
+        ):
+            raise ValueError("child file changed")
+        return raw
+    finally:
+        os.close(fd)
+
+
+def _validated_child_result(job: JobRecord, owner: str, runtime: dict, output: Path) -> bytes:
+    raw = _read_child_file(output, output / "result.json", _MAX_OUTPUT_BYTES)
+    receipt_raw = _read_child_file(output, output / "receipt.json", _MAX_OUTPUT_BYTES - len(raw))
+    receipt = json.loads(receipt_raw)
+    if (
+        not isinstance(receipt, dict)
+        or _canonical(receipt) != receipt_raw
+        or receipt.get("runtime") != runtime
+        or type(receipt.get("attempt")) is not int
+        or receipt["attempt"] != job.attempt
+        or receipt.get("owner") != owner
+    ):
+        raise ValueError("worker receipt mismatch")
+    if canonical_result(StrategyReport.model_validate(receipt.get("report"))) != raw:
+        raise ValueError("worker result mismatch")
+    return raw
+
+
 def run_next_job(
     store: JobStore, owner: str, inputs_root: Path, artifacts_root: Path
 ) -> JobRecord | None:
@@ -358,7 +433,8 @@ def run_next_job(
             return store.get(job.operator_id, job.job_id)
         child = _OwnedChild(_child_command(attempt), job.request.budget, attempt)
         heartbeat = time.monotonic()
-        while child.process.poll() is None:
+        last_pulse = heartbeat
+        while (code := child.poll()) is None:
             if time.monotonic() - started >= job.request.budget.timeout_seconds:
                 error = "timeout"
                 raise TimeoutError("owned worker deadline exceeded")
@@ -377,28 +453,26 @@ def run_next_job(
                 if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
                     return store.get(job.operator_id, job.job_id)
                 heartbeat = time.monotonic()
+            if time.monotonic() - last_pulse >= 1:
+                child.pulse()
+                last_pulse = time.monotonic()
             time.sleep(_POLL_SECONDS)
         if time.monotonic() - started >= job.request.budget.timeout_seconds:
             error = "timeout"
             raise TimeoutError("owned worker deadline exceeded")
-        if child.process.returncode:
+        if code:
             failure = attempt / "error.json"
             if (
                 failure.exists()
-                and json.loads(failure.read_bytes()).get("error_code") == "dataset_rejected"
+                and json.loads(_read_child_file(attempt, failure, _MAX_OUTPUT_BYTES)).get(
+                    "error_code"
+                )
+                == "dataset_rejected"
             ):
                 error = "dataset_rejected"
             raise ValueError("owned worker failed")
-        result_path = attempt / "result.json"
-        if result_path.stat().st_size > _MAX_OUTPUT_BYTES:
-            raise ValueError("report too large")
-        raw = result_path.read_bytes()
         # Parent validates the actual child receipt and numerical schema before publication.
-        receipt = json.loads((attempt / "receipt.json").read_bytes())
-        if receipt["runtime"] != runtime or receipt["attempt"] != job.attempt:
-            raise ValueError("worker receipt mismatch")
-        if canonical_result(StrategyReport.model_validate(receipt["report"])) != raw:
-            raise ValueError("worker result mismatch")
+        raw = _validated_child_result(job, owner, runtime, attempt)
         if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
             return store.get(job.operator_id, job.job_id)
         ref = publish_result(job, raw, Path(artifacts_root))
