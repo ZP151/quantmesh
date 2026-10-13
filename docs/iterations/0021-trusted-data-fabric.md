@@ -756,10 +756,14 @@ durable checkpoint.
 
 ## Current frontier
 
-Functional acceptance is complete. Run the full release gate, dispatch the
-final Reviewer/Verifier, then open and merge the milestone PR for issue #110.
-The real 168-hour run remains a post-merge stability gate (blocks release, not
-merge). The Moomoo 1-minute path is a recorded follow-up.
+Functional code acceptance is integrated through PR #120. On2026-10-12 the
+operator explicitly made formal168h **not required for current work**, with
+reactivation only on a future request. It no longer blocks the current feature
+development/private-prototype frontier. It has not passed; historical failures
+and original criteria above remain preserved. Do not enable disabled tasks,
+start a clock, publish success or reuse past elapsed evidence. Future requested
+resumption must revalidate source contracts, runner/scheduler identities and
+genuine new elapsed evidence. Live-money and data-quality gates are unchanged.
 
 ## Resume instructions
 

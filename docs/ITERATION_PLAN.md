@@ -1,11 +1,20 @@
 # QuantMesh Iteration Plan
 
-Updated: 2026-09-23. This replaces the original conceptual iterations 0–5;
+Updated: 2026-10-12. This replaces the original conceptual iterations 0–5;
 historical delivery IDs and evidence remain in the [iteration index](iterations/INDEX.md).
 Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 [ACTIVE](goals/ACTIVE.md) for the resumable frontier.
 
 ## Current resumable goal
+
+Current priority: feature development. Formal168h is NOT REQUIRED per the
+operator, on-demand only. Do not enable its retired tasks or claim it passed.
+October8 stock-minute and startup configuration acceptance is complete through
+PRs #163–#165. October12 human SSH check restores the private route and actual
+quote-only readiness. PR #166 repairs probe descendant cleanup; installed helper
+replacement and exact-head CI remain separate gates. Strategy simulation is the
+next proposed research loop. Historical checkpoints below retain their original
+dates; ACTIVE and iteration0037 identify the latest runtime and operator state.
 
 Iteration 0035 is complete. Iteration 0036 remains active after the 8 GB
 private AWS migration passed its bounded restore, smoke, chart and restart

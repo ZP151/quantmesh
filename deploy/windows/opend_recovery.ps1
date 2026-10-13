@@ -54,32 +54,122 @@ function Get-QmOpenDRunning([string]$Path) {
     return $false
 }
 
+function Initialize-QmProbeJobType {
+    if ('QmProbeJob' -as [type]) { return }
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class QmProbeJob {
+    [StructLayout(LayoutKind.Sequential)] struct BasicLimits {
+        public long ProcessTime, JobTime;
+        public uint Flags;
+        public UIntPtr MinWorkingSet, MaxWorkingSet;
+        public uint ActiveProcesses;
+        public UIntPtr Affinity;
+        public uint Priority, Scheduling;
+    }
+    [StructLayout(LayoutKind.Sequential)] struct IoCounters {
+        public ulong ReadOps, WriteOps, OtherOps, ReadBytes, WriteBytes, OtherBytes;
+    }
+    [StructLayout(LayoutKind.Sequential)] struct ExtendedLimits {
+        public BasicLimits Basic;
+        public IoCounters Io;
+        public UIntPtr ProcessMemory, JobMemory, PeakProcessMemory, PeakJobMemory;
+    }
+    [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+    static extern IntPtr CreateJobObject(IntPtr attributes, string name);
+    [DllImport("kernel32.dll", SetLastError=true)]
+    static extern bool SetInformationJobObject(IntPtr job, int kind, IntPtr info, uint size);
+    [DllImport("kernel32.dll", SetLastError=true)]
+    public static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
+    [DllImport("kernel32.dll")]
+    public static extern bool CloseHandle(IntPtr handle);
+    public static IntPtr Create() {
+        var job = CreateJobObject(IntPtr.Zero, null);
+        if (job == IntPtr.Zero) throw new InvalidOperationException("Probe job unavailable");
+        var limits = new ExtendedLimits();
+        limits.Basic.Flags = 0x2000; // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        int size = Marshal.SizeOf(limits);
+        var buffer = Marshal.AllocHGlobal(size);
+        try {
+            Marshal.StructureToPtr(limits, buffer, false);
+            if (!SetInformationJobObject(job, 9, buffer, (uint)size)) {
+                CloseHandle(job);
+                throw new InvalidOperationException("Probe containment unavailable");
+            }
+            return job;
+        } finally { Marshal.FreeHGlobal(buffer); }
+    }
+}
+'@ | Out-Null
+}
+
 function Invoke-QmBoundedProbe([string]$Path) {
     # A fixed encoded Python expression avoids nested PowerShell/SSH quoting.
     $code = 'import socket; s=socket.socket(); s.settimeout(2); r=s.connect_ex(("127.0.0.1",11111)); print("QM_LISTENER_PRESENT" if r==0 else "QM_LISTENER_ABSENT" if r==111 else "QM_LISTENER_UNKNOWN"); s.close()'
     $encoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($code))
+    # Tailscale invokes native ssh and a proxy child. Contain this probe's entire
+    # descendant tree, including when its outer wrapper exits before its pipes.
+    # The bootstrap cannot launch the CLI until it has joined the anonymous job.
+    $job = [IntPtr]::Zero
+    $gate = $null
+    $assigned = $false
+    $process = New-Object Diagnostics.Process
+    $gateName = 'Local\QuantMeshProbe-' + [Guid]::NewGuid().ToString('N')
+    $literalPath = $Path.Replace("'", "''")
+    $bootstrap = @'
+$ErrorActionPreference='Stop'
+$gate=[Threading.EventWaitHandle]::OpenExisting('__GATE__')
+try {
+ if (-not $gate.WaitOne(10000)) { exit 1 }
+ & '__PATH__' ssh ubuntu@quantmesh-staging-8gb -o BatchMode=yes -o ConnectTimeout=8 'echo __CODE__ | base64 -d | python3'
+ exit $LASTEXITCODE
+} finally { $gate.Dispose() }
+'@
+    $bootstrap = $bootstrap.Replace('__GATE__', $gateName).Replace('__PATH__', $literalPath).Replace('__CODE__', $encoded)
+    $command = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($bootstrap))
     $info = New-Object Diagnostics.ProcessStartInfo
-    $info.FileName = $Path
-    $info.Arguments = 'ssh ubuntu@quantmesh-staging-8gb -o BatchMode=yes -o ConnectTimeout=8 "echo ' + $encoded + ' | base64 -d | python3"'
+    $info.FileName = Join-Path $PSHOME 'powershell.exe'
+    $info.Arguments = '-NoProfile -NonInteractive -EncodedCommand ' + $command
     $info.UseShellExecute = $false
     $info.CreateNoWindow = $true
     $info.RedirectStandardOutput = $true
     $info.RedirectStandardError = $true
-    $process = New-Object Diagnostics.Process
     $process.StartInfo = $info
     try {
+        Initialize-QmProbeJobType
+        $job = [QmProbeJob]::Create()
+        $gate = New-Object Threading.EventWaitHandle($false, [Threading.EventResetMode]::ManualReset, $gateName)
         if (-not $process.Start()) { return @{ ExitCode = -1; Output = '' } }
         $stdout = $process.StandardOutput.ReadToEndAsync()
         $stderr = $process.StandardError.ReadToEndAsync()
+        if (-not [QmProbeJob]::AssignProcessToJobObject($job, $process.Handle)) {
+            throw 'Probe containment unavailable'
+        }
+        $assigned = $true
+        $gate.Set() | Out-Null
         if (-not $process.WaitForExit(12000)) {
-            $process.Kill() # Only this bounded, owned probe.
-            $process.WaitForExit()
+            return @{ ExitCode = -1; Output = '' }
+        }
+        # Closing the job before draining prevents a surviving proxy from
+        # holding stdout/stderr open after a successful outer-wrapper exit.
+        [QmProbeJob]::CloseHandle($job) | Out-Null
+        $job = [IntPtr]::Zero
+        if (-not $stdout.Wait(1000) -or -not $stderr.Wait(1000)) {
             return @{ ExitCode = -1; Output = '' }
         }
         return @{ ExitCode = $process.ExitCode; Output = $stdout.Result.Trim() }
     }
     catch { return @{ ExitCode = -1; Output = '' } }
-    finally { $process.Dispose() }
+    finally {
+        if ($job -ne [IntPtr]::Zero) { [QmProbeJob]::CloseHandle($job) | Out-Null }
+        if (-not $assigned) {
+            # Assignment failure leaves only the gated bootstrap, never a CLI.
+            try { if (-not $process.HasExited) { $process.Kill() } } catch { }
+        }
+        if ($null -ne $gate) { $gate.Dispose() }
+        $process.Dispose()
+    }
 }
 
 function Get-QmRemoteListener([string]$Path) {
