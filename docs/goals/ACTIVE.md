@@ -1,5 +1,15 @@
 # Active Goal
 
+Milestone integration: draft [PR #175](https://github.com/ZP151/quantmesh/pull/175)
+is the single Option A PR on codex/0038-research-foundation. It remains ClassC,
+not ready for merge/deployment; no issue auto-close or goal completion. Required
+CI runs on its final pushed head; observations never trigger duplicate runs.
+Docker Linux Engine was rechecked this continuation and remains unavailable:
+dockerDesktopLinuxEngine pipe absent, no handle to wait on. Do not start it or
+substitute mocked containment. Existing provider/Engine/human requests remain
+pending. Next inspect this specific CI/review handle; native Engine/model/host
+acceptance continues only when actual prerequisites are available.
+
 Current accepted checkpoint: Task2 staging software and local backend audit
 are integrated prerequisites, not a server gateway release. Managed4836 is
 completed/idle at b623a56891a5058d8f86eac8387f6bb88acef5b8; four additive files

@@ -3,6 +3,16 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
+Draft milestone [PR #175](https://github.com/ZP151/quantmesh/pull/175) now exposes
+the complete integration for remote CI and the remaining review/release gates.
+This is the one approved fast-lane milestone PR, ClassC, not ready for merge or
+deployment. No issue is auto-closed. Root complete origin/main-to-c33656e
+whitespace check exits0; required broad final-head CI remains pending. Actual
+Docker Linux Engine recheck fails at its absent named pipe; this is not a live
+handle or a native containment pass. Provider/Engine/human requests are unchanged.
+Previous goal turn changed authoritative code/evidence and was progress. This
+turn creates a concrete integration/CI boundary instead of repeating fixtures.
+
 Current accepted checkpoint: Task2 staging software and local backend audit
 are integrated prerequisites, not a server gateway release. Managed4836 is
 completed/idle at b623a56891a5058d8f86eac8387f6bb88acef5b8; four additive files
