@@ -1,0 +1,14 @@
+{
+  "reviewed_candidate": "b623a56891a5058d8f86eac8387f6bb88acef5b8",
+  "integrated_head": "f82d5ee3d26a72c424cb3459525a3b32c60c935a",
+  "four_files_byte_equal": true,
+  "proof_original_sha256": "16f689d56a9f410a099461e1742931384eab20914ded5768963f813d2d192505",
+  "proof_root_sha256": "fc3af474d15f7fa5ae74e04dbdad3ef249d957f64d1e4adcf893882c1198a13c",
+  "observer_change": "explicit ROOT points at coordinator integrated bytes; all assertions unchanged",
+  "file_sha256": {
+    "deploy/aws/opend/stage_console.py": "2aabead42bb8211da1a7e9fa81b8f06e48b9b655e1651f992edcfdfa5be6eef4",
+    "deploy/aws/opend/quantmesh-opend-stage@.service": "e108294e59e624d17b0f75034930c9ae3fe1f3d3353c44a90586069e1e0cfdac",
+    "tests/test_opend_staging_window.py": "97cbd9a37d753eda48e51307d65403569f7e30f7782039ceebb45f1c7681cfd9",
+    "docs/runbooks/opend-staging-window.md": "d71f6ac0174186e26ce418109de4f33004ba73682878c27b3fb4227365269a55"
+  }
+}

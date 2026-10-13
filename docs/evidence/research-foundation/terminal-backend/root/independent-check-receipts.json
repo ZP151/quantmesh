@@ -1,0 +1,77 @@
+[
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/noble-updates/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID pBBNGChaUJPdrD0Ba2Ty2SQdgFE 2026-10-12 1791830808\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-10-12 1791830808 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Tue Oct 13 02:46:48 2026 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  },
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/noble-security/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID 2rEC7jmofz5Xh4TPexyP087X7QI 2026-10-12 1791809913\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-10-12 1791809913 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Mon Oct 12 20:58:33 2026 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  },
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/noble/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID GVnDvebl2qOVy2n1fx2yPFLiSUA 2024-04-25 1714057881\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2024-04-25 1714057881 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Thu Apr 25 23:11:21 2024 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  },
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-updates/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID SorVzUyNBhISixxZ8SMs6J/GR2E 2026-09-24 1790271406\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-09-24 1790271406 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Fri Sep 25 01:36:46 2026 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  },
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-security/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID +IKT78AKmgQ7fcGpmMGtOjaMjDg 2026-09-24 1790266060\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-09-24 1790266060 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Fri Sep 25 00:07:40 2026 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  }
+]

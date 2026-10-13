@@ -57,17 +57,27 @@ start_staging_console(window)->dict; run_owned_fixture()->dict; main(argv=None)-
 Code may keep a smaller internal split, but no new unowned files or public
 arbitrary child/command API. Output fixed safe status/error and false release flags.
 
-- [ ] Restore required docs/exact frozen coordinator SHA, isolated managed worktree and independent codex branch; no divergentmain reset. Only four additive files.
-- [ ] RED policy: expired/future/overlong/boolean duration, unknown/credential fields, wrong machine/uid/root ownership/hash, malformed review/source claims, duplicate nonce, true profile qualification or unsafe argv all deny before any spawn/input. Preserve actual RED/exit.
-- [ ] Implement minimal strict bounded/no-follow/root-protected permit and exact blocked profile/helper/artifact admission; unknown live state denies. No GitHub/network authority lookup or credential discovery; operator minting requires actual external review evidence later.
-- [ ] RED live-context cases: nonprivate/echoing/mismatched/wrong-direction/replaced TTY, borrowed cgroup/backend/pidfd, missing manager/nonce ownership and unsupported Python/native platform deny. Verify template has900/15/control-group/no restart/no journals/private socket/history; no test calls a real manager/daemon.
-- [ ] Implement fixed pane guard with admission-before-release, interruption-safe registration, parent-loss/deadline/HUP cleanup through retained handles and explicit pending failures; cgroup authority owns any vendor descendants. Default and --check-window have no start effects. Bare fixed child environment; no account/trade/market calls or secret relay.
-- [ ] GREEN pure/native tests and fresh actual synthetic lifecycle proof: expiry, wrong authority, interrupted handle registration, parent loss, blocked child and known sibling survival; record what systemd/root/backend checks are mocked separately from kernel/PTY facts. No real service/daemon/vendor execution. Final receipt explicitly production/source/auth=false.
-- [ ] New four-file Spec/Standards max2rounds; Ruff/format/diff and exact committed fresh native proof. No third old architecture review. Review focus: permit≠qualification; root/bytecode/path race; interruption before registration; client detach≠server lifetime; expiry/cgroup cleanup and false positive native admission.
-- [ ] HANDOFF clean reviewed commit/four files/raw commands/exits/hashes/native-vs-mocked limits, STOP. Root verifies/integrates/archives then completes backend audit, actual host/ClassC/CI/operator prerequisites. No stage invocation, marker change or login follows automatically.
+- [x] Restore required docs/exact frozen coordinator SHA, isolated managed worktree and independent codex branch; no divergentmain reset. Only four additive files.
+- [x] RED policy: expired/future/overlong/boolean duration, unknown/credential fields, wrong machine/uid/root ownership/hash, malformed review/source claims, duplicate nonce, true profile qualification or unsafe argv all deny before any spawn/input. Preserve actual RED/exit.
+- [x] Implement minimal strict bounded/no-follow/root-protected permit and exact blocked profile/helper/artifact admission; unknown live state denies. No GitHub/network authority lookup or credential discovery; operator minting requires actual external review evidence later.
+- [x] RED live-context cases: nonprivate/echoing/mismatched/wrong-direction/replaced TTY, borrowed cgroup/backend/pidfd, missing manager/nonce ownership and unsupported Python/native platform deny. Verify template has900/15/control-group/no restart/no journals/private socket/history; no test calls a real manager/daemon.
+- [x] Implement fixed pane guard with admission-before-release, interruption-safe registration, parent-loss/deadline/HUP cleanup through retained handles and explicit pending failures; cgroup authority owns any vendor descendants. Default and --check-window have no start effects. Bare fixed child environment; no account/trade/market calls or secret relay.
+- [x] GREEN pure/native tests and fresh actual synthetic lifecycle proof: expiry, wrong authority, interrupted handle registration, parent loss, blocked child and known sibling survival; record what systemd/root/backend checks are mocked separately from kernel/PTY facts. No real service/daemon/vendor execution. Final receipt explicitly production/source/auth=false.
+- [x] New four-file Spec/Standards max2rounds; Ruff/format/diff and exact committed fresh native proof. No third old architecture review. Review focus: permit≠qualification; root/bytecode/path race; interruption before registration; client detach≠server lifetime; expiry/cgroup cleanup and false positive native admission.
+- [x] HANDOFF clean reviewed commit/four files/raw commands/exits/hashes/native-vs-mocked limits, STOP. Root verifies/integrates/archives then completes backend audit, actual host/ClassC/CI/operator prerequisites. No stage invocation, marker change or login follows automatically.
 
 Planner: advance real temporary source-start software, not another anonymous SDK
 retry. Researcher: no numerical/data/model claim. Verifier: local kernel proof
 does not certify manager/backend/host. Actual protected installation, independent
 server terminal/client-detach lifecycle, human login, acknowledged original SDK,
 market/calendar/browser/rollback and final permanent gateway remain required.
+
+## Accepted scope — coordinator checkpoint
+
+The bounded software/audit checklist is complete only within its stated local
+scope. Exact receipts and root independent checks are mirrored into iteration0038
+and the staging-window/terminal-backend evidence archives. Full server source
+acceptance and Option A are not complete; no host/login/deployment permission
+follows from these checkmarks. Both sessions are stopped, with all production
+qualification flags false. Current release prerequisites are recorded in
+docs/runbooks/opend-authentication-review.md.

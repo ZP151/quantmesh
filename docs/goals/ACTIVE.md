@@ -1,35 +1,40 @@
 # Active Goal
 
-Current sourceTask2 batch: expiring staging software ACTIVE in managed4836,
-chat01a13286-d034-7222-a79d-88cd9c9a08b6, frozenb9d7b5d, plan
-2026-10-13-opend-staging-window.md. Fournewstage guard/template/test/runbook
-files only; prodprofile/unit unchanged, root-owned <=900s stage authority,
-privateforegroundterminal backend and owncgroup lifetime avoidSSHclientdependence.
-Actual--start/vendor/auth/host/systemd/tmux execution notauthorizedinthat session;
-nativefixedsynthetic proof separatesmockedmanager/root checks fromkernelfacts.
-Officialtmux3.4 docs reject-Dwithcommand; implementer usesfixedconfig/paneordering
-withinthesamefourfiles, no shell interpolation or fifthhelper guessed.
+Current accepted checkpoint: Task2 staging software and local backend audit
+are integrated prerequisites, not a server gateway release. Managed4836 is
+completed/idle at b623a56891a5058d8f86eac8387f6bb88acef5b8; four additive files
+integrate through7641eda/f82d5ee. Original production profile/unit/helper and
+validator remain byte-unchanged and blocked. Both review axes close two rounds;
+no third review or completed implementation is redispatched.
 
-Independent terminalbackend audit ACTIVE in managed13a1,
-chat01a1328a-154c-7ff3-b870-4deb9926723f, frozen5aab234, plan
-2026-10-13-terminal-backend-audit.md. No trackedfiles; officialsignedUbuntu
-package/source/executionclosure/licence notices beforefreshownednamespace tmux
-foreground/clientdetach proof <=90s, no global/vendor/credentials/market calls.
-Installedlocaltmux read-only observation3.4-1ubuntu0.1 amd64,
-binary034b15c64035f783d43862f2775eb4828f61571ca62c8199796000b97d556ecd,
-copyright9c587ac09a351692c23a910e4e59008d4a5ce66125c7aad1279065f3a272a3e1;
-theseareNOTsignedorigin/closedlicence/productionadmission. Rootnotexecbackend.
-Twoactiveindependentsessions; allolder handoffs remaincompleted. Rootowns
-sharedpins/REUSE/ADR/ACTIVE/iteration and actualhuman/CI/install/release gates.
-No source/privateinput/auth/wire/install/market flags promoted, no new user
-credential request, paidresource/APIcall or repeatedanonymousSDK/source tests.
-Latestlivehandles:4836reports54native synthetic tests green beforepaneordering
-refinement, nowfixedExecStartPost client afterforegroundserver; finalcommit/
-review/nativeproofpending.13a1 reports signedbytes18packages/16sourcegroups/
-24ELF, but firstactualruntimeRED exitsbeforepane; cleanup/sibling preserved.
-MissingUTF8locale is a hypothesis, notprovenversion/auth fault; sameofficial
-libc-bin locale audit + strongerexternalnamespacePID1handle/newfixture underway.
-Root hasnotacceptedthese live reports asfinalbackend orsourcehost qualification.
+Coordinator fresh checks: Windows52 passed/31 Linux skips; native Linux83
+passed/zero skipped/2.16s. Independent synthetic lifecycle observer exit0,
+0.506154s,11 checks/six cases/seven reported PIDs absent/sibling reaped.
+Actual root permit, systemd/cgroup, backend and source-host authority remain
+mocked or absent. Every production/input/auth/SDK/install/market flag is false.
+Raw87 streams, reviews, REDs and root provenance are archived in staging-window.
+
+Managed13a1 is completed/idle on unchanged5aab2346. Official Ubuntu-signed
+tmux3.4-1ubuntu0.1 audit covers20 packages/17 source groups/27 executing ELF
+and UTF8 data. Root independently checks216 signed/hash/mapping/kernel/cleanup
+facts, exit0, without another runtime. Real owned namespace detached creation
+client exit/lifetime/stop proof is0.679403s; it is not interactive SSH detach or
+actual stage-template/systemd acceptance. Private utmp/wtmp and identity-bound
+socket cleanup are fixture facts. The older signed libevent snapshot is for
+reproducibility, not a current production-security recommendation.
+Raw45 streams plus4457-file external inventory are archived in terminal-backend;
+full ignored packages/sources/native assets remain retained, no worktree removal.
+
+No implementation session remains active. Root owns the release packet and
+shared integration. Next: exact ClassC CI/two-human/safety-owner review, merged
+release, target package security/closure admission, real protected installation,
+manager/cgroup/private human-terminal lifecycle and approved operator window.
+Only then vendor login, acknowledged original SDK and source/calendar/browser
+acceptance can qualify PC independence. PR166 is still OPEN at da6e8c7 with no
+human reviews/merge; current read-only GitHub check confirms this, no CI rerun.
+Engine/provider/PR166 human requests already pending; do not repeat or infer
+approval. No new credential, paid resource/model call, market request, server
+operation or anonymous SDK retry. Full Option A remains ACTIVE;168h on-demand.
 
 Latest accepted private-terminal#169: managed2088/chat01a13259-ae57-7010-945d-2470f3b902cd
 completed/idlef99b020153a31d7d8a5265c9795edbd5a7884ddb, root83517eb threeleaf

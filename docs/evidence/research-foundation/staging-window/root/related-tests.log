@@ -1,0 +1,16 @@
+...............................ssssssssssssssssssssssssssssssssss....... [ 51%]
+...................................................................      [100%]
+============================== warnings summary ===============================
+tests/test_server_market_witness.py::test_native_identity_contains_actual_process_socket_and_artifact
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+tests/test_server_market_witness.py::test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence
+tests/test_server_market_witness.py::test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence
+tests/test_server_market_witness.py::test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence
+tests/test_server_market_witness.py::test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\utils\pandas_utils.py:60: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    delta = pd.Timedelta(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+105 passed, 34 skipped, 5 warnings in 7.26s

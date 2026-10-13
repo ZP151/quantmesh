@@ -1,0 +1,310 @@
+...................................................F............FFFFFFFF [ 91%]
+.......                                                                  [100%]
+=================================== FAILURES ===================================
+_____________ test_installed_unit_pin_matches_exact_template_bytes _____________
+
+    def test_installed_unit_pin_matches_exact_template_bytes():
+>       assert (
+            hashlib.sha256(
+                (ROOT / "deploy/aws/opend/quantmesh-opend-stage@.service").read_bytes()
+            ).hexdigest()
+            == stage.UNIT_SHA
+        )
+E       AssertionError: assert 'e108294e59e6...6069e1e0cfdac' == '18cbd154a940...dd5620eb7a618'
+E         
+E         - 18cbd154a940e744f88a8bdd12f77b926c40fed0cc80d4d35e1dd5620eb7a618
+E         + e108294e59e624d17b0f75034930c9ae3fe1f3d3353c44a90586069e1e0cfdac
+
+tests/test_opend_staging_window.py:253: AssertionError
+___ test_specific_protected_file_boundary_with_simulated_root_metadata[link] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75eb46c9fef0>
+bad = 'link'
+
+    @NATIVE
+    @pytest.mark.parametrize("bad", ["link", "hardlink", "owner", "writable", "hash"])
+    def test_specific_protected_file_boundary_with_simulated_root_metadata(monkeypatch, bad):
+        real_fstat = os.fstat
+    
+        def root_metadata(fd):
+            info = real_fstat(fd)
+            values = dict(st_mode=info.st_mode, st_uid=0, st_nlink=info.st_nlink)
+            if stat.S_ISDIR(info.st_mode):
+                values["st_mode"] = stat.S_IFDIR | 0o555
+            elif bad == "owner":
+                values["st_uid"] = 17
+            elif bad == "writable":
+                values["st_mode"] |= 0o020
+            return SimpleNamespace(**values)
+    
+>       with tempfile.TemporaryDirectory(prefix="quantmesh-stage-path-", dir="/var/tmp") as root:
+
+tests/test_opend_staging_window.py:478: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/tempfile.py:1085: in __exit__
+    self.cleanup()
+/usr/lib/python3.12/tempfile.py:1089: in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+/usr/lib/python3.12/tempfile.py:1069: in _rmtree
+    _rmtree(name, onexc=onexc)
+/usr/lib/python3.12/shutil.py:784: in rmtree
+    if os.path.samestat(orig_st, os.fstat(fd)):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s1 = os.stat_result(st_mode=16832, st_ino=391604, st_dev=2096, st_nlink=2, st_uid=1000, st_gid=1000, st_size=4096, st_atime=1791850233, st_mtime=1791850233, st_ctime=1791850233)
+s2 = namespace(st_mode=16749, st_uid=0, st_nlink=2)
+
+>   ???
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'st_ino'
+
+<frozen genericpath>:101: AttributeError
+_ test_specific_protected_file_boundary_with_simulated_root_metadata[hardlink] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75eb46c9ffe0>
+bad = 'hardlink'
+
+    @NATIVE
+    @pytest.mark.parametrize("bad", ["link", "hardlink", "owner", "writable", "hash"])
+    def test_specific_protected_file_boundary_with_simulated_root_metadata(monkeypatch, bad):
+        real_fstat = os.fstat
+    
+        def root_metadata(fd):
+            info = real_fstat(fd)
+            values = dict(st_mode=info.st_mode, st_uid=0, st_nlink=info.st_nlink)
+            if stat.S_ISDIR(info.st_mode):
+                values["st_mode"] = stat.S_IFDIR | 0o555
+            elif bad == "owner":
+                values["st_uid"] = 17
+            elif bad == "writable":
+                values["st_mode"] |= 0o020
+            return SimpleNamespace(**values)
+    
+>       with tempfile.TemporaryDirectory(prefix="quantmesh-stage-path-", dir="/var/tmp") as root:
+
+tests/test_opend_staging_window.py:478: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/tempfile.py:1085: in __exit__
+    self.cleanup()
+/usr/lib/python3.12/tempfile.py:1089: in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+/usr/lib/python3.12/tempfile.py:1069: in _rmtree
+    _rmtree(name, onexc=onexc)
+/usr/lib/python3.12/shutil.py:784: in rmtree
+    if os.path.samestat(orig_st, os.fstat(fd)):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s1 = os.stat_result(st_mode=16832, st_ino=391607, st_dev=2096, st_nlink=2, st_uid=1000, st_gid=1000, st_size=4096, st_atime=1791850233, st_mtime=1791850233, st_ctime=1791850233)
+s2 = namespace(st_mode=16749, st_uid=0, st_nlink=2)
+
+>   ???
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'st_ino'
+
+<frozen genericpath>:101: AttributeError
+__ test_specific_protected_file_boundary_with_simulated_root_metadata[owner] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75eb46df7b00>
+bad = 'owner'
+
+    @NATIVE
+    @pytest.mark.parametrize("bad", ["link", "hardlink", "owner", "writable", "hash"])
+    def test_specific_protected_file_boundary_with_simulated_root_metadata(monkeypatch, bad):
+        real_fstat = os.fstat
+    
+        def root_metadata(fd):
+            info = real_fstat(fd)
+            values = dict(st_mode=info.st_mode, st_uid=0, st_nlink=info.st_nlink)
+            if stat.S_ISDIR(info.st_mode):
+                values["st_mode"] = stat.S_IFDIR | 0o555
+            elif bad == "owner":
+                values["st_uid"] = 17
+            elif bad == "writable":
+                values["st_mode"] |= 0o020
+            return SimpleNamespace(**values)
+    
+>       with tempfile.TemporaryDirectory(prefix="quantmesh-stage-path-", dir="/var/tmp") as root:
+
+tests/test_opend_staging_window.py:478: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/tempfile.py:1085: in __exit__
+    self.cleanup()
+/usr/lib/python3.12/tempfile.py:1089: in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+/usr/lib/python3.12/tempfile.py:1069: in _rmtree
+    _rmtree(name, onexc=onexc)
+/usr/lib/python3.12/shutil.py:784: in rmtree
+    if os.path.samestat(orig_st, os.fstat(fd)):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s1 = os.stat_result(st_mode=16832, st_ino=391609, st_dev=2096, st_nlink=2, st_uid=1000, st_gid=1000, st_size=4096, st_atime=1791850234, st_mtime=1791850234, st_ctime=1791850234)
+s2 = namespace(st_mode=16749, st_uid=0, st_nlink=2)
+
+>   ???
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'st_ino'
+
+<frozen genericpath>:101: AttributeError
+_ test_specific_protected_file_boundary_with_simulated_root_metadata[writable] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75eb46df6450>
+bad = 'writable'
+
+    @NATIVE
+    @pytest.mark.parametrize("bad", ["link", "hardlink", "owner", "writable", "hash"])
+    def test_specific_protected_file_boundary_with_simulated_root_metadata(monkeypatch, bad):
+        real_fstat = os.fstat
+    
+        def root_metadata(fd):
+            info = real_fstat(fd)
+            values = dict(st_mode=info.st_mode, st_uid=0, st_nlink=info.st_nlink)
+            if stat.S_ISDIR(info.st_mode):
+                values["st_mode"] = stat.S_IFDIR | 0o555
+            elif bad == "owner":
+                values["st_uid"] = 17
+            elif bad == "writable":
+                values["st_mode"] |= 0o020
+            return SimpleNamespace(**values)
+    
+>       with tempfile.TemporaryDirectory(prefix="quantmesh-stage-path-", dir="/var/tmp") as root:
+
+tests/test_opend_staging_window.py:478: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/tempfile.py:1085: in __exit__
+    self.cleanup()
+/usr/lib/python3.12/tempfile.py:1089: in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+/usr/lib/python3.12/tempfile.py:1069: in _rmtree
+    _rmtree(name, onexc=onexc)
+/usr/lib/python3.12/shutil.py:784: in rmtree
+    if os.path.samestat(orig_st, os.fstat(fd)):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s1 = os.stat_result(st_mode=16832, st_ino=391611, st_dev=2096, st_nlink=2, st_uid=1000, st_gid=1000, st_size=4096, st_atime=1791850234, st_mtime=1791850234, st_ctime=1791850234)
+s2 = namespace(st_mode=16749, st_uid=0, st_nlink=2)
+
+>   ???
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'st_ino'
+
+<frozen genericpath>:101: AttributeError
+___ test_specific_protected_file_boundary_with_simulated_root_metadata[hash] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75eb46c9edb0>
+bad = 'hash'
+
+    @NATIVE
+    @pytest.mark.parametrize("bad", ["link", "hardlink", "owner", "writable", "hash"])
+    def test_specific_protected_file_boundary_with_simulated_root_metadata(monkeypatch, bad):
+        real_fstat = os.fstat
+    
+        def root_metadata(fd):
+            info = real_fstat(fd)
+            values = dict(st_mode=info.st_mode, st_uid=0, st_nlink=info.st_nlink)
+            if stat.S_ISDIR(info.st_mode):
+                values["st_mode"] = stat.S_IFDIR | 0o555
+            elif bad == "owner":
+                values["st_uid"] = 17
+            elif bad == "writable":
+                values["st_mode"] |= 0o020
+            return SimpleNamespace(**values)
+    
+>       with tempfile.TemporaryDirectory(prefix="quantmesh-stage-path-", dir="/var/tmp") as root:
+
+tests/test_opend_staging_window.py:478: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/tempfile.py:1085: in __exit__
+    self.cleanup()
+/usr/lib/python3.12/tempfile.py:1089: in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+/usr/lib/python3.12/tempfile.py:1069: in _rmtree
+    _rmtree(name, onexc=onexc)
+/usr/lib/python3.12/shutil.py:784: in rmtree
+    if os.path.samestat(orig_st, os.fstat(fd)):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s1 = os.stat_result(st_mode=16832, st_ino=391613, st_dev=2096, st_nlink=2, st_uid=1000, st_gid=1000, st_size=4096, st_atime=1791850234, st_mtime=1791850234, st_ctime=1791850234)
+s2 = namespace(st_mode=16749, st_uid=0, st_nlink=2)
+
+>   ???
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'st_ino'
+
+<frozen genericpath>:101: AttributeError
+______ test_specific_vendor_descendant_boundary_not_parent_failure[file] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75eb46c9f6b0>
+bad = 'file'
+
+>   ???
+
+tests/test_opend_staging_window.py:528: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+deploy/aws/opend/stage_console.py:332: in _vendor_tree
+    ???
+<frozen os>:479: in fwalk
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s1 = namespace(st_uid=0, st_mode=16832, st_nlink=2)
+s2 = namespace(st_uid=0, st_mode=16832, st_nlink=2)
+
+>   ???
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'st_ino'
+
+<frozen genericpath>:101: AttributeError
+____ test_specific_vendor_descendant_boundary_not_parent_failure[directory] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75eb46ce3da0>
+bad = 'directory'
+
+>   ???
+
+tests/test_opend_staging_window.py:528: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+deploy/aws/opend/stage_console.py:332: in _vendor_tree
+    ???
+<frozen os>:479: in fwalk
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s1 = namespace(st_uid=0, st_mode=16832, st_nlink=3)
+s2 = namespace(st_uid=0, st_mode=16832, st_nlink=3)
+
+>   ???
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'st_ino'
+
+<frozen genericpath>:101: AttributeError
+_____ test_specific_vendor_descendant_boundary_not_parent_failure[symlink] _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75eb46ce20c0>
+bad = 'symlink'
+
+>   ???
+
+tests/test_opend_staging_window.py:528: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+deploy/aws/opend/stage_console.py:332: in _vendor_tree
+    ???
+<frozen os>:479: in fwalk
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+s1 = namespace(st_uid=0, st_mode=16832, st_nlink=2)
+s2 = namespace(st_uid=0, st_mode=16832, st_nlink=2)
+
+>   ???
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'st_ino'
+
+<frozen genericpath>:101: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_opend_staging_window.py::test_installed_unit_pin_matches_exact_template_bytes
+FAILED tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[link]
+FAILED tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[hardlink]
+FAILED tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[owner]
+FAILED tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[writable]
+FAILED tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[hash]
+FAILED tests/test_opend_staging_window.py::test_specific_vendor_descendant_boundary_not_parent_failure[file]
+FAILED tests/test_opend_staging_window.py::test_specific_vendor_descendant_boundary_not_parent_failure[directory]
+FAILED tests/test_opend_staging_window.py::test_specific_vendor_descendant_boundary_not_parent_failure[symlink]
+9 failed, 70 passed in 7.38s

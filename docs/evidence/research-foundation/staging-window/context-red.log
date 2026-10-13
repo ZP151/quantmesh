@@ -1,0 +1,298 @@
+..................................ssFFFFFFFFFFFFFFss                     [100%]
+================================== FAILURES ===================================
+_______________ test_manager_wrong_authority_denies[User-root] ________________
+
+key = 'User', value = 'root'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+____________ test_manager_wrong_authority_denies[KillMode-process] ____________
+
+key = 'KillMode', value = 'process'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+_____________ test_manager_wrong_authority_denies[Restart-always] _____________
+
+key = 'Restart', value = 'always'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+_________ test_manager_wrong_authority_denies[StandardOutput-journal] _________
+
+key = 'StandardOutput', value = 'journal'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+________ test_manager_wrong_authority_denies[RuntimeMaxUSec-infinity] _________
+
+key = 'RuntimeMaxUSec', value = 'infinity'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+__________ test_manager_wrong_authority_denies[TimeoutStopUSec-16s] ___________
+
+key = 'TimeoutStopUSec', value = '16s'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+_______ test_manager_wrong_authority_denies[DropInPaths-/tmp/override] ________
+
+key = 'DropInPaths', value = '/tmp/override'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+_______________ test_manager_wrong_authority_denies[MainPID-0] ________________
+
+key = 'MainPID', value = '0'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+_____ test_manager_wrong_authority_denies[ControlGroup-/borrowed/global] ______
+
+key = 'ControlGroup', value = '/borrowed/global'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+__________ test_manager_wrong_authority_denies[ActiveState-inactive] __________
+
+key = 'ActiveState', value = 'inactive'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+____ test_manager_wrong_authority_denies[RuntimeDirectory-quantmesh-opend] ____
+
+key = 'RuntimeDirectory', value = 'quantmesh-opend'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+__________ test_manager_wrong_authority_denies[Id-borrowed.service] ___________
+
+key = 'Id', value = 'borrowed.service'
+
+    @pytest.mark.parametrize("key,value", [("User", "root"), ("KillMode", "process"),
+        ("Restart", "always"), ("StandardOutput", "journal"), ("RuntimeMaxUSec", "infinity"),
+        ("TimeoutStopUSec", "16s"), ("DropInPaths", "/tmp/override"), ("MainPID", "0"),
+        ("ControlGroup", "/borrowed/global"), ("ActiveState", "inactive"),
+        ("RuntimeDirectory", "quantmesh-opend"), ("Id", "borrowed.service")])
+    def test_manager_wrong_authority_denies(key, value):
+>       data = manager()
+               ^^^^^^^^^
+
+tests\test_opend_staging_window.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def manager():
+>       value = dict(stage.MANAGER_FIXED)
+                     ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute 'MANAGER_FIXED'
+
+tests\test_opend_staging_window.py:126: AttributeError
+_________________________ test_manager_exact_contract _________________________
+
+    def test_manager_exact_contract():
+>       stage._validate_manager(stage.StagingWindow(permit()), manager())
+        ^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute '_validate_manager'
+
+tests\test_opend_staging_window.py:146: AttributeError
+____ test_generated_configuration_has_fixed_direct_guard_and_no_recording _____
+
+    def test_generated_configuration_has_fixed_direct_guard_and_no_recording():
+>       config = stage._tmux_config(stage.StagingWindow(permit())).decode()
+                 ^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute '_tmux_config'
+
+tests\test_opend_staging_window.py:150: AttributeError
+=========================== short test summary info ===========================
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[User-root]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[KillMode-process]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[Restart-always]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[StandardOutput-journal]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[RuntimeMaxUSec-infinity]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[TimeoutStopUSec-16s]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[DropInPaths-/tmp/override]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[MainPID-0]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[ControlGroup-/borrowed/global]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[ActiveState-inactive]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[RuntimeDirectory-quantmesh-opend]
+FAILED tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[Id-borrowed.service]
+FAILED tests/test_opend_staging_window.py::test_manager_exact_contract - Attr...
+FAILED tests/test_opend_staging_window.py::test_generated_configuration_has_fixed_direct_guard_and_no_recording
+14 failed, 34 passed, 4 skipped in 0.27s

@@ -1,0 +1,415 @@
+{
+  "scope": "external-unmodified-local-synthetic-fixture-only",
+  "packages": [
+    {
+      "name": "libpython3.12-stdlib",
+      "version": "3.12.3-1ubuntu0.17",
+      "license": "PSF-2 / permissive incorporated code",
+      "reason": "Only fixed stdlib imports; full composite copyright retained.",
+      "notice_sha256": "f1cbf908e1daa8789b389fdcf17811ed36b675d736b39a103591399861350382"
+    },
+    {
+      "name": "libc6",
+      "version": "2.39-0ubuntu8.9",
+      "license": "LGPL-2.1+ and permissive exceptions",
+      "reason": "Unmodified dynamically loaded libc, libm, libresolv and loader; corresponding source and Debian build files retained.",
+      "notice_sha256": "d3c95b56fa33e28b57860580f0baf4e4f4de2a268a2b80f1d031a5191bade265"
+    },
+    {
+      "name": "liblzma5",
+      "version": "5.6.1+really5.4.5-1ubuntu0.3",
+      "license": "Public domain / permissive",
+      "reason": "Exact source COPYING states liblzma public domain; GPL scripts/build files and probably-PD/noderivs non-library files are not executing.",
+      "notice_sha256": "a2dc8fac0f496e1c58aff67018cf0c6b88336316afa5642f9335b71642e28aa8"
+    },
+    {
+      "name": "libpython3.12-minimal",
+      "version": "3.12.3-1ubuntu0.17",
+      "license": "PSF-2 / permissive incorporated code",
+      "reason": "Interpreter minimal stdlib; full composite copyright retained.",
+      "notice_sha256": "f1cbf908e1daa8789b389fdcf17811ed36b675d736b39a103591399861350382"
+    },
+    {
+      "name": "libssl3t64",
+      "version": "3.0.13-0ubuntu3.15",
+      "license": "Apache-2.0",
+      "reason": "Unmodified libcrypto for hashlib in reviewed QuantMesh terminal admission; no TLS/network use.",
+      "notice_sha256": "6a7da622fe0637a334d2a8fc470852d2ffb77d9a2b2f930f854e32a41ad6ef35"
+    },
+    {
+      "name": "libffi8",
+      "version": "3.4.6-1build1",
+      "license": "MIT",
+      "reason": "Full notice/source retained; ctypes fixture tool dependency.",
+      "notice_sha256": "737ff68f0eb104d3b0d96b291c3a8f40a775a3ec2b53f9b2e4bcfe3188bde118"
+    },
+    {
+      "name": "libutempter0",
+      "version": "1.2.1-3build1",
+      "license": "LGPL-2.1+",
+      "reason": "Library AND external unmodified helper audited; new private /run/utmp and /var/log/wtmp, no-new-privileges.",
+      "notice_sha256": "8d0ad082a8402aa9b432a33ce630f33bc7d076997ace50f3162eece84f896015"
+    },
+    {
+      "name": "python3.12-minimal",
+      "version": "3.12.3-1ubuntu0.17",
+      "license": "PSF-2 / CNRI / BeOpen / permissive incorporated code",
+      "reason": "Fixed stdlib fixture only. Unused extension modules cannot load missing dynamic dependencies; no readline/sqlite/SSL imported.",
+      "notice_sha256": "f1cbf908e1daa8789b389fdcf17811ed36b675d736b39a103591399861350382"
+    },
+    {
+      "name": "libexpat1",
+      "version": "2.6.1-2ubuntu0.6",
+      "license": "MIT",
+      "reason": "Full notice/source retained.",
+      "notice_sha256": "60919fe1a156395ff14511bb6ff79756c50ade2fff59ac60c9bae1d8a7fe6292"
+    },
+    {
+      "name": "zlib1g",
+      "version": "1:1.3.dfsg-3.1ubuntu2.2",
+      "license": "Zlib",
+      "reason": "Full notice/source retained.",
+      "notice_sha256": "9e5b96d63773a5d177ba264254390f792be07e41748ebd94730981c6cac31cc6"
+    },
+    {
+      "name": "tmux",
+      "version": "3.4-1ubuntu0.1",
+      "license": "ISC/BSD-2/BSD-3/MIT",
+      "reason": "Unmodified external executable; all source headers, Debian notices and patches retained.",
+      "notice_sha256": "9c587ac09a351692c23a910e4e59008d4a5ce66125c7aad1279065f3a272a3e1"
+    },
+    {
+      "name": "libevent-core-2.1-7t64",
+      "version": "2.1.12-stable-9ubuntu2.1",
+      "license": "BSD-3 / BSD-2 / ISC / MIT",
+      "reason": "Core library only; GPL build tools excluded, full source/notices retained.",
+      "notice_sha256": "d32d223a2f96bb222faa1f6d2b4573b512465b2b234f56e040a4d7daab060d69"
+    },
+    {
+      "name": "libtinfo6",
+      "version": "6.4+20240113-1ubuntu2.2",
+      "license": "MIT/X11 / BSD-3",
+      "reason": "Terminfo library; full notices retained.",
+      "notice_sha256": "7c9d2c8dbee48b6f4bbbffb1f370cc5858de11cc4f5a70c5c622c274917e1c65"
+    },
+    {
+      "name": "libsystemd0",
+      "version": "255.4-1ubuntu8.17",
+      "license": "LGPL-2.1+",
+      "reason": "Library only. GPL-only systemd tools/daemons are outside the executing closure. No real system bus or manager is reachable.",
+      "notice_sha256": "a7d06854714a1ca99f6dbd1a1641dde5bcf28635be149f6554449618f8f427f3"
+    },
+    {
+      "name": "libzstd1",
+      "version": "1.5.5+dfsg2-2build1.1",
+      "license": "BSD-3 selected from BSD/GPL dual grant",
+      "reason": "Library; GPL CLI/test tools excluded.",
+      "notice_sha256": "35e85e8e9bbb71492c5f5dddf39ed65b68775a02ad8d710c25d097b497f06c49"
+    },
+    {
+      "name": "liblz4-1",
+      "version": "1.9.4-1build1.1",
+      "license": "BSD-2",
+      "reason": "Library; GPL programs/tests excluded.",
+      "notice_sha256": "d3be0f43fe14da244f97c451bbae789c0acf868612598a69f5f22a289abeca40"
+    },
+    {
+      "name": "libgcrypt20",
+      "version": "1.10.3-2ubuntu0.2",
+      "license": "LGPL-2.1+ / permissive incorporated code",
+      "reason": "Library statement distinguishes GPL manual/tools; these tools are not executed.",
+      "notice_sha256": "40162167dff80843a4b24aa8d0a4ffc50be5338d004ebe38f86ae3397ba9de3e"
+    },
+    {
+      "name": "libgpg-error0",
+      "version": "1.47-3build2.1",
+      "license": "LGPL-2.1+ / BSD",
+      "reason": "Library; GPL-only tools/tests/build files are not executed.",
+      "notice_sha256": "0250e9e7cbf6c68c2bd05b6db1ea684988f91cd95da69f2936064cf302729fe5"
+    },
+    {
+      "name": "libcap2",
+      "version": "1:2.66-5ubuntu2.4",
+      "license": "BSD-3 selected from BSD/GPL dual grant",
+      "reason": "libcap library files permit BSD choice; GPL-only tools/tests excluded.",
+      "notice_sha256": "e60a5642e12e340060e4e519a65b2eb0330be2917854841c644e36268f607d54"
+    },
+    {
+      "name": "libc-bin",
+      "version": "2.39-0ubuntu8.9",
+      "license": "LGPL-2.1+ / permissive locale data",
+      "reason": "Only authenticated C.utf8 locale DATA are used. Tools in this data-supplier package are not executed.",
+      "notice_sha256": "d3c95b56fa33e28b57860580f0baf4e4f4de2a268a2b80f1d031a5191bade265"
+    }
+  ],
+  "source_license_texts": [
+    {
+      "source": "python3.12",
+      "member": "Python-3.12.3/Doc/license.rst",
+      "sha256": "bad93f2d7f71f6729b12cf0080951ace371acaf5e3fd6835118d53cd4bfd9120",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/python3.12-Python-3.12.3_Doc_license.rst"
+    },
+    {
+      "source": "python3.12",
+      "member": "Python-3.12.3/LICENSE",
+      "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/python3.12-Python-3.12.3_LICENSE"
+    },
+    {
+      "source": "python3.12",
+      "member": "Python-3.12.3/Mac/BuildScript/resources/License.rtf",
+      "sha256": "ab6df6040a4e24babad38f98454eb3263722fa6a1c441bfaa271798efbe55f27",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/python3.12-Python-3.12.3_Mac_BuildScript_resources_License.rtf"
+    },
+    {
+      "source": "python3.12",
+      "member": "Python-3.12.3/Modules/expat/COPYING",
+      "sha256": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/python3.12-Python-3.12.3_Modules_expat_COPYING"
+    },
+    {
+      "source": "python3.12",
+      "member": "Python-3.12.3/Tools/msi/bundle/bootstrap/LICENSE.txt",
+      "sha256": "cb95daf98edda8e08a242e1060691b6941f0911692bf468a3f9c5e4b58c09b8f",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/python3.12-Python-3.12.3_Tools_msi_bundle_bootstrap_LICENSE.txt"
+    },
+    {
+      "source": "glibc",
+      "member": "glibc-2.39/COPYING",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/glibc-glibc-2.39_COPYING"
+    },
+    {
+      "source": "glibc",
+      "member": "glibc-2.39/COPYING.LIB",
+      "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/glibc-glibc-2.39_COPYING.LIB"
+    },
+    {
+      "source": "glibc",
+      "member": "glibc-2.39/LICENSES",
+      "sha256": "bba29819a3e938fae92674d6a88533e10605e389da8b51cdcba0a94f6221c5bc",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/glibc-glibc-2.39_LICENSES"
+    },
+    {
+      "source": "xz-utils",
+      "member": "xz-5.4.5/COPYING.GPLv3",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/xz-utils-xz-5.4.5_COPYING.GPLv3"
+    },
+    {
+      "source": "xz-utils",
+      "member": "xz-5.4.5/COPYING.LGPLv2.1",
+      "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/xz-utils-xz-5.4.5_COPYING.LGPLv2.1"
+    },
+    {
+      "source": "xz-utils",
+      "member": "xz-5.4.5/COPYING.GPLv2",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/xz-utils-xz-5.4.5_COPYING.GPLv2"
+    },
+    {
+      "source": "xz-utils",
+      "member": "xz-5.4.5/COPYING",
+      "sha256": "72d7ef9c98be319fd34ce88b45203b36d5936f9c49e82bf3198ffee5e0c7d87e",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/xz-utils-xz-5.4.5_COPYING"
+    },
+    {
+      "source": "openssl",
+      "member": "openssl-3.0.13/LICENSE.txt",
+      "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/openssl-openssl-3.0.13_LICENSE.txt"
+    },
+    {
+      "source": "openssl",
+      "member": "openssl-3.0.13/external/perl/Text-Template-1.56/LICENSE",
+      "sha256": "9837f05336ef3cbacb6a96e1672a0426d81ad01191f214b8d48e22ca62338181",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/openssl-openssl-3.0.13_external_perl_Text-Template-1.56_LICENSE"
+    },
+    {
+      "source": "libffi",
+      "member": "libffi-3.4.6/LICENSE",
+      "sha256": "67894089811f93fca47a76f85e017da6f8582d4ba0905963c6e0f1ad6df7a195",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libffi-libffi-3.4.6_LICENSE"
+    },
+    {
+      "source": "libffi",
+      "member": "libffi-3.4.6/LICENSE-BUILDTOOLS",
+      "sha256": "e67978cd18816c0cb7d29aaaacde7b7447402c2fb321a051698890a8eaedda94",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libffi-libffi-3.4.6_LICENSE-BUILDTOOLS"
+    },
+    {
+      "source": "libutempter",
+      "member": "libutempter-1.2.1/COPYING",
+      "sha256": "ce64d5f7b49ea6d80fdb6d4cdee6839d1a94274f7493dc797c3b55b65ec8e9ed",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libutempter-libutempter-1.2.1_COPYING"
+    },
+    {
+      "source": "expat",
+      "member": "libexpat-R_2_6_1/COPYING",
+      "sha256": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/expat-libexpat-R_2_6_1_COPYING"
+    },
+    {
+      "source": "expat",
+      "member": "libexpat-R_2_6_1/expat/COPYING",
+      "sha256": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/expat-libexpat-R_2_6_1_expat_COPYING"
+    },
+    {
+      "source": "zlib",
+      "member": "zlib-1.3.dfsg/LICENSE",
+      "sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/zlib-zlib-1.3.dfsg_LICENSE"
+    },
+    {
+      "source": "tmux",
+      "member": "tmux-3.4/COPYING",
+      "sha256": "c031bd37f464c534277814f6aa38686fa023d094261d57fd2545ad592bb53ccd",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/tmux-tmux-3.4_COPYING"
+    },
+    {
+      "source": "libevent",
+      "member": "libevent-2.1.12-stable/LICENSE",
+      "sha256": "ff02effc9b331edcdac387d198691bfa3e575e7d244ad10cb826aa51ef085670",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libevent-libevent-2.1.12-stable_LICENSE"
+    },
+    {
+      "source": "libevent",
+      "member": "libevent-2.1.12-stable/cmake/COPYING-CMAKE-SCRIPTS",
+      "sha256": "8c33ed647ccfaa4e682ffe56b677f4d5d0dc51e2ccc40038015df784c7be51dd",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libevent-libevent-2.1.12-stable_cmake_COPYING-CMAKE-SCRIPTS"
+    },
+    {
+      "source": "ncurses",
+      "member": "ncurses-6.4-20240113/COPYING",
+      "sha256": "b2feb54f39529abe226f709a292584fde48a2e5721559fee417d2cdd51cb7cc1",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/ncurses-ncurses-6.4-20240113_COPYING"
+    },
+    {
+      "source": "systemd",
+      "member": "systemd-stable-255.4/LICENSE.GPL2",
+      "sha256": "ab15fd526bd8dd18a9e77ebc139656bf4d33e97fc7238cd11bf60e2b9b8666c6",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/systemd-systemd-stable-255.4_LICENSE.GPL2"
+    },
+    {
+      "source": "systemd",
+      "member": "systemd-stable-255.4/LICENSE.LGPL2.1",
+      "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/systemd-systemd-stable-255.4_LICENSE.LGPL2.1"
+    },
+    {
+      "source": "libzstd",
+      "member": "zstd-1.5.5/COPYING",
+      "sha256": "f9c375a1be4a41f7b70301dd83c91cb89e41567478859b77eef375a52d782505",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libzstd-zstd-1.5.5_COPYING"
+    },
+    {
+      "source": "libzstd",
+      "member": "zstd-1.5.5/LICENSE",
+      "sha256": "7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libzstd-zstd-1.5.5_LICENSE"
+    },
+    {
+      "source": "libzstd",
+      "member": "zstd-1.5.5/build/LICENSE",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libzstd-zstd-1.5.5_build_LICENSE"
+    },
+    {
+      "source": "lz4",
+      "member": "lz4-1.9.4/LICENSE",
+      "sha256": "2949fcf758d3c9bcb05f8393ca42cadfa15be04eb4ae4b3327c4ad7957511e1b",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/lz4-lz4-1.9.4_LICENSE"
+    },
+    {
+      "source": "lz4",
+      "member": "lz4-1.9.4/contrib/djgpp/LICENSE",
+      "sha256": "d011d1e02cb32b71c1ce2922ab41a2e2ad30f4ecf8de22c078d53618205abc05",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/lz4-lz4-1.9.4_contrib_djgpp_LICENSE"
+    },
+    {
+      "source": "lz4",
+      "member": "lz4-1.9.4/examples/COPYING",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/lz4-lz4-1.9.4_examples_COPYING"
+    },
+    {
+      "source": "lz4",
+      "member": "lz4-1.9.4/lib/LICENSE",
+      "sha256": "8b58c446121a109ccf32edc094bba3010a3d85e4ee3702950db55e4d3e87736c",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/lz4-lz4-1.9.4_lib_LICENSE"
+    },
+    {
+      "source": "lz4",
+      "member": "lz4-1.9.4/programs/COPYING",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/lz4-lz4-1.9.4_programs_COPYING"
+    },
+    {
+      "source": "lz4",
+      "member": "lz4-1.9.4/tests/COPYING",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/lz4-lz4-1.9.4_tests_COPYING"
+    },
+    {
+      "source": "libgcrypt20",
+      "member": "libgcrypt-1.10.3/COPYING",
+      "sha256": "32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libgcrypt20-libgcrypt-1.10.3_COPYING"
+    },
+    {
+      "source": "libgcrypt20",
+      "member": "libgcrypt-1.10.3/COPYING.LIB",
+      "sha256": "ca0061fc1381a3ab242310e4b3f56389f28e3d460eb2fd822ed7a21c6f030532",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libgcrypt20-libgcrypt-1.10.3_COPYING.LIB"
+    },
+    {
+      "source": "libgcrypt20",
+      "member": "libgcrypt-1.10.3/LICENSES",
+      "sha256": "819030c60337759c3411dc480a303a4275657a5734e6ae65b24bfb68a7ecc4ef",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libgcrypt20-libgcrypt-1.10.3_LICENSES"
+    },
+    {
+      "source": "libgpg-error",
+      "member": "libgpg-error-1.47/COPYING",
+      "sha256": "231f7edcc7352d7734a96eef0b8030f77982678c516876fcb81e25b32d68564c",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libgpg-error-libgpg-error-1.47_COPYING"
+    },
+    {
+      "source": "libgpg-error",
+      "member": "libgpg-error-1.47/COPYING.LIB",
+      "sha256": "a9bdde5616ecdd1e980b44f360600ee8783b1f99b8cc83a2beb163a0a390e861",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libgpg-error-libgpg-error-1.47_COPYING.LIB"
+    },
+    {
+      "source": "libcap2",
+      "member": "libcap-2.66/cap/License",
+      "sha256": "25210c9964f43dda870d72191ef4de7aafebc3adf72c52d15c16e513c14a7051",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libcap2-libcap-2.66_cap_License"
+    },
+    {
+      "source": "libcap2",
+      "member": "libcap-2.66/License",
+      "sha256": "f58c80bcce8c929db39a23c32e924876e3311f3ffa54f66076c38056d38fa59b",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libcap2-libcap-2.66_License"
+    },
+    {
+      "source": "libcap2",
+      "member": "libcap-2.66/pam_cap/License",
+      "sha256": "f3236a2484acb34f9f995873861f7d62e3692506e10de720a771b27ead26f058",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libcap2-libcap-2.66_pam_cap_License"
+    },
+    {
+      "source": "libcap2",
+      "member": "libcap-2.66/psx/License",
+      "sha256": "afeefd644a3925879c3e8c1a25b08542efa5e5de3f8d9ccd8836af463ecb5a69",
+      "path": "/tmp/quantmesh-tmux-audit-85vknab4/notices/libcap2-libcap-2.66_psx_License"
+    }
+  ],
+  "obligations": "Preserve every copyright/license notice, full LGPL texts and exact corresponding source including Debian patches/build files outside Git. Dynamic libraries stay replaceable; no restrictions on LGPL modification/relinking/reverse engineering. This audit does not authorize core linking/embedding or distribution without accompanying notices/source. No executing MPL dependency identified; source archives can contain nonexecuting GPL/other files whose notices remain intact.",
+  "signature_prerequisite": true,
+  "license_prerequisite": true,
+  "actual_host_or_installation_authority": false
+}

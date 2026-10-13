@@ -3,25 +3,41 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
-Current Task2 refinement: b9d7b5d stagewindow plan dispatchedmanaged4836/
-01a13286-d034-7222-a79d-88cd9c9a08b6; fournewstage guard/unit/test/runbook,
-root-protected max900s authority distinctfromproductionqualification, private
-server-owned terminal/cgroup lifetime independentofoperatorSSHclient. No actual
-vendor/host/manager/backend execution inimplementation. Exacttmux-Dcannotappend
-command perupstreammanual; fixedconfigordering stayswithinapprovedfourfiles.
-Independent5aab234 backend audit dispatchedmanaged13a1/
-01a1328a-154c-7ff3-b870-4deb9926723f; officialsignedtmux3.4Ubuntu/source/closure/
-licences first, thenfreshownednamespace detachedlifetime/cleanup <=90s, metadata
-only/no secrets/globalservice. Installed3.4-1ubuntu0.1 byteobservations are not
-origin/admission proof. Onlytwoactiveimplementation/verifier sessions; allolder
-completed work staysidle. Rootintegration/pins/human/CI/auth/install gates retained;
-wholeA ACTIVE, no newcredential/paid/source operation or qualificationflagchange.
-Liveprogress only:stage4836reports54syntheticnativegreen beforefixedExecStartPost
-orderingchange (backendmanual-Dcannotappendcommand); finalreview/commitproof
-pending.13a1 signedbyteaudit18packages/16sources/24ELF reported, actualfirst
-runtimefailsbeforepane, ownedcleanup/sibling pass. Locale absencehypothesis
-needsauditedlibc-bin data/newfixture plusretainednamespacePID1handles; no blind
-upgrade/repeatedunchangedtrial and no passedbackend/auth/sourceclaim byroot.
+Current accepted checkpoint: Task2 staging software and local backend audit
+are integrated prerequisites, not a server gateway release. Managed4836 is
+completed/idle at b623a56891a5058d8f86eac8387f6bb88acef5b8; four additive files
+integrate through7641eda/f82d5ee. Original production profile/unit/helper and
+validator remain byte-unchanged and blocked. Both review axes close two rounds;
+no third review or completed implementation is redispatched.
+
+Coordinator fresh checks: Windows52 passed/31 Linux skips; native Linux83
+passed/zero skipped/2.16s. Independent synthetic lifecycle observer exit0,
+0.506154s,11 checks/six cases/seven reported PIDs absent/sibling reaped.
+Actual root permit, systemd/cgroup, backend and source-host authority remain
+mocked or absent. Every production/input/auth/SDK/install/market flag is false.
+Raw87 streams, reviews, REDs and root provenance are archived in staging-window.
+
+Managed13a1 is completed/idle on unchanged5aab2346. Official Ubuntu-signed
+tmux3.4-1ubuntu0.1 audit covers20 packages/17 source groups/27 executing ELF
+and UTF8 data. Root independently checks216 signed/hash/mapping/kernel/cleanup
+facts, exit0, without another runtime. Real owned namespace detached creation
+client exit/lifetime/stop proof is0.679403s; it is not interactive SSH detach or
+actual stage-template/systemd acceptance. Private utmp/wtmp and identity-bound
+socket cleanup are fixture facts. The older signed libevent snapshot is for
+reproducibility, not a current production-security recommendation.
+Raw45 streams plus4457-file external inventory are archived in terminal-backend;
+full ignored packages/sources/native assets remain retained, no worktree removal.
+
+No implementation session remains active. Root owns the release packet and
+shared integration. Next: exact ClassC CI/two-human/safety-owner review, merged
+release, target package security/closure admission, real protected installation,
+manager/cgroup/private human-terminal lifecycle and approved operator window.
+Only then vendor login, acknowledged original SDK and source/calendar/browser
+acceptance can qualify PC independence. PR166 is still OPEN at da6e8c7 with no
+human reviews/merge; current read-only GitHub check confirms this, no CI rerun.
+Engine/provider/PR166 human requests already pending; do not repeat or infer
+approval. No new credential, paid resource/model call, market request, server
+operation or anonymous SDK retry. Full Option A remains ACTIVE;168h on-demand.
 
 Private-terminal#169 localprerequisite accepted:2088 idle/completedf99b020→root83517eb,
 3filesbyteequal, originalandrootnative38/0skip/defaultpreflight2/fixture0.
@@ -815,3 +831,42 @@ bounded only-owned cleanup. No cloud/S3/paid/networkruntime/global/source/model
 action; root ownssharedledgers/integration. SDK69d3/source4a9b/bootstrap5bc4/PGc7be
 idle; backup is onlycurrentimplementation. Finalsource/auth/Engine/provider/
 production/release/human/CI/usergates remain open; fullgoalACTIVE,168h on-demand.
+
+## Coordinator acceptance — staging software and audited terminal backend
+
+Planner advances only the disarmed staging window and local backend prerequisite;
+root-owned expiry authority is distinct from production qualification. Quant
+researcher records no market/model/numerical efficacy. Implementer4836 delivers
+four additive files at b623a568, integrated7641eda/f82d5ee; original protected
+profile/unit/validator/helper are unchanged. Reviewers close Spec/Standards R1
+admission-test/ancestor/order findings and R2 disposition, no third round.
+
+Verifier root checks exact file equivalence and reruns52 Windows/31 native skips,
+83 actual Linux/zero skips, independent synthetic expiry/HUP/blocked/parent-loss/
+missing-handle/interrupted-registration proof and whole Ruff/format. Fresh root
+observer has11 checks,0.506154s, seven fixture PIDs absent, owned sibling reaped;
+manager/root/backend/host are explicitly mocked. Default preflight is exit2.
+
+Independent completed13a1 performs only ignored audit/native work. Five signed
+Ubuntu indices,20 packages/17 sources/27 reachable ELF, source notices and
+authenticated locale data precede execution. Root independently reparses216
+checks without replay or modifying original receipts. Native detached creation
+client exits, two metadata clients observe the same live server/pane, server0/
+paneHUP/reap/PID1 terminal/sibling survival/socket identity cleanup pass0.679403s.
+No actual human attach/SSH detach or stage-template/systemd/cgroup was tested.
+libutempter writes are private to fixture utmp/wtmp, not a global-host guarantee.
+The signed older libevent snapshot retains reproducibility only, not a production
+security recommendation. All auth/source/production flags remain false.
+
+Archives: terminal-backend45 raw streams/full4457-file external inventory;
+staging-window87 raw streams/root JUnit/provenance/reviews/REDs. Packages/source
+archives/binaries/native roots stay outside Git and remain retained. No active
+implementation, redispatch, actual host installation, login, source read, paid
+resource/API call or deployment follows. Exact ClassC CI/human/safety-owner,
+target closure/security, protected host/manager/private terminal, operator
+window/original SDK ACK/calendar/source/browser/rollback remain release gates.
+PR166 fresh GitHub state OPEN/exactda6e8c7/reviews[]/mergeCommitnull; no rerun.
+Full goal ACTIVE; existing Engine/model/PR166 prerequisites remain pending.
+
+Final related Windows regression checks pass105/34 explicit Linux skips/5 existing warnings/7.26s/exit0 across protected profile, private-terminal and server-witness tests. No production code changes followed. Raw upstream notice whitespace is preserved through an exact all-notices.txt attribute exception; archive byte hashes stay unchanged.
+Archive verifier initially detects Windows case-insensitive SHA256.json/sha256.json collision; original producer inventory is restored byte-exact and coordinator inventory renamed archive-sha256.json. Separate byte-provenance corrections retain the original normalized-text hash records and state actual on-disk script hashes after Windows newline translation. No producer receipt/runtime is changed or replayed. Final raw132 streams hash-match.

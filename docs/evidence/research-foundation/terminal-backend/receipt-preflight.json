@@ -1,0 +1,39 @@
+{
+  "checks": {
+    "no_candidate_executed": true
+  },
+  "commands": [],
+  "false_flags": {
+    "production_release_qualified": false,
+    "actual_systemd_cgroup": false,
+    "source_host_private_input_verified": false,
+    "private_input_verified": false,
+    "operator_authenticated": false,
+    "sdk_wire_verified": false,
+    "market_verified": false,
+    "installation_approved": false,
+    "pc_independence_verified": false
+  },
+  "isolation": {
+    "pid": 1,
+    "uid": 0,
+    "uid_map": "0       1000          1",
+    "namespaces": {
+      "user": 4026532228,
+      "net": 4026532231,
+      "mnt": 4026532229,
+      "pid": 4026532230
+    },
+    "interfaces": [
+      "lo"
+    ],
+    "no_route": true,
+    "chroot": true,
+    "private_devpts": true,
+    "private_utmp": true,
+    "bare_home": true,
+    "no_new_privs": "NoNewPrivs:\t1"
+  },
+  "status": "passed",
+  "elapsed_inner_seconds": 0.007793647000653436
+}

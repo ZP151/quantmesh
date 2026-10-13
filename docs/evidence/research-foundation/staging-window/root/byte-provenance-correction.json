@@ -1,0 +1,10 @@
+{
+  "script": "native-proof.py",
+  "actual_file_byte_sha256": "8bd81130d1adfc312c931f4320051bf210a241b610fc140249f75fffd9631179",
+  "initial_text_encoding_hash": "fc3af474d15f7fa5ae74e04dbdad3ef249d957f64d1e4adcf893882c1198a13c",
+  "text_encoding_hash_matches_file": false,
+  "cause": "Windows write_text newline translation; initial hash was of normalized text, not on-disk bytes",
+  "original_provenance_retained": true,
+  "runtime_replayed": false,
+  "producer_receipts_modified": false
+}

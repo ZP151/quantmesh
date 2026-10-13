@@ -1,0 +1,6 @@
+{
+  "original_checker_sha256": "41b040572d4fb2784a6aee97cb3216bfade8c50267e925a2b13e4ab2dac94af1",
+  "root_checker_sha256": "5286d61506d6e9435263beed4ba9b1d28696623a26fe5ae82f69c799631e6735",
+  "changes": "explicit original input and new output paths; removed already-completed old-socket mutation; no runtime replay",
+  "upstream_receipts_modified": false
+}

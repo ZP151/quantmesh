@@ -199,3 +199,24 @@ Official surfaces rechecked for this extension:
 - Time-format drift (the SDK's venue-local strings) is the likeliest
   Phase E adjustment; the adapter's parse formats are centralized in one
   module.
+
+## Server staging authority decision — 2026-10-13
+
+A separately reviewed, disarmed staging template may hold an expiring root-owned
+qualification window of at most900 seconds, with15-second stop grace. A permit
+binds reviewed source/vendor/config/backend bytes, target machine and dedicated
+identity, ClassC CI/two-human/safety-owner and explicit operator claims. It does
+not establish input privacy, authentication, SDK handshake, installation or source
+success; the production profile and its qualification guard remain blocked.
+
+Foreground tmux owns a private pane independently of an SSH creation client.
+Its post-exec fixed client creates the guarded pane without shell interpolation;
+the guard sets and admits private0600/echo-off descriptors before gated release.
+The application/assistant never receives login inputs. Root/same-UID operator
+remain trusted. Actual manager/cgroup descendant cleanup, global-record suppression,
+interactive client loss and host closure/security require their own observed
+acceptance; local synthetic software and isolated backend proofs are insufficient.
+No upstream source or binary is embedded in the application closure. External
+unmodified LGPL OS/helper obligations remain separate and retained in the audited
+archive. Source acceptance still requires original SDK ACK plus real calendar-aware
+market/browser evidence. This decision authorizes no actual host launch or login.

@@ -39,19 +39,53 @@ remains mandatory before any market acceptance or production promotion.
 
 ## Required staged sequence
 
-1. Qualify operator input/lifecycle on a new owned native synthetic fixture.
-   Prove private terminal ownership/mode, echo suppression, no transcript or
-   journal capture, no assistant-readable credential relay, and process/TTY
-   closure after operator disconnect and failed initialization. A sensitive
+### Current prerequisite evidence
+
+The local private-terminal qualifier is integrated and accepted within its
+synthetic scope. The four-file disarmed staging candidateb623a568 integrates
+through7641eda/f82d5ee, with both review axes closed at round2. Root fresh
+native83/zero skips and Windows52/31 native skips pass; original production
+profile/unit/validator/private helper remain unchanged. See
+[staging software receipts](../evidence/research-foundation/staging-window/README.md).
+
+The separate signed Ubuntu tmux3.4-1ubuntu0.1 audit covers20 packages/17 sources/
+27 executing ELF and locale data. Root independent216 checks and the owned
+0.679403-second detached-creation-client proof pass. This is not an interactive
+SSH detach, source-host systemd or stage-template execution witness. See
+[backend audit](../evidence/research-foundation/terminal-backend/README.md).
+The exact older signed dependency snapshot is reproducible, but production
+security/current target closure admission remains open; no silent upgrade or
+dependency permission broadening is authorized.
+
+Exact staging launcher SHA256:
+`2aabead42bb8211da1a7e9fa81b8f06e48b9b655e1651f992edcfdfa5be6eef4`.
+Stage template SHA256:
+`e108294e59e624d17b0f75034930c9ae3fe1f3d3353c44a90586069e1e0cfdac`.
+Audited tmux package SHA256:
+`2913e17aa61879d1f905aab6f374f153f1ece63aefba1b996e387325d1d5338d`;
+executable SHA256:
+`034b15c64035f783d43862f2775eb4828f61571ca62c8199796000b97d556ecd`.
+These are software/audit pins, not an operator window or host permit.
+
+### Sequence and remaining live release gates
+
+1. Local synthetic input/lifecycle prerequisite is accepted in the archived
+   private-terminal and staging proofs; do not rerun completed fixtures.
+   Actual host acceptance must verify private terminal ownership/mode, echo
+   suppression, no transcript/journal capture or assistant credential relay,
+   and closure after owned terminal HUP, expiry and failed initialization. The
+   server-owned pane must survive loss of a mere SSH attach client; actual
+   host/client-loss and descendant cleanup require separate observation. A sensitive
    marker stays within the fixture and is never archived. Preserve timeout,
-   cleanup, sibling and negative permission/identity receipts. Current
-   `/run/quantmesh-opend/operator-tty` is a proposal, not a qualified device.
-2. Implement only the bounded staging/qualification phase needed to avoid the
+   cleanup, sibling and negative permission/identity receipts. The actual nonce
+   runtime/pane device has not been created or qualified on the source host.
+2. The bounded staging/qualification software is integrated to avoid the
    current admission cycle: the production unit correctly refuses startup until
    wire/private-input/auth are qualified. A separately reviewed one-shot staged
    launch must therefore have its own explicit authority and expiry; it cannot
-   set those flags merely to bypass the production guard. No current script is
-   authorized to bypass it. Keep implementation scope independent from market
+   set those flags merely to bypass the production guard. The integrated staging
+   software is still disarmed; no live invocation is authorized yet. Keep scope
+   independent from market
    collection, core settings and trading.
 3. Present the exact reviewed/merged staging script, SDK closure hashes,
    terminal proof, host identity, process owner, deadline and rollback packet.
@@ -59,6 +93,14 @@ remains mandatory before any market acceptance or production promotion.
    host installation. Obtain the operator's explicit authentication window.
    Notify of new-device verification and possible quote-authority transfer.
    Do not request an account password or verification code in chat.
+   Admit the actual target package/OS closure and fixed UID/GID, protected tree
+   and complete-file machine hash convention. Test manager/pane ownership,
+   descendants, detach/expiry/HUP and runtime socket cleanup using only newly
+   owned synthetic resources before vendor input. libutempter must not write
+   global utmp/wtmp, and libsystemd bus/cgroup effects must respect the exact
+   unit boundary. Do not add writable global paths to force acceptance.
+   A surviving socket is removed only after its owned backend is terminal and
+   its recorded inode/device/owner still match. Unknown authority stops here.
 4. The operator opens their own private SSH terminal and enters login only in
    the vendor interface. The assistant does not read that terminal, capture its
    output, receive inputs or save state/logs. Do not select remembering. Pause
@@ -86,6 +128,9 @@ automatic GUI/latest-version fallback. A failed staged test is not permission to
 restart the old collector. Vendor reauthentication after host/process restart
 remains human work and operational recovery remains separately unaccepted.
 
-No new operator action is requested yet: steps1–3 must produce concrete reviewable
-artifacts first. Independent backup work continues. Native Linux Worker Engine
+No new login/operator action is requested yet: software/local prerequisites
+are accepted, but ClassC CI/human/merged release and actual host prerequisites
+must pass first. Owned local backup qualification is complete only for fixture
+   reports; actual off-host/Worker-generated recovery remains open. Native Linux
+   Worker Engine
 and model metadata/API-key prerequisites remain separate from this source path.

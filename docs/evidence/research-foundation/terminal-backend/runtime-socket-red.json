@@ -1,0 +1,279 @@
+{
+  "checks": {
+    "missing_handle_refused": true,
+    "replaced_identity_refused": true,
+    "originating_client_exited": true,
+    "new_client_observed_same_identity": true,
+    "pane_alive_after_clients_exit": true,
+    "history_disabled": true,
+    "server_terminal_after_stop": true,
+    "pane_terminal_after_stop": true,
+    "known_sibling_survived_server_stop": true,
+    "socket_unlinked": false
+  },
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/tmux",
+        "-S",
+        "/run/fixture.sock",
+        "-f",
+        "/proof/tmux.conf",
+        "-N",
+        "new-session",
+        "-d",
+        "-s",
+        "fixture",
+        "-x",
+        "80",
+        "-y",
+        "24",
+        "/usr/bin/python3.12",
+        "-I",
+        "-S",
+        "/proof/pane.py"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "discarded; no terminal stream retained"
+    },
+    {
+      "argv": [
+        "/usr/bin/tmux",
+        "-S",
+        "/run/fixture.sock",
+        "-f",
+        "/proof/tmux.conf",
+        "-N",
+        "display-message",
+        "-p",
+        "-t",
+        "fixture",
+        "#{pid}:#{pane_pid}:#{pane_id}:#{pane_tty}:#{session_attached}:#{pane_dead}"
+      ],
+      "exit": 0,
+      "stdout": "3:5:%0:/dev/pts/0:0:0\n",
+      "stderr": "discarded; no terminal stream retained"
+    },
+    {
+      "argv": [
+        "/usr/bin/tmux",
+        "-S",
+        "/run/fixture.sock",
+        "-f",
+        "/proof/tmux.conf",
+        "-N",
+        "list-clients",
+        "-F",
+        "#{client_pid}"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "discarded; no terminal stream retained"
+    },
+    {
+      "argv": [
+        "/usr/bin/tmux",
+        "-S",
+        "/run/fixture.sock",
+        "-f",
+        "/proof/tmux.conf",
+        "-N",
+        "display-message",
+        "-p",
+        "-t",
+        "fixture",
+        "#{pid}:#{pane_pid}:#{pane_id}:#{pane_tty}:#{session_attached}:#{pane_dead}"
+      ],
+      "exit": 0,
+      "stdout": "3:5:%0:/dev/pts/0:0:0\n",
+      "stderr": "discarded; no terminal stream retained"
+    },
+    {
+      "argv": [
+        "/usr/bin/tmux",
+        "-S",
+        "/run/fixture.sock",
+        "-f",
+        "/proof/tmux.conf",
+        "-N",
+        "show-options",
+        "-g",
+        "-v",
+        "history-limit"
+      ],
+      "exit": 0,
+      "stdout": "0\n",
+      "stderr": "discarded; no terminal stream retained"
+    },
+    {
+      "argv": [
+        "/usr/bin/tmux",
+        "-S",
+        "/run/fixture.sock",
+        "-f",
+        "/proof/tmux.conf",
+        "-N",
+        "kill-server"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "discarded; no terminal stream retained"
+    }
+  ],
+  "false_flags": {
+    "production_release_qualified": false,
+    "actual_systemd_cgroup": false,
+    "source_host_private_input_verified": false,
+    "private_input_verified": false,
+    "operator_authenticated": false,
+    "sdk_wire_verified": false,
+    "market_verified": false,
+    "installation_approved": false,
+    "pc_independence_verified": false
+  },
+  "isolation": {
+    "pid": 1,
+    "uid": 0,
+    "uid_map": "0       1000          1",
+    "namespaces": {
+      "user": 4026532228,
+      "net": 4026532231,
+      "mnt": 4026532229,
+      "pid": 4026532230
+    },
+    "interfaces": [
+      "lo"
+    ],
+    "no_route": true,
+    "chroot": true,
+    "private_devpts": true,
+    "private_utmp": true,
+    "bare_home": true,
+    "no_new_privs": "NoNewPrivs:\t1"
+  },
+  "server_before_release": {
+    "pid": 3,
+    "ticks": "650679",
+    "ns": {
+      "user": 4026532228,
+      "net": 4026532231,
+      "mnt": 4026532229,
+      "pid": 4026532230
+    },
+    "pidfd_owned": true,
+    "held_before_exec": true
+  },
+  "socket": {
+    "mode": 384,
+    "uid": 0,
+    "inode": 390283,
+    "dev": 2096
+  },
+  "pane": {
+    "pid": 5,
+    "ppid": 3,
+    "tty": "/dev/pts/0",
+    "terminal": {
+      "descriptors": [
+        {
+          "fd": 0,
+          "device": 81,
+          "inode": 3,
+          "rdev": 34816
+        },
+        {
+          "fd": 1,
+          "device": 81,
+          "inode": 3,
+          "rdev": 34816
+        },
+        {
+          "fd": 2,
+          "device": 81,
+          "inode": 3,
+          "rdev": 34816
+        }
+      ],
+      "owner_uid": 0,
+      "mode": 384,
+      "echo": false,
+      "echonl": false
+    },
+    "negatives": {
+      "wrong-owner": "wrong_owner",
+      "nonprivate-mode": "nonprivate_mode",
+      "echo-enabled": "echo_enabled",
+      "not-tty": "not_terminal",
+      "wrong-output-direction": "descriptor_access",
+      "mismatched-tty": "terminal_mismatch"
+    },
+    "namespace": {
+      "user": 4026532228,
+      "net": 4026532231,
+      "mnt": 4026532229,
+      "pid": 4026532230
+    },
+    "no_new_privs": "NoNewPrivs:\t1",
+    "stdout_bytes": 0,
+    "stdin_bytes": 0
+  },
+  "metadata_before": "3:5:%0:/dev/pts/0:0:0",
+  "metadata_after": "3:5:%0:/dev/pts/0:0:0",
+  "maps": {
+    "server": [
+      "/usr/bin/tmux",
+      "/usr/lib/locale/C.utf8/LC_CTYPE",
+      "/usr/lib/locale/C.utf8/LC_TIME",
+      "/usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache",
+      "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+      "/usr/lib/x86_64-linux-gnu/libc.so.6",
+      "/usr/lib/x86_64-linux-gnu/libcap.so.2.66",
+      "/usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1",
+      "/usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.3",
+      "/usr/lib/x86_64-linux-gnu/libgpg-error.so.0.34.0",
+      "/usr/lib/x86_64-linux-gnu/liblz4.so.1.9.4",
+      "/usr/lib/x86_64-linux-gnu/liblzma.so.5.4.5",
+      "/usr/lib/x86_64-linux-gnu/libm.so.6",
+      "/usr/lib/x86_64-linux-gnu/libresolv.so.2",
+      "/usr/lib/x86_64-linux-gnu/libsystemd.so.0.38.0",
+      "/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4",
+      "/usr/lib/x86_64-linux-gnu/libutempter.so.1.2.1",
+      "/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5"
+    ],
+    "pane": [
+      "/usr/bin/python3.12",
+      "/usr/lib/locale/C.utf8/LC_CTYPE",
+      "/usr/lib/python3.12/lib-dynload/_hashlib.cpython-312-x86_64-linux-gnu.so",
+      "/usr/lib/python3.12/lib-dynload/_json.cpython-312-x86_64-linux-gnu.so",
+      "/usr/lib/python3.12/lib-dynload/_lzma.cpython-312-x86_64-linux-gnu.so",
+      "/usr/lib/python3.12/lib-dynload/termios.cpython-312-x86_64-linux-gnu.so",
+      "/usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache",
+      "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+      "/usr/lib/x86_64-linux-gnu/libc.so.6",
+      "/usr/lib/x86_64-linux-gnu/libcrypto.so.3",
+      "/usr/lib/x86_64-linux-gnu/libexpat.so.1.9.1",
+      "/usr/lib/x86_64-linux-gnu/liblzma.so.5.4.5",
+      "/usr/lib/x86_64-linux-gnu/libm.so.6",
+      "/usr/lib/x86_64-linux-gnu/libz.so.1.3"
+    ]
+  },
+  "pane_exit": -1,
+  "server_exit": 0,
+  "sibling_exit": -9,
+  "private_utmp_metadata": {
+    "run/utmp": {
+      "bytes": 384,
+      "inode": 390272,
+      "uid": 0
+    },
+    "var/log/wtmp": {
+      "bytes": 768,
+      "inode": 390273,
+      "uid": 0
+    }
+  },
+  "status": "pending",
+  "diagnostic": "RuntimeError:required-check-failed",
+  "elapsed_inner_seconds": 0.6756355590005114
+}

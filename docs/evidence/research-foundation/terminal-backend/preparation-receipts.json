@@ -1,0 +1,222 @@
+[
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libpython3.12-stdlib_3.12.3-1ubuntu0.17_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libc6_2.39-0ubuntu8.9_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/liblzma5_5.6.1+really5.4.5-1ubuntu0.3_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libpython3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libssl3t64_3.0.13-0ubuntu3.15_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libffi8_3.4.6-1build1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libutempter0_1.2.1-3build1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/python3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libexpat1_2.6.1-2ubuntu0.6_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/zlib1g_1.3.dfsg-3.1ubuntu2.2_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/tmux_3.4-1ubuntu0.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libevent-core-2.1-7t64_2.1.12-stable-9ubuntu2.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libtinfo6_6.4+20240113-1ubuntu2.2_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libsystemd0_255.4-1ubuntu8.17_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libzstd1_1.5.5+dfsg2-2build1.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/liblz4-1_1.9.4-1build1.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libgcrypt20_1.10.3-2ubuntu0.2_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libgpg-error0_1.47-3build2.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libcap2_2.66-5ubuntu2.4_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libc-bin_2.39-0ubuntu8.9_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/fixture-root-v3"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

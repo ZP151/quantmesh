@@ -1,0 +1,16 @@
+
+=================================== ERRORS ====================================
+_____________ ERROR collecting tests/test_opend_staging_window.py _____________
+tests\test_opend_staging_window.py:16: in <module>
+    SPEC.loader.exec_module(stage)
+<frozen importlib._bootstrap_external>:1023: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1160: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1218: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\15492\\.codex-clean\\worktrees\\4836\\QuantMesh\\deploy\\aws\\opend\\stage_console.py'
+=========================== short test summary info ===========================
+ERROR tests/test_opend_staging_window.py - FileNotFoundError: [Errno 2] No su...
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.24s

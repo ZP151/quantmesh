@@ -1,0 +1,1574 @@
+[
+  {
+    "argv": [
+      "gpg",
+      "--batch",
+      "--no-options",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--no-default-keyring",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--with-colons",
+      "--fingerprint"
+    ],
+    "exit": 0,
+    "stdout": "tru::1:1791849372:0:3:1:5\npub:-:4096:1:3B4FE6ACC0B21F32:1336770936:::-:::scSC::::::23::0:\nfpr:::::::::790BC7277767219C42C86F933B4FE6ACC0B21F32:\nuid:-::::1336770936::B7A02867A0C1D32B594B36C00E20C8C57E397748::Ubuntu Archive Automatic Signing Key (2012) <ftpmaster@ubuntu.com>::::::::::0:\npub:-:4096:1:D94AA3F0EFE21092:1336774248:::-:::scSC::::::23::0:\nfpr:::::::::843938DF228D22F7B3742BC0D94AA3F0EFE21092:\nuid:-::::1336774248::77355A0B96082B2694009775B6490C605BD16B6F::Ubuntu CD Image Automatic Signing Key (2012) <cdimage@ubuntu.com>::::::::::0:\npub:-:4096:1:871920D1991BC93C:1537196506:::-:::scSC::::::23::0:\nfpr:::::::::F6ECB3762474EDA9D21B7022871920D1991BC93C:\nuid:-::::1537196506::BE438F08F546424C0EA810FD722053597EB5127B::Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>::::::::::0:\n",
+    "stderr": ""
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/dists/noble/InRelease",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/noble/InRelease",
+    "sha256": "cdb2f31d809f589719a53c6ad15f255b27569c4059542ada282aaa21b8e164b0",
+    "bytes": 255850
+  },
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/noble/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID GVnDvebl2qOVy2n1fx2yPFLiSUA 2024-04-25 1714057881\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2024-04-25 1714057881 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Thu Apr 25 23:11:21 2024 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/dists/noble/main/binary-amd64/Packages.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/noble/main/binary-amd64/Packages.xz",
+    "sha256": "2a6a199e1031a5c279cb346646d594993f35b1c03dd4a82aaa0323980dd92451",
+    "bytes": 1401160
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/dists/noble/main/source/Sources.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/noble/main/source/Sources.xz",
+    "sha256": "4f8e45d8f84dd2a6b7ce87695c70336114b9e96e6fd6db066c115f758e39308e",
+    "bytes": 1383940
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/dists/noble-updates/InRelease",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/noble-updates/InRelease",
+    "sha256": "1e24e6e43e609de401dfeede9724139b8ab76a8a688fc39327fb40fdd45efddd",
+    "bytes": 126125
+  },
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/noble-updates/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID pBBNGChaUJPdrD0Ba2Ty2SQdgFE 2026-10-12 1791830808\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-10-12 1791830808 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Tue Oct 13 02:46:48 2026 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/dists/noble-updates/main/binary-amd64/Packages.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/noble-updates/main/binary-amd64/Packages.xz",
+    "sha256": "8667ae3c811ddd36987f1a7cb9184678d9b37630b81fcf64c9290d2b511a86b2",
+    "bytes": 1374908
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/dists/noble-updates/main/source/Sources.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/noble-updates/main/source/Sources.xz",
+    "sha256": "532c57390c1c0d2fc0b7a22158583a9b751676842690a6ce8608d17e35796012",
+    "bytes": 551376
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/dists/noble-security/InRelease",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/noble-security/InRelease",
+    "sha256": "0762124ebfc6d9149d7838baabf15bb48461dce96d7d3aa462c0426e91a2767a",
+    "bytes": 126127
+  },
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/noble-security/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID 2rEC7jmofz5Xh4TPexyP087X7QI 2026-10-12 1791809913\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-10-12 1791809913 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Mon Oct 12 20:58:33 2026 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/dists/noble-security/main/binary-amd64/Packages.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/noble-security/main/binary-amd64/Packages.xz",
+    "sha256": "7b50183d1ecce29c2bc45bde974812f9fa0a3d4db496e4868d56436046390156",
+    "bytes": 1122272
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/dists/noble-security/main/source/Sources.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/noble-security/main/source/Sources.xz",
+    "sha256": "92abc424e835943efba5e6d5eccd2a739435fdcec961794d70baa118185bff54",
+    "bytes": 299188
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/dists/noble-updates/InRelease",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-updates/InRelease",
+    "sha256": "1067ea23399f3f4d1a67448985da849a02d63c879602850ee82014c530539820",
+    "bytes": 126125
+  },
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-updates/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID SorVzUyNBhISixxZ8SMs6J/GR2E 2026-09-24 1790271406\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-09-24 1790271406 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Fri Sep 25 01:36:46 2026 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/dists/noble-updates/main/binary-amd64/Packages.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-updates/main/binary-amd64/Packages.xz",
+    "sha256": "b97a9e1fa53fef163ea68cd9b9bd66fd3ea44a721a13b11cf12ee1e10ad5abdd",
+    "bytes": 1308684
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/dists/noble-updates/main/source/Sources.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-updates/main/source/Sources.xz",
+    "sha256": "8f3548b3adc0a64c7879bd0f7145f6791499b71da1880ecc60798f28ec419e81",
+    "bytes": 538440
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/dists/noble-security/InRelease",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-security/InRelease",
+    "sha256": "c78e93aea915852f166576a1b2ed8222f1e19bf8148ca65da24beb4736517e88",
+    "bytes": 126127
+  },
+  {
+    "argv": [
+      "gpgv",
+      "--homedir",
+      "/tmp/quantmesh-tmux-audit-85vknab4",
+      "--keyring",
+      "/tmp/quantmesh-tmux-audit-85vknab4/ubuntu-archive-keyring.gpg",
+      "--status-fd",
+      "1",
+      "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-security/InRelease"
+    ],
+    "exit": 0,
+    "stdout": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0\n[GNUPG:] SIG_ID +IKT78AKmgQ7fcGpmMGtOjaMjDg 2026-09-24 1790266060\n[GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\n[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-09-24 1790266060 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C\n",
+    "stderr": "gpgv: Signature made Fri Sep 25 00:07:40 2026 +08\ngpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C\ngpgv: Good signature from \"Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>\"\n"
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/dists/noble-security/main/binary-amd64/Packages.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-security/main/binary-amd64/Packages.xz",
+    "sha256": "57863e1835327e992edb3237f4308df2738bd2aae458c3cc795f66bc60d4bc22",
+    "bytes": 1052656
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/dists/noble-security/main/source/Sources.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/20260924T180000Z/noble-security/main/source/Sources.xz",
+    "sha256": "9d4a30942843f378f1a5035cc53e8b89dca7f36ba6f308ab871b400b6fdb4f85",
+    "bytes": 285548
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/utempter/utempter"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x2d18 contains 27 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000c (INIT)               0x1000\n 0x000000000000000d (FINI)               0x1a1c\n 0x0000000000000019 (INIT_ARRAY)         0x3d08\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x3d10\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x3b0\n 0x0000000000000005 (STRTAB)             0x690\n 0x0000000000000006 (SYMTAB)             0x3d8\n 0x000000000000000a (STRSZ)              374 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000015 (DEBUG)              0x0\n 0x0000000000000003 (PLTGOT)             0x3f08\n 0x0000000000000002 (PLTRELSZ)           504 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x990\n 0x0000000000000007 (RELA)               0x8a0\n 0x0000000000000008 (RELASZ)             240 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW PIE\n 0x000000006ffffffe (VERNEED)            0x840\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x806\n 0x000000006ffffff9 (RELACOUNT)          3\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/utempter/utempter"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Position-Independent Executable file)\nEntry point 0x1930\nThere are 13 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040\n                 0x00000000000002d8 0x00000000000002d8  R      0x8\n  INTERP         0x0000000000000318 0x0000000000000318 0x0000000000000318\n                 0x000000000000001c 0x000000000000001c  R      0x1\n      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000b88 0x0000000000000b88  R      0x1000\n  LOAD           0x0000000000001000 0x0000000000001000 0x0000000000001000\n                 0x0000000000000a29 0x0000000000000a29  R E    0x1000\n  LOAD           0x0000000000002000 0x0000000000002000 0x0000000000002000\n                 0x0000000000000294 0x0000000000000294  R      0x1000\n  LOAD           0x0000000000002d08 0x0000000000003d08 0x0000000000003d08\n                 0x0000000000000308 0x0000000000000310  RW     0x1000\n  DYNAMIC        0x0000000000002d18 0x0000000000003d18 0x0000000000003d18\n                 0x00000000000001f0 0x00000000000001f0  RW     0x8\n  NOTE           0x0000000000000338 0x0000000000000338 0x0000000000000338\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  NOTE           0x0000000000000368 0x0000000000000368 0x0000000000000368\n                 0x0000000000000044 0x0000000000000044  R      0x4\n  GNU_PROPERTY   0x0000000000000338 0x0000000000000338 0x0000000000000338\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  GNU_EH_FRAME   0x00000000000021a4 0x00000000000021a4 0x00000000000021a4\n                 0x0000000000000034 0x0000000000000034  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x0000000000002d08 0x0000000000003d08 0x0000000000003d08\n                 0x00000000000002f8 0x00000000000002f8  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     \n   01     .interp \n   02     .interp .note.gnu.property .note.gnu.build-id .note.ABI-tag .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt \n   03     .init .plt .plt.got .plt.sec .text .fini \n   04     .rodata .eh_frame_hdr .eh_frame \n   05     .init_array .fini_array .dynamic .got .data .bss \n   06     .dynamic \n   07     .note.gnu.property \n   08     .note.gnu.build-id .note.ABI-tag \n   09     .note.gnu.property \n   10     .eh_frame_hdr \n   11     \n   12     .init_array .fini_array .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/utempter/utempter"
+    ],
+    "exit": 0,
+    "stdout": "libutempter0:amd64: /usr/lib/x86_64-linux-gnu/utempter/utempter\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libutempter0:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libutempter0\t1.2.1-3build1\tamd64\tlibutempter\t1.2.1-3build1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x37e58 contains 19 entries:\n  Tag        Type                         Name/Value\n 0x000000000000000e (SONAME)             Library soname: [ld-linux-x86-64.so.2]\n 0x0000000000000004 (HASH)               0x2f0\n 0x000000006ffffef5 (GNU_HASH)           0x430\n 0x0000000000000005 (STRTAB)             0x950\n 0x0000000000000006 (SYMTAB)             0x590\n 0x000000000000000a (STRSZ)              714 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000007 (RELA)               0xd60\n 0x0000000000000008 (RELASZ)             72 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0xc70\n 0x000000006ffffffd (VERDEFNUM)          7\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffff0 (VERSYM)             0xc1a\n 0x0000000000000024 (RELR)               0xda8\n 0x0000000000000023 (RELRSZ)             24 (bytes)\n 0x0000000000000025 (RELRENT)            8 (bytes)\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x1f540\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000dc0 0x0000000000000dc0  R      0x1000\n  LOAD           0x0000000000001000 0x0000000000001000 0x0000000000001000\n                 0x000000000002a195 0x000000000002a195  R E    0x1000\n  LOAD           0x000000000002c000 0x000000000002c000 0x000000000002c000\n                 0x00000000000098dc 0x00000000000098dc  R      0x1000\n  LOAD           0x0000000000036360 0x0000000000036360 0x0000000000036360\n                 0x0000000000002da4 0x0000000000002f78  RW     0x1000\n  DYNAMIC        0x0000000000037e58 0x0000000000037e58 0x0000000000037e58\n                 0x0000000000000180 0x0000000000000180  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x00000000000324b4 0x00000000000324b4 0x00000000000324b4\n                 0x000000000000093c 0x000000000000093c  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x0000000000036360 0x0000000000036360 0x0000000000036360\n                 0x0000000000001ca0 0x0000000000001ca0  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .hash .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .rela.dyn .relr.dyn \n   01     .text \n   02     .rodata .stapsdt.base .eh_frame_hdr .eh_frame \n   03     .data.rel.ro .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+    ],
+    "exit": 0,
+    "stdout": "libc6:amd64: /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libc6:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libc6\t2.39-0ubuntu8.9\tamd64\tglibc\t2.39-0ubuntu8.9\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libc.so.6"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x202940 contains 31 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]\n 0x000000000000000e (SONAME)             Library soname: [libc.so.6]\n 0x0000000000000019 (INIT_ARRAY)         0x200c70\n 0x000000000000001b (INIT_ARRAYSZ)       16 (bytes)\n 0x0000000000000004 (HASH)               0x3c8\n 0x000000006ffffef5 (GNU_HASH)           0x4508\n 0x0000000000000005 (STRTAB)             0x1bdc0\n 0x0000000000000006 (SYMTAB)             0x95e0\n 0x000000000000000a (STRSZ)              34928 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000070000000 (DT_X86_64_PLT)      0x28400\n 0x0000000070000001 (DT_X86_64_PLTSZ)    0x3d0\n 0x0000000070000003 (DT_X86_64_PLTENT)   0x10\n 0x0000000000000003 (PLTGOT)             0x203b80\n 0x0000000000000002 (PLTRELSZ)           1464 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x26cd8\n 0x0000000000000007 (RELA)               0x264c8\n 0x0000000000000008 (RELASZ)             2064 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0x25ed8\n 0x000000006ffffffd (VERDEFNUM)          41\n 0x000000000000001e (FLAGS)              BIND_NOW STATIC_TLS\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x26488\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x24630\n 0x0000000000000024 (RELR)               0x27290\n 0x0000000000000023 (RELRSZ)             256 (bytes)\n 0x0000000000000025 (RELRENT)            8 (bytes)\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libc.so.6"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x2a390\nThere are 14 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040\n                 0x0000000000000310 0x0000000000000310  R      0x8\n  INTERP         0x00000000001d77e0 0x00000000001d77e0 0x00000000001d77e0\n                 0x000000000000001c 0x000000000000001c  R      0x10\n      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000027390 0x0000000000027390  R      0x1000\n  LOAD           0x0000000000028000 0x0000000000028000 0x0000000000028000\n                 0x0000000000188039 0x0000000000188039  R E    0x1000\n  LOAD           0x00000000001b1000 0x00000000001b1000 0x00000000001b1000\n                 0x000000000004e0e2 0x000000000004e0e2  R      0x1000\n  LOAD           0x00000000001ffc60 0x0000000000200c60 0x0000000000200c60\n                 0x0000000000004a68 0x0000000000012130  RW     0x1000\n  DYNAMIC        0x0000000000202940 0x0000000000203940 0x0000000000203940\n                 0x0000000000000240 0x0000000000000240  RW     0x8\n  NOTE           0x0000000000000350 0x0000000000000350 0x0000000000000350\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  NOTE           0x0000000000000380 0x0000000000000380 0x0000000000000380\n                 0x0000000000000044 0x0000000000000044  R      0x4\n  TLS            0x00000000001ffc60 0x0000000000200c60 0x0000000000200c60\n                 0x0000000000000010 0x0000000000000088  R      0x8\n  GNU_PROPERTY   0x0000000000000350 0x0000000000000350 0x0000000000000350\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  GNU_EH_FRAME   0x00000000001d77fc 0x00000000001d77fc 0x00000000001d77fc\n                 0x000000000000766c 0x000000000000766c  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x00000000001ffc60 0x0000000000200c60 0x0000000000200c60\n                 0x00000000000033a0 0x00000000000033a0  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     \n   01     .interp \n   02     .note.gnu.property .note.gnu.build-id .note.ABI-tag .hash .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt .relr.dyn \n   03     .plt .plt.got .plt.sec .text \n   04     .rodata .stapsdt.base rodata.cst32 .interp .eh_frame_hdr .eh_frame .gcc_except_table \n   05     .tdata .init_array .data.rel.ro .dynamic .got .data .bss \n   06     .dynamic \n   07     .note.gnu.property \n   08     .note.gnu.build-id .note.ABI-tag \n   09     .tdata .tbss \n   10     .note.gnu.property \n   11     .eh_frame_hdr \n   12     \n   13     .tdata .init_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libc.so.6"
+    ],
+    "exit": 0,
+    "stdout": "libc6:amd64: /usr/lib/x86_64-linux-gnu/libc.so.6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libc6:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libc6\t2.39-0ubuntu8.9\tamd64\tglibc\t2.39-0ubuntu8.9\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/bin/python3.12"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x627dd8 contains 27 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libz.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libexpat.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000c (INIT)               0x420000\n 0x000000000000000d (FINI)               0x702fb0\n 0x0000000000000019 (INIT_ARRAY)         0xa28dc8\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0xa28dd0\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x4003d8\n 0x0000000000000005 (STRTAB)             0x410e30\n 0x0000000000000006 (SYMTAB)             0x4037e0\n 0x000000000000000a (STRSZ)              41689 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000015 (DEBUG)              0x0\n 0x0000000000000003 (PLTGOT)             0xa28fe8\n 0x0000000000000002 (PLTRELSZ)           12048 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x41c6f0\n 0x0000000000000007 (RELA)               0x41c4c8\n 0x0000000000000008 (RELASZ)             552 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffe (VERNEED)            0x41c2e8\n 0x000000006fffffff (VERNEEDNUM)         3\n 0x000000006ffffff0 (VERSYM)             0x41b10a\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/bin/python3.12"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is EXEC (Executable file)\nEntry point 0x6579e0\nThere are 14 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  PHDR           0x0000000000000040 0x0000000000400040 0x0000000000400040\n                 0x0000000000000310 0x0000000000000310  R      0x8\n  INTERP         0x0000000000000350 0x0000000000400350 0x0000000000400350\n                 0x000000000000001c 0x000000000000001c  R      0x1\n      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]\n  LOAD           0x0000000000000000 0x0000000000400000 0x0000000000400000\n                 0x000000000001f600 0x000000000001f600  R      0x1000\n  LOAD           0x0000000000020000 0x0000000000420000 0x0000000000420000\n                 0x00000000002e2fbd 0x00000000002e2fbd  R E    0x1000\n  LOAD           0x0000000000303000 0x0000000000703000 0x0000000000703000\n                 0x0000000000324168 0x0000000000324168  R      0x1000\n  LOAD           0x0000000000627dc8 0x0000000000a28dc8 0x0000000000a28dc8\n                 0x000000000017dab8 0x00000000001812c0  RW     0x1000\n  DYNAMIC        0x0000000000627dd8 0x0000000000a28dd8 0x0000000000a28dd8\n                 0x0000000000000200 0x0000000000000200  RW     0x8\n  NOTE           0x0000000000000370 0x0000000000400370 0x0000000000400370\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x0000000000000390 0x0000000000400390 0x0000000000400390\n                 0x0000000000000044 0x0000000000000044  R      0x4\n  TLS            0x0000000000627dc8 0x0000000000a28dc8 0x0000000000a28dc8\n                 0x0000000000000000 0x0000000000000010  R      0x8\n  GNU_PROPERTY   0x0000000000000370 0x0000000000400370 0x0000000000400370\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x00000000005b0ee4 0x00000000009b0ee4 0x00000000009b0ee4\n                 0x00000000000164cc 0x00000000000164cc  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x0000000000627dc8 0x0000000000a28dc8 0x0000000000a28dc8\n                 0x0000000000000238 0x0000000000000238  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     \n   01     .interp \n   02     .interp .note.gnu.property .note.gnu.build-id .note.ABI-tag .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt \n   03     .init .plt .text .fini \n   04     .rodata .stapsdt.base .eh_frame_hdr .eh_frame \n   05     .init_array .fini_array .dynamic .got .got.plt .data .PyRuntime .probes .bss \n   06     .dynamic \n   07     .note.gnu.property \n   08     .note.gnu.build-id .note.ABI-tag \n   09     .tbss \n   10     .note.gnu.property \n   11     .eh_frame_hdr \n   12     \n   13     .init_array .fini_array .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/bin/python3.12"
+    ],
+    "exit": 0,
+    "stdout": "python3.12-minimal: /usr/bin/python3.12\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "python3.12-minimal"
+    ],
+    "exit": 0,
+    "stdout": "python3.12-minimal\t3.12.3-1ubuntu0.17\tamd64\tpython3.12\t3.12.3-1ubuntu0.17\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libexpat.so.1.9.1"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x2cdd0 contains 25 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libexpat.so.1]\n 0x000000000000000c (INIT)               0x4000\n 0x000000000000000d (FINI)               0x22474\n 0x0000000000000019 (INIT_ARRAY)         0x2b530\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x2b538\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x2f0\n 0x0000000000000005 (STRTAB)             0xe58\n 0x0000000000000006 (SYMTAB)             0x570\n 0x000000000000000a (STRSZ)              2109 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x2cfe8\n 0x0000000000000002 (PLTRELSZ)           336 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x31c0\n 0x0000000000000007 (RELA)               0x17c8\n 0x0000000000000008 (RELASZ)             6648 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffe (VERNEED)            0x1758\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x1696\n 0x000000006ffffff9 (RELACOUNT)          269\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libexpat.so.1.9.1"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000003310 0x0000000000003310  R      0x1000\n  LOAD           0x0000000000004000 0x0000000000004000 0x0000000000004000\n                 0x000000000001e481 0x000000000001e481  R E    0x1000\n  LOAD           0x0000000000023000 0x0000000000023000 0x0000000000023000\n                 0x0000000000007874 0x0000000000007874  R      0x1000\n  LOAD           0x000000000002b530 0x000000000002b530 0x000000000002b530\n                 0x0000000000001b48 0x0000000000001b50  RW     0x1000\n  DYNAMIC        0x000000000002cdd0 0x000000000002cdd0 0x000000000002cdd0\n                 0x00000000000001d0 0x00000000000001d0  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x000000000002788c 0x000000000002788c 0x000000000002788c\n                 0x0000000000000934 0x0000000000000934  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x000000000002b530 0x000000000002b530 0x000000000002b530\n                 0x0000000000001ad0 0x0000000000001ad0  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .got.plt .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libexpat.so.1.9.1"
+    ],
+    "exit": 0,
+    "stdout": "libexpat1:amd64: /usr/lib/x86_64-linux-gnu/libexpat.so.1.9.1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libexpat1:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libexpat1\t2.6.1-2ubuntu0.6\tamd64\texpat\t2.6.1-2ubuntu0.6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libz.so.1.3"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x1add0 contains 27 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libz.so.1]\n 0x000000000000000c (INIT)               0x2000\n 0x000000000000000d (FINI)               0x13c60\n 0x0000000000000019 (INIT_ARRAY)         0x1ac70\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x1ac78\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x2f0\n 0x0000000000000005 (STRTAB)             0x1240\n 0x0000000000000006 (SYMTAB)             0x6a0\n 0x000000000000000a (STRSZ)              1488 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x1afe8\n 0x0000000000000002 (PLTRELSZ)           408 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x1e68\n 0x0000000000000007 (RELA)               0x1b68\n 0x0000000000000008 (RELASZ)             768 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0x1908\n 0x000000006ffffffd (VERDEFNUM)          15\n 0x000000006ffffffe (VERNEED)            0x1b18\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x1810\n 0x000000006ffffff9 (RELACOUNT)          28\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libz.so.1.3"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000002000 0x0000000000002000  R      0x1000\n  LOAD           0x0000000000002000 0x0000000000002000 0x0000000000002000\n                 0x0000000000011c6d 0x0000000000011c6d  R E    0x1000\n  LOAD           0x0000000000014000 0x0000000000014000 0x0000000000014000\n                 0x0000000000005e78 0x0000000000005e78  R      0x1000\n  LOAD           0x000000000001ac70 0x000000000001ac70 0x000000000001ac70\n                 0x0000000000000420 0x0000000000000428  RW     0x1000\n  DYNAMIC        0x000000000001add0 0x000000000001add0 0x000000000001add0\n                 0x00000000000001f0 0x00000000000001f0  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x0000000000018788 0x0000000000018788 0x0000000000018788\n                 0x00000000000003e4 0x00000000000003e4  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x000000000001ac70 0x000000000001ac70 0x000000000001ac70\n                 0x0000000000000390 0x0000000000000390  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .got.plt .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libz.so.1.3"
+    ],
+    "exit": 0,
+    "stdout": "zlib1g:amd64: /usr/lib/x86_64-linux-gnu/libz.so.1.3\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "zlib1g:amd64"
+    ],
+    "exit": 0,
+    "stdout": "zlib1g\t1:1.3.dfsg-3.1ubuntu2.2\tamd64\tzlib\t1:1.3.dfsg-3.1ubuntu2.2\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libm.so.6"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0xe7c10 contains 36 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]\n 0x000000000000000e (SONAME)             Library soname: [libm.so.6]\n 0x000000000000000c (INIT)               0x10000\n 0x000000000000000d (FINI)               0x8e3a8\n 0x0000000000000019 (INIT_ARRAY)         0xe7c00\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0xe7c08\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x0000000000000004 (HASH)               0x320\n 0x000000006ffffef5 (GNU_HASH)           0x25c8\n 0x0000000000000005 (STRTAB)             0xbe38\n 0x0000000000000006 (SYMTAB)             0x4c20\n 0x000000000000000a (STRSZ)              10339 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000070000000 (DT_X86_64_PLT)      0x10230\n 0x0000000070000001 (DT_X86_64_PLTSZ)    0x1f0\n 0x0000000070000003 (DT_X86_64_PLTENT)   0x10\n 0x0000000000000003 (PLTGOT)             0xe7ea0\n 0x0000000000000002 (PLTRELSZ)           744 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0xf3e8\n 0x0000000000000007 (RELA)               0xf2f8\n 0x0000000000000008 (RELASZ)             240 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0xf020\n 0x000000006ffffffd (VERDEFNUM)          17\n 0x000000000000001e (FLAGS)              BIND_NOW STATIC_TLS\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0xf278\n 0x000000006fffffff (VERNEEDNUM)         2\n 0x000000006ffffff0 (VERSYM)             0xe69c\n 0x0000000000000024 (RELR)               0xf6d0\n 0x0000000000000023 (RELRSZ)             24 (bytes)\n 0x0000000000000025 (RELRENT)            8 (bytes)\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libm.so.6"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x000000000000f6e8 0x000000000000f6e8  R      0x1000\n  LOAD           0x0000000000010000 0x0000000000010000 0x0000000000010000\n                 0x000000000007e3b5 0x000000000007e3b5  R E    0x1000\n  LOAD           0x000000000008f000 0x000000000008f000 0x000000000008f000\n                 0x0000000000057f50 0x0000000000057f50  R      0x1000\n  LOAD           0x00000000000e7c00 0x00000000000e7c00 0x00000000000e7c00\n                 0x000000000000040c 0x0000000000000418  RW     0x1000\n  DYNAMIC        0x00000000000e7c10 0x00000000000e7c10 0x00000000000e7c10\n                 0x0000000000000290 0x0000000000000290  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  NOTE           0x00000000000002d8 0x00000000000002d8 0x00000000000002d8\n                 0x0000000000000044 0x0000000000000044  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  GNU_EH_FRAME   0x00000000000dd2a0 0x00000000000dd2a0 0x00000000000dd2a0\n                 0x0000000000001b7c 0x0000000000001b7c  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x00000000000e7c00 0x00000000000e7c00 0x00000000000e7c00\n                 0x0000000000000400 0x0000000000000400  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .note.ABI-tag .hash .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt .relr.dyn \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id .note.ABI-tag \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libm.so.6"
+    ],
+    "exit": 0,
+    "stdout": "libc6:amd64: /usr/lib/x86_64-linux-gnu/libm.so.6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libc6:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libc6\t2.39-0ubuntu8.9\tamd64\tglibc\t2.39-0ubuntu8.9\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/bin/tmux"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x10a658 contains 33 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libsystemd.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libutempter.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libtinfo.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libevent_core-2.1.so.7]\n 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libresolv.so.2]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000c (INIT)               0x1d000\n 0x000000000000000d (FINI)               0xcbb08\n 0x0000000000000019 (INIT_ARRAY)         0xf9f10\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0xf9f18\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x3b0\n 0x0000000000000005 (STRTAB)             0x19e0\n 0x0000000000000006 (SYMTAB)             0x3d8\n 0x000000000000000a (STRSZ)              2899 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000015 (DEBUG)              0x0\n 0x0000000000000003 (PLTGOT)             0x10b8a8\n 0x0000000000000002 (PLTRELSZ)           5304 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x1ad38\n 0x0000000000000007 (RELA)               0x28d0\n 0x0000000000000008 (RELASZ)             99432 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW PIE\n 0x000000006ffffffe (VERNEED)            0x2710\n 0x000000006fffffff (VERNEEDNUM)         6\n 0x000000006ffffff0 (VERSYM)             0x2534\n 0x000000006ffffff9 (RELACOUNT)          4132\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/bin/tmux"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Position-Independent Executable file)\nEntry point 0x20a50\nThere are 13 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040\n                 0x00000000000002d8 0x00000000000002d8  R      0x8\n  INTERP         0x0000000000000318 0x0000000000000318 0x0000000000000318\n                 0x000000000000001c 0x000000000000001c  R      0x1\n      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x000000000001c1f0 0x000000000001c1f0  R      0x1000\n  LOAD           0x000000000001d000 0x000000000001d000 0x000000000001d000\n                 0x00000000000aeb15 0x00000000000aeb15  R E    0x1000\n  LOAD           0x00000000000cc000 0x00000000000cc000 0x00000000000cc000\n                 0x000000000002c3d8 0x000000000002c3d8  R      0x1000\n  LOAD           0x00000000000f8f10 0x00000000000f9f10 0x00000000000f9f10\n                 0x0000000000013b28 0x000000000001b238  RW     0x1000\n  DYNAMIC        0x000000000010a658 0x000000000010b658 0x000000000010b658\n                 0x0000000000000250 0x0000000000000250  RW     0x8\n  NOTE           0x0000000000000338 0x0000000000000338 0x0000000000000338\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  NOTE           0x0000000000000368 0x0000000000000368 0x0000000000000368\n                 0x0000000000000044 0x0000000000000044  R      0x4\n  GNU_PROPERTY   0x0000000000000338 0x0000000000000338 0x0000000000000338\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  GNU_EH_FRAME   0x00000000000e881c 0x00000000000e881c 0x00000000000e881c\n                 0x00000000000028bc 0x00000000000028bc  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x00000000000f8f10 0x00000000000f9f10 0x00000000000f9f10\n                 0x00000000000120f0 0x00000000000120f0  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     \n   01     .interp \n   02     .interp .note.gnu.property .note.gnu.build-id .note.ABI-tag .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt \n   03     .init .plt .plt.got .plt.sec .text .fini \n   04     .rodata .eh_frame_hdr .eh_frame \n   05     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss \n   06     .dynamic \n   07     .note.gnu.property \n   08     .note.gnu.build-id .note.ABI-tag \n   09     .note.gnu.property \n   10     .eh_frame_hdr \n   11     \n   12     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/bin/tmux"
+    ],
+    "exit": 0,
+    "stdout": "tmux: /usr/bin/tmux\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "tmux"
+    ],
+    "exit": 0,
+    "stdout": "tmux\t3.4-1ubuntu0.1\tamd64\ttmux\t3.4-1ubuntu0.1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libresolv.so.2"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0xeb68 contains 35 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libresolv.so.2]\n 0x000000000000000c (INIT)               0x3000\n 0x000000000000000d (FINI)               0xbf1c\n 0x0000000000000019 (INIT_ARRAY)         0xe3d0\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0xe3d8\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x0000000000000004 (HASH)               0x320\n 0x000000006ffffef5 (GNU_HASH)           0x958\n 0x0000000000000005 (STRTAB)             0x19a8\n 0x0000000000000006 (SYMTAB)             0xcd0\n 0x000000000000000a (STRSZ)              1780 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000070000000 (DT_X86_64_PLT)      0x33a0\n 0x0000000070000001 (DT_X86_64_PLTSZ)    0x340\n 0x0000000070000003 (DT_X86_64_PLTENT)   0x10\n 0x0000000000000003 (PLTGOT)             0xede8\n 0x0000000000000002 (PLTRELSZ)           1248 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x2400\n 0x0000000000000007 (RELA)               0x22f8\n 0x0000000000000008 (RELASZ)             264 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0x21b0\n 0x000000006ffffffd (VERDEFNUM)          5\n 0x000000000000001e (FLAGS)              BIND_NOW STATIC_TLS\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x2258\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x209c\n 0x0000000000000024 (RELR)               0x28e0\n 0x0000000000000023 (RELRSZ)             56 (bytes)\n 0x0000000000000025 (RELRENT)            8 (bytes)\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libresolv.so.2"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000002918 0x0000000000002918  R      0x1000\n  LOAD           0x0000000000003000 0x0000000000003000 0x0000000000003000\n                 0x0000000000008f29 0x0000000000008f29  R E    0x1000\n  LOAD           0x000000000000c000 0x000000000000c000 0x000000000000c000\n                 0x0000000000001aa4 0x0000000000001aa4  R      0x1000\n  LOAD           0x000000000000e3d0 0x000000000000e3d0 0x000000000000e3d0\n                 0x0000000000000cd0 0x00000000000034b8  RW     0x1000\n  DYNAMIC        0x000000000000eb68 0x000000000000eb68 0x000000000000eb68\n                 0x0000000000000280 0x0000000000000280  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  NOTE           0x00000000000002d8 0x00000000000002d8 0x00000000000002d8\n                 0x0000000000000044 0x0000000000000044  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  GNU_EH_FRAME   0x000000000000cbc8 0x000000000000cbc8 0x000000000000cbc8\n                 0x0000000000000294 0x0000000000000294  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x000000000000e3d0 0x000000000000e3d0 0x000000000000e3d0\n                 0x0000000000000c30 0x0000000000000c30  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .note.ABI-tag .hash .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt .relr.dyn \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id .note.ABI-tag \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libresolv.so.2"
+    ],
+    "exit": 0,
+    "stdout": "libc6:amd64: /usr/lib/x86_64-linux-gnu/libresolv.so.2\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libc6:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libc6\t2.39-0ubuntu8.9\tamd64\tglibc\t2.39-0ubuntu8.9\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x33a80 contains 27 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libevent_core-2.1.so.7]\n 0x000000000000000c (INIT)               0x9000\n 0x000000000000000d (FINI)               0x27084\n 0x0000000000000019 (INIT_ARRAY)         0x336f0\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x336f8\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x2f0\n 0x0000000000000005 (STRTAB)             0x3fd8\n 0x0000000000000006 (SYMTAB)             0xfa8\n 0x000000000000000a (STRSZ)              10663 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x33c70\n 0x0000000000000002 (PLTRELSZ)           2160 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x77e8\n 0x0000000000000007 (RELA)               0x6e88\n 0x0000000000000008 (RELASZ)             2400 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x6d88\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x6980\n 0x000000006ffffff9 (RELACOUNT)          78\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000008058 0x0000000000008058  R      0x1000\n  LOAD           0x0000000000009000 0x0000000000009000 0x0000000000009000\n                 0x000000000001e091 0x000000000001e091  R E    0x1000\n  LOAD           0x0000000000028000 0x0000000000028000 0x0000000000028000\n                 0x000000000000a800 0x000000000000a800  R      0x1000\n  LOAD           0x00000000000336f0 0x00000000000336f0 0x00000000000336f0\n                 0x0000000000000980 0x0000000000000f78  RW     0x1000\n  DYNAMIC        0x0000000000033a80 0x0000000000033a80 0x0000000000033a80\n                 0x00000000000001f0 0x00000000000001f0  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x000000000002c8b0 0x000000000002c8b0 0x000000000002c8b0\n                 0x00000000000010cc 0x00000000000010cc  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x00000000000336f0 0x00000000000336f0 0x00000000000336f0\n                 0x0000000000000910 0x0000000000000910  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1"
+    ],
+    "exit": 0,
+    "stdout": "libevent-core-2.1-7t64:amd64: /usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.7.0.1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libevent-core-2.1-7t64:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libevent-core-2.1-7t64\t2.1.12-stable-9ubuntu2.1\tamd64\tlibevent\t2.1.12-stable-9ubuntu2.1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x31ad8 contains 29 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libtinfo.so.6]\n 0x000000000000000c (INIT)               0xe000\n 0x000000000000000d (FINI)               0x20b68\n 0x0000000000000019 (INIT_ARRAY)         0x2fb50\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x2fb58\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x2f0\n 0x0000000000000005 (STRTAB)             0x2cf8\n 0x0000000000000006 (SYMTAB)             0xc70\n 0x000000000000000a (STRSZ)              4378 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x32ce8\n 0x0000000000000002 (PLTRELSZ)           1536 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0xd520\n 0x0000000000000007 (RELA)               0x4598\n 0x0000000000000008 (RELASZ)             36744 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0x40c8\n 0x000000006ffffffd (VERDEFNUM)          31\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x4508\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x3e12\n 0x000000006ffffff9 (RELACOUNT)          1501\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x000000000000db20 0x000000000000db20  R      0x1000\n  LOAD           0x000000000000e000 0x000000000000e000 0x000000000000e000\n                 0x0000000000012b75 0x0000000000012b75  R E    0x1000\n  LOAD           0x0000000000021000 0x0000000000021000 0x0000000000021000\n                 0x000000000000d4bc 0x000000000000d4bc  R      0x1000\n  LOAD           0x000000000002eb50 0x000000000002fb50 0x000000000002fb50\n                 0x0000000000003950 0x0000000000003dd8  RW     0x1000\n  DYNAMIC        0x0000000000031ad8 0x0000000000032ad8 0x0000000000032ad8\n                 0x0000000000000210 0x0000000000000210  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x000000000002bc20 0x000000000002bc20 0x000000000002bc20\n                 0x00000000000007f4 0x00000000000007f4  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x000000000002eb50 0x000000000002fb50 0x000000000002fb50\n                 0x00000000000034b0 0x00000000000034b0  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4"
+    ],
+    "exit": 0,
+    "stdout": "libtinfo6:amd64: /usr/lib/x86_64-linux-gnu/libtinfo.so.6.4\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libtinfo6:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libtinfo6\t6.4+20240113-1ubuntu2.2\tamd64\tncurses\t6.4+20240113-1ubuntu2.2\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libutempter.so.1.2.1"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x2d60 contains 29 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libutempter.so.0]\n 0x000000000000000c (INIT)               0x1000\n 0x000000000000000d (FINI)               0x155c\n 0x0000000000000019 (INIT_ARRAY)         0x3d50\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x3d58\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x2f0\n 0x0000000000000005 (STRTAB)             0x578\n 0x0000000000000006 (SYMTAB)             0x338\n 0x000000000000000a (STRSZ)              386 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x3f70\n 0x0000000000000002 (PLTRELSZ)           264 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x840\n 0x0000000000000007 (RELA)               0x798\n 0x0000000000000008 (RELASZ)             168 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0x730\n 0x000000006ffffffd (VERDEFNUM)          2\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x768\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x6fa\n 0x000000006ffffff9 (RELACOUNT)          3\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libutempter.so.1.2.1"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000948 0x0000000000000948  R      0x1000\n  LOAD           0x0000000000001000 0x0000000000001000 0x0000000000001000\n                 0x0000000000000569 0x0000000000000569  R E    0x1000\n  LOAD           0x0000000000002000 0x0000000000002000 0x0000000000002000\n                 0x00000000000001e8 0x00000000000001e8  R      0x1000\n  LOAD           0x0000000000002d50 0x0000000000003d50 0x0000000000003d50\n                 0x00000000000002bc 0x00000000000002d0  RW     0x1000\n  DYNAMIC        0x0000000000002d60 0x0000000000003d60 0x0000000000003d60\n                 0x0000000000000210 0x0000000000000210  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x0000000000002034 0x0000000000002034 0x0000000000002034\n                 0x0000000000000064 0x0000000000000064  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x0000000000002d50 0x0000000000003d50 0x0000000000003d50\n                 0x00000000000002b0 0x00000000000002b0  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libutempter.so.1.2.1"
+    ],
+    "exit": 0,
+    "stdout": "libutempter0:amd64: /usr/lib/x86_64-linux-gnu/libutempter.so.1.2.1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libutempter0:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libutempter0\t1.2.1-3build1\tamd64\tlibutempter\t1.2.1-3build1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libsystemd.so.0.38.0"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0xdc5a0 contains 35 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libcap.so.2]\n 0x0000000000000001 (NEEDED)             Shared library: [libgcrypt.so.20]\n 0x0000000000000001 (NEEDED)             Shared library: [liblz4.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [liblzma.so.5]\n 0x0000000000000001 (NEEDED)             Shared library: [libzstd.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]\n 0x000000000000000e (SONAME)             Library soname: [libsystemd.so.0]\n 0x000000000000000c (INIT)               0x16000\n 0x000000000000000d (FINI)               0xa4770\n 0x0000000000000019 (INIT_ARRAY)         0xd3690\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0xd3698\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x3c8\n 0x0000000000000005 (STRTAB)             0x6f20\n 0x0000000000000006 (SYMTAB)             0x1880\n 0x000000000000000a (STRSZ)              19371 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0xdd810\n 0x0000000000000002 (PLTRELSZ)           5712 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x13f20\n 0x0000000000000007 (RELA)               0xc900\n 0x0000000000000008 (RELASZ)             30240 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0xc208\n 0x000000006ffffffd (VERDEFNUM)          37\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0xc730\n 0x000000006fffffff (VERNEEDNUM)         4\n 0x000000006ffffff0 (VERSYM)             0xbacc\n 0x000000006ffffff9 (RELACOUNT)          1242\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libsystemd.so.0.38.0"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 12 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000015570 0x0000000000015570  R      0x1000\n  LOAD           0x0000000000016000 0x0000000000016000 0x0000000000016000\n                 0x000000000008e77d 0x000000000008e77d  R E    0x1000\n  LOAD           0x00000000000a5000 0x00000000000a5000 0x00000000000a5000\n                 0x000000000002d020 0x000000000002d020  R      0x1000\n  LOAD           0x00000000000d2660 0x00000000000d3660 0x00000000000d3660\n                 0x000000000000b4e0 0x000000000000bfe8  RW     0x1000\n  DYNAMIC        0x00000000000dc5a0 0x00000000000dd5a0 0x00000000000dd5a0\n                 0x0000000000000270 0x0000000000000270  RW     0x8\n  NOTE           0x00000000000002e0 0x00000000000002e0 0x00000000000002e0\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x0000000000000300 0x0000000000000300 0x0000000000000300\n                 0x00000000000000c8 0x00000000000000c8  R      0x4\n  TLS            0x00000000000d2660 0x00000000000d3660 0x00000000000d3660\n                 0x000000000000002c 0x00000000000000cc  R      0x8\n  GNU_PROPERTY   0x00000000000002e0 0x00000000000002e0 0x00000000000002e0\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x00000000000c1dd8 0x00000000000c1dd8 0x00000000000c1dd8\n                 0x0000000000002994 0x0000000000002994  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x00000000000d2660 0x00000000000d3660 0x00000000000d3660\n                 0x000000000000a9a0 0x000000000000a9a0  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .note.package .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .tdata .init_array .fini_array .data.rel.ro .dynamic .got .data SYSTEMD_BUS_ERROR_MAP .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id .note.package \n   07     .tdata .tbss \n   08     .note.gnu.property \n   09     .eh_frame_hdr \n   10     \n   11     .tdata .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libsystemd.so.0.38.0"
+    ],
+    "exit": 0,
+    "stdout": "libsystemd0:amd64: /usr/lib/x86_64-linux-gnu/libsystemd.so.0.38.0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libsystemd0:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libsystemd0\t255.4-1ubuntu8.17\tamd64\tsystemd\t255.4-1ubuntu8.17\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0xb7cb8 contains 27 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libzstd.so.1]\n 0x000000000000000c (INIT)               0x4000\n 0x000000000000000d (FINI)               0xaa7b4\n 0x0000000000000019 (INIT_ARRAY)         0xb8ab0\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0xb8ab8\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x398\n 0x0000000000000005 (STRTAB)             0x1e00\n 0x0000000000000006 (SYMTAB)             0x918\n 0x000000000000000a (STRSZ)              4940 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0xb8ea8\n 0x0000000000000002 (PLTRELSZ)           672 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x3968\n 0x0000000000000007 (RELA)               0x3380\n 0x0000000000000008 (RELASZ)             1512 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x3310\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x314c\n 0x000000006ffffff9 (RELACOUNT)          54\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000003c08 0x0000000000003c08  R      0x1000\n  LOAD           0x0000000000004000 0x0000000000004000 0x0000000000004000\n                 0x00000000000a67c1 0x00000000000a67c1  R E    0x1000\n  LOAD           0x00000000000ab000 0x00000000000ab000 0x00000000000ab000\n                 0x000000000000c790 0x000000000000c790  R      0x1000\n  LOAD           0x00000000000b7ab0 0x00000000000b8ab0 0x00000000000b8ab0\n                 0x0000000000000558 0x0000000000000588  RW     0x1000\n  DYNAMIC        0x00000000000b7cb8 0x00000000000b8cb8 0x00000000000b8cb8\n                 0x00000000000001f0 0x00000000000001f0  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x00000000000000cc 0x00000000000000cc  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x00000000000b0bc0 0x00000000000b0bc0 0x00000000000b0bc0\n                 0x000000000000116c 0x000000000000116c  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x00000000000b7ab0 0x00000000000b8ab0 0x00000000000b8ab0\n                 0x0000000000000550 0x0000000000000550  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .note.package .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id .note.package \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5"
+    ],
+    "exit": 0,
+    "stdout": "libzstd1:amd64: /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libzstd1:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libzstd1\t1.5.5+dfsg2-2build1.1\tamd64\tlibzstd\t1.5.5+dfsg2-2build1.1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/liblzma.so.5.4.5"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x30cb8 contains 29 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [liblzma.so.5]\n 0x000000000000000c (INIT)               0x3000\n 0x000000000000000d (FINI)               0x245f0\n 0x0000000000000019 (INIT_ARRAY)         0x30608\n 0x000000000000001b (INIT_ARRAYSZ)       16 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x30618\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x2f0\n 0x0000000000000005 (STRTAB)             0x1550\n 0x0000000000000006 (SYMTAB)             0x6e0\n 0x000000000000000a (STRSZ)              2966 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x30ec8\n 0x0000000000000002 (PLTRELSZ)           720 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x2bf8\n 0x0000000000000007 (RELA)               0x2388\n 0x0000000000000008 (RELASZ)             2160 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0x2220\n 0x000000006ffffffd (VERDEFNUM)          6\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x22e8\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x20e6\n 0x000000006ffffff9 (RELACOUNT)          86\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/liblzma.so.5.4.5"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000002ec8 0x0000000000002ec8  R      0x1000\n  LOAD           0x0000000000003000 0x0000000000003000 0x0000000000003000\n                 0x00000000000215fd 0x00000000000215fd  R E    0x1000\n  LOAD           0x0000000000025000 0x0000000000025000 0x0000000000025000\n                 0x000000000000a978 0x000000000000a978  R      0x1000\n  LOAD           0x0000000000030608 0x0000000000030608 0x0000000000030608\n                 0x0000000000000a00 0x0000000000000a10  RW     0x1000\n  DYNAMIC        0x0000000000030cb8 0x0000000000030cb8 0x0000000000030cb8\n                 0x0000000000000210 0x0000000000000210  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x000000000002bce8 0x000000000002bce8 0x000000000002bce8\n                 0x0000000000000a34 0x0000000000000a34  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x0000000000030608 0x0000000000030608 0x0000000000030608\n                 0x00000000000009f8 0x00000000000009f8  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/liblzma.so.5.4.5"
+    ],
+    "exit": 0,
+    "stdout": "liblzma5:amd64: /usr/lib/x86_64-linux-gnu/liblzma.so.5.4.5\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "liblzma5:amd64"
+    ],
+    "exit": 0,
+    "stdout": "liblzma5\t5.6.1+really5.4.5-1ubuntu0.3\tamd64\txz-utils\t5.6.1+really5.4.5-1ubuntu0.3\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/liblz4.so.1.9.4"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x20df8 contains 25 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [liblz4.so.1]\n 0x000000000000000c (INIT)               0x3000\n 0x000000000000000d (FINI)               0x1de8c\n 0x0000000000000019 (INIT_ARRAY)         0x20d30\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x20d38\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x2f0\n 0x0000000000000005 (STRTAB)             0x1240\n 0x0000000000000006 (SYMTAB)             0x6b8\n 0x000000000000000a (STRSZ)              2679 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x20fe8\n 0x0000000000000002 (PLTRELSZ)           240 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x20d0\n 0x0000000000000007 (RELA)               0x1e00\n 0x0000000000000008 (RELASZ)             720 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffe (VERNEED)            0x1db0\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x1cb8\n 0x000000006ffffff9 (RELACOUNT)          26\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/liblz4.so.1.9.4"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x00000000000021c0 0x00000000000021c0  R      0x1000\n  LOAD           0x0000000000003000 0x0000000000003000 0x0000000000003000\n                 0x000000000001ae99 0x000000000001ae99  R E    0x1000\n  LOAD           0x000000000001e000 0x000000000001e000 0x000000000001e000\n                 0x0000000000001d7c 0x0000000000001d7c  R      0x1000\n  LOAD           0x0000000000020d30 0x0000000000020d30 0x0000000000020d30\n                 0x0000000000000328 0x0000000000000330  RW     0x1000\n  DYNAMIC        0x0000000000020df8 0x0000000000020df8 0x0000000000020df8\n                 0x00000000000001d0 0x00000000000001d0  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x000000000001e51c 0x000000000001e51c 0x000000000001e51c\n                 0x000000000000045c 0x000000000000045c  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x0000000000020d30 0x0000000000020d30 0x0000000000020d30\n                 0x00000000000002d0 0x00000000000002d0  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .got.plt .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/liblz4.so.1.9.4"
+    ],
+    "exit": 0,
+    "stdout": "liblz4-1:amd64: /usr/lib/x86_64-linux-gnu/liblz4.so.1.9.4\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "liblz4-1:amd64"
+    ],
+    "exit": 0,
+    "stdout": "liblz4-1\t1.9.4-1build1.1\tamd64\tlz4\t1.9.4-1build1.1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.3"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x143af0 contains 30 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libgpg-error.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libgcrypt.so.20]\n 0x000000000000000c (INIT)               0xf000\n 0x000000000000000d (FINI)               0x103920\n 0x0000000000000019 (INIT_ARRAY)         0x13f8b0\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x13f8b8\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x2f0\n 0x0000000000000005 (STRTAB)             0x2728\n 0x0000000000000006 (SYMTAB)             0xa78\n 0x000000000000000a (STRSZ)              4924 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x143d10\n 0x0000000000000002 (PLTRELSZ)           2016 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0xde48\n 0x0000000000000007 (RELA)               0x3db0\n 0x0000000000000008 (RELASZ)             41112 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0x3cc8\n 0x000000006ffffffd (VERDEFNUM)          2\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x3d00\n 0x000000006fffffff (VERNEEDNUM)         2\n 0x000000006ffffff0 (VERSYM)             0x3a64\n 0x000000006ffffff9 (RELACOUNT)          1707\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.3"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x000000000000e628 0x000000000000e628  R      0x1000\n  LOAD           0x000000000000f000 0x000000000000f000 0x000000000000f000\n                 0x00000000000f492d 0x00000000000f492d  R E    0x1000\n  LOAD           0x0000000000104000 0x0000000000104000 0x0000000000104000\n                 0x000000000003ad8c 0x000000000003ad8c  R      0x1000\n  LOAD           0x000000000013f8b0 0x000000000013f8b0 0x000000000013f8b0\n                 0x00000000000084f0 0x0000000000008ac0  RW     0x1000\n  DYNAMIC        0x0000000000143af0 0x0000000000143af0 0x0000000000143af0\n                 0x0000000000000220 0x0000000000000220  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x0000000000131538 0x0000000000131538 0x0000000000131538\n                 0x00000000000024b4 0x00000000000024b4  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x000000000013f8b0 0x000000000013f8b0 0x000000000013f8b0\n                 0x0000000000004750 0x0000000000004750  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.3"
+    ],
+    "exit": 0,
+    "stdout": "libgcrypt20:amd64: /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.3\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libgcrypt20:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libgcrypt20\t1.10.3-2ubuntu0.2\tamd64\tlibgcrypt20\t1.10.3-2ubuntu0.2\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libgpg-error.so.0.34.0"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0x23b10 contains 29 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libgpg-error.so.0]\n 0x000000000000000c (INIT)               0x4000\n 0x000000000000000d (FINI)               0x19d74\n 0x0000000000000019 (INIT_ARRAY)         0x237c8\n 0x000000000000001b (INIT_ARRAYSZ)       16 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x237d8\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x2f0\n 0x0000000000000005 (STRTAB)             0x1f30\n 0x0000000000000006 (SYMTAB)             0x808\n 0x000000000000000a (STRSZ)              3459 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0x23d20\n 0x0000000000000002 (PLTRELSZ)           1896 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x36c0\n 0x0000000000000007 (RELA)               0x2f70\n 0x0000000000000008 (RELASZ)             1872 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffffc (VERDEF)             0x2ea8\n 0x000000006ffffffd (VERDEFNUM)          2\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x2ee0\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x2cb4\n 0x000000006ffffff9 (RELACOUNT)          70\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libgpg-error.so.0.34.0"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x0\nThere are 11 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000003e28 0x0000000000003e28  R      0x1000\n  LOAD           0x0000000000004000 0x0000000000004000 0x0000000000004000\n                 0x0000000000015d81 0x0000000000015d81  R E    0x1000\n  LOAD           0x000000000001a000 0x000000000001a000 0x000000000001a000\n                 0x0000000000008a90 0x0000000000008a90  R      0x1000\n  LOAD           0x00000000000237c8 0x00000000000237c8 0x00000000000237c8\n                 0x00000000000008a8 0x00000000000009e0  RW     0x1000\n  DYNAMIC        0x0000000000023b10 0x0000000000023b10 0x0000000000023b10\n                 0x0000000000000210 0x0000000000000210  RW     0x8\n  NOTE           0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x00000000000002c8 0x00000000000002c8 0x00000000000002c8\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x00000000000002a8 0x00000000000002a8 0x00000000000002a8\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x000000000001f810 0x000000000001f810 0x000000000001f810\n                 0x00000000000008e4 0x00000000000008e4  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x00000000000237c8 0x00000000000237c8 0x00000000000237c8\n                 0x0000000000000838 0x0000000000000838  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt \n   01     .init .plt .plt.got .plt.sec .text .fini \n   02     .rodata .eh_frame_hdr .eh_frame \n   03     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss \n   04     .dynamic \n   05     .note.gnu.property \n   06     .note.gnu.build-id \n   07     .note.gnu.property \n   08     .eh_frame_hdr \n   09     \n   10     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libgpg-error.so.0.34.0"
+    ],
+    "exit": 0,
+    "stdout": "libgpg-error0:amd64: /usr/lib/x86_64-linux-gnu/libgpg-error.so.0.34.0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libgpg-error0:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libgpg-error0\t1.47-3build2.1\tamd64\tlibgpg-error\t1.47-3build2.1\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-d",
+      "/usr/lib/x86_64-linux-gnu/libcap.so.2.66"
+    ],
+    "exit": 0,
+    "stdout": "\nDynamic section at offset 0xbb70 contains 27 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000000e (SONAME)             Library soname: [libcap.so.2]\n 0x000000000000000c (INIT)               0x3000\n 0x000000000000000d (FINI)               0x8608\n 0x0000000000000019 (INIT_ARRAY)         0xb640\n 0x000000000000001b (INIT_ARRAYSZ)       16 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0xb650\n 0x000000000000001c (FINI_ARRAYSZ)       16 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x360\n 0x0000000000000005 (STRTAB)             0x11a8\n 0x0000000000000006 (SYMTAB)             0x5d8\n 0x000000000000000a (STRSZ)              1612 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000003 (PLTGOT)             0xbd60\n 0x0000000000000002 (PLTRELSZ)           1824 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x2278\n 0x0000000000000007 (RELA)               0x1990\n 0x0000000000000008 (RELASZ)             2280 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW\n 0x000000006ffffffe (VERNEED)            0x18f0\n 0x000000006fffffff (VERNEEDNUM)         1\n 0x000000006ffffff0 (VERSYM)             0x17f4\n 0x000000006ffffff9 (RELACOUNT)          90\n 0x0000000000000000 (NULL)               0x0\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/usr/lib/x86_64-linux-gnu/libcap.so.2.66"
+    ],
+    "exit": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x82d0\nThere are 13 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040\n                 0x00000000000002d8 0x00000000000002d8  R      0x8\n  INTERP         0x0000000000009840 0x0000000000009840 0x0000000000009840\n                 0x000000000000001c 0x000000000000001c  R      0x10\n      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000002998 0x0000000000002998  R      0x1000\n  LOAD           0x0000000000003000 0x0000000000003000 0x0000000000003000\n                 0x0000000000005615 0x0000000000005615  R E    0x1000\n  LOAD           0x0000000000009000 0x0000000000009000 0x0000000000009000\n                 0x0000000000001920 0x0000000000001920  R      0x1000\n  LOAD           0x000000000000b640 0x000000000000b640 0x000000000000b640\n                 0x00000000000009f0 0x0000000000000a08  RW     0x1000\n  DYNAMIC        0x000000000000bb70 0x000000000000bb70 0x000000000000bb70\n                 0x00000000000001f0 0x00000000000001f0  RW     0x8\n  NOTE           0x0000000000000318 0x0000000000000318 0x0000000000000318\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  NOTE           0x0000000000000338 0x0000000000000338 0x0000000000000338\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  GNU_PROPERTY   0x0000000000000318 0x0000000000000318 0x0000000000000318\n                 0x0000000000000020 0x0000000000000020  R      0x8\n  GNU_EH_FRAME   0x000000000000985c 0x000000000000985c 0x000000000000985c\n                 0x00000000000002e4 0x00000000000002e4  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x000000000000b640 0x000000000000b640 0x000000000000b640\n                 0x00000000000009c0 0x00000000000009c0  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     \n   01     .interp \n   02     .note.gnu.property .note.gnu.build-id .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt \n   03     .init .plt .plt.got .plt.sec .text .fini \n   04     .rodata .interp .eh_frame_hdr .eh_frame \n   05     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss \n   06     .dynamic \n   07     .note.gnu.property \n   08     .note.gnu.build-id \n   09     .note.gnu.property \n   10     .eh_frame_hdr \n   11     \n   12     .init_array .fini_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-S",
+      "/usr/lib/x86_64-linux-gnu/libcap.so.2.66"
+    ],
+    "exit": 0,
+    "stdout": "libcap2:amd64: /usr/lib/x86_64-linux-gnu/libcap.so.2.66\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libcap2:amd64"
+    ],
+    "exit": 0,
+    "stdout": "libcap2\t1:2.66-5ubuntu2.4\tamd64\tlibcap2\t1:2.66-5ubuntu2.4\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libpython3.12-minimal"
+    ],
+    "exit": 0,
+    "stdout": "libpython3.12-minimal\t3.12.3-1ubuntu0.17\tamd64\tpython3.12\t3.12.3-1ubuntu0.17\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n",
+      "libpython3.12-stdlib"
+    ],
+    "exit": 0,
+    "stdout": "libpython3.12-stdlib\t3.12.3-1ubuntu0.17\tamd64\tpython3.12\t3.12.3-1ubuntu0.17\n",
+    "stderr": ""
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/pool/main/libu/libutempter/libutempter0_1.2.1-3build1_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libutempter0_1.2.1-3build1_amd64.deb",
+    "sha256": "46c0dfbfeca19ba0773398d654b7e7225b178f26b414f0e2f8250519551bfb32",
+    "bytes": 9606
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libutempter0_1.2.1-3build1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libutempter0"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/g/glibc/libc6_2.39-0ubuntu8.9_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libc6_2.39-0ubuntu8.9_amd64.deb",
+    "sha256": "ff5557d99b51f761c4b7c92368b9cc45565eda17df9bf9eb4b134d09825008be",
+    "bytes": 3264314
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libc6_2.39-0ubuntu8.9_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libc6"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/p/python3.12/python3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/python3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb",
+    "sha256": "d452689b9660845345a4c3e05e4ad82c082d5474e04031b7aa47f1a6d5610a6e",
+    "bytes": 2334634
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/python3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/python3.12-minimal"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/e/expat/libexpat1_2.6.1-2ubuntu0.6_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libexpat1_2.6.1-2ubuntu0.6_amd64.deb",
+    "sha256": "494b8e672f722130c6bca6a7bc4cc31a43ca891a31d60d868bfdd699a3c20b13",
+    "bytes": 98940
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libexpat1_2.6.1-2ubuntu0.6_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libexpat1"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/z/zlib/zlib1g_1.3.dfsg-3.1ubuntu2.2_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/zlib1g_1.3.dfsg-3.1ubuntu2.2_amd64.deb",
+    "sha256": "84b9cf5752b29c9f92c27cd4c4ba9bbcc70b5ccf9b1b515421a28ae23212e273",
+    "bytes": 62988
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/zlib1g_1.3.dfsg-3.1ubuntu2.2_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/zlib1g"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/t/tmux/tmux_3.4-1ubuntu0.1_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/tmux_3.4-1ubuntu0.1_amd64.deb",
+    "sha256": "2913e17aa61879d1f905aab6f374f153f1ece63aefba1b996e387325d1d5338d",
+    "bytes": 479838
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/tmux_3.4-1ubuntu0.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/tmux"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libe/libevent/libevent-core-2.1-7t64_2.1.12-stable-9ubuntu2.1_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libevent-core-2.1-7t64_2.1.12-stable-9ubuntu2.1_amd64.deb",
+    "sha256": "f8af913312f8de9cab6efcd2259918b3df92f5b7d501aba7ce9a55699fa452b8",
+    "bytes": 91766
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libevent-core-2.1-7t64_2.1.12-stable-9ubuntu2.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libevent-core-2.1-7t64"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/n/ncurses/libtinfo6_6.4+20240113-1ubuntu2.2_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libtinfo6_6.4+20240113-1ubuntu2.2_amd64.deb",
+    "sha256": "b67a6df2bdab61d273eabebd208bb6a3fb12618a390a067e1ee305a409ff03d9",
+    "bytes": 108086
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libtinfo6_6.4+20240113-1ubuntu2.2_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libtinfo6"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/s/systemd/libsystemd0_255.4-1ubuntu8.17_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libsystemd0_255.4-1ubuntu8.17_amd64.deb",
+    "sha256": "4776d2ac7e21efe2ae31f3f7955a7ccd97277225eecf36910a26faf4544979ae",
+    "bytes": 431784
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libsystemd0_255.4-1ubuntu8.17_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libsystemd0"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libz/libzstd/libzstd1_1.5.5+dfsg2-2build1.1_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libzstd1_1.5.5+dfsg2-2build1.1_amd64.deb",
+    "sha256": "dfcf25061e07aad7efd3f4f880ba5ad4d4d09ebe7fc8cc77ab6b8a161d6d4727",
+    "bytes": 299472
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libzstd1_1.5.5+dfsg2-2build1.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libzstd1"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/x/xz-utils/liblzma5_5.6.1+really5.4.5-1ubuntu0.3_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/liblzma5_5.6.1+really5.4.5-1ubuntu0.3_amd64.deb",
+    "sha256": "d2eabd41ca77d2c2dd9d5d4ef478cccb64ffde6279c47cf4699a857d46785a52",
+    "bytes": 127352
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/liblzma5_5.6.1+really5.4.5-1ubuntu0.3_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/liblzma5"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/l/lz4/liblz4-1_1.9.4-1build1.1_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/liblz4-1_1.9.4-1build1.1_amd64.deb",
+    "sha256": "319331270d5cc52d5ebffe51c941d7b01b432bc402c2924b557209a64d4ecbad",
+    "bytes": 63062
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/liblz4-1_1.9.4-1build1.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/liblz4-1"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgcrypt20/libgcrypt20_1.10.3-2ubuntu0.2_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libgcrypt20_1.10.3-2ubuntu0.2_amd64.deb",
+    "sha256": "957b9eeaa83cf6f2d5d5d76dbb8aa31d3297e6781d8a02fa08dcc897ae650a0b",
+    "bytes": 536494
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libgcrypt20_1.10.3-2ubuntu0.2_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libgcrypt20"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgpg-error/libgpg-error0_1.47-3build2.1_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libgpg-error0_1.47-3build2.1_amd64.deb",
+    "sha256": "93654ee8180a73a0363f25c51dc673d67cbabcbecd164187b8a2deb54d007aef",
+    "bytes": 70092
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libgpg-error0_1.47-3build2.1_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libgpg-error0"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libc/libcap2/libcap2_2.66-5ubuntu2.4_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libcap2_2.66-5ubuntu2.4_amd64.deb",
+    "sha256": "23c627c77c66552a658e62852f244f4946dc543898e0ec5428d5dc6bffde2d6a",
+    "bytes": 30500
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libcap2_2.66-5ubuntu2.4_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libcap2"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/p/python3.12/libpython3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libpython3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb",
+    "sha256": "d646ad7112b5adec21ba0e1af015f04ae8ca7f5efdc619622547dd6673c4c14b",
+    "bytes": 838536
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libpython3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libpython3.12-minimal"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/p/python3.12/libpython3.12-stdlib_3.12.3-1ubuntu0.17_amd64.deb",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/packages/libpython3.12-stdlib_3.12.3-1ubuntu0.17_amd64.deb",
+    "sha256": "45d3f530ba1f9d6e879ad46b92046fabab13fe50a82450e4f65557a3bbad1489",
+    "bytes": 2070530
+  },
+  {
+    "argv": [
+      "dpkg-deb",
+      "-x",
+      "/tmp/quantmesh-tmux-audit-85vknab4/packages/libpython3.12-stdlib_3.12.3-1ubuntu0.17_amd64.deb",
+      "/tmp/quantmesh-tmux-audit-85vknab4/extract/libpython3.12-stdlib"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/pool/main/libu/libutempter/libutempter_1.2.1-3build1.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libutempter/libutempter_1.2.1-3build1.dsc",
+    "sha256": "10a60cac3dcd78c0781a54560de299f194616f4468b12a11ef7223354663bb82",
+    "bytes": 2410
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/pool/main/libu/libutempter/libutempter_1.2.1.orig.tar.gz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libutempter/libutempter_1.2.1.orig.tar.gz",
+    "sha256": "967fef372f391de501843ad87570c6cf5dabd9651f00f1783090fbc12b2a34cb",
+    "bytes": 17429
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/pool/main/libu/libutempter/libutempter_1.2.1.orig.tar.gz.asc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libutempter/libutempter_1.2.1.orig.tar.gz.asc",
+    "sha256": "5b870ce4ee8147923fd051c42cfe86c24e54eb631040aa6f4e63cf0e4ae84c14",
+    "bytes": 801
+  },
+  {
+    "uri": "https://archive.ubuntu.com/ubuntu/pool/main/libu/libutempter/libutempter_1.2.1-3build1.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libutempter/libutempter_1.2.1-3build1.debian.tar.xz",
+    "sha256": "0981481ef283676555950abf562253c96e32883ea714c6ed2ebc7772ad8e6f86",
+    "bytes": 13020
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/g/glibc/glibc_2.39.orig.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/glibc/glibc_2.39.orig.tar.xz",
+    "sha256": "f77bd47cf8170c57365ae7bf86696c118adb3b120d3259c64c502d3dc1e2d926",
+    "bytes": 18520988
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/g/glibc/glibc_2.39.orig.tar.xz.asc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/glibc/glibc_2.39.orig.tar.xz.asc",
+    "sha256": "2cce427ef7933c17379f5514e4f0ccf8dffae5bf8c72f0f7e0bf8b8401f34be5",
+    "bytes": 833
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/g/glibc/glibc_2.39-0ubuntu8.9.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/glibc/glibc_2.39-0ubuntu8.9.debian.tar.xz",
+    "sha256": "d6114f2302896a3c8612453e1bf1d0e61603e3029ba4a7c246fbb1ab4c48d2b0",
+    "bytes": 491440
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/g/glibc/glibc_2.39-0ubuntu8.9.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/glibc/glibc_2.39-0ubuntu8.9.dsc",
+    "sha256": "1b73a89e0910eb3e5920cde639ac7eb606256d8ee809688ff9b5912b67002711",
+    "bytes": 9387
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/p/python3.12/python3.12_3.12.3.orig.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/python3.12/python3.12_3.12.3.orig.tar.xz",
+    "sha256": "56bfef1fdfc1221ce6720e43a661e3eb41785dd914ce99698d8c7896af4bdaa1",
+    "bytes": 20625068
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/p/python3.12/python3.12_3.12.3-1ubuntu0.17.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/python3.12/python3.12_3.12.3-1ubuntu0.17.debian.tar.xz",
+    "sha256": "17b15629cb10825924cf7b85055255080ec773133ae0f8b8ce5ea2eec90dd200",
+    "bytes": 302472
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/p/python3.12/python3.12_3.12.3-1ubuntu0.17.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/python3.12/python3.12_3.12.3-1ubuntu0.17.dsc",
+    "sha256": "941700b999737d869b80c3b5a0adc0996a0fd760b982e18551bd2104da779384",
+    "bytes": 3916
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/e/expat/expat_2.6.1.orig.tar.gz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/expat/expat_2.6.1.orig.tar.gz",
+    "sha256": "14113ed69357172a0bf5a268793c8b5b01afc77c7a2e5fb8dd0b06cb87c02c4a",
+    "bytes": 8414649
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/e/expat/expat_2.6.1-2ubuntu0.6.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/expat/expat_2.6.1-2ubuntu0.6.debian.tar.xz",
+    "sha256": "95ae84284d153f5108255b21bc0e76f8cdabaf0bb74cdc61ef410f4b77146517",
+    "bytes": 75472
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/e/expat/expat_2.6.1-2ubuntu0.6.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/expat/expat_2.6.1-2ubuntu0.6.dsc",
+    "sha256": "d1a0cb48d939de61f2121669c941664b844d9a1adf9d8db28e000489df665070",
+    "bytes": 1474
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/z/zlib/zlib_1.3.dfsg.orig.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/zlib/zlib_1.3.dfsg.orig.tar.xz",
+    "sha256": "5eea0322c1c21c75cad3b607ac1c43ff5c71e014b8ac4a34300b5e2b80d02e70",
+    "bytes": 1128572
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/z/zlib/zlib_1.3.dfsg-3.1ubuntu2.2.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/zlib/zlib_1.3.dfsg-3.1ubuntu2.2.debian.tar.xz",
+    "sha256": "de1c2d532ecb7caf99ccb905fb03c37fe0c8117fbdc79d05be4474b71e6398c2",
+    "bytes": 61316
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/z/zlib/zlib_1.3.dfsg-3.1ubuntu2.2.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/zlib/zlib_1.3.dfsg-3.1ubuntu2.2.dsc",
+    "sha256": "56a7cd029863cbddafce831e4e63cccfa84017f93617929cb7c02f80bb5a122a",
+    "bytes": 2987
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/t/tmux/tmux_3.4.orig.tar.gz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/tmux/tmux_3.4.orig.tar.gz",
+    "sha256": "551ab8dea0bf505c0ad6b7bb35ef567cdde0ccb84357df142c254f35a23e19aa",
+    "bytes": 707213
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/t/tmux/tmux_3.4-1ubuntu0.1.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/tmux/tmux_3.4-1ubuntu0.1.debian.tar.xz",
+    "sha256": "9ef140b5b58e2a01373808da9b2f715525c8dfbca6bd3e905ed0cdf1f5995ff7",
+    "bytes": 16584
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/t/tmux/tmux_3.4-1ubuntu0.1.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/tmux/tmux_3.4-1ubuntu0.1.dsc",
+    "sha256": "b5d2e19ef9bffcb58983a8f33a9a53a95caec1e39f234887751cdbacd86430d7",
+    "bytes": 2142
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libe/libevent/libevent_2.1.12-stable.orig.tar.gz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libevent/libevent_2.1.12-stable.orig.tar.gz",
+    "sha256": "92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb",
+    "bytes": 1100847
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libe/libevent/libevent_2.1.12-stable-9ubuntu2.1.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libevent/libevent_2.1.12-stable-9ubuntu2.1.debian.tar.xz",
+    "sha256": "944fd180c46379f053dbfa602cfd04f1c3a20a324de66ec80fd8044c2c9fce47",
+    "bytes": 23948
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libe/libevent/libevent_2.1.12-stable-9ubuntu2.1.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libevent/libevent_2.1.12-stable-9ubuntu2.1.dsc",
+    "sha256": "e109dc3f353d7baf6a1d82081da64ff8f835efcb1d93fa120857c7b7c91b9f3e",
+    "bytes": 2567
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/n/ncurses/ncurses_6.4+20240113.orig.tar.gz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/ncurses/ncurses_6.4+20240113.orig.tar.gz",
+    "sha256": "37a12a0f8ae2605012c9a164dd286b0cfa02b51b5055836d09eb3d597fc351b1",
+    "bytes": 3688489
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/n/ncurses/ncurses_6.4+20240113.orig.tar.gz.asc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/ncurses/ncurses_6.4+20240113.orig.tar.gz.asc",
+    "sha256": "b70cfa4f155f61dfa7c085ad1e3f90c73132ad198764d7793a44cd7fdca51f1b",
+    "bytes": 729
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/n/ncurses/ncurses_6.4+20240113-1ubuntu2.2.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/ncurses/ncurses_6.4+20240113-1ubuntu2.2.debian.tar.xz",
+    "sha256": "c7bbb8483d7ec358fb925a370575d8ebef63d6e455edce140de2ca7b86cf98d1",
+    "bytes": 50532
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/n/ncurses/ncurses_6.4+20240113-1ubuntu2.2.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/ncurses/ncurses_6.4+20240113-1ubuntu2.2.dsc",
+    "sha256": "a7dea4604db5c8bc113eda2c4a7353f357618a74d96e404ae98655128e2f03ec",
+    "bytes": 3942
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/s/systemd/systemd_255.4.orig.tar.gz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/systemd/systemd_255.4.orig.tar.gz",
+    "sha256": "96e75bd08c57ad401677456fb88ef54a9f05bb1695693013bc6ecce839640fd5",
+    "bytes": 14952427
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/s/systemd/systemd_255.4-1ubuntu8.17.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/systemd/systemd_255.4-1ubuntu8.17.debian.tar.xz",
+    "sha256": "4695ff34f83b1f7e6e02bf3cfac2e2a44ac76b6cfc5a38c0081bac6919d547bb",
+    "bytes": 272596
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/s/systemd/systemd_255.4-1ubuntu8.17.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/systemd/systemd_255.4-1ubuntu8.17.dsc",
+    "sha256": "8e5f4e5a7b7ee457214be1efd1ea1d380186c38b146d8c98af5da0f625d3c396",
+    "bytes": 7324
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libz/libzstd/libzstd_1.5.5+dfsg2.orig.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libzstd/libzstd_1.5.5+dfsg2.orig.tar.xz",
+    "sha256": "d7cf3c10d416fd999cb8fcf7685d9268ba7bec8eb78121fc2d0d916fa393d22b",
+    "bytes": 1784164
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libz/libzstd/libzstd_1.5.5+dfsg2-2build1.1.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libzstd/libzstd_1.5.5+dfsg2-2build1.1.debian.tar.xz",
+    "sha256": "c1df6d2628b26d085259b8e7ac020eb060e4c1feca98d6103058eda5ded725bc",
+    "bytes": 21288
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libz/libzstd/libzstd_1.5.5+dfsg2-2build1.1.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libzstd/libzstd_1.5.5+dfsg2-2build1.1.dsc",
+    "sha256": "c190a5dff9e7c5b5b1399f0d701bb2c173bc7cbdf14d5e05970f5ac066c25570",
+    "bytes": 2485
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/x/xz-utils/xz-utils_5.6.1+really5.4.5.orig.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/xz-utils/xz-utils_5.6.1+really5.4.5.orig.tar.xz",
+    "sha256": "da9dec6c12cf2ecf269c31ab65b5de18e8e52b96f35d5bcd08c12b43e6878803",
+    "bytes": 1680520
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/x/xz-utils/xz-utils_5.6.1+really5.4.5-1ubuntu0.3.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/xz-utils/xz-utils_5.6.1+really5.4.5-1ubuntu0.3.debian.tar.xz",
+    "sha256": "03f321901f6e1c56235cd7ae6a6784c104b1b1060ca3afa5a5806e345ee72e01",
+    "bytes": 31672
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/x/xz-utils/xz-utils_5.6.1+really5.4.5-1ubuntu0.3.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/xz-utils/xz-utils_5.6.1+really5.4.5-1ubuntu0.3.dsc",
+    "sha256": "34c2be772533a5c31e881bc620cedaf9be3d315feb677f00e12c136c299d126a",
+    "bytes": 2505
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/l/lz4/lz4_1.9.4.orig.tar.gz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/lz4/lz4_1.9.4.orig.tar.gz",
+    "sha256": "0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b",
+    "bytes": 354063
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/l/lz4/lz4_1.9.4-1build1.1.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/lz4/lz4_1.9.4-1build1.1.debian.tar.xz",
+    "sha256": "9551b039576db7c87f38c3c847283877de65114cca06488accb9596a7c4f1ead",
+    "bytes": 8356
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/l/lz4/lz4_1.9.4-1build1.1.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/lz4/lz4_1.9.4-1build1.1.dsc",
+    "sha256": "ba7b585b15d8b4c955dd68c7af5aa89901cfbb3fdb4f2607ccad51628857d669",
+    "bytes": 2061
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgcrypt20/libgcrypt20_1.10.3.orig.tar.bz2",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libgcrypt20/libgcrypt20_1.10.3.orig.tar.bz2",
+    "sha256": "8b0870897ac5ac67ded568dcfadf45969cfa8a6beb0fd60af2a9eadc2a3272aa",
+    "bytes": 3783827
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgcrypt20/libgcrypt20_1.10.3.orig.tar.bz2.asc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libgcrypt20/libgcrypt20_1.10.3.orig.tar.bz2.asc",
+    "sha256": "f02a5f961b89c034a78decbb355ea5a8d9356df5a9636dec53ae548d7d814b14",
+    "bytes": 390
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgcrypt20/libgcrypt20_1.10.3-2ubuntu0.2.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libgcrypt20/libgcrypt20_1.10.3-2ubuntu0.2.debian.tar.xz",
+    "sha256": "8298a57538f427d3c1112f2d86e374dd8223156e06b403f5c7945dd3d86f2050",
+    "bytes": 66364
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgcrypt20/libgcrypt20_1.10.3-2ubuntu0.2.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libgcrypt20/libgcrypt20_1.10.3-2ubuntu0.2.dsc",
+    "sha256": "688df10bc9c90b241926470d1f12a4d5092157263a6c1555996c53bcf40ca7d1",
+    "bytes": 2914
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgpg-error/libgpg-error_1.47.orig.tar.bz2",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libgpg-error/libgpg-error_1.47.orig.tar.bz2",
+    "sha256": "9e3c670966b96ecc746c28c2c419541e3bcb787d1a73930f5e5f5e1bcbbb9bdb",
+    "bytes": 1020862
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgpg-error/libgpg-error_1.47.orig.tar.bz2.asc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libgpg-error/libgpg-error_1.47.orig.tar.bz2.asc",
+    "sha256": "6ab547bf020761e1df80b08335773a91c345ff2c1344f15b1f7d195293ab21a5",
+    "bytes": 228
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgpg-error/libgpg-error_1.47-3build2.1.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libgpg-error/libgpg-error_1.47-3build2.1.debian.tar.xz",
+    "sha256": "f02a079a6ddf9930659c3402820b6bd190687e8f1c223f340c965a9da74abcd5",
+    "bytes": 18776
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libg/libgpg-error/libgpg-error_1.47-3build2.1.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libgpg-error/libgpg-error_1.47-3build2.1.dsc",
+    "sha256": "3c8abf463c9ade945fe2e9d87c4aa2bff0026964207b07e99432d9ef6d9436d8",
+    "bytes": 3007
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libc/libcap2/libcap2_2.66.orig.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libcap2/libcap2_2.66.orig.tar.xz",
+    "sha256": "15c40ededb3003d70a283fe587a36b7d19c8b3b554e33f86129c059a4bb466b2",
+    "bytes": 181592
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libc/libcap2/libcap2_2.66-5ubuntu2.4.debian.tar.xz",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libcap2/libcap2_2.66-5ubuntu2.4.debian.tar.xz",
+    "sha256": "7eb46752c6b59984494d2f641a049b9d4b394b7d1fe067729ccbc413c5943136",
+    "bytes": 24724
+  },
+  {
+    "uri": "https://snapshot.ubuntu.com/ubuntu/20260924T180000Z/pool/main/libc/libcap2/libcap2_2.66-5ubuntu2.4.dsc",
+    "path": "/tmp/quantmesh-tmux-audit-85vknab4/source/libcap2/libcap2_2.66-5ubuntu2.4.dsc",
+    "sha256": "8178019803f285b92e52e82cf84b0a6fc18840041270b2c588db826b8277e3e0",
+    "bytes": 2319
+  }
+]

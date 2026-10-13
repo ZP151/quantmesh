@@ -1,0 +1,10 @@
+{
+  "script": "check.py",
+  "actual_file_byte_sha256": "4e4d8718d03a1a6a029b2696816969a29d67b9e1ece7512ef1a789bbd74fe0ef",
+  "initial_text_encoding_hash": "5286d61506d6e9435263beed4ba9b1d28696623a26fe5ae82f69c799631e6735",
+  "text_encoding_hash_matches_file": false,
+  "cause": "Windows write_text newline translation; initial hash was of normalized text, not on-disk bytes",
+  "original_provenance_retained": true,
+  "runtime_replayed": false,
+  "producer_receipts_modified": false
+}

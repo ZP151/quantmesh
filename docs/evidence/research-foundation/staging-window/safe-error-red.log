@@ -1,0 +1,49 @@
+..................................ss.............FsFss                   [100%]
+================================== FAILURES ===================================
+____ test_generated_configuration_has_fixed_direct_guard_and_no_recording _____
+
+    def test_generated_configuration_has_fixed_direct_guard_and_no_recording():
+        config = stage._tmux_config(stage.StagingWindow(permit())).decode()
+        assert "new-session -d -s opend /usr/bin/python3 -I -S -B " in config
+        assert "--pane --nonce " + "a" * 32 in config
+        for setting in [
+            "history-limit 0",
+            "set-clipboard off",
+            "buffer-limit 1",
+            "exit-unattached off",
+            "unbind-key -a",
+        ]:
+>           assert setting in config
+E           AssertionError: assert 'buffer-limit 1' in 'set-option -g history-limit 0\nset-option -s buffer-limit 0\nset-option -s message-limit 0\nset-option -s set-clipboa...pend /usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --pane --nonce aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n'
+
+tests\test_opend_staging_window.py:231: AssertionError
+____________ test_no_effect_check_window_redacts_unexpected_error _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000016960CAA9E0>
+capsys = <_pytest.capture.CaptureFixture object at 0x0000016960CE6FD0>
+
+    def test_no_effect_check_window_redacts_unexpected_error(monkeypatch, capsys):
+        def denied(*args):
+            raise RuntimeError("noncredential-fixture-marker")
+        monkeypatch.setattr(stage, "load_staging_window", denied)
+>       assert stage.main(["--check-window", "--nonce", "a" * 32]) == 2
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_opend_staging_window.py:251: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy\aws\opend\stage_console.py:1057: in main
+    window = load_staging_window()
+             ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = ()
+
+    def denied(*args):
+>       raise RuntimeError("noncredential-fixture-marker")
+E       RuntimeError: noncredential-fixture-marker
+
+tests\test_opend_staging_window.py:249: RuntimeError
+=========================== short test summary info ===========================
+FAILED tests/test_opend_staging_window.py::test_generated_configuration_has_fixed_direct_guard_and_no_recording
+FAILED tests/test_opend_staging_window.py::test_no_effect_check_window_redacts_unexpected_error
+2 failed, 47 passed, 5 skipped in 0.22s
