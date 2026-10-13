@@ -19,16 +19,21 @@ three incumbent formatting changes have identical tested/final AST. Readonly
 runtime after-admission81licenses/6669RECORD/zero.pyc passes. This is not yet
 deployed and is not proven to cause the observed AWS collection gap.
 
-Remote PR175 head042fb0b CI38365280962/watch76685 remains live; independent
-service artifact202passed/5PGskipped/207total/81licenses is verified separately.
-The subsequent local poll patch requires new exact-tree checks before release.
+Remote PR175 head042fb0b CI38365280962 completes SUCCESS08:50:27UTC; watch76685
+exits0 and must not be polled/restarted. Actualcheckout6cd983d tree06c80ca matches
+candidate;18fullrelease steps/4497corepytest113skip3307.114s/frontend419 pass.
+Independent service202passed/5PGskipped/207total/81licenses is verified separately.
+Terminal proof is [ci042-terminal](../evidence/research-foundation/ci042-terminal/README.md).
+The subsequent localb535f08 poll patch requires new exact-tree checks before release.
 No old CI/watch or completed full tests are rerun. PR175 remains DRAFT.
 
 Task2 proposal SHA8770d945f510aa1854f07d612d7bfb010d4ff81896d1680e3aa72e973d228a01
 has34indexedfiles/36archivemembers/15rootGitblobs and1,548,420totalbytes verified.
 Root freezes construction-only WorkerRunner/privateContextVar, actualcontainer
 poll/pulse/close, ROinput/RWoutput and measuredimage/runtime identity for new
-bounded software implementation in the existing #172 chat. Full numerical
+bounded software implementation in the existing #172 chat. Its current new
+checkpoint36pass/4Windows-native skip/17deselected with2.67MB owned footprint
+awaits new slice reviews; no Linux numerical execution is enabled. Full numerical
 image/ELF/notices/native<=90s recovery remain pending. No newlocalbulkimage/env/
 clone/container is allowed while whole-C12.93GB attribution remains unresolved;
 the existing disk question is pending. Source and small tests use existing

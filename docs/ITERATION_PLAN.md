@@ -21,8 +21,9 @@ explicit user human review and exact-head CI; reviewed helper12688 is restored
 with Startup/OpenD preserved. Fresh authentication is completed; actual08:27UTC
 SSHhealth and08:28 private-listener observation pass. The personal-PC gateway is
 not relabelled cloud and market ingestion remains a separate gate. Research c545
-CI passes4493pytest/111skip/frontend419; current042fb0b CI38365280962 is live with
-offline service202pass/5PGskip. A subsequent isolated unexpected-poll repair has
+CI passes4493pytest/111skip/frontend419; later042fb0b CI38365280962 completes
+SUCCESS4497pytest/113skip/frontend419, separate offline service202pass/5PGskip.
+A subsequent local isolated unexpected-poll repair has
 RED3/24focusedpasses/narrowreview; its exact checks/deployment remain pending.
 New Linux numerical Worker software proceeds after root-frozen proposal, while
 new localbulk materialization is held on unresolved disk attribution. Actual

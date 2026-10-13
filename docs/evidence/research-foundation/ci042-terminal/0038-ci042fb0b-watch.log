@@ -1,0 +1,4186 @@
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 1 minute ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* fast (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  * Test frontend
+  * Check committed frontend bundle
+  * Run bounded fast gate
+  * Retain gate evidence
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 2 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 3 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 4 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 5 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 6 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 7 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 8 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 9 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 10 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 11 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 12 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 13 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 15 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 16 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 17 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 18 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 19 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 20 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 21 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 22 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 23 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 24 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 25 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 26 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 27 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 28 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 29 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 30 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 31 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 32 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 33 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 34 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 35 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 36 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 37 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 38 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 39 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 40 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 41 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 42 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 43 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 44 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 45 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 47 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 48 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 49 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 50 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 51 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 52 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 53 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 54 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 55 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 56 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 57 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 58 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+Refreshing run status every 60 seconds. Press Ctrl+C to quit.
+
+* codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 59 minutes ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+* release (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  * Certify exact checkout
+  * Retain release diagnostics
+  * Post Run actions/setup-node@v4
+  * Post Run actions/setup-python@v5
+  * Post Run actions/checkout@v4
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+✓ codex/0038-research-foundation CI ZP151/quantmesh#175 · 38365280962
+Triggered via pull_request about 1 hour ago
+
+JOBS
+✓ classify in 9s (ID 115188808577)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Classify validation impact
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ research_service in 1m10s (ID 115188808915)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install independent hash-locked service environment
+  ✓ Verify offline service compatibility
+  ✓ Retain separate service evidence
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ fast in 2m5s (ID 115188873995)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install frontend dependencies
+  ✓ Review locked frontend licenses
+  ✓ Audit frontend dependencies
+  ✓ Check generated OpenAPI client
+  ✓ Type-check frontend
+  ✓ Lint frontend
+  ✓ Test frontend
+  ✓ Check committed frontend bundle
+  ✓ Run bounded fast gate
+  ✓ Retain gate evidence
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+✓ release in 59m27s (ID 115188874076)
+  ✓ Set up job
+  ✓ Set gate evidence directory
+  ✓ Run actions/checkout@v4
+  ✓ Run actions/setup-python@v5
+  ✓ Install Python validation environment
+  ✓ Run actions/setup-node@v4
+  ✓ Install Chromium
+  ✓ Certify exact checkout
+  ✓ Retain release diagnostics
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run actions/setup-python@v5
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+- domain in 0s (ID 115188876009)
+- browser in 0s (ID 115188876246)
+✓ python in 4s (ID 115211098875)
+  ✓ Set up job
+  ✓ Run actions/setup-python@v5
+  ✓ Require successful selected gates
+  ✓ Post Run actions/setup-python@v5
+  ✓ Complete job
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+classify: .github#8
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+classify: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+research_service: .github#2
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+python: .github#2
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+python: .github#1
+

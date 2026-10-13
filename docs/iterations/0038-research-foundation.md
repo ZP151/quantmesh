@@ -19,14 +19,19 @@ readonlyruntime81licenses/6669RECORD/zero.pyc after-admission passes. Not deploy
 and not established as the actual AWS gap's cause.45raw receipts/681488B are
 hash-bound under [post-auth-poll-repair](../evidence/research-foundation/post-auth-poll-repair/README.md).
 
-Remote042fb0b CI38365280962/watch76685 remains live, with independently verified
-offline service202pass/5PGskip/207total/81licenses; later local poll code needs
-its own exact-tree checks. No old CI or completed broad tests are repeated.
+Remote042fb0b CI38365280962 is SUCCESS08:50:27UTC/watch76685exit0; actualcheckout
+6cd983d/tree06c80ca matches candidate,18release steps/4497corepass113skip3307.114s/
+frontend419 pass. Independently verified offline service202pass/5PGskip/207total/
+81licenses remains separate. [Terminal proof](../evidence/research-foundation/ci042-terminal/README.md)
+retains stdout/metadata; laterlocalb535f08 needs new exact-tree checks. No old CI,
+ended watch or completed broad tests are repeated.
 
 Task2 proposal8770d945f510aa1854f07d612d7bfb010d4ff81896d1680e3aa72e973d228a01
 is independently verified34files/36members/15rootblobs/1,548,420B. Root accepts
 construction-context/actualcontainer supervision/RO-RW/runtime-image interfaces
-for a new bounded software turn in existing #172 chat. Actual numerical image,
+for a new bounded software turn in existing #172 chat. Currentcheckpoint36pass/
+4Windows-native skip/17deselected/2.67MB awaits new slice review; Linux numerical
+execution is not enabled. Actual numerical image,
 ELF/notices/newimage probe/two-job recovery and resource acceptance remain
 pending. New localbulkimage/env/clone/container operations remain held under
 unresolved12.93GB disk attribution; only small source/tests on existing resources.

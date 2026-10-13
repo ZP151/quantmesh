@@ -1,0 +1,32 @@
+[
+  {
+    "path": "0038-ci38365280962-terminal.json",
+    "bytes": 10992,
+    "sha256": "702fa1de1a23d0c18aa51a3ca6e895f6b3f8b721662151150cb870644737b921"
+  },
+  {
+    "path": "0038-ci38365280962-checkout.json",
+    "bytes": 2594,
+    "sha256": "37f6f481515d232ef4152ca575e0f0ec575173280bc00ec5566ecff636ff8191"
+  },
+  {
+    "path": "0038-ci38365280962-success.log",
+    "bytes": 325209,
+    "sha256": "4b544ab68bb653ab0a2aa6ced3c9d2a679c43c42bcb928b50367a9f0ded888a7"
+  },
+  {
+    "path": "0038-ci38365280962-verified-summary.json",
+    "bytes": 2409,
+    "sha256": "35b4e966e775178ae48cd2451884965b1ab5f72e3fa3a5f0facd54bf23cfe0e6"
+  },
+  {
+    "path": "0038-ci042fb0b-watch.log",
+    "bytes": 166102,
+    "sha256": "8b2ad0a313c9b3f6c4f60a06cbf12e7045ee01272207231b55416ce0a3682aa7"
+  },
+  {
+    "path": "0038-ci042fb0b-watch.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  }
+]

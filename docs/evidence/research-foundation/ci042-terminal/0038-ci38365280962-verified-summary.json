@@ -1,0 +1,102 @@
+{
+  "run": 38365280962,
+  "head": "042fb0b491c13f4535bddbb61290b191d29b1790",
+  "conclusion": "success",
+  "completed_at": "2026-10-13T08:50:27Z",
+  "actual_checkout": "6cd983d55bdd3f7a49b488b8ecd28ad2a5fc21dd",
+  "tree": "06c80ca3427808c558ea0ef65ff3865ddfff52ec",
+  "trees_match": true,
+  "full_release_steps": 18,
+  "full_pytest": {
+    "passed": 4497,
+    "skipped": 113,
+    "seconds": 3307.114
+  },
+  "frontend_passed": 419,
+  "independent_service": {
+    "passed": 202,
+    "skipped": 5,
+    "total": 207,
+    "licensed_packages": 81,
+    "profile": "OFFLINE_SCRIPTED_ONLY"
+  },
+  "watch_exit": 0,
+  "old_service_still_running_snapshot_retained": true,
+  "production_deployed": false,
+  "full_option_A_complete": false,
+  "new_local_head_requires_exact_CI": "b535f089a83271670584dc3476538df86bdcb7a9",
+  "step_times": [
+    {
+      "seconds": 1.0,
+      "step": "clone current commit"
+    },
+    {
+      "seconds": 1.0,
+      "step": "release version consistent (metadata, notes, tag)"
+    },
+    {
+      "seconds": 3.0,
+      "step": "fresh venv"
+    },
+    {
+      "seconds": 35.0,
+      "step": "install release extras .[dev,research,e2e,moomoo]"
+    },
+    {
+      "seconds": 1.0,
+      "step": "ruff check src tests tools"
+    },
+    {
+      "seconds": 2.0,
+      "step": "trusted data tooling installed"
+    },
+    {
+      "seconds": 1.0,
+      "step": "license review (closure contract)"
+    },
+    {
+      "seconds": 3.0,
+      "step": "audit venv (isolated tooling)"
+    },
+    {
+      "seconds": 5.0,
+      "step": "install pip-audit (isolated)"
+    },
+    {
+      "seconds": 2.0,
+      "step": "pip-audit over requirements-audit.txt"
+    },
+    {
+      "seconds": 7.0,
+      "step": "npm ci (frontend deps)"
+    },
+    {
+      "seconds": 1.0,
+      "step": "frontend license review (locked closure)"
+    },
+    {
+      "seconds": 1.0,
+      "step": "npm audit --audit-level=high"
+    },
+    {
+      "seconds": 10.0,
+      "step": "frontend bundle current (build_frontend --check)"
+    },
+    {
+      "seconds": 29.0,
+      "step": "frontend unit tests (vitest)"
+    },
+    {
+      "seconds": 3307.1,
+      "step": "full pytest suite"
+    },
+    {
+      "seconds": 52.0,
+      "step": "golden path (walk)"
+    },
+    {
+      "seconds": 1.0,
+      "step": "clean-checkout proof"
+    }
+  ]
+}
