@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "head": "f3a72afb4fcb485e3b2cdc6a9a02fa810d428d68",
+  "native_checkout": "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/integration-f3a72af-checkout",
+  "unit_exit": 0,
+  "dependency_exit": 0,
+  "tests": {
+    "tests": 69,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 3
+  },
+  "bytecode_after": 0,
+  "scope": "INTEGRATED_UNIT_BOUNDARY_NO_NATIVE_PG_PROFILE",
+  "paid_calls": 0,
+  "production_qualified": false
+}
