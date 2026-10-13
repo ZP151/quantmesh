@@ -1,0 +1,10 @@
+{
+  "services/research_agent/src/qm_research_agent/openai_responses.py": {
+    "bytes": 19031,
+    "sha256": "0f4ac75b5feb378b3121da04d6b25ba8d1f51fdad55874a0a03f42949da2d0d2"
+  },
+  "services/research_agent/tests/test_openai_responses.py": {
+    "bytes": 24211,
+    "sha256": "a3ce6e10b667fcc8bd44235489a68dd4352ab8ef708e7a08a5919e4fda8abe48"
+  }
+}

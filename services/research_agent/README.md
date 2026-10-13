@@ -289,3 +289,73 @@ requests cannot change it. No paid model call occurred in this checkpoint.
 See `evidence/checkpoint.json` for role outputs, RED/GREEN commands, current
 verification, review dispositions and residual acceptance. Coordinator should
 mirror that evidence into the shared iteration before integration.
+
+## OpenAI Responses provider — offline Task1 only
+
+`openai_responses.py` adds a typed, service-owned transport and an
+`ApprovedRemoteGateway` subclass using the existing httpx dependency. It does
+not activate the runtime/bootstrap. An explicit `SecretStr`, allowed origin and
+remote consent are required. The sole URL is
+`https://api.openai.com/v1/responses`; no key, proxy, account or endpoint is
+discovered from environment or request data. Unknown model/price versions
+reject at construction. Configuration stays pickle-safe, with a fresh closed
+AsyncClient per effect and no automatic retry.
+
+The selected alias is `gpt-6.1-sol`; no dated snapshot or account access is
+inferred. The immutable price source version is
+`openai-gpt-6.1-sol-standard-2026-10-13`, standard rates per million input/
+cached input/cache write/output tokens $2/$0.10/$2.50/$10, for input at most
+272000 tokens. Other tiers, regional pricing and long contexts are unqualified.
+Source: [official model documentation](https://developers.openai.com/api/docs/models/gpt-6.1-sol).
+
+`make_openai_advisory` constructs the existing runner with provider=`openai`
+and a conservative `Decimal('1.00')` reservation. The existing per-job
+$1/12-call caps and configured $50 UTC-month operating/$200 lifetime development
+policy remain authoritative. This uses a default job's full estimate allowance;
+it is an admission estimate, not a provider bill or spending guarantee. Token
+metadata never refunds a reservation. Missing portfolio authority remains denied.
+
+The adapter maps the existing text messages and optional strict JSON schema
+to Responses `input` and `text.format`, with low reasoning, output at most1024,
+`service_tier=default` and explicit `store=false/background=false/stream=false`.
+Legacy temperature is validated but omitted, because reasoning effort is fixed.
+There are no tools, conversations, previous response, images/files or fallback
+trading text. Request/response UTF-8 payloads are capped at65536 bytes; an
+aggregate asyncio30-second exchange deadline supplements HTTP timeouts. TLS
+verification is on, redirects/proxy discovery are off and clients/responses close
+on errors or cancellation. Only one completed assistant/output_text is accepted,
+with non-published reasoning metadata. Refusal/tool/incomplete/error/unknown
+model or tier rejects. Usage and cached/cache-write/reasoning counts require
+exact nonnegative integers and consistent totals; unknown details fail closed.
+
+The pinned httpx0.28.1 transport installs a guarded network-backend adapter for
+Linux DNS. A fresh owned stdlib subprocess resolves only the fixed public
+hostname; it receives no key/report and is killed/reaped on cancellation. The
+existing backend connects to a numeric public address while httpcore retains
+the original HTTPS origin/TLS SNI. This avoids uncancellable resolver-executor
+shutdown extending the synchronous call's deadline. An unexpected dependency
+shape or unsupported platform fails closed rather than using that fallback.
+This is a narrow resolver/process witness, not aggregate model containment.
+
+The resolver interpreter uses `-B -I`: it cannot load Python modules from the
+caller's working directory or user site. A real owned-child module-shadow
+negative failed before `-I` and passes afterward, without DNS/TCP/API access.
+The final affected suite is131passed/48.60s; no aggregate Linux, real TLS/SNI,
+account/model or provider-billing acceptance is inferred from it.
+
+Offline tests use in-memory mocked HTTP and real gateway/graph/local-store/
+ledger/artifact validation. The subprocess invocation boundary is replaced for
+that mock to stay in-process; these tests do **not** witness native aggregate
+containment, actual API availability, TLS handshake, paid usage or model quality.
+Completed archived responses replay original metadata without another effect;
+ambiguous timeouts keep their reservations and backtest success. Exhausted
+portfolio/job budgets make zero HTTP calls. See the new
+[Task1 plan/evidence](../../docs/superpowers/plans/2026-10-13-openai-advisory-provider.md).
+
+Real activation waits for qualified aggregate Linux execution, reviewed private
+server deployment, model/account/price verification and explicit report-egress
+and server-secret approval. No real request or key was used for this checkpoint.
+`store=false` is not Zero Data Retention; standard abuse monitoring can retain
+data up to30 days. [Official data controls](https://developers.openai.com/api/docs/guides/your-data)
+govern that separate acceptance. Only specifically approved report/context may
+leave the server after those gates.

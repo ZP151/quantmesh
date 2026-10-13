@@ -1,0 +1,2198 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF              [100%]
+=================================== FAILURES ===================================
+______________ test_mapping_strict_schema_usage_and_closed_client ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4806d59d0>
+
+    def test_mapping_strict_schema_usage_and_closed_client(monkeypatch):
+        calls, clients, options = http_fixture(monkeypatch, lambda req: httpx.Response(200, json=completion('{"verdict":"inconclusive"}')))
+        class Verdict(BaseModel):
+            verdict: str
+>       model = gateway()
+                ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+________ test_explicit_config_no_env_discovery_pickle_and_frozen_price _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48043e060>
+
+    def test_explicit_config_no_env_discovery_pickle_and_frozen_price(monkeypatch):
+        for name in ("OPENAI_API_KEY", "QUANTMESH_MODEL_API_KEY", "HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY", "SSL_CERT_FILE"):
+            monkeypatch.setenv(name, "hostile-fixture-must-not-be-used")
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, json=completion()))
+>       model = pickle.loads(pickle.dumps(gateway()))
+                                          ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_config_refuses_before_http[changes0] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4806d71a0>
+changes = {'key': None}
+
+    @pytest.mark.parametrize("changes", [
+        {"key": None}, {"key": "ambient"}, {"key": SecretStr("")}, {"key": SecretStr("bad\r\nkey")},
+        {"remote_consent": False}, {"allowed_origins": frozenset({"https://other.example"})},
+        {"model": "unknown"}, {"model": "gpt-6.1-sol-2026-10-13"}, {"price_version": "unknown"},
+    ])
+    def test_unknown_config_refuses_before_http(monkeypatch, changes):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelConfigurationError) as caught:
+>           gateway(**changes)
+
+services/research_agent/tests/test_openai_responses.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_config_refuses_before_http[changes1] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4804943e0>
+changes = {'key': 'ambient'}
+
+    @pytest.mark.parametrize("changes", [
+        {"key": None}, {"key": "ambient"}, {"key": SecretStr("")}, {"key": SecretStr("bad\r\nkey")},
+        {"remote_consent": False}, {"allowed_origins": frozenset({"https://other.example"})},
+        {"model": "unknown"}, {"model": "gpt-6.1-sol-2026-10-13"}, {"price_version": "unknown"},
+    ])
+    def test_unknown_config_refuses_before_http(monkeypatch, changes):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelConfigurationError) as caught:
+>           gateway(**changes)
+
+services/research_agent/tests/test_openai_responses.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_config_refuses_before_http[changes2] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051dd00>
+changes = {'key': SecretStr('')}
+
+    @pytest.mark.parametrize("changes", [
+        {"key": None}, {"key": "ambient"}, {"key": SecretStr("")}, {"key": SecretStr("bad\r\nkey")},
+        {"remote_consent": False}, {"allowed_origins": frozenset({"https://other.example"})},
+        {"model": "unknown"}, {"model": "gpt-6.1-sol-2026-10-13"}, {"price_version": "unknown"},
+    ])
+    def test_unknown_config_refuses_before_http(monkeypatch, changes):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelConfigurationError) as caught:
+>           gateway(**changes)
+
+services/research_agent/tests/test_openai_responses.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_config_refuses_before_http[changes3] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051f080>
+changes = {'key': SecretStr('**********')}
+
+    @pytest.mark.parametrize("changes", [
+        {"key": None}, {"key": "ambient"}, {"key": SecretStr("")}, {"key": SecretStr("bad\r\nkey")},
+        {"remote_consent": False}, {"allowed_origins": frozenset({"https://other.example"})},
+        {"model": "unknown"}, {"model": "gpt-6.1-sol-2026-10-13"}, {"price_version": "unknown"},
+    ])
+    def test_unknown_config_refuses_before_http(monkeypatch, changes):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelConfigurationError) as caught:
+>           gateway(**changes)
+
+services/research_agent/tests/test_openai_responses.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_config_refuses_before_http[changes4] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051cdd0>
+changes = {'remote_consent': False}
+
+    @pytest.mark.parametrize("changes", [
+        {"key": None}, {"key": "ambient"}, {"key": SecretStr("")}, {"key": SecretStr("bad\r\nkey")},
+        {"remote_consent": False}, {"allowed_origins": frozenset({"https://other.example"})},
+        {"model": "unknown"}, {"model": "gpt-6.1-sol-2026-10-13"}, {"price_version": "unknown"},
+    ])
+    def test_unknown_config_refuses_before_http(monkeypatch, changes):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelConfigurationError) as caught:
+>           gateway(**changes)
+
+services/research_agent/tests/test_openai_responses.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_config_refuses_before_http[changes5] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051d220>
+changes = {'allowed_origins': frozenset({'https://other.example'})}
+
+    @pytest.mark.parametrize("changes", [
+        {"key": None}, {"key": "ambient"}, {"key": SecretStr("")}, {"key": SecretStr("bad\r\nkey")},
+        {"remote_consent": False}, {"allowed_origins": frozenset({"https://other.example"})},
+        {"model": "unknown"}, {"model": "gpt-6.1-sol-2026-10-13"}, {"price_version": "unknown"},
+    ])
+    def test_unknown_config_refuses_before_http(monkeypatch, changes):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelConfigurationError) as caught:
+>           gateway(**changes)
+
+services/research_agent/tests/test_openai_responses.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_config_refuses_before_http[changes6] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051e840>
+changes = {'model': 'unknown'}
+
+    @pytest.mark.parametrize("changes", [
+        {"key": None}, {"key": "ambient"}, {"key": SecretStr("")}, {"key": SecretStr("bad\r\nkey")},
+        {"remote_consent": False}, {"allowed_origins": frozenset({"https://other.example"})},
+        {"model": "unknown"}, {"model": "gpt-6.1-sol-2026-10-13"}, {"price_version": "unknown"},
+    ])
+    def test_unknown_config_refuses_before_http(monkeypatch, changes):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelConfigurationError) as caught:
+>           gateway(**changes)
+
+services/research_agent/tests/test_openai_responses.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_config_refuses_before_http[changes7] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480529160>
+changes = {'model': 'gpt-6.1-sol-2026-10-13'}
+
+    @pytest.mark.parametrize("changes", [
+        {"key": None}, {"key": "ambient"}, {"key": SecretStr("")}, {"key": SecretStr("bad\r\nkey")},
+        {"remote_consent": False}, {"allowed_origins": frozenset({"https://other.example"})},
+        {"model": "unknown"}, {"model": "gpt-6.1-sol-2026-10-13"}, {"price_version": "unknown"},
+    ])
+    def test_unknown_config_refuses_before_http(monkeypatch, changes):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelConfigurationError) as caught:
+>           gateway(**changes)
+
+services/research_agent/tests/test_openai_responses.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_config_refuses_before_http[changes8] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48052b7a0>
+changes = {'price_version': 'unknown'}
+
+    @pytest.mark.parametrize("changes", [
+        {"key": None}, {"key": "ambient"}, {"key": SecretStr("")}, {"key": SecretStr("bad\r\nkey")},
+        {"remote_consent": False}, {"allowed_origins": frozenset({"https://other.example"})},
+        {"model": "unknown"}, {"model": "gpt-6.1-sol-2026-10-13"}, {"price_version": "unknown"},
+    ])
+    def test_unknown_config_refuses_before_http(monkeypatch, changes):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelConfigurationError) as caught:
+>           gateway(**changes)
+
+services/research_agent/tests/test_openai_responses.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change0] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051d340>
+change = {'model': 'other'}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change1] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051c1a0>
+change = {'tools': []}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change2] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051d850>
+change = {'previous_response_id': 'secret'}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change3] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480494920>
+change = {'store': True}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change4] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4806d4560>
+change = {'messages': []}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change5] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4806d5730>
+change = {'messages': [{'role': 'tool', 'content': 'foo'}]}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change6] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48052a540>
+change = {'messages': [{'role': 'user', 'content': [{'type': 'input_image'}]}]}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change7] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48052b860>
+change = {'max_tokens': True}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change8] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48052bfe0>
+change = {'max_tokens': 0}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_request_boundary_refuses_without_network[change9] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48052a840>
+change = {'max_tokens': 1025}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+___________ test_request_boundary_refuses_without_network[change10] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480620a40>
+change = {'temperature': nan}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+___________ test_request_boundary_refuses_without_network[change11] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480620110>
+change = {'messages': [{'role': 'user', 'content': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}]}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+___________ test_request_boundary_refuses_without_network[change12] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48052b8c0>
+change = {'response_format': {'type': 'json_object'}}
+
+    @pytest.mark.parametrize("change", [
+        {"model": "other"}, {"tools": []}, {"previous_response_id": "secret"}, {"store": True},
+        {"messages": []}, {"messages": [{"role": "tool", "content": "foo"}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_image"}]}]},
+        {"max_tokens": True}, {"max_tokens": 0}, {"max_tokens": 1025}, {"temperature": float("nan")},
+        {"messages": [{"role": "user", "content": "x" * 65536}]},
+        {"response_format": {"type": "json_object"}},
+    ])
+    def test_request_boundary_refuses_without_network(monkeypatch, change):
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected request"))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete({**body(), **change})
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_____ test_incomplete_or_unknown_response_is_sanitized[status-incomplete] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480528380>
+field = 'status', value = 'incomplete'
+
+    @pytest.mark.parametrize("field,value", [
+        ("status", "incomplete"), ("error", {"message": "RAW_ERROR_PROMPT_SENTINEL"}),
+        ("incomplete_details", {"reason": "max_output_tokens"}), ("model", "unknown-model"),
+        ("service_tier", "priority"), ("usage", None), ("output", []),
+    ])
+    def test_incomplete_or_unknown_response_is_sanitized(monkeypatch, field, value):
+        payload = completion()
+        payload[field] = value
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+________ test_incomplete_or_unknown_response_is_sanitized[error-value1] ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4806d5e50>
+field = 'error', value = {'message': 'RAW_ERROR_PROMPT_SENTINEL'}
+
+    @pytest.mark.parametrize("field,value", [
+        ("status", "incomplete"), ("error", {"message": "RAW_ERROR_PROMPT_SENTINEL"}),
+        ("incomplete_details", {"reason": "max_output_tokens"}), ("model", "unknown-model"),
+        ("service_tier", "priority"), ("usage", None), ("output", []),
+    ])
+    def test_incomplete_or_unknown_response_is_sanitized(monkeypatch, field, value):
+        payload = completion()
+        payload[field] = value
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_ test_incomplete_or_unknown_response_is_sanitized[incomplete_details-value2] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48043a8d0>
+field = 'incomplete_details', value = {'reason': 'max_output_tokens'}
+
+    @pytest.mark.parametrize("field,value", [
+        ("status", "incomplete"), ("error", {"message": "RAW_ERROR_PROMPT_SENTINEL"}),
+        ("incomplete_details", {"reason": "max_output_tokens"}), ("model", "unknown-model"),
+        ("service_tier", "priority"), ("usage", None), ("output", []),
+    ])
+    def test_incomplete_or_unknown_response_is_sanitized(monkeypatch, field, value):
+        payload = completion()
+        payload[field] = value
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____ test_incomplete_or_unknown_response_is_sanitized[model-unknown-model] _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051c6b0>
+field = 'model', value = 'unknown-model'
+
+    @pytest.mark.parametrize("field,value", [
+        ("status", "incomplete"), ("error", {"message": "RAW_ERROR_PROMPT_SENTINEL"}),
+        ("incomplete_details", {"reason": "max_output_tokens"}), ("model", "unknown-model"),
+        ("service_tier", "priority"), ("usage", None), ("output", []),
+    ])
+    def test_incomplete_or_unknown_response_is_sanitized(monkeypatch, field, value):
+        payload = completion()
+        payload[field] = value
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+___ test_incomplete_or_unknown_response_is_sanitized[service_tier-priority] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051e3f0>
+field = 'service_tier', value = 'priority'
+
+    @pytest.mark.parametrize("field,value", [
+        ("status", "incomplete"), ("error", {"message": "RAW_ERROR_PROMPT_SENTINEL"}),
+        ("incomplete_details", {"reason": "max_output_tokens"}), ("model", "unknown-model"),
+        ("service_tier", "priority"), ("usage", None), ("output", []),
+    ])
+    def test_incomplete_or_unknown_response_is_sanitized(monkeypatch, field, value):
+        payload = completion()
+        payload[field] = value
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_________ test_incomplete_or_unknown_response_is_sanitized[usage-None] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480621550>
+field = 'usage', value = None
+
+    @pytest.mark.parametrize("field,value", [
+        ("status", "incomplete"), ("error", {"message": "RAW_ERROR_PROMPT_SENTINEL"}),
+        ("incomplete_details", {"reason": "max_output_tokens"}), ("model", "unknown-model"),
+        ("service_tier", "priority"), ("usage", None), ("output", []),
+    ])
+    def test_incomplete_or_unknown_response_is_sanitized(monkeypatch, field, value):
+        payload = completion()
+        payload[field] = value
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_______ test_incomplete_or_unknown_response_is_sanitized[output-value6] ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480622990>
+field = 'output', value = []
+
+    @pytest.mark.parametrize("field,value", [
+        ("status", "incomplete"), ("error", {"message": "RAW_ERROR_PROMPT_SENTINEL"}),
+        ("incomplete_details", {"reason": "max_output_tokens"}), ("model", "unknown-model"),
+        ("service_tier", "priority"), ("usage", None), ("output", []),
+    ])
+    def test_incomplete_or_unknown_response_is_sanitized(monkeypatch, field, value):
+        payload = completion()
+        payload[field] = value
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_________ test_usage_exact_integer_consistency_fail_closed[path0-True] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480507e00>
+path = ('input_tokens',), value = True
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________ test_usage_exact_integer_consistency_fail_closed[path1--1] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480507560>
+path = ('output_tokens',), value = -1
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________ test_usage_exact_integer_consistency_fail_closed[path2-18] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48054d700>
+path = ('total_tokens',), value = 18
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_________ test_usage_exact_integer_consistency_fail_closed[path3-10.0] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48054ec90>
+path = ('input_tokens',), value = 10.0
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________ test_usage_exact_integer_consistency_fail_closed[path4-10] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480507c50>
+path = ('input_tokens',), value = '10'
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_________ test_usage_exact_integer_consistency_fail_closed[path5-1025] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480621400>
+path = ('output_tokens',), value = 1025
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________ test_usage_exact_integer_consistency_fail_closed[path6-11] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051e360>
+path = ('input_tokens_details', 'cached_tokens'), value = 11
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________ test_usage_exact_integer_consistency_fail_closed[path7-9] ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051d220>
+path = ('input_tokens_details', 'cache_write_tokens'), value = 9
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________ test_usage_exact_integer_consistency_fail_closed[path8-8] ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48043d940>
+path = ('output_tokens_details', 'reasoning_tokens'), value = 8
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_________ test_usage_exact_integer_consistency_fail_closed[path9-None] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4806d79b0>
+path = ('input_tokens_details', 'cached_tokens'), value = None
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_______ test_usage_exact_integer_consistency_fail_closed[path10-value10] _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480528f50>
+path = ('output_tokens_details',), value = {}
+
+    @pytest.mark.parametrize("path,value", [
+        (("input_tokens",), True), (("output_tokens",), -1), (("total_tokens",), 18),
+        (("input_tokens",), 10.0), (("input_tokens",), "10"), (("output_tokens",), 1025),
+        (("input_tokens_details", "cached_tokens"), 11),
+        (("input_tokens_details", "cache_write_tokens"), 9),
+        (("output_tokens_details", "reasoning_tokens"), 8),
+        (("input_tokens_details", "cached_tokens"), None), (("output_tokens_details",), {}),
+    ])
+    def test_usage_exact_integer_consistency_fail_closed(monkeypatch, path, value):
+        payload = completion()
+        target = payload["usage"]
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________________ test_tool_or_extra_output_rejects[extra0] ___________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48054c170>
+extra = {'type': 'function_call', 'name': 'place_order'}
+
+    @pytest.mark.parametrize("extra", [
+        {"type": "function_call", "name": "place_order"},
+        {"type": "web_search_call"}, {"type": "message", "role": "assistant", "status": "completed", "content": []},
+    ])
+    def test_tool_or_extra_output_rejects(monkeypatch, extra):
+        payload = completion()
+        payload["output"].append(extra)
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________________ test_tool_or_extra_output_rejects[extra1] ___________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48054f2f0>
+extra = {'type': 'web_search_call'}
+
+    @pytest.mark.parametrize("extra", [
+        {"type": "function_call", "name": "place_order"},
+        {"type": "web_search_call"}, {"type": "message", "role": "assistant", "status": "completed", "content": []},
+    ])
+    def test_tool_or_extra_output_rejects(monkeypatch, extra):
+        payload = completion()
+        payload["output"].append(extra)
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________________ test_tool_or_extra_output_rejects[extra2] ___________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48054e2a0>
+extra = {'type': 'message', 'role': 'assistant', 'status': 'completed', 'content': []}
+
+    @pytest.mark.parametrize("extra", [
+        {"type": "function_call", "name": "place_order"},
+        {"type": "web_search_call"}, {"type": "message", "role": "assistant", "status": "completed", "content": []},
+    ])
+    def test_tool_or_extra_output_rejects(monkeypatch, extra):
+        payload = completion()
+        payload["output"].append(extra)
+        http_fixture(monkeypatch, lambda req: httpx.Response(200, json=payload))
+        with pytest.raises(ModelError):
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_ test_http_failures_no_retry_response_client_close[307-RAW_ERROR_PROMPT_SENTINEL-headers0] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4803a9640>
+status = 307, raw = b'RAW_ERROR_PROMPT_SENTINEL'
+headers = {'Location': 'https://other.example'}
+
+    @pytest.mark.parametrize("status,raw,headers", [
+        (307, b"RAW_ERROR_PROMPT_SENTINEL", {"Location": "https://other.example"}),
+        (429, b"RAW_ERROR_PROMPT_SENTINEL", {}), (500, b"RAW_ERROR_PROMPT_SENTINEL", {}),
+        (200, b"not-json", {}), (200, b'{"status":"completed","usage":NaN}', {}),
+        (200, b'{}', {"Content-Length": "65537"}),
+        (200, b'{}', {"Content-Length": "1"}), (200, b'{}', {"Content-Length": "bad"}),
+    ])
+    def test_http_failures_no_retry_response_client_close(monkeypatch, status, raw, headers):
+        stream = Chunks([raw])
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(status, headers=headers, stream=stream))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_ test_http_failures_no_retry_response_client_close[429-RAW_ERROR_PROMPT_SENTINEL-headers1] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4803ab230>
+status = 429, raw = b'RAW_ERROR_PROMPT_SENTINEL', headers = {}
+
+    @pytest.mark.parametrize("status,raw,headers", [
+        (307, b"RAW_ERROR_PROMPT_SENTINEL", {"Location": "https://other.example"}),
+        (429, b"RAW_ERROR_PROMPT_SENTINEL", {}), (500, b"RAW_ERROR_PROMPT_SENTINEL", {}),
+        (200, b"not-json", {}), (200, b'{"status":"completed","usage":NaN}', {}),
+        (200, b'{}', {"Content-Length": "65537"}),
+        (200, b'{}', {"Content-Length": "1"}), (200, b'{}', {"Content-Length": "bad"}),
+    ])
+    def test_http_failures_no_retry_response_client_close(monkeypatch, status, raw, headers):
+        stream = Chunks([raw])
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(status, headers=headers, stream=stream))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_ test_http_failures_no_retry_response_client_close[500-RAW_ERROR_PROMPT_SENTINEL-headers2] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48054f2f0>
+status = 500, raw = b'RAW_ERROR_PROMPT_SENTINEL', headers = {}
+
+    @pytest.mark.parametrize("status,raw,headers", [
+        (307, b"RAW_ERROR_PROMPT_SENTINEL", {"Location": "https://other.example"}),
+        (429, b"RAW_ERROR_PROMPT_SENTINEL", {}), (500, b"RAW_ERROR_PROMPT_SENTINEL", {}),
+        (200, b"not-json", {}), (200, b'{"status":"completed","usage":NaN}', {}),
+        (200, b'{}', {"Content-Length": "65537"}),
+        (200, b'{}', {"Content-Length": "1"}), (200, b'{}', {"Content-Length": "bad"}),
+    ])
+    def test_http_failures_no_retry_response_client_close(monkeypatch, status, raw, headers):
+        stream = Chunks([raw])
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(status, headers=headers, stream=stream))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+___ test_http_failures_no_retry_response_client_close[200-not-json-headers3] ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48054f620>
+status = 200, raw = b'not-json', headers = {}
+
+    @pytest.mark.parametrize("status,raw,headers", [
+        (307, b"RAW_ERROR_PROMPT_SENTINEL", {"Location": "https://other.example"}),
+        (429, b"RAW_ERROR_PROMPT_SENTINEL", {}), (500, b"RAW_ERROR_PROMPT_SENTINEL", {}),
+        (200, b"not-json", {}), (200, b'{"status":"completed","usage":NaN}', {}),
+        (200, b'{}', {"Content-Length": "65537"}),
+        (200, b'{}', {"Content-Length": "1"}), (200, b'{}', {"Content-Length": "bad"}),
+    ])
+    def test_http_failures_no_retry_response_client_close(monkeypatch, status, raw, headers):
+        stream = Chunks([raw])
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(status, headers=headers, stream=stream))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_ test_http_failures_no_retry_response_client_close[200-{"status":"completed","usage":NaN}-headers4] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48054e000>
+status = 200, raw = b'{"status":"completed","usage":NaN}', headers = {}
+
+    @pytest.mark.parametrize("status,raw,headers", [
+        (307, b"RAW_ERROR_PROMPT_SENTINEL", {"Location": "https://other.example"}),
+        (429, b"RAW_ERROR_PROMPT_SENTINEL", {}), (500, b"RAW_ERROR_PROMPT_SENTINEL", {}),
+        (200, b"not-json", {}), (200, b'{"status":"completed","usage":NaN}', {}),
+        (200, b'{}', {"Content-Length": "65537"}),
+        (200, b'{}', {"Content-Length": "1"}), (200, b'{}', {"Content-Length": "bad"}),
+    ])
+    def test_http_failures_no_retry_response_client_close(monkeypatch, status, raw, headers):
+        stream = Chunks([raw])
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(status, headers=headers, stream=stream))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______ test_http_failures_no_retry_response_client_close[200-{}-headers5] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480528b00>
+status = 200, raw = b'{}', headers = {'Content-Length': '65537'}
+
+    @pytest.mark.parametrize("status,raw,headers", [
+        (307, b"RAW_ERROR_PROMPT_SENTINEL", {"Location": "https://other.example"}),
+        (429, b"RAW_ERROR_PROMPT_SENTINEL", {}), (500, b"RAW_ERROR_PROMPT_SENTINEL", {}),
+        (200, b"not-json", {}), (200, b'{"status":"completed","usage":NaN}', {}),
+        (200, b'{}', {"Content-Length": "65537"}),
+        (200, b'{}', {"Content-Length": "1"}), (200, b'{}', {"Content-Length": "bad"}),
+    ])
+    def test_http_failures_no_retry_response_client_close(monkeypatch, status, raw, headers):
+        stream = Chunks([raw])
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(status, headers=headers, stream=stream))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______ test_http_failures_no_retry_response_client_close[200-{}-headers6] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4806d7350>
+status = 200, raw = b'{}', headers = {'Content-Length': '1'}
+
+    @pytest.mark.parametrize("status,raw,headers", [
+        (307, b"RAW_ERROR_PROMPT_SENTINEL", {"Location": "https://other.example"}),
+        (429, b"RAW_ERROR_PROMPT_SENTINEL", {}), (500, b"RAW_ERROR_PROMPT_SENTINEL", {}),
+        (200, b"not-json", {}), (200, b'{"status":"completed","usage":NaN}', {}),
+        (200, b'{}', {"Content-Length": "65537"}),
+        (200, b'{}', {"Content-Length": "1"}), (200, b'{}', {"Content-Length": "bad"}),
+    ])
+    def test_http_failures_no_retry_response_client_close(monkeypatch, status, raw, headers):
+        stream = Chunks([raw])
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(status, headers=headers, stream=stream))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______ test_http_failures_no_retry_response_client_close[200-{}-headers7] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4806d74d0>
+status = 200, raw = b'{}', headers = {'Content-Length': 'bad'}
+
+    @pytest.mark.parametrize("status,raw,headers", [
+        (307, b"RAW_ERROR_PROMPT_SENTINEL", {"Location": "https://other.example"}),
+        (429, b"RAW_ERROR_PROMPT_SENTINEL", {}), (500, b"RAW_ERROR_PROMPT_SENTINEL", {}),
+        (200, b"not-json", {}), (200, b'{"status":"completed","usage":NaN}', {}),
+        (200, b'{}', {"Content-Length": "65537"}),
+        (200, b'{}', {"Content-Length": "1"}), (200, b'{}', {"Content-Length": "bad"}),
+    ])
+    def test_http_failures_no_retry_response_client_close(monkeypatch, status, raw, headers):
+        stream = Chunks([raw])
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(status, headers=headers, stream=stream))
+        with pytest.raises(ModelError) as caught:
+>           gateway()._transport.complete(body())
+            ^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:47: in gateway
+    return provider().OpenAIResponsesGateway(**kwargs)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_________________ test_streamed_excess_and_aggregate_deadline __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b48051e240>
+
+    def test_streamed_excess_and_aggregate_deadline(monkeypatch):
+>       module = provider()
+                 ^^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_______ test_actual_runner_reserves_before_http_and_replays_after_reopen _______
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x70b4cc75e720>, PosixPath('/var/tmp/qm-openai-provider-ed95-z...st_actual_runner_reserves_be0/lake'), [datetime.datetime(2026, 10, 13, 6, 23, 16, 5074, tzinfo=datetime.timezone.utc)])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480622e40>
+
+    def test_actual_runner_reserves_before_http_and_replays_after_reopen(local, monkeypatch):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        observed = []
+        def handle(request):
+            with store._transaction() as con:
+                observed.append(con.execute("SELECT price,status FROM model_effects").fetchall())
+            return httpx.Response(200, json=completion(json.dumps({"verdict": "inconclusive", "summary": "OFFLINE_HTTP_FIXTURE_ONLY", "citations": [ref.artifact_id]})))
+>       engine, model, effects, calls, clients = setup_loop(monkeypatch, store, handle)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:267: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:253: in setup_loop
+    engine, model = provider().make_openai_advisory(store, effects, key=SecretStr(KEY), allowed_origins=ORIGINS, remote_consent=True)
+                    ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+_____________ test_portfolio_exhaustion_zero_http_calls[operating] _____________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x70b4803b6f30>, PosixPath('/var/tmp/qm-openai-provider-ed95-z..._portfolio_exhaustion_zero0/lake'), [datetime.datetime(2026, 10, 13, 6, 23, 16, 221314, tzinfo=datetime.timezone.utc)])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4803fb890>
+category = 'operating'
+
+    @pytest.mark.parametrize("category", ["operating", "development"])
+    def test_portfolio_exhaustion_zero_http_calls(local, monkeypatch, category):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected HTTP"))
+        policy = PortfolioBudgetPolicy("openai-offline-fixture", Decimal("0"), Decimal("0"))
+        effects = EffectLedger(store, policy=policy, category=category)
+>       engine, model = provider().make_openai_advisory(store, effects, key=SecretStr(KEY), allowed_origins=ORIGINS, remote_consent=True)
+                        ^^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+____________ test_portfolio_exhaustion_zero_http_calls[development] ____________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x70b4803b72f0>, PosixPath('/var/tmp/qm-openai-provider-ed95-z..._portfolio_exhaustion_zero1/lake'), [datetime.datetime(2026, 10, 13, 6, 23, 16, 426175, tzinfo=datetime.timezone.utc)])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b480623080>
+category = 'development'
+
+    @pytest.mark.parametrize("category", ["operating", "development"])
+    def test_portfolio_exhaustion_zero_http_calls(local, monkeypatch, category):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        calls, _, _ = http_fixture(monkeypatch, lambda req: pytest.fail("unexpected HTTP"))
+        policy = PortfolioBudgetPolicy("openai-offline-fixture", Decimal("0"), Decimal("0"))
+        effects = EffectLedger(store, policy=policy, category=category)
+>       engine, model = provider().make_openai_advisory(store, effects, key=SecretStr(KEY), allowed_origins=ORIGINS, remote_consent=True)
+                        ^^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+______________ test_unknown_price_and_per_job_call_cap_zero_http _______________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x70b480621430>, PosixPath('/var/tmp/qm-openai-provider-ed95-z..._unknown_price_and_per_job0/lake'), [datetime.datetime(2026, 10, 13, 6, 23, 16, 629513, tzinfo=datetime.timezone.utc)])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4803f94f0>
+
+    def test_unknown_price_and_per_job_call_cap_zero_http(local, monkeypatch):
+        store, lake, clock = local
+        job = store.submit("operator", "zero", request_for(lake, analysis_requested=True, budget={"max_model_calls": 0}))
+        ref = publish(store, job)
+>       engine, model, effects, calls, _ = setup_loop(monkeypatch, store, lambda req: pytest.fail("unexpected HTTP"))
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:305: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:253: in setup_loop
+    engine, model = provider().make_openai_advisory(store, effects, key=SecretStr(KEY), allowed_origins=ORIGINS, remote_consent=True)
+                    ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+__________ test_timeout_retains_unknown_effect_across_reconstruction ___________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x70b480506510>, PosixPath('/var/tmp/qm-openai-provider-ed95-z..._timeout_retains_unknown_e0/lake'), [datetime.datetime(2026, 10, 13, 6, 23, 16, 832933, tzinfo=datetime.timezone.utc)])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b4803fbfb0>
+
+    def test_timeout_retains_unknown_effect_across_reconstruction(local, monkeypatch):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        def timeout(request):
+            raise httpx.ReadTimeout("RAW_ERROR_PROMPT_SENTINEL", request=request)
+>       engine, model, effects, calls, clients = setup_loop(monkeypatch, store, timeout)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:320: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/research_agent/tests/test_openai_responses.py:253: in setup_loop
+    engine, model = provider().make_openai_advisory(store, effects, key=SecretStr(KEY), allowed_origins=ORIGINS, remote_consent=True)
+                    ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def provider():
+>       assert importlib.util.find_spec("qm_research_agent.openai_responses") is not None, (
+            "missing service-owned Responses compatibility boundary"
+        )
+E       AssertionError: missing service-owned Responses compatibility boundary
+E       assert None is not None
+E        +  where None = <function find_spec at 0x70b4cf09f7e0>('qm_research_agent.openai_responses')
+E        +    where <function find_spec at 0x70b4cf09f7e0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+services/research_agent/tests/test_openai_responses.py:38: AssertionError
+=============================== warnings summary ===============================
+../../quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/research_agent/tests/test_openai_responses.py::test_mapping_strict_schema_usage_and_closed_client
+FAILED services/research_agent/tests/test_openai_responses.py::test_explicit_config_no_env_discovery_pickle_and_frozen_price
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_config_refuses_before_http[changes0]
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_config_refuses_before_http[changes1]
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_config_refuses_before_http[changes2]
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_config_refuses_before_http[changes3]
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_config_refuses_before_http[changes4]
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_config_refuses_before_http[changes5]
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_config_refuses_before_http[changes6]
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_config_refuses_before_http[changes7]
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_config_refuses_before_http[changes8]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change0]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change1]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change2]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change3]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change4]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change5]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change6]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change7]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change8]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change9]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change10]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change11]
+FAILED services/research_agent/tests/test_openai_responses.py::test_request_boundary_refuses_without_network[change12]
+FAILED services/research_agent/tests/test_openai_responses.py::test_incomplete_or_unknown_response_is_sanitized[status-incomplete]
+FAILED services/research_agent/tests/test_openai_responses.py::test_incomplete_or_unknown_response_is_sanitized[error-value1]
+FAILED services/research_agent/tests/test_openai_responses.py::test_incomplete_or_unknown_response_is_sanitized[incomplete_details-value2]
+FAILED services/research_agent/tests/test_openai_responses.py::test_incomplete_or_unknown_response_is_sanitized[model-unknown-model]
+FAILED services/research_agent/tests/test_openai_responses.py::test_incomplete_or_unknown_response_is_sanitized[service_tier-priority]
+FAILED services/research_agent/tests/test_openai_responses.py::test_incomplete_or_unknown_response_is_sanitized[usage-None]
+FAILED services/research_agent/tests/test_openai_responses.py::test_incomplete_or_unknown_response_is_sanitized[output-value6]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path0-True]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path1--1]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path2-18]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path3-10.0]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path4-10]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path5-1025]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path6-11]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path7-9]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path8-8]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path9-None]
+FAILED services/research_agent/tests/test_openai_responses.py::test_usage_exact_integer_consistency_fail_closed[path10-value10]
+FAILED services/research_agent/tests/test_openai_responses.py::test_tool_or_extra_output_rejects[extra0]
+FAILED services/research_agent/tests/test_openai_responses.py::test_tool_or_extra_output_rejects[extra1]
+FAILED services/research_agent/tests/test_openai_responses.py::test_tool_or_extra_output_rejects[extra2]
+FAILED services/research_agent/tests/test_openai_responses.py::test_http_failures_no_retry_response_client_close[307-RAW_ERROR_PROMPT_SENTINEL-headers0]
+FAILED services/research_agent/tests/test_openai_responses.py::test_http_failures_no_retry_response_client_close[429-RAW_ERROR_PROMPT_SENTINEL-headers1]
+FAILED services/research_agent/tests/test_openai_responses.py::test_http_failures_no_retry_response_client_close[500-RAW_ERROR_PROMPT_SENTINEL-headers2]
+FAILED services/research_agent/tests/test_openai_responses.py::test_http_failures_no_retry_response_client_close[200-not-json-headers3]
+FAILED services/research_agent/tests/test_openai_responses.py::test_http_failures_no_retry_response_client_close[200-{"status":"completed","usage":NaN}-headers4]
+FAILED services/research_agent/tests/test_openai_responses.py::test_http_failures_no_retry_response_client_close[200-{}-headers5]
+FAILED services/research_agent/tests/test_openai_responses.py::test_http_failures_no_retry_response_client_close[200-{}-headers6]
+FAILED services/research_agent/tests/test_openai_responses.py::test_http_failures_no_retry_response_client_close[200-{}-headers7]
+FAILED services/research_agent/tests/test_openai_responses.py::test_streamed_excess_and_aggregate_deadline
+FAILED services/research_agent/tests/test_openai_responses.py::test_actual_runner_reserves_before_http_and_replays_after_reopen
+FAILED services/research_agent/tests/test_openai_responses.py::test_portfolio_exhaustion_zero_http_calls[operating]
+FAILED services/research_agent/tests/test_openai_responses.py::test_portfolio_exhaustion_zero_http_calls[development]
+FAILED services/research_agent/tests/test_openai_responses.py::test_unknown_price_and_per_job_call_cap_zero_http
+FAILED services/research_agent/tests/test_openai_responses.py::test_timeout_retains_unknown_effect_across_reconstruction
+59 failed, 1 warning in 2.76s

@@ -1,0 +1,290 @@
+[
+  {
+    "archived": "001-affected-first.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\affected-first.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "002-affected-first.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\affected-first.log",
+    "bytes": 1292,
+    "sha256": "582a164444bf9d1110842386fd3f21625def53729631fc26899465b4b1836358"
+  },
+  {
+    "archived": "003-dns-control-green.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-control-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "004-dns-control-green.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-control-green.log",
+    "bytes": 780,
+    "sha256": "dc6551f86ddd00d79c258db3279ac6a95708fafe82aa27e8ee50ca9a577d714b"
+  },
+  {
+    "archived": "005-dns-control.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-control.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "archived": "006-dns-control.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-control.log",
+    "bytes": 4379,
+    "sha256": "412b17589c822097f431c913aad9a6bdaaabc2ef6b73a59bafe66adbbf13a1b4"
+  },
+  {
+    "archived": "007-dns-debug.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-debug.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "008-dns-debug.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-debug.log",
+    "bytes": 779,
+    "sha256": "e8d17f871cd872099600143d93cca849bef30205c2dc0fa250155213978900bc"
+  },
+  {
+    "archived": "009-dns-green.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-green.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "archived": "010-dns-green.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-green.log",
+    "bytes": 7433,
+    "sha256": "16f1cf2d56c2b925f2f65412844ef0ef15a0eaa6a9d2761fc43f9ed0a9871252"
+  },
+  {
+    "archived": "011-dns-red.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-red.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "archived": "012-dns-red.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\dns-red.log",
+    "bytes": 7140,
+    "sha256": "046b96ff62a50be04b92c0af5671143eecd47b983d5db4e2ac57349f4e3ca7c0"
+  },
+  {
+    "archived": "013-final-green.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\final-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "014-final-green.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\final-green.log",
+    "bytes": 1319,
+    "sha256": "4037fb055cc8f7aa700961ce74bebb405c8fcc50cda84601a65ae8c893fd9a42"
+  },
+  {
+    "archived": "015-final-green.sh",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\final-green.sh",
+    "bytes": 946,
+    "sha256": "2200cc20b3c45035e1573f3284a6695fc0c71195aaac87aac6a33011d18dad07"
+  },
+  {
+    "archived": "016-format-dns-final.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\format-dns-final.log",
+    "bytes": 44,
+    "sha256": "efdeab0bc812c70e2bd44db03a0038b5470f175ab59f6e87ed36f64feb27c422"
+  },
+  {
+    "archived": "017-format-dns.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\format-dns.log",
+    "bytes": 555,
+    "sha256": "6dba82071beaadcbc992e6d1e0a5de8139bc880c8d2cf0142b838499e3337e55"
+  },
+  {
+    "archived": "018-format.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\format.log",
+    "bytes": 15960,
+    "sha256": "4fb14a69e7db79e5d0fcba3720aa9ec1f31dc81269ceabd3c0b09e9e0a0b4515"
+  },
+  {
+    "archived": "019-frozen-check-first.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\frozen-check-first.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "archived": "020-frozen-check-first.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\frozen-check-first.log",
+    "bytes": 1019,
+    "sha256": "9dde48f05128aa4d90c31495c32aeb52bd246c69db5a8c1b5fcfb38126ddc377"
+  },
+  {
+    "archived": "021-frozen-check.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\frozen-check.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "022-frozen-check.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\frozen-check.log",
+    "bytes": 974,
+    "sha256": "ebb4a30ca8cf968edb03089b3e4aff9a579a9d350b789eec1ee1988c32cb25eb"
+  },
+  {
+    "archived": "023-frozen-check.py",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\frozen-check.py",
+    "bytes": 937,
+    "sha256": "a18b3d027a899b33299c8408ba0400f7b9228ffc3489bba05ebfcd5ba8571d33"
+  },
+  {
+    "archived": "024-frozen-check.sh",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\frozen-check.sh",
+    "bytes": 482,
+    "sha256": "c23d963d535eb6e39a4d87dee95868383af49b1ca386815707c1c86b6e9dec50"
+  },
+  {
+    "archived": "025-green-first.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\green-first.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "archived": "026-green-first.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\green-first.log",
+    "bytes": 2250,
+    "sha256": "69f9a6ab5c53afcb191cd00a6bbefc9cf73ed046937f961d0e59f09665816bb1"
+  },
+  {
+    "archived": "027-green-protocol.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\green-protocol.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "028-green-protocol.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\green-protocol.log",
+    "bytes": 765,
+    "sha256": "64dc68fa2b3c2fdfab83e4167b758a574d8d15a08e56afcf754065d7ee06eaa3"
+  },
+  {
+    "archived": "029-red.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\red.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "archived": "030-red.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\red.log",
+    "bytes": 127272,
+    "sha256": "f408837316d3ffadfba31e0ec1081f48cb5aaa5992945cda70b1ffe2f3fb84d4"
+  },
+  {
+    "archived": "031-review-green.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\review-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "032-review-green.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\review-green.log",
+    "bytes": 1830,
+    "sha256": "1aa6593ac2f7ded3d39883dc214458a4fde323ad80aaff435f544d029a4db1ab"
+  },
+  {
+    "archived": "033-runtime-after-tests.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\runtime-after-tests.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "034-runtime-after-tests.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\runtime-after-tests.log",
+    "bytes": 415,
+    "sha256": "198accbec322964ce29f9d7bd50a8455f715b63da51c186139ce165ae981a12d"
+  },
+  {
+    "archived": "035-runtime-before.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\runtime-before.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "036-runtime-before.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\runtime-before.log",
+    "bytes": 215,
+    "sha256": "9f22b9dc2c7c63df6658d353aaa6ed792eaa78510d4cb2a47b5ffe87262cc88a"
+  },
+  {
+    "archived": "037-spec-review-receipts.json",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\spec-review-receipts.json",
+    "bytes": 2630,
+    "sha256": "07009ce7e31e5c247cee4df32f588aa3b855bbe9deb4d08f2e600e21b14ebe34"
+  },
+  {
+    "archived": "038-standards-review-receipts.json",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\output\\0038-openai-advisory-20261013\\standards-review-receipts.json",
+    "bytes": 3062,
+    "sha256": "9af7db83be17851fd77e1b7d4b1c2c5c0988ce4fdc3d0f958f2ded0e7c6a568f"
+  },
+  {
+    "archived": "039-0038-openai-root-shadow-red.sh",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-shadow-red.sh",
+    "bytes": 460,
+    "sha256": "014862ac9e4c8513bba2a498ecc90267f7486e85e1004a897fafeeea97be2f5a"
+  },
+  {
+    "archived": "040-0038-openai-root-shadow-red.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-shadow-red.log",
+    "bytes": 2898,
+    "sha256": "65a0087460f91db534c8957ec9dd6551e5f38fe25ac01b3abd668bc608f855d7"
+  },
+  {
+    "archived": "041-0038-openai-root-shadow-red.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-shadow-red.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "archived": "042-0038-openai-root-final-green.sh",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-final-green.sh",
+    "bytes": 1023,
+    "sha256": "03b8ce0588cfc6989e87e587b287665f876cf4953892ca7ab98ac3a1cd804624"
+  },
+  {
+    "archived": "043-0038-openai-root-final-green.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-final-green.log",
+    "bytes": 1319,
+    "sha256": "72686faf0110927136f4813df03e75b1d9c4b320591e909f3dbb3e5c629051aa"
+  },
+  {
+    "archived": "044-0038-openai-root-final-green.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-final-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "archived": "045-0038-openai-root-final-green.xml",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-final-green.xml",
+    "bytes": 17214,
+    "sha256": "8b1d733fc7c97cbfd0110c7820ea69efc0300af9df12233d4bbb663d44e62597"
+  },
+  {
+    "archived": "046-0038-openai-root-admission-after.sh",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-admission-after.sh",
+    "bytes": 397,
+    "sha256": "673a0d691bc9e46cbe8f24c667e14571ec3c15586466bca76828e90781537e55"
+  },
+  {
+    "archived": "047-0038-openai-root-admission-after.log",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-admission-after.log",
+    "bytes": 924,
+    "sha256": "de1283b758da0aa8e1f715e2425a85624fc42af72689211fde52fd300078c3a7"
+  },
+  {
+    "archived": "048-0038-openai-root-admission-after.exit",
+    "source": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-openai-root-admission-after.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  }
+]

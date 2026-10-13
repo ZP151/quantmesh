@@ -1,0 +1,67 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+______ test_stalled_dns_executor_cannot_extend_synchronous_deadline[True] ______
+
+tmp_path = PosixPath('/var/tmp/qm-openai-provider-ed95-zzXQXTHi/dns-control-tmp/test_stalled_dns_executor_cann1')
+use_owned_resolver = True
+
+    @pytest.mark.parametrize("use_owned_resolver", [False, True])
+    def test_stalled_dns_executor_cannot_extend_synchronous_deadline(tmp_path, use_owned_resolver):
+        # Actual owned Python process, fake DNS executor only; no real DNS/API call.
+        code = r'''
+    import asyncio,json,time,httpx,socket
+    from pydantic import SecretStr
+    from quantmesh.ai.wire import ModelRequest,ChatMessage,build_chat_body
+    from qm_research_agent import openai_responses as p
+    p.HTTP_DEADLINE_SECONDS=0.05
+    def fake_dns(*args,**kwargs):
+        time.sleep(5)
+        raise RuntimeError('fixture resolver stopped')
+    socket.getaddrinfo=fake_dns
+    # The real HTTP backend's resolver helper is also stalled, without real DNS.
+    # On the old implementation, parent loop.getaddrinfo blocks its executor.
+    p._DNS_PROGRAM=DNS_PROGRAM_FIXTURE
+    RESOLVER_SELECTION_FIXTURE
+    transport=p.OpenAIResponsesTransport(key=SecretStr('fixture-explicit-not-a-real-key'),
+        allowed_origins=frozenset({'https://api.openai.com'}),remote_consent=True)
+    request=build_chat_body(model_name='gpt-6.1-sol',request=ModelRequest(messages=[ChatMessage(role='user',content='fixture')]))
+    started=time.monotonic()
+    try: transport.complete(request)
+    except Exception as error: print(json.dumps({'seconds':time.monotonic()-started,'error':str(error)}),flush=True)
+    '''
+        resolver_pid = tmp_path / "resolver.pid"
+        fake_resolver = ("import os,time; "
+                         f"open({str(resolver_pid)!r},'w').write(str(os.getpid())); "
+                         "time.sleep(3)")
+        code = code.replace("DNS_PROGRAM_FIXTURE", repr(fake_resolver))
+        code = code.replace("RESOLVER_SELECTION_FIXTURE", "" if use_owned_resolver else
+                            "p._owned_resolver=lambda client:None")
+        env = {"PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": os.pathsep.join(sys.path),
+               "HOME": str(tmp_path)}
+        process = subprocess.Popen([sys.executable, "-B", "-c", code], env=env,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            try:
+                stdout, stderr = process.communicate(timeout=10)
+            except subprocess.TimeoutExpired:
+                pytest.fail("synchronous transport exceeded deadline while resolver executor shut down")
+            assert process.returncode == 0, stderr.decode()
+            elapsed = json.loads(stdout)["seconds"]
+            if use_owned_resolver:
+                assert elapsed < 0.5
+>               assert resolver_pid.exists(), "stalled owned resolver actually started"
+E               AssertionError: stalled owned resolver actually started
+E               assert False
+E                +  where False = exists()
+E                +    where exists = PosixPath('/var/tmp/qm-openai-provider-ed95-zzXQXTHi/dns-control-tmp/test_stalled_dns_executor_cann1/resolver.pid').exists
+
+services/research_agent/tests/test_openai_responses.py:523: AssertionError
+=============================== warnings summary ===============================
+../../quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/research_agent/tests/test_openai_responses.py::test_stalled_dns_executor_cannot_extend_synchronous_deadline[True]
+1 failed, 1 passed, 61 deselected, 1 warning in 12.65s
