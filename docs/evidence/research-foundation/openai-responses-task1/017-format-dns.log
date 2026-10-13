@@ -1,0 +1,13 @@
+E501 Line too long (112 > 100)
+   --> services/research_agent/tests/test_openai_responses.py:501:101
+    |
+499 | started=time.monotonic()
+500 | try: transport.complete(request)
+501 | except Exception as error: print(json.dumps({'seconds':time.monotonic()-started,'error':str(error)}),flush=True)
+    |                                                                                                     ^^^^^^^^^^^^
+502 | '''
+503 |     resolver_pid = tmp_path / "resolver.pid"
+    |
+
+Found 2 errors (1 fixed, 1 remaining).
+2 files reformatted

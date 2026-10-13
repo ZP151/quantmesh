@@ -1,0 +1,46 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_owned_resolver_ignores_caller_module_shadow _______________
+
+tmp_path = PosixPath('/var/tmp/qm-openai-provider-ed95-zzXQXTHi/root-shadow-red-tmp/test_owned_resolver_ignores_ca0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71e7e43b1b20>
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="owned resolver acceptance requires Linux")
+    def test_owned_resolver_ignores_caller_module_shadow(tmp_path, monkeypatch):
+        module = provider()
+        marker = tmp_path / "unexpected-caller-import"
+        (tmp_path / "socket.py").write_text(
+            f"from pathlib import Path; Path({str(marker)!r}).write_text('loaded')\n"
+        )
+        monkeypatch.chdir(tmp_path)
+        # This actual stdlib child imports socket but never performs DNS or TCP.
+        monkeypatch.setattr(
+            module, "_DNS_PROGRAM", "import socket,json; print(json.dumps(['1.1.1.1']))"
+        )
+        sentinel = object()
+    
+        class NumericEdge:
+            async def connect_tcp(self, host, port, **kwargs):
+                assert (host, port) == ("1.1.1.1", 443)
+                return sentinel
+    
+        result = asyncio.run(
+            module._OwnedResolverBackend(NumericEdge()).connect_tcp("api.openai.com", 443)
+        )
+        assert result is sentinel
+>       assert not marker.exists(), "resolver imported a module from the caller directory"
+E       AssertionError: resolver imported a module from the caller directory
+E       assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/var/tmp/qm-openai-provider-ed95-zzXQXTHi/root-shadow-red-tmp/test_owned_resolver_ignores_ca0/unexpected-caller-import').exists
+
+/var/tmp/qm-openai-provider-ed95-zzXQXTHi/repo/services/research_agent/tests/test_openai_responses.py:571: AssertionError
+=============================== warnings summary ===============================
+../../quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/research_agent/tests/test_openai_responses.py::test_owned_resolver_ignores_caller_module_shadow
+1 failed, 1 warning in 1.06s

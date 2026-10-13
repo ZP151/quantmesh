@@ -1,0 +1,101 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_stalled_dns_executor_cannot_extend_synchronous_deadline _________
+
+    def test_stalled_dns_executor_cannot_extend_synchronous_deadline():
+        # Actual owned Python process, fake DNS executor only; no real DNS/API call.
+        code = r'''
+    import asyncio,json,time,httpx
+    from pydantic import SecretStr
+    from quantmesh.ai.wire import ModelRequest,ChatMessage,build_chat_body
+    from qm_research_agent import openai_responses as p
+    p.HTTP_DEADLINE_SECONDS=0.05
+    original=httpx.AsyncClient
+    async def fake_dns(request):
+        asyncio.get_running_loop().run_in_executor(None,time.sleep,5)
+        await asyncio.sleep(5)
+    httpx.AsyncClient=lambda **kwargs: original(**kwargs,transport=httpx.MockTransport(fake_dns))
+    transport=p.OpenAIResponsesTransport(key=SecretStr('fixture-explicit-not-a-real-key'),
+        allowed_origins=frozenset({'https://api.openai.com'}),remote_consent=True)
+    request=build_chat_body(model_name='gpt-6.1-sol',request=ModelRequest(messages=[ChatMessage(role='user',content='fixture')]))
+    started=time.monotonic()
+    try: transport.complete(request)
+    except Exception as error: print(json.dumps({'seconds':time.monotonic()-started,'error':str(error)}),flush=True)
+    '''
+        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": os.pathsep.join(sys.path)}
+        process = subprocess.Popen([sys.executable, "-B", "-c", code], env=env,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            try:
+>               stdout, stderr = process.communicate(timeout=2)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/research_agent/tests/test_openai_responses.py:504: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/subprocess.py:1209: in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/subprocess.py:2116: in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: -9 args: ['/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz...>
+endtime = 29886.207479744, orig_timeout = 2, stdout_seq = [], stderr_seq = []
+skip_check_and_raise = False
+
+    def _check_timeout(self, endtime, orig_timeout, stdout_seq, stderr_seq,
+                       skip_check_and_raise=False):
+        """Convenience for checking if a timeout has expired."""
+        if endtime is None:
+            return
+        if skip_check_and_raise or _time() > endtime:
+>           raise TimeoutExpired(
+                    self.args, orig_timeout,
+                    output=b''.join(stdout_seq) if stdout_seq else None,
+                    stderr=b''.join(stderr_seq) if stderr_seq else None)
+E           subprocess.TimeoutExpired: Command '['/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python', '-B', '-c', "\nimport asyncio,json,time,httpx\nfrom pydantic import SecretStr\nfrom quantmesh.ai.wire import ModelRequest,ChatMessage,build_chat_body\nfrom qm_research_agent import openai_responses as p\np.HTTP_DEADLINE_SECONDS=0.05\noriginal=httpx.AsyncClient\nasync def fake_dns(request):\n    asyncio.get_running_loop().run_in_executor(None,time.sleep,5)\n    await asyncio.sleep(5)\nhttpx.AsyncClient=lambda **kwargs: original(**kwargs,transport=httpx.MockTransport(fake_dns))\ntransport=p.OpenAIResponsesTransport(key=SecretStr('fixture-explicit-not-a-real-key'),\n    allowed_origins=frozenset({'https://api.openai.com'}),remote_consent=True)\nrequest=build_chat_body(model_name='gpt-6.1-sol',request=ModelRequest(messages=[ChatMessage(role='user',content='fixture')]))\nstarted=time.monotonic()\ntry: transport.complete(request)\nexcept Exception as error: print(json.dumps({'seconds':time.monotonic()-started,'error':str(error)}),flush=True)\n"]' timed out after 2 seconds
+
+/usr/lib/python3.12/subprocess.py:1253: TimeoutExpired
+
+During handling of the above exception, another exception occurred:
+
+    def test_stalled_dns_executor_cannot_extend_synchronous_deadline():
+        # Actual owned Python process, fake DNS executor only; no real DNS/API call.
+        code = r'''
+    import asyncio,json,time,httpx
+    from pydantic import SecretStr
+    from quantmesh.ai.wire import ModelRequest,ChatMessage,build_chat_body
+    from qm_research_agent import openai_responses as p
+    p.HTTP_DEADLINE_SECONDS=0.05
+    original=httpx.AsyncClient
+    async def fake_dns(request):
+        asyncio.get_running_loop().run_in_executor(None,time.sleep,5)
+        await asyncio.sleep(5)
+    httpx.AsyncClient=lambda **kwargs: original(**kwargs,transport=httpx.MockTransport(fake_dns))
+    transport=p.OpenAIResponsesTransport(key=SecretStr('fixture-explicit-not-a-real-key'),
+        allowed_origins=frozenset({'https://api.openai.com'}),remote_consent=True)
+    request=build_chat_body(model_name='gpt-6.1-sol',request=ModelRequest(messages=[ChatMessage(role='user',content='fixture')]))
+    started=time.monotonic()
+    try: transport.complete(request)
+    except Exception as error: print(json.dumps({'seconds':time.monotonic()-started,'error':str(error)}),flush=True)
+    '''
+        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": os.pathsep.join(sys.path)}
+        process = subprocess.Popen([sys.executable, "-B", "-c", code], env=env,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            try:
+                stdout, stderr = process.communicate(timeout=2)
+            except subprocess.TimeoutExpired:
+>               pytest.fail("synchronous transport exceeded deadline while resolver executor shut down")
+E               Failed: synchronous transport exceeded deadline while resolver executor shut down
+
+services/research_agent/tests/test_openai_responses.py:506: Failed
+=============================== warnings summary ===============================
+../../quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/research_agent/tests/test_openai_responses.py::test_stalled_dns_executor_cannot_extend_synchronous_deadline
+1 failed, 61 deselected, 1 warning in 2.89s

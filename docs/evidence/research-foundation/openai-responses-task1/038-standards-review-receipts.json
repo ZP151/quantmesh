@@ -1,0 +1,31 @@
+{
+  "threadId": "01a133f2-3eab-76f1-8adf-f377047c818c",
+  "axis": "standards",
+  "source": "read_thread authoritative completed review turns",
+  "turns": [
+    {
+      "id": "01a1340e-8453-7402-a18a-1a64aeef1f8c",
+      "status": "completed",
+      "finalMessages": [
+        "- **[P2] Mark resolver acceptance tests as Linux-only** — [test_openai_responses.py:479](/C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/tests/test_openai_responses.py:479) and [test_openai_responses.py:547](/C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/tests/test_openai_responses.py:547). Both tests run unconditionally, while `_OwnedResolverBackend.connect_tcp()` explicitly rejects non-Linux platforms. Windows/macOS runs therefore fail at the resolver-PID assertion or raise `ModelUnavailableError`. Add platform skips to these Linux acceptance fixtures; unsupported-platform refusal can remain a separate test.\n\nThe R1 DNS executor deadline finding is addressed by the owned resolver and cancellation kill/reap path. No further actionable Standards findings in the scoped provider, tests, README section, and Task1 plan.\n\nFinal R2 static review only. No execution, imports, network, secrets, environment inspection, or edits. Reported Linux test results do not establish real API/TLS or aggregate containment qualification."
+      ]
+    },
+    {
+      "id": "01a1340a-455f-7640-a3e3-965f60a0d890",
+      "status": "failed",
+      "finalMessages": []
+    },
+    {
+      "id": "01a133f4-cd3d-73a0-8420-6a3dba5615b7",
+      "status": "completed",
+      "finalMessages": [
+        "- **[P2] The 30-second deadline excludes event-loop shutdown** — [openai_responses.py:315](/C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/src/qm_research_agent/openai_responses.py:315). `_exchange()` times out after 30 seconds, but `asyncio.run()` subsequently waits for its default executor to shut down. HTTP DNS resolution can use that executor; cancelling the coroutine cannot stop an already-running resolver thread. On CPython 3.12, shutdown can add up to 300 seconds, exceeding Task1’s transport deadline. The delayed-stream fixture only exercises cancellable async work. Bound the complete synchronous invocation, including resolver teardown, and add a stalled-resolution/shutdown fixture.\n\nNo other actionable Standards findings in the scoped files. Fixed-origin configuration, disabled environment discovery/redirects, streamed byte enforcement, response/client cleanup, strict normalization, existing gateway admission, and the factory’s $1 reservation appear consistent with Task1. Current official schema evidence resolves the cache-write-field concern.\n\nRead-only static review; no tests, imports, network calls, secrets, or environment inspection. Reported green mocks establish neither native containment nor real-provider qualification."
+      ]
+    },
+    {
+      "id": "01a133f2-3fdf-7100-8633-47c5faec28b7",
+      "status": "failed",
+      "finalMessages": []
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+.....................................................F.....              [100%]
+=================================== FAILURES ===================================
+_________________ test_streamed_excess_and_aggregate_deadline __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7cc9adb19190>
+
+    def test_streamed_excess_and_aggregate_deadline(monkeypatch):
+        module = provider()
+        oversized = Chunks([b"x" * 32768] * 3)
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, headers={"Content-Length": "1"}, stream=oversized))
+        with pytest.raises(ModelError):
+            gateway()._transport.complete(body())
+        assert len(calls) == 1 and oversized.closed and clients[0].is_closed
+        # Exercise the real aggregate deadline with a short test-only bound.
+        monkeypatch.setattr(module, "HTTP_DEADLINE_SECONDS", 0.01)
+        slow = Chunks([b"{}"], delay=0.05)
+        calls, clients, _ = http_fixture(monkeypatch, lambda req: httpx.Response(200, stream=slow))
+        with pytest.raises(ModelError):
+            gateway()._transport.complete(body())
+>       assert len(calls) == 1 and slow.closed and clients[0].is_closed
+E       assert (0 == 1)
+E        +  where 0 = len([])
+
+services/research_agent/tests/test_openai_responses.py:247: AssertionError
+=============================== warnings summary ===============================
+../../quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/research_agent/tests/test_openai_responses.py::test_streamed_excess_and_aggregate_deadline
+1 failed, 58 passed, 1 warning in 2.14s
