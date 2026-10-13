@@ -7,47 +7,52 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 
 ## Current resumable goal
 
-Latest correction: exact7498 CI38381619194 fails six runtime-fixture environment
-markers (4540pass/113skip/frontend419). Controlled test-only RED6/GREEN7 fixes
-those; originless alias/data helper correction has affected65passes and closed
-narrow review findings. Cython descriptor/instance callbacks remain unqualified,
-so native caches still refuse. Construction bb36/0137 is software-only accepted.
-User approves new independent$44/month research8GB plus retention of both existing
-hosts; actual new Ubuntu24.04/SingaporeA instance is Running, HTTP removed/SSH
-Lightsail-browser-only. Actual new-host Tailnet authentication/Running-online
-status and fresh private SSH exit0/x86_64 pass; production services stay unactivated.
-FullA ACTIVE; software-only cumulative cap12MB does not waive local disk gate.
+Exact PR175 candidate56d95cfeaea74f3faeba33f3621fbeafbf582df0 CI38395044039
+completes SUCCESS13:06:34UTC. Actual checkoutdb7d2b31df7150b590bc32e7cb89b0d1836fcc80
+tree86b871043c72e0ddf7468c3333ea60fb0aebee53 equals candidate. All18release commands/
+4557Python139skip3259.1s/frontend419 pass. Separate offline service202pass5PGskip/
+207total81licenses/ZIP digest passes. No actionable reviews at intake; PR remains
+DRAFT. Old failed7498 and prior success042 runs/ended watches are not restarted.
+Evidence: [ci56-terminal](evidence/research-foundation/ci56-terminal/README.md).
 
-Authoritative current priority is [iteration0038](iterations/0038-research-foundation.md)
-and [approved Option A plan](superpowers/plans/2026-10-12-research-portfolio.md).
-Deliver one persistent research-job/report loop with an independent advisory
-Agent service; freeze contracts before parallel workers. Server-owned market
-sources are a requirement, not fulfilled by SDK registration alone: Windows
-OpenD migration and stale application ingestion are tracked in issue#169.
-Server/calendar#169 and contracts#168 form the first parallel batch after
-operator freshness steering; validation#132 and Eval#160 follow.
-Formal168h is NOT REQUIRED/on-demand. Capacity and disruptive operational drills
-are later acceptance, not the development frontier. PR166 is merged7da320f after
-explicit user human review and exact-head CI; reviewed helper12688 is restored
-with Startup/OpenD preserved. Fresh authentication is completed; actual08:27UTC
-SSHhealth and08:28 private-listener observation pass. The personal-PC gateway is
-not relabelled cloud and market ingestion remains a separate gate. Research c545
-CI passes4493pytest/111skip/frontend419; later042fb0b CI38365280962 completes
-SUCCESS4497pytest/113skip/frontend419, separate offline service202pass/5PGskip.
-A subsequent local isolated unexpected-poll repair has
-RED3/24focusedpasses/narrowreview; its exact checks/deployment remain pending.
-Linux Worker software sourcefd01b5ba is integrated after root's bounded residual
-P2 correction and specific review, with49focused passes/4Windowsskips plus5actual
-Windows ownership passes. It does not activate Linux or qualify a numerical image.
-AWS console login is complete; actual running staging8GB and retained2GB are
-confirmed. Research Ubuntu24.04/8GB/2vCPU/160GB/SingaporeZoneA/$44monthly form is
-prepared; concrete bill/private-tailnet approval is pending, no resource created.
-Actual AWS SDK Oct12-close quote clocks and the Oct9 app cache are separately
-recorded; no weekend or age-only failure and no collector-cause claim.
-New Linux numerical Worker software proceeds after root-frozen proposal, while
-new localbulk materialization is held on unresolved disk attribution. Actual
-server delivery and the full approved Option A acceptance remain required.
-The dated checkpoints below are historical, not instructions to restart old work.
+Approved independent quantmesh-research-8gb is Running/private Tailnet online,
+actual SSH exits0. Ubuntu24.04/SingaporeA/8GB2vCPU160GB costs additional$44/month;
+old8GB+2GB remain, compute subtotal$100/month before taxes/model/backup/overage.
+HTTP removed, public SSH restricted to Lightsail browser only. Official Docker
+29.9/cgroupv2 is installed; no production research services are activated.
+
+Actual non-root PG18.6 source/build now includes OpenSSL/ICU/readline/zlib.
+Disposable loopback fixture passes15protocol/ownership checks13:24UTC:TLS1.3/
+256bit verify-full, dedicated SCRAM role/CRUD, wrongCA/name/plaintext/password/
+cross-role/admin-operation refusals. Recipe cleanup P2s are corrected with actual
+rejected-link RED/GREEN, forced ownership-capture failure exit1/cleaned and owned
+log-bound counterexample. Verified pidfd stop exits0; both fixture PID files
+removed/no own postmaster left/private SSH and Tailnet remain. Host introduced
+831553536B/free161431252992B meets fresh5GB/50GB budget. No keys/passwords/data/
+raw SQL/server logs archived. Actual service store, production PG, real report
+restore/p95/user-loop acceptance remain pending; CI still honestly skips5PGcases.
+Evidence: [aws-pg-tls](evidence/research-foundation/aws-pg-tls/README.md).
+
+Reviewed alias/data-only adapter remains partial; native Cython caches still
+refuse. New lineage proposal has three decisive P2 proof gaps. Root freezes only
+canonical measured base -B/-I/-S entry, independent parent binding and CURRENT
+revalidation foundation in the original #172 chat, not native-cache exemption.
+Actual measured constructor/continuous native-loading/noexec/seccomp/kernel
+qualification must precede numeric admission. Original construction/reviews/
+completed tests are not repeated. Explicit same-baseline software cap20MB reserves
+at most5MB for new source/tests/evidence/Git/copies; original8,876,772B baseline
+and whole-C5GB attribution hold/no local materialization waiver remain.
+Plan: [root ruling](superpowers/plans/2026-10-13-worker-lineage-root-ruling.md).
+
+Full approved Option A stays ACTIVE. Numerical image/three actual baselines and
+two-job recovery<=90s, real provider/key/egress/Agent, production report recovery/
+user loop, and genuine server-owned market cutover remain required. Private app
+69515b7/papertrue/livefalse and original Windows/OpenD/helper/tunnel remain;
+closed-session source clocks are judged by the actual calendar, never age/price
+alone. Formal168h is NOT_REQUIRED; disruptive operational drills stay on demand.
+This evidence update is subsequent to candidate56 and is not certified by its CI.
+
+The checkpoints below are historical, not instructions to restart work.
 
 Iteration 0035 is complete. Iteration 0036 remains active after the 8 GB
 private AWS migration passed its bounded restore, smoke, chart and restart

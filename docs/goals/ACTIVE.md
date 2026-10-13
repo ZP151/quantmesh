@@ -1,35 +1,51 @@
 # Active Goal
 
-## Current correction and approved research host
+## Current CI, actual cloud PG prerequisite and Worker frontier
 
-PR175 head7498a73 CI38381619194 ends FAILURE:6failed/4540passed/113skipped,
-frontend419; fast and independent service jobs pass. Actual checkout4991ba9e
-tree38126bd6 equals the candidate. All six failures are synthetic Worker fixtures
-missing the required bytecode environment marker; controlled RED6/GREEN7 fixes
-only tests and preserves missing-marker refusal. No old CI/watch is restarted.
+Exact PR175 candidate56d95cfeaea74f3faeba33f3621fbeafbf582df0 CI38395044039
+completes SUCCESS13:06:34UTC. Actual checkoutdb7d2b31df7150b590bc32e7cb89b0d1836fcc80
+tree86b871043c72e0ddf7468c3333ea60fb0aebee53 equals candidate. All18release commands/
+4557Python139skip3259.1s/frontend419 pass. Separate offline service202pass5PGskip/
+207total81licenses/ZIP digest passes. No actionable reviews at intake; PR remains
+DRAFT. Old failed7498 and prior success042 runs/ended watches are not restarted.
+Evidence: [ci56-terminal](../evidence/research-foundation/ci56-terminal/README.md).
 
-Construction sourcebb36e404 integrates0137bae;10 distinct software cases pass,
-two reviews complete. Actual readonly81 numerical imports reveal5originless
-helpers, which previous synthetic tests did not cover. Measured typing aliases
-and data-only cython_runtime now have a bounded adapter. Narrow review's equality
-hook/compiler P2s have RED3/GREEN65 evidence and are closed. Cython type caches
-still refuse because descriptor/instance callback payloads are unqualified.
-This is partial software progress, not numerical/image/native admission.
-The cumulative software allowance is explicitly12MB with the same original
-8,876,772B baseline; whole-C5GB attribution remains pending/no bulk-local waiver.
+Approved independent quantmesh-research-8gb is Running/private Tailnet online,
+actual SSH exits0. Ubuntu24.04/SingaporeA/8GB2vCPU160GB costs additional$44/month;
+old8GB+2GB remain, compute subtotal$100/month before taxes/model/backup/overage.
+HTTP removed, public SSH restricted to Lightsail browser only. Official Docker
+29.9/cgroupv2 is installed; no production research services are activated.
 
-The user approves a new independent quantmesh-research-8gb and retaining both
-existing instances. Actual Lightsail reports Running for Ubuntu24.04/SingaporeA/
-8GB/2vCPU/160GB at additional$44/month. Default HTTP is removed and SSH limited
-to Lightsail browser only. Three compute bundles total$100/month before taxes,
-model/backup/storage/overage. Private Tailnet onboarding and actual production
-PG/Worker/Agent/source/userloop acceptance remain required; no research service is enabled.
-The user completes this new host's actual first Tailnet authentication. Its
-own sanitized status is Running/online with the expected private domain, and
-root's fresh private SSH uname exits0/x86_64. Official Tailscale1.104.1 is
-installed; accept-routes/accept-dns are false. No repeated authentication is
-needed without a new actual challenge. Production runtime preparation follows.
-Full approved Option A stays ACTIVE; formal168h remains not required.
+Actual non-root PG18.6 source/build now includes OpenSSL/ICU/readline/zlib.
+Disposable loopback fixture passes15protocol/ownership checks13:24UTC:TLS1.3/
+256bit verify-full, dedicated SCRAM role/CRUD, wrongCA/name/plaintext/password/
+cross-role/admin-operation refusals. Recipe cleanup P2s are corrected with actual
+rejected-link RED/GREEN, forced ownership-capture failure exit1/cleaned and owned
+log-bound counterexample. Verified pidfd stop exits0; both fixture PID files
+removed/no own postmaster left/private SSH and Tailnet remain. Host introduced
+831553536B/free161431252992B meets fresh5GB/50GB budget. No keys/passwords/data/
+raw SQL/server logs archived. Actual service store, production PG, real report
+restore/p95/user-loop acceptance remain pending; CI still honestly skips5PGcases.
+Evidence: [aws-pg-tls](../evidence/research-foundation/aws-pg-tls/README.md).
+
+Reviewed alias/data-only adapter remains partial; native Cython caches still
+refuse. New lineage proposal has three decisive P2 proof gaps. Root freezes only
+canonical measured base -B/-I/-S entry, independent parent binding and CURRENT
+revalidation foundation in the original #172 chat, not native-cache exemption.
+Actual measured constructor/continuous native-loading/noexec/seccomp/kernel
+qualification must precede numeric admission. Original construction/reviews/
+completed tests are not repeated. Explicit same-baseline software cap20MB reserves
+at most5MB for new source/tests/evidence/Git/copies; original8,876,772B baseline
+and whole-C5GB attribution hold/no local materialization waiver remain.
+Plan: [root ruling](../superpowers/plans/2026-10-13-worker-lineage-root-ruling.md).
+
+Full approved Option A stays ACTIVE. Numerical image/three actual baselines and
+two-job recovery<=90s, real provider/key/egress/Agent, production report recovery/
+user loop, and genuine server-owned market cutover remain required. Private app
+69515b7/papertrue/livefalse and original Windows/OpenD/helper/tunnel remain;
+closed-session source clocks are judged by the actual calendar, never age/price
+alone. Formal168h is NOT_REQUIRED; disruptive operational drills stay on demand.
+This evidence update is subsequent to candidate56 and is not certified by its CI.
 
 ## Earlier October 13 SSH and software intake — retained history
 

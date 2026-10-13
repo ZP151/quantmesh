@@ -16,6 +16,13 @@ stale app ingestion and qualifies server gateway migration. Formal168h is not
 required now, on-demand only. Historical failures remain unaccepted. Read
 ACTIVE and iteration0038 before interpreting the historical stage notes below.
 
+October13 latest frontier:approved independent research8GB/private Tailnet/SSH
+and Docker are ready; real disposable PG18.6 TLS/SCRAM/roles prerequisite
+passes15checks and is stopped. Candidate56 exact CI passes4557Python139skip/
+419frontend, PR175 DRAFT. Numerical-cache provenance/kernel boundary, actual
+Worker/Agent/production PG/report loop/server-market cutover remain pending.
+No production service or source switch is inferred from the cloud fixture.
+
 M0 through M13 and iterations 0014–0020 are implemented and merged.
 `v0.1.1-rc1` is the immutable accepted prototype baseline. It includes the
 React workstation, deterministic demo and paper authority, read-only live

@@ -1,28 +1,51 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
-## Current correction and approved independent host
+## Current CI, actual cloud PG prerequisite and Worker frontier
 
-Exact7498a73 CI38381619194 is terminal FAILURE:6failed/4540passed/113skip,
-frontend419; checkout4991ba9e/tree38126bd6 equals candidate. Six positive runtime
-fixtures lacked the required environment marker. Test-only RED6/GREEN7 closes
-that issue without changing production policy/workflow. No old run is retried.
-Construction bb36e404 integrates0137bae with10 distinct software passes/two
-reviews. Real readonly81 imports show5originless helpers. The measured typing/
-data-only runtime adapter passes affected65tests/6.99s; specific review P2s close
-with controlled RED3. Cython descriptor/instance payload provenance stays
-unqualified and caches refuse; full numerical/image/native proof is pending.
-Software allowance explicitly12MB, original baseline retained; no whole-C5GB
-attribution waiver or new local image/env/clone/container authorization.
+Exact PR175 candidate56d95cfeaea74f3faeba33f3621fbeafbf582df0 CI38395044039
+completes SUCCESS13:06:34UTC. Actual checkoutdb7d2b31df7150b590bc32e7cb89b0d1836fcc80
+tree86b871043c72e0ddf7468c3333ea60fb0aebee53 equals candidate. All18release commands/
+4557Python139skip3259.1s/frontend419 pass. Separate offline service202pass5PGskip/
+207total81licenses/ZIP digest passes. No actionable reviews at intake; PR remains
+DRAFT. Old failed7498 and prior success042 runs/ended watches are not restarted.
+Evidence: [ci56-terminal](../evidence/research-foundation/ci56-terminal/README.md).
 
-User approves new independent research8GB while retaining existing8GB+2GB.
-Actual Lightsail creates quantmesh-research-8gb, Ubuntu24.04/SingaporeZoneA/
-8GB/2vCPU/160GB, Running; extra$44/month, compute subtotal$100/month before
-tax/model/backup/overage. Default HTTP removed; SSH browser-only. Private Tailnet
-onboarding is verified by own Running/online status and fresh private SSH exit0/
-x86_64 after the user completes actual new-host authentication. Official
-Tailscale1.104.1 is installed with accept-routes/accept-dns false. Real
-PG/Worker/Agent/source/userloop activation remains unfinished.
-FullA ACTIVE; formal168h not required. Earlier checkpoints below are historical.
+Approved independent quantmesh-research-8gb is Running/private Tailnet online,
+actual SSH exits0. Ubuntu24.04/SingaporeA/8GB2vCPU160GB costs additional$44/month;
+old8GB+2GB remain, compute subtotal$100/month before taxes/model/backup/overage.
+HTTP removed, public SSH restricted to Lightsail browser only. Official Docker
+29.9/cgroupv2 is installed; no production research services are activated.
+
+Actual non-root PG18.6 source/build now includes OpenSSL/ICU/readline/zlib.
+Disposable loopback fixture passes15protocol/ownership checks13:24UTC:TLS1.3/
+256bit verify-full, dedicated SCRAM role/CRUD, wrongCA/name/plaintext/password/
+cross-role/admin-operation refusals. Recipe cleanup P2s are corrected with actual
+rejected-link RED/GREEN, forced ownership-capture failure exit1/cleaned and owned
+log-bound counterexample. Verified pidfd stop exits0; both fixture PID files
+removed/no own postmaster left/private SSH and Tailnet remain. Host introduced
+831553536B/free161431252992B meets fresh5GB/50GB budget. No keys/passwords/data/
+raw SQL/server logs archived. Actual service store, production PG, real report
+restore/p95/user-loop acceptance remain pending; CI still honestly skips5PGcases.
+Evidence: [aws-pg-tls](../evidence/research-foundation/aws-pg-tls/README.md).
+
+Reviewed alias/data-only adapter remains partial; native Cython caches still
+refuse. New lineage proposal has three decisive P2 proof gaps. Root freezes only
+canonical measured base -B/-I/-S entry, independent parent binding and CURRENT
+revalidation foundation in the original #172 chat, not native-cache exemption.
+Actual measured constructor/continuous native-loading/noexec/seccomp/kernel
+qualification must precede numeric admission. Original construction/reviews/
+completed tests are not repeated. Explicit same-baseline software cap20MB reserves
+at most5MB for new source/tests/evidence/Git/copies; original8,876,772B baseline
+and whole-C5GB attribution hold/no local materialization waiver remain.
+Plan: [root ruling](../superpowers/plans/2026-10-13-worker-lineage-root-ruling.md).
+
+Full approved Option A stays ACTIVE. Numerical image/three actual baselines and
+two-job recovery<=90s, real provider/key/egress/Agent, production report recovery/
+user loop, and genuine server-owned market cutover remain required. Private app
+69515b7/papertrue/livefalse and original Windows/OpenD/helper/tunnel remain;
+closed-session source clocks are judged by the actual calendar, never age/price
+alone. Formal168h is NOT_REQUIRED; disruptive operational drills stay on demand.
+This evidence update is subsequent to candidate56 and is not certified by its CI.
 
 ## Earlier October 13 SSH and software intake — retained history
 

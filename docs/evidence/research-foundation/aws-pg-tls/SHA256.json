@@ -1,0 +1,132 @@
+[
+  {
+    "path": "0038-aws-postgres-after.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-postgres-after.json",
+    "bytes": 402,
+    "sha256": "0fd4a3000c730ad4a7e85cbaa5e363de55ef2b1ea901b8c99d5591accc13cfb6"
+  },
+  {
+    "path": "0038-aws-postgres-build.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-postgres-build.json",
+    "bytes": 1366,
+    "sha256": "a966fba1e29db09593184cb8135d5a83a9ea91c40a523591b9b64a8a1cb2d250"
+  },
+  {
+    "path": "0038-aws-postgres-capture-failure.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-postgres-capture-failure.json",
+    "bytes": 756,
+    "sha256": "b887347242e7f6f3728311118fc3092f61da045083c34a60cb9cdb7478996b6d"
+  },
+  {
+    "path": "0038-aws-postgres-dependencies.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-postgres-dependencies.json",
+    "bytes": 795,
+    "sha256": "0474b58f4b5d2cc05f5b789f5c5a5f783434aecd47307fa571b72fb7426f53b7"
+  },
+  {
+    "path": "0038-aws-postgres-host-intake.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-postgres-preflight-negatives.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-postgres-preflight-negatives.json",
+    "bytes": 1082,
+    "sha256": "ef507333e39c243e5b7aa159edc518a04d9a597cef130904afaa6dc7fbb97001"
+  },
+  {
+    "path": "0038-aws-postgres-preflight-negatives.py",
+    "bytes": 54552,
+    "sha256": "f04f38a560c8273b647a5781a263c1a8e54a77f018debefd2570af3571ed0d30"
+  },
+  {
+    "path": "0038-aws-postgres-preflight-ssh-timeout.exit",
+    "bytes": 5,
+    "sha256": "a730e9f4fecef62a7023b1b3b6b11312e9689ef5a5c2109737bc7e12db929948"
+  },
+  {
+    "path": "0038-aws-postgres-protocol.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-postgres-protocol.jsonl",
+    "bytes": 5015,
+    "sha256": "8c3002f669c2b7de3a81d4905dd4a8edd520d4ca4bcb97923de939521b7f25af"
+  },
+  {
+    "path": "0038-aws-postgres-source-intake.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-postgres-source-intake.json",
+    "bytes": 842,
+    "sha256": "046432544045083d86a39e33203bb8edb5ccc07c0eb7ffce102af4652cd44453"
+  },
+  {
+    "path": "0038-aws-postgres-verified-summary.json",
+    "bytes": 944,
+    "sha256": "23edbd290d0e4e5a3681863402a0ba6c9c5d54010bd60e2363e86de9329547af"
+  },
+  {
+    "path": "build_aws_postgres_tls.py",
+    "bytes": 3803,
+    "sha256": "b861259debda4f0214a12c7c0049f09c87b87c1a76f19dd411da7f1b21d4b0c8"
+  },
+  {
+    "path": "check_aws_pg_after.py",
+    "bytes": 2213,
+    "sha256": "d83d2350869dbd1f4f853f36edfc605824fc129a1790dec9abb7f9424de52ca3"
+  },
+  {
+    "path": "install_aws_pg_build_dependencies.py",
+    "bytes": 2828,
+    "sha256": "4a2e7eac7b5e4c9459f3cec18d2fae53431d936bc691f01bd4f3a4750e2a6d75"
+  },
+  {
+    "path": "prepare_aws_postgres_source.py",
+    "bytes": 3506,
+    "sha256": "5e39ec3302d83fd2585286b0a18c39fb78e75b15f0587ed39c05649e7d11ff44"
+  },
+  {
+    "path": "prepare_pg_preflight_negative.py",
+    "bytes": 2972,
+    "sha256": "234d9ab2acb327038fcba468012d6a141493753d9e7f5c15b7cbcb2b4033de5d"
+  },
+  {
+    "path": "qualify_aws_postgres_tls-before-receipt-guard.py",
+    "bytes": 18239,
+    "sha256": "0b9818f92a5b55151bbafe9f51dce6124e544bbdedaa8c39ea5bef904aa5a5ba"
+  },
+  {
+    "path": "qualify_aws_postgres_tls.py",
+    "bytes": 20838,
+    "sha256": "66668da480d767a40809b5eaf58692cd31aa6027dbae954bd401670b14682aea"
+  },
+  {
+    "path": "0038-aws-postgres-review.md",
+    "bytes": 1707,
+    "sha256": "171c972dfc92ec82d9ac8d32626e67c9fbe30926cb44f5683743b1acdb90d40c"
+  }
+]
