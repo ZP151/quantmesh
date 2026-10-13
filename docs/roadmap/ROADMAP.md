@@ -11,8 +11,12 @@ Last updated: 2026-10-13
 
 Research checkpointc545 passes exact full CI38352153020. PR166 probe repair is
 merged7da320f and installed; helper recovery does not close the server-owned
-market requirement. New Linux native image and OpenAI Responses slices are in
-progress; private AWS deployment/report/provider/user acceptance remains open.
+market requirement. Fresh SSH authentication/forwarded listener is verified;
+current042fb0b CI remains live. Native stdlib and OpenAI offline slices are
+integrated; numerical Worker software is active with real image/storage gates
+pending. A new isolated poll-error repair has24focusedpasses and narrowreview,
+but is not deployed or proven to cause the AWS gap. Private AWS/report/provider/
+user and server-owned market acceptance remain open.
 
 ## Status legend
 

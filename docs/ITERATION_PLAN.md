@@ -18,10 +18,15 @@ operator freshness steering; validation#132 and Eval#160 follow.
 Formal168h is NOT REQUIRED/on-demand. Capacity and disruptive operational drills
 are later acceptance, not the development frontier. PR166 is merged7da320f after
 explicit user human review and exact-head CI; reviewed helper12688 is restored
-with Startup/OpenD preserved. Fresh SSH authentication/loopback remains pending;
-the personal-PC gateway is not relabelled cloud. Research c545 CI38352153020
-passes full release4493pytest/111skip/frontend419; the new combined native/model
-tree and actual server delivery still require separate acceptance.
+with Startup/OpenD preserved. Fresh authentication is completed; actual08:27UTC
+SSHhealth and08:28 private-listener observation pass. The personal-PC gateway is
+not relabelled cloud and market ingestion remains a separate gate. Research c545
+CI passes4493pytest/111skip/frontend419; current042fb0b CI38365280962 is live with
+offline service202pass/5PGskip. A subsequent isolated unexpected-poll repair has
+RED3/24focusedpasses/narrowreview; its exact checks/deployment remain pending.
+New Linux numerical Worker software proceeds after root-frozen proposal, while
+new localbulk materialization is held on unresolved disk attribution. Actual
+server delivery and the full approved Option A acceptance remain required.
 The dated checkpoints below are historical, not instructions to restart old work.
 
 Iteration 0035 is complete. Iteration 0036 remains active after the 8 GB

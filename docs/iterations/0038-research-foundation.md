@@ -1,6 +1,39 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
-## Current frontier — October 13, after c545 CI
+## Current frontier — October 13, after fresh SSH authentication
+
+Actual08:27UTC bounded SSH health exits0 after the user's fresh authentication,
+exact69515b7/papertrue/livefalse;08:28 reviewed ObserveOnly confirms the private
+forwarded listener. Helper12688/OpenD28036/Startup/digest60FED2/Globalmutex remain.
+This removes the route-auth barrier, not server-native source or PC-independence
+acceptance. The post-auth app stock bars still endOct9 20:00UTC. Current shared
+XNYS4.13.2 calendar identifies closed/latestcompletedOct12 20:00UTC/nextopenOct13
+13:30UTC; unknown provider delay remainsunknown, not a price/age-only failure.
+
+Independent local RED3 proves unexpected SDK quote/ticker/candle exceptions
+silently end the poll task and orphan recv. Six source lines surface a fixed
+sanitized poll_error to existing supervisor disconnect/backoff. Completepoll17
+and minute7 pass; one fresh narrow review finds noP1/P2. Ruff/diff/finalformat
+pass, tested/final AST matches after3incumbent whitespace normalizations;
+readonlyruntime81licenses/6669RECORD/zero.pyc after-admission passes. Not deployed,
+and not established as the actual AWS gap's cause.45raw receipts/681488B are
+hash-bound under [post-auth-poll-repair](../evidence/research-foundation/post-auth-poll-repair/README.md).
+
+Remote042fb0b CI38365280962/watch76685 remains live, with independently verified
+offline service202pass/5PGskip/207total/81licenses; later local poll code needs
+its own exact-tree checks. No old CI or completed broad tests are repeated.
+
+Task2 proposal8770d945f510aa1854f07d612d7bfb010d4ff81896d1680e3aa72e973d228a01
+is independently verified34files/36members/15rootblobs/1,548,420B. Root accepts
+construction-context/actualcontainer supervision/RO-RW/runtime-image interfaces
+for a new bounded software turn in existing #172 chat. Actual numerical image,
+ELF/notices/newimage probe/two-job recovery and resource acceptance remain
+pending. New localbulkimage/env/clone/container operations remain held under
+unresolved12.93GB disk attribution; only small source/tests on existing resources.
+FullA ACTIVE; actual provider/key/egress/AWS/PG-TLS/offhost actualreport/p95/
+userloop/server-owned source acceptance remain required. Formal168h not required.
+
+## Earlier October 13 checkpoints — retained historical evidence
 
 OpenAI Responses offlineTask1 now integrates sourcee6cdc7c asb52ae44. Two terminal
 implementation-capacity interruptions are retained as harness errors; root

@@ -1,0 +1,8 @@
+{
+  "test_ast_unchanged": true,
+  "before_tested_sha256": "e868a69daa99670b44dbfd9593fc2a850377fa6de760d5a2c413d0fa64bc621b",
+  "after_formatted_sha256": "6bb2a350f0381ae460874dad13ce7f61a8b061409feaf7d4a129a63fd3baf722",
+  "source_sha256": "b93156bd4a490d0666796c544c81abb692cfc4b5ae261913ccf397f375ed0223",
+  "format_scope": "3 incumbent whitespace areas only, no behavior changes",
+  "tests": "17 fullpoll+7minute passed before this whitespace-only normalization"
+}

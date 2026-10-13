@@ -1,0 +1,37 @@
+unformatted: File would be reformatted
+   --> tests/test_live_moomoo.py:239:29
+    |
+238 |     assert (
+    -         supervisor.dispatch(
+    -             {"kind": "stock_quote", "payload": stale.stock_quote(["US.AAPL"])}, now
+    -         )
+239 +         supervisor.dispatch({"kind": "stock_quote", "payload": stale.stock_quote(["US.AAPL"])}, now)
+240 |         == []
+--------------------------------------------------------------------------------
+456 |         _wait_for(
+    -             lambda: _state(feed, "AAPL")
+    -             .get("kinds", {})
+    -             .get("trade", {})
+    -             .get("payload", {})
+    -             .get("side")
+    -             == "sell"
+457 +             lambda: (
+458 +                 _state(feed, "AAPL")
+459 +                 .get("kinds", {})
+460 +                 .get("trade", {})
+461 +                 .get("payload", {})
+462 +                 .get("side")
+463 +                 == "sell"
+464 +             )
+465 |         )
+--------------------------------------------------------------------------------
+539 |         # statuses() defaults alone are not the surface)
+    -         _wait_for(
+    -             lambda: set(feed.latest_state()["instruments"])
+    -             == {"moomoo:AAPL", "moomoo:NVDA"}
+    -         )
+540 +         _wait_for(lambda: set(feed.latest_state()["instruments"]) == {"moomoo:AAPL", "moomoo:NVDA"})
+541 |         assert _source_state(feed, "AAPL") == "unavailable"
+    |
+
+1 file would be reformatted, 1 file already formatted

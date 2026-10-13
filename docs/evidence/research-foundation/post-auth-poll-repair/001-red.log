@@ -1,0 +1,487 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_unexpected_poll_failure_reaches_supervisor_without_private_details[stock_quote] _
+
+fut = <coroutine object MoomooVenueTransport.recv at 0x7827b8d99a80>
+timeout = 1
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Coroutine will be wrapped in Task.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+    
+        If the wait is cancelled, the task is also cancelled.
+    
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+/usr/lib/python3.12/asyncio/tasks.py:520: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/quantmesh/live/moomoo.py:134: in recv
+    return await self._frames.get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Queue at 0x7827c6b3aed0 maxsize=0>
+
+    async def get(self):
+        """Remove and return an item from the queue.
+    
+        If queue is empty, wait until an item is available.
+        """
+        while self.empty():
+            getter = self._get_loop().create_future()
+            self._getters.append(getter)
+            try:
+>               await getter
+E               asyncio.exceptions.CancelledError
+
+/usr/lib/python3.12/asyncio/queues.py:158: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+method = 'stock_quote'
+
+    @pytest.mark.parametrize("method", ["stock_quote", "rt_ticker", "current_kline"])
+    def test_unexpected_poll_failure_reaches_supervisor_without_private_details(method) -> None:
+        """An SDK cleanup failure must disconnect the wire instead of orphaning recv."""
+        client = _StubOpenD()
+    
+        def fail(*args, **kwargs):
+            raise RuntimeError("private-sdk-detail-that-must-not-be-surfaced")
+    
+        setattr(client, method, fail)
+        transport = MoomooVenueTransport(client, candle_num=1)
+    
+        async def run() -> None:
+            transport.connect()
+            transport.send({"symbol": "AAPL", "code": "US.AAPL"})
+            task = transport._task
+            try:
+                while True:
+                    frame = await asyncio.wait_for(transport.recv(), timeout=1)
+                    if frame["kind"] == "poll_error":
+                        assert frame["message"] == "unexpected OpenD poll failure"
+                        assert "private-sdk-detail" not in str(frame)
+                        supervisor = MoomooVenueSupervisor(transport)
+                        with pytest.raises(MoomooProtocolError):
+                            supervisor.dispatch(frame, datetime.now(UTC))
+                        break
+            finally:
+                transport.close()
+                await asyncio.gather(task, return_exceptions=True)
+    
+>       asyncio.run(run())
+
+tests/test_live_moomoo.py:354: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_live_moomoo.py:342: in run
+    frame = await asyncio.wait_for(transport.recv(), timeout=1)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x7827c6cab800>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+/usr/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+_ test_unexpected_poll_failure_reaches_supervisor_without_private_details[rt_ticker] _
+
+fut = <coroutine object MoomooVenueTransport.recv at 0x78277a551d80>
+timeout = 1
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Coroutine will be wrapped in Task.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+    
+        If the wait is cancelled, the task is also cancelled.
+    
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+/usr/lib/python3.12/asyncio/tasks.py:520: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/quantmesh/live/moomoo.py:134: in recv
+    return await self._frames.get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Queue at 0x7827c6b3bf20 maxsize=0 tasks=1>
+
+    async def get(self):
+        """Remove and return an item from the queue.
+    
+        If queue is empty, wait until an item is available.
+        """
+        while self.empty():
+            getter = self._get_loop().create_future()
+            self._getters.append(getter)
+            try:
+>               await getter
+E               asyncio.exceptions.CancelledError
+
+/usr/lib/python3.12/asyncio/queues.py:158: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+method = 'rt_ticker'
+
+    @pytest.mark.parametrize("method", ["stock_quote", "rt_ticker", "current_kline"])
+    def test_unexpected_poll_failure_reaches_supervisor_without_private_details(method) -> None:
+        """An SDK cleanup failure must disconnect the wire instead of orphaning recv."""
+        client = _StubOpenD()
+    
+        def fail(*args, **kwargs):
+            raise RuntimeError("private-sdk-detail-that-must-not-be-surfaced")
+    
+        setattr(client, method, fail)
+        transport = MoomooVenueTransport(client, candle_num=1)
+    
+        async def run() -> None:
+            transport.connect()
+            transport.send({"symbol": "AAPL", "code": "US.AAPL"})
+            task = transport._task
+            try:
+                while True:
+                    frame = await asyncio.wait_for(transport.recv(), timeout=1)
+                    if frame["kind"] == "poll_error":
+                        assert frame["message"] == "unexpected OpenD poll failure"
+                        assert "private-sdk-detail" not in str(frame)
+                        supervisor = MoomooVenueSupervisor(transport)
+                        with pytest.raises(MoomooProtocolError):
+                            supervisor.dispatch(frame, datetime.now(UTC))
+                        break
+            finally:
+                transport.close()
+                await asyncio.gather(task, return_exceptions=True)
+    
+>       asyncio.run(run())
+
+tests/test_live_moomoo.py:354: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_live_moomoo.py:342: in run
+    frame = await asyncio.wait_for(transport.recv(), timeout=1)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x782779086dc0>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+/usr/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+_ test_unexpected_poll_failure_reaches_supervisor_without_private_details[current_kline] _
+
+fut = <coroutine object MoomooVenueTransport.recv at 0x7827b8d99e40>
+timeout = 1
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Coroutine will be wrapped in Task.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+    
+        If the wait is cancelled, the task is also cancelled.
+    
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+/usr/lib/python3.12/asyncio/tasks.py:520: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/quantmesh/live/moomoo.py:134: in recv
+    return await self._frames.get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Queue at 0x7827c6b3ad20 maxsize=0 tasks=2>
+
+    async def get(self):
+        """Remove and return an item from the queue.
+    
+        If queue is empty, wait until an item is available.
+        """
+        while self.empty():
+            getter = self._get_loop().create_future()
+            self._getters.append(getter)
+            try:
+>               await getter
+E               asyncio.exceptions.CancelledError
+
+/usr/lib/python3.12/asyncio/queues.py:158: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+method = 'current_kline'
+
+    @pytest.mark.parametrize("method", ["stock_quote", "rt_ticker", "current_kline"])
+    def test_unexpected_poll_failure_reaches_supervisor_without_private_details(method) -> None:
+        """An SDK cleanup failure must disconnect the wire instead of orphaning recv."""
+        client = _StubOpenD()
+    
+        def fail(*args, **kwargs):
+            raise RuntimeError("private-sdk-detail-that-must-not-be-surfaced")
+    
+        setattr(client, method, fail)
+        transport = MoomooVenueTransport(client, candle_num=1)
+    
+        async def run() -> None:
+            transport.connect()
+            transport.send({"symbol": "AAPL", "code": "US.AAPL"})
+            task = transport._task
+            try:
+                while True:
+                    frame = await asyncio.wait_for(transport.recv(), timeout=1)
+                    if frame["kind"] == "poll_error":
+                        assert frame["message"] == "unexpected OpenD poll failure"
+                        assert "private-sdk-detail" not in str(frame)
+                        supervisor = MoomooVenueSupervisor(transport)
+                        with pytest.raises(MoomooProtocolError):
+                            supervisor.dispatch(frame, datetime.now(UTC))
+                        break
+            finally:
+                transport.close()
+                await asyncio.gather(task, return_exceptions=True)
+    
+>       asyncio.run(run())
+
+tests/test_live_moomoo.py:354: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_live_moomoo.py:342: in run
+    frame = await asyncio.wait_for(transport.recv(), timeout=1)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x78277935a980>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+/usr/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+=============================== warnings summary ===============================
+../../../../../../../../var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_live_moomoo.py::test_unexpected_poll_failure_reaches_supervisor_without_private_details[stock_quote]
+FAILED tests/test_live_moomoo.py::test_unexpected_poll_failure_reaches_supervisor_without_private_details[rt_ticker]
+FAILED tests/test_live_moomoo.py::test_unexpected_poll_failure_reaches_supervisor_without_private_details[current_kline]
+3 failed, 14 deselected, 1 warning in 8.99s

@@ -1,6 +1,45 @@
 # Active Goal
 
-## Current frontier — October 13, after c545 CI
+## Current frontier — October 13, after fresh SSH authentication
+
+The user completes the fresh SSH challenge. Actual08:27UTC bounded owned SSH
+observer exits0 with AWShealth69515b7/papertrue/livefalse;08:28 reviewed
+ObserveOnly returns existing_private_tunnel. Helper12688/OpenD28036/digest60FED2/
+Startup and actualGlobal mutex remain. This removes the SSH authentication
+barrier, not personal-PC dependency or market-ingestion acceptance. One app
+intake still has Oct9 completed stock bars; shared XNYS4.13.2 identifies closed
+state/latestcompletedOct12 20:00UTC/nextopenOct13 13:30UTC. Provider latency is
+unknown, so freshness staysunknown; no price/age-only closed-session failure.
+
+Root isolates a different, reproducible poll-lifecycle defect: unexpected SDK
+quote/ticker/candle exceptions end _poll without notifying recv. RED3 leads to
+six sanitized-error-frame source lines; completepoll17pass6.75s and minute7pass
+4.83s, one new narrow independentreview clear. Ruff/diff/finalformat pass;
+three incumbent formatting changes have identical tested/final AST. Readonly
+runtime after-admission81licenses/6669RECORD/zero.pyc passes. This is not yet
+deployed and is not proven to cause the observed AWS collection gap.
+
+Remote PR175 head042fb0b CI38365280962/watch76685 remains live; independent
+service artifact202passed/5PGskipped/207total/81licenses is verified separately.
+The subsequent local poll patch requires new exact-tree checks before release.
+No old CI/watch or completed full tests are rerun. PR175 remains DRAFT.
+
+Task2 proposal SHA8770d945f510aa1854f07d612d7bfb010d4ff81896d1680e3aa72e973d228a01
+has34indexedfiles/36archivemembers/15rootGitblobs and1,548,420totalbytes verified.
+Root freezes construction-only WorkerRunner/privateContextVar, actualcontainer
+poll/pulse/close, ROinput/RWoutput and measuredimage/runtime identity for new
+bounded software implementation in the existing #172 chat. Full numerical
+image/ELF/notices/native<=90s recovery remain pending. No newlocalbulkimage/env/
+clone/container is allowed while whole-C12.93GB attribution remains unresolved;
+the existing disk question is pending. Source and small tests use existing
+resources. Evidence: [post-auth-poll-repair](../evidence/research-foundation/post-auth-poll-repair/README.md).
+
+Full approved Option A remains ACTIVE: actual serverWorker/provider/key/egress,
+private AWS host/PG-TLS/offhost actualreport restore/p95/userloop and genuine
+server-owned market cutover remain required. No paid resource/model call,
+vendor login/source switch or app redeployment occurs. Formal168h is not required.
+
+## Earlier October 13 checkpoints — retained historical evidence
 
 Subsequent OpenAI offlineTask1 sourcee6cdc7c9ca9ae1b6934f60970a135c354acf7c5f
 integratesb52ae44. Existing implementation chat has two actual terminal harness
@@ -46,7 +85,7 @@ and OpenD28036 preserved. Private HTTPS health06:31UTC remains exact69515b7,
 paper=true/live=false; fresh SSH extra authentication and remote11111 acceptance
 remain pending. No AWS app redeployment or server independence is inferred.
 
-Two existing authorized implementation chats are active: #172 immutable-image
+At that earlier intake, two authorized implementation chats were active: #172 immutable-image
 Task1 native qualification after root-reviewed packet, and #171 new OpenAI
 Responses offline adapter Task1. Bytecode RED5 becomes focusedGREEN47; actual
 fixture image is built, conservative new local footprint225796096B and C free

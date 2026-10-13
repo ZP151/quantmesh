@@ -1,0 +1,272 @@
+[
+  {
+    "source": "output/0038-poll-unexpected-repair/red.log",
+    "archived": "001-red.log",
+    "bytes": 19522,
+    "sha256": "361428c7c1ba1849fc745dd6555ea0f8e9919db290b3341fdab0c6558f925a6a"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/red.exit",
+    "archived": "002-red.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/green.log",
+    "archived": "003-green.log",
+    "bytes": 1474,
+    "sha256": "fd2f493aa3e8390398321024467c00ef768815498cedaf2fa4c344d1a48918dd"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/green.exit",
+    "archived": "004-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/green.xml",
+    "archived": "005-green.xml",
+    "bytes": 2324,
+    "sha256": "d4a46056e3c50f8c7dbb51c5dca3bafe6f33a0502cb533922bfd0644c0028cab"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/minutes.log",
+    "archived": "006-minutes.log",
+    "bytes": 1593,
+    "sha256": "fe7ef27e78db394f5b7cb3b9f9d3027381f70d022a3ffb1312a9d2d4021b1fb0"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/minutes.exit",
+    "archived": "007-minutes.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/minutes.xml",
+    "archived": "008-minutes.xml",
+    "bytes": 1217,
+    "sha256": "add5017101e408bc9be9d328a5a4e7bbbb0f992855dddacd48ab13e1103a4475"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/review.md",
+    "archived": "009-review.md",
+    "bytes": 1720,
+    "sha256": "92fffb4ac6a80a52ce3de1d186a83c8306b7dc6f910abf4df3b00f3b5b33070f"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/ruff.log",
+    "archived": "010-ruff.log",
+    "bytes": 20,
+    "sha256": "a4443afdcfb6d7363adb285762515ccf7cf50473b1a05c20c1a50f6bed4d26b0"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/ruff.exit",
+    "archived": "011-ruff.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/format-before.log",
+    "archived": "012-format-before.log",
+    "bytes": 1564,
+    "sha256": "d25e00ef10e9c5a139a594ef2df4f6a69b7293e1b034908a24b7e677a5044eaf"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/format-before.exit",
+    "archived": "013-format-before.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/format.log",
+    "archived": "014-format.log",
+    "bytes": 20,
+    "sha256": "d9d79976036ac55b771b47f6cecaa66a30fe59749dba207bd67b2104ca5c29d7"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/format.exit",
+    "archived": "015-format.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/format-final.log",
+    "archived": "016-format-final.log",
+    "bytes": 27,
+    "sha256": "97d85b4b6c185a05396e2d09a3c304ff0f7cc77f8b7b7bb7989ec6cd875b3898"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/format-final.exit",
+    "archived": "017-format-final.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/format-ast.json",
+    "archived": "018-format-ast.json",
+    "bytes": 477,
+    "sha256": "9f690e2b9d9228211f40447a582e4415a2ceb2a556d08104e0c7fbbf137c2cee"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/test_live_moomoo.tested-before-format.py",
+    "archived": "019-test_live_moomoo.tested-before-format.py",
+    "bytes": 21759,
+    "sha256": "e868a69daa99670b44dbfd9593fc2a850377fa6de760d5a2c413d0fa64bc621b"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/runtime-after.log",
+    "archived": "020-runtime-after.log",
+    "bytes": 215,
+    "sha256": "9f22b9dc2c7c63df6658d353aaa6ed792eaa78510d4cb2a47b5ffe87262cc88a"
+  },
+  {
+    "source": "output/0038-poll-unexpected-repair/runtime-after.exit",
+    "archived": "021-runtime-after.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "source": "output/0038-pr166-release/route-health.json",
+    "archived": "022-route-health.json",
+    "bytes": 751,
+    "sha256": "cb1c7d71077386afd39994b9458f69768e7232404eb70ec5603e2f58423a0624"
+  },
+  {
+    "source": "output/0038-pr166-release/post-auth-observe.json",
+    "archived": "023-post-auth-observe.json",
+    "bytes": 155,
+    "sha256": "9f30652351df3f5d68d97404f60757aaa51679535b5d3dd52e20854935a738e9"
+  },
+  {
+    "source": "output/0038-pr166-release/post-auth-observe.exit",
+    "archived": "024-post-auth-observe.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "source": "output/0038-pr166-release/current-local-witness.json",
+    "archived": "025-current-local-witness.json",
+    "bytes": 1080,
+    "sha256": "eb3b17ae41fad20e153ba0ba74f7b3ccd977ebc8f2bda9d2cc389e0dbe73e1a1"
+  },
+  {
+    "source": "output/0038-pr166-release/current-local-witness-wrong-mutex-name.json",
+    "archived": "026-current-local-witness-wrong-mutex-name.json",
+    "bytes": 891,
+    "sha256": "c153ff4f160192dd46c3b90179fd31f2c93ad7be78c04af89ca56dcfbe2aaa34"
+  },
+  {
+    "source": "output/0038-pr166-release/post-auth-app-source-intake.json",
+    "archived": "027-post-auth-app-source-intake.json",
+    "bytes": 7099,
+    "sha256": "84885d7804db8c719851f996fe02982f751298d110cbae3695180f15bfe5f354"
+  },
+  {
+    "source": "output/0038-pr166-release/post-auth-calendar-diagnostic.json",
+    "archived": "028-post-auth-calendar-diagnostic.json",
+    "bytes": 1840,
+    "sha256": "0a0752e921bab2731e6a60d60a9a9a0fa090f0ff7b4e312789bb708a314cfa8f"
+  },
+  {
+    "source": "output/0038-pr166-release/post-auth-app-supervisor-intake.json",
+    "archived": "029-post-auth-app-supervisor-intake.json",
+    "bytes": 697,
+    "sha256": "3d8163abe2f1567149db19f8c2abd981ae1d6632573258201b63a07319bc5e12"
+  },
+  {
+    "source": "output/0038-pr166-release/post-auth-app-supervisor-wrong-shape.json",
+    "archived": "030-post-auth-app-supervisor-wrong-shape.json",
+    "bytes": 163,
+    "sha256": "56b30f66b3ca656d84b5a83ff37526fe99c1e6ff3fdbab28bc1aa8ddcd621bf6"
+  },
+  {
+    "source": "output/0038-pr166-release/release-handoff.json",
+    "archived": "031-release-handoff.json",
+    "bytes": 1627,
+    "sha256": "73ed346b4ab5b949f545259e3c7255fb9b557c85ca9a3766c1a8b0eca12fe18b"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/pytest-d2c0c8e1b9ce4af5b46dfbd3faa43665.xml",
+    "archived": "032-pytest-d2c0c8e1b9ce4af5b46dfbd3faa43665.xml",
+    "bytes": 28042,
+    "sha256": "c6fd987eefa9a8e721386c9e2260698596a6086a7bb9cc0a6518c2912f62c4e4"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/service-gate-0.log",
+    "archived": "033-service-gate-0.log",
+    "bytes": 30,
+    "sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/service-gate-1.log",
+    "archived": "034-service-gate-1.log",
+    "bytes": 19,
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/service-gate-2.log",
+    "archived": "035-service-gate-2.log",
+    "bytes": 27,
+    "sha256": "edc30689f9fd3dc494be14b82b3b560778897cff7435d2cc81d54f1829d5038d"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/service-gate-3.log",
+    "archived": "036-service-gate-3.log",
+    "bytes": 1312,
+    "sha256": "96497f83213677d5faafc3e7024db7a18d0dbc85f642f0c495ac7c98545dc496"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/service-gate-4.log",
+    "archived": "037-service-gate-4.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/service-gate.json",
+    "archived": "038-service-gate.json",
+    "bytes": 10348,
+    "sha256": "f316d2120d1928d790cc9603f92c36ce4e68ff8a3bfbe38291484fc6c1a18ef8"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/artifact-metadata.json",
+    "archived": "039-artifact-metadata.json",
+    "bytes": 404,
+    "sha256": "5a637587ffc63a962db0109d4c716e20b2f50432b2581957843dcf89ef6d6164"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/verified-summary.json",
+    "archived": "040-verified-summary.json",
+    "bytes": 1299,
+    "sha256": "1a8d7c1b7dd55ee9debe146c8b4d1dff2cfb0a8911d2e56eeef1f269cf436a06"
+  },
+  {
+    "source": "output/0038-remote-service-ci042fb0b/zip-path-inventory.json",
+    "archived": "041-zip-path-inventory.json",
+    "bytes": 204,
+    "sha256": "e95e51094c9c3136129fcad8dd2b84bafc4b1c4983e1c12abec5ad5d9c199a2e"
+  },
+  {
+    "source": "output/0038-linux-native-admission/root-task2-proposal-verified.json",
+    "archived": "042-root-task2-proposal-verified.json",
+    "bytes": 548,
+    "sha256": "c5244cb1c131a3b747b34d2ff29819ca16e3a59bbb5a07ea0c1a2da6de48fd62"
+  },
+  {
+    "source": "output/0038-linux-native-admission/root-task2-interface-freeze.json",
+    "archived": "043-root-task2-interface-freeze.json",
+    "bytes": 2023,
+    "sha256": "3a78d7e47368b82008979fd00b61aaf472625405eecf6ae5f329424ff9e50d76"
+  },
+  {
+    "source": "independent-native-chat/output/172-task2-proposal-20261013/PACKET-INDEX.json",
+    "archived": "044-PACKET-INDEX.json",
+    "bytes": 1202,
+    "sha256": "bd4d9b227d827d6c12e3f5e56e910981478bd2ca733f393e3f5635962c17dea1"
+  },
+  {
+    "source": "independent-native-chat/output/172-task2-proposal-20261013/task2-proposal.tar.gz",
+    "archived": "045-task2-proposal.tar.gz",
+    "bytes": 569768,
+    "sha256": "8770d945f510aa1854f07d612d7bfb010d4ff81896d1680e3aa72e973d228a01"
+  }
+]
