@@ -1,7 +1,7 @@
 """Recoverable registered fixture baselines in an owned bounded process tree.
 
 Windows uses an OS Job Object (tree lifetime, memory and CPU affinity).
-Linux requires a future crash-safe containment adapter; fractional CPU quotas
+Linux requires explicitly constructed crash-safe containment; fractional CPU quotas
 and other platforms are explicitly unsupported, never silently unbounded.
 No user code, vendor query, model call or execution authority is accepted.
 """
@@ -38,8 +38,10 @@ from quantmesh.research.jobs import (
     RunBudget,
     canonical_request_digest,
 )
+from quantmesh.research.linux_owned import LinuxContainmentError
 from quantmesh.research.reports import ReportRegistry, StrategyReport
 from quantmesh.research.strategy_registry import get_strategy, pin_fixture_dataset, validate_dataset
+from quantmesh.research.worker_execution import _execution
 
 _POLL_SECONDS = 0.1
 _MAX_OUTPUT_BYTES = 16 * 1024 * 1024
@@ -287,16 +289,36 @@ def _child_command(attempt: Path) -> list[str]:
     return [sys.executable, "-B", "-c", boot, str(attempt)]
 
 
-def _child_main(directory: str) -> None:
+def _child_main(
+    directory: str,
+    *,
+    output_directory: str | None = None,
+    build_manifest: Path | None = None,
+    manifest_sha256: str | None = None,
+) -> None:
     path = Path(directory)
+    output = Path(output_directory) if output_directory is not None else path
     try:
+        if output_directory is not None:
+            if (
+                sys.platform != "linux"
+                or build_manifest is None
+                or manifest_sha256 is None
+                or not path.is_absolute()
+                or not output.is_absolute()
+                or output.is_relative_to(path)
+                or path.is_relative_to(output)
+            ):
+                raise ValueError("Linux child admission missing")
+            _contained(path, path / "job.json")
+            _contained(output, output / "result.json")
         job = JobRecord.model_validate_json((path / "job.json").read_bytes())
         _verify(job, path / "inputs")
-        runtime = runtime_fingerprint()
+        runtime = runtime_fingerprint(manifest_path=build_manifest, manifest_sha256=manifest_sha256)
         if runtime != json.loads((path / "runtime.json").read_bytes()):
             raise ValueError("runtime changed before execution")
         r = job.request
-        registry = ReportRegistry(path / "registry", lake_root=path / "inputs")
+        registry = ReportRegistry(output / "registry", lake_root=path / "inputs")
         report = run_baseline_report(
             dataset=r.dataset.dataset_id,
             revision=r.dataset.revision,
@@ -316,7 +338,7 @@ def _child_main(directory: str) -> None:
             dependency_digest=runtime["dependency_digest"],
         )
         _verify(job, path / "inputs")
-        (path / "receipt.json").write_bytes(
+        (output / "receipt.json").write_bytes(
             _canonical(
                 dict(
                     report=report.model_dump(mode="json"),
@@ -330,18 +352,20 @@ def _child_main(directory: str) -> None:
                         cpu_limit=1.0,
                         memory_semantics="job_commit"
                         if os.name == "nt"
+                        else "cgroup_v2"
+                        if output_directory is not None
                         else "process_address_space",
                         tree_owned=True,
                     ),
                 )
             )
         )
-        (path / "result.json").write_bytes(canonical_result(report))
+        (output / "result.json").write_bytes(canonical_result(report))
     except DatasetRejected:
-        (path / "error.json").write_text('{"error_code":"dataset_rejected"}')
+        (output / "error.json").write_text('{"error_code":"dataset_rejected"}')
         raise SystemExit(2) from None
     except Exception:
-        (path / "error.json").write_text('{"error_code":"worker_failed"}')
+        (output / "error.json").write_text('{"error_code":"worker_failed"}')
         raise SystemExit(2) from None
 
 
@@ -420,18 +444,31 @@ def run_next_job(
         / (f"attempt-{job.attempt}-{uuid.uuid4().hex}")
     )
     child = None
+    execution = _execution.get()
     started = time.monotonic()
     error = "worker_failed"
     try:
         _contained(Path(artifacts_root), attempt)
         attempt.mkdir(parents=True, exist_ok=False)
-        _snapshot(job, Path(inputs_root).absolute(), attempt / "inputs")
-        runtime = runtime_fingerprint()
-        (attempt / "job.json").write_text(job.model_dump_json(), encoding="utf-8")
-        (attempt / "runtime.json").write_bytes(_canonical(runtime))
+        if execution is not None and sys.platform != "linux":
+            raise UnsupportedLimits("Linux execution requires Linux owner")
+        bundle = attempt / "bundle" if execution is not None else attempt
+        output = attempt / "output" if execution is not None else attempt
+        if execution is not None:
+            bundle.mkdir()
+        _snapshot(job, Path(inputs_root).absolute(), bundle / "inputs")
+        runtime = (
+            execution.runtime_fingerprint() if execution is not None else runtime_fingerprint()
+        )
+        (bundle / "job.json").write_text(job.model_dump_json(), encoding="utf-8")
+        (bundle / "runtime.json").write_bytes(_canonical(runtime))
         if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
             return store.get(job.operator_id, job.job_id)
-        child = _OwnedChild(_child_command(attempt), job.request.budget, attempt)
+        child = (
+            execution.start(job, runtime, bundle, output)
+            if execution is not None
+            else _OwnedChild(_child_command(attempt), job.request.budget, attempt)
+        )
         heartbeat = time.monotonic()
         last_pulse = heartbeat
         while (code := child.poll()) is None:
@@ -461,10 +498,10 @@ def run_next_job(
             error = "timeout"
             raise TimeoutError("owned worker deadline exceeded")
         if code:
-            failure = attempt / "error.json"
+            failure = output / "error.json"
             if (
                 failure.exists()
-                and json.loads(_read_child_file(attempt, failure, _MAX_OUTPUT_BYTES)).get(
+                and json.loads(_read_child_file(output, failure, _MAX_OUTPUT_BYTES)).get(
                     "error_code"
                 )
                 == "dataset_rejected"
@@ -472,7 +509,9 @@ def run_next_job(
                 error = "dataset_rejected"
             raise ValueError("owned worker failed")
         # Parent validates the actual child receipt and numerical schema before publication.
-        raw = _validated_child_result(job, owner, runtime, attempt)
+        if execution is not None:
+            execution.validate_exit(child, job, runtime)
+        raw = _validated_child_result(job, owner, runtime, output)
         if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
             return store.get(job.operator_id, job.job_id)
         ref = publish_result(job, raw, Path(artifacts_root))
@@ -491,7 +530,7 @@ def run_next_job(
             )
         )
         store.finish(job.job_id, owner, job.attempt, "failed", [], "worker_failed")
-    except (ValueError, OSError, subprocess.SubprocessError):
+    except (ValueError, OSError, subprocess.SubprocessError, LinuxContainmentError):
         store.finish(job.job_id, owner, job.attempt, "failed", [], error)
     finally:
         if child is not None:

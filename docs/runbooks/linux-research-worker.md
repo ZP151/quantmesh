@@ -244,3 +244,37 @@ actual image/ELF/notices, same-image numerical equality and <=90s two-job lease
 recovery remain pending. The original whole-C five-billion-byte storage gate
 also remains pending. Issue#172, server/AWS delivery and release acceptance
 cannot be closed using this software checkpoint.
+
+## Construction-context software sub-checkpoint
+
+`WorkerRunner(execution=...)` supplies construction-only configuration around the
+unchanged four-argument function, with private ContextVar reset in finally.
+Default wrappers and independent threads inherit no configured executor. There
+is no environment, request DTO or SDK configuration path and no background
+pulse keeper. Linux execution uses the existing LinuxOwnedProcess interface;
+its actual inspect/poll, pulse and exact CID/nonce close determine the adapter
+status. The loop still checks the store live fence before1s pulse, heartbeat15s,
+real60s lease and global2 store cap. Existing Windows construction is preserved.
+
+The host prepares a distinct `bundle` mounted read-only at `/inputs` and an absent
+`output` subsequently created by the owned adapter and mounted at `/output`.
+The trusted command is fixed venv Python `-B -I` plus the baked worker entry.
+The private numerical child accepts explicit input/output/manifest binding;
+separate-output Linux execution cannot fall back to a host/Git fingerprint.
+Admission is rechecked before launch and before publication. Parent receipt,
+actual adapter terminal status/cgroup limits and existing heartbeat/finish fences
+must agree before success.
+
+`WorkerImageAdmission.verify(profile)` is a trusted typed provider boundary.
+No concrete image admission implementation is shipped here; a caller-supplied
+saved tuple or qualified boolean is not an implementation of the required
+actual image/config/source/inventory/probe checks. The eventual operator entry
+must use the reviewed immutable-image provider; current default Linux refusal
+remains. Full producer/admission, baked entry, real numerical-container evidence
+and <=90s recovery remain required before delivery.
+
+Targeted software tests use the production owned adapter, SQLite and numerical
+receipt/publication against a fake Engine and test-only admission provider.
+The nonzero/OOM/cgroup scenarios are mocked control-plane checks, not actual
+container witnesses. No new image/container/environment/download was created.
+Original raw evidence and the original10MB cumulative budget remain preserved.
