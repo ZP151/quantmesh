@@ -16,7 +16,13 @@ market requirement. Fresh SSH authentication/forwarded listener is verified;
 integrated; numerical Worker software is active with real image/storage gates
 pending. A new isolated poll-error repair has24focusedpasses and narrowreview,
 but is not deployed or proven to cause the AWS gap. Private AWS/report/provider/
-user and server-owned market acceptance remain open.
+user and server-owned market acceptance remain open. Worker Task2 byte/receipt
+software is integrated after a bounded loaded-code correction;49focused passes
+and5actual Windows ownership passes do not certify the numerical image. AWS
+console login confirms two retained staging instances; new research host's
+specific$44monthly/private-tailnet approval is pending. Actual Oct12-close vendor
+quote clocks and Oct9 app cache are recorded separately, without closed-session
+freshness failure or a claimed collector cause.
 
 ## Status legend
 

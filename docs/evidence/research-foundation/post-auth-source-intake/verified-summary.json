@@ -1,0 +1,56 @@
+{
+  "raw_files": {
+    "post-auth-aws-readiness.json": {
+      "sha256": "cf3d9f51245df222b4e820c3bef45f955d810bd36d34d4c0048025988cda4920",
+      "bytes": 1247
+    },
+    "post-auth-aws-source-clocks.json": {
+      "sha256": "3f3543bd968bc0857e969e570a753235ae3bb4676bb503ea73e24a48bd049161",
+      "bytes": 587
+    },
+    "source-clock-before-home-correction.json": {
+      "sha256": "501d6caed2bbdaaf9c551eaaf23440a066a62ae42025e24e4f6addaacd4190d0",
+      "bytes": 376
+    },
+    "post-auth-calendar-diagnostic.json": {
+      "sha256": "0a0752e921bab2731e6a60d60a9a9a0fa090f0ff7b4e312789bb708a314cfa8f",
+      "bytes": 1840
+    },
+    "post-auth-app-source-intake.json": {
+      "sha256": "84885d7804db8c719851f996fe02982f751298d110cbae3695180f15bfe5f354",
+      "bytes": 7099
+    },
+    "post-auth-app-supervisor-intake.json": {
+      "sha256": "3d8163abe2f1567149db19f8c2abd981ae1d6632573258201b63a07319bc5e12",
+      "bytes": 697
+    },
+    "check-aws-source-clocks.ps1": {
+      "sha256": "4471be27fd7188701e0e93d3a38778845b5ee4c99e29b99831b3b4cf31b30b8f",
+      "bytes": 4305
+    },
+    "check-aws-readiness.ps1": {
+      "sha256": "0e1ed5397d72ca5c0c55448162711e9ab58caa3535de8b9ed7e207fa0aa66c8c",
+      "bytes": 2945
+    },
+    "task2-software-runtime-after.log": {
+      "sha256": "de1283b758da0aa8e1f715e2425a85624fc42af72689211fde52fd300078c3a7",
+      "bytes": 924
+    },
+    "task2-software-runtime-after.exit": {
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "bytes": 3
+    }
+  },
+  "readiness": "ready/251dailyrows each/no orders",
+  "vendor_quote_clocks": "Oct12 16:00Eastern; actual closed/latest completed session",
+  "application_completed_candles": "Oct9 20:00UTC, distinct earlier intake",
+  "conclusion": "Observed collection/recovery gap; root cause and minute progression unproven.",
+  "policy": "unknown provider latency => unknown; no closed/weekend price-age-only failure",
+  "harness": "Initial missing HOME receipt retained; one controlled HOME correction succeeds.",
+  "runtime_after": "81 licensed packages/6669 RECORD files/zero bytecode; existing readonly env only",
+  "app_build": "69515b79d2bc67303bfef9dee660dbca9bef41e3",
+  "paper": true,
+  "live": false,
+  "server_owned_source": false,
+  "purchase": false
+}

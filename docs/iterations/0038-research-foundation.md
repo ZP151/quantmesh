@@ -9,6 +9,12 @@ This removes the route-auth barrier, not server-native source or PC-independence
 acceptance. The post-auth app stock bars still endOct9 20:00UTC. Current shared
 XNYS4.13.2 calendar identifies closed/latestcompletedOct12 20:00UTC/nextopenOct13
 13:30UTC; unknown provider delay remainsunknown, not a price/age-only failure.
+Actual09:49 AWS quote clocks are Oct12 16:00Eastern for both AAPL/NVDA, matching
+the latest completed session;09:16 AWS readiness has quote/history ready and251
+daily rows each/no orders. App cache and provider quote clocks are separate
+observations, not minute-progression proof. The collection/recovery cause remains
+unproven. A retained first source-clock harness failure is corrected by restoring
+SDK HOME before import; no vendor or application restart is performed.
 
 Independent local RED3 proves unexpected SDK quote/ticker/candle exceptions
 silently end the poll task and orphan recv. Six source lines surface a fixed
@@ -29,9 +35,14 @@ ended watch or completed broad tests are repeated.
 Task2 proposal8770d945f510aa1854f07d612d7bfb010d4ff81896d1680e3aa72e973d228a01
 is independently verified34files/36members/15rootblobs/1,548,420B. Root accepts
 construction-context/actualcontainer supervision/RO-RW/runtime-image interfaces
-for a new bounded software turn in existing #172 chat. Currentcheckpoint36pass/
-4Windows-native skip/17deselected/2.67MB awaits new slice review; Linux numerical
-execution is not enabled. Actual numerical image,
+for a new bounded software turn in existing #172 chat. The second review stopped
+on loaded dependency origins; root reproduces/fixes that P2 and two measured-entry/
+base-stdlib compatibility cases. Specific corrective review is clear; no third
+whole review. Sourcefd01b5ba integratesa3fa802 with6exactGitblobs and79raw receipts/
+312210B verified, including54sealed original packet members. Final focused49pass/
+4Windowsskip/17deselect/3.62s; actual Windows ownership/memory/affinity5pass/0skip/
+5.03s, Ruff/format/diff0. [Software evidence](../evidence/research-foundation/linux-task2-software/README.md)
+is not image certification. Linux numerical execution is not enabled. Actual numerical image,
 ELF/notices/newimage probe/two-job recovery and resource acceptance remain
 pending. New localbulkimage/env/clone/container operations remain held under
 unresolved12.93GB disk attribution; only small source/tests on existing resources.

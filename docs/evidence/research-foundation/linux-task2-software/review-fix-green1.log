@@ -1,0 +1,56 @@
+.........................FF..                                            [100%]
+=================================== FAILURES ===================================
+_______ test_dependency_origin_outside_inventory_refuses[metadata_root] ________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...native-90afdbee6add43169483520e384539ae/task2-tests/review-fix-green1/test_dependency_origin_outside0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71626b751f40>
+tmp_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/review-fix-green1/test_dependency_origin_outside0')
+outside = 'metadata_root'
+
+    @pytest.mark.parametrize("outside", ["metadata_root", "record_file"])
+    def test_dependency_origin_outside_inventory_refuses(sealed, monkeypatch, tmp_path, outside):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        distributions = list(api._distributions())
+        original = distributions[0].locate_file
+        distributions[0].locate_file = lambda name: (
+            tmp_path / "outside"
+            if (outside == "metadata_root" or str(name) == "RECORD")
+            else original(name)
+        )
+>       with pytest.raises(api.WorkerBuildRejected):
+E       Failed: DID NOT RAISE WorkerBuildRejected
+
+tests/test_worker_build.py:297: Failed
+________ test_dependency_origin_outside_inventory_refuses[record_file] _________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...native-90afdbee6add43169483520e384539ae/task2-tests/review-fix-green1/test_dependency_origin_outside1/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x716273b03200>
+tmp_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/review-fix-green1/test_dependency_origin_outside1')
+outside = 'record_file'
+
+    @pytest.mark.parametrize("outside", ["metadata_root", "record_file"])
+    def test_dependency_origin_outside_inventory_refuses(sealed, monkeypatch, tmp_path, outside):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        distributions = list(api._distributions())
+        original = distributions[0].locate_file
+        distributions[0].locate_file = lambda name: (
+            tmp_path / "outside"
+            if (outside == "metadata_root" or str(name) == "RECORD")
+            else original(name)
+        )
+>       with pytest.raises(api.WorkerBuildRejected):
+E       Failed: DID NOT RAISE WorkerBuildRejected
+
+tests/test_worker_build.py:297: Failed
+=============================== warnings summary ===============================
+tests/test_worker_build.py::test_actual_runtime_fields_without_git
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_worker_build.py::test_dependency_origin_outside_inventory_refuses[metadata_root]
+FAILED tests/test_worker_build.py::test_dependency_origin_outside_inventory_refuses[record_file]
+2 failed, 27 passed, 1 warning in 2.29s

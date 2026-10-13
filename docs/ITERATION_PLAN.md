@@ -25,6 +25,14 @@ CI passes4493pytest/111skip/frontend419; later042fb0b CI38365280962 completes
 SUCCESS4497pytest/113skip/frontend419, separate offline service202pass/5PGskip.
 A subsequent local isolated unexpected-poll repair has
 RED3/24focusedpasses/narrowreview; its exact checks/deployment remain pending.
+Linux Worker software sourcefd01b5ba is integrated after root's bounded residual
+P2 correction and specific review, with49focused passes/4Windowsskips plus5actual
+Windows ownership passes. It does not activate Linux or qualify a numerical image.
+AWS console login is complete; actual running staging8GB and retained2GB are
+confirmed. Research Ubuntu24.04/8GB/2vCPU/160GB/SingaporeZoneA/$44monthly form is
+prepared; concrete bill/private-tailnet approval is pending, no resource created.
+Actual AWS SDK Oct12-close quote clocks and the Oct9 app cache are separately
+recorded; no weekend or age-only failure and no collector-cause claim.
 New Linux numerical Worker software proceeds after root-frozen proposal, while
 new localbulk materialization is held on unresolved disk attribution. Actual
 server delivery and the full approved Option A acceptance remain required.

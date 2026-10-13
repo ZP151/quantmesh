@@ -1,0 +1,20 @@
+{
+  "AtUtc": "2026-10-13T08:36:02.2386148Z",
+  "Scope": "post-auth supervisor intake; no raw notes/provider payload/accounts",
+  "Connected": false,
+  "Rows": [
+    {
+      "instrument": "AAPL",
+      "state": "stale",
+      "data_time": "2026-10-10T08:16:01.755967+08:00",
+      "received_at": "2026-10-10T08:16:01.758315+08:00"
+    },
+    {
+      "instrument": "NVDA",
+      "state": "stale",
+      "data_time": "2026-10-10T08:14:26.182289+08:00",
+      "received_at": "2026-10-10T08:14:26.224071+08:00"
+    }
+  ],
+  "HarnessCorrection": "Initial observer used incorrect sources shape; empty rows were not runtime evidence. Actual reviewed venues/sources shape used here."
+}

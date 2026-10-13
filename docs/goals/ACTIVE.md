@@ -8,8 +8,14 @@ ObserveOnly returns existing_private_tunnel. Helper12688/OpenD28036/digest60FED2
 Startup and actualGlobal mutex remain. This removes the SSH authentication
 barrier, not personal-PC dependency or market-ingestion acceptance. One app
 intake still has Oct9 completed stock bars; shared XNYS4.13.2 identifies closed
-state/latestcompletedOct12 20:00UTC/nextopenOct13 13:30UTC. Provider latency is
-unknown, so freshness staysunknown; no price/age-only closed-session failure.
+state/latestcompletedOct12 20:00UTC/nextopenOct13 13:30UTC. Actual09:49UTC AWS SDK
+quote clocks for AAPL/NVDA are Oct12 16:00Eastern, consistent with that completed
+session. Actual09:16 readiness also passes both quotes/251daily rows with no
+orders. The app cache and vendor quote clocks are distinct observations; this
+narrows a collection/recovery gap without proving its cause or minute-bar
+progression. Provider latency remains unknown in policy; no price/age-only
+closed-session failure. The first source-clock probe lacked SDK HOME restoration;
+its failed receipt is retained, and one controlled harness correction succeeds.
 
 Root isolates a different, reproducible poll-lifecycle defect: unexpected SDK
 quote/ticker/candle exceptions end _poll without notifying recv. RED3 leads to
@@ -31,13 +37,27 @@ Task2 proposal SHA8770d945f510aa1854f07d612d7bfb010d4ff81896d1680e3aa72e973d228a
 has34indexedfiles/36archivemembers/15rootGitblobs and1,548,420totalbytes verified.
 Root freezes construction-only WorkerRunner/privateContextVar, actualcontainer
 poll/pulse/close, ROinput/RWoutput and measuredimage/runtime identity for new
-bounded software implementation in the existing #172 chat. Its current new
-checkpoint36pass/4Windows-native skip/17deselected with2.67MB owned footprint
-awaits new slice reviews; no Linux numerical execution is enabled. Full numerical
+bounded software implementation in the existing #172 chat. Its second review
+stopped on loaded dependency origins. Root reproduced/fixed that exact P2 and
+measured-entry/base-stdlib compatibility cases with a specific corrective review,
+not a third whole review. Exact sourcefd01b5ba integratesa3fa802; final focused
+49pass/4Windowsskip/17deselect/3.62s and actual Windows ownership/memory/affinity
+5pass/0skip/5.03s. All6 final Git blobs and79raw receipts/312210B independently
+verify, including the original54-member sealed review-stop packet. Software only;
+no Linux numerical execution is enabled. Full numerical
 image/ELF/notices/native<=90s recovery remain pending. No newlocalbulkimage/env/
 clone/container is allowed while whole-C12.93GB attribution remains unresolved;
 the existing disk question is pending. Source and small tests use existing
-resources. Evidence: [post-auth-poll-repair](../evidence/research-foundation/post-auth-poll-repair/README.md).
+resources. Evidence: [post-auth-poll-repair](../evidence/research-foundation/post-auth-poll-repair/README.md)
+and [Task2 software](../evidence/research-foundation/linux-task2-software/README.md).
+
+The user completes AWS console login. Read-only Lightsail inventory confirms
+running Singapore quantmesh-staging-8gb(8GB/2vCPU/160GB) and retained
+quantmesh-staging(2GB/2vCPU/60GB); no research host yet. The new
+quantmesh-research-8gb Ubuntu24.04/SingaporeZoneA/8GB/2vCPU/160GB creation form
+is prepared at actual$44/month. Concrete resource-bill/private-tailnet approval
+is requested under research-service.md; no Create action, purchase, access change
+or service activation has occurred. Existing staging and rollback remain.
 
 Full approved Option A remains ACTIVE: actual serverWorker/provider/key/egress,
 private AWS host/PG-TLS/offhost actualreport restore/p95/userloop and genuine

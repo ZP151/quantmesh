@@ -1,0 +1,43 @@
+{
+  "before": {
+    "utc": "2026-10-13T09:05:24.707032+00:00",
+    "free_c_bytes": 89388761088,
+    "test_fixture_bytes": 3421417,
+    "evidence_bytes": 148172,
+    "explicit_source_bytes": 67049,
+    "introduced_logical_upper_bound": 3753687
+  },
+  "after": {
+    "utc": "2026-10-13T09:05:31.604241+00:00",
+    "free_c_bytes": 89387270144,
+    "test_fixture_bytes": 4095387,
+    "evidence_bytes": 148957,
+    "explicit_source_bytes": 67049,
+    "introduced_logical_upper_bound": 4428442
+  },
+  "argv": [
+    "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_worker_build.py",
+    "tests/test_research_job_runner.py",
+    "-k",
+    "worker_build or worker_manifest or child_receipt or child_command or owned_child_poll or windows_launcher or failed_windows_setup or linux_without_crash_safe_limits or boot_eof or runtime_digest_binds_python_build",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/final-focused2"
+  ],
+  "mirrored": [
+    "src/quantmesh/research/worker_build.py",
+    "src/quantmesh/research/job_runner.py",
+    "tests/test_worker_build.py",
+    "tests/test_research_job_runner.py"
+  ],
+  "borrowed_environment_read_only": true,
+  "environment_bytecode_policy": "-B and PYTHONDONTWRITEBYTECODE=1",
+  "source_semantics": "explicit targeted overlay on prior owned c545 clone; not whole042 clean checkout",
+  "resource_gate": "software logical<=10MB and free C>=50GB; prior whole-C5GB admission remains PENDING"
+}

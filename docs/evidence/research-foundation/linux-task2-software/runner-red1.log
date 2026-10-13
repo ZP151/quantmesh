@@ -1,0 +1,214 @@
+FFFFFFFF                                                                 [100%]
+=================================== FAILURES ===================================
+_______________ test_child_command_disables_bytecode_before_boot _______________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/runner-red1/test_child_command_disables_by0')
+
+    def test_child_command_disables_bytecode_before_boot(tmp_path):
+        from quantmesh.research.job_runner import _child_command
+    
+>       assert _child_command(tmp_path)[1] == "-B"
+E       AssertionError: assert '-c' == '-B'
+E         
+E         - -B
+E         + -c
+
+tests/test_research_job_runner.py:382: AssertionError
+_________________ test_owned_child_poll_uses_actual_popen_exit _________________
+
+    def test_owned_child_poll_uses_actual_popen_exit():
+        from types import SimpleNamespace
+    
+        from quantmesh.research.job_runner import _OwnedChild
+    
+        child = object.__new__(_OwnedChild)
+        child.process = SimpleNamespace(poll=lambda: 7, returncode=0)
+>       assert child.poll() == 7
+               ^^^^^^^^^^
+E       AttributeError: '_OwnedChild' object has no attribute 'poll'
+
+tests/test_research_job_runner.py:392: AttributeError
+______________ test_child_receipt_accepts_canonical_bound_result _______________
+
+child_receipt_fixture = (JobRecord(job_id='92b48d9a38dd4832ae6b919445cebf70', operator_id='local', idempotency_key='receipt', request=Research...start":"2026-01-07T07:00:00Z","train_end":"2026-01-07T06:00:00Z","turnover":0.0,"window_return":0.0425556071913229}]}')
+
+    def test_child_receipt_accepts_canonical_bound_result(child_receipt_fixture):
+        from quantmesh.research import job_runner
+    
+        job, runtime, output, _, raw = child_receipt_fixture
+>       assert job_runner._validated_child_result(job, "owner", runtime, output) == raw
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'quantmesh.research.job_runner' has no attribute '_validated_child_result'
+
+tests/test_research_job_runner.py:430: AttributeError
+___________ test_child_receipt_rejects_wrong_identity_or_file[owner] ___________
+
+child_receipt_fixture = (JobRecord(job_id='cd13640980264a1cb02b1d39088f9e2c', operator_id='local', idempotency_key='receipt', request=Research...start":"2026-01-07T07:00:00Z","train_end":"2026-01-07T06:00:00Z","turnover":0.0,"window_return":0.0425556071913229}]}')
+fault = 'owner'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e23d1acba10>
+
+    @pytest.mark.parametrize("fault", ["owner", "attempt", "runtime", "symlink", "large"])
+    def test_child_receipt_rejects_wrong_identity_or_file(child_receipt_fixture, fault, monkeypatch):
+        from quantmesh.research import job_runner
+        from quantmesh.research.job_artifacts import _canonical
+    
+        job, runtime, output, receipt, _ = child_receipt_fixture
+        path = output / "receipt.json"
+        if fault in {"owner", "attempt", "runtime"}:
+            receipt[fault] = {"injected": "host"} if fault == "runtime" else "other"
+            path.write_bytes(_canonical(receipt))
+        elif fault == "large":
+            monkeypatch.setattr(job_runner, "_MAX_OUTPUT_BYTES", 10)
+        else:
+            target = output / "saved.json"
+            path.rename(target)
+            try:
+                path.symlink_to(target.name)
+            except OSError:
+                pytest.skip("OS does not permit fixture symlinks")
+        with pytest.raises(ValueError):
+>           job_runner._validated_child_result(job, "owner", runtime, output)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.job_runner' has no attribute '_validated_child_result'
+
+tests/test_research_job_runner.py:453: AttributeError
+__________ test_child_receipt_rejects_wrong_identity_or_file[attempt] __________
+
+child_receipt_fixture = (JobRecord(job_id='38e773502fd049959218e7ed3dfcf227', operator_id='local', idempotency_key='receipt', request=Research...start":"2026-01-07T07:00:00Z","train_end":"2026-01-07T06:00:00Z","turnover":0.0,"window_return":0.0425556071913229}]}')
+fault = 'attempt'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e23d0f50e00>
+
+    @pytest.mark.parametrize("fault", ["owner", "attempt", "runtime", "symlink", "large"])
+    def test_child_receipt_rejects_wrong_identity_or_file(child_receipt_fixture, fault, monkeypatch):
+        from quantmesh.research import job_runner
+        from quantmesh.research.job_artifacts import _canonical
+    
+        job, runtime, output, receipt, _ = child_receipt_fixture
+        path = output / "receipt.json"
+        if fault in {"owner", "attempt", "runtime"}:
+            receipt[fault] = {"injected": "host"} if fault == "runtime" else "other"
+            path.write_bytes(_canonical(receipt))
+        elif fault == "large":
+            monkeypatch.setattr(job_runner, "_MAX_OUTPUT_BYTES", 10)
+        else:
+            target = output / "saved.json"
+            path.rename(target)
+            try:
+                path.symlink_to(target.name)
+            except OSError:
+                pytest.skip("OS does not permit fixture symlinks")
+        with pytest.raises(ValueError):
+>           job_runner._validated_child_result(job, "owner", runtime, output)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.job_runner' has no attribute '_validated_child_result'
+
+tests/test_research_job_runner.py:453: AttributeError
+__________ test_child_receipt_rejects_wrong_identity_or_file[runtime] __________
+
+child_receipt_fixture = (JobRecord(job_id='36c02f6e136745eebbfd2c20986d32ba', operator_id='local', idempotency_key='receipt', request=Research...start":"2026-01-07T07:00:00Z","train_end":"2026-01-07T06:00:00Z","turnover":0.0,"window_return":0.0425556071913229}]}')
+fault = 'runtime'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e23d0f41e50>
+
+    @pytest.mark.parametrize("fault", ["owner", "attempt", "runtime", "symlink", "large"])
+    def test_child_receipt_rejects_wrong_identity_or_file(child_receipt_fixture, fault, monkeypatch):
+        from quantmesh.research import job_runner
+        from quantmesh.research.job_artifacts import _canonical
+    
+        job, runtime, output, receipt, _ = child_receipt_fixture
+        path = output / "receipt.json"
+        if fault in {"owner", "attempt", "runtime"}:
+            receipt[fault] = {"injected": "host"} if fault == "runtime" else "other"
+            path.write_bytes(_canonical(receipt))
+        elif fault == "large":
+            monkeypatch.setattr(job_runner, "_MAX_OUTPUT_BYTES", 10)
+        else:
+            target = output / "saved.json"
+            path.rename(target)
+            try:
+                path.symlink_to(target.name)
+            except OSError:
+                pytest.skip("OS does not permit fixture symlinks")
+        with pytest.raises(ValueError):
+>           job_runner._validated_child_result(job, "owner", runtime, output)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.job_runner' has no attribute '_validated_child_result'
+
+tests/test_research_job_runner.py:453: AttributeError
+__________ test_child_receipt_rejects_wrong_identity_or_file[symlink] __________
+
+child_receipt_fixture = (JobRecord(job_id='f8273f7fc92f413ea8440a6ca9ca966b', operator_id='local', idempotency_key='receipt', request=Research...start":"2026-01-07T07:00:00Z","train_end":"2026-01-07T06:00:00Z","turnover":0.0,"window_return":0.0425556071913229}]}')
+fault = 'symlink'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e23d1196840>
+
+    @pytest.mark.parametrize("fault", ["owner", "attempt", "runtime", "symlink", "large"])
+    def test_child_receipt_rejects_wrong_identity_or_file(child_receipt_fixture, fault, monkeypatch):
+        from quantmesh.research import job_runner
+        from quantmesh.research.job_artifacts import _canonical
+    
+        job, runtime, output, receipt, _ = child_receipt_fixture
+        path = output / "receipt.json"
+        if fault in {"owner", "attempt", "runtime"}:
+            receipt[fault] = {"injected": "host"} if fault == "runtime" else "other"
+            path.write_bytes(_canonical(receipt))
+        elif fault == "large":
+            monkeypatch.setattr(job_runner, "_MAX_OUTPUT_BYTES", 10)
+        else:
+            target = output / "saved.json"
+            path.rename(target)
+            try:
+                path.symlink_to(target.name)
+            except OSError:
+                pytest.skip("OS does not permit fixture symlinks")
+        with pytest.raises(ValueError):
+>           job_runner._validated_child_result(job, "owner", runtime, output)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.job_runner' has no attribute '_validated_child_result'
+
+tests/test_research_job_runner.py:453: AttributeError
+___________ test_child_receipt_rejects_wrong_identity_or_file[large] ___________
+
+child_receipt_fixture = (JobRecord(job_id='d86b0735b13e40eab43f70ebbe766ea0', operator_id='local', idempotency_key='receipt', request=Research...start":"2026-01-07T07:00:00Z","train_end":"2026-01-07T06:00:00Z","turnover":0.0,"window_return":0.0425556071913229}]}')
+fault = 'large'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e245807cc80>
+
+    @pytest.mark.parametrize("fault", ["owner", "attempt", "runtime", "symlink", "large"])
+    def test_child_receipt_rejects_wrong_identity_or_file(child_receipt_fixture, fault, monkeypatch):
+        from quantmesh.research import job_runner
+        from quantmesh.research.job_artifacts import _canonical
+    
+        job, runtime, output, receipt, _ = child_receipt_fixture
+        path = output / "receipt.json"
+        if fault in {"owner", "attempt", "runtime"}:
+            receipt[fault] = {"injected": "host"} if fault == "runtime" else "other"
+            path.write_bytes(_canonical(receipt))
+        elif fault == "large":
+            monkeypatch.setattr(job_runner, "_MAX_OUTPUT_BYTES", 10)
+        else:
+            target = output / "saved.json"
+            path.rename(target)
+            try:
+                path.symlink_to(target.name)
+            except OSError:
+                pytest.skip("OS does not permit fixture symlinks")
+        with pytest.raises(ValueError):
+>           job_runner._validated_child_result(job, "owner", runtime, output)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.job_runner' has no attribute '_validated_child_result'
+
+tests/test_research_job_runner.py:453: AttributeError
+=============================== warnings summary ===============================
+../../quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_research_job_runner.py::test_child_command_disables_bytecode_before_boot
+FAILED tests/test_research_job_runner.py::test_owned_child_poll_uses_actual_popen_exit
+FAILED tests/test_research_job_runner.py::test_child_receipt_accepts_canonical_bound_result
+FAILED tests/test_research_job_runner.py::test_child_receipt_rejects_wrong_identity_or_file[owner]
+FAILED tests/test_research_job_runner.py::test_child_receipt_rejects_wrong_identity_or_file[attempt]
+FAILED tests/test_research_job_runner.py::test_child_receipt_rejects_wrong_identity_or_file[runtime]
+FAILED tests/test_research_job_runner.py::test_child_receipt_rejects_wrong_identity_or_file[symlink]
+FAILED tests/test_research_job_runner.py::test_child_receipt_rejects_wrong_identity_or_file[large]
+8 failed, 24 deselected, 1 warning in 3.15s

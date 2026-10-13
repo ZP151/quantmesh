@@ -1,0 +1,527 @@
+FFFFFFFFFFFFFFFFFFFFFF                                                   [100%]
+=================================== FAILURES ===================================
+____________________ test_actual_runtime_fields_without_git ____________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_actual_runtime_fields_wit0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741c2be68c80>
+
+    def test_actual_runtime_fields_without_git(sealed, monkeypatch):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+____________________ test_changed_actual_bytes_refuse[code] ____________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_changed_actual_bytes_refu0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092f2c0>
+name = 'code'
+
+    @pytest.mark.parametrize("name", ["code", "exe", "library", "metadata", "record", "notice", "lock"])
+    def test_changed_actual_bytes_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+____________________ test_changed_actual_bytes_refuse[exe] _____________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_changed_actual_bytes_refu1/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092d130>
+name = 'exe'
+
+    @pytest.mark.parametrize("name", ["code", "exe", "library", "metadata", "record", "notice", "lock"])
+    def test_changed_actual_bytes_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+__________________ test_changed_actual_bytes_refuse[library] ___________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_changed_actual_bytes_refu2/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092caa0>
+name = 'library'
+
+    @pytest.mark.parametrize("name", ["code", "exe", "library", "metadata", "record", "notice", "lock"])
+    def test_changed_actual_bytes_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+__________________ test_changed_actual_bytes_refuse[metadata] __________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_changed_actual_bytes_refu3/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092c740>
+name = 'metadata'
+
+    @pytest.mark.parametrize("name", ["code", "exe", "library", "metadata", "record", "notice", "lock"])
+    def test_changed_actual_bytes_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+___________________ test_changed_actual_bytes_refuse[record] ___________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_changed_actual_bytes_refu4/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092fa40>
+name = 'record'
+
+    @pytest.mark.parametrize("name", ["code", "exe", "library", "metadata", "record", "notice", "lock"])
+    def test_changed_actual_bytes_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+___________________ test_changed_actual_bytes_refuse[notice] ___________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_changed_actual_bytes_refu5/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092fd70>
+name = 'notice'
+
+    @pytest.mark.parametrize("name", ["code", "exe", "library", "metadata", "record", "notice", "lock"])
+    def test_changed_actual_bytes_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+____________________ test_changed_actual_bytes_refuse[lock] ____________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_changed_actual_bytes_refu6/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd0930320>
+name = 'lock'
+
+    @pytest.mark.parametrize("name", ["code", "exe", "library", "metadata", "record", "notice", "lock"])
+    def test_changed_actual_bytes_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+________________ test_extra_executable_files_refuse[shadow.py] _________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_extra_executable_files_re0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd0932510>
+name = 'shadow.py'
+
+    @pytest.mark.parametrize("name", ["shadow.py", "shadow.so", "cache.pyc"])
+    def test_extra_executable_files_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+________________ test_extra_executable_files_refuse[shadow.so] _________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_extra_executable_files_re1/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd0932750>
+name = 'shadow.so'
+
+    @pytest.mark.parametrize("name", ["shadow.py", "shadow.so", "cache.pyc"])
+    def test_extra_executable_files_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+________________ test_extra_executable_files_refuse[cache.pyc] _________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_extra_executable_files_re2/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092a9f0>
+name = 'cache.pyc'
+
+    @pytest.mark.parametrize("name", ["shadow.py", "shadow.so", "cache.pyc"])
+    def test_extra_executable_files_refuse(sealed, monkeypatch, name):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+________________ test_bad_or_injected_manifest_refuses[runtime] ________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_bad_or_injected_manifest_0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd09299d0>
+change = 'runtime'
+
+    @pytest.mark.parametrize("change", ["runtime", "commit", "source", "prefix", "libraries", "notices"])
+    def test_bad_or_injected_manifest_refuses(sealed, monkeypatch, change):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+________________ test_bad_or_injected_manifest_refuses[commit] _________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_bad_or_injected_manifest_1/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd0929fd0>
+change = 'commit'
+
+    @pytest.mark.parametrize("change", ["runtime", "commit", "source", "prefix", "libraries", "notices"])
+    def test_bad_or_injected_manifest_refuses(sealed, monkeypatch, change):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+________________ test_bad_or_injected_manifest_refuses[source] _________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_bad_or_injected_manifest_2/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092aa50>
+change = 'source'
+
+    @pytest.mark.parametrize("change", ["runtime", "commit", "source", "prefix", "libraries", "notices"])
+    def test_bad_or_injected_manifest_refuses(sealed, monkeypatch, change):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+________________ test_bad_or_injected_manifest_refuses[prefix] _________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_bad_or_injected_manifest_3/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd0935a60>
+change = 'prefix'
+
+    @pytest.mark.parametrize("change", ["runtime", "commit", "source", "prefix", "libraries", "notices"])
+    def test_bad_or_injected_manifest_refuses(sealed, monkeypatch, change):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+_______________ test_bad_or_injected_manifest_refuses[libraries] _______________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_bad_or_injected_manifest_4/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd09298e0>
+change = 'libraries'
+
+    @pytest.mark.parametrize("change", ["runtime", "commit", "source", "prefix", "libraries", "notices"])
+    def test_bad_or_injected_manifest_refuses(sealed, monkeypatch, change):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+________________ test_bad_or_injected_manifest_refuses[notices] ________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_bad_or_injected_manifest_5/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092b050>
+change = 'notices'
+
+    @pytest.mark.parametrize("change", ["runtime", "commit", "source", "prefix", "libraries", "notices"])
+    def test_bad_or_injected_manifest_refuses(sealed, monkeypatch, change):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+_____________________ test_external_manifest_hash_required _____________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_external_manifest_hash_re0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd0932960>
+
+    def test_external_manifest_hash_required(sealed, monkeypatch):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+_______________________ test_json_duplicate_key_refuses ________________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_json_duplicate_key_refuse0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd09329c0>
+
+    def test_json_duplicate_key_refuses(sealed, monkeypatch):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:163: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+________________________ test_manifest_symlink_refuses _________________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...linux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_manifest_symlink_refuses0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd0930590>
+tmp_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_manifest_symlink_refuses0')
+
+    def test_manifest_symlink_refuses(sealed, monkeypatch, tmp_path):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+______________________ test_wrong_dependency_set_refuses _______________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_wrong_dependency_set_refu0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092df10>
+
+    def test_wrong_dependency_set_refuses(sealed, monkeypatch):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:184: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+_______________ test_job_runner_manifest_branch_never_calls_git ________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red2/test_job_runner_manifest_branc0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bd092f050>
+
+    def test_job_runner_manifest_branch_never_calls_git(sealed, monkeypatch):
+>       api = _api()
+              ^^^^^^
+
+tests/test_worker_build.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _api():
+>       assert importlib.util.find_spec("quantmesh.research.worker_build"), "byte verifier missing"
+E       AssertionError: byte verifier missing
+E       assert None
+E        +  where None = <function find_spec at 0x741c2e75f880>('quantmesh.research.worker_build')
+E        +    where <function find_spec at 0x741c2e75f880> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_worker_build.py:18: AssertionError
+=============================== warnings summary ===============================
+tests/test_worker_build.py::test_actual_runtime_fields_without_git
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_worker_build.py::test_actual_runtime_fields_without_git - A...
+FAILED tests/test_worker_build.py::test_changed_actual_bytes_refuse[code] - A...
+FAILED tests/test_worker_build.py::test_changed_actual_bytes_refuse[exe] - As...
+FAILED tests/test_worker_build.py::test_changed_actual_bytes_refuse[library]
+FAILED tests/test_worker_build.py::test_changed_actual_bytes_refuse[metadata]
+FAILED tests/test_worker_build.py::test_changed_actual_bytes_refuse[record]
+FAILED tests/test_worker_build.py::test_changed_actual_bytes_refuse[notice]
+FAILED tests/test_worker_build.py::test_changed_actual_bytes_refuse[lock] - A...
+FAILED tests/test_worker_build.py::test_extra_executable_files_refuse[shadow.py]
+FAILED tests/test_worker_build.py::test_extra_executable_files_refuse[shadow.so]
+FAILED tests/test_worker_build.py::test_extra_executable_files_refuse[cache.pyc]
+FAILED tests/test_worker_build.py::test_bad_or_injected_manifest_refuses[runtime]
+FAILED tests/test_worker_build.py::test_bad_or_injected_manifest_refuses[commit]
+FAILED tests/test_worker_build.py::test_bad_or_injected_manifest_refuses[source]
+FAILED tests/test_worker_build.py::test_bad_or_injected_manifest_refuses[prefix]
+FAILED tests/test_worker_build.py::test_bad_or_injected_manifest_refuses[libraries]
+FAILED tests/test_worker_build.py::test_bad_or_injected_manifest_refuses[notices]
+FAILED tests/test_worker_build.py::test_external_manifest_hash_required - Ass...
+FAILED tests/test_worker_build.py::test_json_duplicate_key_refuses - Assertio...
+FAILED tests/test_worker_build.py::test_manifest_symlink_refuses - AssertionE...
+FAILED tests/test_worker_build.py::test_wrong_dependency_set_refuses - Assert...
+FAILED tests/test_worker_build.py::test_job_runner_manifest_branch_never_calls_git
+22 failed, 1 warning in 2.19s

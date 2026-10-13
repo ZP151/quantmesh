@@ -1,0 +1,30 @@
+{
+    "Readiness":  {
+                      "Symbols":  [
+                                      {
+                                          "Status":  "ready",
+                                          "Code":  "US.AAPL",
+                                          "HistoryRows":  251,
+                                          "QuoteStatus":  "ready",
+                                          "HistoryStatus":  "ready"
+                                      },
+                                      {
+                                          "Status":  "ready",
+                                          "Code":  "US.NVDA",
+                                          "HistoryRows":  251,
+                                          "QuoteStatus":  "ready",
+                                          "HistoryStatus":  "ready"
+                                      }
+                                  ],
+                      "Status":  "ready",
+                      "OrderChecked":  false
+                  },
+    "ObserverTreeClosed":  true,
+    "ObserverPid":  3488,
+    "AuthenticationUrls":  [
+
+                           ],
+    "Finished":  true,
+    "AtUtc":  "2026-10-13T09:16:47.1870612Z",
+    "ExitCode":  0
+}
