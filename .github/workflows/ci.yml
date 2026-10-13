@@ -25,9 +25,9 @@ jobs:
       frontend: ${{ steps.policy.outputs.frontend }}
       run_browser: ${{ steps.policy.outputs.run_browser }}
       tier: ${{ steps.policy.outputs.tier }}
-    env:
-      QUANTMESH_GATE_LOGS: ${{ runner.temp }}/quantmesh-gate-logs
     steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -56,9 +56,9 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      QUANTMESH_GATE_LOGS: ${{ runner.temp }}/quantmesh-gate-logs
     steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -124,9 +124,9 @@ jobs:
         domain: ${{ fromJSON(needs.classify.outputs.domains) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      QUANTMESH_GATE_LOGS: ${{ runner.temp }}/quantmesh-gate-logs
     steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -150,9 +150,9 @@ jobs:
     if: needs.classify.outputs.run_browser == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      QUANTMESH_GATE_LOGS: ${{ runner.temp }}/quantmesh-gate-logs
     steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -182,9 +182,9 @@ jobs:
       !contains(fromJSON('["fast","domain","browser"]'), needs.classify.outputs.tier))
     runs-on: ubuntu-latest
     timeout-minutes: 180
-    env:
-      QUANTMESH_GATE_LOGS: ${{ runner.temp }}/quantmesh-gate-logs
     steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:

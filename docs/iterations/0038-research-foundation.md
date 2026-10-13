@@ -3,6 +3,18 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
+Root CI correction: PR175 head37ded3b run38328133300 terminal failure has no
+jobs/logs. GitHub annotations at29/60/128/154/186 reject runner.temp in jobs.env;
+the official context table confirms it. Minimal10-added/10-removed-line change
+exports the same path from an initial runner shell step via GITHUB_ENV in five
+jobs. All old gate commands, conditions, matrix, concurrency, timeouts, upload
+paths and python aggregator are structurally unchanged. Actual five private
+native shell exports pass;161 gate-policy/executor tests pass,2 explicit native
+skips,12.04s/exit0. Read-only ci_context_review has no actionable findings in this
+new correction.10 raw diagnosis/before-after/review/local-check streams archived
+ci-workflow-context. Remote workflow creation/full selected gates remain pending;
+old invalid heads are not rerun. No host/source/model/paid operation follows.
+
 Draft milestone [PR #175](https://github.com/ZP151/quantmesh/pull/175) now exposes
 the complete integration for remote CI and the remaining review/release gates.
 This is the one approved fast-lane milestone PR, ClassC, not ready for merge or

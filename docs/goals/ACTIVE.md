@@ -1,5 +1,15 @@
 # Active Goal
 
+Latest CI diagnosis: PR175 head37ded3b push run38328133300 is terminal failure
+with zero jobs, not a live wait or a test failure. GitHub annotation rejects
+runner.temp in five jobs.env entries; exact official context table confirms
+runner is unavailable there. Root moves only those exports to initial runtime
+steps using RUNNER_TEMP/GITHUB_ENV. Five owned native shell exports pass;
+161 gate tests/2 explicit native skips/12.04s pass. One new targeted correction
+review has no findings, not another completed-slice structural review. Raw
+ci-workflow-context archive retains10 byte streams. Next final-head remote CI
+must prove workflow creation and selected gates; do not rerun old invalid heads.
+
 Milestone integration: draft [PR #175](https://github.com/ZP151/quantmesh/pull/175)
 is the single Option A PR on codex/0038-research-foundation. It remains ClassC,
 not ready for merge/deployment; no issue auto-close or goal completion. Required
