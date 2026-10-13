@@ -18,7 +18,20 @@ from tests.research_fixtures import pinned_lake
 
 
 @pytest.fixture
-def setup(tmp_path):
+def directory_profile():
+    from quantmesh.research._fixture_handles import (
+        UnsupportedSnapshotProfile,
+        require_snapshot_profile,
+    )
+
+    try:
+        require_snapshot_profile()
+    except UnsupportedSnapshotProfile:
+        pytest.skip("snapshot handle-relative I/O unavailable; Windows research Worker unsupported")
+
+
+@pytest.fixture
+def setup(tmp_path, directory_profile):
     if os.name != "nt":
         pytest.skip(
             "owned baseline execution requires Windows Job Objects; Linux rejects explicitly"
@@ -394,6 +407,80 @@ def test_child_command_disables_bytecode_before_boot(tmp_path):
     assert _child_command(tmp_path)[1] == "-B"
 
 
+@pytest.mark.parametrize("fault", ["fingerprint", "receipt"])
+def test_runtime_rejection_precedes_job_and_content_decoding(tmp_path, monkeypatch, fault, request):
+    from quantmesh.research import job_runner
+
+    if fault == "receipt":
+        request.getfixturevalue("directory_profile")
+
+    (tmp_path / "runtime.json").write_text('{"different":true}')
+    (tmp_path / "job.json").write_text("{}")
+    markers = []
+
+    def fingerprint(**kwargs):
+        if fault == "fingerprint":
+            raise ValueError("runtime refused")
+        return {"software_only": True}
+
+    def decode(*args, **kwargs):
+        markers.append("job")
+        raise ValueError("job decoder reached")
+
+    monkeypatch.setattr(job_runner, "runtime_fingerprint", fingerprint)
+    monkeypatch.setattr(job_runner.JobRecord, "model_validate_json", decode)
+    monkeypatch.setattr(job_runner, "_verify", lambda *args: markers.append("content"))
+    with pytest.raises(SystemExit):
+        job_runner._child_main(str(tmp_path))
+    assert markers == []
+
+
+@pytest.mark.parametrize("name", ["runtime.json", "job.json"])
+@pytest.mark.parametrize("fault", ["size", "symlink", "hardlink", "fifo"])
+def test_child_metadata_bounds_and_file_types_precede_job_decoder(
+    tmp_path, monkeypatch, name, fault, directory_profile
+):
+    from quantmesh.research import job_runner
+
+    (tmp_path / "runtime.json").write_bytes(b"{}")
+    (tmp_path / "job.json").write_bytes(b"{}")
+    path = tmp_path / name
+    monkeypatch.setattr(job_runner, "runtime_fingerprint", lambda **kwargs: {})
+    monkeypatch.setattr(job_runner, "_MAX_INPUT_METADATA_BYTES", 8)
+    markers = []
+
+    def decode(*args, **kwargs):
+        markers.append("job")
+        raise ValueError("decoder reached")
+
+    monkeypatch.setattr(job_runner.JobRecord, "model_validate_json", decode)
+    if fault == "size":
+        with path.open("wb") as stream:
+            stream.truncate(9)
+        read = job_runner.os.read
+
+        def guarded_read(fd, count):
+            if os.fstat(fd).st_size == 9:
+                pytest.fail("oversized metadata reached read")
+            return read(fd, count)
+
+        monkeypatch.setattr(job_runner.os, "read", guarded_read)
+    else:
+        preserved = path.with_suffix(".preserved")
+        path.rename(preserved)
+        if fault == "symlink":
+            path.symlink_to(preserved)
+        elif fault == "hardlink":
+            os.link(preserved, path)
+        elif hasattr(os, "mkfifo"):
+            os.mkfifo(path)
+        else:
+            pytest.skip("FIFO unavailable on this platform")
+    with pytest.raises(SystemExit):
+        job_runner._child_main(str(tmp_path))
+    assert markers == []
+
+
 def test_owned_child_poll_uses_actual_popen_exit():
     from types import SimpleNamespace
 
@@ -406,7 +493,7 @@ def test_owned_child_poll_uses_actual_popen_exit():
 
 
 @pytest.fixture
-def child_receipt_fixture(tmp_path):
+def child_receipt_fixture(tmp_path, directory_profile):
     from quantmesh.research.job_artifacts import _canonical, canonical_result
 
     lake = tmp_path / "lake"

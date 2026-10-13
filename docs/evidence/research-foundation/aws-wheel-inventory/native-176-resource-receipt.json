@@ -1,0 +1,28 @@
+{
+  "root_head": "f0093aa6d7853ebad9f70f938fbfae7500b4e1b1",
+  "original_baseline_bytes": 8876772,
+  "full_foundation_forecast_bytes": 5500000,
+  "operator_audit_reserve_bytes": 250000,
+  "software_cap_bytes": 22000000,
+  "audit_cap_bytes": 40000,
+  "two_copies_reserved": true,
+  "root_frontier": {
+    "original_baseline_bytes": 8876772,
+    "prior_conservative_upper": 11770904.0,
+    "additional_files": 312,
+    "additional_raw_and_copy_bytes": 2727884,
+    "new_software_source_test_evidence_git_copy_forecast": 5500000,
+    "new_operator_inventory_audit_reservation_bytes": 250000,
+    "conservative_upper_with_future": 20248788,
+    "software_cap_bytes": 22000000,
+    "free_c_bytes": 98365894656,
+    "original_whole_C_attribution": "PENDING/no waiver/no reset",
+    "no_new_local_materialization": true,
+    "actual_remote_PG_receipts_separate": true
+  },
+  "source_unchanged": true,
+  "no_runtime_tests_or_source_import": true,
+  "whole_C_attribution": "PENDING/no waiver",
+  "local_bytes": 19629,
+  "all_copy_bytes": 39258
+}

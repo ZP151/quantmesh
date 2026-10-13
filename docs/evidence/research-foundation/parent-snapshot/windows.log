@@ -1,0 +1,23 @@
+sss..ssssssssssssssssssssssssss.sssssssss                                [100%]
+============================== warnings summary ===============================
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+SKIPPED [3] tests\test_fixture_snapshot.py:105: actual POSIX rename/symlink association fixture
+SKIPPED [1] tests\test_fixture_snapshot.py:180: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [1] tests\test_fixture_snapshot.py:206: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [1] tests\test_fixture_snapshot.py:240: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [8] tests\test_fixture_snapshot.py:254: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [1] tests\test_fixture_snapshot.py:291: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [1] tests\test_fixture_snapshot.py:309: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [1] tests\test_fixture_snapshot.py:325: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [2] tests\test_fixture_snapshot.py:343: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [6] tests\test_fixture_snapshot.py:365: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [3] tests\test_fixture_snapshot.py:386: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [1] tests\test_fixture_snapshot.py:414: POSIX snapshot handles unavailable; Windows research Worker unsupported
+SKIPPED [1] tests\test_research_job_runner.py:410: snapshot handle-relative I/O unavailable; Windows research Worker unsupported
+SKIPPED [8] tests\test_research_job_runner.py:438: snapshot handle-relative I/O unavailable; Windows research Worker unsupported
+3 passed, 38 skipped, 1 warning in 1.11s

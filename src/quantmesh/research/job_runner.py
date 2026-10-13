@@ -22,8 +22,13 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-from quantmesh.data.layout import shards_in
+from quantmesh.research._fixture_handles import (
+    DirectoryHandles,
+    UnsupportedSnapshotProfile,
+    require_snapshot_profile,
+)
 from quantmesh.research.baselines import run_baseline_report
+from quantmesh.research.fixture_snapshot import copy_fixture_snapshot
 from quantmesh.research.job_artifacts import (
     _canonical,
     _contained,
@@ -40,11 +45,12 @@ from quantmesh.research.jobs import (
 )
 from quantmesh.research.linux_owned import LinuxContainmentError
 from quantmesh.research.reports import ReportRegistry, StrategyReport
-from quantmesh.research.strategy_registry import get_strategy, pin_fixture_dataset, validate_dataset
+from quantmesh.research.strategy_registry import get_strategy, validate_dataset
 from quantmesh.research.worker_execution import _execution
 
 _POLL_SECONDS = 0.1
 _MAX_OUTPUT_BYTES = 16 * 1024 * 1024
+_MAX_INPUT_METADATA_BYTES = 256 * 1024
 _SOURCE_ROOT = Path(__file__).resolve().parents[2]
 _REPO = _SOURCE_ROOT.parent
 
@@ -113,33 +119,14 @@ def _verify(job: JobRecord, inputs_root: Path) -> None:
 
 
 def _snapshot(job: JobRecord, source: Path, destination: Path) -> None:
-    """Copy exactly the manifest-covered shards, then re-pin the private snapshot."""
-    _verify(job, source)
-    name = job.request.dataset.dataset_id
-    dataset = source / name
-    manifest = dataset / "manifest.json"
-    _contained(source, manifest)
-    raw = manifest.read_bytes()
-    declared = json.loads(raw)
-    relative_paths = {Path("manifest.json")}
-    for coverage in declared["coverage"]:
-        partition = dataset / coverage["interval"] / coverage["venue"] / coverage["symbol"]
-        _contained(source, partition)
-        relative_paths.update(p.relative_to(dataset) for p in shards_in(partition))
-    total = 0
-    for relative in sorted(relative_paths):
-        original = dataset / relative
-        _contained(source, original)
-        data = raw if relative == Path("manifest.json") else original.read_bytes()
-        total += len(data)
-        if total > 256 * 1024 * 1024:
-            raise DatasetRejected("fixture_snapshot_too_large")
-        target = destination / name / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(data)
-    if pin_fixture_dataset(source, name) != job.request.dataset:
-        raise DatasetRejected("pin_changed_during_snapshot")
-    _verify(job, destination)
+    """Check queued metadata and copy bytes; content admission belongs to the child."""
+    require_snapshot_profile()
+    if canonical_request_digest(job.request) != job.request_digest:
+        raise ValueError("request digest mismatch")
+    spec = get_strategy(job.request.strategy_id, job.request.strategy_version)
+    if spec.implementation_digest != job.implementation_digest:
+        raise ValueError("queued engine changed")
+    copy_fixture_snapshot(job, source, destination)
 
 
 class UnsupportedLimits(ValueError):
@@ -312,11 +299,15 @@ def _child_main(
                 raise ValueError("Linux child admission missing")
             _contained(path, path / "job.json")
             _contained(output, output / "result.json")
-        job = JobRecord.model_validate_json((path / "job.json").read_bytes())
-        _verify(job, path / "inputs")
         runtime = runtime_fingerprint(manifest_path=build_manifest, manifest_sha256=manifest_sha256)
-        if runtime != json.loads((path / "runtime.json").read_bytes()):
+        if runtime != json.loads(
+            _read_child_file(path, path / "runtime.json", _MAX_INPUT_METADATA_BYTES)
+        ):
             raise ValueError("runtime changed before execution")
+        job = JobRecord.model_validate_json(
+            _read_child_file(path, path / "job.json", _MAX_INPUT_METADATA_BYTES)
+        )
+        _verify(job, path / "inputs")
         r = job.request
         registry = ReportRegistry(output / "registry", lake_root=path / "inputs")
         report = run_baseline_report(
@@ -370,9 +361,9 @@ def _child_main(
 
 
 def _read_child_file(root: Path, path: Path, limit: int) -> bytes:
-    _contained(root, path)
-    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
-    try:
+    with DirectoryHandles({"read": root.absolute()}) as handles:
+        path = path.absolute()
+        fd = handles.open_file(path, os.O_RDONLY | os.O_NONBLOCK, "read")
         before = os.fstat(fd)
         if (
             not stat.S_ISREG(before.st_mode)
@@ -388,7 +379,7 @@ def _read_child_file(root: Path, path: Path, limit: int) -> bytes:
             chunks.append(chunk)
             remaining -= len(chunk)
         raw = b"".join(chunks)
-        after, named = os.fstat(fd), path.lstat()
+        after, named = os.fstat(fd), handles.file_stat(path, "read")
 
         def identity(info):
             return (
@@ -399,6 +390,8 @@ def _read_child_file(root: Path, path: Path, limit: int) -> bytes:
                 info.st_size,
                 info.st_mtime_ns,
                 info.st_ctime_ns,
+                info.st_uid,
+                info.st_gid,
             )
 
         if (
@@ -408,8 +401,6 @@ def _read_child_file(root: Path, path: Path, limit: int) -> bytes:
         ):
             raise ValueError("child file changed")
         return raw
-    finally:
-        os.close(fd)
 
 
 def _validated_child_result(job: JobRecord, owner: str, runtime: dict, output: Path) -> bytes:
@@ -518,12 +509,14 @@ def run_next_job(
         store.finish(job.job_id, owner, job.attempt, "succeeded", [ref], None)
     except DatasetRejected:
         store.finish(job.job_id, owner, job.attempt, "failed", [], "dataset_rejected")
-    except UnsupportedLimits:
+    except (UnsupportedLimits, UnsupportedSnapshotProfile) as unsupported:
         (attempt / "failure.json").write_bytes(
             _canonical(
                 dict(
                     error_code="worker_failed",
-                    limitation="platform_or_cpu_quota_unsupported",
+                    limitation="fixture_snapshot_profile_unsupported"
+                    if isinstance(unsupported, UnsupportedSnapshotProfile)
+                    else "platform_or_cpu_quota_unsupported",
                     platform=sys.platform,
                     cpu_limit=job.request.budget.cpu_limit,
                 )

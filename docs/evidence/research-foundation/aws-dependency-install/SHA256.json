@@ -1,0 +1,207 @@
+[
+  {
+    "path": "0038-aws-console-connection-check.json",
+    "bytes": 592,
+    "sha256": "5870769705bbaf9f486c45a63b0382d71902430d7169db39a609136af803db3a"
+  },
+  {
+    "path": "0038-aws-numeric-base-pip-layout-diagnostic.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-base-pip-layout-diagnostic.json",
+    "bytes": 948,
+    "sha256": "639da29345cb6ea7c07da174e8152422eace40c6cdd6840161bdd68eff50e39f"
+  },
+  {
+    "path": "0038-aws-numeric-base-pip-path-diagnostic.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-base-pip-path-diagnostic.json",
+    "bytes": 176,
+    "sha256": "bcbc09fc2b604c6328c3203b2cbf168462c4ebefcb65ded7e78f0d56f764451f"
+  },
+  {
+    "path": "0038-aws-numeric-install-alias-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-install-alias-green.log",
+    "bytes": 510,
+    "sha256": "0604ea2a7842b32e828a9071f309e132364219f982d604dc2209dbc36325ace4"
+  },
+  {
+    "path": "0038-aws-numeric-install-alias-red.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-install-alias-red.log",
+    "bytes": 512,
+    "sha256": "9747fd1f28a4d53f889b0816370a0063c4aeb89632648e8bd98145e376af351c"
+  },
+  {
+    "path": "0038-aws-numeric-install-commit-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-install-commit-green.log",
+    "bytes": 385,
+    "sha256": "d7b95373238b4581308d901a77562f7a8b2650bb318f18b6c0c78a75e108fc6c"
+  },
+  {
+    "path": "0038-aws-numeric-install-commit-red.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-install-commit-red.log",
+    "bytes": 371,
+    "sha256": "2ce9adcecae8fb9465f53294ae3542863e2c1e01a981ad346c94d4e6e254cdf7"
+  },
+  {
+    "path": "0038-aws-numeric-install-output-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-install-output-green.log",
+    "bytes": 139,
+    "sha256": "795b81b4743027886a2ba89f1ba368f770e6def1c8fe38ae2b5645705576e420"
+  },
+  {
+    "path": "0038-aws-numeric-install-output-red.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-install-output-red.log",
+    "bytes": 140,
+    "sha256": "53f1e8d45e8191327a9d90a667cbcf6c5692eb42db2a0827a013290e27e1a032"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-install-alias-review.md",
+    "bytes": 2501,
+    "sha256": "ac67bd04a3e77989a2ff44068207c7dba6cd6c2f00741cd2020c47221625a04e"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-install-base-pip-alias.exit",
+    "bytes": 5,
+    "sha256": "a730e9f4fecef62a7023b1b3b6b11312e9689ef5a5c2109737bc7e12db929948"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-install-output-review.md",
+    "bytes": 2612,
+    "sha256": "ebb79ff1da75eac118b1f62ee5528bcb66a2c663ae1976662c7701630dff9392"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-install-review.md",
+    "bytes": 4538,
+    "sha256": "7fc44b2840e84717404b27669072be20df9041013d70e4403d8334c9ea01cb4a"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-install-ssh-check.json",
+    "bytes": 234,
+    "sha256": "18dd25b42caa5ac9f8247eff1cc066a75ce65d7680fbfbc74cb924cab1bf9576"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-install-with-failure-output.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-install-with-failure-output.json",
+    "bytes": 1161,
+    "sha256": "56a59a2ad693321b0480154d7a8e24a222bd650119053659afbd73ca12bccda1"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-install.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-install.json",
+    "bytes": 874,
+    "sha256": "5a150c0f5e751dc5da9ee0b7a3e004b4799ca04dfa9c98e1cd46ed989704256e"
+  },
+  {
+    "path": "0038-duckdb-fixture-policy-attributed.json",
+    "bytes": 1770,
+    "sha256": "58f64a46214a9d4efbd15e8850ff880038203ceb37dc43d8443045c7c4583f89"
+  },
+  {
+    "path": "0038-duckdb-fixture-policy-first-constructor.exit",
+    "bytes": 4,
+    "sha256": "412a8da13330793d63a3a17bed32c76be361edad27fe0f6a0ceb144d3f0aa50e"
+  },
+  {
+    "path": "0038-duckdb-fixture-policy-unqualified.json",
+    "bytes": 945,
+    "sha256": "ce444ea67b8ce72d3eaf82789e92d6c7c4813389845c82c97f703fc656328429"
+  },
+  {
+    "path": "0038-duckdb-fixture-policy.exit",
+    "bytes": 4,
+    "sha256": "412a8da13330793d63a3a17bed32c76be361edad27fe0f6a0ceb144d3f0aa50e"
+  },
+  {
+    "path": "0038-duckdb-fixture-policy.log",
+    "bytes": 53,
+    "sha256": "d99fae4e1be3584d2c5f71b872d41d112ec53f536111d1cb333324469f71139d"
+  },
+  {
+    "path": "0038-openai-official-current-check.json",
+    "bytes": 1027,
+    "sha256": "edd0d647277710c4af3329ad51d28d097eef0852820629627d514ce038318188"
+  },
+  {
+    "path": "check_numeric_install_commit_observer.py",
+    "bytes": 2121,
+    "sha256": "2835511ecf3a00087e551706df7ef40bcd1a0f89c79733610a4f6e042e57bbd0"
+  },
+  {
+    "path": "check_numeric_install_failure_output.py",
+    "bytes": 1395,
+    "sha256": "f849afaacc816e28040fa94cffc8ae8fdbbd6f8121a994c5e75a7ee0f3926e6b"
+  },
+  {
+    "path": "check_numeric_install_pip_alias.py",
+    "bytes": 2378,
+    "sha256": "f962be8f00db701b116e5e9d8b43a15cc8f61a6a2c4b417847df4bfbd900fa56"
+  },
+  {
+    "path": "install_aws_numeric_wheels-before-commit-observer.py",
+    "bytes": 12940,
+    "sha256": "e641a408ac5ca67b3cc1e21757d04509eac009ab43479aec838e74dbcee1c6a1"
+  },
+  {
+    "path": "install_aws_numeric_wheels-before-pip-alias.py",
+    "bytes": 13813,
+    "sha256": "a1ca79000e5ae4c924630faa4972b8dd3cd2f671a616ab30435d149b0dae7ea3"
+  },
+  {
+    "path": "install_aws_numeric_wheels-first-executed.py",
+    "bytes": 12992,
+    "sha256": "86f7d65299f3776999657338f872152be4792c2489a7444dbf3150d55ccc9295"
+  },
+  {
+    "path": "install_aws_numeric_wheels.py",
+    "bytes": 14159,
+    "sha256": "238c1bf14bb12e8b748b4e93dc23ceb0777f6b3a25d70d5089783a5ab14064cd"
+  },
+  {
+    "path": "qualify_duckdb_fixture_policy-first-constructor.py",
+    "bytes": 3097,
+    "sha256": "8367f43c4ce93c8ea41da6a84da75141bfd44ff8cc94c559ffc9a08e68056c77"
+  },
+  {
+    "path": "qualify_duckdb_fixture_policy.py",
+    "bytes": 3321,
+    "sha256": "b638bb80b941dd05937f5aad3ffbc3e276d80c643341f04391209ebc0eb0eb94"
+  }
+]

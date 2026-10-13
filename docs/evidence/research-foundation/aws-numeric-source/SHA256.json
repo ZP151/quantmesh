@@ -1,0 +1,137 @@
+[
+  {
+    "path": "0038-aws-numeric-after.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-after.json",
+    "bytes": 5066,
+    "sha256": "7d98abc23ff2b0c4b67bce6dc595b669220344a6c6b5cdc18587379d0c804a7a"
+  },
+  {
+    "path": "0038-aws-numeric-blob-intake.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-blob-intake.json",
+    "bytes": 2631,
+    "sha256": "82933eb313fae2f8baa9512d957fc76b6e2d3135afebcbc1c9554658271b96c0"
+  },
+  {
+    "path": "0038-aws-numeric-full-notice-intake.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-full-notice-intake.json",
+    "bytes": 3712,
+    "sha256": "3d72ab17dfe8f20dd0328429399b31353441b606eff9751c40fa6c1e418708f3"
+  },
+  {
+    "path": "0038-aws-numeric-notice-intake.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-notice-intake.json",
+    "bytes": 3691,
+    "sha256": "45f41b851b1bd1c3636315356a3c9189c70e7527c3aebf873e077a41aa7d81fd"
+  },
+  {
+    "path": "0038-aws-numeric-verified-summary.json",
+    "bytes": 1492,
+    "sha256": "bed911188194c65e722eac3161e4d57a0d207405f451ea124157d40afd1c8775"
+  },
+  {
+    "path": "0038-aws-numeric-virtual-counterexamples-first-notices.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-virtual-counterexamples-first-notices.json",
+    "bytes": 762,
+    "sha256": "ed52344285c29dd5186150f1e5f7737d6d19dadb148d5cfefbaac7058665b7b2"
+  },
+  {
+    "path": "0038-aws-numeric-virtual-counterexamples-first-notices.log",
+    "bytes": 683,
+    "sha256": "e505f203a68ae8100f61f092be0b84852e051030398e3b710ab00522cca1e370"
+  },
+  {
+    "path": "0038-aws-numeric-virtual-counterexamples-first-selector.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-virtual-counterexamples.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-virtual-counterexamples.json",
+    "bytes": 762,
+    "sha256": "b6b105a8faf17127e6a5399622e54c2c6cccef6357e5b23c2341e84990af7ed5"
+  },
+  {
+    "path": "0038-aws-numeric-virtual-counterexamples.log",
+    "bytes": 683,
+    "sha256": "1ebf8360326df5f23bcbac329c0b9af276edc7d241cdc9a228936ae7f72f82be"
+  },
+  {
+    "path": "0038-aws-numeric-watchdog-counterexample.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-watchdog-counterexample.json",
+    "bytes": 805,
+    "sha256": "5305fd55b2e21ee51c4f27aa37d8939636bbf616fb925582060effcac986ce7e"
+  },
+  {
+    "path": "fetch_aws_numeric_blobs.py",
+    "bytes": 13246,
+    "sha256": "3ebbba8e896d28297c32cfa4d70bc54ab14b3401edb00992e1cfb4960c9557c9"
+  },
+  {
+    "path": "fetch_aws_numeric_blobs-before-watchdog.py",
+    "bytes": 10477,
+    "sha256": "dd6ad79b3f4c78b4f2d94a732a712f93fa376846db3ef2a5735306e5fb155242"
+  },
+  {
+    "path": "fetch_aws_numeric_blobs-review.md",
+    "bytes": 3882,
+    "sha256": "b4f7af2bdd023dba8a567183784f0d09c0c754b9c7b0195a791a2393de6e4aaf"
+  },
+  {
+    "path": "inspect_aws_numeric_layers.py",
+    "bytes": 15479,
+    "sha256": "b33c6502b024082f19e6229f189e37f5833c963e46b59e70e7dea9a9189e8fd8"
+  },
+  {
+    "path": "inspect_aws_numeric_layers-first-notices.py",
+    "bytes": 15409,
+    "sha256": "0ae26c000fa1969453f1902d78071c29d6fb4c035f6975b20b53bb5390b40767"
+  },
+  {
+    "path": "inspect_aws_numeric_layers-review.md",
+    "bytes": 3011,
+    "sha256": "bc168d7b0d0fc94573edb0ef1e1f5178b9e4b1c8d4954a3a945ad0226f6fa4a8"
+  },
+  {
+    "path": "observe_aws_numeric_after.py",
+    "bytes": 3250,
+    "sha256": "294f1c472a427944ceb607856daf12f0aab1b76f57c56d9c282a98ec4a732614"
+  },
+  {
+    "path": "check_virtual_layer_semantics.py",
+    "bytes": 3705,
+    "sha256": "e41e920e3e1ef8de75dc6d26cb378b416aa7709f3e16d0e034cb6493fbffe022"
+  },
+  {
+    "path": "check_virtual_layer_semantics-first-selector-failed.py",
+    "bytes": 3685,
+    "sha256": "30d5a1921977a02556122d4eb535a8fae023bc875bf5337a0cb74ddbf140d885"
+  }
+]

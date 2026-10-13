@@ -16,12 +16,87 @@ stale app ingestion and qualifies server gateway migration. Formal168h is not
 required now, on-demand only. Historical failures remain unaccepted. Read
 ACTIVE and iteration0038 before interpreting the historical stage notes below.
 
-October13 latest frontier:approved independent research8GB/private Tailnet/SSH
-and Docker are ready; real disposable PG18.6 TLS/SCRAM/roles prerequisite
-passes15checks and is stopped. Candidate56 exact CI passes4557Python139skip/
-419frontend, PR175 DRAFT. Numerical-cache provenance/kernel boundary, actual
-Worker/Agent/production PG/report loop/server-market cutover remain pending.
-No production service or source switch is inferred from the cloud fixture.
+## Parent snapshot source acceptance — release still pending
+
+Task178 single final-review fix is accepted by root covering verification:
+Final46producer members and5current source/source-archive hashes match. Component-wise
+no-follow directory acquisition and held relative I/O close the Task177 transient
+ancestor P2. Final Linux covering43pass/1deselected, leaf-refusal5pass, Windows
+unsupported-profile guards3pass and lint/format/diff exit0 are retained separately.
+The older affected2fail/32pass/21skip remains failed; both specific corrections
+are covered afterward. Unchanged numerical roundtrip passed in earlier41checks;
+no fresh native/runtime/numerical certificate is claimed. Windows research jobs
+fail closed before fixture I/O; approved production target is Linux. Windows
+OpenD/Startup/Job Object/privileges remain unchanged. No third structural review.
+
+Root integrates the5source/test files and53raw evidence members into the existing
+draft PR175 candidate. f009CI remains terminalSUCCESS only for that older commit;
+the new candidate requires its own checks and human release approval. No merge,
+AWS deployment, production Worker/PG/Agent, real-model request or source cutover
+follows from this software acceptance. SSH extra authentication still pending;
+the fresh read-only probe ends1/timeout before owned-root/alias-phase output.
+Inspect that phase after authentication before the reviewed finite installation.
+Known crash payload524,611,584B remains private/unread/not deleted; whole-C
+attribution pending and original baselines retained. Option A stays ACTIVE.
+
+## Earlier dependency inventory and input-boundary checkpoint — retained history
+
+Research-host authentication/private SSH is accepted. Exact81 wheel inventory
+now exits0 with6568file members/6487non-self RECORD hashes/86ELF magic hashes;
+79packages have bundled full notices and2exact source supplements are preserved.
+All81 have full notice text references,114files/458,565B. Missing-notice exit1
+and actual ZIP-path RED3/GREEN0 remain retained; seven association cases exit0.
+No numerical/native certificate follows from this data-only inspection.
+Original AWS source ledger390,287,360B/free161,040,965,632B. Bulk stays on AWS.
+
+Canonical base3.12.15/usr/local finite stdlib probe actually ran and its unique
+stopped container was removed16:44; that phase ended1image/0containers. Two finite offline install attempts failed and cleaned their owned containers.
+The second actual failure is remove_pip/AssertionError: pinned official basepip
+is a fixed alias to pip3, not a regular file. Exact-link/script-hash correction
+passes3real small Linux fixture cases and bounded review. Controlled continuation
+requests a NEW real SSH extra-check, then exits255/connect timeout without a
+remote Python result. Human authentication is pending; fresh phase must be
+observed before continuation. No candidate image or numerical service claimed;
+NEW local DuckDB policy diagnostics fail11 twice without a qualified receipt;
+stop local retries and verify actual canonical AWS controls later. Two new WSL
+crash payloads524,611,584B are metadata-accounted/private/unread/not deleted;
+remaining whole-C attribution PENDING, no global scan/delete/reset or waiver;
+whole materialization keeps original5GB/free50GB baseline, no local bulk.
+Native174 remains INCOMPLETE.175construction proposal/176input authority audit
+are completed/idle; root independently verifies176five members/17source pins.
+G2 is real: parent _snapshot parses Parquet before isolated child start. New
+Task177 source repair and software checks are completed, sealed4source/46raw
+members independently verified by root (91affected+pilot1, final44,21Windows-only
+skips). Final independent review finds one P2: full-path I/O can follow transient
+ancestor links. NEW Task178 one association fix pass uses held no-follow directory
+handles; no third structural review or native exception. Root Windows26pass3skip/
+4fail is not all green (3missing symlink privilege, single inode short-path pass);
+no policy/privilege change. Implementation stays UNSTAGED/unintegrated. No per-type exception,
+no global Lake/numerical/JobStore/schema change. Complete decoder/kernel/runtime
+admission, real jobs/productionPG/Agent key/private user loop/server cutover pending.
+
+
+Task178 continuation: three real transient-ancestor REDs are retained. The
+initial expanded run has two failures (metadata test demanded every restored
+rename be rejected; leaf symlink exposed raw ELOOP). Planner acceptance requires
+actual held no-follow parent handles and relative I/O, with association checks;
+it does not promise detection of every restored rename. Same implementation
+session is correcting covering tests and sanitized refusal; final handoff and
+root verification remain pending, not a fresh architecture review.
+Current official OpenAI documentation confirms the existing gpt-6.1-sol API
+model, low reasoning and standard pricing; no model-source correction is needed.
+Account access, key, real response and data-egress approval remain unverified.
+Fresh actual SSH inspection again requires an additional human check and times
+out before the owned-root/phase result. First Tailnet join acceptance does not
+prove this SSH check. Browser SSH showed SERVER_ERROR512 on the older terminal;
+one new terminal has no observed shell result. No remote command via console,
+firewall/key change, installation retry or new paid resource followed.
+
+Same software baseline8,876,772B/full5.5MBfoundation forecast retained. Explicit
+software ceiling24MB with250KBoperator/copy and NEW2MBsmall fixture allocation;
+original whole-C5GB
+attribution unresolved. f009CI38407671413 terminalSUCCESS/PR175DRAFT; later
+source/docs/WIP are not certified by that CI. Overall approved Option A ACTIVE.
 
 M0 through M13 and iterations 0014–0020 are implemented and merged.
 `v0.1.1-rc1` is the immutable accepted prototype baseline. It includes the

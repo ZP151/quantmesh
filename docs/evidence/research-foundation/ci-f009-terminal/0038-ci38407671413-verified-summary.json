@@ -1,0 +1,38 @@
+{
+  "run": 38407671413,
+  "head": "f0093aa6d7853ebad9f70f938fbfae7500b4e1b1",
+  "conclusion": "success",
+  "actual_checkout": "dd4b22ceabcc7f2d6251546a653717feac8a5d5a",
+  "tree": "dfdc719c0246b7f0ac8b287443e7d901a7e7ab6a",
+  "trees_match": true,
+  "required_jobs": [
+    "classify",
+    "fast",
+    "python",
+    "release",
+    "research_service"
+  ],
+  "release_steps": 18,
+  "python_passed": 4557,
+  "python_skipped": 139,
+  "frontend_passed": 419,
+  "service_passed": 202,
+  "service_PG_skipped": 5,
+  "locked_packages": 81,
+  "service_profile": "OFFLINE_SCRIPTED_ONLY",
+  "artifact_sha256": "sha256:fd857ec9112a22ccbabbce8e742b3624a548a0bd8f28d034e651bc3753aa849d",
+  "artifact_raw_sha256": {
+    "pytest-5fe05a7f4af04f0a929bfcdbb0cf84d9.xml": "878b4269999c9de3020f20169c79da6ecc1d56700165a4573ce0d4b5f451a5d0",
+    "service-gate-1.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "service-gate-0.log": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09",
+    "service-gate-2.log": "edc30689f9fd3dc494be14b82b3b560778897cff7435d2cc81d54f1829d5038d",
+    "service-gate-3.log": "24bb6ab671d9bb0654d51a497b4c27d65bbab965d0111490ed0d7169958150f3",
+    "service-gate.json": "a657305cdaffb6a7d11f54144625c231e388bea48646b10606d445e630db2332",
+    "service-gate-4.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "actionable_reviews": 0,
+  "production_deployed": false,
+  "actual_provider": false,
+  "numerical_certificate": false,
+  "full_option_A_complete": false
+}

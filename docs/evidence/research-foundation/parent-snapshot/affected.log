@@ -1,0 +1,28 @@
+..Fsssssssssssssssssss...................F.ss..........                  [100%]
+=================================== FAILURES ===================================
+_______ test_transient_ancestor_swap_around_real_open_refuses[metadata] ________
+tests/test_fixture_snapshot.py:143: in test_transient_ancestor_swap_around_real_open_refuses
+    with pytest.raises(ValueError if role == "metadata" else DatasetRejected):
+E   Failed: DID NOT RAISE ValueError
+__________ test_child_receipt_rejects_wrong_identity_or_file[symlink] __________
+tests/test_research_job_runner.py:561: in test_child_receipt_rejects_wrong_identity_or_file
+    job_runner._validated_child_result(job, "owner", runtime, output)
+src/quantmesh/research/job_runner.py:408: in _validated_child_result
+    receipt_raw = _read_child_file(output, output / "receipt.json", _MAX_OUTPUT_BYTES - len(raw))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/quantmesh/research/job_runner.py:366: in _read_child_file
+    fd = handles.open_file(path, os.O_RDONLY | os.O_NONBLOCK, "read")
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/quantmesh/research/_fixture_handles.py:162: in open_file
+    fd = os.open(
+E   OSError: [Errno 40] Too many levels of symbolic links: 'receipt.json'
+=============================== warnings summary ===============================
+../../../../../../../../var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_fixture_snapshot.py::test_transient_ancestor_swap_around_real_open_refuses[metadata]
+FAILED tests/test_research_job_runner.py::test_child_receipt_rejects_wrong_identity_or_file[symlink]
+2 failed, 32 passed, 21 skipped, 1 warning in 23.46s

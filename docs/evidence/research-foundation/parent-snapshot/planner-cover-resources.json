@@ -1,0 +1,83 @@
+{
+  "before": {
+    "frontier": {
+      "original_baseline_bytes": 8876772,
+      "prior_conservative_upper": 11770904.0,
+      "additional_files": 450,
+      "additional_raw_and_copy_bytes": 3084412,
+      "new_software_source_test_evidence_git_copy_forecast": 5500000,
+      "new_operator_inventory_audit_reservation_bytes": 250000,
+      "new_parent_snapshot_fixture_reservation_bytes": 2000000,
+      "new_directory_association_fix_reservation_bytes": 200000,
+      "conservative_upper_with_future": 22805316,
+      "software_cap_bytes": 24000000,
+      "free_c_bytes": 96892993536,
+      "original_whole_C_attribution": "PENDING/no waiver/no reset",
+      "no_new_local_runtime_bundle_materialization": true,
+      "unexpected_local_crash_payload_bytes": 524611584,
+      "crash_payloads_private_unread_not_copied_or_deleted": true,
+      "crash_payloads_not_in_software_source_reservation": true,
+      "actual_remote_PG_receipts_separate": true
+    },
+    "source_copies_bytes": 169816,
+    "raw_copies_bytes": 283422,
+    "git_reserve": 35000,
+    "owned_test_bytes": 1926638,
+    "root_windows_fixtures_and_short_case_reserve": 18284,
+    "scope_upper": 488238,
+    "full_upper": 23405316,
+    "free_c_bytes": 96892727296
+  },
+  "after": {
+    "frontier": {
+      "original_baseline_bytes": 8876772,
+      "prior_conservative_upper": 11770904.0,
+      "additional_files": 450,
+      "additional_raw_and_copy_bytes": 3084412,
+      "new_software_source_test_evidence_git_copy_forecast": 5500000,
+      "new_operator_inventory_audit_reservation_bytes": 250000,
+      "new_parent_snapshot_fixture_reservation_bytes": 2000000,
+      "new_directory_association_fix_reservation_bytes": 200000,
+      "conservative_upper_with_future": 22805316,
+      "software_cap_bytes": 24000000,
+      "free_c_bytes": 96892424192,
+      "original_whole_C_attribution": "PENDING/no waiver/no reset",
+      "no_new_local_runtime_bundle_materialization": true,
+      "unexpected_local_crash_payload_bytes": 524611584,
+      "crash_payloads_private_unread_not_copied_or_deleted": true,
+      "crash_payloads_not_in_software_source_reservation": true,
+      "actual_remote_PG_receipts_separate": true
+    },
+    "source_copies_bytes": 169816,
+    "raw_copies_bytes": 285020,
+    "git_reserve": 35000,
+    "owned_test_bytes": 1947872,
+    "root_windows_fixtures_and_short_case_reserve": 18284,
+    "scope_upper": 489836,
+    "full_upper": 23405316,
+    "free_c_bytes": 96892284928
+  },
+  "argv": [
+    "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_fixture_snapshot.py",
+    "tests/test_research_job_runner.py::test_runtime_rejection_precedes_job_and_content_decoding",
+    "tests/test_research_job_runner.py::test_child_metadata_bounds_and_file_types_precede_job_decoder",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task178-tests/planner-cover",
+    "--deselect=tests/test_fixture_snapshot.py::test_real_fixture_child_validates_twice_and_preserves_canonical_numerics"
+  ],
+  "source_hashes": {
+    "src/quantmesh/research/fixture_snapshot.py": "ed23e0446df15f6080c17ff3b4e272e32355902ff5c9ddedddfa84debeae043c",
+    "src/quantmesh/research/_fixture_handles.py": "c3864306f0913453165b552c203398060f728f3c30ee957c5401aa1b61ce0c46",
+    "src/quantmesh/research/job_runner.py": "426ffb38eb85e43453ab722e84e10ee4bc99128d2646e1551aa15b7fa222ef6e",
+    "tests/test_fixture_snapshot.py": "63b60f648e03e374bb2c71f41fc7b573dc5d060c03aa1cdb06f1dbeb9fac37c6",
+    "tests/test_research_job_runner.py": "e9a24338650e3aa9697a0293b2f3829496e4a5eecc80cb157ac4533047c6b792"
+  }
+}

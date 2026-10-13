@@ -1,0 +1,80 @@
+{
+  "before": {
+    "frontier": {
+      "original_baseline_bytes": 8876772,
+      "prior_conservative_upper": 11770904.0,
+      "additional_files": 448,
+      "additional_raw_and_copy_bytes": 3073460,
+      "new_software_source_test_evidence_git_copy_forecast": 5500000,
+      "new_operator_inventory_audit_reservation_bytes": 250000,
+      "new_parent_snapshot_fixture_reservation_bytes": 2000000,
+      "new_directory_association_fix_reservation_bytes": 200000,
+      "conservative_upper_with_future": 22794364,
+      "software_cap_bytes": 24000000,
+      "free_c_bytes": 97564667904,
+      "original_whole_C_attribution": "PENDING/no waiver/no reset",
+      "no_new_local_runtime_bundle_materialization": true,
+      "unexpected_local_crash_payload_bytes": 524611584,
+      "crash_payloads_private_unread_not_copied_or_deleted": true,
+      "crash_payloads_not_in_software_source_reservation": true,
+      "actual_remote_PG_receipts_separate": true
+    },
+    "source_copies_bytes": 157956,
+    "raw_copies_bytes": 231652,
+    "git_reserve": 35000,
+    "owned_test_bytes": 1348290,
+    "scope_upper": 424608,
+    "full_upper": 23394364,
+    "free_c_bytes": 97564667904
+  },
+  "after": {
+    "frontier": {
+      "original_baseline_bytes": 8876772,
+      "prior_conservative_upper": 11770904.0,
+      "additional_files": 448,
+      "additional_raw_and_copy_bytes": 3073460,
+      "new_software_source_test_evidence_git_copy_forecast": 5500000,
+      "new_operator_inventory_audit_reservation_bytes": 250000,
+      "new_parent_snapshot_fixture_reservation_bytes": 2000000,
+      "new_directory_association_fix_reservation_bytes": 200000,
+      "conservative_upper_with_future": 22794364,
+      "software_cap_bytes": 24000000,
+      "free_c_bytes": 97564602368,
+      "original_whole_C_attribution": "PENDING/no waiver/no reset",
+      "no_new_local_runtime_bundle_materialization": true,
+      "unexpected_local_crash_payload_bytes": 524611584,
+      "crash_payloads_private_unread_not_copied_or_deleted": true,
+      "crash_payloads_not_in_software_source_reservation": true,
+      "actual_remote_PG_receipts_separate": true
+    },
+    "source_copies_bytes": 157956,
+    "raw_copies_bytes": 233222,
+    "git_reserve": 35000,
+    "owned_test_bytes": 1413431,
+    "scope_upper": 426178,
+    "full_upper": 23394364,
+    "free_c_bytes": 97564602368
+  },
+  "argv": [
+    "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_fixture_snapshot.py",
+    "tests/test_research_job_runner.py::test_runtime_rejection_precedes_job_and_content_decoding",
+    "tests/test_research_job_runner.py::test_child_metadata_bounds_and_file_types_precede_job_decoder",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task178-tests/green"
+  ],
+  "source_hashes": {
+    "src/quantmesh/research/fixture_snapshot.py": "ed23e0446df15f6080c17ff3b4e272e32355902ff5c9ddedddfa84debeae043c",
+    "src/quantmesh/research/_fixture_handles.py": "95ecc7995800dcf0941edc61de1ec3b1778eddb36d54fce34ff6c205dab7d0fa",
+    "src/quantmesh/research/job_runner.py": "ce21e6f1a89952721b5dc3cc15c997e2f0a95fd7a4f71dfa4d06cf189ff26372",
+    "tests/test_fixture_snapshot.py": "585f868614be0ec75a686d85fe179d2d525dc2ce329518d712ab7e91179b5363",
+    "tests/test_research_job_runner.py": "879cbed5aeb7510126f07f45010c6b0f998779b8d80766e48a9285c85e12291a"
+  }
+}

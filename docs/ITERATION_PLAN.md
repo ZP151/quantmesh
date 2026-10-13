@@ -1,5 +1,171 @@
 # QuantMesh Iteration Plan
 
+## Parent snapshot source acceptance — release still pending
+
+Task178 single final-review fix is accepted by root covering verification:
+Final46producer members and5current source/source-archive hashes match. Component-wise
+no-follow directory acquisition and held relative I/O close the Task177 transient
+ancestor P2. Final Linux covering43pass/1deselected, leaf-refusal5pass, Windows
+unsupported-profile guards3pass and lint/format/diff exit0 are retained separately.
+The older affected2fail/32pass/21skip remains failed; both specific corrections
+are covered afterward. Unchanged numerical roundtrip passed in earlier41checks;
+no fresh native/runtime/numerical certificate is claimed. Windows research jobs
+fail closed before fixture I/O; approved production target is Linux. Windows
+OpenD/Startup/Job Object/privileges remain unchanged. No third structural review.
+
+Root integrates the5source/test files and53raw evidence members into the existing
+draft PR175 candidate. f009CI remains terminalSUCCESS only for that older commit;
+the new candidate requires its own checks and human release approval. No merge,
+AWS deployment, production Worker/PG/Agent, real-model request or source cutover
+follows from this software acceptance. SSH extra authentication still pending;
+the fresh read-only probe ends1/timeout before owned-root/alias-phase output.
+Inspect that phase after authentication before the reviewed finite installation.
+Known crash payload524,611,584B remains private/unread/not deleted; whole-C
+attribution pending and original baselines retained. Option A stays ACTIVE.
+
+## Earlier dependency inventory and input-boundary checkpoint — retained history
+
+Research-host authentication/private SSH is accepted. Exact81 wheel inventory
+now exits0 with6568file members/6487non-self RECORD hashes/86ELF magic hashes;
+79packages have bundled full notices and2exact source supplements are preserved.
+All81 have full notice text references,114files/458,565B. Missing-notice exit1
+and actual ZIP-path RED3/GREEN0 remain retained; seven association cases exit0.
+No numerical/native certificate follows from this data-only inspection.
+Original AWS source ledger390,287,360B/free161,040,965,632B. Bulk stays on AWS.
+
+Canonical base3.12.15/usr/local finite stdlib probe actually ran and its unique
+stopped container was removed16:44; that phase ended1image/0containers. Two finite offline install attempts failed and cleaned their owned containers.
+The second actual failure is remove_pip/AssertionError: pinned official basepip
+is a fixed alias to pip3, not a regular file. Exact-link/script-hash correction
+passes3real small Linux fixture cases and bounded review. Controlled continuation
+requests a NEW real SSH extra-check, then exits255/connect timeout without a
+remote Python result. Human authentication is pending; fresh phase must be
+observed before continuation. No candidate image or numerical service claimed;
+NEW local DuckDB policy diagnostics fail11 twice without a qualified receipt;
+stop local retries and verify actual canonical AWS controls later. Two new WSL
+crash payloads524,611,584B are metadata-accounted/private/unread/not deleted;
+remaining whole-C attribution PENDING, no global scan/delete/reset or waiver;
+whole materialization keeps original5GB/free50GB baseline, no local bulk.
+Native174 remains INCOMPLETE.175construction proposal/176input authority audit
+are completed/idle; root independently verifies176five members/17source pins.
+G2 is real: parent _snapshot parses Parquet before isolated child start. New
+Task177 source repair and software checks are completed, sealed4source/46raw
+members independently verified by root (91affected+pilot1, final44,21Windows-only
+skips). Final independent review finds one P2: full-path I/O can follow transient
+ancestor links. NEW Task178 one association fix pass uses held no-follow directory
+handles; no third structural review or native exception. Root Windows26pass3skip/
+4fail is not all green (3missing symlink privilege, single inode short-path pass);
+no policy/privilege change. Implementation stays UNSTAGED/unintegrated. No per-type exception,
+no global Lake/numerical/JobStore/schema change. Complete decoder/kernel/runtime
+admission, real jobs/productionPG/Agent key/private user loop/server cutover pending.
+
+
+Task178 continuation: three real transient-ancestor REDs are retained. The
+initial expanded run has two failures (metadata test demanded every restored
+rename be rejected; leaf symlink exposed raw ELOOP). Planner acceptance requires
+actual held no-follow parent handles and relative I/O, with association checks;
+it does not promise detection of every restored rename. Same implementation
+session is correcting covering tests and sanitized refusal; final handoff and
+root verification remain pending, not a fresh architecture review.
+Current official OpenAI documentation confirms the existing gpt-6.1-sol API
+model, low reasoning and standard pricing; no model-source correction is needed.
+Account access, key, real response and data-egress approval remain unverified.
+Fresh actual SSH inspection again requires an additional human check and times
+out before the owned-root/phase result. First Tailnet join acceptance does not
+prove this SSH check. Browser SSH showed SERVER_ERROR512 on the older terminal;
+one new terminal has no observed shell result. No remote command via console,
+firewall/key change, installation retry or new paid resource followed.
+
+Same software baseline8,876,772B/full5.5MBfoundation forecast retained. Explicit
+software ceiling24MB with250KBoperator/copy and NEW2MBsmall fixture allocation;
+original whole-C5GB
+attribution unresolved. f009CI38407671413 terminalSUCCESS/PR175DRAFT; later
+source/docs/WIP are not certified by that CI. Overall approved Option A ACTIVE.
+
+## Earlier October13 16:23/16:44 cloud checkpoint — retained history
+
+Later16:44 canonical stdlib-only probe exits0 on actual/usr/local Python3.12.15
+with fixed -B-I-S/nonroot command and nonce-owned readonly/network-none container.
+Actual stopped exit0/noOOM and exact no-force removal are observed; final1image/
+0containers. Interpreter digest4dbf3143...; maps include [vdso] and [vsyscall],
+not a continuous native/kernel certificate. Cloud-source introduced387,919,872B/
+free161,043,333,120B. This did not initialize the Worker or install the81 wheels.
+The finite-construction proposal is now completed/idle (47,570B/50KB including
+reserved coordinator copy); unchanged WIP/gates, root input-authority/kernel
+decision pending. Do not repeat the completed174 implementation/planning task.
+
+
+Research-host authentication/private SSH is accepted; no repeat authentication.
+Exact eight-member OCI capsule47,575,040B is read-back verified. One actual Docker
+load returns0, but original tag observer exits1; retained failure is reconciled
+READ-ONLY using immutable image ID2ed6491.../exact config4f228.../four diffIDs.
+Actual expected Engine/build has1image/0containers. At16:23 no container had run.
+Exactly81 pinned official wheel files88,992,477B now exist on AWS; all sizes,
+hashes/name/version match and the nonroot download child is reaped. No install,
+numerical/runtime/native certificate, permanent PG/Worker/Agent or source cutover.
+Original cloud-source baseline introduced387,805,184B/free161,043,447,808B remains
+within500MB/free50GB (prior PG831,553,536B separately disclosed). No local bulk.
+
+Native174 completed INCOMPLETE:6targeted pass,2BASE/core fail BEFORE intended
+initialization. Retained _contextvars.Token.MISSING diagnostic is a different
+unsupported family. No automatic per-type exemption/review/commit/push/integration.
+All26manifest members match. At this checkpoint a bounded planning task asked
+for a finite construction/coverage decision; native admission remained unaccepted.
+Same original software20MB cap/5.5MB foundation forecast; whole-C attribution
+remains pending. Earlier CI38407671413 is terminalSUCCESS, not authority for later
+docs/WIP. PR175 remains DRAFT; overall approved Option A stays ACTIVE.
+Evidence: [actual image/wheel packet](evidence/research-foundation/aws-numeric-image/README.md).
+
+## Earlier October13 CI/source checkpoint — retained history
+
+Candidatef0093aa6d7853ebad9f70f938fbfae7500b4e1b1 CI38407671413 completes
+SUCCESS14:28:58UTC. Actual dd4b22ceabcc7f2d6251546a653717feac8a5d5a checkout
+tree dfdc719c0246b7f0ac8b287443e7d901a7e7ab6a equals candidate; all18release
+commands/4557Python139skip/frontend419 and separate202service pass5PGskip/
+81licenses pass. Service artifact digest independently verified; no actionable
+review at intake. PR175 remains DRAFT and runtime not deployed. Do not restart
+old CI/watches. Subsequent local evidence/plans are not certified by f009 CI.
+Evidence: [ci-f009-terminal](evidence/research-foundation/ci-f009-terminal/README.md).
+
+Approved research host now has actual pinned official OCI manifest/config/four
+compressed layer bytes47,565,914B and all four uncompressed diffIDs verified.
+Data-only virtual overlay observes6600nodes/801ELF file hashes/105installed binary
+packages; all105 have notices. Preserve91selected files including14Debian common
+license bodies; Python full notice matches pinned upstream. Source/binary rows
+libcrypt1/libxcrypt and libsemanage binaries/source are distinguished. Raw notice
+availability is not legal-expression acceptance or complete ELF/runtime closure.
+Expected2second stuck-download negative exits1 with exact child reaped2.052s;
+10synthetic overlay counterexamples pass. Earlier77notice run and failed AST
+selector harness are retained. No rootfs extraction or image/code execution.
+Actual15:12UTC after witness:Engine29.9.0 remains0images/0containers/private
+Tailnet healthy; phase1introduced53,493,760B/free161,377,759,232B meets the same
+fresh500MB/50GB ledger. Bulk blobs/notices stay in the owned AWS root. No new
+local materialization/PG service/Worker/Agent/model/source cutover is inferred.
+Evidence: [aws-numeric-source](evidence/research-foundation/aws-numeric-source/README.md).
+
+a718 original foundation and173 core-bootstrap follow-up remain INCOMPLETE WIP.
+The173 slice passes4new targeted checks but2BASE/core checks fail before intended
+initialization; missing raw weak referent is the actual next refusal. Final173
+introduced578,286B and source/delta/failures are retained; no new review launched.
+Root freezes ONE new privately captured builtin weak-reference target/callback
+inspection slice, same three new files/no name/opaque/native exemption. Actual
+BASE and intended core negatives must pass before appropriate new scoped review.
+Engine/image/CID/kernel chain and all native-cache permission remain unimplemented.
+Same original8,876,772B/20MB total cap; original foundation4,035,125B plus173 charge
+=4,613,411B. Explicit root internal allocation adds500KB to the foundation forecast
+from5MB to5.5MB, with at most600KB for this NEW corrective slice/all copies/tests/
+review/Git. Root current forecast upper19,468,139B; no baseline reset/subtraction,
+local materialization or whole-C attribution waiver. Old completed work not repeated.
+Plan: [weak-reference ruling](superpowers/plans/2026-10-13-worker-weak-reference-ruling.md).
+
+Full approved Option A stays ACTIVE: actual81-dependency image/kernel/numerical
+baselines/two-job recovery, production service-store/report restore/user loop,
+actual OpenAI provider/key/egress and true server-owned market cutover remain
+required. No pending repeat auth/purchase; server key/operator gates occur only
+after concrete deployment preparation. Existing staging69515b7/papertrue/livefalse
+and Windows/OpenD/helper/originaltunnel remain. Actual calendar determines source
+freshness; formal168h is NOT_REQUIRED, disruptive drills on demand.
+
 Updated: 2026-10-12. This replaces the original conceptual iterations 0–5;
 historical delivery IDs and evidence remain in the [iteration index](iterations/INDEX.md).
 Use the [roadmap](roadmap/ROADMAP.md) for product direction and
