@@ -1,0 +1,663 @@
+{
+  "schema_version": 1,
+  "task": "Approved Option A bounded Task 1, issue #171 under #167",
+  "status": "committed_review_ready_r2_pending",
+  "as_of_utc": "2026-10-13T01:51:34.556109+00:00",
+  "workspace": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh",
+  "branch": "codex/0038-portfolio-budgets",
+  "plan": "C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/docs/superpowers/plans/2026-10-13-research-portfolio-budgets.md",
+  "baseline": "216b378192bbc0a1742a28b7a1fc75a86ae2fda9",
+  "head": "b10762883edc1bbad164951d1a1adfb9f0f7457c",
+  "head_tree": "f867f3b3d6f7471d5a5624ba2ee93ea0b9cb99a5",
+  "main_preserved": "c74ea03f16c9159e96861c0fb60a7af560bc52eb",
+  "worktree_clean": true,
+  "changed_files": [
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\README.md",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\src\\qm_research_agent\\accounting.py",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\src\\qm_research_agent\\budgets.py",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\src\\qm_research_agent\\runtime.py",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests\\conftest.py",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests\\test_agent.py",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests\\test_hardening.py",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests\\test_portfolio_budgets.py",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests\\test_portfolio_runtime.py",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests\\test_store.py"
+  ],
+  "source_sha256": {
+    "services/research_agent/README.md": "074ca1fb0fe172c79bbac86a8fc864aba64b106e3ff3175765bba5b137ea6e83",
+    "services/research_agent/src/qm_research_agent/accounting.py": "eae4766dc8b7ae94a98bd1e0b6a928939362886705cd1e0d60448d89a4c9d55e",
+    "services/research_agent/src/qm_research_agent/budgets.py": "cf599bd8bea3e7c492491a882f12cd66a1e9beb818ca1412af0dc96bf2f30986",
+    "services/research_agent/src/qm_research_agent/runtime.py": "2348a562e0627ffbaa150b6dc49ed5f407a7a0810dd9923d849c7e8a801bd8a0",
+    "services/research_agent/tests/conftest.py": "edb850941a89d1580e5354a04f71eec7438dff790ba993bc57caf480d03db34e",
+    "services/research_agent/tests/test_agent.py": "17a9139fa0505fdc4eba888ee638e23b5fb13af4f7bfeadd697571a7a32b218f",
+    "services/research_agent/tests/test_hardening.py": "1e14ad818cc7742b30fd2b2f3abfb088a43a5c7e57f205f97de37524be9d4df7",
+    "services/research_agent/tests/test_portfolio_budgets.py": "62f8ad46ed97329eae693f0c16a487d4fa3f15a2120934e895f762000038c855",
+    "services/research_agent/tests/test_portfolio_runtime.py": "5af964d5c309844595a8d863262a9f173ce6e1e97a36c574853a98241bb4c481",
+    "services/research_agent/tests/test_store.py": "445232208c350f5844840359e3fbaaa53f3187beef1e7ae58788fae3da1e9356"
+  },
+  "environment": {
+    "interpreter": "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+    "reused_read_only": true,
+    "no_installs_or_shared_environment_changes": true,
+    "gate_profile": "OFFLINE_SCRIPTED_ONLY",
+    "runtime_profile": "windows-cp313-x86_64",
+    "gate_process_environment": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONPATH": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\src;C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\src;C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh"
+    }
+  },
+  "verification": [
+    {
+      "phase": "baseline-ambient-temp",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests",
+        "-q"
+      ],
+      "exit": 1,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\baseline.log",
+      "finding": "Ambient pytest temp ACL cleanup failure; preserved without changing global temp."
+    },
+    {
+      "phase": "baseline-owned",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests",
+        "-q",
+        "--basetemp=output/portfolio-budgets/baseline-tmp"
+      ],
+      "exit": 0,
+      "passed": 34,
+      "skipped": 51,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\baseline-owned.log"
+    },
+    {
+      "phase": "RED-cross-job",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests/test_portfolio_budgets.py",
+        "-q",
+        "--basetemp=output/portfolio-budgets/red-tmp"
+      ],
+      "exit": 1,
+      "failed": 1,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\red-cross-job.log",
+      "finding": "Old EffectLedger admitted both independent 0.60 reservations against intended shared 1.00 cap."
+    },
+    {
+      "phase": "RED-policy",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests/test_portfolio_budgets.py",
+        "-q",
+        "--basetemp=output/portfolio-budgets/red-policy-tmp"
+      ],
+      "exit": 1,
+      "failed": 31,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\red-policy.log"
+    },
+    {
+      "phase": "GREEN-accounting",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests/test_portfolio_budgets.py",
+        "-q",
+        "--basetemp=output/portfolio-budgets/green1-tmp"
+      ],
+      "exit": 0,
+      "passed": 31,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\green1.log"
+    },
+    {
+      "phase": "RED-runtime",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests/test_portfolio_runtime.py",
+        "-q",
+        "--basetemp=output/portfolio-budgets/red-runtime2-tmp"
+      ],
+      "exit": 1,
+      "failed": 3,
+      "passed": 6,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\red-runtime2.log"
+    },
+    {
+      "phase": "RED-integrity",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests/test_portfolio_budgets.py",
+        "-q",
+        "-k",
+        "missing_version or completed_without",
+        "--basetemp=output/portfolio-budgets/red-integrity-tmp"
+      ],
+      "exit": 1,
+      "failed": 2,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\red-integrity.log"
+    },
+    {
+      "phase": "GREEN-focused-final",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests/test_portfolio_budgets.py",
+        "services/research_agent/tests/test_portfolio_runtime.py",
+        "-q",
+        "--basetemp=output/portfolio-budgets/focused-final-tmp",
+        "--junitxml=output/portfolio-budgets/focused-final.xml"
+      ],
+      "exit": 0,
+      "passed": 54,
+      "skipped": 0,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\focused-final.log"
+    },
+    {
+      "phase": "GREEN-complete-service-offline",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "tools/research_service_gate.py",
+        "--offline",
+        "--evidence-dir",
+        "output/portfolio-budgets/offline-gate"
+      ],
+      "exit": 0,
+      "passed": 88,
+      "skipped": 51,
+      "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\offline-gate\\service-gate.json",
+      "inner_commands": [
+        {
+          "argv": [
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\services\\research_agent\\.venv\\Scripts\\python.exe",
+            "-m",
+            "pip",
+            "check"
+          ],
+          "exit": 0
+        },
+        {
+          "argv": [
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\services\\research_agent\\.venv\\Scripts\\python.exe",
+            "-m",
+            "ruff",
+            "check",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\src",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\lock_service.py",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\tools\\research_service_gate.py"
+          ],
+          "exit": 0
+        },
+        {
+          "argv": [
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\services\\research_agent\\.venv\\Scripts\\python.exe",
+            "-m",
+            "ruff",
+            "format",
+            "--check",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\src",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\lock_service.py",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\tools\\research_service_gate.py"
+          ],
+          "exit": 0
+        },
+        {
+          "argv": [
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\services\\research_agent\\.venv\\Scripts\\python.exe",
+            "-m",
+            "pytest",
+            "-c",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\pyproject.toml",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests",
+            "-q",
+            "--basetemp",
+            "output\\portfolio-budgets\\offline-gate\\pytest-owned-32270acbff6f4b25811d76728836d11e",
+            "--junitxml",
+            "output\\portfolio-budgets\\offline-gate\\pytest-32270acbff6f4b25811d76728836d11e.xml"
+          ],
+          "exit": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "phase": "R1-RED-orphan-import",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests/test_portfolio_budgets.py",
+        "-q",
+        "-k",
+        "orphan_reservation",
+        "--basetemp=output/portfolio-budgets/r1-red-orphan-tmp"
+      ],
+      "exit": 1,
+      "failed": 2,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-red-orphan.log",
+      "finding": "Both policy activation and existing-instance admission accepted an orphan reservation before the reverse completeness check."
+    },
+    {
+      "phase": "R1-GREEN-focused",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "-c",
+        "services/research_agent/pyproject.toml",
+        "services/research_agent/tests/test_portfolio_budgets.py",
+        "services/research_agent/tests/test_portfolio_runtime.py",
+        "-q",
+        "--basetemp=output/portfolio-budgets/r1-green-focused-tmp",
+        "--junitxml=output/portfolio-budgets/r1-green-focused.xml"
+      ],
+      "exit": 0,
+      "passed": 56,
+      "skipped": 0,
+      "log": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-green-focused.log"
+    },
+    {
+      "phase": "R1-GREEN-complete-service-offline",
+      "argv": [
+        "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+        "-B",
+        "tools/research_service_gate.py",
+        "--offline",
+        "--evidence-dir",
+        "output/portfolio-budgets/r1-offline-gate"
+      ],
+      "exit": 0,
+      "passed": 90,
+      "skipped": 51,
+      "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-offline-gate\\service-gate.json",
+      "inner_commands": [
+        {
+          "argv": [
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\services\\research_agent\\.venv\\Scripts\\python.exe",
+            "-m",
+            "pip",
+            "check"
+          ],
+          "exit": 0
+        },
+        {
+          "argv": [
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\services\\research_agent\\.venv\\Scripts\\python.exe",
+            "-m",
+            "ruff",
+            "check",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\src",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\lock_service.py",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\tools\\research_service_gate.py"
+          ],
+          "exit": 0
+        },
+        {
+          "argv": [
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\services\\research_agent\\.venv\\Scripts\\python.exe",
+            "-m",
+            "ruff",
+            "format",
+            "--check",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\src",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\lock_service.py",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\tools\\research_service_gate.py"
+          ],
+          "exit": 0
+        },
+        {
+          "argv": [
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\ed95\\QuantMesh\\services\\research_agent\\.venv\\Scripts\\python.exe",
+            "-m",
+            "pytest",
+            "-c",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\pyproject.toml",
+            "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\services\\research_agent\\tests",
+            "-q",
+            "--basetemp",
+            "output\\portfolio-budgets\\r1-offline-gate\\pytest-owned-5c3886ab91904efa94ffc099eea860d2",
+            "--junitxml",
+            "output\\portfolio-budgets\\r1-offline-gate\\pytest-5c3886ab91904efa94ffc099eea860d2.xml"
+          ],
+          "exit": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit": 0
+        }
+      ]
+    }
+  ],
+  "frozen": {
+    "schema_digest": "a645a8bde2b439587f736a6a6875e4ffae77265cdcc2900d0b2def43f5f0de18",
+    "protocol_digest": "454cce6bd355465e48a59cb61fbbacb775776cb28c41826e54aff554cf2ccae1",
+    "lock_sha256": {
+      "services/research_agent/requirements.lock": "7a756138c304061ab5a2e428dca963cdc2ff314314cfe35fc92c4c0ff66b71a3",
+      "services/research_agent/requirements.linux-cp312.lock": "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a"
+    },
+    "core_contracts_protocol_store_locks_remote_defaults_unchanged": true
+  },
+  "public_api": {
+    "policy": "PortfolioBudgetPolicy(policy_id, operating_monthly_usd: Decimal, development_total_usd: Decimal), frozen dataclass exported from qm_research_agent.budgets",
+    "ledger": "EffectLedger(store, *, policy=None, category=None)",
+    "categories": [
+      "operating",
+      "development"
+    ],
+    "reserve_call_signature_and_read_response_checkpoint_unchanged": true,
+    "new_reservations_without_policy": "deny, including zero and all scripted tests; no fixture exemption",
+    "activation_mismatch_or_unattributed_history": "ValueError, transaction rolled back",
+    "admission_mismatch_or_unknown_version_or_backward_clock": "False, no effect inserted",
+    "orchestrator": "Unchanged: existing reservation-before-bounded_complete path inherits ledger denial; explicit remote no-policy test proves zero invocations."
+  },
+  "accounting_schema": {
+    "qm_portfolio_schema": [
+      "version INTEGER NOT NULL; exactly one row version 1"
+    ],
+    "qm_portfolio_policy": [
+      "slot INTEGER PRIMARY KEY CHECK(slot=1)",
+      "policy_id TEXT NOT NULL",
+      "operating_monthly_usd TEXT NOT NULL",
+      "development_total_usd TEXT NOT NULL",
+      "high_water TEXT NOT NULL"
+    ],
+    "qm_portfolio_reservations": [
+      "job_id TEXT NOT NULL",
+      "digest TEXT NOT NULL",
+      "category TEXT NOT NULL operating/development",
+      "period TEXT NOT NULL YYYY-MM from UTC store clock",
+      "price TEXT NOT NULL canonical Decimal",
+      "reserved_at TEXT NOT NULL canonical UTC ISO microseconds",
+      "PRIMARY KEY(job_id,digest)",
+      "FOREIGN KEY(job_id,digest) REFERENCES model_effects(job_id,digest)"
+    ],
+    "model_effects": "Original six columns unchanged. Effect and attribution are inserted in same existing store transaction."
+  },
+  "rulings": [
+    "Coordinator explicitly accepted requiring policy for every new reservation; existing script tests now use labelled real policy authority without exemption.",
+    "Use exact Fraction sums of validated Decimals to prevent ambient Decimal precision rounding tiny overages away; persistence/API remain canonical Decimal.",
+    "Runtime JSON caps are strings or in-process Decimal, never coerced float; optional policy/category are paired and bind only on serving.",
+    "Task 1 evidence/ledger is stored in this ignored handoff/output, because coordinator exclusively owns plan/ACTIVE/iteration/CI/integration."
+  ],
+  "acceptance_coverage": [
+    "cross-job shared exact boundary",
+    "one last-slot winner across separate SQLite store connections",
+    "per-job 1 USD/12 calls",
+    "separate operating/development categories",
+    "development lifetime exhaustion after completed effect/month/reopen",
+    "UTC month completed reset and unresolved carry",
+    "cancellation/unknown-effect no release",
+    "clock rollback and stale fences",
+    "duplicate/crash/reopen/atomic rollback",
+    "malformed/mismatched policy and caps",
+    "unsupported/empty version and malformed/incomplete accounting",
+    "legacy history fail closed",
+    "remote no-policy zero invocation",
+    "archived response/checkpoint replay without policy",
+    "optional validated runtime binds policy while model unavailable",
+    "bidirectional effect/reservation completeness: orphan import rejects both activation and existing-instance admission"
+  ],
+  "evidence": [
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\baseline-owned.log",
+      "sha256": "cfff0d146b18b41f516cc649c71a599930c8f4935461612af6bd266e672e9ab7"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\baseline.log",
+      "sha256": "fcc8f8af70276e1fbf1e69b45ea410739241aae500d14ea9919ec3493755d215"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\fixture-migration-red.log",
+      "sha256": "413c3c848fe95e4890bb933a489ef0c64e60ac8adfb296f87fbd78ba5f09d1dc"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\focused-final.log",
+      "sha256": "1c5c7c89a75506b7cf210ecf811e95f99fc1ed590625421e49a4745c25ee00f7"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\green1.log",
+      "sha256": "1d01f76f216a4f7843fef12a1fa550d3a6ff0f59e427c7b3479b5187a3165a9f"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\green2.log",
+      "sha256": "7b238871f78e83628f60e0cdb9534bec1e2ecceb1487f0662e0ab99122457e58"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\offline-gate.log",
+      "sha256": "088635bbf01a3c28f06fa1e1762d9cbb940ad55515a8d3c130261fcd5f4de39e"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\red-cross-job.log",
+      "sha256": "176f995282f7f862fc4ba836053e494521f7af75ba975b801d8a6513ddf76d9c"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\red-integrity.log",
+      "sha256": "812de11363d224dc792e728ea2b8f13b142b5ed227bdfc2de84a97c3ccb5b215"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\red-policy.log",
+      "sha256": "8a74b7f75760f534c2036a2a7d6146f7a0cb99be553e40377b4170cf74f8bb54"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\red-runtime.log",
+      "sha256": "71bc2620d5561fc9aab34f8926a23f5ffa451226126e5e3cacc7057d78d4e33a"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\red-runtime2.log",
+      "sha256": "6cc35539aba2c5c9829daaebe6308a1c82aeb5806d8ca7fc902b8abcb612046a"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\service-green.log",
+      "sha256": "001b6a9767ed555af13b8fd07ca700c72d940003d14f2c16c0a236f4285d9580"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\focused-final.xml",
+      "sha256": "390bbe00f73db4a8d5f3c81184c9e56acca7ada1245f8a956a5b37a0fbf2a5ac"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\offline-gate\\service-gate-0.log",
+      "sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\offline-gate\\service-gate-1.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\offline-gate\\service-gate-2.log",
+      "sha256": "19c2e88957b1c3c58a4a7ed24fc196278e5a0541d48dc9f317a488583e59f74e"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\offline-gate\\service-gate-3.log",
+      "sha256": "78a4d92ceaa7bb7dd728c1b6eed0a760cfba659254fce738aa2ce857da9fada0"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\offline-gate\\service-gate-4.log",
+      "sha256": "243ccc21397b24bdca51d8ea4292cb0d1a27ce1b25217202fca65649eb7d5ccf"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\offline-gate\\pytest-32270acbff6f4b25811d76728836d11e.xml",
+      "sha256": "ff1b1a827fb37bd662f203f47b7ccaf4b311ad979ab8cc5a9340f38f83ff55db"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\offline-gate\\service-gate.json",
+      "sha256": "e4055f84304a061bb4e8326c5607cd028cf9907a9e378abb5be3816d3bc7f789"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\review.patch",
+      "sha256": "15d4bd9b6bd5f0477a2e5ecf0ede92217d68986c810dce013a86e2b191307975"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-red-orphan.log",
+      "sha256": "05cfe19e4d71bb96bcf6337ef5dfbbced2e02d3a16e559b95b099910794ff834"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-green-focused.log",
+      "sha256": "33d42a6537e6c8eb892e29c10e4d655e06746d3bfec385e1a6dfb4fd8b583d87"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-green-focused.xml",
+      "sha256": "3fb8a1e8204e9b812af6bd91773bc9f156fa476a5be44e1e7984ca17323afbcd"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-offline-gate.log",
+      "sha256": "2a30a5c1344d7ba06b4b14f69528e9507d9a86a809d6e88986e5c24d36322354"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-fix.patch",
+      "sha256": "f9e01286840a676e325b17e8ef24d5800a31384326ba25555b53ecee706b0292"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\standards-r1.md",
+      "sha256": "9f6d4d45aa7e485a8e53001db08578a1dc598c6f9596ca03bd523e59f32c478f"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\handoff-8502eee.json",
+      "sha256": "b6308f0fae631cb23f6558e5c8ccbcf357c31a857a762eef526c482c268b9f9e"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-offline-gate\\service-gate-0.log",
+      "sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-offline-gate\\service-gate-1.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-offline-gate\\service-gate-2.log",
+      "sha256": "19c2e88957b1c3c58a4a7ed24fc196278e5a0541d48dc9f317a488583e59f74e"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-offline-gate\\service-gate-3.log",
+      "sha256": "afb43dc596ffcd2ebd93eb9da44f54d7b5681bf24000ca6c77fd148b520794c1"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-offline-gate\\service-gate-4.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-offline-gate\\pytest-5c3886ab91904efa94ffc099eea860d2.xml",
+      "sha256": "2d21cb44346ed3495471465ae12227f3f79f06fb2fee19f167fb638973770e24"
+    },
+    {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\r1-offline-gate\\service-gate.json",
+      "sha256": "d0d1f2231f4b301a05b1799fcad374d5e62733d9760a65d158d9ca87093a0abc"
+    }
+  ],
+  "limits": {
+    "operating_monthly_usd_max": "50",
+    "development_lifetime_usd_max": "200",
+    "per_job_max_usd": "1",
+    "per_job_max_calls": 12,
+    "two_round_review_owned_by": "coordinator",
+    "production_cutover": "operator gated, one authority; clones/backups cannot independently reset or simultaneously spend the same allowance"
+  },
+  "concerns_and_pending": [
+    "Windows offline result has 46 Linux bootstrap/CLI skips plus 5 opt-in real PostgreSQL skips.",
+    "Two existing upstream deprecation warnings (exchange_calendars/NumPy and Starlette/AnyIO) remain; unchanged from baseline.",
+    "Independent PostgreSQL process race/dump/restore qualification is Task 2; not performed or claimed here.",
+    "Root scoped R2 review of the fixed Standards P2 remains pending; no PR/push/merge/deploy performed.",
+    "Estimates are not provider invoices; infrastructure and external tools bypassing service are outside this witness.",
+    "A stale backup cannot be promoted as a fresh authority; production cutover requires operator control and complete history."
+  ],
+  "production_flags": {
+    "live_trading": false,
+    "real_provider_enabled": false,
+    "paid_calls": false,
+    "deployed": false,
+    "production_postgres_verified": false,
+    "production_tls_verified": false,
+    "off_host_restore_verified": false,
+    "model_performance_verified": false
+  },
+  "paper_default": true,
+  "next_owner": "coordinator 01a0ab0b-5c9e-7813-bb49-df106a27760d",
+  "stop_condition": "Committed review-ready slice; coordinator supplies at most two independent review rounds and exact reviewed candidate to Task 2.",
+  "review_fix": {
+    "round": 1,
+    "finding": "Standards P2: reservations missing effect rows were silently omitted by admission inner join.",
+    "original_candidate": "8502eee7600de5edbcbc3e3b56e199b39def1ced",
+    "followup_commit": "b10762883edc1bbad164951d1a1adfb9f0f7457c",
+    "changed_files": [
+      "services/research_agent/src/qm_research_agent/accounting.py",
+      "services/research_agent/tests/test_portfolio_budgets.py"
+    ],
+    "root_review_source": "C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/0038-portfolio-budget-standards-r1.md",
+    "preserved_review_copy": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\standards-r1.md",
+    "preserved_original_handoff": "C:\\Users\\15492\\.codex-clean\\worktrees\\10c3\\QuantMesh\\output\\portfolio-budgets\\handoff-8502eee.json",
+    "historical_raw_evidence": "Original logs, JUnit, test fixtures, root-owned probe and receipts retained unchanged; no old qualifier edits.",
+    "fix": "Validate reservation-to-effect relationship before activation/admission, in the same authoritative transaction as existing checks.",
+    "regression": "test_orphan_reservation_from_incomplete_import_fails_closed[activation/admission] creates an actual orphan through a separate FK-off SQLite import connection, then verifies both boundaries reject, service FKs remain on, durable reservation remains 0.6 and no new effect exists.",
+    "red": {
+      "failed": 2,
+      "exit": 1
+    },
+    "green": {
+      "focused_passed": 56,
+      "full_offline_passed": 90,
+      "skipped": 51,
+      "exit": 0
+    },
+    "scope_preserved": true,
+    "foreign_keys_weakened": false,
+    "interfaces_or_schema_or_defaults_changed": false,
+    "review_round_2": "pending coordinator scoped review",
+    "real_postgresql_qualification": "pending review closure / separate Task 2"
+  }
+}

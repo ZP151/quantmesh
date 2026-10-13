@@ -3,6 +3,51 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
+Latest terminal checkpoint: CI38330059615/216b378 endedFAILURE01:43:24UTC;
+watch63918 ended1, not live. Fullpytest child receivedSIGHUP(-1) with no timeout,
+remaining gates not inferred. Root reproduces specific negativePTY test as a
+sessionleader then fixtureO_NOCTTY gives121native passes/5.49s. Aggregate contract
+test RED1/GREEN10 nowmandates separate service job, includingfailed/cancelled/
+skipped/missing denial. Prepared nodeverbose and scopedalways-upload release logs
+preserve fullsuite/timeouts/cleanup;32native gate tests pass. Repairreview clear.
+
+Accounting850/b107 is independentlyclosed through twoaxes/tworounds, root maps
+to b5aba03/4a7fff9. P2 incompleteimport/orphan reservation hasRED2/GREEN2;
+56focused and Windows90pass51skip. Actual PG/dumprestore remainsrequired. Root
+nativeb107 service gate1/135pass5skip1fail credential-outputstateunavailable is
+retained; fivebounded sanitizedprobes do notreproduceoriginalcause. No native
+GREEN or transientclaim. Existing effect child dropsno-bytecode flags and writes
+1311cachefiles; ownedlaunchregression FalseRED/TrueGREEN1 after-B+explicitenvfix.
+Oldunqualifiedenvs staypreserved. NEW rootowned72a6 cachedexact81wheels/6669RECORD/
+zero.pyc admission0 is dependency-only, source/model/productionfalse. Verifier
+usesonly ledger/nativequalifier withbefore/afteradmission; repaired modelrunner
+and completecurrentnative service verificationremain separate. No paidcalls,
+newserver/source/helperoperation, push/merge/deploy or overallcompletion.
+
+Latest coordinator checkpoint: exact216b378/run38330059615 has successful
+classifier/fast/independent service jobs; full release still running at observed
+state. Actual hosted service receipt/JUnit independently agree80passed/5PGskips,
+81packages/five commands0; OFFLINE_SCRIPTED_ONLY. Nine raw streams/SHA archived
+isolated-service-ci-216b, no nested synthetic private fixtures or ZIP published.
+Core all-GREEN, actual SQL/model/Worker/host/production are not inferred from it.
+
+Portfolio phase4/Workers Task2 budget requirement is incomplete in existing code:
+root independently reads actual cross-job RED where two jobs each reserve$0.60
+against shared$1. Bounded accounting plan implements approved monthly operating50
+and lifetime development200 estimates, immutable authority, UTC-month periods,
+unresolved carry and rollback denial; no budget reset via restart or restore.
+Two authorized native chats are active from verified216b:10c3 implementation,
+b7a1 independent native PG verifier preparation. Implementation31focused tests
+and verifier24native harness tests pass, but neither code nor actual PG/restore
+acceptance is integrated yet. Root supplies bounded review then exact candidate.
+Explicit policy required for every new effect; no fixture/zero-price exemption.
+
+Prepared workflow upload excludes633 nested fixture entries while preserving
+all7 actual service receipts; all other YAML structures equal. New remote upload
+unverified, no push/cancellation of live CI for preparation. Existing Engine,
+provider/API metadata and human release requests remain unchanged. Production,
+source qualification and paid-call flags false; formal168h not required.
+
 PR175 integration follow-up: actual CI38328514078 classifies successfully and
 starts jobs, proving workflow-context correction. It then fails three fixed
 Singapore display-day assertions (416frontendpass/3fail) and stale frontend

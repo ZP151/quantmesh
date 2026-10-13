@@ -125,7 +125,7 @@ def test_full_pytest_command_is_exhaustive_with_duration_reporting(
     pytest_index = full_pytest.index("pytest")
     assert full_pytest[pytest_index:] == [
         "pytest",
-        "-q",
+        "-vv",
         "--durations=50",
         "--basetemp",
         str(gate_root / "pytest-tmp"),

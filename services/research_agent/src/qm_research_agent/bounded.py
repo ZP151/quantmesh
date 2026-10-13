@@ -32,8 +32,11 @@ def bounded_complete(gateway, request, budget):
     env["USERPROFILE"] = str(child_home)
     env["HOME"] = str(child_home)  # isolated child only; no parent/global mutation
     env["QM_EFFECT_OWNER_PID"] = str(os.getpid())
+    # Sanitizing the environment must not let the child invalidate the admitted
+    # source/dependency closure by creating executable bytecode on first import.
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
     process = subprocess.Popen(
-        [sys.executable, "-m", "qm_research_agent.effect_worker"],
+        [sys.executable, "-B", "-m", "qm_research_agent.effect_worker"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,

@@ -1,0 +1,17 @@
+{
+  "scope": "OWNED_LOCAL_TEST_PROCESS_ONLY",
+  "start_new_session": true,
+  "argv": [
+    "/var/tmp/quantmesh-portfolio-runtime-aihe1p21/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_opend_private_terminal.py::test_wrong_descriptor_access_mode_refuses",
+    "-vv",
+    "--basetemp",
+    "/var/tmp/quantmesh-portfolio-runtime-aihe1p21/ci-tty-red-tmp"
+  ],
+  "exit": -1,
+  "paid_calls": 0,
+  "server_operations": 0
+}

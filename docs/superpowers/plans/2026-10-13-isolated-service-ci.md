@@ -34,6 +34,16 @@ Docker, PostgreSQL daemon, AWS, secrets, paid calls or production operation.
 - [ ] Mirror actual outcomes and retain RED/GREEN raw evidence. No PR merge,
   release, source flag change or full-goal completion from this CI job.
 
+Remote observation: exact216b378/run38330059615 research_service SUCCESS/48s.
+Independent receipt/JUnit check confirms80passed/5PGskips/85total,81locked
+packages and five commands0; nine raw streams/SHA retained in
+docs/evidence/research-foundation/isolated-service-ci-216b. Classifier/fast also
+SUCCESS, but full release still running at observation, so the broader task
+checkbox stays open. Root prepares top-level JSON/log/JUnit upload globs after
+recursive upload warnings: all7 verified receipts retained,633 nested fixture
+entries excluded, other YAML unchanged. The future upload is not remotely
+verified and will be pushed only with the next coherent code integration.
+
 Acceptance: required CI/python cannot succeed if research_service fails/skips;
 its own venv/81 hash-locked versions and scope-labelled service-gate receipt are
 retained. Real owned PostgreSQL/native/Worker/model gates retain their independent

@@ -1,0 +1,18 @@
+.........F                                                               [100%]
+=================================== FAILURES ===================================
+___________ test_required_python_check_aggregates_all_gate_failures ____________
+
+    def test_required_python_check_aggregates_all_gate_failures():
+        workflow = _load_workflow("ci.yml")
+        job = workflow["jobs"]["python"]
+>       assert set(job["needs"]) == {"classify", "fast", "domain", "browser", "release"}
+E       AssertionError: assert {'browser', '...arch_service'} == {'browser', '...t', 'release'}
+E         
+E         Extra items in the left set:
+E         'research_service'
+E         Use -v to get more diff
+
+tests/test_ci_gate_workflow.py:167: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_ci_gate_workflow.py::test_required_python_check_aggregates_all_gate_failures
+1 failed, 9 passed in 1.75s

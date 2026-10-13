@@ -164,7 +164,14 @@ def test_security_workflow_remains_independent_and_dependency_scoped() -> None:
 def test_required_python_check_aggregates_all_gate_failures():
     workflow = _load_workflow("ci.yml")
     job = workflow["jobs"]["python"]
-    assert set(job["needs"]) == {"classify", "fast", "domain", "browser", "release"}
+    assert set(job["needs"]) == {
+        "classify",
+        "fast",
+        "domain",
+        "browser",
+        "release",
+        "research_service",
+    }
     assert job["if"] == "${{ always() }}"
     import os
     import subprocess
@@ -180,6 +187,7 @@ def test_required_python_check_aggregates_all_gate_failures():
                 "domain": "skipped",
                 "browser": "skipped",
                 "release": "skipped",
+                "research_service": "success",
             },
             0,
         ),
@@ -190,6 +198,7 @@ def test_required_python_check_aggregates_all_gate_failures():
                 "domain": "failure",
                 "browser": "success",
                 "release": "skipped",
+                "research_service": "success",
             },
             1,
         ),
@@ -200,6 +209,7 @@ def test_required_python_check_aggregates_all_gate_failures():
                 "domain": "skipped",
                 "browser": "skipped",
                 "release": "success",
+                "research_service": "success",
             },
             1,
         ),
@@ -210,10 +220,23 @@ def test_required_python_check_aggregates_all_gate_failures():
                 "domain": "skipped",
                 "browser": "skipped",
                 "release": "cancelled",
+                "research_service": "success",
             },
             1,
         ),
     ]
+    for service_result in ("failure", "cancelled", "skipped", None):
+        results = {
+            "classify": "success",
+            "fast": "success",
+            "domain": "skipped",
+            "browser": "skipped",
+            "release": "success",
+        }
+        if service_result is not None:
+            results["research_service"] = service_result
+        # Exercise the actual workflow program, including missing required job.
+        cases.append((results, 1))
     import json
 
     for results, expected in cases:

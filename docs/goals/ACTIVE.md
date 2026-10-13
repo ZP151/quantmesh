@@ -1,5 +1,59 @@
 # Active Goal
 
+New actual terminal boundary: run38330059615/216b378 FAILURE at01:43:24UTC,
+watch63918 ended1, no rerun. Classifier/fast/service remain SUCCESS; fullpytest
+received SIGHUP(-1), timed_out=false/limit10800, without terminal failure summary.
+Root exactly reproduces the negative PTY access-mode test under a session-leader
+pytest process: exit-1. Fixture-only O_NOCTTY correction gives121native private
+terminal/staging passes/5.49s; production terminal/profile helpers unchanged.
+Old CI aggregate test expected only five jobs; its actual RED1 becomesGREEN10
+including required servicefailure/cancel/skip/missing denial. Release diagnostics
+now prepare verbose node IDs and always-upload only logs under private TMPDIR,
+same exhaustive suite/durations/basetemp/timeouts.32gate tests pass; initial
+wrong pip-flag patch was caught by tests and reverted. Bounded repair review clear.
+
+Budget Task1 two-axis R1/R2 is complete onb107628: Spec clear; Standards P2 orphan
+reservations fixed with behavioralRED2/GREEN2, focused56/Windowsoffline90pass51skip.
+Root integrates850/b107 asb5aba03/4a7fff9; no push/merge/deploy or nativePGclaim.
+Verifierb7a1 now has actual executor prep, stillawaits realPG/dumprestore proof.
+
+Current native integration gap is separately retained: fresh b107 Linux offline
+gate1/135pass5PGskip1fail (credential-output testcase returnsunavailable). Five
+bounded category-only probes do not reproduce it; exacthistoricalcause remains
+unresolved, no transientassumption or nativeGREEN. Existing bounded child drops
+parent bytecode flags and recreates1311pyc, independently reproduced by actual
+child FalseRED ->TrueGREEN1 after-B/explicitenvfix. This requires fresh qualified
+assets; oldenvs are preserved/rejected, not cleaned or trusted. Root NEW72a6
+exactcached81wheels/6669RECORD/0pyc dependency-only admission0, no network or shared
+changes. Verifier will revalidate it before/after ledger-only native witness;
+no oldbound modelrunner tests against that sharedcleanenv. Source/model/production
+admission are independent. FullA ACTIVE; Engine/provider/human gates unchanged.
+
+Latest coordinator boundary: actual run38330059615 certifies exact216b378
+classifier/fast/research_service SUCCESS; full release remains running at the
+latest observation, not all-CI GREEN. Remote service artifact independently
+proves80pass/5PGskips/81packages/five commands0, OFFLINE_SCRIPTED_ONLY. Nine raw
+streams retained in isolated-service-ci-216b. Local nativeGit path harness REDs
+remain preserved; the hosted fresh checkout is a distinct real observation.
+
+Approved phase4/Worker Task2 has a concrete cross-job budget gap: two independent
+jobs each reserve$0.60 despite a shared$1 test allowance. New bounded policy plan
+maps the approved$50/month operating/$200 lifetime development ceilings onto one
+durable service authority. Managed10c3/thread01a132dd-6019-7c13-a665-d1074b8aece2
+implements accounting; managedb7a1/thread01a132dd-602c-7310-8fb2-28ddbc528ffa
+prepares independent owned PG/dump/restore verification. Both exact216b baselines
+confirmed. Task1 focused31/scripted local tests pass; Task2 native24 harness tests
+pass. Neither slice is accepted or integrated yet; real accounting SQL/restore
+qualification waits for the reviewed implementation candidate. All new effects
+require explicit policy/category, including scripted/zero-estimate fixtures.
+
+Root also prepares nonrecursive service artifact globs: all7 remote receipts
+retained,633 nested fixture entries excluded, parsed workflow otherwise identical.
+Future upload unverified. Do not push this preparation while current release is
+live; package with the next coherent reviewed code checkpoint. No paid call,
+model activation, source/helper change, server install, merge or deployment.
+Engine/provider/human/production gates remain pending; full Option A stays ACTIVE.
+
 Latest integrated CI follow-up:9f088e1/run38328514078 is terminal FAILURE,
 with actual classify SUCCESS/jobs running before frontend errors. Three
 WorkspaceHeader cases hardcoded Singapore Oct10 while UTC correctly renders

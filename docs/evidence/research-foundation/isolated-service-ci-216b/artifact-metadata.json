@@ -1,0 +1,14 @@
+{
+  "id": 11782760139,
+  "name": "research-service-offline-linux-cp312",
+  "size_in_bytes": 677432,
+  "expired": false,
+  "created_at": "2026-10-13T01:01:30Z",
+  "workflow_run": {
+    "id": 38330059615,
+    "repository_id": 1325529676,
+    "head_repository_id": 1325529676,
+    "head_branch": "codex/0038-research-foundation",
+    "head_sha": "216b378192bbc0a1742a28b7a1fc75a86ae2fda9"
+  }
+}

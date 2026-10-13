@@ -1,0 +1,17 @@
+{
+  "scope": "OWNED_LOCAL_GATE_TESTS",
+  "argv": [
+    "/var/tmp/quantmesh-portfolio-runtime-aihe1p21/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_ci_gate_workflow.py",
+    "tests/test_release_gate.py",
+    "-q",
+    "--basetemp",
+    "/var/tmp/quantmesh-portfolio-runtime-aihe1p21/ci-diagnostic-green2-tmp"
+  ],
+  "exit": 0,
+  "start_new_session": true,
+  "model_calls": 0
+}

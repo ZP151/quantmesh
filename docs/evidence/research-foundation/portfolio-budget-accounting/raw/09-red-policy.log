@@ -1,0 +1,809 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                          [100%]
+================================== FAILURES ===================================
+_________________ test_independent_jobs_share_exact_allowance _________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213A456A0>, WindowsPath('C:/Users/15492/.codex-clean/...t_independent_jobs_share_ex0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 8, 919338, tzinfo=datetime.timezone.utc)])
+
+    def test_independent_jobs_share_exact_allowance(local):
+        pairs = jobs(local)
+        # RED bridge exercises the old behavior rather than failing at import.
+        if hasattr(budgets, "PortfolioBudgetPolicy"):
+            policy = budgets.PortfolioBudgetPolicy("scripted-local", Decimal("1"), Decimal("2"))
+            ledger = budgets.EffectLedger(local[0], policy=policy, category="operating")
+        else:
+            ledger = budgets.EffectLedger(local[0])
+        assert reserve(ledger, pairs[0])
+>       assert not reserve(ledger, pairs[1])
+E       AssertionError: assert not True
+E        +  where True = reserve(<qm_research_agent.budgets.EffectLedger object at 0x0000016213A45A90>, (JobRecord(job_id='d5a97bc618994b89800598b11a1f60f8', operator_id='operator', idempotency_key='portfolio-1', request=R...9338, tzinfo=datetime.timezone.utc), report_digest='9af82c2b9944f25490d6fdecbf023bad2dbbe5dd767d7adf618425ecd7d64d39')))
+
+services\research_agent\tests\test_portfolio_budgets.py:53: AssertionError
+___________ test_exact_boundary_decimal_precision_and_per_job_limit ___________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213A49A90>, WindowsPath('C:/Users/15492/.codex-clean/...t_exact_boundary_decimal_pr0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 9, 422822, tzinfo=datetime.timezone.utc)])
+
+    def test_exact_boundary_decimal_precision_and_per_job_limit(local):
+        pairs = jobs(local)
+>       effects = ledger(local, operating="0.3")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '0.3', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+___________ test_per_job_limits_still_apply_with_room_in_portfolio ____________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213A4A5D0>, WindowsPath('C:/Users/15492/.codex-clean/...t_per_job_limits_still_appl0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 9, 765729, tzinfo=datetime.timezone.utc)])
+
+    def test_per_job_limits_still_apply_with_room_in_portfolio(local):
+        pair = jobs(local, 1)[0]
+>       effects = ledger(local, operating="50")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '50', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+__________ test_last_slot_race_different_jobs_and_store_connections ___________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x00000162139E2190>, WindowsPath('C:/Users/15492/.codex-clean/...t_last_slot_race_different_0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 10, 38269, tzinfo=datetime.timezone.utc)])
+
+    def test_last_slot_race_different_jobs_and_store_connections(local):
+        pairs = jobs(local)
+>       ledger(local)
+
+services\research_agent\tests\test_portfolio_budgets.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________ test_categories_are_separate_development_is_lifetime _____________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x00000162139E2780>, WindowsPath('C:/Users/15492/.codex-clean/..._categories_are_separate_d0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 10, 440613, tzinfo=datetime.timezone.utc)])
+
+    def test_categories_are_separate_development_is_lifetime(local):
+        pairs = jobs(local)
+>       operating = ledger(local, operating="0.6", development="0.6")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '0.6', development = '0.6', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+______ test_utc_month_transition_completed_reset_unresolved_carry[True] _______
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213B584D0>, WindowsPath('C:/Users/15492/.codex-clean/...tmp/test_utc_month_transition_comp0/lake'), [datetime.datetime(2026, 1, 31, 23, 59, 30, tzinfo=datetime.timezone.utc)])
+completed = True
+
+    @pytest.mark.parametrize("completed", [True, False])
+    def test_utc_month_transition_completed_reset_unresolved_carry(local, completed):
+        local[2][0] = datetime(2026, 1, 31, 23, 59, 30, tzinfo=UTC)
+        pairs = jobs(local)
+>       effects = ledger(local, operating="0.6")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '0.6', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+______ test_utc_month_transition_completed_reset_unresolved_carry[False] ______
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213A969C0>, WindowsPath('C:/Users/15492/.codex-clean/...tmp/test_utc_month_transition_comp1/lake'), [datetime.datetime(2026, 1, 31, 23, 59, 30, tzinfo=datetime.timezone.utc)])
+completed = False
+
+    @pytest.mark.parametrize("completed", [True, False])
+    def test_utc_month_transition_completed_reset_unresolved_carry(local, completed):
+        local[2][0] = datetime(2026, 1, 31, 23, 59, 30, tzinfo=UTC)
+        pairs = jobs(local)
+>       effects = ledger(local, operating="0.6")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '0.6', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+___________ test_clock_rollback_and_stale_fence_deny_without_effect ___________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213A97020>, WindowsPath('C:/Users/15492/.codex-clean/...t_clock_rollback_and_stale_0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 12, 27819, tzinfo=datetime.timezone.utc)])
+
+    def test_clock_rollback_and_stale_fence_deny_without_effect(local):
+        pair = jobs(local, 1)[0]
+>       effects = ledger(local)
+                  ^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+__________________ test_missing_policy_denies_zero_estimate ___________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213A91150>, WindowsPath('C:/Users/15492/.codex-clean/..._missing_policy_denies_zer0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 12, 395197, tzinfo=datetime.timezone.utc)])
+
+    def test_missing_policy_denies_zero_estimate(local):
+        pair = jobs(local, 1)[0]
+        effects = budgets.EffectLedger(local[0])
+>       assert not reserve(effects, pair, "0")
+E       AssertionError: assert not True
+E        +  where True = reserve(<qm_research_agent.budgets.EffectLedger object at 0x0000016213A4A5D0>, (JobRecord(job_id='37fe877d39b6422c89d14d7e1ce42f90', operator_id='operator', idempotency_key='portfolio-0', request=R...5197, tzinfo=datetime.timezone.utc), report_digest='d836c582a007af1daa1058b8b5741ee69eb7e36f16fc400ebdbb908691bc5dba')), '0')
+
+services\research_agent\tests\test_portfolio_budgets.py:134: AssertionError
+____________________ test_invalid_policy_rejected[kwargs0] ____________________
+
+kwargs = {'operating': '50.01'}
+
+    @pytest.mark.parametrize("kwargs", [
+        {"operating": "50.01"}, {"development": "200.01"}, {"operating": "NaN"},
+        {"development": "Infinity"}, {"operating": "-1"}, {"policy_id": "../bad"},
+        {"policy_id": ""}, {"policy_id": "x" * 65},
+    ])
+    def test_invalid_policy_rejected(kwargs):
+        with pytest.raises(ValueError):
+>           policy(**kwargs)
+
+services\research_agent\tests\test_portfolio_budgets.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '50.01', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_policy_rejected[kwargs1] ____________________
+
+kwargs = {'development': '200.01'}
+
+    @pytest.mark.parametrize("kwargs", [
+        {"operating": "50.01"}, {"development": "200.01"}, {"operating": "NaN"},
+        {"development": "Infinity"}, {"operating": "-1"}, {"policy_id": "../bad"},
+        {"policy_id": ""}, {"policy_id": "x" * 65},
+    ])
+    def test_invalid_policy_rejected(kwargs):
+        with pytest.raises(ValueError):
+>           policy(**kwargs)
+
+services\research_agent\tests\test_portfolio_budgets.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '200.01', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_policy_rejected[kwargs2] ____________________
+
+kwargs = {'operating': 'NaN'}
+
+    @pytest.mark.parametrize("kwargs", [
+        {"operating": "50.01"}, {"development": "200.01"}, {"operating": "NaN"},
+        {"development": "Infinity"}, {"operating": "-1"}, {"policy_id": "../bad"},
+        {"policy_id": ""}, {"policy_id": "x" * 65},
+    ])
+    def test_invalid_policy_rejected(kwargs):
+        with pytest.raises(ValueError):
+>           policy(**kwargs)
+
+services\research_agent\tests\test_portfolio_budgets.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = 'NaN', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_policy_rejected[kwargs3] ____________________
+
+kwargs = {'development': 'Infinity'}
+
+    @pytest.mark.parametrize("kwargs", [
+        {"operating": "50.01"}, {"development": "200.01"}, {"operating": "NaN"},
+        {"development": "Infinity"}, {"operating": "-1"}, {"policy_id": "../bad"},
+        {"policy_id": ""}, {"policy_id": "x" * 65},
+    ])
+    def test_invalid_policy_rejected(kwargs):
+        with pytest.raises(ValueError):
+>           policy(**kwargs)
+
+services\research_agent\tests\test_portfolio_budgets.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = 'Infinity', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_policy_rejected[kwargs4] ____________________
+
+kwargs = {'operating': '-1'}
+
+    @pytest.mark.parametrize("kwargs", [
+        {"operating": "50.01"}, {"development": "200.01"}, {"operating": "NaN"},
+        {"development": "Infinity"}, {"operating": "-1"}, {"policy_id": "../bad"},
+        {"policy_id": ""}, {"policy_id": "x" * 65},
+    ])
+    def test_invalid_policy_rejected(kwargs):
+        with pytest.raises(ValueError):
+>           policy(**kwargs)
+
+services\research_agent\tests\test_portfolio_budgets.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '-1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_policy_rejected[kwargs5] ____________________
+
+kwargs = {'policy_id': '../bad'}
+
+    @pytest.mark.parametrize("kwargs", [
+        {"operating": "50.01"}, {"development": "200.01"}, {"operating": "NaN"},
+        {"development": "Infinity"}, {"operating": "-1"}, {"policy_id": "../bad"},
+        {"policy_id": ""}, {"policy_id": "x" * 65},
+    ])
+    def test_invalid_policy_rejected(kwargs):
+        with pytest.raises(ValueError):
+>           policy(**kwargs)
+
+services\research_agent\tests\test_portfolio_budgets.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = '../bad'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_policy_rejected[kwargs6] ____________________
+
+kwargs = {'policy_id': ''}
+
+    @pytest.mark.parametrize("kwargs", [
+        {"operating": "50.01"}, {"development": "200.01"}, {"operating": "NaN"},
+        {"development": "Infinity"}, {"operating": "-1"}, {"policy_id": "../bad"},
+        {"policy_id": ""}, {"policy_id": "x" * 65},
+    ])
+    def test_invalid_policy_rejected(kwargs):
+        with pytest.raises(ValueError):
+>           policy(**kwargs)
+
+services\research_agent\tests\test_portfolio_budgets.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = ''
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_policy_rejected[kwargs7] ____________________
+
+kwargs = {'policy_id': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}
+
+    @pytest.mark.parametrize("kwargs", [
+        {"operating": "50.01"}, {"development": "200.01"}, {"operating": "NaN"},
+        {"development": "Infinity"}, {"operating": "-1"}, {"policy_id": "../bad"},
+        {"policy_id": ""}, {"policy_id": "x" * 65},
+    ])
+    def test_invalid_policy_rejected(kwargs):
+        with pytest.raises(ValueError):
+>           policy(**kwargs)
+
+services\research_agent\tests\test_portfolio_budgets.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2'
+policy_id = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+_________________ test_policy_is_immutable_and_rejects_float __________________
+
+    def test_policy_is_immutable_and_rejects_float():
+>       value = policy()
+                ^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+________________ test_bound_policy_cannot_be_replaced[limits0] ________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213B34050>, WindowsPath('C:/Users/15492/.codex-clean/..._bound_policy_cannot_be_re0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 12, 790707, tzinfo=datetime.timezone.utc)])
+limits = {'policy_id': 'other'}
+
+    @pytest.mark.parametrize("limits", [{"policy_id": "other"}, {"operating": "2"},
+                                        {"development": "3"}])
+    def test_bound_policy_cannot_be_replaced(local, limits):
+>       ledger(local)
+
+services\research_agent\tests\test_portfolio_budgets.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+________________ test_bound_policy_cannot_be_replaced[limits1] ________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x00000162139F7890>, WindowsPath('C:/Users/15492/.codex-clean/..._bound_policy_cannot_be_re1/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 12, 977050, tzinfo=datetime.timezone.utc)])
+limits = {'operating': '2'}
+
+    @pytest.mark.parametrize("limits", [{"policy_id": "other"}, {"operating": "2"},
+                                        {"development": "3"}])
+    def test_bound_policy_cannot_be_replaced(local, limits):
+>       ledger(local)
+
+services\research_agent\tests\test_portfolio_budgets.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+________________ test_bound_policy_cannot_be_replaced[limits2] ________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x00000162139F76B0>, WindowsPath('C:/Users/15492/.codex-clean/..._bound_policy_cannot_be_re2/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 13, 136156, tzinfo=datetime.timezone.utc)])
+limits = {'development': '3'}
+
+    @pytest.mark.parametrize("limits", [{"policy_id": "other"}, {"operating": "2"},
+                                        {"development": "3"}])
+    def test_bound_policy_cannot_be_replaced(local, limits):
+>       ledger(local)
+
+services\research_agent\tests\test_portfolio_budgets.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+__________________ test_invalid_category_and_unpaired_policy __________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213ACC750>, WindowsPath('C:/Users/15492/.codex-clean/..._invalid_category_and_unpa0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 13, 307508, tzinfo=datetime.timezone.utc)])
+
+    def test_invalid_category_and_unpaired_policy(local):
+        with pytest.raises(ValueError):
+>           budgets.EffectLedger(local[0], policy=policy(), category="scripted")
+                                                  ^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:166: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+_ test_legacy_unattributed_effects_block_policy_activation_and_preserve_read __
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213AAD710>, WindowsPath('C:/Users/15492/.codex-clean/..._legacy_unattributed_effec0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 13, 474078, tzinfo=datetime.timezone.utc)])
+
+    def test_legacy_unattributed_effects_block_policy_activation_and_preserve_read(local):
+        pair = jobs(local, 1)[0]
+        old = budgets.EffectLedger(local[0])
+        with local[0]._transaction() as con:
+            con.execute("INSERT INTO model_effects VALUES (?, 'legacy', '0', 'completed', 'raw', NULL)",
+                        (pair[0].job_id,))
+        with pytest.raises(ValueError):
+>           ledger(local)
+
+services\research_agent\tests\test_portfolio_budgets.py:180: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+_______________ test_duplicate_crash_reopen_and_atomic_rollback _______________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x000001627F703C70>, WindowsPath('C:/Users/15492/.codex-clean/..._duplicate_crash_reopen_an0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 13, 773014, tzinfo=datetime.timezone.utc)])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000162139E22C0>
+
+    def test_duplicate_crash_reopen_and_atomic_rollback(local, monkeypatch):
+        pairs = jobs(local)
+>       effects = ledger(local)
+                  ^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:186: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+______ test_unknown_accounting_version_rejects_activation_and_admission _______
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213BB1B50>, WindowsPath('C:/Users/15492/.codex-clean/..._unknown_accounting_versio0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 14, 218580, tzinfo=datetime.timezone.utc)])
+
+    def test_unknown_accounting_version_rejects_activation_and_admission(local):
+        pair = jobs(local, 1)[0]
+>       effects = ledger(local)
+                  ^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:210: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____ test_policy_mismatch_and_unattributed_history_deny_existing_instance _____
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213BB2390>, WindowsPath('C:/Users/15492/.codex-clean/..._policy_mismatch_and_unatt0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 14, 537670, tzinfo=datetime.timezone.utc)])
+
+    def test_policy_mismatch_and_unattributed_history_deny_existing_instance(local):
+        pair = jobs(local, 1)[0]
+>       effects = ledger(local)
+                  ^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:220: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+_____________________ test_invalid_estimate_denied[None] ______________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213B090D0>, WindowsPath('C:/Users/15492/.codex-clean/..._invalid_estimate_denied_N0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 14, 836234, tzinfo=datetime.timezone.utc)])
+price = None
+
+    @pytest.mark.parametrize("price", [None, 0.0, Decimal("NaN"), Decimal("Infinity"), Decimal("-1")])
+    def test_invalid_estimate_denied(local, price):
+        job, lease = jobs(local, 1)[0]
+>       assert not ledger(local).reserve_call(job.job_id, "invalid", price, RunBudget(), lease)
+                   ^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+______________________ test_invalid_estimate_denied[0.0] ______________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213B099C0>, WindowsPath('C:/Users/15492/.codex-clean/..._invalid_estimate_denied_00/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 15, 150670, tzinfo=datetime.timezone.utc)])
+price = 0.0
+
+    @pytest.mark.parametrize("price", [None, 0.0, Decimal("NaN"), Decimal("Infinity"), Decimal("-1")])
+    def test_invalid_estimate_denied(local, price):
+        job, lease = jobs(local, 1)[0]
+>       assert not ledger(local).reserve_call(job.job_id, "invalid", price, RunBudget(), lease)
+                   ^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_estimate_denied[price2] _____________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213B92C10>, WindowsPath('C:/Users/15492/.codex-clean/..._invalid_estimate_denied_p0/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 15, 434206, tzinfo=datetime.timezone.utc)])
+price = Decimal('NaN')
+
+    @pytest.mark.parametrize("price", [None, 0.0, Decimal("NaN"), Decimal("Infinity"), Decimal("-1")])
+    def test_invalid_estimate_denied(local, price):
+        job, lease = jobs(local, 1)[0]
+>       assert not ledger(local).reserve_call(job.job_id, "invalid", price, RunBudget(), lease)
+                   ^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_estimate_denied[price3] _____________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213B93390>, WindowsPath('C:/Users/15492/.codex-clean/..._invalid_estimate_denied_p1/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 15, 762088, tzinfo=datetime.timezone.utc)])
+price = Decimal('Infinity')
+
+    @pytest.mark.parametrize("price", [None, 0.0, Decimal("NaN"), Decimal("Infinity"), Decimal("-1")])
+    def test_invalid_estimate_denied(local, price):
+        job, lease = jobs(local, 1)[0]
+>       assert not ledger(local).reserve_call(job.job_id, "invalid", price, RunBudget(), lease)
+                   ^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+____________________ test_invalid_estimate_denied[price4] _____________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000016213C3B890>, WindowsPath('C:/Users/15492/.codex-clean/...t_invalid_estimate_denied_p2/lake'), [datetime.datetime(2026, 10, 13, 1, 30, 16, 61141, tzinfo=datetime.timezone.utc)])
+price = Decimal('-1')
+
+    @pytest.mark.parametrize("price", [None, 0.0, Decimal("NaN"), Decimal("Infinity"), Decimal("-1")])
+    def test_invalid_estimate_denied(local, price):
+        job, lease = jobs(local, 1)[0]
+>       assert not ledger(local).reserve_call(job.job_id, "invalid", price, RunBudget(), lease)
+                   ^^^^^^^^^^^^^
+
+services\research_agent\tests\test_portfolio_budgets.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services\research_agent\tests\test_portfolio_budgets.py:41: in ledger
+    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
+                                                 ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+operating = '1', development = '2', policy_id = 'scripted-local'
+
+    def policy(operating="1", development="2", policy_id="scripted-local"):
+>       assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
+E       AssertionError: missing immutable portfolio policy
+E       assert False
+E        +  where False = hasattr(budgets, 'PortfolioBudgetPolicy')
+
+services\research_agent\tests\test_portfolio_budgets.py:36: AssertionError
+============================== warnings summary ===============================
+..\..\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_independent_jobs_share_exact_allowance
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_exact_boundary_decimal_precision_and_per_job_limit
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_per_job_limits_still_apply_with_room_in_portfolio
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_last_slot_race_different_jobs_and_store_connections
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_categories_are_separate_development_is_lifetime
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_utc_month_transition_completed_reset_unresolved_carry[True]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_utc_month_transition_completed_reset_unresolved_carry[False]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_clock_rollback_and_stale_fence_deny_without_effect
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_missing_policy_denies_zero_estimate
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_policy_rejected[kwargs0]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_policy_rejected[kwargs1]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_policy_rejected[kwargs2]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_policy_rejected[kwargs3]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_policy_rejected[kwargs4]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_policy_rejected[kwargs5]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_policy_rejected[kwargs6]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_policy_rejected[kwargs7]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_policy_is_immutable_and_rejects_float
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_bound_policy_cannot_be_replaced[limits0]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_bound_policy_cannot_be_replaced[limits1]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_bound_policy_cannot_be_replaced[limits2]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_category_and_unpaired_policy
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_legacy_unattributed_effects_block_policy_activation_and_preserve_read
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_duplicate_crash_reopen_and_atomic_rollback
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_unknown_accounting_version_rejects_activation_and_admission
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_policy_mismatch_and_unattributed_history_deny_existing_instance
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_estimate_denied[None]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_estimate_denied[0.0]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_estimate_denied[price2]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_estimate_denied[price3]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_invalid_estimate_denied[price4]
+31 failed, 1 warning in 7.50s

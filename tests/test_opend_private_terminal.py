@@ -262,7 +262,11 @@ def test_missing_proc_identity_closes_gate_without_bare_pid_signal(tmp_path, mon
 @pytest.mark.parametrize("position", [0, 1, 2])
 def test_wrong_descriptor_access_mode_refuses(position):
     with private_pty() as (_, slave):
-        fd = os.open(f"/proc/self/fd/{slave}", os.O_WRONLY if position == 0 else os.O_RDONLY)
+        # Release pytest is a session leader. A negative access-mode fixture
+        # must never acquire this slave as its controlling terminal: closing
+        # the owned master would otherwise send SIGHUP to the test runner.
+        mode = os.O_WRONLY if position == 0 else os.O_RDONLY
+        fd = os.open(f"/proc/self/fd/{slave}", mode | os.O_NOCTTY)
         try:
             descriptors = [slave, slave, slave]
             descriptors[position] = fd

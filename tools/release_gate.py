@@ -529,7 +529,9 @@ def main() -> int:
                 _venv_python(temp / "release-venv"),
                 "-m",
                 "pytest",
-                "-q",
+                # Keep exact failing/running node IDs if a native signal stops
+                # pytest before its terminal assertion summary is printed.
+                "-vv",
                 "--durations=50",
                 # Do not let pytest touch the shared Windows TEMP root:
                 # a locked pytest-current symlink can make an otherwise

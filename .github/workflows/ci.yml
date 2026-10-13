@@ -184,7 +184,10 @@ jobs:
     timeout-minutes: 180
     steps:
       - name: Set gate evidence directory
-        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
+        run: |
+          echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
+          mkdir -m 700 "$RUNNER_TEMP/quantmesh-release-temp"
+          echo "TMPDIR=$RUNNER_TEMP/quantmesh-release-temp" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -199,6 +202,15 @@ jobs:
         run: python -m playwright install --with-deps chromium
       - name: Certify exact checkout
         run: python tools/release_gate.py
+      - name: Retain release diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-diagnostics
+          path: |
+            ${{ runner.temp }}/quantmesh-release-temp/qmesh-release-gate-*/logs/*.log
+            ${{ runner.temp }}/quantmesh-release-temp/qmesh-release-gate-*/logs/*.jsonl
+          if-no-files-found: ignore
 
   # The independent service has a different Python/lock closure from core.
   # Offline compatibility is mandatory, but never stands in for PG/model/host proof.
@@ -231,7 +243,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: research-service-offline-linux-cp312
-          path: ${{ runner.temp }}/research-service-evidence
+          path: |
+            ${{ runner.temp }}/research-service-evidence/*.json
+            ${{ runner.temp }}/research-service-evidence/*.log
+            ${{ runner.temp }}/research-service-evidence/*.xml
           if-no-files-found: ignore
 
   # Preserve the pre-existing required CI / python check as an aggregate.

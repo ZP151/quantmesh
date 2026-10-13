@@ -1,0 +1,3 @@
+warning: in the working copy of 'services/research_agent/tests/test_agent.py', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'services/research_agent/tests/test_hardening.py', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'services/research_agent/tests/test_store.py', CRLF will be replaced by LF the next time Git touches it
