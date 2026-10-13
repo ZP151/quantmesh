@@ -513,7 +513,7 @@ function replay used synthetic timestamp labels, not actual timing evidence.
 Old failed phase/source remain. No full native/Worker/kernel/production certificate.
 
 Owned-leader retirement repairs now pass7focused Linux cases/35deselected4.01s;
-source33916bb4/tests a8a33007 remain uncommitted; formatting AST is unchanged.
+source33916bb4/tests a8a33007 are integrated in draft PR175; formatting AST is unchanged.
 Bounded retirement review is clear; Ruff/format/diff pass. Full CI/human gates pending.
 Old2948 CI38454677312 stays terminalFAILED/no rerun. Both deterministic REDs,
 partial1fail8pass, and two test-fixture budget overruns are retained. Root preserved
