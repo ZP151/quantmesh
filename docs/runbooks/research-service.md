@@ -1,10 +1,22 @@
 # Option A private deployment review and recovery handoff
 
-Status2026-10-13 Singapore: preparation only; no purchase request, server
-installation or production recovery acceptance yet. This implements the review
+Current resource checkpoint: the operator explicitly approves the independent
+$44/month quantmesh-research-8gb, retaining the existing8GB application and2GB
+rollback. Actual Lightsail creation returns Running, Ubuntu24.04/SingaporeZoneA/
+8GB/2vCPU/160GB. Default HTTP is removed; SSH limited to Lightsail browser only
+for private onboarding. Compute subtotal is$100/month before taxes/model/backups/
+overage. No snapshot/model/storage add-on is purchased. Tailnet and production
+PG/Worker/Agent acceptance are separate; resource creation does not enable them.
+The user completes new-host first Tailnet authentication. Own sanitized
+Running/online status and fresh private SSH uname exit0/x86_64 verify onboarding;
+official Tailscale1.104.1 uses accept-routes/accept-dns false. This permits actual
+host preparation, not activation of unqualified Workers or research services.
+
+Status2026-10-13 Singapore: the approved compute resource is created; runtime,
+production service and recovery acceptance remain pending. This implements the review
 preparation in [Task4](../superpowers/plans/2026-10-12-research-workers-workstation.md),
-not an executable deployment approval. Finish actual runtime/image qualification,
-the final milestone PR/human gates and the operator's concrete resource approval
+not production deployment acceptance. Finish actual runtime/image qualification
+and the final milestone PR/human gates
 before enabling any service. Formal168h stays not required/on-demand.
 
 ## Resources and bill

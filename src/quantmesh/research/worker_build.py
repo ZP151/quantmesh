@@ -15,6 +15,7 @@ import platform
 import re
 import stat
 import sys
+import types
 from pathlib import Path
 
 LINUX_LOCK_SHA256 = "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a"
@@ -184,6 +185,111 @@ def _pins(path: Path) -> dict[str, str]:
     return result
 
 
+def _originless_helper(name: str, module: object, modules: dict, files: dict) -> bool:
+    """Bind only the two observed non-native helper shapes, without calling hooks.
+
+    Native Cython caches deliberately remain refused: type slots alone do not
+    attest instance/descriptor callback payloads. This is not image admission.
+    """
+    if name == "cython_runtime":
+        if type(module) is not types.ModuleType:
+            raise ValueError
+        raw = types.ModuleType.__getattribute__(module, "__dict__")
+        if any(type(key) is not str for key in raw):
+            raise ValueError
+        metadata = {"__name__", "__doc__", "__loader__", "__package__", "__spec__"}
+        if set(raw) not in (metadata, metadata | {"cline_in_traceback"}):
+            raise ValueError
+        if type(raw["__name__"]) is not str or raw["__name__"] != name:
+            raise ValueError
+        if any(raw[key] is not None for key in metadata - {"__name__"}):
+            raise ValueError
+        if "cline_in_traceback" in raw and type(raw["cline_in_traceback"]) is not bool:
+            raise ValueError
+        return True
+    if name not in {"typing.io", "typing.re"}:
+        return False
+    if sys.version_info[:2] != (3, 12):
+        raise ValueError
+    typing = modules.get("typing")
+    if type(typing) is not types.ModuleType:
+        raise ValueError
+    namespace = types.ModuleType.__getattribute__(typing, "__dict__")
+    if any(type(key) is not str for key in namespace):
+        raise ValueError
+    path = _path(namespace["__file__"])
+    source = _read(path, _JSON_LIMIT)
+    if hashlib.sha256(source).hexdigest() != files.get(str(path)):
+        raise ValueError
+    suffix = name.split(".")[1]
+    meta = namespace["_DeprecatedType"]
+    if type(meta) is not type or type(module) is not meta or module is not namespace[suffix]:
+        raise ValueError
+    meta_raw = type.__getattribute__(meta, "__dict__")
+    if (
+        set(meta_raw) != {"__module__", "__doc__", "__getattribute__"}
+        or type(meta_raw["__module__"]) is not str
+        or meta_raw["__module__"] != "typing"
+        or meta_raw["__doc__"] is not None
+        or type.__getattribute__(meta, "__bases__") != (type,)
+    ):
+        raise ValueError
+    method = meta_raw["__getattribute__"]
+    if type(method) is not types.FunctionType or method.__globals__ is not namespace:
+        raise ValueError
+
+    # Compile measured bytes without executing them; compare the actual defining
+    # function with its code in that source, rather than trusting co_filename.
+    def named_code(code, wanted):
+        matches = [c for c in code.co_consts if type(c) is types.CodeType and c.co_name == wanted]
+        if len(matches) != 1:
+            raise ValueError
+        return matches[0]
+
+    try:
+        expected = named_code(
+            named_code(compile(source, str(path), "exec", dont_inherit=True), "_DeprecatedType"),
+            "__getattribute__",
+        )
+    except SyntaxError:
+        raise ValueError from None
+    if (
+        method.__code__ != expected
+        or method.__code__.co_filename != str(path)
+        or method.__defaults__ is not None
+        or method.__kwdefaults__ is not None
+        or method.__annotations__
+        or not method.__closure__
+        or len(method.__closure__) != 1
+        or method.__closure__[0].cell_contents is not meta
+    ):
+        raise ValueError
+    members = ("IO", "TextIO", "BinaryIO") if suffix == "io" else ("Pattern", "Match")
+    raw = type.__getattribute__(module, "__dict__")
+    if (
+        set(raw) != set(members) | {"__module__", "__doc__", "__all__", "__dict__", "__weakref__"}
+        or type(raw["__module__"]) is not str
+        or raw["__module__"] != "typing"
+        or type(raw["__doc__"]) is not str
+        or type(raw["__all__"]) is not list
+        or any(type(member) is not str for member in raw["__all__"])
+        or raw["__all__"] != list(members)
+        or type.__getattribute__(module, "__bases__") != (object,)
+        or type.__getattribute__(module, "__name__") != name
+        or any(raw[key] is not namespace[key] for key in members)
+    ):
+        raise ValueError
+    for key in ("__dict__", "__weakref__"):
+        descriptor = raw[key]
+        if (
+            type(descriptor) is not types.GetSetDescriptorType
+            or descriptor.__objclass__ is not module
+            or descriptor.__name__ != key
+        ):
+            raise ValueError
+    return True
+
+
 def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict:
     """Validate pinned actual bytes, then collect the unchanged five runtime fields.
 
@@ -263,6 +369,8 @@ def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict
             if module is None:
                 continue
             if name != "quantmesh" and not name.startswith("quantmesh."):
+                if _originless_helper(name, module, sys.modules, files):
+                    continue
                 # Installed RECORDs cannot attest code imported before admission.
                 # Bind every active non-QuantMesh file (including stdlib/extensions)
                 # to the measured closure, and every package search root. A venv's

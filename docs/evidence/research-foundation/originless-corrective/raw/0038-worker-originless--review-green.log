@@ -1,0 +1,14 @@
+.................................................................        [100%]
+=============================== warnings summary ===============================
+tests/test_worker_originless.py::test_genuine_measured_typing_alias_passes[typing.io]
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+tests/test_worker_originless.py::test_typing_alias_changes_refuse[member]
+tests/test_worker_originless.py::test_typing_alias_changes_refuse[all]
+tests/test_worker_originless.py::test_typing_alias_changes_refuse[descriptor]
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:240: DeprecationWarning: typing.io is deprecated, import directly from typing instead. typing.io will be removed in Python 3.13.
+    oldval = getattr(target, name, NOTSET)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+65 passed, 4 warnings in 6.99s

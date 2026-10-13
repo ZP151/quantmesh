@@ -94,6 +94,7 @@ def _bind(sealed):
 
 
 def _runtime(api, sealed, monkeypatch):
+    monkeypatch.setenv("PYTHONDONTWRITEBYTECODE", "1")
     monkeypatch.setattr(
         api,
         "sys",
@@ -148,6 +149,14 @@ def test_actual_runtime_fields_without_git(sealed, monkeypatch):
     assert result["python_version"] == "3.12.3 unit fixture"
     assert result["python_executable_digest"] == _sha(sealed.exe.read_bytes())
     assert not (sealed.source / ".git").exists()
+
+
+def test_missing_runtime_bytecode_policy_refuses(sealed, monkeypatch):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    monkeypatch.delenv("PYTHONDONTWRITEBYTECODE", raising=False)
+    with pytest.raises(api.WorkerBuildRejected):
+        api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
 
 
 @pytest.mark.parametrize("name", ["code", "exe", "library", "metadata", "record", "notice", "lock"])

@@ -7,6 +7,17 @@ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
 
 ## Current resumable goal
 
+Latest correction: exact7498 CI38381619194 fails six runtime-fixture environment
+markers (4540pass/113skip/frontend419). Controlled test-only RED6/GREEN7 fixes
+those; originless alias/data helper correction has affected65passes and closed
+narrow review findings. Cython descriptor/instance callbacks remain unqualified,
+so native caches still refuse. Construction bb36/0137 is software-only accepted.
+User approves new independent$44/month research8GB plus retention of both existing
+hosts; actual new Ubuntu24.04/SingaporeA instance is Running, HTTP removed/SSH
+Lightsail-browser-only. Actual new-host Tailnet authentication/Running-online
+status and fresh private SSH exit0/x86_64 pass; production services stay unactivated.
+FullA ACTIVE; software-only cumulative cap12MB does not waive local disk gate.
+
 Authoritative current priority is [iteration0038](iterations/0038-research-foundation.md)
 and [approved Option A plan](superpowers/plans/2026-10-12-research-portfolio.md).
 Deliver one persistent research-job/report loop with an independent advisory

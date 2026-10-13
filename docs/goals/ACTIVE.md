@@ -1,6 +1,37 @@
 # Active Goal
 
-## Current frontier — October 13, after fresh SSH authentication
+## Current correction and approved research host
+
+PR175 head7498a73 CI38381619194 ends FAILURE:6failed/4540passed/113skipped,
+frontend419; fast and independent service jobs pass. Actual checkout4991ba9e
+tree38126bd6 equals the candidate. All six failures are synthetic Worker fixtures
+missing the required bytecode environment marker; controlled RED6/GREEN7 fixes
+only tests and preserves missing-marker refusal. No old CI/watch is restarted.
+
+Construction sourcebb36e404 integrates0137bae;10 distinct software cases pass,
+two reviews complete. Actual readonly81 numerical imports reveal5originless
+helpers, which previous synthetic tests did not cover. Measured typing aliases
+and data-only cython_runtime now have a bounded adapter. Narrow review's equality
+hook/compiler P2s have RED3/GREEN65 evidence and are closed. Cython type caches
+still refuse because descriptor/instance callback payloads are unqualified.
+This is partial software progress, not numerical/image/native admission.
+The cumulative software allowance is explicitly12MB with the same original
+8,876,772B baseline; whole-C5GB attribution remains pending/no bulk-local waiver.
+
+The user approves a new independent quantmesh-research-8gb and retaining both
+existing instances. Actual Lightsail reports Running for Ubuntu24.04/SingaporeA/
+8GB/2vCPU/160GB at additional$44/month. Default HTTP is removed and SSH limited
+to Lightsail browser only. Three compute bundles total$100/month before taxes,
+model/backup/storage/overage. Private Tailnet onboarding and actual production
+PG/Worker/Agent/source/userloop acceptance remain required; no research service is enabled.
+The user completes this new host's actual first Tailnet authentication. Its
+own sanitized status is Running/online with the expected private domain, and
+root's fresh private SSH uname exits0/x86_64. Official Tailscale1.104.1 is
+installed; accept-routes/accept-dns are false. No repeated authentication is
+needed without a new actual challenge. Production runtime preparation follows.
+Full approved Option A stays ACTIVE; formal168h remains not required.
+
+## Earlier October 13 SSH and software intake — retained history
 
 The user completes the fresh SSH challenge. Actual08:27UTC bounded owned SSH
 observer exits0 with AWShealth69515b7/papertrue/livefalse;08:28 reviewed

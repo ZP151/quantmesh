@@ -1,6 +1,30 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
-## Current frontier — October 13, after fresh SSH authentication
+## Current correction and approved independent host
+
+Exact7498a73 CI38381619194 is terminal FAILURE:6failed/4540passed/113skip,
+frontend419; checkout4991ba9e/tree38126bd6 equals candidate. Six positive runtime
+fixtures lacked the required environment marker. Test-only RED6/GREEN7 closes
+that issue without changing production policy/workflow. No old run is retried.
+Construction bb36e404 integrates0137bae with10 distinct software passes/two
+reviews. Real readonly81 imports show5originless helpers. The measured typing/
+data-only runtime adapter passes affected65tests/6.99s; specific review P2s close
+with controlled RED3. Cython descriptor/instance payload provenance stays
+unqualified and caches refuse; full numerical/image/native proof is pending.
+Software allowance explicitly12MB, original baseline retained; no whole-C5GB
+attribution waiver or new local image/env/clone/container authorization.
+
+User approves new independent research8GB while retaining existing8GB+2GB.
+Actual Lightsail creates quantmesh-research-8gb, Ubuntu24.04/SingaporeZoneA/
+8GB/2vCPU/160GB, Running; extra$44/month, compute subtotal$100/month before
+tax/model/backup/overage. Default HTTP removed; SSH browser-only. Private Tailnet
+onboarding is verified by own Running/online status and fresh private SSH exit0/
+x86_64 after the user completes actual new-host authentication. Official
+Tailscale1.104.1 is installed with accept-routes/accept-dns false. Real
+PG/Worker/Agent/source/userloop activation remains unfinished.
+FullA ACTIVE; formal168h not required. Earlier checkpoints below are historical.
+
+## Earlier October 13 SSH and software intake — retained history
 
 Actual08:27UTC bounded SSH health exits0 after the user's fresh authentication,
 exact69515b7/papertrue/livefalse;08:28 reviewed ObserveOnly confirms the private
