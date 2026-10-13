@@ -1,0 +1,370 @@
+tests/test_linux_owned.py
+17: @pytest.fixture
+18: def profile(tmp_path):
+19:     cli = tmp_path / "docker"
+20:     cli.write_text("fixture")
+21:     root = tmp_path / "fixtures"
+22:     root.mkdir()
+23:     return owned.LinuxExecutionProfile(
+24:         endpoint="unix:///var/run/docker.sock",
+25:         docker_cli=cli,
+26:         image_id="sha256:" + "a" * 64,
+27:         uid=10001,
+28:         gid=10001,
+29:         fixture_root=root,
+30:     )
+56: @pytest.fixture
+57: def engine(monkeypatch, profile):
+58:     calls = []
+59:     state = {"Running": True, "ExitCode": 0, "OOMKilled": False}
+60:     nonce = []
+61:     attach = Attach(
+62:         {
+63:             "event": "ready",
+64:             "bootstrap_sha256": owned.bootstrap_digest(),
+65:             "limits": {
+66:                 "memory.max": "2147483648",
+67:                 "memory.swap.max": "0",
+68:                 "cpu.max": "100000 100000",
+69:                 "pids.max": "128",
+70:             },
+71:         }
+72:     )
+73: 
+74:     def invoke(self, args):
+75:         calls.append(args)
+76:         if args[0] == "info":
+77:             return json.dumps({"OSType": "linux", "CgroupVersion": "2", "ID": "fixture"})
+78:         if args[:2] == ["image", "inspect"]:
+79:             return json.dumps([{"Id": profile.image_id, "Os": "linux"}])
+80:         if args[0] == "create":
+81:             nonce.append(args[args.index("--label") + 1].split("=", 1)[1])
+82:             return "b" * 64
+83:         if args[0] == "inspect":
+84:             return json.dumps(
+85:                 [
+86:                     {
+87:                         "Id": "b" * 64,
+88:                         "Image": profile.image_id,
+89:                         "Config": {"Labels": {owned.OWNER_LABEL: nonce[0]}},
+90:                         "State": state,
+91:                     }
+92:                 ]
+93:             )
+94:         return ""
+95: 
+96:     monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", invoke)
+97:     monkeypatch.setattr(owned, "_attach", lambda *a: attach)
+98:     return calls, state, nonce, attach
+101: def test_fixed_creation_and_gated_start(profile, paths, engine):
+102:     calls, state, _, attach = engine
+103:     process = owned.LinuxOwnedProcess(
+104:         profile, ["/usr/local/bin/python3", "-V"], RunBudget(), *paths
+105:     )
+106:     create = next(a for a in calls if a[0] == "create")
+107:     for flag in [
+108:         "--pull=never",
+109:         "--network=none",
+110:         "--read-only",
+111:         "--cap-drop=ALL",
+112:         "--security-opt=no-new-privileges",
+113:         "--pids-limit=128",
+114:         "--cpus=1",
+115:         "--memory=2048m",
+116:         "--memory-swap=2048m",
+117:         "--restart=no",
+118:     ]:
+119:         assert flag in create
+120:     assert create.count("--mount") == 2
+121:     assert "readonly" in create[create.index("--mount") + 1]
+122:     assert attach.sent == ["go"]
+123:     process.pulse()
+124:     assert attach.sent[-1] == "pulse"
+125:     assert process.poll() is None
+126:     state.update(Running=False, ExitCode=7)
+127:     assert process.poll() == 7
+128:     process.close()
+129:     assert calls[-1] == ["rm", "--force", "b" * 64]
+158: def test_creation_failure_never_guesses_container(profile, paths, engine, monkeypatch):
+159:     calls, _, _, _ = engine
+160:     original = profile.invoke
+161: 
+162:     def fail(self, args):
+163:         if args[0] == "create":
+164:             raise owned.LinuxContainmentError("engine_command_failed")
+165:         return original(args)
+166: 
+167:     monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", fail)
+168:     with pytest.raises(owned.LinuxContainmentError):
+169:         owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+170:     assert not any(a[0] == "rm" for a in calls)
+171: 
+172: 
+173: def test_output_limit_is_failure(profile, paths, engine, monkeypatch):
+174:     process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+175:     monkeypatch.setattr(owned, "output_size", lambda p: owned.MAX_OUTPUT_BYTES + 1)
+176:     assert process.poll() == 125
+177:     assert process.evidence["controller_failure"] == "output_limit"
+178: 
+179: 
+180: @pytest.mark.parametrize("unsafe", ["oversized", "symlink"])
+181: def test_terminal_output_cannot_succeed(profile, paths, engine, monkeypatch, unsafe):
+182:     process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+183:     engine[1].update(Running=False, ExitCode=0)
+184: 
+185:     def output_size(path):
+186:         if unsafe == "symlink":
+187:             raise ValueError("unsafe_output")
+188:         return owned.MAX_OUTPUT_BYTES + 1
+189: 
+190:     monkeypatch.setattr(owned, "output_size", output_size)
+191:     assert process.poll() == 125
+192:     process.close()
+193: 
+194: 
+195: def test_transient_cleanup_can_retry_exact_ownership(profile, paths, engine, monkeypatch):
+196:     process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+197:     original = profile.invoke
+198:     failures = [True]
+199: 
+200:     def remove(self, args):
+201:         if args[0] == "rm" and failures.pop():
+202:             raise owned.LinuxContainmentError("engine_unavailable")
+203:         return original(args)
+204: 
+205:     monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", remove)
+206:     with pytest.raises(owned.LinuxContainmentError):
+207:         process.close()
+208:     assert process.closed is False
+209:     failures.append(False)
+210:     process.close()
+211:     assert process.closed is True
+212:     assert engine[0][-2:] == [["inspect", "b" * 64], ["rm", "--force", "b" * 64]]
+370: def test_admission_and_owned_cleanup(profile, paths, engine, monkeypatch, failure):
+371:     calls, _, nonce, attach = engine
+372:     if failure == "cgroup":
+373:         attach.ready["limits"]["memory.max"] = "max"
+374:     elif failure == "digest":
+375:         attach.ready["bootstrap_sha256"] = "0" * 64
+376:     elif failure == "attach":
+377: 
+378:         def fail(*args):
+379:             raise owned.LinuxContainmentError("attach_failed")
+380: 
+381:         monkeypatch.setattr(owned, "_attach", fail)
+382:     else:
+383:         original = profile.invoke
+384: 
+385:         def changed(self, args):
+386:             result = original(args)
+387:             if args[0] == "inspect":
+388:                 doc = json.loads(result)
+389:                 if failure == "nonce":
+390:                     doc[0]["Config"]["Labels"][owned.OWNER_LABEL] = "other"
+391:                 else:
+392:                     doc[0]["Id"] = "c" * 64
+393:                 return json.dumps(doc)
+394:             return result
+395: 
+396:         monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", changed)
+397:     with pytest.raises(owned.LinuxContainmentError):
+398:         owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+399:     assert "go" not in attach.sent
+400:     assert any(a[0] == "rm" for a in calls) == (failure not in {"nonce", "id"})
+401: 
+402: 
+403: def test_actual_oom_is_failure(profile, paths, engine):
+404:     _, state, _, _ = engine
+405:     process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+406:     state.update(Running=False, ExitCode=0, OOMKilled=True)
+407:     assert process.poll() != 0
+408:     assert process.evidence["oom_killed"] is True
+409:     process.close()
+
+src/quantmesh/research/linux_owned.py
+288:             not self.inputs.is_dir()
+289:             or self.output.exists()
+290:             or not self.inputs.is_relative_to(root)
+291:             or self.inputs == root
+292:             or not self.output.is_relative_to(root)
+293:             or self.output == root
+294:             or self.output.is_relative_to(self.inputs)
+295:             or self.inputs.is_relative_to(self.output)
+296:         ):
+297:             raise LinuxContainmentError("unsafe_mounts")
+298:         # Reject existing nested links too; trusted datasets cannot alias host secrets.
+299:         if any(
+300:             p.is_symlink() or (hasattr(p, "is_junction") and p.is_junction())
+301:             for p in self.inputs.rglob("*")
+302:         ):
+303:             raise LinuxContainmentError("unsafe_mounts")
+304:         self.evidence.update(profile.prerequisites())
+305:         self.output.mkdir(parents=False)
+306:         if os.name == "posix":
+307:             os.chown(self.output, profile.uid, profile.gid)
+308:             self.output.chmod(0o700)
+
+tests/test_live_router.py
+122: @pytest.fixture()
+123: def live_app(tmp_path):
+124:     """A workstation app with an attached feed (lake on tmp, pump
+125:     started by the TestClient lifespan) and a bare account."""
+126:     feed = LiveFeed(lake=LiveBuffer(root=tmp_path), lag=LAG, stale=STALE)
+127:     app = create_workstation_app(
+128:         account=PaperAccount(cash=100_000.0), live_feed=feed, host="127.0.0.1"
+129:     )
+130:     with TestClient(app) as client:
+131:         yield client, app, feed
+184:     def test_root_and_api_mounts_agree(self, live_app) -> None:
+185:         client, _app, feed = live_app
+186:         feed.publish_threadsafe(_upd())
+187:         # generated_at and age_ms are wall-clock measurements taken per
+188:         # request, so they legitimately differ by milliseconds between
+189:         # the two calls — everything else is the same payload.
+190:         def without_clock(snapshot: dict) -> dict:
+191:             return {
+192:                 instrument: {
+193:                     **summary,
+194:                     "kinds": {
+195:                         kind: {key: view[key] for key in view if key != "age_ms"}
+196:                         for kind, view in summary["kinds"].items()
+197:                     },
+198:                 }
+199:                 for instrument, summary in snapshot["instruments"].items()
+200:             }
+201: 
+202:         root_mount = without_clock(client.get("/live/state").json())
+203:         api_mount = without_clock(client.get("/api/live/state").json())
+204:         assert root_mount == api_mount
+
+src/quantmesh/live/feed.py
+496:     def _session_view(
+497:         self,
+498:         venue: str,
+499:         instrument: str,
+500:         update: MarketUpdate | None,
+501:         now: datetime,
+502:         completed: Mapping[tuple[str, str], datetime],
+503:     ) -> dict[str, object]:
+504:         calendar_id = "unknown"
+505:         policy = SessionPolicy.REGULAR
+506:         if venue == Venue.MOOMOO.value and instrument in {"AAPL", "NVDA"}:
+507:             calendar_id = "XNYS"
+508:         elif venue == Venue.HYPERLIQUID.value:
+509:             calendar_id, policy = "24/7", SessionPolicy.CONTINUOUS
+510:         source_at = None
+511:         interval = "1m"
+512:         source_kind = "observation"
+513:         if update is not None and update.provenance in {Provenance.REAL, Provenance.DELAYED}:
+514:             source_at = min(update.data_time, update.received_at)
+515:             if update.kind is UpdateKind.CANDLE:
+516:                 source_kind = "bar_end"
+517:                 interval = str(update.payload.get("interval", "unknown"))
+518:                 # Only the scoped regular Moomoo minute has an admitted end clock.
+519:                 if venue == Venue.MOOMOO.value and interval == "1m":
+520:                     source_at = completed.get((venue, instrument))
+521:                 elif venue == Venue.HYPERLIQUID.value:
+522:                     # Existing crypto candles are observations of a mutable bar,
+523:                     # whose freshness clock is receipt, not completed-bar coverage.
+524:                     source_at = _freshness_time(update)
+525:                     source_kind = "observation"
+526:                     interval = f"{int(self.lag.total_seconds())}s"
+527:                 else:
+528:                     source_at = None
+529:             elif venue == Venue.HYPERLIQUID.value:
+530:                 interval = f"{int(self.lag.total_seconds())}s"
+531:         result = evaluate_session_freshness(
+532:             calendar_id,
+533:             policy,
+534:             now,
+535:             source_at,
+536:             interval,
+537:             self.provider_delays.get(Venue(venue)),
+538:             calendar=self._calendar,
+539:             source_kind=source_kind,
+540:         )
+541:         return result.model_dump(mode="json")
+600:         for (venue, instrument, kind), update in latest:
+601:             identity = f"{venue}:{instrument}"
+602:             entry = instruments.setdefault(identity, {"venue": venue, "instrument": instrument})
+603:             kinds = entry.setdefault("kinds", {})  # type: ignore[assignment]
+604:             kinds[kind] = _view(update, now, lag=self.lag)  # type: ignore[index]
+605:             if update.kind is not UpdateKind.STATUS:
+606:                 kinds[kind]["session_freshness"] = self._session_view(  # type: ignore[index]
+607:                     venue,
+608:                     instrument,
+609:                     update,
+610:                     now,
+611:                     completed,
+612:                 )
+613:         for (venue, instrument, side), update in book_sides:
+614:             identity = f"{venue}:{instrument}"
+615:             entry = instruments.setdefault(identity, {"venue": venue, "instrument": instrument})
+616:             sides = entry.setdefault("book_sides", {})  # type: ignore[assignment]
+617:             sides[side] = _view(update, now, lag=self.lag)  # type: ignore[index]
+618:         ranks = {FRESH: 0, DELAYED: 1, SYNTHETIC: 2, STALE: 3, UNAVAILABLE: 4}
+619:         summaries = self._session_summaries(latest, now, completed)
+620:         for entry in instruments.values():
+621:             key = (entry["venue"], entry["instrument"])
+622:             entry["session_freshness"] = summaries.get(key) or self._session_view(
+623:                 *key,
+624:                 None,
+625:                 now,
+626:                 completed,
+627:             )
+628:             kinds = entry.get("kinds", {})
+629:             # A disconnected status can veto availability, but fresh status or
+630:             # metrics must never make an old quote fresh again.
+631:             labels = [
+632:                 view["label"]
+633:                 for kind, view in kinds.items()
+634:                 if kind != "status" or view["label"] == UNAVAILABLE
+635:             ]
+636:             entry["label"] = max(labels, key=ranks.__getitem__) if labels else UNAVAILABLE
+637:         return {"generated_at": now.isoformat(), "instruments": instruments}
+
+src/quantmesh/live/session_freshness.py
+20:     model_config = ConfigDict(frozen=True, extra="forbid")
+21: 
+22:     market_state: Literal["open", "closed", "unknown"]
+23:     data_state: Literal["fresh", "latest_session", "delayed", "missing", "unknown"]
+24:     last_source_at: datetime | None
+25:     evaluated_at: datetime | None = None
+26:     expected_last_bar_end: datetime | None = None
+27:     next_open_at: datetime | None = None
+28:     calendar_version: str | None = None
+29:     reason: str
+30:     policy_version: str = "quantmesh:session-freshness:1"
+31:     provider_delay_seconds: int | None = None
+32:     opening_grace_seconds: int = 120
+65:     result = dict(
+66:         market_state="unknown",
+67:         data_state="unknown",
+68:         last_source_at=last_source_time,
+69:         evaluated_at=now,
+70:         reason="unknown_calendar_or_policy",
+71:         provider_delay_seconds=provider_delay_seconds,
+72:         opening_grace_seconds=opening_grace_seconds,
+73:     )
+
+tools/release_gate.py
+526:         step(
+527:             "full pytest suite",
+528:             [
+529:                 _venv_python(temp / "release-venv"),
+530:                 "-m",
+531:                 "pytest",
+532:                 "-q",
+533:                 "--durations=50",
+534:                 # Do not let pytest touch the shared Windows TEMP root:
+535:                 # a locked pytest-current symlink can make an otherwise
+536:                 # green release suite fail during pytest's final cleanup.
+537:                 # Keep the test root adjacent to (never inside) checkout,
+538:                 # because commit-resolution tests intentionally expect a
+539:                 # temp path outside the repository's .git ancestry.
+540:                 "--basetemp",
+541:                 str(temp / "pytest-tmp"),
+542:             ],
+543:             checkout,
+544:             FULL_PYTEST_TIMEOUT_SECONDS,
+

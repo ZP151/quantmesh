@@ -1,0 +1,66 @@
+{
+  "output/0038-ci-quiet-failure-diagnosis/collect.receipt.json": {
+    "sha256": "24b005fbec40ca725573755eefc263e34830b2f923df37e7379278ae121952ac",
+    "bytes": 24174
+  },
+  "output/0038-ci-quiet-failure-diagnosis/collect.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "output/0038-ci-quiet-failure-diagnosis/collect.stdout": {
+    "sha256": "d67868b85f368647cb3721ced2af7386323f8f38864bfa60f0e010ad187dfac9",
+    "bytes": 409017
+  },
+  "output/0038-ci-quiet-failure-diagnosis/collected-nodeids.json": {
+    "sha256": "4a2bbc8af1c4ef6c72aa8fe676be003df523ab16ce8b6623651521051f394330",
+    "bytes": 430671
+  },
+  "output/0038-ci-quiet-failure-diagnosis/git-trees.json": {
+    "sha256": "38007c37db1721d15efa2ec614042f4fd7d4cb855effd1e2f09481a3ee23ed8c",
+    "bytes": 219
+  },
+  "output/0038-ci-quiet-failure-diagnosis/inferred-map.json": {
+    "sha256": "c4a8992a77683a0b7b742a1ee5545bb7676fa199198d440cb155427a48d9a22e",
+    "bytes": 14520
+  },
+  "output/0038-ci-quiet-failure-diagnosis/inferred-nodeids.json": {
+    "sha256": "08feef04e513bf8161e01aac65215992e52aaadcd452044d5d873e01b07955e0",
+    "bytes": 435182
+  },
+  "output/0038-ci-quiet-failure-diagnosis/one-target.receipt.json": {
+    "sha256": "01ffbe91115349da21970e960ac700076cf4e79ec607e438f0fbb74ea6a61de2",
+    "bytes": 612
+  },
+  "output/0038-ci-quiet-failure-diagnosis/one-target.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "output/0038-ci-quiet-failure-diagnosis/one-target.stdout": {
+    "sha256": "c61c965ae28dfcb5ee1ef05e93c0e1e25768e5daa9d38d89cfa932c0508796ca",
+    "bytes": 5659
+  },
+  "output/0038-ci-quiet-failure-diagnosis/owned-source.json": {
+    "sha256": "35b6cd102eeaa326358dcdc9872b758e4e01ac386c6654239dfb2cb85d8121d9",
+    "bytes": 262
+  },
+  "output/0038-ci-quiet-failure-diagnosis/progress.json": {
+    "sha256": "3271aec772ac5bd8561a959d071772abd20fe51b1dd553d8660673b7c0fce083",
+    "bytes": 15360
+  },
+  "output/0038-ci-quiet-failure-diagnosis/source-excerpts.txt": {
+    "sha256": "ef2f53e01d214ab083dfdcc0e2ec4925f3cbc6df57b5f697d8a184c41d9812a8",
+    "bytes": 16513
+  },
+  "output/0038-ci-quiet-failure-diagnosis/source-inspection.json": {
+    "sha256": "6151466c567c3cfbe8e5003f75b5f2f7c5bce6199abf03145c48258482388d0d",
+    "bytes": 193527
+  },
+  "output/0038-ci-quiet-failure-diagnosis.md": {
+    "sha256": "26e400971dc0d8535b082f34c66d82575ab19b33a2a824addf52adc40c9271ae",
+    "bytes": 8232
+  },
+  "output/0038-ci216b-terminal/failed.log": {
+    "sha256": "272f2522cd2214aa95779faebd08b12064413929e6774ea81f58fdd2d62778cd",
+    "bytes": 29766
+  }
+}

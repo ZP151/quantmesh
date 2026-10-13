@@ -1,0 +1,361 @@
+{
+  "classification": "INFERENCE_ONLY_COLLECTION_DIVERGED",
+  "collected_count": 4513,
+  "static_added_count": 52,
+  "inferred_total": 4565,
+  "percentage_compatible": true,
+  "missing_modules": [
+    {
+      "file": "tests/test_instrument_workspace_e2e.py",
+      "count": 3,
+      "nodeids": [
+        "tests/test_instrument_workspace_e2e.py::test_nvda_inspect_to_paper_loop_and_race_refusal",
+        "tests/test_instrument_workspace_e2e.py::test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart",
+        "tests/test_instrument_workspace_e2e.py::test_keyboard_locale_reduced_motion_and_mobile_boundary"
+      ],
+      "basis": "STATIC_AST_INFERENCE; no fixture or test execution"
+    },
+    {
+      "file": "tests/test_live_chart_e2e.py",
+      "count": 1,
+      "nodeids": [
+        "tests/test_live_chart_e2e.py::test_packaged_live_charts_update_and_replay_from_both_entry_paths"
+      ],
+      "basis": "STATIC_AST_INFERENCE; no fixture or test execution"
+    },
+    {
+      "file": "tests/test_live_e2e.py",
+      "count": 7,
+      "nodeids": [
+        "tests/test_live_e2e.py::test_watchlist_populates_and_streams",
+        "tests/test_live_e2e.py::test_instrument_detail_chart_book_and_tape",
+        "tests/test_live_e2e.py::test_stale_transition_when_the_venue_goes_quiet",
+        "tests/test_live_e2e.py::test_keyboard_only_walk",
+        "tests/test_live_e2e.py::test_replay_card_honestly_reports_no_lake",
+        "tests/test_live_e2e.py::test_tablet_viewport_has_no_horizontal_overflow",
+        "tests/test_live_e2e.py::test_mobile_viewport_scrolls_the_table_not_the_body"
+      ],
+      "basis": "STATIC_AST_INFERENCE; no fixture or test execution"
+    },
+    {
+      "file": "tests/test_live_prediction_e2e.py",
+      "count": 5,
+      "nodeids": [
+        "tests/test_live_prediction_e2e.py::test_comparison_renders_both_venues",
+        "tests/test_live_prediction_e2e.py::test_single_venue_pair_renders_honest_unavailable",
+        "tests/test_live_prediction_e2e.py::test_stale_transition_when_the_venues_go_quiet",
+        "tests/test_live_prediction_e2e.py::test_keyboard_walk_to_calibration",
+        "tests/test_live_prediction_e2e.py::test_mobile_viewport_stacks_the_pairs"
+      ],
+      "basis": "STATIC_AST_INFERENCE; no fixture or test execution"
+    },
+    {
+      "file": "tests/test_spa_e2e.py",
+      "count": 20,
+      "nodeids": [
+        "tests/test_spa_e2e.py::test_demo_paper_workflow_through_the_ui",
+        "tests/test_spa_e2e.py::test_connector_panel_and_provider_failure",
+        "tests/test_spa_e2e.py::test_data_catalog_populated_state_has_no_mobile_overflow",
+        "tests/test_spa_e2e.py::test_csv_import_validation_and_commit",
+        "tests/test_spa_e2e.py::test_two_click_reset_restores_the_seed",
+        "tests/test_spa_e2e.py::test_keyboard_only_walk",
+        "tests/test_spa_e2e.py::test_nvda_workspace_reaches_each_durable_decision_in_under_two_minutes[STATIC_INSTANCE_1]",
+        "tests/test_spa_e2e.py::test_nvda_workspace_reaches_each_durable_decision_in_under_two_minutes[STATIC_INSTANCE_2]",
+        "tests/test_spa_e2e.py::test_nvda_workspace_reaches_each_durable_decision_in_under_two_minutes[STATIC_INSTANCE_3]",
+        "tests/test_spa_e2e.py::test_decision_inbox_opens_the_exact_saved_packet",
+        "tests/test_spa_e2e.py::test_aapl_decision_inbox_opens_a_saved_watch_packet_after_reload",
+        "tests/test_spa_e2e.py::test_crypto_degraded_inbox_keeps_paper_blocked_and_saves_exact_watch_at_mobile_width[STATIC_INSTANCE_1]",
+        "tests/test_spa_e2e.py::test_crypto_degraded_inbox_keeps_paper_blocked_and_saves_exact_watch_at_mobile_width[STATIC_INSTANCE_2]",
+        "tests/test_spa_e2e.py::test_nvda_packet_copilot_valid_reload_and_unavailable_paths",
+        "tests/test_spa_e2e.py::test_nvda_packet_monitoring_is_packet_bound_and_survives_workspace_reload",
+        "tests/test_spa_e2e.py::test_nvda_filled_open_packet_review_saves_and_reopens_exact_identity",
+        "tests/test_spa_e2e.py::test_shadow_decision_inbox_replays_paper_review_and_exact_keyboard_navigation",
+        "tests/test_spa_e2e.py::test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order",
+        "tests/test_spa_e2e.py::test_nvda_second_confirmation_refusal_keeps_packet_and_proposal_visible",
+        "tests/test_spa_e2e.py::test_nvda_decision_safety_copy_keyboard_reduced_motion_and_mobile_boundary"
+      ],
+      "basis": "STATIC_AST_INFERENCE; no fixture or test execution"
+    },
+    {
+      "file": "tests/test_workstation_e2e.py",
+      "count": 16,
+      "nodeids": [
+        "tests/test_workstation_e2e.py::test_core_paper_workflow_walk",
+        "tests/test_workstation_e2e.py::test_keyboard_only_navigation",
+        "tests/test_workstation_e2e.py::test_kill_switch_keyboard_only",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_1]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_2]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_3]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_4]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_5]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_6]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_7]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_8]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_9]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_10]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_11]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_12]",
+        "tests/test_workstation_e2e.py::test_accessibility_snapshots[STATIC_INSTANCE_13]"
+      ],
+      "basis": "STATIC_AST_INFERENCE; no fixture or test execution"
+    }
+  ],
+  "candidate_failures": [
+    {
+      "log_line": 88,
+      "row_position": 26,
+      "symbol_ordinal": 458,
+      "percent": 11,
+      "candidate_nodeid": "tests/test_ci_gate_workflow.py::test_required_python_check_aggregates_all_gate_failures",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 15,
+      "symbol_ordinal": 1815,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_fixed_creation_and_gated_start",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 22,
+      "symbol_ordinal": 1822,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_creation_failure_never_guesses_container",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 23,
+      "symbol_ordinal": 1823,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_output_limit_is_failure",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 24,
+      "symbol_ordinal": 1824,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_terminal_output_cannot_succeed[oversized]",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 25,
+      "symbol_ordinal": 1825,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_terminal_output_cannot_succeed[symlink]",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 26,
+      "symbol_ordinal": 1826,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_transient_cleanup_can_retry_exact_ownership",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 40,
+      "symbol_ordinal": 1840,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_admission_and_owned_cleanup[cgroup]",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 41,
+      "symbol_ordinal": 1841,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_admission_and_owned_cleanup[digest]",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 42,
+      "symbol_ordinal": 1842,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_admission_and_owned_cleanup[attach]",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 43,
+      "symbol_ordinal": 1843,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_admission_and_owned_cleanup[nonce]",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 44,
+      "symbol_ordinal": 1844,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_admission_and_owned_cleanup[id]",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 107,
+      "row_position": 45,
+      "symbol_ordinal": 1845,
+      "percent": 41,
+      "candidate_nodeid": "tests/test_linux_owned.py::test_actual_oom_is_failure",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    },
+    {
+      "log_line": 112,
+      "row_position": 29,
+      "symbol_ordinal": 2189,
+      "percent": 48,
+      "candidate_nodeid": "tests/test_live_router.py::TestStateEndpoint::test_root_and_api_mounts_agree",
+      "classification": "INFERRED_NOT_RECORDED_FAILURE"
+    }
+  ],
+  "skip_alignment": [
+    {
+      "log_line": 96,
+      "row_position": 8,
+      "symbol_ordinal": 1016,
+      "percent": 23,
+      "candidate_nodeid": "tests/test_finrl_x_bakeoff.py::test_timeout_terminates_descendants_and_bounds_collection"
+    },
+    {
+      "log_line": 96,
+      "row_position": 9,
+      "symbol_ordinal": 1017,
+      "percent": 23,
+      "candidate_nodeid": "tests/test_finrl_x_bakeoff.py::test_windows_containment_setup_failure_never_runs_or_leaks_child[assignment]"
+    },
+    {
+      "log_line": 96,
+      "row_position": 10,
+      "symbol_ordinal": 1018,
+      "percent": 23,
+      "candidate_nodeid": "tests/test_finrl_x_bakeoff.py::test_windows_containment_setup_failure_never_runs_or_leaks_child[resume]"
+    },
+    {
+      "log_line": 105,
+      "row_position": 55,
+      "symbol_ordinal": 1711,
+      "percent": 37,
+      "candidate_nodeid": "tests/test_instrument_workspace_e2e.py::test_nvda_inspect_to_paper_loop_and_race_refusal"
+    },
+    {
+      "log_line": 105,
+      "row_position": 56,
+      "symbol_ordinal": 1712,
+      "percent": 37,
+      "candidate_nodeid": "tests/test_instrument_workspace_e2e.py::test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart"
+    },
+    {
+      "log_line": 105,
+      "row_position": 57,
+      "symbol_ordinal": 1713,
+      "percent": 37,
+      "candidate_nodeid": "tests/test_instrument_workspace_e2e.py::test_keyboard_locale_reduced_motion_and_mobile_boundary"
+    },
+    {
+      "log_line": 108,
+      "row_position": 36,
+      "symbol_ordinal": 1908,
+      "percent": 42,
+      "candidate_nodeid": "tests/test_live_chart_e2e.py::test_packaged_live_charts_update_and_replay_from_both_entry_paths"
+    },
+    {
+      "log_line": 109,
+      "row_position": 10,
+      "symbol_ordinal": 1954,
+      "percent": 44,
+      "candidate_nodeid": "tests/test_live_e2e.py::test_watchlist_populates_and_streams"
+    },
+    {
+      "log_line": 109,
+      "row_position": 11,
+      "symbol_ordinal": 1955,
+      "percent": 44,
+      "candidate_nodeid": "tests/test_live_e2e.py::test_instrument_detail_chart_book_and_tape"
+    },
+    {
+      "log_line": 109,
+      "row_position": 12,
+      "symbol_ordinal": 1956,
+      "percent": 44,
+      "candidate_nodeid": "tests/test_live_e2e.py::test_stale_transition_when_the_venue_goes_quiet"
+    },
+    {
+      "log_line": 109,
+      "row_position": 13,
+      "symbol_ordinal": 1957,
+      "percent": 44,
+      "candidate_nodeid": "tests/test_live_e2e.py::test_keyboard_only_walk"
+    },
+    {
+      "log_line": 109,
+      "row_position": 14,
+      "symbol_ordinal": 1958,
+      "percent": 44,
+      "candidate_nodeid": "tests/test_live_e2e.py::test_replay_card_honestly_reports_no_lake"
+    },
+    {
+      "log_line": 109,
+      "row_position": 15,
+      "symbol_ordinal": 1959,
+      "percent": 44,
+      "candidate_nodeid": "tests/test_live_e2e.py::test_tablet_viewport_has_no_horizontal_overflow"
+    },
+    {
+      "log_line": 109,
+      "row_position": 16,
+      "symbol_ordinal": 1960,
+      "percent": 44,
+      "candidate_nodeid": "tests/test_live_e2e.py::test_mobile_viewport_scrolls_the_table_not_the_body"
+    },
+    {
+      "log_line": 112,
+      "row_position": 14,
+      "symbol_ordinal": 2174,
+      "percent": 48,
+      "candidate_nodeid": "tests/test_live_prediction_e2e.py::test_comparison_renders_both_venues"
+    },
+    {
+      "log_line": 112,
+      "row_position": 15,
+      "symbol_ordinal": 2175,
+      "percent": 48,
+      "candidate_nodeid": "tests/test_live_prediction_e2e.py::test_single_venue_pair_renders_honest_unavailable"
+    },
+    {
+      "log_line": 112,
+      "row_position": 16,
+      "symbol_ordinal": 2176,
+      "percent": 48,
+      "candidate_nodeid": "tests/test_live_prediction_e2e.py::test_stale_transition_when_the_venues_go_quiet"
+    },
+    {
+      "log_line": 112,
+      "row_position": 17,
+      "symbol_ordinal": 2177,
+      "percent": 48,
+      "candidate_nodeid": "tests/test_live_prediction_e2e.py::test_keyboard_walk_to_calibration"
+    },
+    {
+      "log_line": 112,
+      "row_position": 18,
+      "symbol_ordinal": 2178,
+      "percent": 48,
+      "candidate_nodeid": "tests/test_live_prediction_e2e.py::test_mobile_viewport_stacks_the_pairs"
+    },
+    {
+      "log_line": 119,
+      "row_position": 38,
+      "symbol_ordinal": 2702,
+      "percent": 59,
+      "candidate_nodeid": "tests/test_moomoo_opend.py::test_sdk_transport_probe_without_sdk_fails_typed"
+    }
+  ],
+  "last_observed_status_candidate": "tests/test_opend_private_terminal.py::test_wrong_descriptor_access_mode_refuses[0]",
+  "next_test_candidate": "tests/test_opend_private_terminal.py::test_wrong_descriptor_access_mode_refuses[1]"
+}

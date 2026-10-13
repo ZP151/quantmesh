@@ -20,7 +20,15 @@ waits for a final journal, original mismatch receipt retained.
 
 Run38330059615 remains terminalFAILURE, no rerun. Actionstestmerge1313c77 tree
 6a7fa1c9baddd62ed1e958fb3bb91861468105e5 equals candidate216b tree; actual checkout
-was the testmerge commit. Other unidentified fullsuite F markers remain open.
+was the testmerge commit. Historical14F node identities are reconstructed only
+by inference, not recovered CI tracebacks. Root actually reproduces two narrowed
+cases: foreign fixtureUID chownEPERM and root/API nested evaluated_at inequality.
+Two test-only fixes keep real ownership enforcement and compare complete JSON at
+one test clock; new native foreign-UID negative denies before container creation.
+Both files pass78native/0skip23.01s; Ruff/format/diff pass; formatting AST unchanged.
+One bounded new review clear.44rawstreams retained in ci-test-fixture-repairs;
+post-run dependency admission6669RECORD/81licenses/zero.pyc. Old CI failure summary
+is still absent, and final hosted checks remain unconfirmed.
 Next coherent reviewed integration gets new exact-head requiredCI; no merge or
 deployment from partialGREEN. Docker LinuxEngine remains absent on actual
 recheck; existing provider/Engine/human requests remain pending. FullA ACTIVE.

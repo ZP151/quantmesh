@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "prefix": "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv",
+  "licensed_packages": 81,
+  "verified_record_files": 6669,
+  "bytecode_files": 0,
+  "model_call": false,
+  "production_qualified": false
+}

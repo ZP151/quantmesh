@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="3.659" timestamp="2026-10-13T11:11:07.865847+08:00" hostname="zhoulaptop"><testcase classname="" name="test_fixed_creation_and_gated_start" time="0.004"><failure message="PermissionError: [Errno 1] Operation not permitted: '/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/ci-test-repairs-red-tmp/test_fixed_creation_and_gated_0/fixtures/attempt'">profile = LinuxExecutionProfile(endpoint='unix:///var/run/docker.sock', docker_cli=PosixPath('/var/tmp/quantmesh-portfolio-runti...Path('/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/ci-test-repairs-red-tmp/test_fixed_creation_and_gated_0/fixtures'))
+paths = (PosixPath('/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/ci-test-repairs-red-tmp/test_fixed_creation_and_gated_0/fixt...ar/tmp/quantmesh-portfolio-runtime-9r8rsnwz/ci-test-repairs-red-tmp/test_fixed_creation_and_gated_0/fixtures/attempt'))
+engine = ([['info', '--format', '{{json .}}'], ['image', 'inspect', 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...aaaaa']], {'Running': True, 'ExitCode': 0, 'OOMKilled': False}, [], &lt;test_linux_owned.Attach object at 0x73ef66983cb0&gt;)
+
+    def test_fixed_creation_and_gated_start(profile, paths, engine):
+        calls, state, _, attach = engine
+&gt;       process = owned.LinuxOwnedProcess(
+            profile, ["/usr/local/bin/python3", "-V"], RunBudget(), *paths
+        )
+
+tests/test_linux_owned.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;quantmesh.research.linux_owned.LinuxOwnedProcess object at 0x73ef66983c20&gt;
+profile = LinuxExecutionProfile(endpoint='unix:///var/run/docker.sock', docker_cli=PosixPath('/var/tmp/quantmesh-portfolio-runti...Path('/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/ci-test-repairs-red-tmp/test_fixed_creation_and_gated_0/fixtures'))
+command = ['/usr/local/bin/python3', '-V']
+budget = RunBudget(timeout_seconds=900, memory_mib=2048, cpu_limit=1.0, max_model_calls=12, max_estimated_model_usd=1.0)
+inputs = PosixPath('/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/ci-test-repairs-red-tmp/test_fixed_creation_and_gated_0/fixtures/inputs')
+output = PosixPath('/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/ci-test-repairs-red-tmp/test_fixed_creation_and_gated_0/fixtures/attempt')
+
+    def __init__(
+        self,
+        profile: LinuxExecutionProfile,
+        command: list[str],
+        budget: RunBudget,
+        inputs: Path,
+        output: Path,
+    ):
+        self.profile = profile
+        self.container_id = None
+        self.nonce = uuid.uuid4().hex
+        self.transport = None
+        self.evidence: dict = {"qualification": "unqualified", "native": False}
+        self.closed = False
+        self.started = time.monotonic()
+        self.budget = budget
+        if budget.cpu_limit != 1:
+            raise LinuxContainmentError("fractional_cpu_unsupported")
+        if (
+            not command
+            or any(not isinstance(c, str) or "\x00" in c for c in command)
+            or not command[0].startswith("/")
+        ):
+            raise LinuxContainmentError("unsafe_command")
+        self.inputs, self.output = _safe_path(inputs), _safe_path(output)
+        root = profile.fixture_root
+        if (
+            not self.inputs.is_dir()
+            or self.output.exists()
+            or not self.inputs.is_relative_to(root)
+            or self.inputs == root
+            or not self.output.is_relative_to(root)
+            or self.output == root
+            or self.output.is_relative_to(self.inputs)
+            or self.inputs.is_relative_to(self.output)
+        ):
+            raise LinuxContainmentError("unsafe_mounts")
+        # Reject existing nested links too; trusted datasets cannot alias host secrets.
+        if any(
+            p.is_symlink() or (hasattr(p, "is_junction") and p.is_junction())
+            for p in self.inputs.rglob("*")
+        ):
+            raise LinuxContainmentError("unsafe_mounts")
+        self.evidence.update(profile.prerequisites())
+        self.output.mkdir(parents=False)
+        if os.name == "posix":
+&gt;           os.chown(self.output, profile.uid, profile.gid)
+E           PermissionError: [Errno 1] Operation not permitted: '/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/ci-test-repairs-red-tmp/test_fixed_creation_and_gated_0/fixtures/attempt'
+
+src/quantmesh/research/linux_owned.py:307: PermissionError</failure></testcase><testcase classname=".TestStateEndpoint" name="test_root_and_api_mounts_agree" time="0.479"><failure message="AssertionError: assert {'hyperliquid...', ...}, ...}} == {'hyperliquid...', ...}, ...}}&#10;  &#10;  Differing items:&#10;  {'hyperliquid:BTC': {'venue': 'hyperliquid', 'instrument': 'BTC', 'kinds': {'quote': {'kind': 'quote', 'provenance': '...': 'fresh', 'last_source_at': '2026-10-13T03:11:11.143578Z', 'evaluated_at': '2026-10-13T03:11:11.197826Z', ...}, ...}} != {'hyperliquid:BTC': {'venue': 'hyperliquid', 'instrument': 'BTC', 'kinds': {'quote': {'kind': 'quote', 'provenance': '...': 'fresh', 'last_source_at': '2026-10-13T03:11:11.143578Z', 'evaluated_at': '2026-10-13T03:11:11.474674Z', ...}, ...}}&#10;  Use -v to get more diff">self = &lt;test_live_router.TestStateEndpoint object at 0x73ef669832f0&gt;
+live_app = (&lt;starlette.testclient.TestClient object at 0x73ef6664a060&gt;, &lt;fastapi.applications.FastAPI object at 0x73ef679b6cf0&gt;, &lt;quantmesh.live.feed.LiveFeed object at 0x73ef679b6e10&gt;)
+
+    def test_root_and_api_mounts_agree(self, live_app) -&gt; None:
+        client, _app, feed = live_app
+        feed.publish_threadsafe(_upd())
+        # generated_at and age_ms are wall-clock measurements taken per
+        # request, so they legitimately differ by milliseconds between
+        # the two calls — everything else is the same payload.
+        def without_clock(snapshot: dict) -&gt; dict:
+            return {
+                instrument: {
+                    **summary,
+                    "kinds": {
+                        kind: {key: view[key] for key in view if key != "age_ms"}
+                        for kind, view in summary["kinds"].items()
+                    },
+                }
+                for instrument, summary in snapshot["instruments"].items()
+            }
+    
+        root_mount = without_clock(client.get("/live/state").json())
+        api_mount = without_clock(client.get("/api/live/state").json())
+&gt;       assert root_mount == api_mount
+E       AssertionError: assert {'hyperliquid...', ...}, ...}} == {'hyperliquid...', ...}, ...}}
+E         
+E         Differing items:
+E         {'hyperliquid:BTC': {'venue': 'hyperliquid', 'instrument': 'BTC', 'kinds': {'quote': {'kind': 'quote', 'provenance': '...': 'fresh', 'last_source_at': '2026-10-13T03:11:11.143578Z', 'evaluated_at': '2026-10-13T03:11:11.197826Z', ...}, ...}} != {'hyperliquid:BTC': {'venue': 'hyperliquid', 'instrument': 'BTC', 'kinds': {'quote': {'kind': 'quote', 'provenance': '...': 'fresh', 'last_source_at': '2026-10-13T03:11:11.143578Z', 'evaluated_at': '2026-10-13T03:11:11.474674Z', ...}, ...}}
+E         Use -v to get more diff
+
+tests/test_live_router.py:204: AssertionError</failure></testcase></testsuite></testsuites>

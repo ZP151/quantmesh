@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import time
@@ -24,8 +25,10 @@ def profile(tmp_path):
         endpoint="unix:///var/run/docker.sock",
         docker_cli=cli,
         image_id="sha256:" + "a" * 64,
-        uid=10001,
-        gid=10001,
+        # A real POSIX ownership check stays enabled in these fake-engine tests.
+        # Non-root CI cannot assign an unrelated hardcoded container identity.
+        uid=(os.getuid() or 10001) if os.name == "posix" else 10001,
+        gid=(os.getgid() or 10001) if os.name == "posix" else 10001,
         fixture_root=root,
     )
 
@@ -118,6 +121,7 @@ def test_fixed_creation_and_gated_start(profile, paths, engine):
     ]:
         assert flag in create
     assert create.count("--mount") == 2
+    assert create[create.index("--user") + 1] == f"{profile.uid}:{profile.gid}"
     assert "readonly" in create[create.index("--mount") + 1]
     assert attach.sent == ["go"]
     process.pulse()
@@ -127,6 +131,20 @@ def test_fixed_creation_and_gated_start(profile, paths, engine):
     assert process.poll() == 7
     process.close()
     assert calls[-1] == ["rm", "--force", "b" * 64]
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or os.geteuid() == 0,
+    reason="requires the real non-root POSIX ownership boundary",
+)
+def test_unassignable_output_owner_refuses_before_container_create(profile, paths, engine):
+    from dataclasses import replace
+
+    calls, _, _, _ = engine
+    foreign = replace(profile, uid=profile.uid + 1)
+    with pytest.raises(PermissionError):
+        owned.LinuxOwnedProcess(foreign, ["/bin/true"], RunBudget(), *paths)
+    assert not any(args[0] == "create" for args in calls)
 
 
 @pytest.mark.parametrize(
