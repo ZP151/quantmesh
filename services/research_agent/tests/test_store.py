@@ -7,9 +7,8 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
-from conftest import publish
+from conftest import publish, scripted_effects
 from pydantic import SecretStr
-from qm_research_agent.budgets import EffectLedger
 from qm_research_agent.store import PostgresJobStore, connect
 from test_research_jobs import request_for
 
@@ -101,7 +100,7 @@ def test_postgres_concurrent_reservations_cannot_exceed_allowance(pg):
     lease = store.claim_analysis("analyst", clock[0])
 
     def reserve(i):
-        return EffectLedger(factory()).reserve_call(
+        return scripted_effects(factory()).reserve_call(
             job.job_id, f"{i:064x}", Decimal("0.6"), RunBudget(), lease
         )
 

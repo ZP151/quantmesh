@@ -3,8 +3,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 import pytest
-from conftest import succeeded
-from qm_research_agent.budgets import EffectLedger
+from conftest import scripted_effects, succeeded
 from qm_research_agent.orchestrator import AdvisoryRunner
 
 from quantmesh.ai.gateway import ModelGateway
@@ -34,7 +33,7 @@ def gateway(ref, content=None):
 def runner(store, price=Decimal("0")):
     return AdvisoryRunner(
         store,
-        EffectLedger(store),
+        scripted_effects(store),
         provider="scripted",
         price=price,
         price_version="scripted-free-v1",
@@ -64,7 +63,7 @@ def test_ambiguous_model_timeout_requires_operator_retry(local):
     job, ref = succeeded(store, lake)
     model, transport = gateway(ref)
     lease = store.claim_analysis("first", clock[0])
-    effects = EffectLedger(store)
+    effects = scripted_effects(store)
     digest = ref.sha256
     assert effects.reserve_call(job.job_id, digest, Decimal("0"), job.request.budget, lease)
     # A reserved effect left by a killed process has unknown external outcome.
@@ -119,7 +118,7 @@ def test_expired_lease_cannot_reserve(local):
     job, _ = succeeded(store, lake)
     lease = store.claim_analysis("first", clock[0])
     clock[0] += timedelta(seconds=61)
-    assert not EffectLedger(store).reserve_call(
+    assert not scripted_effects(store).reserve_call(
         job.job_id, "a" * 64, Decimal("0"), RunBudget(), lease
     )
 

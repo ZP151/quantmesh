@@ -15,11 +15,14 @@ import stat
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 from urllib.parse import parse_qsl, urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+
+from qm_research_agent.budgets import PortfolioBudgetPolicy
 
 
 class RuntimeRejected(ValueError):
@@ -53,6 +56,34 @@ def _directory(path: Path) -> Path:
     return path
 
 
+class PortfolioPolicyConfig(BaseModel):
+    """Explicit service config; JSON amounts are exact decimal strings."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", hide_input_in_errors=True)
+    policy_id: str
+    operating_monthly_usd: Decimal
+    development_total_usd: Decimal
+
+    @model_validator(mode="before")
+    @classmethod
+    def exact_amounts(cls, values):
+        if isinstance(values, dict):
+            for name in ("operating_monthly_usd", "development_total_usd"):
+                if name in values and not isinstance(values[name], (str, Decimal)):
+                    raise RuntimeRejected("configuration_invalid")
+        return values
+
+    def authority(self):
+        return PortfolioBudgetPolicy(
+            self.policy_id, self.operating_monthly_usd, self.development_total_usd
+        )
+
+    @model_validator(mode="after")
+    def valid_policy(self):
+        self.authority()
+        return self
+
+
 class ServiceRuntimeConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid", hide_input_in_errors=True)
 
@@ -65,6 +96,8 @@ class ServiceRuntimeConfig(BaseModel):
     credential_directory: Path = Field(repr=False)
     host: Literal["127.0.0.1"] = "127.0.0.1"
     port: Literal[8110] = 8110
+    portfolio_policy: PortfolioPolicyConfig | None = None
+    portfolio_category: Literal["operating", "development"] | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -81,6 +114,8 @@ class ServiceRuntimeConfig(BaseModel):
         from quantmesh.data.layout import validate_dataset_name
 
         try:
+            if (self.portfolio_policy is None) != (self.portfolio_category is None):
+                raise ValueError
             if len(set(self.configured_dataset_ids)) != len(self.configured_dataset_ids):
                 raise ValueError
             for name in self.configured_dataset_ids:
@@ -469,6 +504,7 @@ def load_runtime(config_path: Path) -> ServiceRuntime:
 
 def build_app(runtime: ServiceRuntime):
     from qm_research_agent.app import create_app
+    from qm_research_agent.budgets import EffectLedger
     from qm_research_agent.store import PostgresJobStore
 
     config = runtime.config
@@ -478,6 +514,11 @@ def build_app(runtime: ServiceRuntime):
     store = PostgresJobStore(
         runtime.postgres_dsn, lake_root=config.lake_root, artifact_root=config.artifact_root
     )
+    if config.portfolio_policy is not None:
+        # Bind authority only; bootstrap does not construct or start a model runner.
+        EffectLedger(
+            store, policy=config.portfolio_policy.authority(), category=config.portfolio_category
+        )
     return create_app(
         store,
         operator_id=config.operator_id,

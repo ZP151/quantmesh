@@ -79,6 +79,80 @@ in this slice. Price must be explicitly known, finite and nonnegative; call
 count and USD reservations cannot exceed the request budget. Dollar limits are
 estimate admission controls, not provider invoice guarantees.
 
+## Portfolio estimate authority — issue #171
+
+New effects, including zero estimates and scripted fixtures, require an explicit
+service-owned policy and category. This is additive accounting over the frozen
+store/DTO contracts. Runtime defaults still have no model runner; health and
+preflight continue to report model `unavailable`, paper mode and live disabled.
+
+```python
+from decimal import Decimal
+from qm_research_agent.budgets import EffectLedger, PortfolioBudgetPolicy
+
+policy = PortfolioBudgetPolicy("research-estimates-v1", Decimal("50"), Decimal("200"))
+effects = EffectLedger(store, policy=policy, category="operating")
+```
+
+The frozen policy accepts a bounded ASCII identifier and finite nonnegative
+Decimal caps, at most $50 operating per UTC calendar month and $200 development
+over the authority's lifetime. Category is explicitly `operating` or
+`development`; jobs and HTTP submissions cannot supply it. The optional private
+runtime configuration uses paired `portfolio_policy` and `portfolio_category`:
+
+```json
+{
+  "portfolio_policy": {
+    "policy_id": "research-estimates-v1",
+    "operating_monthly_usd": "50",
+    "development_total_usd": "200"
+  },
+  "portfolio_category": "operating"
+}
+```
+
+Amounts in JSON are decimal strings. Numeric coercion, unpaired fields, unknown
+fields and expanded caps reject. Serving with this optional configuration binds
+the policy in the authoritative store; it does not enable model execution or
+external requests. Configuring a future model runner requires independent
+provider/key/containment approval.
+
+The additive version-1 tables are `qm_portfolio_schema`, singleton
+`qm_portfolio_policy` (immutable identity/caps and a UTC high-water clock), and
+`qm_portfolio_reservations` (effect identity, category, UTC month, canonical
+Decimal price and reservation timestamp). `model_effects` retains its original
+columns and read/response/checkpoint tuple. Admission validates the binding and
+version, checks lease fencing and both per-job and portfolio limits, then inserts
+the effect and attribution in the **same** store transaction. SQLite witnesses
+use BEGIN IMMEDIATE; PostgreSQL uses the existing schema advisory transaction
+lock. Provider invocation happens only after commit. Exact rational arithmetic
+over validated Decimals avoids ambient Decimal-context rounding and float sums;
+prices and caps persist as canonical Decimal strings.
+
+Completed operating estimates count only in their reservation month. Unresolved
+effects from earlier months still count against the current month; cancellation,
+timeouts and crashes never release them. Development estimates remain cumulative
+after completion, month transitions and reopening. Backward store time denies new
+reservations. The authoritative store clock supplies all timestamps and periods.
+Changed policy IDs/caps, unknown accounting versions and existing unattributed
+effects fail closed; no historical category/timestamp is invented. Missing policy
+denies new effects but archived response/checkpoint replay remains usable.
+
+There is one authority per deployment/schema. A restored backup preserves the
+policy, clock and complete reservation history; it does not renew the allowance.
+Cloned or restored stores cannot be simultaneously promoted as independent
+authorities for one allowance. Production cutover remains operator-gated; an
+older snapshot cannot serve as a fresh spending authority. External development
+API tools must reserve through this same approved authority before future paid
+activation or remain blocked. This service ledger does not certify a full-project
+ceiling for tools or bake-offs that bypass it. Estimates differ from provider
+invoices, and infrastructure spending is outside this ledger.
+
+The new tests are explicitly local SQLite/scripted accounting witnesses. Real
+PostgreSQL concurrency and dump/restore require the separate owned qualifier;
+these tests do not certify real billing, model performance, production TLS,
+off-host restore or deployment. No paid call is authorized by this change.
+
 Model input is the verified published report only. Credential/endpoint/order
 fields and recognized secret text reject; schema-valid outputs must cite the
 exact published report and produce digest/size-verified job-owned analysis

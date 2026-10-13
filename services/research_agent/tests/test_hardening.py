@@ -2,11 +2,10 @@ import json
 import time
 from decimal import Decimal
 
-from conftest import succeeded
+from conftest import scripted_effects, succeeded
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from qm_research_agent.app import create_app
-from qm_research_agent.budgets import EffectLedger
 from qm_research_agent.orchestrator import AdvisoryRunner, ApprovedRemoteGateway
 from test_research_jobs import request_for
 
@@ -25,7 +24,7 @@ def test_unsupported_budget_blocks_before_effect(local, monkeypatch):
     transport = ScriptedModelTransport([])
     gateway = ModelGateway(transport, model_name="scripted-fixture")
     lease = store.claim_analysis("first", clock[0])
-    effects = EffectLedger(store)
+    effects = scripted_effects(store)
     engine = AdvisoryRunner(
         store, effects, provider="scripted", price=Decimal("0"), price_version="v1"
     )
@@ -81,7 +80,7 @@ def test_unknown_effect_survives_changed_configuration(local):
     gateway = ModelGateway(transport, model_name="scripted-fixture")
     lease = store.claim_analysis("first", clock[0])
     engine = AdvisoryRunner(
-        store, EffectLedger(store), provider="scripted", price=Decimal("0"), price_version="v1"
+        store, scripted_effects(store), provider="scripted", price=Decimal("0"), price_version="v1"
     )
     assert engine.run_analysis(job, ref, gateway, lease=lease).error_code == "unknown_effect"
     engine.price_version = "v2"
@@ -129,7 +128,7 @@ def test_analysis_deadline_stops_owned_effect_without_recall(local):
     gateway = ModelGateway(transport, model_name="scripted-fixture")
     lease = store.claim_analysis("first", clock[0])
     engine = AdvisoryRunner(
-        store, EffectLedger(store), provider="scripted", price=Decimal("0"), price_version="v1"
+        store, scripted_effects(store), provider="scripted", price=Decimal("0"), price_version="v1"
     )
     started = time.monotonic()
     result = engine.run_analysis(job, ref, gateway, lease=lease)

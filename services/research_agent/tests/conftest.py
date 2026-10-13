@@ -3,8 +3,10 @@
 import hashlib
 import json
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import pytest
+from qm_research_agent.budgets import EffectLedger, PortfolioBudgetPolicy
 from test_research_jobs import request_for
 
 from quantmesh.research.job_store import SQLiteJobStore
@@ -51,3 +53,12 @@ def succeeded(store, lake):
     job = store.submit("operator", "first", request_for(lake, analysis_requested=True))
     ref = publish(store, job)
     return store.get("operator", job.job_id), ref
+
+
+def scripted_effects(store):
+    """Explicit fixture authority, with the same admission as remote effects."""
+    return EffectLedger(
+        store,
+        policy=PortfolioBudgetPolicy("scripted-test-authority", Decimal("50"), Decimal("200")),
+        category="operating",
+    )
