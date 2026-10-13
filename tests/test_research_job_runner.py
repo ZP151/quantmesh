@@ -164,13 +164,13 @@ def test_timeout_kills_only_owned_worker(setup, monkeypatch, tmp_path):
     # A controlled worker tree, deliberately blocked before baseline. Real sibling is unrelated.
     boot = (
         "import sys,time,subprocess,json,os,pathlib; sys.stdin.readline(); "
-        "p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(120)']); "
+        "p=subprocess.Popen([sys.executable,'-B','-c','import time;time.sleep(120)']); "
         "pathlib.Path(sys.argv[1]).write_text(json.dumps([os.getpid(),p.pid]));time.sleep(120)"
     )
     monkeypatch.setattr(
-        job_runner, "_child_command", lambda _: [sys.executable, "-c", boot, str(marker)]
+        job_runner, "_child_command", lambda _: [sys.executable, "-B", "-c", boot, str(marker)]
     )
-    sibling = subprocess.Popen([sys.executable, "-c", "import time;time.sleep(120)"])
+    sibling = subprocess.Popen([sys.executable, "-B", "-c", "import time;time.sleep(120)"])
     try:
         start = time.monotonic()
         result = job_runner.run_next_job(store, "timeout-worker", lake, store.artifact_root)
@@ -216,7 +216,12 @@ def test_active_child_is_stopped_on_cancellation(setup, monkeypatch):
     monkeypatch.setattr(
         job_runner,
         "_child_command",
-        lambda _: [sys.executable, "-c", "import sys,time;sys.stdin.readline();time.sleep(120)"],
+        lambda _: [
+            sys.executable,
+            "-B",
+            "-c",
+            "import sys,time;sys.stdin.readline();time.sleep(120)",
+        ],
     )
     with ThreadPoolExecutor(max_workers=1) as pool:
         future = pool.submit(
@@ -259,6 +264,7 @@ def test_windows_launcher_cannot_escape_before_assignment(tmp_path, monkeypatch)
     monkeypatch.setattr(job_runner.subprocess, "Popen", slow_parent)
     command = [
         sys.executable,
+        "-B",
         "-c",
         "import sys,os,pathlib,time;"
         "pathlib.Path(sys.argv[1]).write_text(str(os.getpid()));sys.stdin.readline();time.sleep(120)",
@@ -294,6 +300,7 @@ def test_windows_memory_and_one_cpu_limits_are_real(tmp_path):
 
     command = [
         sys.executable,
+        "-B",
         "-c",
         "import sys,ctypes;sys.stdin.readline();"
         "k=ctypes.windll.kernel32;a=ctypes.c_size_t();b=ctypes.c_size_t();"
@@ -335,7 +342,12 @@ def test_failed_windows_setup_reaps_direct_child(tmp_path, monkeypatch, operatio
     try:
         with pytest.raises(job_runner.UnsupportedLimits):
             job_runner._OwnedChild(
-                [sys.executable, "-c", "import sys,time;sys.stdin.readline();time.sleep(120)"],
+                [
+                    sys.executable,
+                    "-B",
+                    "-c",
+                    "import sys,time;sys.stdin.readline();time.sleep(120)",
+                ],
                 RunBudget(),
                 tmp_path,
             )
@@ -354,7 +366,7 @@ def test_linux_without_crash_safe_limits_is_explicitly_rejected(tmp_path, monkey
     monkeypatch.setattr(job_runner.sys, "platform", "linux")
     with pytest.raises(job_runner.UnsupportedLimits):
         child = job_runner._OwnedChild(
-            [sys.executable, "-c", "print('unsafe')"], RunBudget(), tmp_path
+            [sys.executable, "-B", "-c", "print('unsafe')"], RunBudget(), tmp_path
         )
         child.close()
 
@@ -376,6 +388,92 @@ def test_runtime_digest_binds_python_build(monkeypatch):
     assert first["dependency_digest"] != second["dependency_digest"]
 
 
+def test_child_command_disables_bytecode_before_boot(tmp_path):
+    from quantmesh.research.job_runner import _child_command
+
+    assert _child_command(tmp_path)[1] == "-B"
+
+
+def test_owned_child_poll_uses_actual_popen_exit():
+    from types import SimpleNamespace
+
+    from quantmesh.research.job_runner import _OwnedChild
+
+    child = object.__new__(_OwnedChild)
+    child.process = SimpleNamespace(poll=lambda: 7, returncode=0)
+    assert child.poll() == 7
+    child.pulse()  # Windows ownership requires no pulse channel.
+
+
+@pytest.fixture
+def child_receipt_fixture(tmp_path):
+    from quantmesh.research.job_artifacts import _canonical, canonical_result
+
+    lake = tmp_path / "lake"
+    pinned_lake(lake)
+    store = SQLiteJobStore(tmp_path / "queue.sqlite", lake_root=lake)
+    request = request_for(lake)
+    store.submit("local", "receipt", request)
+    job = store.claim("owner", datetime.now(UTC))
+    report = run_baseline_report(
+        dataset="equities",
+        revision=request.dataset.revision,
+        strategy=request.strategy_id,
+        interval=request.interval,
+        universe=request.universe,
+        window_spec=request.window_spec,
+        costs=request.costs,
+        commit=job.implementation_digest,
+        registry=ReportRegistry(tmp_path / "direct", lake_root=lake),
+    )
+    runtime = dict(build_digest="a" * 64, dependency_digest="b" * 64)
+    report.evidence.update(
+        runtime,
+        request_digest=job.request_digest,
+        manifest_digest=request.dataset.manifest_digest,
+        export_digest=request.dataset.export_digest,
+    )
+    output = tmp_path / "output"
+    output.mkdir()
+    raw = canonical_result(report)
+    receipt = dict(
+        report=report.model_dump(mode="json"), runtime=runtime, attempt=job.attempt, owner="owner"
+    )
+    (output / "result.json").write_bytes(raw)
+    (output / "receipt.json").write_bytes(_canonical(receipt))
+    return job, runtime, output, receipt, raw
+
+
+def test_child_receipt_accepts_canonical_bound_result(child_receipt_fixture):
+    from quantmesh.research import job_runner
+
+    job, runtime, output, _, raw = child_receipt_fixture
+    assert job_runner._validated_child_result(job, "owner", runtime, output) == raw
+
+
+@pytest.mark.parametrize("fault", ["owner", "attempt", "runtime", "symlink", "large"])
+def test_child_receipt_rejects_wrong_identity_or_file(child_receipt_fixture, fault, monkeypatch):
+    from quantmesh.research import job_runner
+    from quantmesh.research.job_artifacts import _canonical
+
+    job, runtime, output, receipt, _ = child_receipt_fixture
+    path = output / "receipt.json"
+    if fault in {"owner", "attempt", "runtime"}:
+        receipt[fault] = {"injected": "host"} if fault == "runtime" else "other"
+        path.write_bytes(_canonical(receipt))
+    elif fault == "large":
+        monkeypatch.setattr(job_runner, "_MAX_OUTPUT_BYTES", 10)
+    else:
+        target = output / "saved.json"
+        path.rename(target)
+        try:
+            path.symlink_to(target.name)
+        except OSError:
+            pytest.skip("OS does not permit fixture symlinks")
+    with pytest.raises(ValueError):
+        job_runner._validated_child_result(job, "owner", runtime, output)
+
+
 @pytest.mark.skipif(os.name != "nt", reason="Windows abrupt-owner tree witness")
 def test_owner_death_kills_tree_and_preserves_sibling(tmp_path):
     import ctypes
@@ -386,21 +484,23 @@ def test_owner_death_kills_tree_and_preserves_sibling(tmp_path):
     marker = tmp_path / "tree.json"
     tree = (
         "import sys,time,subprocess,json,os,pathlib;sys.stdin.readline();"
-        "p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(120)']);"
+        "p=subprocess.Popen([sys.executable,'-B','-c','import time;time.sleep(120)']);"
         "pathlib.Path(sys.argv[1]).write_text(json.dumps([os.getpid(),p.pid]));time.sleep(120)"
     )
     script = (
         "import sys,os,time;sys.stdin.readline();from pathlib import Path;"
         "from quantmesh.research.job_runner import _OwnedChild;"
         "from quantmesh.research.jobs import RunBudget;"
-        "child=_OwnedChild([sys.executable,'-c',sys.argv[2],sys.argv[1]],RunBudget(),Path(sys.argv[3]));"
+        "child=_OwnedChild([sys.executable,'-B','-c',sys.argv[2],sys.argv[1]],RunBudget(),Path(sys.argv[3]));"
         "exec('while not Path(sys.argv[1]).exists():\\n time.sleep(.02)');os._exit(24)"
     )
     inner_dir = tmp_path / "inner"
     inner_dir.mkdir()
-    sibling = subprocess.Popen([sys.executable, "-c", "import time;time.sleep(120)"])
+    sibling = subprocess.Popen([sys.executable, "-B", "-c", "import time;time.sleep(120)"])
     owner = _OwnedChild(
-        [sys.executable, "-c", script, str(marker), tree, str(inner_dir)], RunBudget(), tmp_path
+        [sys.executable, "-B", "-c", script, str(marker), tree, str(inner_dir)],
+        RunBudget(),
+        tmp_path,
     )
     kernel = ctypes.windll.kernel32
     kernel.OpenProcess.restype = ctypes.c_void_p
@@ -436,7 +536,12 @@ def test_owned_worker_crash_recovers_within_ninety_seconds(setup, tmp_path, monk
 
     def command(attempt):
         if json.loads((attempt / "job.json").read_bytes())["job_id"] == sibling.job_id:
-            return [sys.executable, "-c", "import sys,time;sys.stdin.readline();time.sleep(120)"]
+            return [
+                sys.executable,
+                "-B",
+                "-c",
+                "import sys,time;sys.stdin.readline();time.sleep(120)",
+            ]
         return real_command(attempt)
 
     def launch(*args):
@@ -479,7 +584,7 @@ def _recover_under_load(store, lake, tmp_path, sibling, sibling_child):
     directory = tmp_path / "owner"
     directory.mkdir()
     child = _OwnedChild(
-        [sys.executable, "-c", script, str(store.path), str(lake)], RunBudget(), directory
+        [sys.executable, "-B", "-c", script, str(store.path), str(lake)], RunBudget(), directory
     )
     try:
         assert child.process.wait(timeout=20) == 23
