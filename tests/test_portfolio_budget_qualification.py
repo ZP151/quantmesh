@@ -320,6 +320,183 @@ def test_stdout_stderr_and_nonzero_exit_are_retained(verifier, tmp_path):
     assert (tmp_path / receipt["stderr"]).read_bytes() == b"raw-err\n"
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="retained native leader pidfd")
+@pytest.mark.parametrize("transition", ["terminal-empty", "live-empty", "terminal-wrong-nonce"])
+def test_owned_leader_exit_during_environment_read_preserves_retention(
+    verifier, tmp_path, monkeypatch, transition
+):
+    terminal = transition.startswith("terminal")
+    tmp_path.chmod(0o700)
+    release = tmp_path / "release-owned-leader"
+    code = (
+        "import sys,time;from pathlib import Path;deadline=time.monotonic()+15;"
+        "\nwhile not Path(sys.argv[1]).exists():"
+        "\n if time.monotonic()>deadline: sys.exit(90)"
+        "\n time.sleep(0.005)"
+        "\nprint('raw-out');print('raw-err',file=sys.stderr);sys.exit(7)"
+    )
+    runner = verifier.Commands(tmp_path, tmp_path)
+    handle = runner.spawn(
+        [sys.executable, "-B", "-c", code, str(release)],
+        verifier.environment(tmp_path),
+        tmp_path,
+    )
+    member = handle.members[(handle.pid, handle.ticks)]
+    environment_path = Path("/proc") / str(handle.pid) / "environ"
+    read_bytes = Path.read_bytes
+    evidence = {"leader": member.identity.copy(), "transition": transition}
+    changed = False
+
+    def exiting_environment(path):
+        nonlocal changed
+        if path == environment_path and (not changed or not terminal):
+            # Only the already admitted leader is inspected; no ambient process is sampled.
+            raw = read_bytes(path)
+            assert b"QM_BACKUP_COMMAND_OWNER=" + handle.nonce.encode() in raw.split(b"\0")
+            assert verifier.owned.process_ticks(handle.pid) == handle.ticks
+            changed = True
+            if terminal:
+                release.touch()
+                assert select.select([member.pidfd], [], [], 3)[0]
+            evidence.update(
+                phase="Child.identity/environ",
+                predicate="owner_nonce_absent_in_terminal_window",
+                pidfd_ready=member.ready(),
+                popen_before_poll=handle.process.returncode,
+            )
+            # Controlled /proc transition: all earlier identity fields remain real.
+            return b"QM_BACKUP_COMMAND_OWNER=wrong\0" if transition.endswith("wrong-nonce") else b""
+        return read_bytes(path)
+
+    try:
+        with monkeypatch.context() as boundary:
+            boundary.setattr(Path, "read_bytes", exiting_environment)
+            expected = (
+                "command failed" if transition == "terminal-empty" else "family ownership refused"
+            )
+            with pytest.raises(ValueError, match=expected):
+                runner.collect(handle, "owned-leader-exit-transition", timeout=5)
+        receipt = runner.receipts[-1]
+        if transition == "terminal-empty":
+            assert receipt["exit"] == 7
+            assert (tmp_path / receipt["stdout"]).read_bytes() == b"raw-out\n"
+            assert (tmp_path / receipt["stderr"]).read_bytes() == b"raw-err\n"
+            assert member.terminal and member.reaped == "owned_Popen"
+        elif not terminal:
+            assert handle.process.poll() is None
+            assert not member.ready()
+            assert receipt["exit"] is None
+        assert not member.signals
+    finally:
+        # The test releases only its own positively admitted child, without signalling.
+        release.touch()
+        handle.process.wait(timeout=3)
+        evidence.update(popen_exit=handle.process.returncode, signals=member.signals)
+        handle.close()
+        (tmp_path / "owned-leader-transition.json").write_text(json.dumps(evidence, sort_keys=True))
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="native registration pidfd")
+@pytest.mark.parametrize("terminal", [True, False], ids=["terminal", "live-refusal"])
+def test_registration_environment_permission_error_retains_owned_exit(
+    verifier, tmp_path, monkeypatch, terminal
+):
+    release = tmp_path / "release-registration-leader"
+    code = (
+        "import sys,time;from pathlib import Path;print('R',end='',flush=True);"
+        "deadline=time.monotonic()+12;"
+        "\nwhile not Path(sys.argv[1]).exists():"
+        "\n if time.monotonic()>deadline: sys.exit(90)"
+        "\n time.sleep(0.005)"
+        "\nprint('raw-out');print('raw-err',file=sys.stderr);sys.exit(7)"
+    )
+    runner = verifier.Commands(tmp_path, tmp_path)
+    identity, read_bytes = verifier.Child.identity, Path.read_bytes
+    open_pidfd, select_fds = os.pidfd_open, select.select
+    state = {"calls": 0, "pending": False}
+
+    def observed_identity(handle, pid):
+        state["handle"] = handle
+        state["calls"] += 1
+        result = identity(handle, pid)
+        if state["calls"] == 1:
+            state["first"] = result
+        return result
+
+    def retained_pidfd(pid, *args):
+        fd = open_pidfd(pid, *args)
+        if pid == state["first"]["pid"]:
+            state["fd"] = fd
+        return fd
+
+    def permission_transition(path):
+        handle = state.get("handle")
+        if (
+            handle is not None
+            and state["calls"] == 2
+            and path == Path("/proc") / str(handle.pid) / "environ"
+        ):
+            assert state["first"]["start_ticks"] == handle.ticks
+            assert select_fds([handle.process.stdout], [], [], 3)[0]
+            assert os.read(handle.process.stdout.fileno(), 1) == b"R"
+            state["pending"] = True
+            raise PermissionError(13, "controlled owned registration exit window")
+        return read_bytes(path)
+
+    def terminal_observation(read, write, error, timeout=None):
+        if state["pending"] and read == [state["fd"]] and timeout and terminal:
+            release.touch()
+        ready = select_fds(read, write, error, timeout)
+        if state["pending"] and read == [state["fd"]] and timeout:
+            state["observed_terminal"] = bool(ready[0])
+        return ready
+
+    try:
+        with monkeypatch.context() as boundary:
+            boundary.setattr(verifier.Child, "identity", observed_identity)
+            boundary.setattr(Path, "read_bytes", permission_transition)
+            boundary.setattr(os, "pidfd_open", retained_pidfd)
+            boundary.setattr(select, "select", terminal_observation)
+            expected = ValueError if terminal else PermissionError
+            with pytest.raises(
+                expected, match="command failed" if terminal else "controlled owned"
+            ):
+                handle = runner.spawn(
+                    [sys.executable, "-B", "-c", code, str(release)],
+                    verifier.environment(tmp_path),
+                    tmp_path,
+                )
+                runner.collect(handle, "owned-registration-transition", timeout=5)
+            handle = state["handle"]
+            assert not any(m.signals for m in handle.members.values())
+            if terminal:
+                receipt = runner.receipts[-1]
+                assert receipt["exit"] == 7
+                assert (tmp_path / receipt["stdout"]).read_bytes() == b"raw-out\n"
+                assert (tmp_path / receipt["stderr"]).read_bytes() == b"raw-err\n"
+            else:
+                assert handle.process.poll() is None
+    finally:
+        release.touch()
+        handle = state.get("handle")
+        if handle is not None:
+            handle.process.wait(timeout=3)
+            handle.close()
+            if terminal:
+                print(
+                    json.dumps(
+                        {
+                            "first_identity": state.get("first"),
+                            "phase": "registration/second-identity/environ",
+                            "terminal_observed": state.get("observed_terminal"),
+                            "exit": handle.process.returncode,
+                            "signals": [],
+                        },
+                        sort_keys=True,
+                    )
+                )
+
+
 def test_pg_prefix_manifest_rejects_substitution(verifier, tmp_path):
     prefix = tmp_path / "prefix"
     prefix.mkdir()

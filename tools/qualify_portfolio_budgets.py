@@ -286,10 +286,22 @@ class Child(owned.CommandProcess):
             or int(fields[3]) != self.pid
             or executable not in self.allowed_binaries
             or owned.digest(proc / "exe") != self.allowed_binaries[executable]
-            or b"QM_BACKUP_COMMAND_OWNER=" + self.nonce.encode()
-            not in (proc / "environ").read_bytes().split(b"\0")
             or (pid == self.pid and argv != list(map(os.fsencode, self.argv)))
         ):
+            raise ValueError("command family ownership refused; no unowned signal")
+        environment = (proc / "environ").read_bytes()
+        if b"QM_BACKUP_COMMAND_OWNER=" + self.nonce.encode() not in environment.split(b"\0"):
+            member = self.members.get((pid, fields[19]))
+            if (
+                not environment
+                and pid == self.pid
+                and fields[19] == self.ticks
+                and member is not None
+                and member.ready()
+            ):
+                # A retained leader may lose /proc/environ while exiting. This
+                # terminal pidfd grants retirement only, never signal authority.
+                raise ProcessLookupError("terminal owned leader")
             raise ValueError("command family ownership refused; no unowned signal")
         return {
             "pid": pid,
@@ -322,7 +334,18 @@ class Child(owned.CommandProcess):
                     try:
                         if select.select([fd], [], [], 0)[0]:
                             continue
-                        second = self.identity(identity["pid"])
+                        try:
+                            second = self.identity(identity["pid"])
+                        except PermissionError:
+                            if (
+                                identity["pid"] == self.pid
+                                and identity["start_ticks"] == self.ticks
+                                and select.select([fd], [], [], 0.1)[0]
+                            ):
+                                # The first identity was fully admitted. Observe
+                                # retirement through its held handle, never signal.
+                                continue
+                            raise
                         if any(
                             second[k] != identity[k]
                             for k in (
