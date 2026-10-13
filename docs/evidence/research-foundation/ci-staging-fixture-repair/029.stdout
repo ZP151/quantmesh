@@ -1,0 +1,277 @@
+.....................E................................................F. [ 60%]
+...............................F........F.F..F.                          [100%]
+==================================== ERRORS ====================================
+_ ERROR at teardown of test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks _
+
+    @pytest.fixture(scope="module")
+    def live_quote_anchor() -> tuple[LiveFeed, datetime]:
+        """The scripted venue + live supervisor + feed pump on one daemon
+        loop; returns the feed and the receipt anchor of the burst quote."""
+        loop = asyncio.new_event_loop()
+        holder: dict[str, object] = {}
+        ready = threading.Event()
+    
+        def runner() -> None:
+            async def serve() -> None:
+                holder["task"] = asyncio.current_task()
+                async with ScriptedVenue(plan=_plan(), transform_frame=_fresh_fixture_frame) as venue:
+                    feed = LiveFeed(lag=timedelta(seconds=5), stale=timedelta(seconds=10))
+                    supervisor = HyperliquidVenueSupervisor(LiveHyperliquidTransport(str(venue.url)))
+                    supervisor.subscribe(["BTC"])
+                    feed.attach(supervisor)
+                    holder["feed"] = feed
+                    held: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+                    holder["held"] = held
+                    ready.set()
+                    await asyncio.gather(feed.run(), held)
+    
+            with asyncio.Runner(loop_factory=lambda: loop) as owned_runner:
+                try:
+                    owned_runner.run(serve())
+                except asyncio.CancelledError:
+                    pass
+    
+        thread = threading.Thread(target=runner, daemon=True)
+        thread.start()
+        if not ready.wait(timeout=10):
+            raise AssertionError("the scripted venue never came up")
+        feed = cast(LiveFeed, holder["feed"])
+        received_at: datetime | None = None
+        for _ in range(150):
+            state = feed.latest_state()
+            view = (
+                state.get("instruments", {}).get("hyperliquid:BTC", {}).get("kinds", {}).get("quote")
+                if isinstance(state.get("instruments"), dict)
+                else None
+            )
+            if isinstance(view, dict):
+                anchor = view.get("received_at")
+                if isinstance(anchor, str):
+                    received_at = datetime.fromisoformat(anchor)
+                    break
+            threading.Event().wait(0.1)
+        if received_at is None:
+            raise AssertionError("the feed never delivered a quote for BTC")
+        try:
+            yield feed, received_at
+        finally:
+            # Cancel the parent task so gather cancels the pump as well; cancelling
+            # its held Future alone leaves the feed and executor running.
+            task = cast(asyncio.Task[None], holder["task"])
+            loop.call_soon_threadsafe(task.cancel)
+            thread.join(timeout=5)
+>           assert not thread.is_alive(), "owned live quote pump did not finish shutdown"
+E           AssertionError: owned live quote pump did not finish shutdown
+E           assert not True
+E            +  where True = is_alive()
+E            +    where is_alive = <Thread(Thread-1 (runner), started daemon 131177279047360)>.is_alive
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_live_fence.py:453: AssertionError
+=================================== FAILURES ===================================
+__________________________ test_actual_owned_fixture ___________________________
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="real Linux pidfd/PTY lifecycle")
+    def test_actual_owned_fixture():
+>       result = stage.run_owned_fixture()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:1037: in run_owned_fixture
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+>           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:175: StageDenied
+_______ test_final_descriptor_replacement_refuses_actual_synthetic_gate ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x774e175bb980>
+
+    @NATIVE
+    def test_final_descriptor_replacement_refuses_actual_synthetic_gate(monkeypatch):
+        from tools import qualify_opend_private_terminal as helper
+    
+        profile = json.loads((ROOT / "deploy/aws/opend/gateway-profile.json").read_bytes())
+        monkeypatch.setattr(stage, "_admit", lambda w: (profile, helper))
+        c = permit()
+        c["expires_at"] = (datetime.now(UTC) + timedelta(seconds=5)).isoformat()
+        window = stage.StagingWindow(c)
+        monkeypatch.setattr(stage, "load_staging_window", lambda: window)
+        monkeypatch.setattr(stage, "_unclaimed", lambda w: None)
+        monkeypatch.setattr(stage, "_claim", lambda w, d: None)
+        monkeypatch.setattr(stage, "_finish_backend", os.close)  # synthetic backend/manager only
+        monkeypatch.setattr(stage, "_digest_fd", lambda fd: stage.VENDOR_SHA)
+    
+        @contextmanager
+        def fixture_file(path):
+            fd = os.open("/dev/null", os.O_RDONLY)
+            try:
+                yield fd
+            finally:
+                os.close(fd)
+    
+        monkeypatch.setattr(stage, "_protected_fd", fixture_file)
+        monkeypatch.setattr(stage, "_owned_dir", fixture_file)
+        original_spawn = stage._spawn_gated
+        captured = []
+    
+        def synthetic(fds, **kwargs):
+            child = original_spawn(fds, fixture=True, seconds=3, registry=kwargs["registry"])
+            captured.append(child)
+            return child
+    
+        monkeypatch.setattr(stage, "_spawn_gated", synthetic)
+        with (
+            stage._fixture_pty() as (_, slave),
+            stage._fixture_pty() as (_, replacement),
+            inherited_terminal(slave),
+        ):
+            calls = []
+    
+            def context(w):
+                if calls:
+                    os.dup2(replacement, 0)
+                calls.append(True)
+                return dict(
+                    manager=manager(),
+                    terminal=helper.inspect_private_terminal(0, 1, 2, expected_uid=os.getuid()),
+                    backend_pidfd=os.pidfd_open(os.getpid()),
+                )
+    
+            monkeypatch.setattr(stage, "inspect_staging_context", context)
+            with pytest.raises(helper.TerminalQualificationError, match="terminal_mismatch"):
+>               stage.start_staging_console(window)
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:536: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:718: in start_staging_console
+    child = _spawn_gated(
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:512: in synthetic
+    child = original_spawn(fds, fixture=True, seconds=3, registry=kwargs["registry"])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:940: in _spawn_gated
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+>           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:175: StageDenied
+___________ test_registry_is_retained_before_interrupt_is_unblocked ____________
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="native registry interruption")
+    def test_registry_is_retained_before_interrupt_is_unblocked():
+        registry = []
+>       with pytest.raises(stage.StageDenied, match="registration_interrupted") as caught:
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'registration_interrupted'
+E         Actual message: 'unsupported_native'
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:617: AssertionError
+______ test_owned_backend_stop_uses_retained_handle_and_preserves_sibling ______
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="real pidfd backend stop")
+    def test_owned_backend_stop_uses_retained_handle_and_preserves_sibling():
+        children = []
+        try:
+>           sibling = stage._spawn_gated(None, fixture=True, seconds=8, registry=children)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:639: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:940: in _spawn_gated
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+>           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:175: StageDenied
+______________ test_admission_failure_never_releases_actual_child ______________
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="native gated fork lifecycle")
+    def test_admission_failure_never_releases_actual_child():
+        def denied():
+            raise stage.StageDenied("backend_denied")
+    
+        with stage._fixture_pty() as (_, slave):
+>           child = stage._spawn_gated(slave, fixture=True, seconds=1)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:682: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:940: in _spawn_gated
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+>           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:175: StageDenied
+=============================== warnings summary ===============================
+../venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/utils/pandas_utils.py:60: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    delta = pd.Timedelta(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED ../../../../mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py::test_actual_owned_fixture
+FAILED ../../../../mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py::test_final_descriptor_replacement_refuses_actual_synthetic_gate
+FAILED ../../../../mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py::test_registry_is_retained_before_interrupt_is_unblocked
+FAILED ../../../../mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py::test_owned_backend_stop_uses_retained_handle_and_preserves_sibling
+FAILED ../../../../mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py::test_admission_failure_never_releases_actual_child
+ERROR ../../../../mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+5 failed, 113 passed, 5 warnings, 1 error in 12.63s

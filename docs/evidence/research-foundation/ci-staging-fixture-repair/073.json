@@ -1,0 +1,13 @@
+{
+  "deploy/aws/opend/stage_console.py": "2aabead42bb8211da1a7e9fa81b8f06e48b9b655e1651f992edcfdfa5be6eef4",
+  "tests/test_opend_staging_window.py": "97cbd9a37d753eda48e51307d65403569f7e30f7782039ceebb45f1c7681cfd9",
+  "tests/test_live_moomoo.py": "a7563b5b026e5d1e6ce406b6ca4cdfa0011ed150c39fd39ac1f0d08fa0f453a5",
+  "tests/test_live_fence.py": "e228e5f03c2c8d003275ecdda497639a179b7cfaaa69a6fd313bd02ede1ba157",
+  "tests/test_live_e2e.py": "0001a7ef651adf7f622c22a9f7bf359f8db3a79a70fe3166eb6c1e96e832cd63",
+  "tests/test_live_prediction_e2e.py": "636901ded631b1a9f41fda3e2190580e237b0bf1d69007be6529d52920e4d9ce",
+  "src/quantmesh/live/moomoo.py": "53357818c9cdccad2fd9b58bf2ffc938d9b8218c1045297e85a971ce42ea116e",
+  "src/quantmesh/live/feed.py": "f3f2bef90d6aa5315cda5f5af80a6f296f3190d2b0a5d3967ea52ab3d8e5c154",
+  "tests/test_moomoo_live_sdk.py": "e069659aa0438bc9f1588b7ddf31340e7b14e6583ea7a3b8728d41ce2cf54b3e",
+  "tests/test_moomoo_readiness_sdk.py": "b5108800378a5471951d7aa90e56b6026aae83da434e70bc8d61e94c761afcba",
+  "tests/test_moomoo_opend.py": "58bcf23120bbb419eaf4533a7b54fa100ad5942667393cbba66e933bf8ac6bf1"
+}

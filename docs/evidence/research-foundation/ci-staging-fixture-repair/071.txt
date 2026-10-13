@@ -1,0 +1,349 @@
+deploy/aws/opend/stage_console.py
+166: def _native(*, live=False):
+167:     if (
+168:         sys.platform != "linux"
+169:         or platform.machine() != "x86_64"
+170:         or not hasattr(os, "pidfd_open")
+171:         or not hasattr(signal, "pidfd_send_signal")
+172:         or threading.active_count() != 1
+173:         or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+174:     ):
+175:         raise StageDenied("unsupported_native")
+176:     if live and (
+177:         sys.version_info[:2] != (3, 12)
+178:         or not sys.flags.isolated
+179:         or not sys.flags.no_site
+180:         or not sys.flags.dont_write_bytecode
+181:         or Path(__file__) != LAUNCHER
+182:         or len(list(Path("/proc/self/task").iterdir())) != 1
+183:     ):
+184:         raise StageDenied("unsupported_native")
+866:     """Gated child; terminal descriptors pass directly, with no relay or capture."""
+867:     try:
+868:         for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP, signal.SIGALRM):
+869:             signal.signal(signum, signal.SIG_DFL)
+870:         _prctl(1, signal.SIGKILL)  # PR_SET_PDEATHSIG, preserved by ordinary exec.
+871:         if os.getppid() != parent:
+872:             os._exit(40)
+873:         signal.pthread_sigmask(signal.SIG_SETMASK, [])
+874:         if terminal_fds is None:
+875:             fd = os.open("/dev/null", os.O_RDWR)
+876:             for target in (0, 1, 2):
+877:                 os.dup2(fd, target)
+878:             if fd > 2:
+879:                 os.close(fd)
+880:         else:
+881:             for fd, target in zip(terminal_fds, (0, 1, 2), strict=True):
+882:                 os.dup2(fd, target)
+883:         keep = {0, 1, 2, gate, report, executable}
+884:         for entry in Path("/proc/self/fd").iterdir():
+885:             fd = int(entry.name)
+886:             if fd not in keep:
+887:                 try:
+888:                     os.close(fd)
+889:                 except OSError:
+890:                     pass
+891:         if not select.select([gate], [], [], 2)[0] or os.read(gate, 1) != b"R":
+892:             os._exit(40)
+931:     *,
+932:     fixture,
+933:     seconds,
+934:     role="blocked",
+935:     failure=None,
+936:     executable=None,
+937:     vendor_argv=None,
+938:     registry=None,
+939: ):
+940:     _native()
+941:     if terminal_fds is not None and type(terminal_fds) is int:
+942:         terminal_fds = (terminal_fds,) * 3
+943:     if role not in {"blocked", "parent"} or not 0 < seconds <= 900:
+944:         raise StageDenied("context_denied")
+945:     descriptors = []
+946:     pid = handle = None
+947:     owned = None
+948:     old_mask = None
+949:     try:
+950:         gate_r, gate_w = os.pipe()
+951:         descriptors.extend([gate_r, gate_w])
+952:         report_r, report_w = os.pipe()
+953:         descriptors.extend([report_r, report_w])
+954:         old_mask = signal.pthread_sigmask(
+955:             signal.SIG_BLOCK, {signal.SIGINT, signal.SIGTERM, signal.SIGHUP}
+956:         )
+957:         parent = os.getpid()
+958:         pid = os.fork()
+959:         if pid == 0:
+960:             _child(
+961:                 gate_r,
+962:                 report_w,
+1036: def run_owned_fixture():
+1037:     _native()
+1038:     started = time.monotonic()
+1039:     children = []
+1040:     root = Path(tempfile.mkdtemp(prefix="quantmesh-opend-stage-", dir="/var/tmp"))
+1041:     result = dict(
+1042:         status="failed",
+1043:         scope="OWNED_LOCAL_STAGING_FIXTURE",
+1044:         **FALSE_FLAGS,
+1045:         mocked=["root_permit", "systemd_manager", "tmux_backend", "source_host"],
+1046:         native=["fork_gate", "pidfd", "waitpid", "private_pty", "expiry", "pdeathsig", "hup"],
+1047:         root=str(root),
+1048:         owner_uid=os.getuid(),
+1049:         cases={},
+1050:         python_version=platform.python_version(),
+1051:     )
+1052:     subreaper = ctypes.c_int()
+1053:     _prctl(37, ctypes.byref(subreaper))
+1054:     _prctl(36, 1)
+1055:     try:
+
+tests/test_live_moomoo.py
+328: def _start_pump(feed: LiveFeed) -> tuple[threading.Thread, asyncio.Task[None]]:
+329:     loop = asyncio.new_event_loop()
+330:     started = threading.Event()
+331:     holder: dict[str, object] = {}
+332: 
+333:     def runner() -> None:
+334:         asyncio.set_event_loop(loop)
+335:         task = loop.create_task(feed.run())
+336:         holder["task"] = task
+337:         started.set()
+338:         try:
+339:             loop.run_until_complete(task)
+340:         except asyncio.CancelledError:
+341:             pass
+342: 
+343:     thread = threading.Thread(target=runner, daemon=True)
+344:     thread.start()
+345:     if not started.wait(timeout=5):
+346:         raise AssertionError("the pump never started")
+347:     return thread, cast(asyncio.Task[None], holder["task"])
+348: 
+349: 
+350: def _stop_pump(thread, loop, run_task: asyncio.Task[None], transport) -> None:
+351:     loop.call_soon_threadsafe(run_task.cancel)
+352:     loop.call_soon_threadsafe(transport.close)  # cancels the poll task
+353:     thread.join(timeout=5)
+
+tests/test_live_fence.py
+396: @pytest.fixture(scope="module")
+397: def live_quote_anchor() -> tuple[LiveFeed, datetime]:
+398:     """The scripted venue + live supervisor + feed pump on one daemon
+399:     loop; returns the feed and the receipt anchor of the burst quote."""
+400:     loop = asyncio.new_event_loop()
+401:     holder: dict[str, object] = {}
+402:     ready = threading.Event()
+403: 
+404:     def runner() -> None:
+405:         asyncio.set_event_loop(loop)
+406: 
+407:         async def serve() -> None:
+408:             async with ScriptedVenue(plan=_plan(), transform_frame=_fresh_fixture_frame) as venue:
+409:                 feed = LiveFeed(lag=timedelta(seconds=5), stale=timedelta(seconds=10))
+410:                 supervisor = HyperliquidVenueSupervisor(LiveHyperliquidTransport(str(venue.url)))
+411:                 supervisor.subscribe(["BTC"])
+412:                 feed.attach(supervisor)
+413:                 holder["feed"] = feed
+414:                 held: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+415:                 holder["held"] = held
+416:                 ready.set()
+417:                 await asyncio.gather(feed.run(), held)
+418: 
+419:         loop.run_until_complete(serve())
+420: 
+421:     thread = threading.Thread(target=runner, daemon=True)
+422:     thread.start()
+423:     if not ready.wait(timeout=10):
+424:         raise AssertionError("the scripted venue never came up")
+425:     feed = cast(LiveFeed, holder["feed"])
+426:     received_at: datetime | None = None
+427:     for _ in range(150):
+428:         state = feed.latest_state()
+429:         view = (
+430:             state.get("instruments", {}).get("hyperliquid:BTC", {}).get("kinds", {}).get("quote")
+431:             if isinstance(state.get("instruments"), dict)
+432:             else None
+433:         )
+434:         if isinstance(view, dict):
+435:             anchor = view.get("received_at")
+436:             if isinstance(anchor, str):
+437:                 received_at = datetime.fromisoformat(anchor)
+438:                 break
+439:         threading.Event().wait(0.1)
+440:     if received_at is None:
+441:         raise AssertionError("the feed never delivered a quote for BTC")
+442:     try:
+443:         yield feed, received_at
+444:     finally:
+445:         held = holder.get("held")
+446:         if held is not None:
+447:             loop.call_soon_threadsafe(cast(asyncio.Future, held).cancel)
+448:         thread.join(timeout=5)
+
+src/quantmesh/live/moomoo.py
+145:         await self._codes_ready.wait()
+146:         while True:
+147:             codes = sorted(self._codes.values())
+148:             try:
+149:                 quote = await asyncio.to_thread(self._client.stock_quote, codes)
+150:                 await self._frames.put({"kind": "stock_quote", "payload": quote})
+151:                 for code in codes:
+152:                     ticker = await asyncio.to_thread(
+153:                         self._client.rt_ticker, code, num=self._ticker_num
+154:                     )
+155:                     await self._frames.put({"kind": "rt_ticker", "payload": ticker})
+156:                     if self._candle_num and code in {"US.AAPL", "US.NVDA"}:
+157:                         candles = await asyncio.to_thread(
+158:                             self._client.current_kline, code, num=self._candle_num
+159:                         )
+160:                         await self._frames.put({"kind": "current_kline", "payload": candles})
+161:             except OpenDError as error:
+162:                 await self._frames.put({"kind": "poll_error", "message": str(error)})
+163:             await asyncio.sleep(self._poll_interval.total_seconds())
+164: 
+165: 
+
+src/quantmesh/live/feed.py
+760:         venues still surface lagging/stale transitions. Only the app
+761:         lifespan starts this; shutdown cancels it (and with it every
+762:         supervisor pump, whose reconnect loops never exit on their own).
+763:         """
+764:         self._loop = asyncio.get_running_loop()
+765:         tasks = [asyncio.create_task(supervisor.run()) for supervisor in self._supervisors]
+766:         tasks.append(asyncio.create_task(self._drain_loop()))
+767:         tasks.append(asyncio.create_task(self._tick_loop()))
+768:         try:
+769:             await asyncio.gather(*tasks)
+770:         finally:
+771:             for task in tasks:
+772:                 task.cancel()
+773:             # inside a cancelled task every await raises CancelledError;
+774:             # swallow it so the cleanup gather still runs to completion
+775:             with contextlib.suppress(asyncio.CancelledError):
+776:                 await asyncio.gather(*tasks, return_exceptions=True)
+777: 
+778:     async def _drain_loop(self) -> None:
+779:         while True:
+789:     async def _tick_loop(self) -> None:
+790:         while True:
+791:             await asyncio.sleep(_TICK_SECONDS)
+792:             now = datetime.now(UTC)
+793:             # DuckDB retention is synchronous and may scan/delete a large
+794:             # persisted lake.  Keep that work off the asyncio loop so a
+795:             # supervisor's reconnect, freshness and subscriber pumps remain
+796:             # responsive while the five-minute sweep runs.
+797:             await asyncio.to_thread(self.prune_if_due, now)
+798:             for supervisor in self._supervisors:
+799:                 supervisor.on_tick(now)
+
+tests/test_live_e2e.py
+211: def venue_url() -> tuple[str, Callable[[], None]]:
+212:     """The ScriptedVenue on its own asyncio loop in a daemon thread (the
+213:     sync Playwright thread cannot run the venue's loop). Yields the URL
+214:     and a thread-safe trigger that flips the venue's ``quiet`` event —
+215:     the deterministic "venue went quiet" condition for the stale test."""
+216:     loop = asyncio.new_event_loop()
+217:     holder: dict[str, object] = {}
+218:     ready = threading.Event()
+219: 
+220:     def runner() -> None:
+221:         asyncio.set_event_loop(loop)
+222: 
+223:         async def serve() -> None:
+224:             quiet = asyncio.Event()
+225:             holder["quiet"] = quiet
+226:             async with ScriptedVenue(
+227:                 plan=_venue_plan(), quiet=quiet, transform_frame=_current_source_times,
+228:             ) as venue:
+229:                 holder["url"] = venue.url
+230:                 held: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+231:                 holder["held"] = held
+232:                 ready.set()
+233:                 await held
+234: 
+235:         try:
+236:             loop.run_until_complete(serve())
+237:         except asyncio.CancelledError:
+238:             # Fixture teardown cancels the held future to release the
+239:             # scripted venue. That is the expected shutdown signal, not
+240:             # an unhandled thread failure.
+241:             pass
+242:         finally:
+243:             loop.close()
+244: 
+245:     thread = threading.Thread(target=runner, daemon=True)
+246:     thread.start()
+247:     if not ready.wait(timeout=10):
+
+tests/test_live_prediction_e2e.py
+216: 
+217: def _venue_fixture(name: str, plan: list[tuple[float, object]]):
+218:     """The proven single-venue pattern (test_live_e2e) for one
+219:     protocol; the sync Playwright thread cannot run the venue's loop."""
+220: 
+221:     @pytest.fixture(scope="module")
+222:     def venue_url() -> str:
+223:         loop = asyncio.new_event_loop()
+224:         holder: dict[str, object] = {}
+225:         ready = threading.Event()
+226: 
+227:         def runner() -> None:
+228:             asyncio.set_event_loop(loop)
+229: 
+230:             async def serve() -> None:
+231:                 async with ScriptedVenue(plan=plan) as venue:
+232:                     holder["url"] = venue.url
+233:                     held = asyncio.Event()
+234:                     holder["held"] = held
+235:                     ready.set()
+236:                     await held.wait()
+237: 
+238:             try:
+239:                 loop.run_until_complete(serve())
+240:             finally:
+241:                 loop.close()
+242: 
+243:         thread = threading.Thread(target=runner, daemon=True)
+244:         thread.start()
+245:         if not ready.wait(timeout=10):
+246:             raise AssertionError(f"the {name} scripted venue never came up")
+247:         try:
+248:             yield str(holder["url"])
+249:         finally:
+250:             held = holder.get("held")
+251:             if held is not None:
+252:                 loop.call_soon_threadsafe(cast(asyncio.Event, held).set)
+253:             thread.join(timeout=5)
+254: 
+
+tests/test_moomoo_live_sdk.py
+65:     module = SimpleNamespace(
+66:         OpenQuoteContext=QuoteContext, OpenSecTradeContext=forbidden_trade,
+67:         SubType=SimpleNamespace(QUOTE="QUOTE", TICKER="TICKER"),
+68:     )
+69:     monkeypatch.setitem(sys.modules, "moomoo", module)
+70:     return module, events
+
+tests/test_moomoo_readiness_sdk.py
+72:         OpenQuoteContext=QuoteContext, OpenSecTradeContext=forbidden_trade,
+73:         SubType=SimpleNamespace(QUOTE="QUOTE"),
+74:         KLType=SimpleNamespace(K_DAY="K_DAY"),
+75:         AuType=SimpleNamespace(NONE="NONE", QFQ="QFQ", HFQ="HFQ"),
+76:     )
+77:     monkeypatch.setitem(sys.modules, "moomoo", module)
+78:     return module, events
+
+tests/test_moomoo_opend.py
+552:     assert isinstance(error, OpenDUnavailableError)
+553: 
+554: 
+555: @pytest.mark.skipif(
+556:     importlib.util.find_spec("moomoo") is not None,
+557:     reason="vendor SDK is importable here; probe would hit the real port",
+558: )
+559: def test_sdk_transport_probe_without_sdk_fails_typed() -> None:
+560:     client = MoomooOpenDClient.from_settings(Settings())
+561:     with pytest.raises(OpenDSdkMissingError, match="py-moomoo-api"):
+562:         client.probe()
+

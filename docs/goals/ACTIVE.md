@@ -1,5 +1,31 @@
 # Active Goal
 
+Current terminal checkpoint: exact57a CI38346386735 fails fullpytest normally:
+4487passed/5failed/111skipped/9warnings2899.87s. Actual checkout877cea01624f1de6b96d8139f616d76678b9fcc8 tree
+d7a479b5176f57484e70e15e9f68e642c7a721f2 equals candidate57a tree. Required
+fast/classifier/service pass; aggregate denies failure. Actual scoped release
+logs are retained, not a quiet-log node inference. Independent service artifact
+is verified137pass/5PGskip/81licenses/exact7top-level receipts; no private nested
+inputs. Original service snapshot still_running is retained as historical.
+
+Root native order REDs reproduce leaked fixture-owned executors and pump; only
+test_live_moomoo/test_live_fence change. Runner owns loop/tasks/executor; local
+quiet socket handler observes owner close instead of hour-sleep, parent-task
+cancellation retires feed. Productionstage/_native/pins and shared venue fixture
+are unchanged. New executor-retirement regression has meaningfulRED. Initial
+repair attempt113pass/5fail/1error is preserved; boundedreview P1 then closes.
+Final affected3files118nativepass/0skip/8.64s; Pythonthread snapshotsMain-only and
+SIGCHLD0, not kernel-thread production proof.12fork warnings remain among17.
+Ruff/diff pass; correctedafter-admission6669RECORD/81licenses/zero.pyc. Initial
+harness import/collector errors remain separate.102rawstreams/hashindex retained
+in ci-staging-fixture-repair. Fresh requiredCI follows this reviewed code repair;
+old57a run/watch21348 are terminal, never rerun. PR175 staysDRAFT/notready; no
+merge/deploy/model/market/vendor call. FullA ACTIVE; existing Engine/provider/
+human/protectedhost/PG-TLS/offhost/numericalWorker/p95 gates remain pending.
+
+Earlier accepted checkpoints and snapshots follow; their live/pending language
+records those historical observation times.
+
 Latest integrated candidatef3a72af has a fresh proper nativeGit checkout unit
 boundary:66passed/3actualPGopt-in skips/69total11.15s, dependency6669RECORD/81
 licenses/zero.pyc. Raw archiveportfolio-integration-f3a72af; this is no wholeCI

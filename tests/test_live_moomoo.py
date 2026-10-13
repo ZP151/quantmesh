@@ -331,14 +331,18 @@ def _start_pump(feed: LiveFeed) -> tuple[threading.Thread, asyncio.Task[None]]:
     holder: dict[str, object] = {}
 
     def runner() -> None:
-        asyncio.set_event_loop(loop)
-        task = loop.create_task(feed.run())
-        holder["task"] = task
-        started.set()
-        try:
-            loop.run_until_complete(task)
-        except asyncio.CancelledError:
-            pass
+        async def pump() -> None:
+            holder["task"] = asyncio.current_task()
+            started.set()
+            await feed.run()
+
+        # The fixture owns the loop and its to_thread executor, including
+        # cancellation cleanup; joining only the pump leaks executor threads.
+        with asyncio.Runner(loop_factory=lambda: loop) as owned_runner:
+            try:
+                owned_runner.run(pump())
+            except asyncio.CancelledError:
+                pass
 
     thread = threading.Thread(target=runner, daemon=True)
     thread.start()
@@ -351,6 +355,30 @@ def _stop_pump(thread, loop, run_task: asyncio.Task[None], transport) -> None:
     loop.call_soon_threadsafe(run_task.cancel)
     loop.call_soon_threadsafe(transport.close)  # cancels the poll task
     thread.join(timeout=5)
+    assert not thread.is_alive(), "owned pump did not finish shutdown"
+    assert loop.is_closed(), "owned pump loop was not closed"
+
+
+def test_pump_shutdown_closes_owned_loop_and_executor() -> None:
+    feed = LiveFeed(lag=timedelta(seconds=2), stale=timedelta(seconds=4))
+    transport = MoomooVenueTransport(_StubOpenD(), poll_interval=timedelta(seconds=0.1))
+    supervisor = MoomooVenueSupervisor(transport)
+    supervisor.subscribe(["AAPL"])
+    feed.attach(supervisor)
+    thread, run_task = _start_pump(feed)
+    loop = run_task.get_loop()
+    workers = ()
+    try:
+        _wait_for(lambda: _state(feed, "AAPL").get("label") == "real")
+        executor = loop._default_executor
+        assert executor is not None
+        workers = tuple(executor._threads)
+        assert workers and all(worker.is_alive() for worker in workers)
+    finally:
+        _stop_pump(thread, loop, run_task, transport)
+    assert not thread.is_alive()
+    assert loop.is_closed()
+    assert all(not worker.is_alive() for worker in workers)
 
 
 def _wait_for(condition, timeout: float = 10.0) -> None:

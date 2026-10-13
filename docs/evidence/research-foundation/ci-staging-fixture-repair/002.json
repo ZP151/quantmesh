@@ -1,0 +1,125 @@
+{
+  "snapshots": [
+    {
+      "node": "::test_live_stack_streams_real_labels_from_a_live_daemon",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "::test_live_stack_ages_stale_when_the_venue_clock_stops",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        },
+        {
+          "name": "asyncio_0",
+          "daemon": true,
+          "alive": true
+        },
+        {
+          "name": "asyncio_1",
+          "daemon": true,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "::test_live_stack_honest_disconnected_when_the_daemon_dies",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        },
+        {
+          "name": "asyncio_0",
+          "daemon": true,
+          "alive": true
+        },
+        {
+          "name": "asyncio_1",
+          "daemon": true,
+          "alive": true
+        },
+        {
+          "name": "asyncio_0",
+          "daemon": true,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "::test_live_stack_honest_unavailable_when_opend_is_down",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        },
+        {
+          "name": "asyncio_0",
+          "daemon": true,
+          "alive": true
+        },
+        {
+          "name": "asyncio_1",
+          "daemon": true,
+          "alive": true
+        },
+        {
+          "name": "asyncio_0",
+          "daemon": true,
+          "alive": true
+        },
+        {
+          "name": "asyncio_0",
+          "daemon": true,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "::test_actual_owned_fixture",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        },
+        {
+          "name": "asyncio_0",
+          "daemon": true,
+          "alive": true
+        },
+        {
+          "name": "asyncio_1",
+          "daemon": true,
+          "alive": true
+        },
+        {
+          "name": "asyncio_0",
+          "daemon": true,
+          "alive": true
+        },
+        {
+          "name": "asyncio_0",
+          "daemon": true,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    }
+  ],
+  "exit": 1
+}

@@ -1,0 +1,6 @@
+{
+  "exit": 0,
+  "bytecode_after": 0,
+  "scope": "DEPENDENCY_ADMISSION_ONLY_AFTER_NATIVE_FIXTURE_TESTS",
+  "earlier_missing_import_receipt_retained": true
+}

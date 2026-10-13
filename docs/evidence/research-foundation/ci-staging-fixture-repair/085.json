@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "run": 38346386735,
+  "head": "57a66f84d4e101d54410fcfa49ea2ee064f2ba33",
+  "scope": "OFFLINE_SCRIPTED_ONLY",
+  "runtime": {
+    "system": "Linux",
+    "implementation": "CPython",
+    "python": "3.12.15",
+    "architecture": "x86_64",
+    "scope": "dependency-and-service-tests-only"
+  },
+  "tests": {
+    "tests": 142,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5
+  },
+  "locked_packages": 81,
+  "postgres": "pending",
+  "full_core_ci": "still_running",
+  "actual_model_verified": false,
+  "production_deployed": false,
+  "raw_file_sha256": {
+    "pytest-aac6a691fce4443abbfaa9cb7a181708.xml": "5893f26ca0a9f793169acf469c85c6179699b3225c7c5c82a45dfa3872e51f87",
+    "service-gate-0.log": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09",
+    "service-gate-1.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "service-gate-2.log": "7715b02781372f8741fb309aee97a6483e689c9039f0d78081dd910f70b0256e",
+    "service-gate-3.log": "d62e23a94a2d157ac7bc9f8fd381c9dba1bbed4de7f5b05606a72c1d0602c82d",
+    "service-gate-4.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "service-gate.json": "e8670181ba1b56820eff90b7f42fdeafc97ce267a6c21d4e75ea5ad205639902"
+  }
+}

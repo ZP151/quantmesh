@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="5" time="4.010" timestamp="2026-10-13T13:22:13.282252+08:00" hostname="zhoulaptop"><testcase classname="" name="test_live_stack_streams_real_labels_from_a_live_daemon" time="0.366" /><testcase classname="" name="test_live_stack_ages_stale_when_the_venue_clock_stops" time="1.421" /><testcase classname="" name="test_live_stack_honest_disconnected_when_the_daemon_dies" time="0.154" /><testcase classname="" name="test_live_stack_honest_unavailable_when_opend_is_down" time="0.002" /><testcase classname="" name="test_actual_owned_fixture" time="0.000"><failure message="stage.StageDenied: unsupported_native">@pytest.mark.skipif(sys.platform != "linux", reason="real Linux pidfd/PTY lifecycle")
+    def test_actual_owned_fixture():
+&gt;       result = stage.run_owned_fixture()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_opend_staging_window.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+deploy/aws/opend/stage_console.py:1037: in run_owned_fixture
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+&gt;           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+deploy/aws/opend/stage_console.py:175: StageDenied</failure></testcase></testsuite></testsuites>

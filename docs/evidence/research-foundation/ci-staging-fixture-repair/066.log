@@ -1,0 +1,58 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/checkout/frontend[39m
+
+ [32m✓[39m src/screens/Watchlist.test.tsx [2m([22m[2m60 tests[22m[2m)[22m[33m 2607[2mms[22m[39m
+   [33m[2m✓[22m[39m filters the four textual attention buckets while preserving exact packet identity [33m 306[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/DecisionRail.test.tsx [2m([22m[2m22 tests[22m[2m)[22m[33m 2843[2mms[22m[39m
+   [33m[2m✓[22m[39m DecisionRail[2m > [22mkeeps Reject and Watch usable while evidence blocks Paper, then displays the saved packet ID [33m 364[2mms[22m[39m
+ [32m✓[39m src/components/charts/InstrumentChart.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[33m 540[2mms[22m[39m
+ [32m✓[39m src/screens/Cockpit.test.tsx [2m([22m[2m26 tests[22m[2m)[22m[33m 1235[2mms[22m[39m
+ [32m✓[39m src/lib/live.test.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32m✓[39m src/screens/InstrumentWorkspace.test.tsx [2m([22m[2m37 tests[22m[2m)[22m[33m 5465[2mms[22m[39m
+   [33m[2m✓[22m[39m InstrumentWorkspaceScreen[2m > [22mrestores exact packet action state on Back and Forward after creating a child [33m 878[2mms[22m[39m
+   [33m[2m✓[22m[39m InstrumentWorkspaceScreen[2m > [22mreplaces the packet query with an action child and removes it for new analysis [33m 508[2mms[22m[39m
+   [33m[2m✓[22m[39m InstrumentWorkspaceScreen[2m > [22mpromotes an action result across market, scenarios, evidence, risk, and actions during polling [33m 409[2mms[22m[39m
+   [33m[2m✓[22m[39m InstrumentWorkspaceScreen[2m > [22mpauses Reject, Watch, and Paper while a requested range still shows placeholder evidence [33m 381[2mms[22m[39m
+   [33m[2m✓[22m[39m InstrumentWorkspaceScreen[2m > [22mpauses an existing proposal confirmation while a requested range still shows placeholder evidence [33m 312[2mms[22m[39m
+   [33m[2m✓[22m[39m InstrumentWorkspaceScreen[2m > [22mrefetches history for URL-backed range and comparison controls [33m 321[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/PacketOutcomeReview.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 799[2mms[22m[39m
+   [33m[2m✓[22m[39m PacketOutcomeReview[2m > [22mrenders honest pending evidence and saves only the exact outcome identity [33m 446[2mms[22m[39m
+ [32m✓[39m src/screens/NavigationAndValuation.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[33m 1132[2mms[22m[39m
+ [32m✓[39m src/screens/ResearchJobs.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[33m 1478[2mms[22m[39m
+   [33m[2m✓[22m[39m fixture research loop[2m > [22msubmits pinned setup, reaches report, reloads and keeps Agent unavailable independent [33m 344[2mms[22m[39m
+   [33m[2m✓[22m[39m fixture research loop[2m > [22mstops automatic status checks at the bound and never polls a terminal job [33m 383[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/ScenarioLab.test.tsx [2m([22m[2m17 tests[22m[2m)[22m[33m 3001[2mms[22m[39m
+   [33m[2m✓[22m[39m saves Watch with the displayed horizon and then replays the child snapshot [33m 431[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps safe Watch available on saved evidence when current risk data is unavailable [33m 304[2mms[22m[39m
+   [33m[2m✓[22m[39m blocks saved-draft Paper with complete valuation when current capability refuses: forecast evidence is stale [33m 350[2mms[22m[39m
+   [33m[2m✓[22m[39m blocks saved-draft Paper with complete valuation when current capability refuses: forecast is unavailable [33m 315[2mms[22m[39m
+   [33m[2m✓[22m[39m blocks saved-draft Paper with complete valuation when current capability refuses: paper proposal service is not attached [33m 453[2mms[22m[39m
+ [32m✓[39m src/screens/Markets.test.tsx [2m([22m[2m30 tests[22m[2m)[22m[33m 1061[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/PacketCopilot.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 426[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/MarketCanvas.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 516[2mms[22m[39m
+ [32m✓[39m src/screens/DataCatalog.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 416[2mms[22m[39m
+ [32m✓[39m src/lib/messages.test.ts [2m([22m[2m36 tests[22m[2m)[22m[32m 95[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/ScenarioEvidence.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 215[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/PacketMonitoring.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 408[2mms[22m[39m
+ [32m✓[39m src/screens/Prediction.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 277[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/WorkspaceHeader.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[32m 173[2mms[22m[39m
+ [32m✓[39m src/lib/live-session.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/ForecastOutcomeComparison.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 359[2mms[22m[39m
+ [32m✓[39m src/screens/Imports.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 415[2mms[22m[39m
+ [32m✓[39m src/components/charts/ForecastBand.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/lib/preferences.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 150[2mms[22m[39m
+ [32m✓[39m src/screens/Overview.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 231[2mms[22m[39m
+ [32m✓[39m src/components/live-data-badge.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/format.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/screens/Locale.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 160[2mms[22m[39m
+ [32m✓[39m src/components/instrument-entry.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 536[2mms[22m[39m
+ [32m✓[39m src/lib/nav.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/screens/Settings.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 145[2mms[22m[39m
+ [32m✓[39m src/lib/api.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/screens/instrument/WorkspaceStates.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 26[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m33 passed[39m[22m[90m (33)[39m
+[2m      Tests [22m [1m[32m419 passed[39m[22m[90m (419)[39m
+[2m   Start at [22m 04:28:12
+[2m   Duration [22m 22.08s[2m (transform 2.33s, setup 6.48s, collect 9.59s, tests 24.83s, environment 17.08s, prepare 2.98s)[22m
+

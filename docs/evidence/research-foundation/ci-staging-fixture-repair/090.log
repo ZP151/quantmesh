@@ -1,0 +1,222 @@
+release	Certify exact checkout	﻿2026-10-13T04:27:05.8694246Z ##[group]Run python tools/release_gate.py
+release	Certify exact checkout	2026-10-13T04:27:05.8694725Z ^[[36;1mpython tools/release_gate.py^[[0m
+release	Certify exact checkout	2026-10-13T04:27:05.8734264Z shell: /usr/bin/bash -e {0}
+release	Certify exact checkout	2026-10-13T04:27:05.8734637Z env:
+release	Certify exact checkout	2026-10-13T04:27:05.8735137Z   QUANTMESH_GATE_LOGS: /home/runner/work/_temp/quantmesh-gate-logs
+release	Certify exact checkout	2026-10-13T04:27:05.8735630Z   TMPDIR: /home/runner/work/_temp/quantmesh-release-temp
+release	Certify exact checkout	2026-10-13T04:27:05.8736147Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T04:27:05.8736614Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+release	Certify exact checkout	2026-10-13T04:27:05.8737317Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T04:27:05.8737773Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T04:27:05.8738227Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T04:27:05.8738734Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+release	Certify exact checkout	2026-10-13T04:27:05.8739126Z ##[endgroup]
+release	Certify exact checkout	2026-10-13T04:27:06.2379079Z release gate over HEAD @ 877cea01624f — source checkout clean, proceeding with a fresh deterministic environment
+release	Certify exact checkout	2026-10-13T04:27:06.2381460Z == clone current commit ==
+release	Certify exact checkout	2026-10-13T04:27:06.2390367Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/01-clone-current-commit.log","name":"clone current commit","pid":2911,"timeout_seconds":600,"timestamp":"2026-10-13T04:27:06.238Z"}
+release	Certify exact checkout	2026-10-13T04:27:07.2399821Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/01-clone-current-commit.log","name":"clone current commit","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:07.239Z"}
+release	Certify exact checkout	2026-10-13T04:27:07.2401928Z ok — 0:01
+release	Certify exact checkout	2026-10-13T04:27:07.2402543Z == release version consistent (metadata, notes, tag) ==
+release	Certify exact checkout	2026-10-13T04:27:07.2406837Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/02-release-version-consistent-(metadata,-notes,-tag).log","name":"release version consistent (metadata, notes, tag)","pid":2924,"timeout_seconds":120,"timestamp":"2026-10-13T04:27:07.240Z"}
+release	Certify exact checkout	2026-10-13T04:27:08.2414424Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/02-release-version-consistent-(metadata,-notes,-tag).log","name":"release version consistent (metadata, notes, tag)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:08.240Z"}
+release	Certify exact checkout	2026-10-13T04:27:08.2417303Z ok — 0:01
+release	Certify exact checkout	2026-10-13T04:27:08.2417741Z == fresh venv ==
+release	Certify exact checkout	2026-10-13T04:27:08.2421646Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/03-fresh-venv.log","name":"fresh venv","pid":2927,"timeout_seconds":600,"timestamp":"2026-10-13T04:27:08.241Z"}
+release	Certify exact checkout	2026-10-13T04:27:11.2432681Z {"elapsed_seconds":3.002,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/03-fresh-venv.log","name":"fresh venv","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:11.242Z"}
+release	Certify exact checkout	2026-10-13T04:27:11.2434623Z ok — 0:03
+release	Certify exact checkout	2026-10-13T04:27:11.2435354Z == install release extras .[dev,research,e2e,moomoo] ==
+release	Certify exact checkout	2026-10-13T04:27:11.2440346Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/04-install-release-extras-.[dev,research,e2e,moomoo].log","name":"install release extras .[dev,research,e2e,moomoo]","pid":2952,"timeout_seconds":1800,"timestamp":"2026-10-13T04:27:11.243Z"}
+release	Certify exact checkout	2026-10-13T04:27:41.2509521Z {"elapsed_seconds":30.007,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/04-install-release-extras-.[dev,research,e2e,moomoo].log","name":"install release extras .[dev,research,e2e,moomoo]","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:41.250Z"}
+release	Certify exact checkout	2026-10-13T04:27:41.2512220Z ok — 0:30
+release	Certify exact checkout	2026-10-13T04:27:41.2512766Z == ruff check src tests tools ==
+release	Certify exact checkout	2026-10-13T04:27:41.2516794Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/05-ruff-check-src-tests-tools.log","name":"ruff check src tests tools","pid":3007,"timeout_seconds":600,"timestamp":"2026-10-13T04:27:41.251Z"}
+release	Certify exact checkout	2026-10-13T04:27:42.2524059Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/05-ruff-check-src-tests-tools.log","name":"ruff check src tests tools","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:42.251Z"}
+release	Certify exact checkout	2026-10-13T04:27:42.2526159Z ok — 0:01
+release	Certify exact checkout	2026-10-13T04:27:42.2526870Z == trusted data tooling installed ==
+release	Certify exact checkout	2026-10-13T04:27:42.2531457Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/06-trusted-data-tooling-installed.log","name":"trusted data tooling installed","pid":3016,"timeout_seconds":120,"timestamp":"2026-10-13T04:27:42.252Z"}
+release	Certify exact checkout	2026-10-13T04:27:44.2540823Z {"elapsed_seconds":2.001,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/06-trusted-data-tooling-installed.log","name":"trusted data tooling installed","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:44.253Z"}
+release	Certify exact checkout	2026-10-13T04:27:44.2542997Z ok — 0:02
+release	Certify exact checkout	2026-10-13T04:27:44.2543533Z == license review (closure contract) ==
+release	Certify exact checkout	2026-10-13T04:27:44.2547958Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/07-license-review-(closure-contract).log","name":"license review (closure contract)","pid":3025,"timeout_seconds":600,"timestamp":"2026-10-13T04:27:44.254Z"}
+release	Certify exact checkout	2026-10-13T04:27:45.2556627Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/07-license-review-(closure-contract).log","name":"license review (closure contract)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:45.255Z"}
+release	Certify exact checkout	2026-10-13T04:27:45.2559536Z ok — 0:01
+release	Certify exact checkout	2026-10-13T04:27:45.2559932Z == audit venv (isolated tooling) ==
+release	Certify exact checkout	2026-10-13T04:27:45.2564781Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/08-audit-venv-(isolated-tooling).log","name":"audit venv (isolated tooling)","pid":3026,"timeout_seconds":600,"timestamp":"2026-10-13T04:27:45.256Z"}
+release	Certify exact checkout	2026-10-13T04:27:48.2575392Z {"elapsed_seconds":3.002,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/08-audit-venv-(isolated-tooling).log","name":"audit venv (isolated tooling)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:48.256Z"}
+release	Certify exact checkout	2026-10-13T04:27:48.2578092Z ok — 0:03
+release	Certify exact checkout	2026-10-13T04:27:48.2578476Z == install pip-audit (isolated) ==
+release	Certify exact checkout	2026-10-13T04:27:48.2582885Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/09-install-pip-audit-(isolated).log","name":"install pip-audit (isolated)","pid":3051,"timeout_seconds":600,"timestamp":"2026-10-13T04:27:48.257Z"}
+release	Certify exact checkout	2026-10-13T04:27:52.2594166Z {"elapsed_seconds":4.002,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/09-install-pip-audit-(isolated).log","name":"install pip-audit (isolated)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:52.258Z"}
+release	Certify exact checkout	2026-10-13T04:27:52.2595824Z ok — 0:04
+release	Certify exact checkout	2026-10-13T04:27:52.2596187Z == pip-audit over requirements-audit.txt ==
+release	Certify exact checkout	2026-10-13T04:27:52.2600834Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/10-pip-audit-over-requirements-audit.txt.log","name":"pip-audit over requirements-audit.txt","pid":3075,"timeout_seconds":900,"timestamp":"2026-10-13T04:27:52.259Z"}
+release	Certify exact checkout	2026-10-13T04:27:55.2612798Z {"elapsed_seconds":3.002,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/10-pip-audit-over-requirements-audit.txt.log","name":"pip-audit over requirements-audit.txt","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:27:55.260Z"}
+release	Certify exact checkout	2026-10-13T04:27:55.2614445Z ok — 0:03
+release	Certify exact checkout	2026-10-13T04:27:55.2614737Z == npm ci (frontend deps) ==
+release	Certify exact checkout	2026-10-13T04:27:55.2619406Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/11-npm-ci-(frontend-deps).log","name":"npm ci (frontend deps)","pid":3078,"timeout_seconds":1800,"timestamp":"2026-10-13T04:27:55.261Z"}
+release	Certify exact checkout	2026-10-13T04:28:01.2640459Z {"elapsed_seconds":6.003,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/11-npm-ci-(frontend-deps).log","name":"npm ci (frontend deps)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:28:01.263Z"}
+release	Certify exact checkout	2026-10-13T04:28:01.2642078Z ok — 0:06
+release	Certify exact checkout	2026-10-13T04:28:01.2642460Z == frontend license review (locked closure) ==
+release	Certify exact checkout	2026-10-13T04:28:01.2646209Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/12-frontend-license-review-(locked-closure).log","name":"frontend license review (locked closure)","pid":3130,"timeout_seconds":120,"timestamp":"2026-10-13T04:28:01.264Z"}
+release	Certify exact checkout	2026-10-13T04:28:02.2656595Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/12-frontend-license-review-(locked-closure).log","name":"frontend license review (locked closure)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:28:02.264Z"}
+release	Certify exact checkout	2026-10-13T04:28:02.2659292Z ok — 0:01
+release	Certify exact checkout	2026-10-13T04:28:02.2659764Z == npm audit --audit-level=high ==
+release	Certify exact checkout	2026-10-13T04:28:02.2661331Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/13-npm-audit---audit-level=high.log","name":"npm audit --audit-level=high","pid":3131,"timeout_seconds":600,"timestamp":"2026-10-13T04:28:02.265Z"}
+release	Certify exact checkout	2026-10-13T04:28:03.2670664Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/13-npm-audit---audit-level=high.log","name":"npm audit --audit-level=high","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:28:03.266Z"}
+release	Certify exact checkout	2026-10-13T04:28:03.2672489Z ok — 0:01
+release	Certify exact checkout	2026-10-13T04:28:03.2672964Z == frontend bundle current (build_frontend --check) ==
+release	Certify exact checkout	2026-10-13T04:28:03.2675857Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/14-frontend-bundle-current-(build_frontend---check).log","name":"frontend bundle current (build_frontend --check)","pid":3142,"timeout_seconds":1800,"timestamp":"2026-10-13T04:28:03.267Z"}
+release	Certify exact checkout	2026-10-13T04:28:12.2771189Z {"elapsed_seconds":9.01,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/14-frontend-bundle-current-(build_frontend---check).log","name":"frontend bundle current (build_frontend --check)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:28:12.276Z"}
+release	Certify exact checkout	2026-10-13T04:28:12.2773113Z ok — 0:09
+release	Certify exact checkout	2026-10-13T04:28:12.2773696Z == frontend unit tests (vitest) ==
+release	Certify exact checkout	2026-10-13T04:28:12.2777865Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/15-frontend-unit-tests-(vitest).log","name":"frontend unit tests (vitest)","pid":3189,"timeout_seconds":900,"timestamp":"2026-10-13T04:28:12.277Z"}
+release	Certify exact checkout	2026-10-13T04:28:35.3230883Z {"elapsed_seconds":23.046,"event":"step_finished","exit_code":0,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/15-frontend-unit-tests-(vitest).log","name":"frontend unit tests (vitest)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T04:28:35.322Z"}
+release	Certify exact checkout	2026-10-13T04:28:35.3232982Z ok — 0:23
+release	Certify exact checkout	2026-10-13T04:28:35.3233329Z == full pytest suite ==
+release	Certify exact checkout	2026-10-13T04:28:35.3236230Z {"event":"step_started","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/16-full-pytest-suite.log","name":"full pytest suite","pid":3627,"timeout_seconds":10800,"timestamp":"2026-10-13T04:28:35.323Z"}
+release	Certify exact checkout	2026-10-13T04:38:35.5035744Z {"elapsed_seconds":600.18,"event":"step_progress","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/16-full-pytest-suite.log","log_size_bytes":61484,"name":"full pytest suite","pytest_percentage":12,"timestamp":"2026-10-13T04:38:35.503Z"}
+release	Certify exact checkout	2026-10-13T04:48:35.6641207Z {"elapsed_seconds":1200.341,"event":"step_progress","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/16-full-pytest-suite.log","log_size_bytes":63842,"name":"full pytest suite","pytest_percentage":12,"timestamp":"2026-10-13T04:48:35.663Z"}
+release	Certify exact checkout	2026-10-13T04:58:35.8273876Z {"elapsed_seconds":1800.504,"event":"step_progress","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/16-full-pytest-suite.log","log_size_bytes":76383,"name":"full pytest suite","pytest_percentage":15,"timestamp":"2026-10-13T04:58:35.826Z"}
+release	Certify exact checkout	2026-10-13T05:05:33.9612302Z {"elapsed_seconds":2218.637,"event":"step_failure_seen","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/16-full-pytest-suite.log","name":"full pytest suite","timestamp":"2026-10-13T05:05:33.960Z"}
+release	Certify exact checkout	2026-10-13T05:08:36.0122792Z {"elapsed_seconds":2400.689,"event":"step_progress","log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/16-full-pytest-suite.log","log_size_bytes":345487,"name":"full pytest suite","pytest_percentage":68,"timestamp":"2026-10-13T05:08:36.011Z"}
+release	Certify exact checkout	2026-10-13T05:17:01.1747562Z {"elapsed_seconds":2905.849,"event":"step_finished","exit_code":1,"log_path":"/home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae/logs/16-full-pytest-suite.log","name":"full pytest suite","slow_tests":["79.19s call     tests/test_decision_session_e2e.py::test_nvda_aapl_refresh_is_bounded_and_exact_results_survive_reconstruction","78.52s call     tests/test_packet_reviews.py::test_risk_refusal_and_operator_invoked_watch_coverage_remain_exact","54.29s call     tests/test_demo_instrument_workspace.py::test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state","53.26s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[filled]","53.13s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[reviewed]","51.70s call     tests/test_packet_reviews.py::test_pending_blocked_and_accepted_unfilled_paper_states_are_exact","51.39s call     tests/test_packet_reviews.py::test_review_replay_rejects_outer_rehashed_embedded_packet_and_path_tampering","49.13s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[risk_rejected]","48.00s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[pending]","44.69s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[watch]","44.23s call     tests/test_packet_reviews.py::test_review_is_one_atomic_idempotent_restart_safe_record","42.27s call     tests/test_decision_packet_api.py::test_packet_outcome_review_get_is_read_only_and_post_is_fenced_restart_safe","41.02s call     tests/test_demo_instrument_workspace.py::test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders[reject-BTC-USD]","40.84s call     tests/test_demo_instrument_workspace.py::test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders[watch-BTC-USD]","40.75s call     tests/test_demo_instrument_workspace.py::test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders[watch-SOL-USD]","40.40s call     tests/test_demo_instrument_workspace.py::test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders[reject-SOL-USD]","40.22s call     tests/test_demo_instrument_workspace.py::test_nvda_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[paper_proposal]","39.83s call     tests/test_decision_packet_api.py::test_packet_watch_conditions_accept_only_fixed_kinds_and_never_mutate_packet","37.62s call     tests/test_demo_instrument_workspace.py::test_nvda_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[reject]","37.06s call     tests/test_demo_instrument_workspace.py::test_nvda_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[watch]","36.67s call     tests/test_packet_copilot.py::test_copilot_api_idle_ready_and_restart_reopen","36.50s call     tests/test_decision_packet_api.py::test_advancing_workspace_clock_saves_exact_draft_then_refreshes_fresh_alongside_latest","36.20s call     tests/test_demo_instrument_workspace.py::test_aapl_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[paper_proposal]","34.87s call     tests/test_decision_inbox.py::test_reconstructed_inbox_preserves_exact_row_and_session_monitoring_facts","34.12s call     tests/test_demo_instrument_workspace.py::test_aapl_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[watch]","33.67s call     tests/test_decision_packet_api.py::test_clean_demo_restart_reopens_identical_packet_bytes","33.65s call     tests/test_demo_instrument_workspace.py::test_aapl_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[reject]","31.59s call     tests/test_decision_inbox.py::test_inbox_prefers_newer_passive_terminal_action_over_older_open_paper","31.31s call     tests/test_decision_inbox.py::test_inbox_projects_terminal_actions_and_missing_proposal_link","29.92s call     tests/test_packet_reviews.py::test_preview_refuses_drafts_and_corrupt_review_store","29.53s call     tests/test_packet_reviews.py::test_filled_open_entry_has_fill_metrics_but_never_fabricates_realized_r","28.38s call     tests/test_decision_inbox.py::test_inbox_is_read_only_and_pending_action_beats_newer_draft","27.82s call     tests/test_decision_packet_api.py::test_packet_outcome_review_refuses_draft_unknown_and_reset_clears_owned_store","26.72s call     tests/test_decision_inbox.py::test_shadow_missing_exact_order_is_unavailable_without_fallback","26.64s call     tests/test_packet_reviews.py::test_partial_or_unavailable_outcome_rejects_conclusive_classification","26.59s call     tests/test_decision_inbox.py::test_inbox_projects_confirmed_and_blocked_paper_lifecycle_states[advance0-blocked]","26.30s call     tests/test_decision_inbox.py::test_inbox_projects_confirmed_and_blocked_paper_lifecycle_states[advance1-paper_open]","26.06s call     tests/test_packet_reviews.py::test_path_rejects_missing_forecast_session_future_generation_and_live_tail","25.84s call     tests/test_packet_reviews.py::test_outcome_fence_is_stable_between_requests_when_no_local_evidence_changes","25.46s call     tests/test_decision_inbox.py::test_inbox_reports_a_missing_paper_proposal_link_as_unavailable","25.45s call     tests/test_decision_inbox.py::test_inbox_fails_closed_for_packet_proposal_evidence_identity_mismatch[config_digest]","25.30s call     tests/test_decision_packet_api.py::test_demo_reset_restores_pristine_packet_monitoring_files_after_a_check","25.27s call     tests/test_packet_reviews.py::test_complete_daily_path_uses_strict_thresholds_and_discloses_same_bar_ambiguity","25.12s call     tests/test_packet_reviews.py::test_post_recomposes_immediately_before_append_and_refuses_source_drift","25.03s call     tests/test_decision_inbox.py::test_inbox_fails_closed_for_packet_proposal_evidence_identity_mismatch[id]","25.00s call     tests/test_decision_inbox.py::test_inbox_configured_mark_is_unavailable_for_freshness_and_position_is_context_only","24.84s call     tests/test_demo_instrument_workspace.py::test_demo_reset_discards_staged_drafts_from_the_replaced_root","24.75s call     tests/test_decision_inbox.py::test_shadow_pending_paper_stays_neutral_when_confirmation_freshness_fails","22.90s call     tests/test_decision_packet_api.py::test_intent_only_crash_recovers_at_original_action_time_across_days","21.99s call     tests/test_decision_packet_api.py::test_action_replay_uses_exact_parent_after_a_newer_analysis_root_is_saved"],"timed_out":false,"timestamp":"2026-10-13T05:17:01.172Z"}
+release	Certify exact checkout	2026-10-13T05:17:01.1765978Z FAILED after 48:25; exit code 1; last output:
+release	Certify exact checkout	2026-10-13T05:17:01.1766489Z ============================= slowest 50 durations =============================
+release	Certify exact checkout	2026-10-13T05:17:01.1767468Z 79.19s call     tests/test_decision_session_e2e.py::test_nvda_aapl_refresh_is_bounded_and_exact_results_survive_reconstruction
+release	Certify exact checkout	2026-10-13T05:17:01.1768391Z 78.52s call     tests/test_packet_reviews.py::test_risk_refusal_and_operator_invoked_watch_coverage_remain_exact
+release	Certify exact checkout	2026-10-13T05:17:01.1769250Z 54.29s call     tests/test_demo_instrument_workspace.py::test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state
+release	Certify exact checkout	2026-10-13T05:17:01.1770110Z 53.26s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[filled]
+release	Certify exact checkout	2026-10-13T05:17:01.1770927Z 53.13s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[reviewed]
+release	Certify exact checkout	2026-10-13T05:17:01.1771740Z 51.70s call     tests/test_packet_reviews.py::test_pending_blocked_and_accepted_unfilled_paper_states_are_exact
+release	Certify exact checkout	2026-10-13T05:17:01.1772572Z 51.39s call     tests/test_packet_reviews.py::test_review_replay_rejects_outer_rehashed_embedded_packet_and_path_tampering
+release	Certify exact checkout	2026-10-13T05:17:01.1773402Z 49.13s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[risk_rejected]
+release	Certify exact checkout	2026-10-13T05:17:01.1774269Z 48.00s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[pending]
+release	Certify exact checkout	2026-10-13T05:17:01.1775380Z 44.69s call     tests/test_decision_inbox.py::test_shadow_paper_watch_review_exact_ids_and_restart[watch]
+release	Certify exact checkout	2026-10-13T05:17:01.1776463Z 44.23s call     tests/test_packet_reviews.py::test_review_is_one_atomic_idempotent_restart_safe_record
+release	Certify exact checkout	2026-10-13T05:17:01.1777852Z 42.27s call     tests/test_decision_packet_api.py::test_packet_outcome_review_get_is_read_only_and_post_is_fenced_restart_safe
+release	Certify exact checkout	2026-10-13T05:17:01.1779404Z 41.02s call     tests/test_demo_instrument_workspace.py::test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders[reject-BTC-USD]
+release	Certify exact checkout	2026-10-13T05:17:01.1781073Z 40.84s call     tests/test_demo_instrument_workspace.py::test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders[watch-BTC-USD]
+release	Certify exact checkout	2026-10-13T05:17:01.1782730Z 40.75s call     tests/test_demo_instrument_workspace.py::test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders[watch-SOL-USD]
+release	Certify exact checkout	2026-10-13T05:17:01.1784521Z 40.40s call     tests/test_demo_instrument_workspace.py::test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders[reject-SOL-USD]
+release	Certify exact checkout	2026-10-13T05:17:01.1786238Z 40.22s call     tests/test_demo_instrument_workspace.py::test_nvda_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[paper_proposal]
+release	Certify exact checkout	2026-10-13T05:17:01.1787675Z 39.83s call     tests/test_decision_packet_api.py::test_packet_watch_conditions_accept_only_fixed_kinds_and_never_mutate_packet
+release	Certify exact checkout	2026-10-13T05:17:01.1788644Z 37.62s call     tests/test_demo_instrument_workspace.py::test_nvda_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[reject]
+release	Certify exact checkout	2026-10-13T05:17:01.1789643Z 37.06s call     tests/test_demo_instrument_workspace.py::test_nvda_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[watch]
+release	Certify exact checkout	2026-10-13T05:17:01.1790478Z 36.67s call     tests/test_packet_copilot.py::test_copilot_api_idle_ready_and_restart_reopen
+release	Certify exact checkout	2026-10-13T05:17:01.1791308Z 36.50s call     tests/test_decision_packet_api.py::test_advancing_workspace_clock_saves_exact_draft_then_refreshes_fresh_alongside_latest
+release	Certify exact checkout	2026-10-13T05:17:01.1792351Z 36.20s call     tests/test_demo_instrument_workspace.py::test_aapl_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[paper_proposal]
+release	Certify exact checkout	2026-10-13T05:17:01.1793370Z 34.87s call     tests/test_decision_inbox.py::test_reconstructed_inbox_preserves_exact_row_and_session_monitoring_facts
+release	Certify exact checkout	2026-10-13T05:17:01.1794283Z 34.12s call     tests/test_demo_instrument_workspace.py::test_aapl_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[watch]
+release	Certify exact checkout	2026-10-13T05:17:01.1795245Z 33.67s call     tests/test_decision_packet_api.py::test_clean_demo_restart_reopens_identical_packet_bytes
+release	Certify exact checkout	2026-10-13T05:17:01.1796091Z 33.65s call     tests/test_demo_instrument_workspace.py::test_aapl_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly[reject]
+release	Certify exact checkout	2026-10-13T05:17:01.1797096Z 31.59s call     tests/test_decision_inbox.py::test_inbox_prefers_newer_passive_terminal_action_over_older_open_paper
+release	Certify exact checkout	2026-10-13T05:17:01.1798131Z 31.31s call     tests/test_decision_inbox.py::test_inbox_projects_terminal_actions_and_missing_proposal_link
+release	Certify exact checkout	2026-10-13T05:17:01.1798824Z 29.92s call     tests/test_packet_reviews.py::test_preview_refuses_drafts_and_corrupt_review_store
+release	Certify exact checkout	2026-10-13T05:17:01.1799555Z 29.53s call     tests/test_packet_reviews.py::test_filled_open_entry_has_fill_metrics_but_never_fabricates_realized_r
+release	Certify exact checkout	2026-10-13T05:17:01.1800455Z 28.38s call     tests/test_decision_inbox.py::test_inbox_is_read_only_and_pending_action_beats_newer_draft
+release	Certify exact checkout	2026-10-13T05:17:01.1801618Z 27.82s call     tests/test_decision_packet_api.py::test_packet_outcome_review_refuses_draft_unknown_and_reset_clears_owned_store
+release	Certify exact checkout	2026-10-13T05:17:01.1802696Z 26.72s call     tests/test_decision_inbox.py::test_shadow_missing_exact_order_is_unavailable_without_fallback
+release	Certify exact checkout	2026-10-13T05:17:01.1803950Z 26.64s call     tests/test_packet_reviews.py::test_partial_or_unavailable_outcome_rejects_conclusive_classification
+release	Certify exact checkout	2026-10-13T05:17:01.1805291Z 26.59s call     tests/test_decision_inbox.py::test_inbox_projects_confirmed_and_blocked_paper_lifecycle_states[advance0-blocked]
+release	Certify exact checkout	2026-10-13T05:17:01.1806561Z 26.30s call     tests/test_decision_inbox.py::test_inbox_projects_confirmed_and_blocked_paper_lifecycle_states[advance1-paper_open]
+release	Certify exact checkout	2026-10-13T05:17:01.1807945Z 26.06s call     tests/test_packet_reviews.py::test_path_rejects_missing_forecast_session_future_generation_and_live_tail
+release	Certify exact checkout	2026-10-13T05:17:01.1809233Z 25.84s call     tests/test_packet_reviews.py::test_outcome_fence_is_stable_between_requests_when_no_local_evidence_changes
+release	Certify exact checkout	2026-10-13T05:17:01.1810517Z 25.46s call     tests/test_decision_inbox.py::test_inbox_reports_a_missing_paper_proposal_link_as_unavailable
+release	Certify exact checkout	2026-10-13T05:17:01.1811897Z 25.45s call     tests/test_decision_inbox.py::test_inbox_fails_closed_for_packet_proposal_evidence_identity_mismatch[config_digest]
+release	Certify exact checkout	2026-10-13T05:17:01.1813235Z 25.30s call     tests/test_decision_packet_api.py::test_demo_reset_restores_pristine_packet_monitoring_files_after_a_check
+release	Certify exact checkout	2026-10-13T05:17:01.1814574Z 25.27s call     tests/test_packet_reviews.py::test_complete_daily_path_uses_strict_thresholds_and_discloses_same_bar_ambiguity
+release	Certify exact checkout	2026-10-13T05:17:01.1815931Z 25.12s call     tests/test_packet_reviews.py::test_post_recomposes_immediately_before_append_and_refuses_source_drift
+release	Certify exact checkout	2026-10-13T05:17:01.1817341Z 25.03s call     tests/test_decision_inbox.py::test_inbox_fails_closed_for_packet_proposal_evidence_identity_mismatch[id]
+release	Certify exact checkout	2026-10-13T05:17:01.1818706Z 25.00s call     tests/test_decision_inbox.py::test_inbox_configured_mark_is_unavailable_for_freshness_and_position_is_context_only
+release	Certify exact checkout	2026-10-13T05:17:01.1820063Z 24.84s call     tests/test_demo_instrument_workspace.py::test_demo_reset_discards_staged_drafts_from_the_replaced_root
+release	Certify exact checkout	2026-10-13T05:17:01.1821346Z 24.75s call     tests/test_decision_inbox.py::test_shadow_pending_paper_stays_neutral_when_confirmation_freshness_fails
+release	Certify exact checkout	2026-10-13T05:17:01.1822627Z 22.90s call     tests/test_decision_packet_api.py::test_intent_only_crash_recovers_at_original_action_time_across_days
+release	Certify exact checkout	2026-10-13T05:17:01.1823922Z 21.99s call     tests/test_decision_packet_api.py::test_action_replay_uses_exact_parent_after_a_newer_analysis_root_is_saved
+release	Certify exact checkout	2026-10-13T05:17:01.1825083Z =========================== short test summary info ============================
+release	Certify exact checkout	2026-10-13T05:17:01.1826093Z FAILED tests/test_opend_staging_window.py::test_actual_owned_fixture - stage.StageDenied: unsupported_native
+release	Certify exact checkout	2026-10-13T05:17:01.1827645Z FAILED tests/test_opend_staging_window.py::test_final_descriptor_replacement_refuses_actual_synthetic_gate - stage.StageDenied: unsupported_native
+release	Certify exact checkout	2026-10-13T05:17:01.1829291Z FAILED tests/test_opend_staging_window.py::test_registry_is_retained_before_interrupt_is_unblocked - AssertionError: Regex pattern did not match.
+release	Certify exact checkout	2026-10-13T05:17:01.1830291Z   Expected regex: 'registration_interrupted'
+release	Certify exact checkout	2026-10-13T05:17:01.1830792Z   Actual message: 'unsupported_native'
+release	Certify exact checkout	2026-10-13T05:17:01.1831901Z FAILED tests/test_opend_staging_window.py::test_owned_backend_stop_uses_retained_handle_and_preserves_sibling - stage.StageDenied: unsupported_native
+release	Certify exact checkout	2026-10-13T05:17:01.1833431Z FAILED tests/test_opend_staging_window.py::test_admission_failure_never_releases_actual_child - stage.StageDenied: unsupported_native
+release	Certify exact checkout	2026-10-13T05:17:01.1834533Z ===== 5 failed, 4487 passed, 111 skipped, 9 warnings in 2899.87s (0:48:19) =====
+release	Certify exact checkout	2026-10-13T05:17:01.1907696Z 
+release	Certify exact checkout	2026-10-13T05:17:01.1908698Z === release gate summary ===
+release	Certify exact checkout	2026-10-13T05:17:01.1909408Z branch: HEAD   commit: 877cea01624f1de6b96d8139f616d76678b9fcc8
+release	Certify exact checkout	2026-10-13T05:17:01.1910282Z source checkout clean at start: yes
+release	Certify exact checkout	2026-10-13T05:17:01.1910953Z   PASS      1.0s  clone current commit
+release	Certify exact checkout	2026-10-13T05:17:01.1911797Z   PASS      1.0s  release version consistent (metadata, notes, tag)
+release	Certify exact checkout	2026-10-13T05:17:01.1912598Z   PASS      3.0s  fresh venv
+release	Certify exact checkout	2026-10-13T05:17:01.1913704Z   PASS     30.0s  install release extras .[dev,research,e2e,moomoo]
+release	Certify exact checkout	2026-10-13T05:17:01.1914581Z   PASS      1.0s  ruff check src tests tools
+release	Certify exact checkout	2026-10-13T05:17:01.1915323Z   PASS      2.0s  trusted data tooling installed
+release	Certify exact checkout	2026-10-13T05:17:01.1916096Z   PASS      1.0s  license review (closure contract)
+release	Certify exact checkout	2026-10-13T05:17:01.1916632Z   PASS      3.0s  audit venv (isolated tooling)
+release	Certify exact checkout	2026-10-13T05:17:01.1917278Z   PASS      4.0s  install pip-audit (isolated)
+release	Certify exact checkout	2026-10-13T05:17:01.1917797Z   PASS      3.0s  pip-audit over requirements-audit.txt
+release	Certify exact checkout	2026-10-13T05:17:01.1918283Z   PASS      6.0s  npm ci (frontend deps)
+release	Certify exact checkout	2026-10-13T05:17:01.1918774Z   PASS      1.0s  frontend license review (locked closure)
+release	Certify exact checkout	2026-10-13T05:17:01.1919265Z   PASS      1.0s  npm audit --audit-level=high
+release	Certify exact checkout	2026-10-13T05:17:01.1919810Z   PASS      9.0s  frontend bundle current (build_frontend --check)
+release	Certify exact checkout	2026-10-13T05:17:01.1920321Z   PASS     23.0s  frontend unit tests (vitest)
+release	Certify exact checkout	2026-10-13T05:17:01.1920746Z   FAIL   2905.8s  full pytest suite
+release	Certify exact checkout	2026-10-13T05:17:01.1921218Z clone clean at end (no generated state): yes
+release	Certify exact checkout	2026-10-13T05:17:01.1921683Z   pytest: 4487 passed, 5 failed, 111 skipped
+release	Certify exact checkout	2026-10-13T05:17:01.1922155Z   playwright browser cache: absent (E2E tests skipped)
+release	Certify exact checkout	2026-10-13T05:17:01.1922464Z 
+release	Certify exact checkout	2026-10-13T05:17:01.1923476Z RELEASE GATE FAILED — diagnostics kept at /home/runner/work/_temp/quantmesh-release-temp/qmesh-release-gate-ujc4ktae
+release	Certify exact checkout	2026-10-13T05:17:01.2020063Z ##[error]Process completed with exit code 1.
+python	Require successful selected gates	﻿2026-10-13T05:17:28.6357824Z ##[group]Run python - <<'PY'
+python	Require successful selected gates	2026-10-13T05:17:28.6358864Z ^[[36;1mpython - <<'PY'^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6359462Z ^[[36;1mimport json^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6359943Z ^[[36;1mimport os^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6360539Z ^[[36;1mresults = json.loads(os.environ["GATE_RESULTS"])^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6361334Z ^[[36;1mrequired = ("classify", "fast", "research_service")^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6362279Z ^[[36;1mfailed = any(results[name]["result"] != "success" for name in required)^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6363203Z ^[[36;1mfailed |= any(value["result"] not in {"success", "skipped"}^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6363975Z ^[[36;1m              for value in results.values())^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6364635Z ^[[36;1mraise SystemExit(1 if failed else 0)^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6365220Z ^[[36;1mPY^[[0m
+python	Require successful selected gates	2026-10-13T05:17:28.6706556Z shell: /usr/bin/bash -e {0}
+python	Require successful selected gates	2026-10-13T05:17:28.6707283Z env:
+python	Require successful selected gates	2026-10-13T05:17:28.6707910Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T05:17:28.6708907Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+python	Require successful selected gates	2026-10-13T05:17:28.6709949Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T05:17:28.6710834Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T05:17:28.6711722Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T05:17:28.6712890Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+python	Require successful selected gates	2026-10-13T05:17:28.6730614Z   GATE_RESULTS: {
+python	Require successful selected gates	  "classify": {
+python	Require successful selected gates	    "result": "success",
+python	Require successful selected gates	    "outputs": {
+python	Require successful selected gates	      "decision": "{\"domains\":[],\"frontend\":false,\"pytest_targets\":[],\"reasons\":[\"safety:.github/workflows/ci.yml\",\"safety:docs/evidence/research-foundation/owned-research-backup/public-audit/go.mod\",\"safety:docs/evidence/research-foundation/owned-research-backup/public-audit/go.sum\",\"safety:frontend/src/components/live-data-badge.test.tsx\",\"safety:frontend/src/components/live-data-badge.tsx\",\"safety:frontend/src/components/live-market-list.tsx\",\"safety:frontend/src/lib/live-session.test.ts\",\"safety:frontend/src/lib/live.ts\",\"safety:src/quantmesh/instruments/contracts.py\",\"safety:src/quantmesh/instruments/workspace.py\",\"safety:src/quantmesh/live/feed.py\",\"safety:src/quantmesh/live/fence.py\",\"safety:src/quantmesh/live/session_freshness.py\",\"safety:src/quantmesh/research/job_store.py\",\"safety:tests/test_ai_acceptance.py\",\"safety:tests/test_live_fence.py\",\"safety:tests/test_live_router.py\",\"safety:tests/test_live_session_consumers.py\",\"safety:tests/test_live_session_freshness.py\",\"safety:tests/test_owned_postgres_fixture.py\",\"safety:tests/test_research_job_store.py\",\"safety:tools/eval_harness/README.md\",\"safety:tools/eval_harness/__init__.py\",\"safety:tools/eval_harness/__main__.py\",\"safety:tools/eval_harness/core.py\",\"safety:tools/eval_harness/pytest_plugin.py\",\"safety:tools/eval_harness/runner.py\",\"safety:tools/gate_policy.py\",\"safety:tools/qualify_linux_worker.py\",\"safety:tools/qualify_opend_private_terminal.py\",\"safety:tools/qualify_owned_postgres.py\",\"safety:tools/qualify_portfolio_budgets.py\",\"safety:tools/qualify_research_backup.py\",\"safety:tools/quality_gate.py\",\"safety:tools/release_gate.py\",\"safety:tools/research_job.py\",\"safety:tools/research_service_gate.py\",\"safety:tools/server_market_inventory.py\",\"safety:tools/verify_server_market_source.py\"],\"tier\":\"release\"}",
+python	Require successful selected gates	      "domains": "[]",
+python	Require successful selected gates	      "frontend": "false",
+python	Require successful selected gates	      "run_browser": "false",
+python	Require successful selected gates	      "tier": "release"
+python	Require successful selected gates	    }
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "fast": {
+python	Require successful selected gates	    "result": "success",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "domain": {
+python	Require successful selected gates	    "result": "skipped",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "browser": {
+python	Require successful selected gates	    "result": "skipped",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "release": {
+python	Require successful selected gates	    "result": "failure",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "research_service": {
+python	Require successful selected gates	    "result": "success",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  }
+python	Require successful selected gates	}
+python	Require successful selected gates	2026-10-13T05:17:28.6743450Z ##[endgroup]
+python	Require successful selected gates	2026-10-13T05:17:29.0451985Z ##[error]Process completed with exit code 1.

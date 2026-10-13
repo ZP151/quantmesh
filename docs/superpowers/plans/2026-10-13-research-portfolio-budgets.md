@@ -146,3 +146,11 @@ contracts/locks retained. Historical journal/hash mismatch is preserved and
 originalbytes recovered. This accepts only ownedlocalSQL/scripted accounting.
 Publicationcheckbox remains pending until newheadCI is genuinelyterminal and
 the draft/human/release gates are satisfied. FullA remains ACTIVE.
+
+Publication follow-up2026-10-13:57a/run38346386735 terminalFAILURE
+4487pass/5staging-nativefail/111skip; exacttestmerge877cea treeequals57a.
+Two earlier fixture-owned loop lifetimes are actualorder REDs, repaired without
+productiongatechange; finalaffected3files118nativepass0skip8.64s/Ruff/diff and
+boundedreview clear.102rawstreams retain failedattempt/diagnostics/service7receipt
+artifact. Only localfixture acceptance; newexactheadCI and fullA/human/operator
+publication remain pending. No oldrunreplay or scope reduction.

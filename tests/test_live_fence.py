@@ -371,12 +371,19 @@ def _bbo(coin: str) -> dict[str, object]:
 
 
 def _plan() -> list[tuple[float, object]]:
-    # A burst of real bbo frames, then an hour of silence (socket open).
+    # The owned quiet venue keeps the socket open after this burst.
     return [
         (0.0, _bbo("BTC")),
         (0.0, _bbo("BTC")),
-        (3600.0, {"__cmd": "close"}),
     ]
+
+
+class _QuietVenue(ScriptedVenue):
+    async def _handle(self, socket) -> None:
+        await super()._handle(socket)
+        # Silence lasts until the connection closes, so fixture shutdown can
+        # retire this owned handler before the server's wait_closed completes.
+        await socket.wait_closed()
 
 
 def _fresh_fixture_frame(frame: object) -> object:
@@ -402,10 +409,9 @@ def live_quote_anchor() -> tuple[LiveFeed, datetime]:
     ready = threading.Event()
 
     def runner() -> None:
-        asyncio.set_event_loop(loop)
-
         async def serve() -> None:
-            async with ScriptedVenue(plan=_plan(), transform_frame=_fresh_fixture_frame) as venue:
+            holder["task"] = asyncio.current_task()
+            async with _QuietVenue(plan=_plan(), transform_frame=_fresh_fixture_frame) as venue:
                 feed = LiveFeed(lag=timedelta(seconds=5), stale=timedelta(seconds=10))
                 supervisor = HyperliquidVenueSupervisor(LiveHyperliquidTransport(str(venue.url)))
                 supervisor.subscribe(["BTC"])
@@ -416,7 +422,11 @@ def live_quote_anchor() -> tuple[LiveFeed, datetime]:
                 ready.set()
                 await asyncio.gather(feed.run(), held)
 
-        loop.run_until_complete(serve())
+        with asyncio.Runner(loop_factory=lambda: loop) as owned_runner:
+            try:
+                owned_runner.run(serve())
+            except asyncio.CancelledError:
+                pass
 
     thread = threading.Thread(target=runner, daemon=True)
     thread.start()
@@ -442,10 +452,13 @@ def live_quote_anchor() -> tuple[LiveFeed, datetime]:
     try:
         yield feed, received_at
     finally:
-        held = holder.get("held")
-        if held is not None:
-            loop.call_soon_threadsafe(cast(asyncio.Future, held).cancel)
+        # Cancel the parent task so gather cancels the pump as well; cancelling
+        # its held Future alone leaves the feed and executor running.
+        task = cast(asyncio.Task[None], holder["task"])
+        loop.call_soon_threadsafe(task.cancel)
         thread.join(timeout=5)
+        assert not thread.is_alive(), "owned live quote pump did not finish shutdown"
+        assert loop.is_closed(), "owned live quote loop was not closed"
 
 
 def test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks(

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="5" skipped="0" tests="118" time="12.625" timestamp="2026-10-13T13:26:50.557468+08:00" hostname="zhoulaptop"><testcase classname="tests.test_live_fence" name="test_blesses_a_healthy_real_quote_into_a_usable_domain_quote" time="0.001" /><testcase classname="tests.test_live_fence" name="test_rejects_when_there_is_no_quote_view[None]" time="0.001" /><testcase classname="tests.test_live_fence" name="test_rejects_when_there_is_no_quote_view[view1]" time="0.000" /><testcase classname="tests.test_live_fence" name="test_rejects_anything_that_is_not_real[delayed]" time="0.000" /><testcase classname="tests.test_live_fence" name="test_rejects_anything_that_is_not_real[synthetic]" time="0.000" /><testcase classname="tests.test_live_fence" name="test_rejects_anything_that_is_not_real[unavailable]" time="0.000" /><testcase classname="tests.test_live_fence" name="test_rejects_a_sequence_gapped_quote" time="0.000" /><testcase classname="tests.test_live_fence" name="test_rejects_missing_positive_continuity_evidence" time="0.000" /><testcase classname="tests.test_live_fence" name="test_rejects_a_stale_quote_with_the_explicit_age" time="0.000" /><testcase classname="tests.test_live_fence" name="test_rejects_a_quote_without_usable_depth" time="0.000" /><testcase classname="tests.test_live_fence" name="test_rejects_a_quote_without_a_receipt_anchor" time="0.000" /><testcase classname="tests.test_live_fence" name="test_rejection_priority_is_source_then_gap_then_age" time="0.000" /><testcase classname="tests.test_live_fence" name="test_max_age_must_be_positive" time="0.001" /><testcase classname="tests.test_live_fence" name="test_resolve_pulls_the_quote_view_from_the_snapshot" time="0.001" /><testcase classname="tests.test_live_fence" name="test_submit_flows_a_healthy_fenced_quote_to_fills" time="0.002" /><testcase classname="tests.test_live_fence" name="test_submit_records_the_fence_rejection_with_the_explicit_reason" time="0.001" /><testcase classname="tests.test_live_fence" name="test_submit_ignores_a_caller_quote_when_the_fence_is_enabled" time="0.001" /><testcase classname="tests.test_live_fence" name="test_idempotency_replay_bypasses_the_fence" time="0.001" /><testcase classname="tests.test_live_fence" name="test_fence_requires_a_snapshot_and_submit_requires_a_quote_or_fence" time="0.001" /><testcase classname="tests.test_live_fence" name="test_without_a_fence_the_caller_quote_is_used_unchanged" time="0.001" /><testcase classname="tests.test_live_fence" name="test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks" time="5.411"><error message="failed on teardown with &quot;AssertionError: owned live quote pump did not finish shutdown&#10;assert not True&#10; +  where True = is_alive()&#10; +    where is_alive = &lt;Thread(Thread-1 (runner), started daemon 131177279047360)&gt;.is_alive&quot;">@pytest.fixture(scope="module")
+    def live_quote_anchor() -&gt; tuple[LiveFeed, datetime]:
+        """The scripted venue + live supervisor + feed pump on one daemon
+        loop; returns the feed and the receipt anchor of the burst quote."""
+        loop = asyncio.new_event_loop()
+        holder: dict[str, object] = {}
+        ready = threading.Event()
+    
+        def runner() -&gt; None:
+            async def serve() -&gt; None:
+                holder["task"] = asyncio.current_task()
+                async with ScriptedVenue(plan=_plan(), transform_frame=_fresh_fixture_frame) as venue:
+                    feed = LiveFeed(lag=timedelta(seconds=5), stale=timedelta(seconds=10))
+                    supervisor = HyperliquidVenueSupervisor(LiveHyperliquidTransport(str(venue.url)))
+                    supervisor.subscribe(["BTC"])
+                    feed.attach(supervisor)
+                    holder["feed"] = feed
+                    held: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+                    holder["held"] = held
+                    ready.set()
+                    await asyncio.gather(feed.run(), held)
+    
+            with asyncio.Runner(loop_factory=lambda: loop) as owned_runner:
+                try:
+                    owned_runner.run(serve())
+                except asyncio.CancelledError:
+                    pass
+    
+        thread = threading.Thread(target=runner, daemon=True)
+        thread.start()
+        if not ready.wait(timeout=10):
+            raise AssertionError("the scripted venue never came up")
+        feed = cast(LiveFeed, holder["feed"])
+        received_at: datetime | None = None
+        for _ in range(150):
+            state = feed.latest_state()
+            view = (
+                state.get("instruments", {}).get("hyperliquid:BTC", {}).get("kinds", {}).get("quote")
+                if isinstance(state.get("instruments"), dict)
+                else None
+            )
+            if isinstance(view, dict):
+                anchor = view.get("received_at")
+                if isinstance(anchor, str):
+                    received_at = datetime.fromisoformat(anchor)
+                    break
+            threading.Event().wait(0.1)
+        if received_at is None:
+            raise AssertionError("the feed never delivered a quote for BTC")
+        try:
+            yield feed, received_at
+        finally:
+            # Cancel the parent task so gather cancels the pump as well; cancelling
+            # its held Future alone leaves the feed and executor running.
+            task = cast(asyncio.Task[None], holder["task"])
+            loop.call_soon_threadsafe(task.cancel)
+            thread.join(timeout=5)
+&gt;           assert not thread.is_alive(), "owned live quote pump did not finish shutdown"
+E           AssertionError: owned live quote pump did not finish shutdown
+E           assert not True
+E            +  where True = is_alive()
+E            +    where is_alive = &lt;Thread(Thread-1 (runner), started daemon 131177279047360)&gt;.is_alive
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_live_fence.py:453: AssertionError</error></testcase><testcase classname="tests.test_live_moomoo" name="test_specs_derive_market_qualified_codes" time="0.000" /><testcase classname="tests.test_live_moomoo" name="test_stock_quote_frame_yields_metrics_update" time="0.001" /><testcase classname="tests.test_live_moomoo" name="test_rt_ticker_frame_yields_trades_with_sides_sequences_and_dedup" time="0.001" /><testcase classname="tests.test_live_moomoo" name="test_stale_venue_clock_emits_nothing" time="0.000" /><testcase classname="tests.test_live_moomoo" name="test_dispatch_fails_closed" time="0.000" /><testcase classname="tests.test_live_moomoo" name="test_connect_probes_and_serves_quote_capability" time="0.005" /><testcase classname="tests.test_live_moomoo" name="test_connect_fails_honestly_when_opend_is_unavailable" time="0.000" /><testcase classname="tests.test_live_moomoo" name="test_connect_refuses_when_quote_capability_is_off" time="0.000" /><testcase classname="tests.test_live_moomoo" name="test_poll_failure_becomes_a_poll_error_frame" time="0.052" /><testcase classname="tests.test_live_moomoo" name="test_pump_shutdown_closes_owned_loop_and_executor" time="0.115" /><testcase classname="tests.test_live_moomoo" name="test_live_stack_streams_real_labels_from_a_live_daemon" time="0.104" /><testcase classname="tests.test_live_moomoo" name="test_live_stack_ages_stale_when_the_venue_clock_stops" time="1.069" /><testcase classname="tests.test_live_moomoo" name="test_live_stack_honest_disconnected_when_the_daemon_dies" time="0.205" /><testcase classname="tests.test_live_moomoo" name="test_live_stack_honest_unavailable_when_opend_is_down" time="0.002" /><testcase classname="tests.test_opend_staging_window" name="test_valid_permit_is_staging_authority_only" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[schema_version-True]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[nonce-../../x]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[approved_build-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[max_seconds-True]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[max_seconds-901]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[max_seconds-0]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[gateway_uid-0]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[gateway_gid-True]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[tmux_version-3.5]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[tmux_sha256-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[machine_sha256-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[human_reviewers-value11]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[safety_owner-outsider]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[ci_conclusion-pending]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[operator_window_approved-False]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[new_device_approved-1]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[market_right_transfer_approved-False]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[not_before-2026-10-13T00:00:01+00:00]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[expires_at-2026-10-13T00:00:00+00:00]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[expires_at-2026-10-14T00:00:00]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[expires_at-2026-10-13T00:15:01+00:00]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_malformed_or_wrong_authority_denied[launcher_sha256-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_unknown_and_credential_claims_denied[password]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_unknown_and_credential_claims_denied[account_id]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_unknown_and_credential_claims_denied[token]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_unknown_and_credential_claims_denied[source_qualified]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_unknown_and_credential_claims_denied[install_allowed]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_default_does_not_inspect_or_spawn" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_cli_has_no_arbitrary_authority[args0]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_cli_has_no_arbitrary_authority[args1]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_cli_has_no_arbitrary_authority[args2]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_cli_has_no_arbitrary_authority[args3]" time="0.002" /><testcase classname="tests.test_opend_staging_window" name="test_template_is_distinct_foreground_and_bounded" time="0.020" /><testcase classname="tests.test_opend_staging_window" name="test_actual_owned_fixture" time="0.000"><failure message="stage.StageDenied: unsupported_native">@pytest.mark.skipif(sys.platform != "linux", reason="real Linux pidfd/PTY lifecycle")
+    def test_actual_owned_fixture():
+&gt;       result = stage.run_owned_fixture()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:1037: in run_owned_fixture
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+&gt;           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:175: StageDenied</failure></testcase><testcase classname="tests.test_opend_staging_window" name="test_protected_reader_denies_link_and_mutable_parent" time="0.003" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[User-root]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[KillMode-process]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[Restart-always]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[StandardOutput-journal]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[RuntimeMaxUSec-infinity]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[TimeoutStopUSec-16s]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[DropInPaths-/tmp/override]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[MainPID-0]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[ControlGroup-/borrowed/global]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[ActiveState-inactive]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[RuntimeDirectory-quantmesh-opend]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_wrong_authority_denies[Id-borrowed.service]" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_manager_exact_contract" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_generated_configuration_has_fixed_direct_guard_and_no_recording" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_service_creates_pane_only_after_foreground_exec" time="0.012" /><testcase classname="tests.test_opend_staging_window" name="test_installed_unit_pin_matches_exact_template_bytes" time="0.008" /><testcase classname="tests.test_opend_staging_window" name="test_activation_transition_preserves_manager_authority" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_actual_context_terminal_rejection_precedes_release[echo]" time="0.018" /><testcase classname="tests.test_opend_staging_window" name="test_actual_context_terminal_rejection_precedes_release[mode]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_actual_context_terminal_rejection_precedes_release[mismatch]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_actual_context_terminal_rejection_precedes_release[direction]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_actual_context_terminal_rejection_precedes_release[owner]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[parent]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[cgroup]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[exe]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[pidfd]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[pane]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_actual_profile_admission_denies_before_backend_or_child[qualified]" time="0.012" /><testcase classname="tests.test_opend_staging_window" name="test_actual_profile_admission_denies_before_backend_or_child[unsafe_argv]" time="0.009" /><testcase classname="tests.test_opend_staging_window" name="test_actual_profile_admission_denies_before_backend_or_child[public_endpoint]" time="0.004" /><testcase classname="tests.test_opend_staging_window" name="test_actual_profile_admission_denies_before_backend_or_child[profile_hash]" time="0.003" /><testcase classname="tests.test_opend_staging_window" name="test_final_descriptor_replacement_refuses_actual_synthetic_gate" time="0.006"><failure message="stage.StageDenied: unsupported_native">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x774e175bb980&gt;
+
+    @NATIVE
+    def test_final_descriptor_replacement_refuses_actual_synthetic_gate(monkeypatch):
+        from tools import qualify_opend_private_terminal as helper
+    
+        profile = json.loads((ROOT / "deploy/aws/opend/gateway-profile.json").read_bytes())
+        monkeypatch.setattr(stage, "_admit", lambda w: (profile, helper))
+        c = permit()
+        c["expires_at"] = (datetime.now(UTC) + timedelta(seconds=5)).isoformat()
+        window = stage.StagingWindow(c)
+        monkeypatch.setattr(stage, "load_staging_window", lambda: window)
+        monkeypatch.setattr(stage, "_unclaimed", lambda w: None)
+        monkeypatch.setattr(stage, "_claim", lambda w, d: None)
+        monkeypatch.setattr(stage, "_finish_backend", os.close)  # synthetic backend/manager only
+        monkeypatch.setattr(stage, "_digest_fd", lambda fd: stage.VENDOR_SHA)
+    
+        @contextmanager
+        def fixture_file(path):
+            fd = os.open("/dev/null", os.O_RDONLY)
+            try:
+                yield fd
+            finally:
+                os.close(fd)
+    
+        monkeypatch.setattr(stage, "_protected_fd", fixture_file)
+        monkeypatch.setattr(stage, "_owned_dir", fixture_file)
+        original_spawn = stage._spawn_gated
+        captured = []
+    
+        def synthetic(fds, **kwargs):
+            child = original_spawn(fds, fixture=True, seconds=3, registry=kwargs["registry"])
+            captured.append(child)
+            return child
+    
+        monkeypatch.setattr(stage, "_spawn_gated", synthetic)
+        with (
+            stage._fixture_pty() as (_, slave),
+            stage._fixture_pty() as (_, replacement),
+            inherited_terminal(slave),
+        ):
+            calls = []
+    
+            def context(w):
+                if calls:
+                    os.dup2(replacement, 0)
+                calls.append(True)
+                return dict(
+                    manager=manager(),
+                    terminal=helper.inspect_private_terminal(0, 1, 2, expected_uid=os.getuid()),
+                    backend_pidfd=os.pidfd_open(os.getpid()),
+                )
+    
+            monkeypatch.setattr(stage, "inspect_staging_context", context)
+            with pytest.raises(helper.TerminalQualificationError, match="terminal_mismatch"):
+&gt;               stage.start_staging_console(window)
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:536: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:718: in start_staging_console
+    child = _spawn_gated(
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:512: in synthetic
+    child = original_spawn(fds, fixture=True, seconds=3, registry=kwargs["registry"])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:940: in _spawn_gated
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+&gt;           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:175: StageDenied</failure></testcase><testcase classname="tests.test_opend_staging_window" name="test_specific_protected_file_boundary_with_simulated_root_metadata[link]" time="0.003" /><testcase classname="tests.test_opend_staging_window" name="test_specific_protected_file_boundary_with_simulated_root_metadata[hardlink]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_specific_protected_file_boundary_with_simulated_root_metadata[owner]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_specific_protected_file_boundary_with_simulated_root_metadata[writable]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_specific_protected_file_boundary_with_simulated_root_metadata[hash]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_specific_vendor_descendant_boundary_not_parent_failure[file]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_specific_vendor_descendant_boundary_not_parent_failure[directory]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_specific_vendor_descendant_boundary_not_parent_failure[symlink]" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_registry_is_retained_before_interrupt_is_unblocked" time="0.000"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'registration_interrupted'&#10;  Actual message: 'unsupported_native'">@pytest.mark.skipif(sys.platform != "linux", reason="native registry interruption")
+    def test_registry_is_retained_before_interrupt_is_unblocked():
+        registry = []
+&gt;       with pytest.raises(stage.StageDenied, match="registration_interrupted") as caught:
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'registration_interrupted'
+E         Actual message: 'unsupported_native'
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:617: AssertionError</failure></testcase><testcase classname="tests.test_opend_staging_window" name="test_no_effect_check_window_redacts_unexpected_error" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_owned_backend_stop_uses_retained_handle_and_preserves_sibling" time="0.000"><failure message="stage.StageDenied: unsupported_native">@pytest.mark.skipif(sys.platform != "linux", reason="real pidfd backend stop")
+    def test_owned_backend_stop_uses_retained_handle_and_preserves_sibling():
+        children = []
+        try:
+&gt;           sibling = stage._spawn_gated(None, fixture=True, seconds=8, registry=children)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:639: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:940: in _spawn_gated
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+&gt;           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:175: StageDenied</failure></testcase><testcase classname="tests.test_opend_staging_window" name="test_credential_free_vendor_tree_rejects_mutability" time="0.001" /><testcase classname="tests.test_opend_staging_window" name="test_backend_finish_signals_before_closing_handle" time="0.000" /><testcase classname="tests.test_opend_staging_window" name="test_admission_failure_never_releases_actual_child" time="0.000"><failure message="stage.StageDenied: unsupported_native">@pytest.mark.skipif(sys.platform != "linux", reason="native gated fork lifecycle")
+    def test_admission_failure_never_releases_actual_child():
+        def denied():
+            raise stage.StageDenied("backend_denied")
+    
+        with stage._fixture_pty() as (_, slave):
+&gt;           child = stage._spawn_gated(slave, fixture=True, seconds=1)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_opend_staging_window.py:682: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:940: in _spawn_gated
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+&gt;           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:175: StageDenied</failure></testcase><testcase classname="tests.test_opend_staging_window" name="test_nonce_claim_is_exclusive_and_survives_reopen" time="0.004" /></testsuite></testsuites>
