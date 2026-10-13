@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "head": "084c86316066297f2c817ce2380cb49099d4ee41",
+  "verified_raw_hashes": 687,
+  "issues": [],
+  "source_files": 3,
+  "native_tests": {
+    "build": "084c86316066297f2c817ce2380cb49099d4ee41",
+    "passed": 37,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "seconds": 20.45,
+    "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-r1-final.json",
+    "junit": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\native-r1-final.junit.xml"
+  },
+  "scope": "OWNED_LOCAL_POSTGRES_SCRIPTED_PORTFOLIO_ONLY",
+  "review_pending": true,
+  "production_release_qualified": false
+}

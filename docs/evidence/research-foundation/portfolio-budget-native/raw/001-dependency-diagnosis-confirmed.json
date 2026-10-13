@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "wsl",
+    "-d",
+    "Ubuntu",
+    "--",
+    "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python",
+    "-B",
+    "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-preparation/diagnose-dependencies.py"
+  ],
+  "exit": 0,
+  "stdout_sha256": "32380b40b3049d11031490fde87121d6b3dc038c236527bf57af4c183961fc70",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,9 @@
+{
+  "original_manifest_size": 650,
+  "original_manifest_sha256": "4e76b67cbcdb057805d6a282e42e144be49c6dcfe71f5fdd5240b052bdaa9fe9",
+  "recovered_exact_historical_bytes": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\progress-before-final-handoff-55ecfc7.txt",
+  "later_current_size": 827,
+  "later_current_sha256": "30f80e4d3671f8468b8ea803c5e9af80a970ec444324c92d9ec71eac65815fef",
+  "cause": "Previous final handoff hashed old journal then rewrote journal after hash; proof files were not modified.",
+  "resolution": "Finalize journal before hashing replacement final manifest; preserve original handoff and recovered original journal."
+}

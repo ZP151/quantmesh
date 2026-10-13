@@ -1,0 +1,11 @@
+2026-10-13 11:20:48.165 +08 [60064] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-13 11:20:48.165 +08 [60064] LOG:  listening on IPv4 address "127.0.0.1", port 49589
+2026-10-13 11:20:48.168 +08 [60071] LOG:  database system was shut down at 2026-10-13 11:20:48 +08
+2026-10-13 11:20:48.170 +08 [60064] LOG:  database system is ready to accept connections
+2026-10-13 11:20:54.101 +08 [60064] LOG:  received fast shutdown request
+2026-10-13 11:20:54.104 +08 [60064] LOG:  aborting any active transactions
+2026-10-13 11:20:54.104 +08 [60064] LOG:  background worker "logical replication launcher" (PID 60074) exited with exit code 1
+2026-10-13 11:20:54.104 +08 [60069] LOG:  shutting down
+2026-10-13 11:20:54.106 +08 [60069] LOG:  checkpoint starting: shutdown immediate
+2026-10-13 11:20:54.116 +08 [60069] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.003 s, sync=0.001 s, total=0.012 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/16EF7C0, redo lsn=0/16EF7C0
+2026-10-13 11:20:54.121 +08 [60064] LOG:  database system is shut down

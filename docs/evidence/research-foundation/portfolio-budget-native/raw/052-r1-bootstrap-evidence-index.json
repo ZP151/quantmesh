@@ -1,0 +1,50 @@
+[
+  {
+    "path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-49a582866a944082901876140ab05141-test_actual_initdb_bootstrap_d0\\bootstrap-cleanup.json",
+    "observed_boot_terminal": true,
+    "qualified_cleanup": true,
+    "parent_pid": 62068,
+    "boot_pid": 62076,
+    "parent_exit": -9,
+    "sibling_survived": true,
+    "fallback": false,
+    "group": 62068,
+    "session": 62068
+  },
+  {
+    "path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-53aab6f769934e71a83872972eed3c9c-test_actual_initdb_bootstrap_d0\\bootstrap-cleanup.json",
+    "observed_boot_terminal": true,
+    "qualified_cleanup": true,
+    "parent_pid": 60847,
+    "boot_pid": 60855,
+    "parent_exit": -9,
+    "sibling_survived": true,
+    "fallback": false,
+    "group": 60847,
+    "session": 60847
+  },
+  {
+    "path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-9a91cfec974e406fb4a9b41fc7a4dbd3-test_actual_initdb_bootstrap_d0\\bootstrap-cleanup.json",
+    "observed_boot_terminal": false,
+    "qualified_cleanup": false,
+    "parent_pid": 58126,
+    "boot_pid": 58134,
+    "parent_exit": -9,
+    "sibling_survived": true,
+    "fallback": true,
+    "group": 58030,
+    "session": 58030
+  },
+  {
+    "path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-b95969adb1794be49d21dcbcb3c19561-test_actual_initdb_bootstrap_d0\\bootstrap-cleanup.json",
+    "observed_boot_terminal": true,
+    "qualified_cleanup": true,
+    "parent_pid": 59882,
+    "boot_pid": 59890,
+    "parent_exit": -9,
+    "sibling_survived": true,
+    "fallback": false,
+    "group": 59882,
+    "session": 59882
+  }
+]

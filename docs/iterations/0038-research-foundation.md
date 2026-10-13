@@ -8,15 +8,22 @@ native-service-bf64883; no paid/model/production/whole-CI qualification inferred
 The separate b107 native service failure remains retained and its historical
 unavailable cause is not diagnosed by this current-source pass.
 
-Portfolio verifier exacta9b9ec6 final native35passed/0skip15.66s has real owned
-PostgreSQL race, durable observer before1scriptedinvocation, complete7table
-pg_dump/restore equality and source/restored budget exhaustion. SpecR1 clear.
-StandardsR1 finds actualP2: timed-out initdb direct parent reaped while its
-positively identified owned postgres --boot descendant remains alive. Original
-Task2 session resumes a bounded three-leaf repair and native RED/GREEN beforeR2;
-verifier is NOT integrated/accepted yet. Root433rawhash audit matches432;
-only progress.md changed after handoff, not native proof bytes. Metadata reseal
-waits for a final journal, original mismatch receipt retained.
+Portfolio verifier exact084c86316066297f2c817ce2380cb49099d4ee41 closes capped
+Spec/StandardsR2. Actual initdb descendantP2 has meaningfulRED1, fixed native
+boot/shell terminal before any fallback, unknownmember preserved/refused,
+identity-fenced pidfds and restored owned subreaper. Exact native37passed/0skip/
+20.45s proves realPG race, durable independentSQLobserver before1scriptedinvoke,
+complete7tablepg_dump/restore equality, exhausted categories and7negatives.
+All42recordedPIDs absent in independentinspection;81licenses/6669RECORD/zero.pyc
+before/after. Root all687rawhashes/sizes match. Exact old650-byte journal and
+mutablemetadata versions recovered with originalSHAs; mismatchhistory preserved.
+Three reviewed leaves integrate byte-identically;364rawstreams includeALL281
+nativefiles plusR1/R2reports and root audit in portfolio-budget-native. Complete
+source bundles/audits/preparation remain in ownedb7a1; no worktree removal.
+Accepted scope is OWNED_LOCAL_POSTGRES_SCRIPTED_PORTFOLIO_ONLY, not production
+TLS/offhost/numericalWorker/realmodel/host/wholeCI or wholeA. No paidcalls,
+server/source/helperoperation, merge or deployment. Next one coherent draftPR175
+push triggers new exact-head checks; old terminalCI is never rerun.
 
 Run38330059615 remains terminalFAILURE, no rerun. Actionstestmerge1313c77 tree
 6a7fa1c9baddd62ed1e958fb3bb91861468105e5 equals candidate216b tree; actual checkout

@@ -64,26 +64,26 @@ new service-owned accounting module if needed, `orchestrator.py`, `runtime.py`,
 service tests, and service README. No core contracts, dependency locks, shared
 CI, source gateway, old native qualifier or global ledger edits.
 
-- [ ] RED proves independent jobs can currently each reserve beyond a shared
+- [x] RED proves independent jobs can currently each reserve beyond a shared
   allowance; keep old per-job test as a separate boundary.
-- [ ] Add a frozen `PortfolioBudgetPolicy` in budgets (or re-export there):
+- [x] Add a frozen `PortfolioBudgetPolicy` in budgets (or re-export there):
   `policy_id`, `operating_monthly_usd: Decimal`, `development_total_usd: Decimal`.
   IDs are bounded nonsecret identifiers; reject invalid/nonfinite/negative
   values and caps above approved ceilings. `EffectLedger(store, *, policy=None,
   category=None)` binds explicit `operating` or `development` category. Existing
   reserve_call signature and read/response/checkpoint tuple remain unchanged.
-- [ ] Implement the additive authoritative policy/high-water clock/reservation
+- [x] Implement the additive authoritative policy/high-water clock/reservation
   ledger with explicit version validation and atomic admission described above.
   Missing/mismatched policy and unattributed history deny new paid/remote effects.
-- [ ] Add optional validated runtime configuration for the policy/category only;
+- [x] Add optional validated runtime configuration for the policy/category only;
   this does NOT start a model runner or allow external requests. Keep unknown
   config rejected, credentials private, health model unavailable.
-- [ ] Prove cross-job exact-boundary, last-slot race, separate categories,
+- [x] Prove cross-job exact-boundary, last-slot race, separate categories,
   lifetime exhaustion, month transition, unresolved carry, backward time,
   duplicate/crash/reopen/rollback, malformed/mismatched policy and legacy history
   fail-closed cases. Remote missing-policy denial must demonstrate zero external
   invocations; scripted boundary labelled explicitly. No real paid call.
-- [ ] Run focused new tests plus the complete relevant service offline boundary,
+- [x] Run focused new tests plus the complete relevant service offline boundary,
   Ruff/format/diff. Preserve raw RED/GREEN and exact commit handoff. Stop before
   merge, PR creation or deployment. Root supplies bounded two-axis review.
 
@@ -95,34 +95,34 @@ against the frozen public accounting API above; root sends the reviewed exact
 Task 1 commit before execution. Do not change old PG/backup qualifiers or their
 baseline checks to make a newer tree look previously certified.
 
-- [ ] Design an owned-only default blocked preflight and bounded admission
+- [x] Design an owned-only default blocked preflight and bounded admission
   comparable to existing qualifiers. Reuse independently audited readonly PG18.6
   binaries and service environment, never existing clusters or global packages.
-- [ ] Create disposable private loopback PostgreSQL resources with attributable
+- [x] Create disposable private loopback PostgreSQL resources with attributable
   process identity/cleanup, bounded subprocess output/timeouts, and no ambient
   credential ingestion. Nonowned resources survive all success/failure cleanup.
-- [ ] Real independent processes, different jobs, shared schema: race for last
+- [x] Real independent processes, different jobs, shared schema: race for last
   allowance; count durable reservations with an independent SQL observer before
   scripted provider invocation. Exactly one winning invocation; denied call zero.
-- [ ] Verify exhausted operating/development policies persist through close,
+- [x] Verify exhausted operating/development policies persist through close,
   reopen and a real pg_dump/pg_restore to a separately owned database. Compare
   complete additive accounting tables and immutable effect rows; do not reset
   clock/policy to pass. Source and restored stores both reject another effect.
-- [ ] Prove version/mismatch/rollback and failure cleanup with meaningful tests;
+- [x] Prove version/mismatch/rollback and failure cleanup with meaningful tests;
   distinguish real DB/dump/restore from scripted provider and synthetic fixture
   numerical report. No encrypted off-host claim; the previous restic proof stays
   independently limited to its frozen baseline.
-- [ ] Save actual source/build/lock/binary hashes, stdout/stderr/exit streams,
+- [x] Save actual source/build/lock/binary hashes, stdout/stderr/exit streams,
   independent observer proof and known PID terminal cleanup. Stop at bounded
   review-ready commit and actual local evidence; all production flags false.
 
 ## Task 3: root integration and publication boundary
 
-- [ ] Independent Spec and Standards checks at most two rounds per slice; root
+- [x] Independent Spec and Standards checks at most two rounds per slice; root
   independently verifies targeted evidence rather than repeating unchanged
   historical qualification/full local suites.
-- [ ] Preserve frozen schema/protocol/lock digests; archive raw bytes and hashes.
-- [ ] At the real CI terminal boundary, also narrow research_service upload to
+- [x] Preserve frozen schema/protocol/lock digests; archive raw bytes and hashes.
+- [x] At the real CI terminal boundary, also narrow research_service upload to
   top-level gate JSON/log/JUnit receipts, avoiding recursive test fixture files.
 - [ ] Integrate coherent reviewed candidate into draft #175; mirror local versus
   scripted versus production state in ACTIVE/iteration/plan and ignored handoff.
@@ -135,3 +135,14 @@ waits for its exact reviewed candidate before runtime. Task 1 and Task 2 writabl
 files are disjoint. Root alone owns shared docs/CI/integration. Additive accounting
 does not alter nine store methods or v1 DTOs. Historical native qualifiers remain
 untouched. No paid resource/model/server operation is part of this slice.
+
+Local acceptance2026-10-13: Task1b107 accounting closesR1/R2; root maps it to
+b5aba03/4a7fff9 and actualcurrentbf64883 Linuxservice137pass5PGskip (142total).
+Task2exact084 closesfinalSpec/StandardsR2 afterrealinitdb descendantRED/GREEN;
+37native/0skip20.45s,687/687rawhashes match, all281nativefiles retained among364
+trackedrawstreams. Unknownfamily members remain preserved and unqualified;
+normal ownedfamilies are kernel-terminal before rescue. Source bytes/frozen
+contracts/locks retained. Historical journal/hash mismatch is preserved and
+originalbytes recovered. This accepts only ownedlocalSQL/scripted accounting.
+Publicationcheckbox remains pending until newheadCI is genuinelyterminal and
+the draft/human/release gates are satisfied. FullA remains ACTIVE.

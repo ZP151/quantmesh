@@ -1,0 +1,85 @@
+{
+  "scope": "UNIT_FAMILY_OWNERSHIP_AND_FLAGS_ONLY",
+  "entries": [
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_failed_owned_child_is_rea0/command-001.json",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_failed_owned_child_is_rea0/command-001.json",
+      "sha256": "a6e0a0f7e082135c7d03b5b0a9186e2a5929508591c9f9a764a942cbd4533d84"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_failed_owned_child_is_rea0/unit-cleanup.json",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_failed_owned_child_is_rea0/unit-cleanup.json",
+      "sha256": "de60cacc3db7c0346ddba5238ec94f6fd3f0eaab8a0ff6df57d73821fde3d98f"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_failed_owned_child_is_rea0/command-001.stderr",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_failed_owned_child_is_rea0/command-001.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_failed_owned_child_is_rea0/command-001.stdout",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_failed_owned_child_is_rea0/command-001.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_unknown_live_member_is_pr0/command-001.json",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_unknown_live_member_is_pr0/command-001.json",
+      "sha256": "f27aa233ae32c50fe71dcd75a07b4af055265a968497b5c84a450385756f0fd9"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_unknown_live_member_is_pr0/command-001.stderr",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_unknown_live_member_is_pr0/command-001.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_unknown_live_member_is_pr0/command-001.stdout",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_unknown_live_member_is_pr0/command-001.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_child_retains_no_bytecode0/command-001.json",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_child_retains_no_bytecode0/command-001.json",
+      "sha256": "bba9d80143232a03efb2e96768ab4f404872ae26b6f8ec91c569c0fc312d3552"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_child_retains_no_bytecode0/command-001.stderr",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_child_retains_no_bytecode0/command-001.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_child_retains_no_bytecode0/command-001.stdout",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_child_retains_no_bytecode0/command-001.stdout",
+      "sha256": "5756bf0d477540380f73e7cbc47c351ddc5b1fffd80b126103f0e47519472329"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_output_exhaustion_reaps_o0/command-001.json",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_output_exhaustion_reaps_o0/command-001.json",
+      "sha256": "7037a08f1a4df556e21153bb8bf7bd0c673916da6fb78370274189f3657630fd"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_output_exhaustion_reaps_o0/command-001.stderr",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_output_exhaustion_reaps_o0/command-001.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_output_exhaustion_reaps_o0/command-001.stdout",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_output_exhaustion_reaps_o0/command-001.stdout",
+      "sha256": "6932fd31e5daf4739b9fa78ff777b2831b0995cc1d0b0093cac80601902013bc"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_stdout_stderr_and_nonzero0/command-001.json",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_stdout_stderr_and_nonzero0/command-001.json",
+      "sha256": "ca7ccc72f232e3bac54d57fc573548b4096e31d4867487b813564fbb9ca4f468"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_stdout_stderr_and_nonzero0/command-001.stderr",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_stdout_stderr_and_nonzero0/command-001.stderr",
+      "sha256": "055f9e97128e6b6e2d6b813c0516949297c96c043284c5065c6d58414fc682fe"
+    },
+    {
+      "native_path": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-final-tmp/test_stdout_stderr_and_nonzero0/command-001.stdout",
+      "archive_path": "/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/output/portfolio-budget-native/r1-unit-family-evidence/test_stdout_stderr_and_nonzero0/command-001.stdout",
+      "sha256": "2601136449d0bddc406432e97cd439ac8d82adb7cdd525d335eeb5b967c70d3d"
+    }
+  ]
+}

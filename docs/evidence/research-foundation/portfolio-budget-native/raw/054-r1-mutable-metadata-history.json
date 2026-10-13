@@ -1,0 +1,15 @@
+{
+  "history": [
+    {
+      "original_path": "actual-native-inventory.json",
+      "original_sha256": "ced0d4b80b4262cf0562271fe1ee95dd82d5c3bf59c39a3a8871c2970f9b96e8",
+      "recovered_exact_archive": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native-inventory-before-r1-a9.json"
+    },
+    {
+      "original_path": "native-root.json",
+      "original_sha256": "bd32d618fe3d41475f886bcd217a6de23a4881764ab2c0901e9f95586301bc73",
+      "recovered_exact_archive": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-root-before-r1-a9.json"
+    }
+  ],
+  "note": "Expanded inventory/current candidate pointer are mutable instrumentation; exact pre-R1 versions preserved against original manifest. Native proof bytes unchanged."
+}
