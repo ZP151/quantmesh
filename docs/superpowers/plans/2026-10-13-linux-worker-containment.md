@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-12-research-foundation.md`, Worker Task1 of `2026-10-12-research-workers-workstation.md`, issue [#172](https://github.com/ZP151/quantmesh/issues/172).
 
-Status: bounded implementation refinement of approved Option A. Task1 may proceed in the second authorized independent session. Task2 remains gated on a measured immutable Linux image and native Task1 qualification; no speculative platform switch. Docker Linux engine is currently absent. WSL read-only intake finds cgroup v2 controllers and the Docker CLI, which does not prove a working Engine or delegated limits.
+Status: bounded implementation refinement of approved Option A. Task1 sourcef818a553c024169b2e3a61dcd6fa8941774cf43b is integrated by root as e743c93. Actual local Engine/image/controller admission and15/15 native Task1 checks pass, with48 focused regressions. Root verifies17 source paths/202 public phase hashes/301 archived members. Final storage envelope remains PENDING: native-run conservative547MB was inside5GB, but post-cleanup whole-volume delta12.93GB exceeds that gate; known logical retained files/cache are203MB, attribution unproven. Exact new images/containers are removed and unrelated baseline states preserved; no global prune. Do not repeat completed Task1 tests or call its stdlib fixture a numerical Worker image. Task2 numerical image/materialization stays gated on resource resolution and separate actual image/runtime qualification. Long-term resources remain AWS.
 
 ## Global constraints
 

@@ -2,6 +2,39 @@
 
 ## Current frontier — October 13, after c545 CI
 
+OpenAI Responses offlineTask1 now integrates sourcee6cdc7c asb52ae44. Two terminal
+implementation-capacity interruptions are retained as harness errors; root
+completes the remaining tested source/48raw receipts and normal branch push.
+Initial59RED/protocol59/affected125 precede DNS executor P2/owned resolver fix,
+two completed Spec/Standards rounds and Linux-only test markers. Root additionally
+reproduces unsafe caller socket-module import: RED1, -I fix, final131affected/
+0skip/48.60s/JUnit/Ruff/format/81licenses6669RECORDzero.pyc and frozen schema/
+protocol/locks pass. Exact two executed source files match staged blobs and raw
+archive hashes. That last isolation fix is author-verified afterR2, not a third
+review. In-memory HTTP/real local ledger replay tests replace bounded_complete;
+controlled DNS witnesses never use real network. No real TLS/SNI/account/model,
+paid API/key/aggregate containment or server activation claim follows. New code
+is confined to the independent provider; core/runtime/bootstrap stay unchanged.
+
+New accepted software/native scope: exactf818a553c024169b2e3a61dcd6fa8941774cf43b
+integrates as e743c93 after independent17source/202public phase/301archive hash
+checks. Actual Task1 immutable stdlib image/control-plane/native15/15/56.965s,
+focused48/23deselected/16.41s and exact cleanup pass. Four tested source files
+match Git bytes; no old tests or Docker operations repeat. The evidence archive
+preserves an18MiB output-overflow negative, correctly separate from16MiB report
+admission. Initial root auditor wrongly applied that report bound to raw proof;
+corrected streaming read verifies every bound byte without extraction. This
+harness issue is not a runtime failure or fresh native test.
+
+Resource acceptance is PENDING: native-run conservative547016704B/freeC102358667264B
+passes; post-cleanup whole-volume delta12931973120B exceeds5GB while known
+logical retained203031020B and cache83875867B are measured. Both new images and
+all known containers are removed; baseline states preserved, no global/cache
+prune. Attribution remains unproven and user clarification pending. Stop new
+local bulk materialization; numerical Task2/full runtime and AWS remain gated.
+The OpenAI provider software closeout is completed by root after actual terminal
+harness-capacity errors; two-round review ceiling is unchanged. Full A remains ACTIVE.
+
 Exact c545c02093b5f7e3d8dedb5ccc79b128c9dc014f CI38352153020 is SUCCESS06:33:57UTC,
 watch77669 exits0. Actual checkoutabd48a1b150ec2b7c3334e751ed548ba385084b2 has
 candidate-identical treec75dce1ff6fd69a29b70cea4f6c65057e5baf0fd. All18 full-release

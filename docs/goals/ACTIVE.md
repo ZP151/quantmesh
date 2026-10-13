@@ -2,6 +2,33 @@
 
 ## Current frontier — October 13, after c545 CI
 
+Subsequent OpenAI offlineTask1 sourcee6cdc7c9ca9ae1b6934f60970a135c354acf7c5f
+integratesb52ae44. Existing implementation chat has two actual terminal harness
+capacity failures; root finishes its closeout rather than repeatedly restarting
+the work. New provider/tests/README/plan preserve core/runtime/locks/schema/
+nine-method store. Spec/Standards complete two bounded rounds; DNS executor P2
+and platform markers are corrected. Root actual caller-module-shadow RED1 leads
+to DNS child -B/-I; final affected131passed/0skip/48.60s, Ruff/format and after
+admission81licenses/6669RECORD/zero.pyc pass.48raw receipts are hash-bound under
+openai-responses-task1. Last narrow fix is author-verified, not third review.
+HTTP/ledger integration replaces bounded_complete for in-memory mocks; real
+DNS/TCP/TLS/SNI/account/model/billing and aggregate Linux are not accepted.
+Runtime model remains unavailable; no real key/call/paid resource or deployment.
+
+Subsequent exact Task1 checkpointf818a553c024169b2e3a61dcd6fa8941774cf43b is
+integratede743c93. Root independently verifies17Git source blobs,202public phase
+hashes and all301archive members; four tested source files are byte-identical.
+Actual15/15native checks/56.965s and48focused/23deselected/16.41s pass within
+the Task1 standard-library fixture scope. Image/config/controller/636entries/
+26ELFs/notices and exact new-container/image cleanup are retained; preexisting
+states preserved. No numerical Worker/provider/server certificate is inferred.
+Final resource envelope remains pending: whole C delta12.93GB versus5GB cap,
+known logical retained203MB with83.9MBcache. Extra allocation is unproven.
+Do not prune global/borrowed resources or materialize new local images/envs;
+the already-sent disk-activity question remains pending. OpenAI software closeout
+is completed by root after its actual capacity interruptions; native Task1 chat
+is completed/idle, not a live handle to poll for old work.
+
 Full approved Option A / iteration0038 remains ACTIVE. Exact c545c02093b5f7e3d8dedb5ccc79b128c9dc014f
 CI38352153020 completes SUCCESS06:33:57UTC; watcher77669 exits0 and must not be
 polled/restarted. Actual checkoutabd48a1b150ec2b7c3334e751ed548ba385084b2 tree
