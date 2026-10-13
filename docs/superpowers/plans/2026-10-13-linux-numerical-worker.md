@@ -104,6 +104,23 @@ activation, fake image proof or unverified producer/qualifier stubs to appear do
 
 ## Checkpoint2: Construction context and complete numerical image tooling
 
+Construction software sub-checkpoint, October13: WorkerRunner sets/resets a private
+ContextVar in finally, including nested/default wrappers and independent threads.
+LinuxWorkerExecution invokes the existing LinuxOwnedProcess with the fixed baked
+entry argv, distinct RO bundle/RW output, rechecks the independent admission
+provider before launch and publication, and checks actual adapter status/cgroups.
+No concrete image-admission provider, baked entry, producer or image qualification
+is supplied by this sub-checkpoint; WorkerImageAdmission is a typed trusted
+verify(profile) boundary, not a saved-record implementation. Full checkpoint2
+items below remain open until their implementations and evidence exist.
+
+Targeted tests use production LinuxOwnedProcess/SQLite/math/publication with a
+fake Engine and test-only admission provider. They do not prove actual container
+exit/OOM/cgroups or numerical-image execution. Existing passed groups are not
+repeated under the root resource constraint. The conservative original8,876,772B
+baseline is retained; every new fixture/source/evidence and root integration copy
+must remain inside the original10MB cap. Review and sealed handoff record results.
+
 **Files:** new worker_execution.py; job_runner private Linux path; fixed
 deploy/research_worker worker_entry/Dockerfile/prepare/admission source; dedicated
 tests and opt-in tools/qualify_linux_worker_jobs.py. These are later implementations,
