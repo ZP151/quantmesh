@@ -95,7 +95,11 @@ def supervise(
                 stdin=subprocess.DEVNULL,
                 stdout=stdout,
                 stderr=stderr,
-                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LANG": "C.UTF-8"},
+                env={
+                    "PATH": "/usr/local/bin:/usr/bin:/bin",
+                    "LANG": "C.UTF-8",
+                    "PYTHONDONTWRITEBYTECODE": "1",
+                },
                 cwd=output,
                 start_new_session=True,
             )

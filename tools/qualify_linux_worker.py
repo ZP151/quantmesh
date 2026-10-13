@@ -84,7 +84,7 @@ def _owner(profile_path: Path, directory: Path) -> int:
     profile = load_profile(profile_path)
     worker = LinuxOwnedProcess(
         profile,
-        [PYTHON_PATH, "-c", SLEEP],
+        [PYTHON_PATH, "-B", "-c", SLEEP],
         RunBudget(memory_mib=128, timeout_seconds=20),
         directory / "inputs",
         directory / "attempt",
@@ -109,7 +109,7 @@ def native_checks(
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
     sibling = LinuxOwnedProcess(
         profile,
-        [PYTHON_PATH, "-c", SLEEP],
+        [PYTHON_PATH, "-B", "-c", SLEEP],
         RunBudget(memory_mib=128, timeout_seconds=120),
         inputs,
         output / "sibling",
@@ -118,7 +118,7 @@ def native_checks(
     def run(name, script, *, expected=0, memory=128, timeout=20, pulses=True):
         process = LinuxOwnedProcess(
             profile,
-            [PYTHON_PATH, "-c", script],
+            [PYTHON_PATH, "-B", "-c", script],
             RunBudget(memory_mib=memory, timeout_seconds=timeout),
             inputs,
             output / name,
@@ -145,7 +145,7 @@ def native_checks(
             "aggregate_oom",
             """
 import subprocess,sys
-children=[subprocess.Popen([sys.executable,'-c',
+children=[subprocess.Popen([sys.executable,'-B','-c',
  'import time;x=bytearray(32*1024*1024);time.sleep(8)']) for _ in range(4)]
 codes=[p.wait() for p in children]
 sys.exit(137 if any(c!=0 for c in codes) else 0)
@@ -164,7 +164,7 @@ def stats():
  return dict(line.split() for line in Path('/sys/fs/cgroup/cpu.stat').read_text().splitlines())
 before=stats();start=time.monotonic()
 script='import time;end=time.monotonic()+4\\nwhile time.monotonic()<end: pass'
-children=[subprocess.Popen([sys.executable,'-c',script]) for _ in range(4)]
+children=[subprocess.Popen([sys.executable,'-B','-c',script]) for _ in range(4)]
 for p in children: p.wait()
 after=stats();elapsed=time.monotonic()-start
 usage=(int(after['usage_usec'])-int(before['usage_usec']))/1e6
@@ -212,8 +212,12 @@ else: raise SystemExit(1)
 import os,socket
 from pathlib import Path
 assert os.getuid()!=0
+assert os.environ.get('PYTHONDONTWRITEBYTECODE')=='1'
+import sys
+assert sys.dont_write_bytecode
 assert os.read(0,1)==b''
-assert not any(k for k in os.environ if k not in {'PATH','LANG','LC_CTYPE'})
+allowed={'PATH','LANG','LC_CTYPE','PYTHONDONTWRITEBYTECODE'}
+assert not any(k for k in os.environ if k not in allowed)
 status=dict(line.split(':',1) for line in Path('/proc/self/status').read_text().splitlines()
  if ':' in line)
 assert int(status['CapEff'].strip(),16)==0
@@ -232,7 +236,7 @@ else: raise SystemExit(1)
         for name in ("cancel", "lease_loss"):
             process = LinuxOwnedProcess(
                 profile,
-                [PYTHON_PATH, "-c", SLEEP],
+                [PYTHON_PATH, "-B", "-c", SLEEP],
                 RunBudget(memory_mib=128, timeout_seconds=20),
                 inputs,
                 output / name,
@@ -251,7 +255,7 @@ else: raise SystemExit(1)
             }
         process = LinuxOwnedProcess(
             profile,
-            [PYTHON_PATH, "-c", SLEEP],
+            [PYTHON_PATH, "-B", "-c", SLEEP],
             RunBudget(memory_mib=128, timeout_seconds=20),
             inputs,
             output / "cli_loss",
@@ -271,7 +275,7 @@ else: raise SystemExit(1)
             raise LinuxContainmentError("hung_attachment_witness_requires_linux_owner")
         process = LinuxOwnedProcess(
             profile,
-            [PYTHON_PATH, "-c", SLEEP],
+            [PYTHON_PATH, "-B", "-c", SLEEP],
             RunBudget(memory_mib=128, timeout_seconds=20),
             inputs,
             output / "hung_attach",
@@ -296,6 +300,7 @@ else: raise SystemExit(1)
         owner = subprocess.Popen(
             [
                 sys.executable,
+                "-B",
                 str(Path(__file__).resolve()),
                 "--internal-owner",
                 str(owner_dir),
