@@ -1,0 +1,10 @@
+
+ RUN  v3.2.7 C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/frontend
+
+ ✓ src/screens/instrument/WorkspaceHeader.test.tsx (10 tests) 104ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  08:48:23
+   Duration  1.60s (transform 163ms, setup 177ms, collect 344ms, tests 104ms, environment 556ms, prepare 175ms)
+

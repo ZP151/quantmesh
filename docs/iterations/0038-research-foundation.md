@@ -3,6 +3,32 @@
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 
+PR175 integration follow-up: actual CI38328514078 classifies successfully and
+starts jobs, proving workflow-context correction. It then fails three fixed
+Singapore display-day assertions (416frontendpass/3fail) and stale frontend
+bundle. Only test expectation becomes timezone-portable; UTC/Singapore10each,
+full419frontend/33files/16.23s, typecheck/lint/build/check pass. New generated
+assets have the same names the Linux CI source build produced. Closed-session
+coverage, execution data age and trading refusal semantics are unchanged.
+
+Planner closes an uncovered approved Worker Task2 requirement: separate
+service CI. Existing two workflows/core release gate never ran it. Root adds
+one independent CPython3.12/Ubuntu24.04 job with existing81-package hash/wheel
+lock, fresh private venv, existing --offline gate and labelled evidence upload;
+required python aggregator denies failure/cancel/skip. Existing five jobs unchanged.
+One new scoped wiring review clear after minor README correction; no third old
+architecture review. Four real local aggregate cases pass. Native offline test
+attempt1 lacks intentionally separate pip; existing audited gate-only tool path
+fixes the harness. Attempt2 has80pass/5PGskips/85total but overall exit1 because
+LinuxGit cannot resolve the Windows common-directory pointer. Neither is a passed
+gate; remote fresh native checkout must prove it. No shared-venv install, daemon,
+fakeGit, model call, lock/core-code change or qualification flag promotion.
+
+Raw33 integration-repair streams/JUnit/receipts/logs/review/SHA archived in
+ci-milestone-integration. Source service/Worker/global caps/PG/TLS/model/host/
+final human/release gates remain open, full goal ACTIVE. Old watch31531 and local
+frontend84458/service31859 are terminal; new exact-head remote CI is next.
+
 Root CI correction: PR175 head37ded3b run38328133300 terminal failure has no
 jobs/logs. GitHub annotations at29/60/128/154/186 reject runner.temp in jobs.env;
 the official context table confirms it. Minimal10-added/10-removed-line change

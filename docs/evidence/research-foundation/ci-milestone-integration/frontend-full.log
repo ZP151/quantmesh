@@ -1,0 +1,86 @@
+
+ RUN  v3.2.7 C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/frontend
+
+ ✓ src/lib/live.test.ts (40 tests) 69ms
+ ✓ src/lib/messages.test.ts (36 tests) 73ms
+ ✓ src/screens/instrument/ScenarioEvidence.test.tsx (2 tests) 239ms
+ ✓ src/screens/instrument/WorkspaceHeader.test.tsx (10 tests) 234ms
+ ✓ src/components/charts/InstrumentChart.test.tsx (16 tests) 586ms
+ ✓ src/lib/live-session.test.ts (6 tests) 10ms
+ ✓ src/components/charts/ForecastBand.test.ts (4 tests) 10ms
+ ✓ src/screens/instrument/ForecastOutcomeComparison.test.tsx (4 tests) 484ms
+   ✓ ForecastOutcomeComparison > shows descriptive complete scores and exact dated evidence  359ms
+ ✓ src/screens/Prediction.test.tsx (5 tests) 479ms
+ ✓ src/screens/instrument/PacketMonitoring.test.tsx (6 tests) 715ms
+ ✓ src/screens/instrument/PacketCopilot.test.tsx (6 tests) 771ms
+   ✓ PacketCopilot > requests by keyboard, isolates loading, and renders every cited section  306ms
+ ✓ src/screens/DataCatalog.test.tsx (5 tests) 743ms
+   ✓ DataCatalogScreen > shows failed quality and lineage without presenting data as usable  462ms
+ ✓ src/lib/preferences.test.tsx (3 tests) 223ms
+ ✓ src/components/live-data-badge.test.tsx (7 tests) 8ms
+ ✓ src/screens/Overview.test.tsx (3 tests) 426ms
+ ✓ src/screens/instrument/PacketOutcomeReview.test.tsx (10 tests) 1773ms
+   ✓ PacketOutcomeReview > renders honest pending evidence and saves only the exact outcome identity  950ms
+ ✓ src/screens/Imports.test.tsx (4 tests) 804ms
+   ✓ ImportsScreen > auto-fills the suggested mapping and gates the commit on dataset + symbol  398ms
+ ✓ src/screens/Cockpit.test.tsx (26 tests) 2338ms
+   ✓ CockpitScreen > replays a recorded window from the lake under a visible banner  387ms
+ ✓ src/screens/instrument/MarketCanvas.test.tsx (8 tests) 1243ms
+   ✓ MarketCanvas > changes range and chart controls with real pressed states  523ms
+   ✓ ComparisonPicker > accepts at most three venue-aware peers  370ms
+ ✓ src/screens/ResearchJobs.test.tsx (14 tests) 3085ms
+   ✓ fixture research loop > submits pinned setup, reaches report, reloads and keeps Agent unavailable independent  602ms
+   ✓ fixture research loop > stops automatic status checks at the bound and never polls a terminal job  771ms
+ ✓ src/lib/format.test.ts (9 tests) 17ms
+ ✓ src/lib/nav.test.ts (5 tests) 7ms
+ ✓ src/screens/Markets.test.tsx (30 tests) 2422ms
+   ✓ Markets shows covered closed-session real data with source-down=false  316ms
+ ✓ src/lib/api.test.ts (1 test) 9ms
+ ✓ src/screens/Locale.test.tsx (2 tests) 257ms
+ ✓ src/screens/Settings.test.tsx (1 test) 245ms
+ ✓ src/screens/instrument/WorkspaceStates.test.tsx (1 test) 40ms
+ ✓ src/components/instrument-entry.test.tsx (4 tests) 974ms
+   ✓ normalizes the supported ticker and opens chart analysis by keyboard  384ms
+ ✓ src/screens/NavigationAndValuation.test.tsx (15 tests) 1338ms
+   ✓ canonical instrument workspace navigation > shows the exact staging build separately from package and runtime identity  326ms
+ ✓ src/screens/Watchlist.test.tsx (60 tests) 4956ms
+   ✓ shows durable session summary on initial load in en-US without refresh  303ms
+   ✓ keeps not-started entries in No action while unavailable venue entries stay Blocked  339ms
+   ✓ filters the four textual attention buckets while preserving exact packet identity  510ms
+   ✓ keeps a keyboard-selected bucket stable through explicit Inbox invalidation only  544ms
+ ✓ src/screens/instrument/ScenarioLab.test.tsx (17 tests) 5563ms
+   ✓ puts the observed chart before evidence and collapsed decision controls  382ms
+   ✓ saves Watch with the displayed horizon and then replays the child snapshot  834ms
+   ✓ keeps safe Watch available on saved evidence when current risk data is unavailable  577ms
+   ✓ blocks saved-draft Paper with complete valuation when current capability refuses: forecast evidence is stale  658ms
+   ✓ blocks saved-draft Paper with complete valuation when current capability refuses: forecast is unavailable  599ms
+   ✓ blocks saved-draft Paper with complete valuation when current capability refuses: paper proposal service is not attached  635ms
+   ✓ blocks saved-draft Paper with complete valuation when current capability refuses: a fresh real quote is required for paper confirmation  565ms
+   ✓ retains the abstaining chart and safe actions when the pinned artifact is unavailable  494ms
+ ✓ src/screens/instrument/DecisionRail.test.tsx (22 tests) 6438ms
+   ✓ DecisionRail > keeps Reject and Watch usable while evidence blocks Paper, then displays the saved packet ID  1087ms
+   ✓ DecisionRail > acts directly on an exact persisted Draft and offers an explicit fresh-analysis switch  553ms
+   ✓ DecisionRail > sends operator-edited quantity and limit while retaining server defaults as the starting point  396ms
+   ✓ DecisionRail > preserves draft inputs and a completed action result across same-context polling  488ms
+   ✓ DecisionRail > completes an exact saved action when same-context polling replaces the fresh draft ID  396ms
+   ✓ DecisionRail > accepts a durable action result when same-context polling changes the draft during the request  479ms
+   ✓ DecisionRail > drops a deferred action result after the full workspace context changes  310ms
+   ✓ DecisionRail > requires the displayed token and delegates the only second confirmation to the existing authority  422ms
+   ✓ DecisionRail > wraps long packet, proposal, and order identities in the terminal state  382ms
+   ✓ DecisionRail > rejects a confirmation response for another instrument context  433ms
+   ✓ DecisionRail > keeps incomplete valuation and a confirmation refusal visible  394ms
+ ✓ src/screens/InstrumentWorkspace.test.tsx (37 tests) 8311ms
+   ✓ InstrumentWorkspaceScreen > restores exact packet action state on Back and Forward after creating a child  1826ms
+   ✓ InstrumentWorkspaceScreen > leaves a pinned packet atomically when changing range and keeps fresh controls  464ms
+   ✓ InstrumentWorkspaceScreen > replaces the packet query with an action child and removes it for new analysis  796ms
+   ✓ InstrumentWorkspaceScreen > promotes an action result across market, scenarios, evidence, risk, and actions during polling  659ms
+   ✓ InstrumentWorkspaceScreen > pauses Reject, Watch, and Paper while a requested range still shows placeholder evidence  720ms
+   ✓ InstrumentWorkspaceScreen > pauses an existing proposal confirmation while a requested range still shows placeholder evidence  556ms
+   ✓ InstrumentWorkspaceScreen > resets packet selection when the venue-symbol-range context changes  313ms
+   ✓ InstrumentWorkspaceScreen > refetches history for URL-backed range and comparison controls  492ms
+
+ Test Files  33 passed (33)
+      Tests  419 passed (419)
+   Start at  00:48:26
+   Duration  16.23s (transform 9.77s, setup 15.74s, collect 69.83s, tests 44.89s, environment 51.55s, prepare 7.29s)
+

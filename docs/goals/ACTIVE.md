@@ -1,5 +1,24 @@
 # Active Goal
 
+Latest integrated CI follow-up:9f088e1/run38328514078 is terminal FAILURE,
+with actual classify SUCCESS/jobs running before frontend errors. Three
+WorkspaceHeader cases hardcoded Singapore Oct10 while UTC correctly renders
+Oct9; test-only timezone-portable display-day assertion now passes both10-case
+timezone runs and all419 frontend cases. Rebuilt committed bundle/check pass;
+no calendar, raw-age or trading fence changes. Raw33 streams archived in
+ci-milestone-integration. Do not poll ended watch31531 or replay that run.
+
+Approved Worker Task2 isolated service CI had no workflow coverage. New
+research_service job uses separate Ubuntu24.04/CPython3.12 hash/wheel-only81
+lock venv and existing offline gate, mandatory in python aggregation. Four
+aggregate outcomes prove service failure/cancel/skip cannot become success;
+other old jobs unchanged. Bounded new wiring review clear. Local native service
+tests80pass/5PGskips, but overall local gate stays failed at nativeGit reading
+Windows worktree metadata; first missing gate-only pip failure also retained.
+No gate skip or false native GREEN. Exact fresh remote checkout must prove it;
+PG/model/aggregate containment/production remain independent. Native local
+process31859 and frontend84458 are ended. Next inspect new final-head CI.
+
 Latest CI diagnosis: PR175 head37ded3b push run38328133300 is terminal failure
 with zero jobs, not a live wait or a test failure. GitHub annotation rejects
 runner.temp in five jobs.env entries; exact official context table confirms

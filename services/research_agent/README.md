@@ -100,7 +100,20 @@ containment primitives and requires the complete source checkout at runtime.
 
 ## Independent environment and OSS decision
 
-Core locks, dependencies and CI are unchanged. The service's own77-package
+CI also runs an independent `research_service` job on Ubuntu24.04/CPython3.12.
+Its fresh runner-temp venv installs only the81-package Linux lock with hashes
+and wheels enforced, then runs the existing service gate with `--offline`.
+The required `CI / python` aggregator requires this job to succeed. Source paths
+come from the gate/pytest configuration; no core environment, editable installation,
+unpinned build dependency, model secret or PostgreSQL daemon is supplied.
+Retained receipts are explicitly `OFFLINE_SCRIPTED_ONLY`: dependency/license/
+schema/protocol/API/scripted compatibility, with PostgreSQL pending. This does
+not certify real SQL, aggregate model-process limits, paid model calls or a
+deployed service. Existing genuine owned PostgreSQL/native acceptance and future
+production/model/operator gates remain separate.
+
+Core locks and dependencies are unchanged; existing core gate commands are
+preserved. The service's own77-package
 CPython3.13 Windows lock includes the existing core contract import closure.
 Install it in a fresh service venv using hash enforcement:
 

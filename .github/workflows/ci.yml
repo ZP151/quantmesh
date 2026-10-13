@@ -200,9 +200,43 @@ jobs:
       - name: Certify exact checkout
         run: python tools/release_gate.py
 
+  # The independent service has a different Python/lock closure from core.
+  # Offline compatibility is mandatory, but never stands in for PG/model/host proof.
+  research_service:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install independent hash-locked service environment
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/research-service-venv"
+          "$RUNNER_TEMP/research-service-venv/bin/python" -m pip install \
+            --require-hashes --only-binary=:all: \
+            -r services/research_agent/requirements.linux-cp312.lock
+      - name: Verify offline service compatibility
+        shell: bash
+        run: |
+          "$RUNNER_TEMP/research-service-venv/bin/python" -B \
+            tools/research_service_gate.py --offline \
+            --evidence-dir "$RUNNER_TEMP/research-service-evidence"
+      - name: Retain separate service evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-service-offline-linux-cp312
+          path: ${{ runner.temp }}/research-service-evidence
+          if-no-files-found: ignore
+
   # Preserve the pre-existing required CI / python check as an aggregate.
   python:
-    needs: [classify, fast, domain, browser, release]
+    needs: [classify, fast, domain, browser, release, research_service]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -218,7 +252,7 @@ jobs:
           import json
           import os
           results = json.loads(os.environ["GATE_RESULTS"])
-          required = ("classify", "fast")
+          required = ("classify", "fast", "research_service")
           failed = any(results[name]["result"] != "success" for name in required)
           failed |= any(value["result"] not in {"success", "skipped"}
                         for value in results.values())

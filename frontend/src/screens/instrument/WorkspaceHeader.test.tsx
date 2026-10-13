@@ -117,7 +117,11 @@ describe('WorkspaceHeader cached freshness', () => {
     expect(screen.getByText('Market closed · Last session')).toBeInTheDocument()
     expect(screen.getByText('Live degraded')).toBeInTheDocument()
     expect(field('Live classification')).toHaveTextContent('stale')
-    expect(field('Data time')).toHaveTextContent('Oct 10')
+    // The same source instant is Oct 9 in UTC and Oct 10 in Singapore.
+    const displayedSourceDay = new Intl.DateTimeFormat('en-US', {
+      month: 'short', day: 'numeric',
+    }).format(new Date(coverage.last_source_at))
+    expect(field('Data time')).toHaveTextContent(displayedSourceDay)
     expect(field('Age')).not.toHaveTextContent('0 ms')
   })
 })

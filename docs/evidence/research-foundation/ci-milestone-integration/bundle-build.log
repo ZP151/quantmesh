@@ -1,0 +1,30 @@
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+vite v8.2.1 building client environment for production...
+[2Ktransforming...✓ 2090 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                              1.20 kB │ gzip:   0.60 kB
+dist/assets/geist-cyrillic-ext-wght-normal-DjL33-gN.woff2    7.42 kB
+dist/assets/geist-vietnamese-wght-normal-6IgcOCM7.woff2      8.00 kB
+dist/assets/geist-cyrillic-wght-normal-BEAKL7Jp.woff2       15.08 kB
+dist/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2      16.51 kB
+dist/assets/geist-latin-wght-normal-BgDaEnEv.woff2          29.40 kB
+dist/assets/index-Btd8ivVr.css                              57.21 kB │ gzip:  10.59 kB
+dist/assets/InstrumentWorkspace-BIPKNtWq.js                296.53 kB │ gzip:  84.30 kB
+dist/assets/index-DuOEswkL.js                              687.90 kB │ gzip: 195.55 kB
+
+✓ built in 9.09s
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[33m[PLUGIN_TIMINGS] [0mYour build spent 20% of 9.1s inside plugin hooks (1.8s).
+Measured inside the callback, so queue time is excluded and time the callback itself awaited is not:
+  - vite:css transform (14%, 1.3s, 1 call)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+
+copied C:\Users\15492\.codex-clean\worktrees\0038-research-integration\QuantMesh\frontend\dist -> C:\Users\15492\.codex-clean\worktrees\0038-research-integration\QuantMesh\src\quantmesh\api\static\app
