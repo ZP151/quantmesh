@@ -23,6 +23,13 @@ Twoactiveindependentsessions; allolder handoffs remaincompleted. Rootowns
 sharedpins/REUSE/ADR/ACTIVE/iteration and actualhuman/CI/install/release gates.
 No source/privateinput/auth/wire/install/market flags promoted, no new user
 credential request, paidresource/APIcall or repeatedanonymousSDK/source tests.
+Latestlivehandles:4836reports54native synthetic tests green beforepaneordering
+refinement, nowfixedExecStartPost client afterforegroundserver; finalcommit/
+review/nativeproofpending.13a1 reports signedbytes18packages/16sourcegroups/
+24ELF, but firstactualruntimeRED exitsbeforepane; cleanup/sibling preserved.
+MissingUTF8locale is a hypothesis, notprovenversion/auth fault; sameofficial
+libc-bin locale audit + strongerexternalnamespacePID1handle/newfixture underway.
+Root hasnotacceptedthese live reports asfinalbackend orsourcehost qualification.
 
 Latest accepted private-terminal#169: managed2088/chat01a13259-ae57-7010-945d-2470f3b902cd
 completed/idlef99b020153a31d7d8a5265c9795edbd5a7884ddb, root83517eb threeleaf
