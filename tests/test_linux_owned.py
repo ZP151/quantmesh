@@ -121,6 +121,7 @@ def test_fixed_creation_and_gated_start(profile, paths, engine):
     ]:
         assert flag in create
     assert create.count("--mount") == 2
+    assert create[create.index(profile.image_id) + 1] == "-B"
     assert create[create.index("--user") + 1] == f"{profile.uid}:{profile.gid}"
     assert "readonly" in create[create.index("--mount") + 1]
     assert attach.sent == ["go"]
@@ -131,6 +132,67 @@ def test_fixed_creation_and_gated_start(profile, paths, engine):
     assert process.poll() == 7
     process.close()
     assert calls[-1] == ["rm", "--force", "b" * 64]
+
+
+def test_explicit_bytecode_env_image_admission(profile, paths, engine, monkeypatch):
+    original = profile.invoke
+
+    def with_bytecode(self, args):
+        result = original(args)
+        if args[:2] == ["image", "inspect"]:
+            doc = json.loads(result)
+            doc[0]["Config"] = {"Env": ["PYTHONDONTWRITEBYTECODE=1"]}
+            return json.dumps(doc)
+        return result
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", with_bytecode)
+    process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    process.close()
+
+
+@pytest.mark.parametrize("entry", ["owner", "native_sibling"])
+def test_qualification_python_launch_disables_bytecode(profile, tmp_path, monkeypatch, entry):
+    module = _qualification_module()
+    seen = []
+
+    class Stop(RuntimeError):
+        pass
+
+    def capture(profile, command, *args):
+        seen.append(command)
+        raise Stop
+
+    monkeypatch.setattr(module, "LinuxOwnedProcess", capture)
+    output = profile.fixture_root / "qualification"
+    output.mkdir()
+    with pytest.raises(Stop):
+        if entry == "owner":
+            monkeypatch.setattr(module, "load_profile", lambda path: profile)
+            module._owner(tmp_path / "profile", output)
+        else:
+            module.native_checks(profile, output, tmp_path / "profile", {})
+    assert seen[0][1] == "-B"
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="real standalone child env check")
+def test_standalone_child_has_clean_bytecode_environment(tmp_path):
+    (tmp_path / "local_fixture.py").write_text("value=1\n")
+    workload = (
+        "import os,sys,local_fixture;assert sys.dont_write_bytecode;"
+        "assert os.environ.get('PYTHONDONTWRITEBYTECODE')=='1'"
+    )
+    command = [sys.executable, "-B", "-c", workload]
+    script = (
+        "import sys;from pathlib import Path;"
+        "from quantmesh.research.linux_bootstrap import supervise;"
+        f"sys.exit(supervise({command!r},Path({str(tmp_path)!r}),3))"
+    )
+    process = subprocess.Popen([sys.executable, "-B", "-c", script], stdin=subprocess.PIPE)
+    try:
+        assert process.wait(timeout=5) == 0
+        assert not (tmp_path / "__pycache__").exists()
+    finally:
+        process.stdin.close()
 
 
 @pytest.mark.skipif(
@@ -476,7 +538,7 @@ def test_standalone_controller(tmp_path, mode, expected):
         "silent": "import time;time.sleep(20)",
         "output": 'print("x"*200000)',
     }[mode]
-    command = [sys.executable, "-c", workload]
+    command = [sys.executable, "-B", "-c", workload]
     script = (
         "import sys;from pathlib import Path;"
         "from quantmesh.research.linux_bootstrap import supervise;"
@@ -484,7 +546,7 @@ def test_standalone_controller(tmp_path, mode, expected):
         f"Path({str(tmp_path)!r}),2,watchdog_seconds=0.3,max_output_bytes=100000))"
     )
     p = subprocess.Popen(
-        [sys.executable, "-c", script],
+        [sys.executable, "-B", "-c", script],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -504,7 +566,7 @@ def test_standalone_controller(tmp_path, mode, expected):
 
 @pytest.mark.skipif(sys.platform != "linux", reason="standalone Linux controller only")
 def test_standalone_reparented_descendant_and_sibling(tmp_path):
-    sibling = subprocess.Popen([sys.executable, "-c", "import time;time.sleep(20)"])
+    sibling = subprocess.Popen([sys.executable, "-B", "-c", "import time;time.sleep(20)"])
     workload = (
         "import os,time;from pathlib import Path;pid=os.fork();"
         "Path('descendant.pid').write_text(str(pid)) if pid else time.sleep(20)"
@@ -512,9 +574,9 @@ def test_standalone_reparented_descendant_and_sibling(tmp_path):
     script = (
         "import sys;from pathlib import Path;"
         "from quantmesh.research.linux_bootstrap import supervise;"
-        f"sys.exit(supervise({[sys.executable, '-c', workload]!r},Path({str(tmp_path)!r}),2))"
+        f"sys.exit(supervise({[sys.executable, '-B', '-c', workload]!r},Path({str(tmp_path)!r}),2))"
     )
-    controller = subprocess.Popen([sys.executable, "-c", script], stdin=subprocess.PIPE)
+    controller = subprocess.Popen([sys.executable, "-B", "-c", script], stdin=subprocess.PIPE)
     try:
         assert controller.wait(timeout=5) == 0
         pid = int((tmp_path / "descendant.pid").read_text())
