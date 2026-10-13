@@ -16,8 +16,12 @@ OpenD migration and stale application ingestion are tracked in issue#169.
 Server/calendar#169 and contracts#168 form the first parallel batch after
 operator freshness steering; validation#132 and Eval#160 follow.
 Formal168h is NOT REQUIRED/on-demand. Capacity and disruptive operational drills
-are later acceptance, not the development frontier. PR166 CI passed but remains
-open; original installation and personal-PC gateway are not relabelled cloud.
+are later acceptance, not the development frontier. PR166 is merged7da320f after
+explicit user human review and exact-head CI; reviewed helper12688 is restored
+with Startup/OpenD preserved. Fresh SSH authentication/loopback remains pending;
+the personal-PC gateway is not relabelled cloud. Research c545 CI38352153020
+passes full release4493pytest/111skip/frontend419; the new combined native/model
+tree and actual server delivery still require separate acceptance.
 The dated checkpoints below are historical, not instructions to restart old work.
 
 Iteration 0035 is complete. Iteration 0036 remains active after the 8 GB

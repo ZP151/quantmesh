@@ -1,5 +1,42 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current frontier — October 13, after c545 CI
+
+Exact c545c02093b5f7e3d8dedb5ccc79b128c9dc014f CI38352153020 is SUCCESS06:33:57UTC,
+watch77669 exits0. Actual checkoutabd48a1b150ec2b7c3334e751ed548ba385084b2 has
+candidate-identical treec75dce1ff6fd69a29b70cea4f6c65057e5baf0fd. All18 full-release
+steps pass, including4493pytest/111skip/3247.029s, frontend419 and golden walk;
+independent service137pass/5PGskip/81licenses is offline compatibility only.
+Successful runner cleanup removes its release log directory; saved run stdout
+retains actual terminal counts and step exits. No release artifact is invented.
+
+PR166 human review is explicitly approved by the operator in chat; its GitHub
+AI-assisted COMMENT is not counted as approval. Exactda6 normally squash-merges
+to7da320f7d6c3ac81cd7cb92b691e0b969bbcba48, matching tree39c4599bf53475464dbcfecd73e7fec6cbfc71c0.
+Merged supervisor digest60FED2A857B2BB384C0ECD4F8A131C7E6D85AF7BD2CAC605377502216545D961
+is installed after actual missing-helper/mutex verification. Hidden12688 holds
+the mutex; second invocation is duplicate_helper/exit0. Original Startup and
+OpenD28036 remain. Private HTTPS health06:31UTC is exact69515b7/papertrue/livefalse;
+SSH extra authentication and remote loopback remain pending. No AWS redeploy.
+
+Root-reviewed #172 image packet progresses to actual pinned build, focused
+bytecodeRED5/GREEN47; image-built conservative225796096B/freeC102679887872B.
+Image/native qualification still runs. The second existing authorized chat now
+implements #171 OpenAIResponses offline provider; protocolGREEN59 is partial,
+not a real-model or complete provider gate. Current defaults/locks/contracts and
+runtime model-unavailable admission remain intact. Local temporary5GB/free50GB
+limits and long-term AWS placement follow operator instructions.
+
+Normal reconciliation with main166 has only3documentation conflicts; full new
+combined source still needs its exact checks. Linux numerical Worker/report,
+aggregate real provider/key/egress, private host/TLS/offhost actual-report restore,
+p95/browser flow and server-owned market cutover remain required. Full Option A
+ACTIVE; formal168h not required. Source evidence is saved in ignored
+output/0038-ci38352153020-verified-summary.json, output/0038-pr166-release and
+output/0038-linux-native-admission; archive at this coherent integration boundary.
+
+### Earlier preparation checkpoint — retained historical evidence
+
 Current terminal checkpoint: exact57a CI38346386735 fails fullpytest normally:
 4487passed/5failed/111skipped/9warnings2899.87s. Actual checkout877cea01624f1de6b96d8139f616d76678b9fcc8 tree
 d7a479b5176f57484e70e15e9f68e642c7a721f2 equals candidate57a tree. Required

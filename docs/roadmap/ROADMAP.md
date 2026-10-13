@@ -7,7 +7,12 @@ are the next product loop. Server market sources must not depend on the operator
 personal PC; OpenD gateway migration remains distinct from the AWS SDK already
 registered. Formal168h is NOT REQUIRED/on-demand; no uptime pass is inferred.
 
-Last updated: 2026-09-23
+Last updated: 2026-10-13
+
+Research checkpointc545 passes exact full CI38352153020. PR166 probe repair is
+merged7da320f and installed; helper recovery does not close the server-owned
+market requirement. New Linux native image and OpenAI Responses slices are in
+progress; private AWS deployment/report/provider/user acceptance remains open.
 
 ## Status legend
 

@@ -1,0 +1,19 @@
+{
+  "StartupPreserved": true,
+  "AtUtc": "2026-10-13T06:00:32.6538894Z",
+  "Status": {
+    "ObservedAtUtc": "2026-10-13T06:00:21.2506559Z",
+    "Schema": 1,
+    "OwnerSid": "S-1-5-21-3862594683-2510616806-2185980607-1001",
+    "State": "private_tunnel_started"
+  },
+  "Digest": "60FED2A857B2BB384C0ECD4F8A131C7E6D85AF7BD2CAC605377502216545D961",
+  "PriorProcessesPreserved": true,
+  "HelperPid": 12688,
+  "Shortcut": {
+    "Arguments": "-NoProfile -NonInteractive -WindowStyle Hidden -File \"C:\\Users\\15492\\AppData\\Local\\QuantMesh\\OpenDRecovery\\opend_recovery.ps1\" -OpenDPath \"C:/Users/15492/AppData/Roaming/moomoo_OpenD/moomoo_OpenD.exe\" -TailscalePath \"C:/Program Files/Tailscale/tailscale.exe\" -StatusDirectory \"C:\\Users\\15492\\AppData\\Local\\QuantMesh\\OpenDRecovery\"",
+    "TargetPath": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "WorkingDirectory": "C:\\Users\\15492\\AppData\\Local\\QuantMesh\\OpenDRecovery"
+  },
+  "HelperActive": true
+}

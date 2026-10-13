@@ -1,0 +1,23 @@
+{
+  "Processes": [
+    {
+      "Id": 28036,
+      "ProcessName": "moomoo_OpenD",
+      "Path": "C:\\Users\\15492\\AppData\\Roaming\\moomoo_OpenD\\moomoo_OpenD.exe"
+    }
+  ],
+  "CandidateTree": "39c4599bf53475464dbcfecd73e7fec6cbfc71c0",
+  "HelperActive": false,
+  "CI": "38248602251",
+  "MergeTree": "39c4599bf53475464dbcfecd73e7fec6cbfc71c0",
+  "AtUtc": "2026-10-13T05:58:09.0126675Z",
+  "HumanApproval": "User explicitly approved PR166 human review and continuation in chat",
+  "OldDigest": "9D9E19F735096EF32A3BA28B816ED348CC20D127029CCC97ECE24DF9CD20DE9B",
+  "Merge": "7da320f7d6c3ac81cd7cb92b691e0b969bbcba48",
+  "Shortcut": {
+    "WorkingDirectory": "C:\\Users\\15492\\AppData\\Local\\QuantMesh\\OpenDRecovery",
+    "Arguments": "-NoProfile -NonInteractive -WindowStyle Hidden -File \"C:\\Users\\15492\\AppData\\Local\\QuantMesh\\OpenDRecovery\\opend_recovery.ps1\" -OpenDPath \"C:/Users/15492/AppData/Roaming/moomoo_OpenD/moomoo_OpenD.exe\" -TailscalePath \"C:/Program Files/Tailscale/tailscale.exe\" -StatusDirectory \"C:\\Users\\15492\\AppData\\Local\\QuantMesh\\OpenDRecovery\"",
+    "TargetPath": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+  },
+  "NewDigest": "60FED2A857B2BB384C0ECD4F8A131C7E6D85AF7BD2CAC605377502216545D961"
+}

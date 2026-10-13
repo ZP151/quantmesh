@@ -11,7 +11,9 @@
 **Spec:** `docs/superpowers/specs/2026-10-12-research-foundation.md`.
 
 Status: APPROVED Option A2026-10-12. User authorizes separate sessions in bounded
-batches. B is unselected. PR166 CI succeeded; PR remains OPEN. Current rollout
+batches. B is unselected. PR166 is normally merged7da320f after explicit human
+review and installed with missing-helper recovery; SSH loopback remains pending.
+Exact c545 CI38352153020 passes; subsequent combined tree is not yet certified. Current rollout
 adds server-source independence and global calendar-aware freshness under#169.
 Estimates start after approval, in working days, not continuous unattended hours.
 

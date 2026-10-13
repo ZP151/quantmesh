@@ -1,5 +1,41 @@
 # Active Goal
 
+## Current frontier — October 13, after c545 CI
+
+Full approved Option A / iteration0038 remains ACTIVE. Exact c545c02093b5f7e3d8dedb5ccc79b128c9dc014f
+CI38352153020 completes SUCCESS06:33:57UTC; watcher77669 exits0 and must not be
+polled/restarted. Actual checkoutabd48a1b150ec2b7c3334e751ed548ba385084b2 tree
+c75dce1ff6fd69a29b70cea4f6c65057e5baf0fd equals candidate tree. All18 full-release
+steps exit0, including4493pytest passed/111skipped/3247.029s, frontend419 and
+golden walk. Separate offline service137passed/5PGskipped/81licenses remains
+its own compatibility scope. This success is for c545, not a subsequent tree.
+
+The user explicitly approves PR166 human review in chat. Exactda6e8c7 normally
+squash-merges to7da320f7d6c3ac81cd7cb92b691e0b969bbcba48; candidate/merge tree
+39c4599bf53475464dbcfecd73e7fec6cbfc71c0 matches. Actual absent helper/mutex
+allows reviewed merged supervisor installation: digest60FED2A857B2BB384C0ECD4F8A131C7E6D85AF7BD2CAC605377502216545D961,
+hidden helper12688/mutex held, duplicate_helper exit0, original Startup arguments
+and OpenD28036 preserved. Private HTTPS health06:31UTC remains exact69515b7,
+paper=true/live=false; fresh SSH extra authentication and remote11111 acceptance
+remain pending. No AWS app redeployment or server independence is inferred.
+
+Two existing authorized implementation chats are active: #172 immutable-image
+Task1 native qualification after root-reviewed packet, and #171 new OpenAI
+Responses offline adapter Task1. Bytecode RED5 becomes focusedGREEN47; actual
+fixture image is built, conservative new local footprint225796096B and C free
+102679887872B at image-built phase. These are not completed OCI/native/model
+certificates. Temporary tests stay local under5GB/freefloor50GB; long-term
+resources remain AWS. OpenAI gpt-6.1-sol provider choice is accepted, but real
+key/egress/calls and aggregate Linux qualification are still gated.
+
+Root reconciles reviewed main166 with c545; only ITERATION_PLAN/ACTIVE/ROADMAP
+have content conflicts, no runtime conflicts. New combined native/provider
+tree requires its own final checks/review, private AWS host/PG-TLS/offhost actual
+Worker restore/p95/browser acceptance and genuine server-owned market cutover.
+Formal168h is not required. Do not mark the full goal complete from this CI.
+
+### Earlier preparation checkpoint — retained historical evidence
+
 Current terminal checkpoint: exact57a CI38346386735 fails fullpytest normally:
 4487passed/5failed/111skipped/9warnings2899.87s. Actual checkout877cea01624f1de6b96d8139f616d76678b9fcc8 tree
 d7a479b5176f57484e70e15e9f68e642c7a721f2 equals candidate57a tree. Required

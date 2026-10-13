@@ -1,0 +1,12 @@
+{
+  "Transport": "HTTPS normal certificate verification",
+  "Origin": "private HTTPS /api/health",
+  "PaperMode": true,
+  "Environment": "staging",
+  "AtUtc": "2026-10-13T06:31:18.7177591Z",
+  "Build": "69515b79d2bc67303bfef9dee660dbca9bef41e3",
+  "RuntimeMode": "live",
+  "SSHOrGatewayAcceptance": false,
+  "LiveTrading": false,
+  "Status": "ok"
+}
