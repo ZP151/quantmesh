@@ -94,9 +94,13 @@ The [official tmux3.4 manual](https://raw.githubusercontent.com/tmux/tmux/3.4/tm
 forbids commands after `-D`. `ExecCondition` checks the fixed permit without a
 terminal/vendor; `ExecStartPre --prepare` writes only a fixed runtime configuration
 to the nonce-specific0700 directory. `ExecStart` executes tmux `-D -f` that
-configuration and `-S` that private socket. Configuration creates a detached
-session using multiple direct executable arguments, with no `sh -c` or user
-configuration. tmux's [3.4 config selection](https://raw.githubusercontent.com/tmux/tmux/3.4/tmux.c)
+configuration and `-S` that private socket. Configuration contains only fixed
+privacy settings. A fixed `ExecStartPost --create-pane` waits at most5 seconds
+for the socket, verifies the own backend/unit/cgroup, then invokes a subsequent
+`tmux -N` client to create the detached session using multiple direct executable
+arguments, with no `sh -c` or user configuration. Type=exec orders that step
+after successful foreground exec; actual backend readiness still needs native
+backend proof. tmux's [3.4 config selection](https://raw.githubusercontent.com/tmux/tmux/3.4/tmux.c)
 clears ambient config paths when `-f` is specified. The template's null streams
 keep both daemon and vendor terminal output out of journals.
 

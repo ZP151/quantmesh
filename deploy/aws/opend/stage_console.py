@@ -34,7 +34,7 @@ TMUX_SHA = "034b15c64035f783d43862f2775eb4828f61571ca62c8199796000b97d556ecd"
 HELPER_SHA = "c18a81701ce432cb93e1ac2243b31add34f3ec10944dc381b92ff8e1d0133b63"
 VALIDATOR_SHA = "53fb2821b21dc695a2934dd20d6822f69714e960585e371181d20d0b81441736"
 PROFILE_SHA = "0e0b15be83e2b7b435d4e6dbb94f2cbd9c7833e681c4af517e361f5b80b40e17"
-UNIT_SHA = "18cbd154a940e744f88a8bdd12f77b926c40fed0cc80d4d35e1dd5620eb7a618"
+UNIT_SHA = "e108294e59e624d17b0f75034930c9ae3fe1f3d3353c44a90586069e1e0cfdac"
 CONFIG_SHA = "d6c9c112004bd0866dacc5d0e4fae4d715fcd6db250cd68cae859f787583bffb"
 VENDOR_SHA = "e05b901dbe9107061b954a7fe3c059916c4a1e580d8f0a57277d402438898601"
 BASE = Path("/opt/quantmesh/opend")
@@ -481,24 +481,64 @@ def _cgroup(pid):
 
 def _tmux_config(window):
     return (
-        "set-option -g history-limit 0\n"
+        b"set-option -g history-limit 0\n"
         # tmux 3.4 minimum is 1. Disable every creation mechanism, not an invalid 0.
-        "set-option -s buffer-limit 1\n"
-        "set-option -s message-limit 0\n"
-        "set-option -s prompt-history-limit 0\n"
-        "set-option -s history-file ''\n"
-        "set-option -s set-clipboard off\n"
-        "set-option -s copy-command ''\n"
-        "set-option -g update-environment ''\n"
-        "set-option -s exit-unattached off\n"
-        "set-option -g status off\n"
-        "set-option -g remain-on-exit off\n"
-        "unbind-key -a\n"
-        "unbind-key -a -T root\n"
-        "set-option -g prefix None\n"
-        "new-session -d -s opend /usr/bin/python3 -I -S -B "
-        "/opt/quantmesh/opend/stage_console.py --pane --nonce " + window.nonce + "\n"
-    ).encode()
+        b"set-option -s buffer-limit 1\n"
+        b"set-option -s message-limit 0\n"
+        b"set-option -s prompt-history-limit 0\n"
+        b"set-option -s history-file ''\n"
+        b"set-option -s set-clipboard off\n"
+        b"set-option -s copy-command ''\n"
+        b"set-option -g update-environment ''\n"
+        b"set-option -s exit-unattached off\n"
+        b"set-option -g status off\n"
+        b"set-option -g remain-on-exit off\n"
+        b"unbind-key -a\n"
+        b"unbind-key -a -T root\n"
+        b"set-option -g prefix None\n"
+    )
+
+
+def _pane_command(window):
+    return [
+        "/usr/bin/tmux",
+        "-N",
+        "-S",
+        str(_paths(window) / "socket"),
+        "new-session",
+        "-d",
+        "-s",
+        "opend",
+        "/usr/bin/python3",
+        "-I",
+        "-S",
+        "-B",
+        str(LAUNCHER),
+        "--pane",
+        "--nonce",
+        window.nonce,
+    ]
+
+
+def _create_pane(window):
+    _unclaimed(window)
+    until = time.monotonic() + 5
+    while True:
+        with _owned_dir(_paths(window)) as directory:
+            try:
+                os.stat("socket", dir_fd=directory, follow_symlinks=False)
+                break
+            except FileNotFoundError:
+                pass
+        if time.monotonic() >= until:
+            raise StageDenied("backend_denied")
+        select.select([], [], [], 0.02)
+    context = _backend_context(window, pane=False)
+    try:
+        _command(_pane_command(window))
+    finally:
+        os.close(context["backend_pidfd"])
+    return dict(status="admitted", scope="FIXED_PRIVATE_PANE_CREATED", **FALSE_FLAGS)
 
 
 def _runtime_config(window):
@@ -568,7 +608,14 @@ def _prepare(window):
     return dict(status="admitted", scope="FIXED_RUNTIME_PREPARED", **FALSE_FLAGS)
 
 
-def inspect_staging_context(window):
+def _same_manager(a, b):
+    # Type=exec's activation transition is allowed; all authority properties stay exact.
+    return {k: v for k, v in a.items() if k != "ActiveState"} == {
+        k: v for k, v in b.items() if k != "ActiveState"
+    }
+
+
+def _backend_context(window, *, pane):
     _, helper = _admit(window)
     properties = _manager(window)
     pid = int(properties["MainPID"])
@@ -576,7 +623,7 @@ def inspect_staging_context(window):
     try:
         if (
             select.select([handle], [], [], 0)[0]
-            or os.getppid() != pid
+            or (pane and os.getppid() != pid)
             or _cgroup("self") != properties["ControlGroup"]
             or _cgroup(pid) != properties["ControlGroup"]
             or os.readlink(f"/proc/{pid}/exe") != "/usr/bin/tmux"
@@ -601,6 +648,12 @@ def inspect_staging_context(window):
                 or info.st_mode & 0o077
             ):
                 raise StageDenied("backend_denied")
+        if not pane:
+            if select.select([handle], [], [], 0)[0] or not _same_manager(
+                _manager(window), properties
+            ):
+                raise StageDenied("backend_denied")
+            return dict(manager=properties, backend_pidfd=handle)
         if os.environ.get("TMUX") != f"{socket},{pid},0" or os.environ.get("TMUX_PANE") != "%0":
             raise StageDenied("backend_denied")
         metadata = _command(
@@ -619,12 +672,16 @@ def inspect_staging_context(window):
         if metadata != f"{os.getpid()}|{os.ttyname(0)}|{pid}|{socket}|0|0|0":
             raise StageDenied("backend_denied")
         proof = helper.inspect_private_terminal(0, 1, 2, expected_uid=os.getuid())
-        if select.select([handle], [], [], 0)[0] or _manager(window) != properties:
+        if select.select([handle], [], [], 0)[0] or not _same_manager(_manager(window), properties):
             raise StageDenied("backend_denied")
         return dict(manager=properties, terminal=proof, backend_pidfd=handle)
     except BaseException:
         os.close(handle)
         raise
+
+
+def inspect_staging_context(window):
+    return _backend_context(window, pane=True)
 
 
 def start_staging_console(window):
@@ -674,7 +731,7 @@ def start_staging_console(window):
                 check = inspect_staging_context(latest)
                 try:
                     if (
-                        check["manager"] != context["manager"]
+                        not _same_manager(check["manager"], context["manager"])
                         or check["terminal"] != context["terminal"]
                     ):
                         raise StageDenied("context_denied")
@@ -1094,20 +1151,22 @@ def run_owned_fixture():
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
     mode = parser.add_mutually_exclusive_group()
-    for name in ("start", "check-window", "prepare", "pane", "owned-fixture"):
+    for name in ("start", "check-window", "prepare", "create-pane", "pane", "owned-fixture"):
         mode.add_argument("--" + name, action="store_true")
     parser.add_argument(
         "--nonce",
         type=lambda s: s if re.fullmatch(r"[0-9a-f]{32}", s) else parser.error("invalid nonce"),
     )
     args = parser.parse_args(argv)
-    if args.nonce and not (args.start or args.check_window or args.prepare or args.pane):
+    if args.nonce and not (
+        args.start or args.check_window or args.prepare or args.create_pane or args.pane
+    ):
         parser.error("nonce requires a staging service mode")
     receipt = dict(status="pending", scope="PREFLIGHT_NO_EFFECT", **FALSE_FLAGS)
     try:
         if args.owned_fixture:
             receipt = run_owned_fixture()
-        elif args.start or args.check_window or args.prepare or args.pane:
+        elif args.start or args.check_window or args.prepare or args.create_pane or args.pane:
             window = load_staging_window()
             _admit(window)
             if args.nonce != window.nonce:
@@ -1117,6 +1176,8 @@ def main(argv=None):
                 receipt = dict(status="admitted", scope="STAGING_WINDOW_ONLY", **FALSE_FLAGS)
             elif args.prepare:
                 receipt = _prepare(window)
+            elif args.create_pane:
+                receipt = _create_pane(window)
             else:
                 if args.pane:
                     import termios

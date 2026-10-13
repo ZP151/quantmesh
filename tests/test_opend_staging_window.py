@@ -1,12 +1,16 @@
 """Staging authority stays separate from source/production qualification."""
 
+import hashlib
 import importlib.util
 import json
 import os
+import stat
 import sys
 import tempfile
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -220,8 +224,10 @@ def test_manager_exact_contract():
 
 def test_generated_configuration_has_fixed_direct_guard_and_no_recording():
     config = stage._tmux_config(stage.StagingWindow(permit())).decode()
-    assert "new-session -d -s opend /usr/bin/python3 -I -S -B " in config
-    assert "--pane --nonce " + "a" * 32 in config
+    assert "new-session" not in config
+    pane = stage._pane_command(stage.StagingWindow(permit()))
+    assert pane[-3:] == ["--pane", "--nonce", "a" * 32]
+    assert pane[4:12] == ["new-session", "-d", "-s", "opend", "/usr/bin/python3", "-I", "-S", "-B"]
     for setting in [
         "history-limit 0",
         "set-clipboard off",
@@ -232,6 +238,377 @@ def test_generated_configuration_has_fixed_direct_guard_and_no_recording():
         assert setting in config
     for command in ["capture-pane", "pipe-pane", "run-shell", "sh -c"]:
         assert command not in config
+
+
+def test_service_creates_pane_only_after_foreground_exec():
+    unit = (ROOT / "deploy/aws/opend/quantmesh-opend-stage@.service").read_text()
+    assert (
+        "ExecStartPost=/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py "
+        "--create-pane --nonce %i" in unit
+    )
+    assert unit.index("ExecStart=") < unit.index("ExecStartPost=")
+
+
+def test_installed_unit_pin_matches_exact_template_bytes():
+    assert (
+        hashlib.sha256(
+            (ROOT / "deploy/aws/opend/quantmesh-opend-stage@.service").read_bytes()
+        ).hexdigest()
+        == stage.UNIT_SHA
+    )
+
+
+def test_activation_transition_preserves_manager_authority():
+    before = manager()
+    after = dict(before, ActiveState="activating")
+    assert stage._same_manager(before, after)
+    after["MainPID"] = "9999"
+    assert not stage._same_manager(before, after)
+
+
+NATIVE = pytest.mark.skipif(
+    sys.platform != "linux", reason="native descriptors; root/manager mocked"
+)
+
+
+@contextmanager
+def inherited_terminal(slave):
+    saved = [os.dup(fd) for fd in (0, 1, 2)]
+    try:
+        for fd in (0, 1, 2):
+            os.dup2(slave, fd)
+        yield
+    finally:
+        for target, fd in enumerate(saved):
+            os.dup2(fd, target)
+            os.close(fd)
+
+
+@NATIVE
+@pytest.mark.parametrize("bad", ["echo", "mode", "mismatch", "direction", "owner"])
+def test_actual_context_terminal_rejection_precedes_release(monkeypatch, bad):
+    from tools import qualify_opend_private_terminal as helper
+
+    monkeypatch.setattr(stage, "_admit", lambda w: ({}, helper))
+    facts = manager()
+    facts["MainPID"] = str(os.getppid())
+    monkeypatch.setattr(stage, "_manager", lambda w: facts)
+    monkeypatch.setattr(stage, "_cgroup", lambda pid: facts["ControlGroup"])
+    with stage._fixture_pty() as (_, slave), inherited_terminal(slave):
+        import termios
+
+        proof = helper.inspect_private_terminal(0, 1, 2, expected_uid=os.getuid())
+        # Root/backend authority and socket are simulated; descriptors are genuine.
+        monkeypatch.setattr(stage, "_runtime_config", lambda w: None)
+        monkeypatch.setattr(os, "readlink", lambda p: "/usr/bin/tmux")
+        original_open = os.open
+
+        def opened(path, *args, **kwargs):
+            if str(path).endswith("/exe"):
+                return original_open("/dev/null", os.O_RDONLY)
+            return original_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(os, "open", opened)
+
+        @contextmanager
+        def pinned(path):
+            fd = original_open("/dev/null", os.O_RDONLY)
+            try:
+                yield fd
+            finally:
+                os.close(fd)
+
+        monkeypatch.setattr(stage, "_protected_fd", pinned)
+        monkeypatch.setattr(stage, "_digest_fd", lambda fd: stage.TMUX_SHA)
+        monkeypatch.setattr(stage, "_owned_dir", lambda p: pinned(p))
+        real_stat = os.stat
+        monkeypatch.setattr(
+            os,
+            "stat",
+            lambda p, *a, **k: (
+                SimpleNamespace(st_mode=stat.S_IFSOCK | 0o600, st_uid=os.getuid())
+                if p == "socket"
+                else real_stat(p, *a, **k)
+            ),
+        )
+        window = stage.StagingWindow(permit())
+        socket = stage._paths(window) / "socket"
+        monkeypatch.setenv("TMUX", f"{socket},{os.getppid()},0")
+        monkeypatch.setenv("TMUX_PANE", "%0")
+        monkeypatch.setattr(
+            stage,
+            "_command",
+            lambda argv: f"{os.getpid()}|{os.ttyname(0)}|{os.getppid()}|{socket}|0|0|0",
+        )
+        if bad == "echo":
+            attrs = termios.tcgetattr(slave)
+            attrs[3] |= termios.ECHO
+            termios.tcsetattr(slave, termios.TCSANOW, attrs)
+        elif bad == "mode":
+            os.fchmod(slave, 0o620)
+        elif bad == "mismatch":
+            with stage._fixture_pty() as (_, other):
+                os.dup2(other, 2)
+        elif bad == "direction":
+            wrong = original_open(os.ttyname(slave), os.O_WRONLY)
+            os.dup2(wrong, 0)
+            os.close(wrong)
+        else:
+            actual = helper.inspect_private_terminal
+            monkeypatch.setattr(
+                helper,
+                "inspect_private_terminal",
+                lambda *fds, **kw: actual(*fds, expected_uid=os.getuid() + 1),
+            )
+        with pytest.raises(helper.TerminalQualificationError):
+            stage.start_staging_console(window)
+        assert proof["echo"] is False
+
+
+@NATIVE
+@pytest.mark.parametrize("bad", ["parent", "cgroup", "exe", "pidfd", "pane"])
+def test_actual_backend_context_denies_unknown_or_borrowed_before_terminal(monkeypatch, bad):
+    helper = SimpleNamespace(
+        inspect_private_terminal=lambda *a, **k: pytest.fail("denial reached terminal")
+    )
+    monkeypatch.setattr(stage, "_admit", lambda w: ({}, helper))
+    facts = manager()
+    facts["MainPID"] = str(os.getppid())
+    monkeypatch.setattr(stage, "_manager", lambda w: facts)
+    monkeypatch.setattr(
+        stage, "_cgroup", lambda p: facts["ControlGroup"] if bad != "cgroup" else "/borrowed"
+    )
+    monkeypatch.setattr(
+        os, "readlink", lambda p: "/usr/bin/tmux" if bad != "exe" else "/bin/borrowed"
+    )
+    if bad == "parent":
+        monkeypatch.setattr(os, "getppid", lambda: 999999)
+    elif bad == "pidfd":
+        monkeypatch.setattr(os, "pidfd_open", lambda pid: (_ for _ in ()).throw(OSError()))
+    elif bad == "pane":
+        # Fail an unknown pane at the new metadata command, before helper admission.
+        @contextmanager
+        def pinned(path):
+            fd = os.open("/dev/null", os.O_RDONLY)
+            try:
+                yield fd
+            finally:
+                os.close(fd)
+
+        monkeypatch.setattr(stage, "_protected_fd", pinned)
+        real_open = os.open
+        monkeypatch.setattr(
+            os,
+            "open",
+            lambda path, *a, **k: (
+                real_open("/dev/null", os.O_RDONLY)
+                if str(path).endswith("/exe")
+                else real_open(path, *a, **k)
+            ),
+        )
+        monkeypatch.setattr(stage, "_digest_fd", lambda fd: stage.TMUX_SHA)
+        monkeypatch.setattr(stage, "_runtime_config", lambda w: None)
+        monkeypatch.setattr(stage, "_owned_dir", pinned)
+        real_stat = os.stat
+        monkeypatch.setattr(
+            os,
+            "stat",
+            lambda p, *a, **k: (
+                SimpleNamespace(st_mode=stat.S_IFSOCK | 0o600, st_uid=os.getuid())
+                if p == "socket"
+                else real_stat(p, *a, **k)
+            ),
+        )
+        socket = stage._paths(stage.StagingWindow(permit())) / "socket"
+        monkeypatch.setenv("TMUX", f"{socket},{os.getppid()},0")
+        monkeypatch.setenv("TMUX_PANE", "%0")
+        monkeypatch.setattr(stage, "_command", lambda argv: "mismatched-pane")
+    monkeypatch.setattr(stage, "_spawn_gated", lambda *a, **k: pytest.fail("denial spawned child"))
+    with pytest.raises((stage.StageDenied, OSError)):
+        stage.start_staging_console(stage.StagingWindow(permit()))
+
+
+@NATIVE
+@pytest.mark.parametrize("bad", ["qualified", "unsafe_argv", "public_endpoint", "profile_hash"])
+def test_actual_profile_admission_denies_before_backend_or_child(monkeypatch, bad):
+    import grp
+    import pwd
+
+    from deploy.aws.opend import validate_profile as validator
+    from tools import qualify_opend_private_terminal as helper
+
+    profile = json.loads((ROOT / "deploy/aws/opend/gateway-profile.json").read_bytes())
+    if bad == "qualified":
+        profile["qualification"].update(
+            state="qualified",
+            install_allowed=True,
+            operator_approved=True,
+            server_startup_verified=True,
+        )
+        profile["sdk"]["wire_compatibility_verified"] = True
+        profile["authentication"]["private_input_verified"] = True
+    elif bad == "unsafe_argv":
+        profile["runtime"]["argv"].append("-unapproved=fixture")
+    elif bad == "public_endpoint":
+        profile["endpoint"]["host"] = "0.0.0.0"
+    # All root/identity/pin facts here are explicitly simulated; validator is genuine.
+    monkeypatch.setattr(stage, "_native", lambda **k: None)
+    monkeypatch.setattr(pwd, "getpwnam", lambda n: SimpleNamespace(pw_uid=os.getuid()))
+    monkeypatch.setattr(grp, "getgrnam", lambda n: SimpleNamespace(gr_gid=os.getgid()))
+    monkeypatch.setattr(os, "getgroups", lambda: [os.getgid()])
+    monkeypatch.setattr(stage, "validate_staging_window", lambda *a, **k: None)
+    monkeypatch.setattr(stage, "_digest", lambda p: stage.VENDOR_SHA)
+    monkeypatch.setattr(
+        stage, "_module", lambda p, digest: validator if p.name == "validate_profile.py" else helper
+    )
+
+    def pinned_bytes(path, digest=None):
+        if path == stage.PROFILE:
+            if bad == "profile_hash":
+                raise stage.StageDenied("pin_drift")
+            return json.dumps(profile).encode()
+        return validator.reviewed_configuration() if path == stage.CONFIG else b"mocked-machine"
+
+    monkeypatch.setattr(stage, "_bytes", pinned_bytes)
+    monkeypatch.setattr(
+        stage, "_manager", lambda *a, **k: pytest.fail("profile denial reached backend")
+    )
+    monkeypatch.setattr(
+        stage, "_spawn_gated", lambda *a, **k: pytest.fail("profile denial spawned child")
+    )
+    with pytest.raises(stage.StageDenied, match="pin_drift"):
+        stage.start_staging_console(stage.StagingWindow(permit()))
+
+
+@NATIVE
+def test_final_descriptor_replacement_refuses_actual_synthetic_gate(monkeypatch):
+    from tools import qualify_opend_private_terminal as helper
+
+    profile = json.loads((ROOT / "deploy/aws/opend/gateway-profile.json").read_bytes())
+    monkeypatch.setattr(stage, "_admit", lambda w: (profile, helper))
+    c = permit()
+    c["expires_at"] = (datetime.now(UTC) + timedelta(seconds=5)).isoformat()
+    window = stage.StagingWindow(c)
+    monkeypatch.setattr(stage, "load_staging_window", lambda: window)
+    monkeypatch.setattr(stage, "_unclaimed", lambda w: None)
+    monkeypatch.setattr(stage, "_claim", lambda w, d: None)
+    monkeypatch.setattr(stage, "_finish_backend", os.close)  # synthetic backend/manager only
+    monkeypatch.setattr(stage, "_digest_fd", lambda fd: stage.VENDOR_SHA)
+
+    @contextmanager
+    def fixture_file(path):
+        fd = os.open("/dev/null", os.O_RDONLY)
+        try:
+            yield fd
+        finally:
+            os.close(fd)
+
+    monkeypatch.setattr(stage, "_protected_fd", fixture_file)
+    monkeypatch.setattr(stage, "_owned_dir", fixture_file)
+    original_spawn = stage._spawn_gated
+    captured = []
+
+    def synthetic(fds, **kwargs):
+        child = original_spawn(fds, fixture=True, seconds=3, registry=kwargs["registry"])
+        captured.append(child)
+        return child
+
+    monkeypatch.setattr(stage, "_spawn_gated", synthetic)
+    with (
+        stage._fixture_pty() as (_, slave),
+        stage._fixture_pty() as (_, replacement),
+        inherited_terminal(slave),
+    ):
+        calls = []
+
+        def context(w):
+            if calls:
+                os.dup2(replacement, 0)
+            calls.append(True)
+            return dict(
+                manager=manager(),
+                terminal=helper.inspect_private_terminal(0, 1, 2, expected_uid=os.getuid()),
+                backend_pidfd=os.pidfd_open(os.getpid()),
+            )
+
+        monkeypatch.setattr(stage, "inspect_staging_context", context)
+        with pytest.raises(helper.TerminalQualificationError, match="terminal_mismatch"):
+            stage.start_staging_console(window)
+        assert captured and captured[0].released is False
+        assert captured[0].terminal and captured[0].closed
+
+
+@NATIVE
+@pytest.mark.parametrize("bad", ["link", "hardlink", "owner", "writable", "hash"])
+def test_specific_protected_file_boundary_with_simulated_root_metadata(monkeypatch, bad):
+    real_fstat = os.fstat
+
+    def root_metadata(fd):
+        info = real_fstat(fd)
+        values = list(info)
+        values[4] = 0
+        if stat.S_ISDIR(info.st_mode):
+            values[0] = stat.S_IFDIR | 0o555
+        elif bad == "owner":
+            values[4] = 17
+        elif bad == "writable":
+            values[0] |= 0o020
+        return os.stat_result(values)
+
+    with tempfile.TemporaryDirectory(prefix="quantmesh-stage-path-", dir="/var/tmp") as root:
+        path = Path(root) / "data"
+        path.write_bytes(b"fixed-noncredential-fixture")
+        os.chmod(path, 0o600)
+        if bad == "link":
+            target = Path(root) / "link"
+            target.symlink_to(path)
+            path = target
+        elif bad == "hardlink":
+            os.link(path, Path(root) / "second")
+        monkeypatch.setattr(os, "fstat", root_metadata)
+        with pytest.raises(
+            stage.StageDenied, match="pin_drift" if bad == "hash" else "protected_path"
+        ):
+            stage._bytes(path, "0" * 64 if bad == "hash" else None)
+
+
+@NATIVE
+@pytest.mark.parametrize("bad", ["file", "directory", "symlink"])
+def test_specific_vendor_descendant_boundary_not_parent_failure(monkeypatch, bad):
+    real_stat = os.stat
+
+    @contextmanager
+    def root_directory(path):
+        fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            yield fd
+        finally:
+            os.close(fd)
+
+    monkeypatch.setattr(stage, "_directory", root_directory)
+
+    def metadata(path, *a, **kw):
+        info = real_stat(path, *a, **kw)
+        values = list(info)
+        values[4] = 0
+        return os.stat_result(values)
+
+    monkeypatch.setattr(os, "stat", metadata)
+    monkeypatch.setattr(
+        stage, "_protected_fd", lambda p: pytest.fail("descendant guard did not deny")
+    )
+    with tempfile.TemporaryDirectory(prefix="quantmesh-stage-tree-", dir="/var/tmp") as root:
+        path = Path(root) / "victim"
+        if bad == "file":
+            path.write_bytes(b"noncredential-fixture")
+            os.chmod(path, 0o620)
+        elif bad == "directory":
+            path.mkdir(mode=0o720)
+            os.chmod(path, 0o720)
+        else:
+            path.symlink_to("/dev/null")
+        with pytest.raises(stage.StageDenied, match="protected_path"):
+            stage._vendor_tree(Path(root))
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="native registry interruption")

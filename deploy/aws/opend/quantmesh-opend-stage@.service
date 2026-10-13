@@ -14,6 +14,7 @@ Environment=LANG=C.UTF-8
 ExecCondition=/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --check-window --nonce %i
 ExecStartPre=/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --prepare --nonce %i
 ExecStart=/usr/bin/tmux -D -f /run/quantmesh-opend-stage-%i/tmux.conf -S /run/quantmesh-opend-stage-%i/socket
+ExecStartPost=/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --create-pane --nonce %i
 StandardInput=null
 StandardOutput=null
 StandardError=null
