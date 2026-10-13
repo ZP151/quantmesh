@@ -1,5 +1,32 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+Current coordinator boundary: exact bf64883f0a18e3d4e1e07c83522cbc41276abf7e
+complete native Linux offline service gate passes:137passed/5PGskipped/142total,
+exit0,81licensed packages. NEW owned9r8rsnwz runtime is independently admitted
+before/after:6669RECORD entries/zero.pyc.25rawstreams retained under
+native-service-bf64883; no paid/model/production/whole-CI qualification inferred.
+The separate b107 native service failure remains retained and its historical
+unavailable cause is not diagnosed by this current-source pass.
+
+Portfolio verifier exacta9b9ec6 final native35passed/0skip15.66s has real owned
+PostgreSQL race, durable observer before1scriptedinvocation, complete7table
+pg_dump/restore equality and source/restored budget exhaustion. SpecR1 clear.
+StandardsR1 finds actualP2: timed-out initdb direct parent reaped while its
+positively identified owned postgres --boot descendant remains alive. Original
+Task2 session resumes a bounded three-leaf repair and native RED/GREEN beforeR2;
+verifier is NOT integrated/accepted yet. Root433rawhash audit matches432;
+only progress.md changed after handoff, not native proof bytes. Metadata reseal
+waits for a final journal, original mismatch receipt retained.
+
+Run38330059615 remains terminalFAILURE, no rerun. Actionstestmerge1313c77 tree
+6a7fa1c9baddd62ed1e958fb3bb91861468105e5 equals candidate216b tree; actual checkout
+was the testmerge commit. Other unidentified fullsuite F markers remain open.
+Next coherent reviewed integration gets new exact-head requiredCI; no merge or
+deployment from partialGREEN. Docker LinuxEngine remains absent on actual
+recheck; existing provider/Engine/human requests remain pending. FullA ACTIVE.
+
+Earlier observations below are historical snapshots, not current live handles.
+
 Status: ACTIVE, operator selected Option A2026-10-12. Formal168h not required,
 on-demand only. This ledger governs all parallel sessions of one product iteration.
 

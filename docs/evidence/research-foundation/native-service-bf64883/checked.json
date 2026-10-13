@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "head": "bf64883f0a18e3d4e1e07c83522cbc41276abf7e",
+  "checkout": "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/service-bf64883-checkout",
+  "runtime": {
+    "system": "Linux",
+    "implementation": "CPython",
+    "python": "3.12.3",
+    "architecture": "x86_64",
+    "scope": "dependency-and-service-tests-only"
+  },
+  "tests": {
+    "tests": 142,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5
+  },
+  "locked_packages": 81,
+  "scope": "OFFLINE_SCRIPTED_ONLY",
+  "postgres": "pending",
+  "model_calls": 0,
+  "production_deployed": false,
+  "bytecode_files_after": 0,
+  "gate_exit": 0
+}
