@@ -8,6 +8,18 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Direct real-Engine compatibility repair: current bare NNP is preserved as bare,
+and seccomp filenames become exact JSON payloads in inspect. Fresh two owned
+NEVER-started current-image CIDs prove this, then both removed/Engine5/0. Source
+matcher now uses those real wire values and captures stable private UTF8 policy
+bytes at profile construction, refusing changed-file-before-GO. Cap16KiB leaves
+room in64KiB inspect transport, current policy9,624B fits. RED5/GREEN81 and
+boundaryRED1/GREEN2, Ruff/diff and scoped2-round correction review pass. This
+does not grant kernel/Worker admission; no report was produced.
+Evidence security-wire.json, wire-independent-checked.json and wire*.log/.exit.
+Software forecast3,965,174B/current cumulative127,896,778B carries every original
+peak/error/fixture and reserves; original129MB/5GB limits unchanged.
+
 Latest checkpoint: paired parent policy fields reviewed/affected78pass; actual
 server private venv preparation exit0/81 frozen packages/CPython3.12.3,
 no download/pth/bytecode/service. Evidence output/0038-parent-integration/.

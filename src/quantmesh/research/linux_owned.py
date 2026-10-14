@@ -17,7 +17,7 @@ import threading
 import time
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from quantmesh.research.jobs import RunBudget
@@ -28,6 +28,9 @@ BOOTSTRAP_PATH = "/opt/quantmesh/linux_bootstrap.py"
 PYTHON_PATH = "/usr/local/bin/python3"
 CLI_TIMEOUT = 5.0
 CLI_BYTES = 64 * 1024
+# Engine inspect expands and JSON-escapes this text, alongside its normal
+# container metadata. Keep the fixed policy below the bounded CLI reply size.
+_SECCOMP_BYTES = 16 * 1024
 CONTROL_WRITE_SECONDS = 1.0
 # Public CPython build signer measured in the immutable configured image.
 # This exact public value is not a permission for arbitrary GPG credentials.
@@ -95,7 +98,7 @@ def _matches_owned_container(
             and host["ReadonlyRootfs"] is True
             and host["CapDrop"] == ["ALL"]
             and host["SecurityOpt"]
-            == (security_options if security_options is not None else ["no-new-privileges:true"])
+            == (security_options if security_options is not None else ["no-new-privileges"])
             and host["PidsLimit"] == 128
             and host["NanoCpus"] == 1_000_000_000
             and host["Memory"] == memory_mib * 1024 * 1024
@@ -232,8 +235,8 @@ def _safe_path(path: Path) -> Path:
     return path.resolve()
 
 
-def _private_seccomp_path(path: Path) -> Path:
-    """Validate one bounded private seccomp JSON file before engine use."""
+def _private_seccomp_policy(path: Path) -> tuple[Path, str]:
+    """Capture one stable bounded UTF-8 policy exactly as Docker CLI sends it."""
     fd = None
     try:
         if os.name != "posix" or not isinstance(path, Path):
@@ -252,7 +255,7 @@ def _private_seccomp_path(path: Path) -> Path:
             not stat.S_ISREG(info.st_mode)
             or info.st_nlink != 1
             or info.st_size <= 0
-            or info.st_size > 256 * 1024
+            or info.st_size > _SECCOMP_BYTES
             or info.st_uid != os.geteuid()
             or mode & 0o077
             or not mode & 0o400
@@ -270,15 +273,21 @@ def _private_seccomp_path(path: Path) -> Path:
             len(raw) != info.st_size
             or _binding_stat_signature(info) != _binding_stat_signature(os.fstat(fd))
             or _binding_stat_signature(info) != _binding_stat_signature(named)
-            or not isinstance(json.loads(raw), dict)
         ):
             raise ValueError
-        return resolved
+        text = raw.decode("utf8")
+        if not isinstance(json.loads(text), dict):
+            raise ValueError
+        return resolved, text
     except (OSError, TypeError, ValueError, RecursionError, LinuxContainmentError):
         raise LinuxContainmentError("unsafe_seccomp_policy") from None
     finally:
         if fd is not None:
             os.close(fd)
+
+
+def _private_seccomp_path(path: Path) -> Path:
+    return _private_seccomp_policy(path)[0]
 
 
 class _Transport:
@@ -383,6 +392,7 @@ class LinuxExecutionProfile:
     fixture_root: Path
     apparmor_profile: str | None = None
     seccomp_path: Path | None = None
+    _seccomp_json: str | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self):
         allowed = self.endpoint in {
@@ -406,7 +416,9 @@ class LinuxExecutionProfile:
                 self.apparmor_profile,
             ):
                 raise LinuxContainmentError("unsafe_profile")
-            object.__setattr__(self, "seccomp_path", _private_seccomp_path(self.seccomp_path))
+            path, text = _private_seccomp_policy(self.seccomp_path)
+            object.__setattr__(self, "seccomp_path", path)
+            object.__setattr__(self, "_seccomp_json", text)
         for name in ("docker_cli", "fixture_root"):
             path = _safe_path(Path(getattr(self, name)))
             object.__setattr__(self, name, path)
@@ -415,12 +427,12 @@ class LinuxExecutionProfile:
 
     @property
     def security_options(self) -> list[str]:
-        options = ["no-new-privileges:true"]
+        options = ["no-new-privileges"]
         if self.apparmor_profile is not None and self.seccomp_path is not None:
             options.extend(
                 (
                     f"apparmor={self.apparmor_profile}",
-                    f"seccomp={self.seccomp_path}",
+                    f"seccomp={self._seccomp_json}",
                 )
             )
         return options

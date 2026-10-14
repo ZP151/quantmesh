@@ -1,5 +1,20 @@
 # QuantMesh Domain Context
 
+## Actual Engine protocol correction before concrete Worker admission
+
+Two current-image never-started CIDs prove bare NNP stays bare and seccomp path
+becomes JSON text in actual inspect. Both exact CIDs removed, Engine5/0, no
+service/probe started. Correct source expectation/default bare argv unchanged;
+capture stable private UTF8 JSON at construction so later file changes refuse
+before GO. Seccomp16KiB cap/CLI64KiB, real policy9,624B. RED5/GREEN81 plus bound
+RED1/GREEN2; Ruff/diff and2-round scoped correction review clear. Evidence
+output/0038-parent-integration/wire-independent-checked.json. Saved text was
+stored CRLF by Windows write_text; original request/file kept, normalized exact
+caller LF string hash verified explicitly. No source/native proof rerun or
+Worker/report admission. Next concrete provider/current policy/actual mounts,
+then PG/report/page. Full A ACTIVE; software forecast3,965,174B/cumulative
+127,896,778B, original cap failure/whole-C pending unchanged/no new fee.
+
 ## Parent policy and actual offline service runtime checkpoint
 
 Actual exact candidate checkout/runtime follow-up also passes: eb880b2/tree

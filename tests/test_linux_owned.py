@@ -77,8 +77,12 @@ def _inspect_for_create(profile, create, nonce, state):
     security_opts = [
         option.split("=", 1)[1] for option in create if option.startswith("--security-opt=")
     ]
+    # Actual current Engine preserves the requested NNP string and Docker CLI
+    # expands a seccomp path to its exact JSON bytes before sending it.
     security_opts = [
-        "no-new-privileges:true" if option == "no-new-privileges" else option
+        "seccomp=" + Path(option.split("=", 1)[1]).read_text(encoding="utf8")
+        if option.startswith("seccomp=")
+        else option
         for option in security_opts
     ]
     return {
@@ -211,6 +215,69 @@ def test_operator_security_policies_are_created_and_inspected(profile, paths, en
     process.close()
 
 
+def test_operator_policy_expectation_binds_actual_json_content(profile, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "policy.json"
+    raw = '{"defaultAction":"SCMP_ACT_ERRNO"}\n'
+    seccomp.write_text(raw, encoding="utf8")
+    seccomp.chmod(0o600)
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    assert profile.security_options == ["no-new-privileges"]
+    assert configured.security_options == [
+        "no-new-privileges",
+        "apparmor=qm-worker-wire",
+        "seccomp=" + raw,
+    ]
+
+
+def test_changed_seccomp_file_refuses_before_go(profile, paths, engine, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "policy.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n', encoding="utf8")
+    seccomp.chmod(0o600)
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ALLOW"}\n', encoding="utf8")
+    with pytest.raises(owned.LinuxContainmentError, match="admission_failed"):
+        owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    assert engine[3].sent == []
+
+
+def test_non_utf8_seccomp_cannot_be_sent_to_engine(profile, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "policy.json"
+    seccomp.write_bytes('{"defaultAction":"SCMP_ACT_ERRNO"}'.encode("utf16"))
+    seccomp.chmod(0o600)
+    with pytest.raises(owned.LinuxContainmentError, match="unsafe_seccomp_policy"):
+        replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+
+
+@pytest.mark.parametrize("extra,accepted", [(0, True), (1, False)])
+def test_policy_bound_fits_current_inspect_transport(
+    profile, paths, engine, tmp_path, extra, accepted
+):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "bounded-policy.json"
+    prefix = '{"defaultAction":"SCMP_ACT_ERRNO","padding":"'
+    suffix = '"}'
+    raw = prefix + "x" * (16 * 1024 + extra - len(prefix) - len(suffix)) + suffix
+    seccomp.write_text(raw, encoding="utf8")
+    seccomp.chmod(0o600)
+    if not accepted:
+        with pytest.raises(owned.LinuxContainmentError, match="unsafe_seccomp_policy"):
+            replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+        return
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    process = owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    reply = configured.invoke(["inspect", process.container_id])
+    assert len(reply.encode()) < owned.CLI_BYTES
+    assert json.loads(reply)[0]["HostConfig"]["SecurityOpt"] == configured.security_options
+    process.close()
+
+
 @pytest.mark.parametrize(
     "apparmor,seccomp",
     [
@@ -312,7 +379,7 @@ def test_inspect_recheck_refuses_security_policy_drift(
         result = original(self, args)
         if args[0] == "inspect":
             doc = json.loads(result)
-            doc[0]["HostConfig"]["SecurityOpt"] = ["no-new-privileges:true"]
+            doc[0]["HostConfig"]["SecurityOpt"] = ["no-new-privileges"]
             return json.dumps(doc)
         return result
 
@@ -483,7 +550,7 @@ def test_inspect_refuses_container_control_or_mount_drift():
             "CgroupRules": [],
             "ReadonlyRootfs": True,
             "CapDrop": ["ALL"],
-            "SecurityOpt": ["no-new-privileges:true"],
+            "SecurityOpt": ["no-new-privileges"],
             "PidsLimit": 128,
             "NanoCpus": 1_000_000_000,
             "Memory": 2048 * 1024 * 1024,

@@ -1,5 +1,30 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Direct actual-Engine wire repair
+
+Planner stays on first server report, no new source/native proof. Current real
+never-started intake noncead2ee9eb/CIDsb5ada285/310e6bb8 proves bare NNP stays
+bare, explicit=true stays explicit, seccomp argument path is expanded to exact
+JSON content; payloadSHA187dadd8 matches existing9,624B policy. Both exact owned
+CIDs removed, Engine5/0, no container started or policy loaded. Old test simulator
+invented colon-normalization and preserved path, causing real admission refusal.
+Root corrects simulator/source to observed values; captures stable private UTF8
+JSON at construction so modified policy cannot silently change expected inspect.
+UTF16 refuses, original FIFO/private-file checks remain. Actual RED5 retained;
+full owned/execution81pass32.78s. Scoped reviewer round1 finds256KiB policy versus
+64KiB expanded inspect capacity; root narrows cap16KiB/current9,624B fits.
+BoundaryRED1fail/1pass→GREEN2, Ruff/format/diff green, round2 no P1/P2. No third
+closed source/kernel structural review; this is the direct broken wire repair.
+Saved-text checker first finds Windows write_text CRLF hash mismatch; original
+request/file kept, exact logical LF source sent by caller verified with explicit
+storage erratum, no rerun/native qualification. All errors/fixtures retained.
+Root independent checker exit0, software3,965,174B<=4MB/cumulative127,896,778B
+<=129MB carries original implementer FAILED peak/all root fixtures/reserves;
+whole-C attribution remains pending. No production code release/SQL/report yet.
+Evidence output/0038-parent-integration/security-wire*,wire*.log/.exit/
+*-resource.json,wire-independent-checked.json. Concrete provider/current effective
+policy and mount binding remains next, then the frozen PG/report/page loop.
+
 ## Exact server parent checkout and existing runtime admission
 
 Root actually qualifies candidateeb880b2/treee7f6eb69 on native server FS:
