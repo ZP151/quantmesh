@@ -11,6 +11,7 @@ import json
 import os
 import queue
 import re
+import stat
 import subprocess
 import threading
 import time
@@ -36,6 +37,187 @@ class LinuxContainmentError(RuntimeError):
 
 def bootstrap_digest() -> str:
     return hashlib.sha256(Path(__file__).with_name("linux_bootstrap.py").read_bytes()).hexdigest()
+
+
+def _matches_owned_container(
+    doc: dict,
+    *,
+    container_id: str,
+    image_id: str,
+    nonce: str,
+    command: list[str],
+    user: str,
+    inputs: str,
+    output: str,
+    memory_mib: int,
+) -> bool:
+    """Check the actual Engine record against every control requested by this owner."""
+    try:
+        config = doc["Config"]
+        host = doc["HostConfig"]
+        expected_mounts = {
+            "/inputs": (str(Path(inputs).resolve()), "ro", False),
+            "/output": (str(Path(output).resolve()), "rw", True),
+        }
+        mounts = {}
+        for mount in doc["Mounts"]:
+            destination = mount["Destination"]
+            if destination in mounts:
+                return False
+            mounts[destination] = (
+                mount["Type"],
+                str(Path(mount["Source"]).resolve()),
+                mount["Mode"],
+                mount["RW"],
+            )
+        return bool(
+            doc["Id"] == container_id
+            and doc["Image"] == image_id
+            and config["Labels"][OWNER_LABEL] == nonce
+            and config["Entrypoint"] == [PYTHON_PATH]
+            and config["Cmd"] == command
+            and config["User"] == user
+            and host["NetworkMode"] == "none"
+            and host["Privileged"] is False
+            and host["CapAdd"] in (None, [])
+            and host["Devices"] in (None, [])
+            and host["DeviceRequests"] in (None, [])
+            and host["CgroupnsMode"] in (None, "private")
+            and all(
+                host.get(key) in (None, "")
+                for key in ("PidMode", "IpcMode", "UTSMode", "UsernsMode")
+            )
+            and host.get("Cgroup") in (None, "")
+            and host.get("CgroupParent") in (None, "")
+            and host.get("CgroupRules") in (None, [])
+            and host["ReadonlyRootfs"] is True
+            and host["CapDrop"] == ["ALL"]
+            and host["SecurityOpt"] == ["no-new-privileges:true"]
+            and host["PidsLimit"] == 128
+            and host["NanoCpus"] == 1_000_000_000
+            and host["Memory"] == memory_mib * 1024 * 1024
+            and host["MemorySwap"] == memory_mib * 1024 * 1024
+            and host["RestartPolicy"]["Name"] == "no"
+            and host["Tmpfs"] == {"/tmp": "rw,noexec,nosuid,size=16m"}
+            and host["LogConfig"]["Type"] == "none"
+            and set(mounts) == set(expected_mounts)
+            and mounts["/inputs"] == ("bind", expected_mounts["/inputs"][0], "ro", False)
+            and mounts["/output"][0:2] == ("bind", expected_mounts["/output"][0])
+            and mounts["/output"][2] in ("", "rw")
+            and mounts["/output"][3] is True
+        )
+    except (KeyError, TypeError, ValueError, OSError):
+        return False
+
+
+def _binding_stat_signature(info: os.stat_result) -> tuple[int, ...]:
+    return (
+        info.st_dev,
+        info.st_ino,
+        info.st_mode,
+        info.st_nlink,
+        info.st_size,
+        info.st_mtime_ns,
+        info.st_ctime_ns,
+        info.st_uid,
+        info.st_gid,
+    )
+
+
+def _open_parent_binding(root: Path) -> tuple[int, int | None]:
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
+    directory_fd = None
+    if os.name == "posix" and os.open in os.supports_dir_fd and hasattr(os, "O_DIRECTORY"):
+        directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0))
+        fd = os.open("parent-binding.json", flags, dir_fd=directory_fd)
+    else:
+        fd = os.open(root / "parent-binding.json", flags)
+    return fd, directory_fd
+
+
+def _read_parent_binding(root: Path, uid: int, gid: int) -> bytes:
+    fd = directory_fd = None
+    try:
+        fd, directory_fd = _open_parent_binding(root)
+        info = os.fstat(fd)
+        mode = info.st_mode & 0o777
+        immutable = mode == 0o400 if os.name == "posix" else mode & 0o222 == 0
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or not immutable
+            or info.st_nlink != 1
+            or info.st_size <= 0
+            or info.st_size > 16 * 1024
+            or (os.name == "posix" and (info.st_uid != uid or info.st_gid != gid))
+        ):
+            raise OSError("binding metadata changed")
+        chunks = []
+        remaining = info.st_size + 1
+        while remaining:
+            chunk = os.read(fd, min(remaining, 4096))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        raw = b"".join(chunks)
+        named = (
+            os.stat("parent-binding.json", dir_fd=directory_fd, follow_symlinks=False)
+            if directory_fd is not None
+            else (root / "parent-binding.json").lstat()
+        )
+        if (
+            len(raw) != info.st_size
+            or _binding_stat_signature(info) != _binding_stat_signature(os.fstat(fd))
+            or _binding_stat_signature(info) != _binding_stat_signature(named)
+        ):
+            raise OSError("binding identity changed")
+        return raw
+    except Exception:
+        raise LinuxContainmentError("parent_binding_failed") from None
+    finally:
+        if fd is not None:
+            os.close(fd)
+        if directory_fd is not None:
+            os.close(directory_fd)
+
+
+def _parent_binding_signature(
+    root: Path, expected_raw: bytes, uid: int, gid: int
+) -> tuple[int, ...]:
+    raw = _read_parent_binding(root, uid, gid) if os.name != "posix" else None
+    if os.name == "posix":
+        fd = directory_fd = None
+        try:
+            fd, directory_fd = _open_parent_binding(root)
+            info = os.fstat(fd)
+            raw = os.read(fd, 16 * 1024 + 1)
+            named = (
+                os.stat("parent-binding.json", dir_fd=directory_fd, follow_symlinks=False)
+                if directory_fd is not None
+                else (root / "parent-binding.json").lstat()
+            )
+            if (
+                not stat.S_ISREG(info.st_mode)
+                or info.st_mode & 0o777 != 0o400
+                or info.st_nlink != 1
+                or info.st_uid != uid
+                or info.st_gid != gid
+                or len(raw) != info.st_size
+                or raw != expected_raw
+                or _binding_stat_signature(info) != _binding_stat_signature(named)
+            ):
+                raise OSError("binding identity changed")
+            return _binding_stat_signature(info)
+        except Exception:
+            raise LinuxContainmentError("parent_binding_failed") from None
+        finally:
+            if fd is not None:
+                os.close(fd)
+            if directory_fd is not None:
+                os.close(directory_fd)
+    if raw != expected_raw:
+        raise LinuxContainmentError("parent_binding_failed")
+    return ()
 
 
 def _safe_path(path: Path) -> Path:
@@ -307,6 +489,15 @@ class LinuxOwnedProcess:
         ):
             raise LinuxContainmentError("unsafe_mounts")
         self.evidence.update(profile.prerequisites())
+        self._expected_inspect_command = [
+            "-B",
+            "-I",
+            BOOTSTRAP_PATH,
+            str(budget.memory_mib),
+            str(budget.timeout_seconds),
+            *command,
+        ]
+        self._binding_identity = None
         self.output.mkdir(parents=False)
         if os.name == "posix":
             os.chown(self.output, profile.uid, profile.gid)
@@ -384,10 +575,14 @@ class LinuxOwnedProcess:
                     ):
                         raise ValueError
                     _write_parent_binding(self.inputs, raw, self.profile.uid, self.profile.gid)
+                    self._binding_identity = _parent_binding_signature(
+                        self.inputs, raw, self.profile.uid, self.profile.gid
+                    )
                     self.evidence["parent_binding_sha256"] = binding_sha256
                     start_message = f"go:{binding_sha256}"
                 except Exception as exc:
                     raise LinuxContainmentError("parent_binding_failed") from exc
+                self._inspect()
             self.transport.send(start_message)
             self.started = time.monotonic()
         except (LinuxContainmentError, ValueError, KeyError, TypeError) as exc:
@@ -397,7 +592,7 @@ class LinuxOwnedProcess:
                 pass  # Ownership mismatch refuses cleanup rather than touching a sibling.
             raise LinuxContainmentError("admission_failed") from exc
 
-    def _inspect(self) -> dict:
+    def _inspect_owner(self) -> dict:
         try:
             doc = json.loads(self.profile.invoke(["inspect", self.container_id]))[0]
             if (
@@ -406,6 +601,46 @@ class LinuxOwnedProcess:
                 or doc["Config"]["Labels"][OWNER_LABEL] != self.nonce
             ):
                 raise ValueError
+            return doc
+        except (ValueError, KeyError, TypeError, IndexError) as exc:
+            raise LinuxContainmentError("ownership_mismatch") from exc
+
+    def _inspect(self, *, check_parent_binding: bool = True) -> dict:
+        try:
+            doc = self._inspect_owner()
+            if not _matches_owned_container(
+                doc,
+                container_id=self.container_id,
+                image_id=self.profile.image_id,
+                nonce=self.nonce,
+                command=self._expected_inspect_command,
+                user=f"{self.profile.uid}:{self.profile.gid}",
+                inputs=str(self.inputs),
+                output=str(self.output),
+                memory_mib=self.budget.memory_mib,
+            ):
+                raise ValueError
+            expected_binding = (
+                self.evidence.get("parent_binding_sha256") if check_parent_binding else None
+            )
+            if expected_binding is not None:
+                raw = _read_parent_binding(self.inputs, self.profile.uid, self.profile.gid)
+                if hashlib.sha256(raw).hexdigest() != expected_binding:
+                    raise ValueError
+                from quantmesh.research.worker_build import parse_parent_binding
+
+                binding = parse_parent_binding(raw, expected_sha256=expected_binding)
+                if (
+                    binding.container_id != self.container_id
+                    or binding.owner_nonce != self.nonce
+                    or binding.image_id != self.profile.image_id
+                    or binding.engine_id != self.evidence.get("engine_id")
+                    or _parent_binding_signature(
+                        self.inputs, raw, self.profile.uid, self.profile.gid
+                    )
+                    != self._binding_identity
+                ):
+                    raise ValueError
             return doc
         except (ValueError, KeyError, TypeError, IndexError) as exc:
             raise LinuxContainmentError("ownership_mismatch") from exc
@@ -444,7 +679,10 @@ class LinuxOwnedProcess:
             return
         try:
             if self.container_id:
-                self._inspect()  # Exact identity AND nonce before rm --force.
+                # Exact Engine identity/config/nonce before rm. A tampered binding
+                # may reject publication, but must not prevent cleanup of our own
+                # still-matching container.
+                self._inspect_owner()
                 self.profile.invoke(["rm", "--force", self.container_id])
             self.closed = True
         finally:

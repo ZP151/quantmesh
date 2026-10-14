@@ -61,7 +61,7 @@ def _bound_command(command: list[str], parent_binding_sha256: str | None) -> lis
         or any(present[flag] != 1 for flag in flags)
         or present["--binding-sha256"]
         or len(command) != 11
-        or command[0] != "/opt/quantmesh/venv/bin/python3"
+        or command[0] != "/usr/local/bin/python3"
         or command[1:5] != ["-B", "-I", "-S", "/opt/quantmesh/worker_entry.py"]
         or command[5::2] != ["--binding", "--manifest", "--inventory"]
         or command[6::2]

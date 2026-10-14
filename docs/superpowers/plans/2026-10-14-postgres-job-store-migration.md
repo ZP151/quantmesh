@@ -86,3 +86,7 @@ format and diff checks pass. These changes still require an exact-head CI run.
 ## Acceptance Boundary
 
 This local SQL slice is eligible for the existing PR's CI and review gates. Production PostgreSQL service startup/recovery, PostgreSQL 18.6/TLS, backup/restore, Agent/Eval user flow, Worker native admission, and server-owned market data remain separate unfinished gates.
+
+## 2026-10-14 Worker command/binding integration checkpoint
+
+Root integration now uses the exact canonical CPython path and fixed `-B -I -S` command required by the ruling, requires the trusted parent-binding callback, checks full actual-container controls and mounts, revalidates the binding before publication, and separates owned-container cleanup identity from execution admission. Tests cover empty default writable mount mode, privilege-control drift, cleanup after drift, missing provider refusal and pre-publication binding tamper. Focused suite: 58 passed/51 skipped/1 existing warning, 6.70s; Ruff, format and whitespace checks pass after final edits. All Engine cases are fake on this Windows host. `worker_entry.py`, trusted parent image admission, genuine OCI/native qualification and actual numerical execution remain hard blockers. This worktree delta is not pushed; exact-head CI/human gates remain outstanding.

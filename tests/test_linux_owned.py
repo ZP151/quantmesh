@@ -56,11 +56,69 @@ class Attach:
         self.stopped = True
 
 
+def _inspect_for_create(profile, create, nonce, state):
+    image_at = create.index(profile.image_id)
+    memory = int(create[create.index(next(a for a in create if a.startswith("--memory=")))][9:-1])
+    mounts = []
+    for arg in create:
+        if not arg.startswith("type=bind,src="):
+            continue
+        options = dict(part.split("=", 1) for part in arg.split(",") if "=" in part)
+        readonly = "readonly" in arg.split(",")
+        mounts.append(
+            {
+                "Type": "bind",
+                "Source": options["src"],
+                "Destination": options["dst"],
+                "Mode": "ro" if readonly else "rw",
+                "RW": not readonly,
+            }
+        )
+    return {
+        "Id": "b" * 64,
+        "Image": profile.image_id,
+        "Config": {
+            "Labels": {owned.OWNER_LABEL: nonce},
+            "Entrypoint": [create[create.index("--entrypoint") + 1]],
+            "Cmd": create[image_at + 1 :],
+            "User": create[create.index("--user") + 1],
+        },
+        "HostConfig": {
+            "NetworkMode": "none",
+            "Privileged": False,
+            "CapAdd": [],
+            "Devices": [],
+            "DeviceRequests": [],
+            "CgroupnsMode": "private",
+            "PidMode": "",
+            "IpcMode": "",
+            "UTSMode": "",
+            "UsernsMode": "",
+            "Cgroup": "",
+            "CgroupParent": "",
+            "CgroupRules": [],
+            "ReadonlyRootfs": True,
+            "CapDrop": ["ALL"],
+            "SecurityOpt": ["no-new-privileges:true"],
+            "PidsLimit": 128,
+            "NanoCpus": 1_000_000_000,
+            "Memory": memory * 1024 * 1024,
+            "MemorySwap": memory * 1024 * 1024,
+            "RestartPolicy": {"Name": "no"},
+            "Tmpfs": {"/tmp": "rw,noexec,nosuid,size=16m"},
+            "LogConfig": {"Type": "none"},
+        },
+        "Mounts": mounts,
+        "State": state,
+    }
+
+
 @pytest.fixture
 def engine(monkeypatch, profile):
     calls = []
     state = {"Running": True, "ExitCode": 0, "OOMKilled": False}
     nonce = []
+    create_args = []
     attach = Attach(
         {
             "event": "ready",
@@ -81,19 +139,11 @@ def engine(monkeypatch, profile):
         if args[:2] == ["image", "inspect"]:
             return json.dumps([{"Id": profile.image_id, "Os": "linux"}])
         if args[0] == "create":
+            create_args[:] = args
             nonce.append(args[args.index("--label") + 1].split("=", 1)[1])
             return "b" * 64
         if args[0] == "inspect":
-            return json.dumps(
-                [
-                    {
-                        "Id": "b" * 64,
-                        "Image": profile.image_id,
-                        "Config": {"Labels": {owned.OWNER_LABEL: nonce[0]}},
-                        "State": state,
-                    }
-                ]
-            )
+            return json.dumps([_inspect_for_create(profile, create_args, nonce[0], state)])
         return ""
 
     monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", invoke)
@@ -134,12 +184,12 @@ def test_fixed_creation_and_gated_start(profile, paths, engine):
     assert calls[-1] == ["rm", "--force", "b" * 64]
 
 
-def test_parent_binding_is_written_after_owned_container_ready_before_go(profile, paths, engine):
+def test_parent_binding_is_written_and_rechecked_before_exit(profile, paths, engine):
     import hashlib
 
     from quantmesh.research.worker_build import ParentBindingContract, encode_parent_binding
 
-    _, _, nonce, attach = engine
+    calls, _, nonce, attach = engine
     prepared = []
 
     def prepare(process, ready):
@@ -197,13 +247,18 @@ def test_parent_binding_is_written_after_owned_container_ready_before_go(profile
         assert mode & 0o222 == 0
     assert attach.sent == [f"go:{digest}"]
     assert process.evidence["parent_binding_sha256"] == digest
+    binding_path.chmod(0o600)
+    binding_path.write_bytes(raw + b" ")
+    with pytest.raises(owned.LinuxContainmentError):
+        process.poll()
     process.close()
+    assert ["rm", "--force", "b" * 64] in calls
 
 
 def test_bootstrap_go_digest_is_forwarded_only_for_complete_worker_entry_command():
     digest = "a" * 64
     command = [
-        "/opt/quantmesh/venv/bin/python3",
+        "/usr/local/bin/python3",
         "-B",
         "-I",
         "-S",
@@ -229,6 +284,117 @@ def test_bootstrap_go_digest_is_forwarded_only_for_complete_worker_entry_command
     ):
         with pytest.raises(ValueError):
             bootstrap._bound_command(malformed, digest)
+
+
+def test_inspect_refuses_container_control_or_mount_drift():
+    from quantmesh.research.linux_owned import _matches_owned_container
+
+    expected = {
+        "container_id": "b" * 64,
+        "image_id": "sha256:" + "a" * 64,
+        "nonce": "c" * 32,
+        "command": ["-B", "-I", "/opt/qm-bootstrap.py", "2048", "300", "/worker"],
+        "user": "10001:10001",
+        "inputs": "/private/inputs",
+        "output": "/private/output",
+        "memory_mib": 2048,
+    }
+    doc = {
+        "Id": expected["container_id"],
+        "Image": expected["image_id"],
+        "Config": {
+            "Labels": {owned.OWNER_LABEL: expected["nonce"]},
+            "Entrypoint": [owned.PYTHON_PATH],
+            "Cmd": expected["command"],
+            "User": expected["user"],
+        },
+        "HostConfig": {
+            "NetworkMode": "none",
+            "Privileged": False,
+            "CapAdd": [],
+            "Devices": [],
+            "DeviceRequests": [],
+            "CgroupnsMode": "private",
+            "PidMode": "",
+            "IpcMode": "",
+            "UTSMode": "",
+            "UsernsMode": "",
+            "Cgroup": "",
+            "CgroupParent": "",
+            "CgroupRules": [],
+            "ReadonlyRootfs": True,
+            "CapDrop": ["ALL"],
+            "SecurityOpt": ["no-new-privileges:true"],
+            "PidsLimit": 128,
+            "NanoCpus": 1_000_000_000,
+            "Memory": 2048 * 1024 * 1024,
+            "MemorySwap": 2048 * 1024 * 1024,
+            "RestartPolicy": {"Name": "no"},
+            "Tmpfs": {"/tmp": "rw,noexec,nosuid,size=16m"},
+            "LogConfig": {"Type": "none"},
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": expected["inputs"],
+                "Destination": "/inputs",
+                "Mode": "ro",
+                "RW": False,
+            },
+            {
+                "Type": "bind",
+                "Source": expected["output"],
+                "Destination": "/output",
+                "Mode": "rw",
+                "RW": True,
+            },
+        ],
+    }
+    assert _matches_owned_container(doc, **expected)
+
+    empty_output_mode = {**doc, "Mounts": [*doc["Mounts"]]}
+    empty_output_mode["Mounts"][1] = {**doc["Mounts"][1], "Mode": ""}
+    assert _matches_owned_container(empty_output_mode, **expected)
+
+    mutations = (
+        ("command", ["-B", "-I", "/opt/other.py", "2048", "300", "/worker"]),
+        ("inputs", "/private/other-inputs"),
+        ("output", "/private/other-output"),
+        ("user", "0:0"),
+    )
+    for field, wrong in mutations:
+        changed = {**doc}
+        if field == "command":
+            changed["Config"] = {**doc["Config"], "Cmd": wrong}
+        elif field == "user":
+            changed["Config"] = {**doc["Config"], "User": wrong}
+        elif field in ("inputs", "output"):
+            mount_index = 0 if field == "inputs" else 1
+            mounts = list(doc["Mounts"])
+            mounts[mount_index] = {**mounts[mount_index], "Source": wrong}
+            changed["Mounts"] = mounts
+        assert not _matches_owned_container(changed, **expected)
+
+    for field, wrong in (
+        ("NetworkMode", "bridge"),
+        ("ReadonlyRootfs", False),
+        ("CapDrop", []),
+        ("PidsLimit", 0),
+        ("MemorySwap", 0),
+    ):
+        changed = {**doc, "HostConfig": {**doc["HostConfig"], field: wrong}}
+        assert not _matches_owned_container(changed, **expected)
+
+    for field, wrong in (
+        ("Privileged", True),
+        ("CapAdd", ["SYS_ADMIN"]),
+        ("Devices", [{"PathOnHost": "/dev/kvm"}]),
+        ("DeviceRequests", [{"Capabilities": [["gpu"]]}]),
+        ("PidMode", "host"),
+        ("IpcMode", "host"),
+    ):
+        changed = {**doc, "HostConfig": {**doc["HostConfig"], field: wrong}}
+        assert not _matches_owned_container(changed, **expected)
 
 
 def test_explicit_bytecode_env_image_admission(profile, paths, engine, monkeypatch):
@@ -387,6 +553,26 @@ def test_transient_cleanup_can_retry_exact_ownership(profile, paths, engine, mon
     process.close()
     assert process.closed is True
     assert engine[0][-2:] == [["inspect", "b" * 64], ["rm", "--force", "b" * 64]]
+
+
+def test_owned_container_with_control_drift_is_still_removed(profile, paths, engine, monkeypatch):
+    calls, _, _, _ = engine
+    process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    original = profile.invoke
+
+    def drifted(self, args):
+        result = original(args)
+        if args[0] == "inspect":
+            doc = json.loads(result)
+            doc[0]["HostConfig"]["Privileged"] = True
+            return json.dumps(doc)
+        return result
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", drifted)
+    with pytest.raises(owned.LinuxContainmentError, match="ownership_mismatch"):
+        process.poll()
+    process.close()
+    assert ["rm", "--force", "b" * 64] in calls
 
 
 def test_hung_pulse_write_has_deadline(monkeypatch):

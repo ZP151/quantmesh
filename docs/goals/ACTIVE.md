@@ -2,19 +2,27 @@
 
 ## Current goal ACTIVE — synthetic Reader probe passed; full Worker remains gated
 
-## Current checkpoint — pg8000 migration ready for exact-head CI
+## Current checkpoint — pg8000 landed locally; Worker boundary still software-only
 
 Operator chose pg8000 to preserve the existing license policy. The root
-PostgreSQL store and security install constraint are implemented; local
-affected tests are green and the disposable PostgreSQL 16 integration file
-passed 3/3. This worktree delta is not yet pushed or covered by exact-head CI.
-The security/license policy is unchanged.
+PostgreSQL store and security install constraint are pushed at `5b8fbe5`.
+The migrated implementation's disposable PostgreSQL 16 integration passed
+3/3. Current focused worker/runner/PostgreSQL-store tests pass 58 with 51
+platform/environment skips and one existing NumPy warning; Ruff and
+`git diff --check` pass. The PostgreSQL integration subset in that combined
+command skipped without a DSN; the prior 3/3 disposable PG16 result is
+separate. CI for the driver commit is pending/supersedable; the current Worker
+delta is uncommitted and has no exact-head CI yet. License policy is unchanged.
 
-Full Worker is still gated: production Worker execution is not yet wired to a
-trusted parent binding, and owned-container inspection does not yet revalidate
-the complete command, mounts and security controls. Do not claim Worker
-admission. Server-owned market-data connectivity is also still unresolved; the
-known AWS staging path depends on the Windows OpenD reverse tunnel.
+The Worker start path now requires a parent-binding provider, uses the fixed
+canonical `/usr/local/bin/python3 -B -I -S` entry command, and binds actual
+Engine inspect controls/mounts before release. It revalidates the parent
+binding before publication and still cleans up an exactly owned container after
+configuration drift. These checks are synthetic on Windows: no native OCI
+Engine, trusted image-admission provider or `worker_entry.py` exists in this
+tree, so Worker admission remains unqualified and fail-closed. Server-owned
+market-data connectivity is unresolved; the known AWS staging path depends
+on the Windows OpenD reverse tunnel.
 
 
 ### Latest license-policy checkpoint — 2026-10-14

@@ -1787,3 +1787,9 @@ does not revalidate the full command/mount/security configuration. This remains
 a hard admission blocker and must be addressed before any production Worker
 claim. No market-data source has been moved to the research server: the current
 known staging route still depends on the Windows OpenD tunnel.
+
+### 2026-10-14 scoped Worker-boundary blocker repair
+
+A focused root integration closes four software-only gaps found in the second scoped review: `/output` inspection accepts Docker's default writable `Mode=""` only when `RW` is true; Engine inspection explicitly rejects privileged mode, added capabilities, devices/device requests and host namespace/cgroup overrides; cleanup checks exact container ID/image/owner nonce separately from execution admission so configuration drift cannot strand this attempt's container; and the parent binding is revalidated again immediately before result publication. The launched command is fixed to canonical `/usr/local/bin/python3 -B -I -S` and the bootstrap accepts only that full worker-entry command. Worker execution fails closed unless a parent-binding provider is supplied.
+
+Regression evidence: the first combined run had one flaky Windows readonly-file test failure; its isolated rerun passed, and a fresh complete affected run passed **58 tests, 51 skipped** in 6.70s, with one existing NumPy deprecation warning. Ruff, formatting and `git diff --check` passed before the final canonical-interpreter edit, so rerun quality checks after the final edits. Tests use the current worktree `src` via `PYTHONPATH`; fake Engine tests remain non-native evidence. Native OCI inspection, actual admitted parent provider, worker_entry.py, image/kernel qualification and real numerical Worker jobs remain blocked. This delta is uncommitted/unpushed and is not covered by PR CI.

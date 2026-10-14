@@ -515,6 +515,9 @@ def run_next_job(
         raw = _validated_child_result(job, owner, runtime, output)
         if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
             return store.get(job.operator_id, job.job_id)
+        if execution is not None:
+            # Re-read the exact parent binding immediately before publication.
+            execution.validate_exit(child, job, runtime)
         ref = publish_result(job, raw, Path(artifacts_root))
         store.finish(job.job_id, owner, job.attempt, "succeeded", [ref], None)
     except DatasetRejected:

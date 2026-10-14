@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from test_linux_owned import _inspect_for_create
 from test_research_jobs import request_for
 
 from quantmesh.research import job_runner, linux_owned
@@ -81,7 +82,7 @@ def configured(monkeypatch, small_fixture, *, running=False, oom=False, code=0):
         root,
     )
     state = {"Running": running, "ExitCode": code, "OOMKilled": oom}
-    calls, nonce, mounts, pulses = [], [], {}, []
+    calls, nonce, mounts, pulses, create_args = [], [], {}, [], []
     limits = {
         "memory.max": "2147483648",
         "memory.swap.max": "0",
@@ -96,6 +97,7 @@ def configured(monkeypatch, small_fixture, *, running=False, oom=False, code=0):
         if args[:2] == ["image", "inspect"]:
             return json.dumps([{"Id": profile.image_id, "Os": "linux"}])
         if args[0] == "create":
+            create_args[:] = args
             nonce.append(args[args.index("--label") + 1].split("=", 1)[1])
             for arg in args:
                 if arg.startswith("type=bind,src="):
@@ -103,16 +105,9 @@ def configured(monkeypatch, small_fixture, *, running=False, oom=False, code=0):
                     mounts[dst.removeprefix("dst=")] = Path(src.removeprefix("src="))
             return "f" * 64
         if args[0] == "inspect":
-            return json.dumps(
-                [
-                    dict(
-                        Id="f" * 64,
-                        Image=profile.image_id,
-                        Config={"Labels": {linux_owned.OWNER_LABEL: nonce[-1]}},
-                        State=state,
-                    )
-                ]
-            )
+            inspected = _inspect_for_create(profile, create_args, nonce[-1], state)
+            inspected["Id"] = "f" * 64
+            return json.dumps([inspected])
         return ""
 
     class Attachment:
@@ -133,7 +128,7 @@ def configured(monkeypatch, small_fixture, *, running=False, oom=False, code=0):
                 )
                 if self.on_pulse:
                     self.on_pulse()
-            if value == "go" and not code and not oom:
+            if value.startswith("go:") and not code and not oom:
                 job = json.loads((mounts["/inputs"] / "job.json").read_bytes())
                 actual_report = report.model_copy(deep=True)
                 actual_report.evidence.update(
@@ -169,6 +164,28 @@ def configured(monkeypatch, small_fixture, *, running=False, oom=False, code=0):
             actual_profile.prerequisites()
             return dict(RUNTIME)
 
+        def prepare_parent_binding(self, process, job, runtime, ready):
+            from quantmesh.research.worker_build import ParentBindingContract, encode_parent_binding
+
+            contract = ParentBindingContract(
+                schema=1,
+                engine_id=process.evidence["engine_id"],
+                image_id=process.profile.image_id,
+                image_config_sha256="a" * 64,
+                container_id=process.container_id,
+                owner_nonce=process.nonce,
+                manifest_sha256="b" * 64,
+                inventory_sha256="c" * 64,
+                dependency_lock_sha256=runtime["dependency_digest"],
+                python_executable_sha256=runtime["python_executable_digest"],
+                entry_sha256="f" * 64,
+                observer_sha256="0" * 64,
+                expected_prefix="/usr/local",
+                python_version="3.12.15",
+                kernel_profile_sha256="1" * 64,
+            )
+            return encode_parent_binding(contract)
+
     execution = module.LinuxWorkerExecution(profile=profile, admission=TestAdmission())
     return module.WorkerRunner(execution=execution), store, lake, calls, mounts, pulses, attachment
 
@@ -202,6 +219,39 @@ def test_context_resets_on_exception_nested_default_and_independent_thread(monke
     assert job_runner.run_next_job(None, "read", None, None) is None
 
 
+def test_worker_refuses_to_create_container_without_parent_binding_provider(
+    monkeypatch, small_fixture
+):
+    module = api()
+    root, lake, store, _ = small_fixture()
+    cli = root / "docker-no-binding"
+    cli.write_text("not an executable engine")
+    profile = linux_owned.LinuxExecutionProfile(
+        "unix:///var/run/docker.sock",
+        cli,
+        "sha256:" + "e" * 64,
+        (os.getuid() or 10001) if os.name == "posix" else 10001,
+        (os.getgid() or 10001) if os.name == "posix" else 10001,
+        root,
+    )
+    requested = []
+    monkeypatch.setattr(
+        module,
+        "LinuxOwnedProcess",
+        lambda *args, **kwargs: requested.append((args, kwargs)),
+    )
+
+    class NoParentBindingAdmission:
+        def verify(self, actual_profile):
+            return dict(RUNTIME)
+
+    execution = module.LinuxWorkerExecution(profile, NoParentBindingAdmission())
+    job = store.submit("local", "parent-binding-required", request_for(lake))
+    with pytest.raises(linux_owned.LinuxContainmentError, match="parent_binding_required"):
+        execution.start(job, dict(RUNTIME), root / "bundle", root / "output")
+    assert requested == []
+
+
 @pytest.mark.parametrize("outcome", ["success", "nonzero", "oom"])
 @linux_owner
 def test_actual_owned_status_separate_bundle_and_publication(small_fixture, monkeypatch, outcome):
@@ -217,13 +267,18 @@ def test_actual_owned_status_separate_bundle_and_publication(small_fixture, monk
     assert not mounts["/output"].is_relative_to(mounts["/inputs"])
     assert not list(mounts["/inputs"].rglob("receipt.json"))
     create = next(args for args in calls if args[0] == "create")
-    assert create[-6:] == [
-        "/opt/quantmesh/venv/bin/python3",
+    assert create[-11:] == [
+        "/usr/local/bin/python3",
         "-B",
         "-I",
+        "-S",
         "/opt/quantmesh/worker_entry.py",
-        "/inputs",
-        "/output",
+        "--binding",
+        "/inputs/parent-binding.json",
+        "--manifest",
+        "/opt/quantmesh/manifest.json",
+        "--inventory",
+        "/opt/quantmesh/inventory.json",
     ]
     assert ["rm", "--force", "f" * 64] in calls and attachment.closed
 
@@ -298,6 +353,28 @@ def test_changed_admission_after_child_exit_cannot_publish(small_fixture, monkey
         return runtime
 
     monkeypatch.setattr(runner.execution.admission, "verify", changed)
+    result = runner.run_next_job(store, "worker", lake, store.artifact_root)
+    assert result.job_id == job.job_id and result.state == "failed"
+    assert result.artifacts == []
+
+
+@linux_owner
+def test_parent_binding_is_rechecked_after_result_validation_before_publish(
+    small_fixture, monkeypatch
+):
+    runner, store, lake, _, mounts, _, _ = configured(monkeypatch, small_fixture)
+    job = store.submit("local", "binding-drift-before-publish", request_for(lake))
+    validate_result = job_runner._validated_child_result
+
+    def drift_binding(*args, **kwargs):
+        raw = validate_result(*args, **kwargs)
+        binding = mounts["/inputs"] / "parent-binding.json"
+        binding.chmod(0o600)
+        binding.write_bytes(binding.read_bytes() + b" ")
+        binding.chmod(0o400)
+        return raw
+
+    monkeypatch.setattr(job_runner, "_validated_child_result", drift_binding)
     result = runner.run_next_job(store, "worker", lake, store.artifact_root)
     assert result.job_id == job.job_id and result.state == "failed"
     assert result.artifacts == []

@@ -29,12 +29,17 @@ _execution: ContextVar[LinuxWorkerExecution | None] = ContextVar(
     "quantmesh_worker_execution", default=None
 )
 _COMMAND = (
-    "/opt/quantmesh/venv/bin/python3",
+    "/usr/local/bin/python3",
     "-B",
     "-I",
+    "-S",
     "/opt/quantmesh/worker_entry.py",
-    "/inputs",
-    "/output",
+    "--binding",
+    "/inputs/parent-binding.json",
+    "--manifest",
+    "/opt/quantmesh/manifest.json",
+    "--inventory",
+    "/opt/quantmesh/inventory.json",
 )
 
 
@@ -47,6 +52,10 @@ class WorkerImageAdmission(Protocol):
     """
 
     def verify(self, profile: LinuxExecutionProfile) -> dict: ...
+
+    def prepare_parent_binding(
+        self, process: LinuxOwnedProcess, job: JobRecord, runtime: dict, ready: dict
+    ) -> tuple[bytes, str]: ...
 
 
 @dataclass(frozen=True)
@@ -81,9 +90,20 @@ class LinuxWorkerExecution:
     def start(self, job: JobRecord, runtime: dict, bundle: Path, output: Path) -> LinuxOwnedProcess:
         if self.runtime_fingerprint() != runtime:
             raise LinuxContainmentError("worker_admission_changed")
-        return LinuxOwnedProcess(self.profile, list(_COMMAND), job.request.budget, bundle, output)
+        prepare = getattr(self.admission, "prepare_parent_binding", None)
+        if not callable(prepare):
+            raise LinuxContainmentError("parent_binding_required")
+        return LinuxOwnedProcess(
+            self.profile,
+            list(_COMMAND),
+            job.request.budget,
+            bundle,
+            output,
+            prepare_parent_binding=lambda process, ready: prepare(process, job, runtime, ready),
+        )
 
     def validate_exit(self, child: LinuxOwnedProcess, job: JobRecord, runtime: dict) -> None:
+        child._inspect()
         evidence = child.evidence
         if (
             self.runtime_fingerprint() != runtime
