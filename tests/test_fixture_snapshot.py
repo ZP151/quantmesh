@@ -501,7 +501,23 @@ def test_real_fixture_child_validates_twice_and_preserves_canonical_numerics(tmp
         validations.append(True)
 
     monkeypatch.setattr(job_runner, "validate_dataset", checked)
-    job_runner._child_main(str(attempt))
+    if job_runner.sys.platform == "linux":
+        # Linux's descriptor-pinned fixture reader snapshots the attempt
+        # directory as an ancestor of inputs. Keep child output outside that
+        # tree: creating the report registry inside attempt changes the
+        # ancestor ctime while the reader is open and correctly invalidates
+        # the sealed input snapshot.
+        output = tmp_path / "child-output"
+        output.mkdir()
+        job_runner._child_main(
+            str(attempt),
+            output_directory=str(output),
+            build_manifest=tmp_path / "test-manifest.json",
+            manifest_sha256="a" * 64,
+        )
+    else:
+        output = attempt
+        job_runner._child_main(str(attempt))
     assert validations == [True, True]
     expected = run_baseline_report(
         dataset="equities",
@@ -521,4 +537,4 @@ def test_real_fixture_child_validates_twice_and_preserves_canonical_numerics(tmp
         build_digest=runtime["build_digest"],
         dependency_digest=runtime["dependency_digest"],
     )
-    assert (attempt / "result.json").read_bytes() == canonical_result(expected)
+    assert (output / "result.json").read_bytes() == canonical_result(expected)
