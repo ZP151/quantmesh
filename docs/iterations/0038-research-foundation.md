@@ -1,5 +1,25 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current pinned entry diagnostic source checkpoint
+
+Root implements existing frozen diagnosis scope; independent fast read-only
+analysis confirms outer catch can mask source/project import/revalidation or
+error-file-write failure, so do not guess a native cause. Entry now emits only
+schema1/fixed stage/error-code/qualifiedfalse <=256B in exclusive0600 file under
+held no-follow own0700 /output. Exception text, input, path and credentials never
+enter it; IO refusal preserves stderr/exit2 and cannot clobber existing/link target.
+Runtime/argv/binding/source and before/after child revalidation unchanged.
+RED3 (missing diagnostic), targeted7pass4.00s/256B root, full module37pass4.06s/
+Ruff/diff green. Full native root156058B exceeds assigned32KB and60KB phase;
+FAILED/retained, no broad repeat/deletion. Planner exact reserve reconciliation:
+wire3965174=3375302native+159872local+350000docsGit+80000future, following calls
+carry127896778 unchanged, its80000future unused. Consume80000 once plus50000
+current remaining70000docsGit, phase190000/base128606191/20000docsGit remain;
+old196006forecast +190000 gives128992197<=original129MB. All old peaks retained,
+whole-C pending, no paid resource/cloud cap expansion. Diagnostic not yet in actual
+image; no report certification. Next source-layer update on same81-wheel base,
+current exact metadata/pins and real registered job, not an old source-only gate.
+
 ## Current whole registered job reaches actual binding/GO, not report
 
 User report/page/reopen remains unavailable. Root Verifier actual ubuntu

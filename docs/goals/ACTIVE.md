@@ -8,6 +8,17 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Entry diagnostic source ready (not yet in actual image): fixed <=256B
+schema1/stage/code/qualifiedfalse under own no-follow0700 /output/exclusive0600;
+no exception/input text, IO failure cannot mask existing stderr/exit2. RED3,
+targeted7pass and full entry37pass4.06s/Ruff/diff green. Full native test root
+156058B exceeds32KB and phase60KB: FAILED/retained, no repeat/deletion. Planner
+reconciles previously unspent wire80000future plus50000 remainingdocs reserve
+once; base128606191/phase190000/20000docsGit remain, same original129MB/5GB.
+NEXT exact committed source-layer update on existing81-wheel base, current
+metadata/pins, one real Worker call to classify actual entry refusal. No report
+claim, native whitelist/third structure review, paid resource or deployment.
+
 CURRENT actuala29780f0/10.987s: private PG TLS/ASGI submit/claim, current parent
 image/kernel/livePID/cgroup/mount binding now reached; UID10001/0400 binding
 written and fixed child launched after GO. Child stderr "worker entry rejected",

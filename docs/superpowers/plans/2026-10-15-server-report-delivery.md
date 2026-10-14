@@ -394,3 +394,31 @@ Target<=2hours to precise cause/next actual report attempt; new architecture/nat
 requirement returns to Planner with risk/effort/acceptance impact before expansion.
 Full A remains ACTIVE; no new fee or formal168h revival. Current evidence ledger
 phase194006B/base128796191/2000tail forecast128992197<=129MB, all failures retained.
+
+Ruling, entry diagnosis: independent read-only analysis confirms the outer catch
+also masks project-import and error-file-write failures; do not guess a native
+cause from missing error.json. Fixed diagnostic schema1/stage enum/entry_rejected/
+qualifiedfalse,<=256B, exclusive0600 file under held no-follow own0700 /output;
+no exception text, paths, inputs or credentials. Auxiliary IO failure cannot
+change fixed stderr/refusal exit2. Runtime/argv/binding/source and before/after
+revalidation gates stay intact. Tests first RED3 then GREEN7/256B native root.
+For source-layer materialization/updated exact pins and one real job, consume
+60000 once from prior remaining130000 docsGit reservation:70000 remain,
+base128736191 + previous196006forecast + new60000=>128992197, same129MB cap.
+New phase cap60000 includes bounded local scripts/evidence/native fixtures;
+source/catalog payload only in memory, reuse81-wheel base/ELF/notices/producer.
+Original PG-inclusive cloud baseline162262806528/5GB/free50GB stays; source prep
+reserves50MB within it. No package download, old native/source-only proof rerun,
+new fee, production release or general native permission is authorized by a
+diagnostic receipt. Next actual result must still be an immutable numerical report.
+
+Full entry module37pass/4.06s, but its actual156058B fixture root exceeds assigned
+32768B and new60000B phase: BOTH FAILED/retained, no deletion or repeat. Reconcile
+forecast reserves before any connected effect: wire-independent-checked.json
+earlier3965174=3375302native+159872local+350000docsGit+80000future; all following
+calls carry127896778 unchanged, so its80000future has not been spent. Consume
+that80000 ONCE plus50000 from current remaining70000docsGit: phase190000,
+base128606191,20000docsGit remain. Previous196006forecast +190000phase =>
+128992197 within original129MB; all measured failed roots/old peaks remain.
+This is explicit forecast-reserve reconciliation, not a claim the original
+subcaps passed, or an increased allowance. Full-C/Git attribution stays pending.

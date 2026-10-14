@@ -1,5 +1,15 @@
 # QuantMesh Domain Context
 
+## Current entry failure diagnosis source checkpoint
+
+Existing evidence cannot identify inner rejection. Fixed stage/code-only <=256B
+best-effort nonauthority receipt added without changing refusal/entry/source/
+Reader/publication guards. RED3/targeted7/wholeentry37pass4.06s/Ruff/diff green;
+native full-root156058B capFAILED/retained (32KB and60KB phase), no cleanup/rerun.
+Explicit unspent forecast reserves reconciled in current plan, original129MB/
+whole-host5GB retained/no new fee. Not yet in actual image, no report pass.
+Next committed source layer/current metadata/pins→one real registered job.
+
 ## Current actual job reaches binding/GO; pinned child entry rejects
 
 Latesta29780f0/10.987s, job14c6f374: real PG TLS/ASGI submit/claim and independent

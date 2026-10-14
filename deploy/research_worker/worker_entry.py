@@ -19,6 +19,23 @@ _BINDING = Path("/inputs/parent-binding.json")
 _MANIFEST = _ROOT / "manifest.json"
 _INVENTORY = _ROOT / "inventory.json"
 _REJECT = "worker entry rejected"
+_OUTPUT = Path("/output")
+_STAGE = "startup"
+_FAILURE_STAGES = frozenset(
+    {
+        "startup",
+        "runtime",
+        "arguments",
+        "binding",
+        "source_bytes",
+        "observer_load",
+        "source_preflight",
+        "project_import",
+        "pre_compute_revalidation",
+        "compute",
+        "post_compute_revalidation",
+    }
+)
 _DIGEST = re.compile(r"[0-9a-f]{64}\Z")
 _BINDING_KEYS = frozenset(
     {
@@ -209,19 +226,28 @@ def _decode_binding(raw: bytes, expected_sha256: str) -> dict:
 
 def _execute_child_after_preflight(revalidate, child_main) -> None:
     """Revalidate source immediately before and after the pinned child call."""
+    global _STAGE
+    _STAGE = "pre_compute_revalidation"
     revalidate()
+    _STAGE = "compute"
     child_main()
+    _STAGE = "post_compute_revalidation"
     revalidate()
 
 
 def _run() -> int:
+    global _STAGE
+    _STAGE = "runtime"
     if not _runtime_supported() or sys.argv[0] != str(_ENTRY):
         raise ValueError
+    _STAGE = "arguments"
     if not _arguments(sys.argv[1:]):
         raise ValueError
     expected_sha = sys.argv[-1]
+    _STAGE = "binding"
     binding_raw = _read(_BINDING, 16 * 1024)
     binding = _decode_binding(binding_raw, expected_sha)
+    _STAGE = "source_bytes"
     entry_raw = _read(_ENTRY, 32 * 1024 * 1024)
     observer_raw = _read(_OBSERVER, 32 * 1024 * 1024)
     if (
@@ -237,11 +263,13 @@ def _run() -> int:
     observer.__package__ = ""
     observer.__spec__ = None
     sys.modules[observer_name] = observer
+    _STAGE = "observer_load"
     try:
         exec(compile(observer_raw, str(_OBSERVER), "exec", dont_inherit=True), observer.__dict__)
     except BaseException:
         sys.modules.pop(observer_name, None)
         raise
+    _STAGE = "source_preflight"
     observation = observer.preflight(
         binding_raw=binding_raw,
         expected_binding_sha256=expected_sha,
@@ -253,6 +281,7 @@ def _run() -> int:
             sys.path.append(path)
     # All source/package associations are now bound. This is the first project
     # import; existing runtime, Reader, result and publication guards stay intact.
+    _STAGE = "project_import"
     from quantmesh.research.job_runner import _child_main
 
     def revalidate() -> None:
@@ -275,10 +304,53 @@ def _run() -> int:
     return 0
 
 
+def _retain_failure_stage() -> None:
+    """Best-effort nonauthority metadata; never includes exception/input text."""
+    directory_fd = file_fd = None
+    try:
+        if sys.platform != "linux":
+            return
+        directory_fd = os.open(_OUTPUT, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        directory = os.fstat(directory_fd)
+        if directory.st_uid != os.geteuid() or stat.S_IMODE(directory.st_mode) != 0o700:
+            return
+        raw = json.dumps(
+            {
+                "schema": 1,
+                "stage": _STAGE if _STAGE in _FAILURE_STAGES else "unknown",
+                "code": "entry_rejected",
+                "qualified": False,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("ascii")
+        if len(raw) > 256:
+            return
+        file_fd = os.open(
+            "entry-failure.json",
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+            0o600,
+            dir_fd=directory_fd,
+        )
+        os.write(file_fd, raw)
+    except BaseException:
+        pass
+    finally:
+        for fd in (file_fd, directory_fd):
+            if fd is not None:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+
+
 def main() -> int:
+    global _STAGE
+    _STAGE = "startup"
     try:
         return _run()
     except BaseException:
+        _retain_failure_stage()
         sys.stderr.write(_REJECT + "\n")
         return 2
 

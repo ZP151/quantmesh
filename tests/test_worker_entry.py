@@ -29,6 +29,56 @@ def _entry_module():
     return module
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux owned diagnostic directory")
+@pytest.mark.parametrize("stage", ["source_preflight", "project_import", "compute"])
+def test_failed_entry_retains_only_bounded_stage_without_exception_text(
+    tmp_path, monkeypatch, capsys, stage
+):
+    entry = _entry_module()
+    tmp_path.chmod(0o700)
+    monkeypatch.setattr(entry, "_OUTPUT", tmp_path, raising=False)
+
+    def fail():
+        entry._STAGE = stage
+        raise ValueError("sentinel-private-exception-text")
+
+    monkeypatch.setattr(entry, "_run", fail)
+    assert entry.main() == 2
+    assert capsys.readouterr().err == "worker entry rejected\n"
+    diagnostic = tmp_path / "entry-failure.json"
+    assert diagnostic.exists()
+    raw = diagnostic.read_bytes()
+    assert len(raw) <= 256 and b"sentinel" not in raw
+    assert json.loads(raw) == {
+        "schema": 1,
+        "stage": stage,
+        "code": "entry_rejected",
+        "qualified": False,
+    }
+    assert diagnostic.stat().st_mode & 0o777 == 0o600
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux no-follow diagnostic directory")
+@pytest.mark.parametrize("blocked", ["existing", "symlink"])
+def test_diagnostic_io_refusal_cannot_mask_entry_failure(tmp_path, monkeypatch, capsys, blocked):
+    entry = _entry_module()
+    output = tmp_path / "output"
+    target = tmp_path / "target"
+    target.mkdir(mode=0o700)
+    if blocked == "symlink":
+        output.symlink_to(target, target_is_directory=True)
+    else:
+        output.mkdir(mode=0o700)
+        (output / "entry-failure.json").write_bytes(b"retained")
+    monkeypatch.setattr(entry, "_OUTPUT", output, raising=False)
+    monkeypatch.setattr(entry, "_run", lambda: (_ for _ in ()).throw(ValueError("private")))
+    assert entry.main() == 2
+    assert capsys.readouterr().err == "worker entry rejected\n"
+    assert not list(target.iterdir())
+    if blocked == "existing":
+        assert (output / "entry-failure.json").read_bytes() == b"retained"
+
+
 def test_bootstrap_produced_fixed_argv_is_accepted_by_entry_parser():
     command = [
         "/usr/local/bin/python3",
