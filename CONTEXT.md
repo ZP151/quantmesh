@@ -1,5 +1,24 @@
 # QuantMesh Domain Context
 
+## Actual static OpenD dependency inspection — activation still pending
+
+Read-only staging SSH as ubuntu, 2026-10-14 23:46:59 UTC, exit0/6.026s.
+Held the existing owned0400 archive, rechecked archive/CLI SHA, parsed ELF in
+memory without extraction or vendor execution. PT_INTERP /lib64/ld-linux-x86-64.so.2
+exists; host glibc2.39.18 direct DT_NEEDED names:10 present in the actual x86-64
+host linker cache;8 absent from that cache but same-named archive candidates
+exist (7 libf3c libraries plus libprotobuf.so.32). DT_RPATH starts with $ORIGIN.
+The future protected installation must preserve the vendor library bundle;
+copying only OpenD is insufficient. Name/path availability is NOT transitive ABI,
+actual resolution, startup, authentication or SDK qualification. No ldd, package
+install, remote write, account/unit/permit/vendor state/login/source switch.
+Evidence output/0038-worker-origin/opend-dependencies-{request,response,checked}.json
+and host.gz/.exit; saved consistency checker exit0, all qualification flags false.
+Primary registered-fixture sandbox decision remains pending; no repeated Worker
+run or cache whitelist. Actual PR175 still draft/head370a745/0human reviews,
+existing checks green with domain/browser skipped; they do not certify newer
+worker-kernel commits. Full Option A stays ACTIVE; no new cost or model call.
+
 ## Latest independent source-host preparation (not service activation)
 
 Root actual staging SSH23:36UTC matches fixed machinea6645ff4;11111 belongs to

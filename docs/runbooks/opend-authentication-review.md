@@ -134,3 +134,16 @@ must pass first. Owned local backup qualification is complete only for fixture
    reports; actual off-host/Worker-generated recovery remains open. Native Linux
    Worker Engine
 and model metadata/API-key prerequisites remain separate from this source path.
+
+## Actual staging archive linkage preparation (2026-10-15 Singapore)
+
+The existing pinned archive on staging was read without extraction/execution.
+Static ELF inspection found18 direct DT_NEEDED libraries and $ORIGIN-first
+DT_RPATH. The actual host x86-64 cache provides10 names;7 libf3c names and
+libprotobuf.so.32 are absent there but occur beside OpenD in the archive.
+A protected installation must retain and verify those bundled libraries, not
+copy only the executable. The loader exists and the host reports glibc2.39;
+this does not prove transitive ABI compatibility or actual loaded resolution.
+Keep actual target closure/private-terminal/startup/SDK gates open. Evidence:
+output/0038-worker-origin/opend-dependencies-response.json (23:46:59UTC/exit0).
+No account, unit, permit, login, source switch or system package was changed.

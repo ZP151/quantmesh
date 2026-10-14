@@ -550,3 +550,24 @@ Local caller/evidence <=12KB allocated from remaining40000wire docs/Git reserve
 (28000remain); base127984191/new phase819000 with all prior peaks/caps retained,
 original129MB unchanged. Target<=240s; retain partial file/receipt on failure and
 reconcile exact nonce before retry. No paid resource or market authority change.
+
+Ruling, static source compatibility follow-up: reuse only the existing staging
+archive, hold no-follow file and recheck its complete SHA before parsing its
+pinned CLI in memory. Read ELF PT_INTERP/DT_NEEDED/RPATH without extracting or
+executing vendor code; compare direct names with actual host ldconfig cache and
+archive candidates. Names/paths cannot certify transitive ABI, loaded resolution,
+startup, authentication or SDK. No ldd/vendor invocation, package installation,
+remote writes, account/unit/permit or source switch. <=120s/read-only source
+host, <=64MB CLI memory. Caller/evidence/docs forecast20000B consumes ONCE from
+remaining28000 wire docs/Git reserve (8000remain); base127964191/phase839000,
+original129MB unchanged, failed caps/peaks retained. Other source100000 and
+concrete docs20000 reserves remain. Refusal diagnoses exact cause; no retry
+without new evidence and no Worker-profile work pending the human decision.
+
+Verifier static follow-up exit0/6.026s,23:46:59UTC:18 direct names,10 host
+x86-64 cache paths,8 only same-named bundled candidates. Loader exists/glibc2.39;
+DT_RPATH starts $ORIGIN. Future installation preserves vendor bundle; no sole
+OpenD copy. Actual transitive resolution/ABI/startup/SDK remain unqualified.
+No remote writes or vendor execution. Saved consistency checker exit0. Full A
+ACTIVE; primary profile decision still pending. PR175 draft/370a745/0humans,
+existing CI does not cover later branch commits. No CI rerun or merge.
