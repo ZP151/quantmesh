@@ -371,3 +371,7 @@ field, so no claim of changing this running response is made. This resolves
 the earlier direct-setter limitation for future turns; no product advisory
 model/API key, fees, release approval or goal completion changed. Goal remains
 ACTIVE; source/evidence handoff in output/0038-held-fixture-reader/fast-continuation-handoff.json.
+
+## 2026-10-14 committed-reader continuation
+
+Commit58da85c9ee7313e373b15fb953c9c67a05208414 integrates the sealed FixtureReader, G1/G3 read routing and format-only parent-binding parser into draft PR175. Combined focused suite:314 passed/62 skipped/1 existing dependency warning in13.12s. Ruff, format check and diff check pass; independent scoped review found no P1/P2/P3. Exact-head CI has not appeared in GitHub yet, so the old768 checks are superseded and do not certify these changes. This does not qualify the Linux Worker, parent admission, kernel boundary, full numerical job, PostgreSQL production recovery, Agent user flow or independent server market feed.

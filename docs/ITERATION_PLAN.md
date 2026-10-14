@@ -593,3 +593,7 @@ ACTIVE; source/evidence handoff in output/0038-held-fixture-reader/fast-continua
 ### Approved narrow parser and regression follow-up — 2026-10-14
 
 The format-only immutable parent binding parser is implemented in `worker_build.py`; strict canonical bytes/digest/schema tests pass15 (1 dependency warning), Ruff and `git diff --check` pass. Legacy worker admission tests require Linux CPython3.12 and are not validated by this Windows Python3.13 run. The three frozen issue174 regressions pass on this current iteration candidate (3 passed). A scoped independent review of the alternate isolated patch found no actionable P1/P2/P3; it was not transplanted because current candidate already passes the frozen cases. No runtime deployment, cloud action or trading occurred. Parser and wider research foundation remain uncommitted and PR175 CI does not cover them; overall goal stays ACTIVE.
+
+### 2026-10-14 committed-reader continuation
+
+Commit58da85c9ee7313e373b15fb953c9c67a05208414 integrates the sealed FixtureReader, G1/G3 read routing and format-only parent-binding parser into draft PR175. Combined focused suite:314 passed/62 skipped/1 existing dependency warning in13.12s. Ruff, format check and diff check pass; independent scoped review found no P1/P2/P3. Exact-head CI has not appeared in GitHub yet, so the old768 checks are superseded and do not certify these changes. This does not qualify the Linux Worker, parent admission, kernel boundary, full numerical job, PostgreSQL production recovery, Agent user flow or independent server market feed.

@@ -1634,8 +1634,9 @@ It requires a trusted expected digest, exact canonical JSON, bounded bytes,
 unique/exact fields and strict schema/type/value checks. Its immutable parse
 result has no admission/qualification flag and does not inspect Engine,
 container, image, kernel or runtime state. Dedicated suite passes15 with1
-existing dependency warning; Ruff and `git diff --check` pass. This code is
-uncommitted and not covered by PR175 CI. Running it with legacy
+existing dependency warning; Ruff and `git diff --check` pass. These changes
+are committed as58da85c and pushed to PR175; new exact-head CI has not yet
+appeared. Running it with legacy
 `test_worker_build.py` on this Windows Python3.13 interpreter produced45
 passes/4 skips/5 failures; those failures are existing runtime admission tests
 requiring Linux CPython3.12 and neither validate nor refute the parser. The
@@ -1651,3 +1652,8 @@ noted no explicit HTTPS-loopback or non-UTC-aware-timestamp case. No
 service/cloud/trading action was taken. Goal remains ACTIVE; native Worker
 qualification, durable service recovery and market-source independence remain
 separate gates.
+
+The combined Reader/parser/job-runner/security focused run on the committed
+candidate passes314/62 skipped/1 existing dependency warning in13.12s; Ruff
+and format checks pass across19 files. The independent scoped review found no
+P1/P2/P3. PR175 is now head58da85c; its new CI is pending/not yet visible.
