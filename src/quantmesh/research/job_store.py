@@ -574,6 +574,7 @@ class PostgresJobStore(SQLiteJobStore):
                 )
                 con.execute(
                     f'CREATE TABLE IF NOT EXISTS "{schema}".analysis_outbox ('
+                    "queue_position BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE, "
                     "job_id TEXT PRIMARY KEY REFERENCES "
                     f'"{schema}".jobs(job_id) ON DELETE CASCADE, '
                     "lease TEXT, attempt INTEGER NOT NULL DEFAULT 0 CHECK (attempt >= 0))"
