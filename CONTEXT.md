@@ -1,5 +1,17 @@
 # QuantMesh Domain Context
 
+## Latest binding blocker repaired in source, report still pending
+
+Actual d9ad9fd1/4cbc2680 now reaches controller ready; then cgroup-limit read
+rejects kernel stat-size0 with nonempty bytes. Reuse held no-follow directory
+and bounded virtual reader only for four root-owned cgroup limits,4096B. Normal
+file size gates untouched. Real Linux API RED/GREEN2, whole provider14pass4.11s/
+Ruff/diff green,202B native fixture retained. All own runtime/PG/mount cleanup
+passed. Next actual same registered job with corrected committed provider;
+no numerical report/browser/reopen qualification yet. Original129MB stays,
+base128796191 consumes previous explicit30KB future and20KB docs/Git reserves
+once,130KB docs/Git retained; all failures/peaks and whole-C PENDING unchanged.
+
 ## Actual private PG job reached; Worker readonly wire correction
 
 Ubuntu callcfb51975 proves actual least-privilege PG TLSv1.3/256bit and existing

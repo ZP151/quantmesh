@@ -522,6 +522,7 @@ def test_parent_binding_uses_exact_ready_and_current_process_identity(monkeypatc
     with pytest.raises(WorkerAdmissionRejected):
         provider.prepare_parent_binding(process, job, runtime, ready)
 
+
     state_with_gids = identity
     changing = iter(
         [
@@ -542,3 +543,32 @@ def test_parent_binding_uses_exact_ready_and_current_process_identity(monkeypatc
     monkeypatch.setattr(admission, "_proc_identity", lambda _pid: next(changing))
     with pytest.raises(WorkerAdmissionRejected):
         provider.prepare_parent_binding(process, job, runtime, ready)
+
+
+def test_cgroup_virtual_limit_has_kernel_bytes_despite_zero_stat_size():
+    import os
+    import sys
+
+    import quantmesh.research.worker_admission as admission
+
+    if sys.platform != "linux":
+        pytest.skip("real Linux cgroup filesystem required")
+    groups = Path("/proc/self/cgroup").read_text().splitlines()
+    group = next(line[3:] for line in groups if line.startswith("0::"))
+    directory = Path("/sys/fs/cgroup").joinpath(*Path(group).parts[1:])
+    if not (directory / "memory.max").exists():
+        pytest.skip("current cgroup has no memory controller")
+    fd, descriptors = admission._open_absolute_directory(directory)
+    try:
+        assert (directory / "memory.max").stat().st_size == 0
+        raw = admission._read_proc_member(fd, "memory.max", 4096, cgroup=True)
+        assert raw and raw == (directory / "memory.max").read_bytes()
+        with pytest.raises(WorkerAdmissionRejected):
+            admission._read_proc_member(fd, "memory.max", 4096)
+        with pytest.raises(WorkerAdmissionRejected):
+            admission._read_proc_member(fd, "status", 4096, cgroup=True)
+        with pytest.raises(WorkerAdmissionRejected):
+            admission._read_proc_member(fd, "memory.max", 1, cgroup=True)
+    finally:
+        for descriptor in reversed(descriptors):
+            os.close(descriptor)

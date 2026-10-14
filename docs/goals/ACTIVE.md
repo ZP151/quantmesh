@@ -8,6 +8,18 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Latest d9ad9fd1/4cbc2680 reaches real controller ready, then binding refuses
+_verify_cgroup: cgroupfs stat-size0 differs from its actual limit bytes. Ordinary
+file reader was incorrectly reused. Root narrow repair uses held no-follow
+cgroup directory + existing bounded virtual reader, only four root-owned size0
+limit files/4096B; ordinary file gates unchanged. Real Linux API RED/GREEN2,
+whole provider14pass4.11s/Ruff/diff green,202B fixture retained. All actual own
+containers/policies/mounts/PG/ports cleaned. Next complete same registered job
+with corrected committed provider; no report/page/reopen claim. Original129MB
+unchanged: consume prior30KB future-call and20KB of prior150KB docs/Git reserve
+once for connected tail, keep130KB docs/Git reserved/base128796191 and all old
+failures/peaks. See plan arithmetic; whole-C PENDING/full A ACTIVE.
+
 Actual private PG/ASGI job submit and Worker claim now proven, TLSv1.3/256bit,
 qm_research least-privilege SCRAM, fixture only/budget0; job44622a77 FAILED before
 GO/no report. Noncecfb51975/10.398s; owned PG stopped/port released. Ubuntu could

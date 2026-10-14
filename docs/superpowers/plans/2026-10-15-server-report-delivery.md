@@ -373,3 +373,11 @@ reserve+30000 future-call reserve. Consume that last30000 ONCE for this connecte
 tail: base128816191 plus new actual bytes/tail forecast; retain original gross
 128846191 figure, all failed peaks and150000 docs/Git reserve. Original129MB
 maximum unchanged; no deletion/reset/omitted PG bytes or added cloud fee.
+
+Latest actual full binding fails on cgroupfs stat-size0/nonempty limits, all
+owned cleanup known. Mechanical reader fix uses held kernel directory/bounded
+virtual reads/only four root-owned single-link fields,4096B; ordinary-file gates
+untouched, same livePID/current-kernel/limits acceptance. Wholeprovider14passes.
+Consume another20000 from previous150000 docsGit reservation ONCE (130000 remain)
+for connected evidence; base128796191, same129MB cap/all old peaks retained. This
+spends a forecast reserve, never discards an actual introduced byte or failure.

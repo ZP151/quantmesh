@@ -1150,10 +1150,17 @@ def _proc_identity(pid: int) -> dict:
             os.close(fd)
 
 
-def _read_proc_member(directory_fd: int, name: str, maximum: int) -> bytes:
+def _read_proc_member(
+    directory_fd: int, name: str, maximum: int, *, cgroup: bool = False
+) -> bytes:
     fd = None
     try:
-        if name not in {"stat", "status", "cgroup", "mountinfo", "current"}:
+        allowed = (
+            {"memory.max", "memory.swap.max", "cpu.max", "pids.max"}
+            if cgroup
+            else {"stat", "status", "cgroup", "mountinfo", "current"}
+        )
+        if name not in allowed or (cgroup and maximum != 4096):
             raise ValueError
         fd = os.open(
             name,
@@ -1161,7 +1168,10 @@ def _read_proc_member(directory_fd: int, name: str, maximum: int) -> bytes:
             dir_fd=directory_fd,
         )
         before = os.fstat(fd)
-        if not stat.S_ISREG(before.st_mode):
+        if not stat.S_ISREG(before.st_mode) or (
+            cgroup
+            and (before.st_uid != 0 or before.st_nlink != 1 or before.st_size != 0)
+        ):
             raise ValueError
         data = bytearray()
         while len(data) <= maximum:
@@ -1223,8 +1233,15 @@ def _verify_cgroup(raw: str, memory_mib: int) -> None:
         raise ValueError
     base = Path("/sys/fs/cgroup")
     directory = base.joinpath(*Path(matches[0]).parts[1:])
-    values = {
-        key: _read_absolute_regular(directory / key, 4096).decode("ascii").strip()
-        for key in ("memory.max", "memory.swap.max", "cpu.max", "pids.max")
-    }
+    # cgroupfs reports size zero even when limits contain bytes. Reuse the
+    # bounded virtual-file reader on a held, no-follow kernel directory only.
+    fd, descriptors = _open_absolute_directory(directory)
+    try:
+        values = {
+            key: _read_proc_member(fd, key, 4096, cgroup=True).decode("ascii").strip()
+            for key in ("memory.max", "memory.swap.max", "cpu.max", "pids.max")
+        }
+    finally:
+        for descriptor in reversed(descriptors):
+            os.close(descriptor)
     verify_limits(values, memory_mib)

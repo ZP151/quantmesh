@@ -1,5 +1,26 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Latest actual binding refusal: cgroup virtual-file reader
+
+Controller now ready, actual PG/ASGI claim remains proven. Complete calls
+d9ad9fd1/8.307s and context4cbc2680/8.473s refuse before GO; full sanitized
+exception context identifies _verify_cgroup→_read_absolute_regular length check.
+cgroupfs publishes stat-size0 with real numeric bytes. All own CID/policy/mount/
+PG/port cleanup pass; jobs3bf2c16c/3c9316ba remain FAILED/no report, not retried
+or rewritten as success. Root Planner scopes repair to this same required
+kernel API reader, not another native prerequisite or third structural review.
+Held no-follow cgroup directory and existing bounded virtual-file reader now
+accept only four root-owned/single-link/size0 limit files,4096B, same stat/name
+identity and actual limits mandatory. Ordinary files retain exact length gate.
+Real Linux cgroup API RED1/GREEN2/wholeprovider14pass4.11s, Ruff/diff green,
+new native root202B retained. Next ONE corrected same registered Worker call.
+Budget ledger retains original failed100KB phase and all earlier peaks. Prior
+949413 forecast=466281native+303132local+150000docsGit+30000future. Previous
+30000 future consumption plus20000 of unused docsGit is allocated once to
+connected evidence; base128796191,130000docsGit remain, original129MB unchanged.
+No old peak removed, artifact deleted or whole-C claim; no cloud fee increase.
+PR175 originaldraft gates unchanged; no runtime production deployment claimed.
+
 ## Actual PG/registered job first call and direct Engine correction
 
 Latest corrected full callc4447602/12.535s still fails before GO; root-owned
