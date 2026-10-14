@@ -14,9 +14,9 @@ currently reviewed `LLVM-exception` qualifier and detects Commons Clause
 without case sensitivity. License tests pass 12/12 focused and 24/24 security;
 the clean 78-package Windows release closure passes, pip-audit reports no known
 vulnerabilities, and Ruff/diff checks pass. This fix is not yet committed or
-covered by CI. Checkpoint `d64575a` is committed locally but not yet pushed; PR
-#175 still has the earlier failing exact-head checks, so fresh CI is required.
-No service/AWS change occurred.
+covered by CI. The reviewed checkpoint is pushed to PR #175; its prior failing
+checks belong to the superseded head and fresh exact-head CI is required. No
+service/AWS change occurred.
 
 The user cleared the unfinished old goal and explicitly requested a new goal.
 The controller now reports ACTIVE for the remaining approved iteration0038 A

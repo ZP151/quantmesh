@@ -1713,7 +1713,7 @@ and the clean 78-package Windows release closure passes with 72 installed
 packages and six documented Linux-only pins absent. `pip-audit` reports no
 known vulnerabilities; Ruff, production-file format and `git diff --check`
 pass. Disposable PostgreSQL 16 integration remains the prior 3-pass result;
-it was not rerun for this parser-only correction. Checkpoint `d64575a` is
-committed locally, but not pushed or covered by CI; PR #175 requires a new
-exact-head CI run and applicable release review. No AWS, server, model
-key/API call, or trade action occurred.
+it was not rerun for this parser-only correction. The reviewed checkpoint is
+pushed to PR #175, but is not yet covered by CI; a new exact-head CI run and
+applicable release review remain required. No AWS, server, model key/API call,
+or trade action occurred.
