@@ -1691,3 +1691,29 @@ this is recorded as an environment limitation, not a green full-suite result.
 The local PostgreSQL result does not qualify PostgreSQL 18.6/TLS, production
 service recovery, backups, Worker-native admission, Agent/Eval, or market-source
 deployment. No AWS change, model call, secret configuration, or trade occurred.
+
+### 2026-10-14 approved LGPL dependency-policy continuation
+
+User approved the narrow policy expansion needed by the pinned PostgreSQL
+driver: LGPL-2.0, LGPL-2.1 and LGPL-3.0, including SPDX `-only` and
+`-or-later` variants. This does not admit GPL/AGPL, Commons Clause,
+proprietary or unknown declarations, and the policy is not a legal-compliance
+waiver. ADR-0027 records the exact `psycopg==3.3.6` and
+`psycopg-binary==3.3.6` wheel metadata (`LGPL-3.0-only`), upstream notices,
+and redistribution/relinking obligations. The docs explicitly retain a
+separate no-GPL/AGPL/LGPL npm-closure statement.
+
+Independent review found that arbitrary SPDX `WITH` identifiers were stripped
+and mixed-case Commons Clause could evade refusal. New tests reproduced both
+gaps before the correction. Unknown `WITH` identifiers, including
+`GPL-3.0-only`, now fail closed; only the reviewed `LLVM-exception` is
+allowlisted. Commons Clause text uses case-insensitive matching. The focused
+license class passes 12 tests, all `tests/test_security.py` passes 24 tests,
+and the clean 78-package Windows release closure passes with 72 installed
+packages and six documented Linux-only pins absent. `pip-audit` reports no
+known vulnerabilities; Ruff, production-file format and `git diff --check`
+pass. Disposable PostgreSQL 16 integration remains the prior 3-pass result;
+it was not rerun for this parser-only correction. Checkpoint `d64575a` is
+committed locally, but not pushed or covered by CI; PR #175 requires a new
+exact-head CI run and applicable release review. No AWS, server, model
+key/API call, or trade action occurred.

@@ -2,6 +2,22 @@
 
 ## Current goal ACTIVE — synthetic Reader probe passed; full Worker remains gated
 
+### Latest license-policy checkpoint — 2026-10-14
+
+The user approved admitting the LGPL-2.0/2.1/3.0 weak-copyleft family for the
+Python release closure, with GPL/AGPL, Commons Clause, proprietary and unknown
+licenses still refused. Psycopg 3.3.6's exact `psycopg` and `psycopg-binary`
+wheel metadata both declare `LGPL-3.0-only`; notices and distribution-form
+obligations are recorded in ADR-0027. The independent review found two parser
+gaps; regression tests reproduced both, and the parser now accepts only the
+currently reviewed `LLVM-exception` qualifier and detects Commons Clause
+without case sensitivity. License tests pass 12/12 focused and 24/24 security;
+the clean 78-package Windows release closure passes, pip-audit reports no known
+vulnerabilities, and Ruff/diff checks pass. This fix is not yet committed or
+covered by CI. Checkpoint `d64575a` is committed locally but not yet pushed; PR
+#175 still has the earlier failing exact-head checks, so fresh CI is required.
+No service/AWS change occurred.
+
 The user cleared the unfinished old goal and explicitly requested a new goal.
 The controller now reports ACTIVE for the remaining approved iteration0038 A
 scope. This is a replacement, not a claim that the old A deliverables finished.

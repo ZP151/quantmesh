@@ -75,11 +75,10 @@ PLATFORM_TOLERATED = {
 # repo's requirements-audit.txt; tests may point elsewhere.
 CLOSURE_FILE = Path(__file__).resolve().parents[1] / "requirements-audit.txt"
 
-# Documented allowlist (docs/licenses.md mirrors it). A license outside
-# this set — GPL/AGPL, LGPL, proprietary, source-available
-# restrictions such as the Commons Clause, or unknown — is
-# incompatible with the project's local-first, redistributable posture
-# and fails the job.
+# Documented allowlist (docs/licenses.md mirrors it). The LGPL family is
+# explicitly admitted as weak copyleft with its notices/relinking/source
+# obligations recorded in ADR-0027. GPL/AGPL, proprietary, source-available
+# restrictions such as the Commons Clause, and unknown licenses still fail.
 ALLOWED = {
     "MIT",
     "BSD-2-Clause",
@@ -94,6 +93,15 @@ ALLOWED = {
     "CNRI-Python",  # the historical CNRI Python license (permissive)
     "MIT-CMU",  # MIT variant with the CMU notice (Pillow)
     "MIT-0",  # MIT No Attribution (OSI-approved; cffi declares it)
+    "LGPL-2.0",
+    "LGPL-2.0-only",
+    "LGPL-2.0-or-later",
+    "LGPL-2.1",
+    "LGPL-2.1-only",
+    "LGPL-2.1-or-later",
+    "LGPL-3.0",
+    "LGPL-3.0-only",
+    "LGPL-3.0-or-later",
 }
 
 # Hand-verified overrides for closure members whose metadata carries
@@ -134,6 +142,10 @@ _SPDX_ALIASES = {
     "PSF License": "PSF-2.0",
 }
 
+# SPDX exception identifiers admitted by the current release closure.
+# Unknown exceptions stay closed until their effect is reviewed explicitly.
+_SPDX_EXCEPTIONS = {"LLVM-exception"}
+
 
 def _from_expression(expr: str) -> str | None:
     """Resolve an SPDX expression to an allowed key, or None if no
@@ -142,12 +154,15 @@ def _from_expression(expr: str) -> str | None:
     ``WITH <exception>`` qualifier (e.g. ``WITH LLVM-exception``)
     *relaxes* the license, so the exception identifier itself is
     stripped, never treated as a restricting member."""
-    if "commons" in expr.lower():
+    if "commons" in expr.casefold():
         # "WITH Commons-Clause" is not an SPDX exception — it is a
         # restricting condition that cancels the Apache grant; refused
         # before the qualifier strip could turn it into Apache-2.0.
         return None
-    expr = re.sub(r"\s+WITH\s+[A-Za-z0-9._-]+", "", expr)
+    qualifiers = re.findall(r"\s+WITH\s+([A-Za-z0-9._-]+)", expr, re.IGNORECASE)
+    if any(qualifier not in _SPDX_EXCEPTIONS for qualifier in qualifiers):
+        return None
+    expr = re.sub(r"\s+WITH\s+[A-Za-z0-9._-]+", "", expr, flags=re.IGNORECASE)
     parts = [p.strip() for p in re.split(r"\s+AND\s+", expr)]
     alternatives = [p.strip() for p in re.split(r"\s+OR\s+", " OR ".join(parts))]
     keys = [_SPDX_ALIASES.get(a, a) for a in alternatives]
@@ -173,6 +188,18 @@ _LINE1_NAMES = {
     "Apache License, Version 2.0": "Apache-2.0",
     "Apache License Version 2.0": "Apache-2.0",
     "Python Software Foundation License": "PSF-2.0",
+    "LGPL-2.0": "LGPL-2.0",
+    "LGPL-2.0-only": "LGPL-2.0-only",
+    "LGPL-2.0-or-later": "LGPL-2.0-or-later",
+    "LGPL-2.1": "LGPL-2.1",
+    "LGPL-2.1-only": "LGPL-2.1-only",
+    "LGPL-2.1-or-later": "LGPL-2.1-or-later",
+    "LGPL-3.0": "LGPL-3.0",
+    "LGPL-3.0-only": "LGPL-3.0-only",
+    "LGPL-3.0-or-later": "LGPL-3.0-or-later",
+    "GNU Lesser General Public License v2": "LGPL-2.0",
+    "GNU Lesser General Public License v2.1": "LGPL-2.1",
+    "GNU Lesser General Public License v3": "LGPL-3.0",
 }
 
 
@@ -182,7 +209,7 @@ def _from_text(text: str) -> str | None:
     blobs would otherwise misclassify via a bundled text); MIT and
     BSD are otherwise distinguished by the BSD 'Neither the name ...'
     restriction."""
-    if "Commons Clause" in text:
+    if "commons clause" in text.casefold():
         # Apache-2.0 + Commons Clause is source-available, not OSI —
         # the Apache appendix text is inside, so the clause must be
         # refused *before* the Apache pattern can match (vectorbt).
@@ -190,6 +217,16 @@ def _from_text(text: str) -> str | None:
     first = text.splitlines()[0].strip()
     if first in _LINE1_NAMES:
         return _LINE1_NAMES[first]
+    if first == "GNU LESSER GENERAL PUBLIC LICENSE":
+        version_line = next((line.strip() for line in text.splitlines()[1:4] if line.strip()), "")
+        match = re.fullmatch(r"Version (2(?:\.1)?|3)(?:,.*)?", version_line)
+        if match:
+            version = {"2": "2.0", "2.1": "2.1", "3": "3.0"}[match.group(1)]
+            return f"LGPL-{version}"
+    if first == "GNU LIBRARY GENERAL PUBLIC LICENSE":
+        version_line = next((line.strip() for line in text.splitlines()[1:4] if line.strip()), "")
+        if re.fullmatch(r"Version 2(?:,.*)?", version_line):
+            return "LGPL-2.0"
     if "Apache License" in text and "Version 2.0" in text:
         return "Apache-2.0"
     if "Permission is hereby granted" in text:

@@ -24,6 +24,7 @@
 - Reopening a migrated store does not add duplicate indexes or reorder jobs.
 - Explicit legacy positions do not break future identity-generated positions.
 - Expired analysis leases are reclaimable with a higher attempt while stale lease owners remain fenced.
+- The Python closure admits only the specifically approved LGPL weak-copyleft family; GPL/AGPL, Commons Clause, proprietary and unknown licenses remain denied.
 
 ---
 
@@ -43,6 +44,29 @@
 - [x] Verify reopened jobs/reports/outbox and expired-lease recovery, including attempt increment and stale-owner fencing.
 - [x] Run the focused PostgreSQL integration file against a disposable local PostgreSQL 16 instance: 3 passed, 1 dependency warning, exit 0.
 - [x] Run Ruff and format checks on both changed Python files and `git diff --check`.
+
+### Task 2: Admit approved LGPL dependency licenses
+
+**Files:**
+- Modify: `tools/license_review.py`, `tests/test_security.py`
+- Modify: `requirements-audit.txt`, `docs/licenses.md`, `docs/REUSE_MATRIX.md`
+- Add: `docs/adr/0027-lgpl-weak-copyleft-dependency-policy.md`
+
+- [x] Add regression cases first and observe the LGPL acceptance and exact-text cases fail against the previous deny-all policy.
+- [x] Permit only LGPL-2.0, LGPL-2.1 and LGPL-3.0 base / `-only` / `-or-later` SPDX declarations; retain explicit GPL, AGPL and Commons-Clause rejection.
+- [x] Pin the exact Psycopg distributions and versions identified by the failed fresh-release CI metadata; synchronize the Python closure inventory and dependency reuse record.
+- [x] Run the focused license suite and gate on a clean release environment; inspect the exact closure rows and confirm no unknown/untracked packages (72 Windows closure packages reviewed, six Linux-only pins tolerated, all 78 locked rows classified, no untracked packages).
+- [x] Run the focused PostgreSQL integration tests on disposable local PostgreSQL 16; retain paper-only and no-AWS scope (3 passed, 1 existing NumPy deprecation warning, 15.46s).
+- [ ] Push a reviewed checkpoint and pass exact-head required CI; do not merge until the applicable PR review and release gates are satisfied.
+
+Review follow-up: the first bounded review identified two parser escape paths
+(`WITH GPL-3.0-only` and mixed-case Commons Clause). Both were reproduced by
+focused RED tests, then fixed. The parser now allowlists only the currently
+reviewed `LLVM-exception`; unknown SPDX qualifiers fail closed, and Commons
+Clause matching casefolds free text. The reviewer verified the fixes and the
+two focused tests pass. Windows security tests pass 24/24, the 78-package clean
+release closure passes, `pip-audit` reports no known vulnerabilities, and Ruff,
+format and diff checks pass. These changes still require an exact-head CI run.
 
 ## Acceptance Boundary
 

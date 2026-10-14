@@ -40,6 +40,8 @@ numpy==2.5.2
 packaging==26.3
 pandas==2.3.3
 patsy==1.0.3
+psycopg==3.3.6
+psycopg-binary==3.3.6
 playwright==1.62.0
 pluggy==1.6.0
 protobuf==7.36.1

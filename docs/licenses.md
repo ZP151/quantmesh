@@ -20,14 +20,21 @@ creates one).
 
 ## Policy
 
-- **Allowed** (permissive, redistributable): MIT, BSD-2-Clause,
+- **Allowed**: permissive licenses MIT, BSD-2-Clause,
   BSD-3-Clause, Apache-2.0, PSF-2.0, ISC, MPL-2.0 (file-level
   copyleft — permissive for redistribution; certifi, tqdm), 0BSD,
   Zlib, CC0-1.0, CNRI-Python (the historical CNRI Python license),
   MIT-CMU (Pillow's MIT variant), MIT-0 (MIT No Attribution,
-  OSI-approved; cffi declares it).
-- **Refused**: GPL/AGPL, LGPL, proprietary licenses, source-available
-  restrictions such as the Commons Clause, and anything unclassified.
+  OSI-approved; cffi declares it); and LGPL-2.0, LGPL-2.1 and LGPL-3.0
+  (including their explicit `-only` and `-or-later` SPDX forms) as an
+  approved weak-copyleft family under
+  [ADR-0027](adr/0027-lgpl-weak-copyleft-dependency-policy.md).
+- **Refused**: GPL/AGPL, proprietary licenses, source-available restrictions
+  such as the Commons Clause, and anything unclassified. An LGPL allowlist
+  result is not a legal-compliance waiver: any redistribution must include
+  the required license/copyright notices and satisfy the applicable source,
+  relinking and modification obligations for the LGPL component. Review the
+  exact version and distribution form before shipping.
 - **Untracked installed packages are refused**: the installed
   third-party set must equal the pinned closure (plus the venv's own
   pip/setuptools/wheel build tooling). This is the iteration-0013
@@ -138,6 +145,14 @@ fails loudly otherwise.
 
 ## Decisions recorded on this surface
 
+- **Psycopg uses the approved LGPL exception family (ADR-0027)** — the
+  operator approved LGPL weak-copyleft dependencies after the release gate
+  rejected `psycopg[binary]`. The audited closure pins both `psycopg` and
+  `psycopg-binary`; the audit continues to reject GPL/AGPL, Commons Clause,
+  proprietary and unknown declarations. This is a dependency-policy decision,
+  not legal advice or a finding that every possible redistribution model
+  already satisfies LGPL obligations.
+
 - **vectorbt was removed from the `research` extra (ADR-0012
   decision 4)** — it ships as Apache-2.0 **with the Commons Clause**
   (source-available, not OSI: the clause strips the right to sell the
@@ -176,7 +191,7 @@ part of the Python runtime dependency closure:
 
 ## Frontend npm closure (iteration 0020 Task 6, checked 2026-08-12)
 
-ADR-0013 Decision 5 budget: permissive licenses only; any dependency
+ADR-0013 Decision 5 budget: the named permissive frontend set; any dependency
 outside the adopted set enters through a license/maintenance check
 recorded here and in `docs/REUSE_MATRIX.md`. The checks are `npm audit
 --audit-level=high` for advisories plus the fail-closed, stdlib-only
@@ -186,8 +201,9 @@ release gate. **646 packages**
 (lockfile v3, root entry excluded, all platform variants included), **every license
 allowlisted**: MIT 562, ISC 26, MPL-2.0 24, Apache-2.0 11,
 BSD-3-Clause 8, BSD-2-Clause 7, BlueOak-1.0.0 2, 0BSD 1, MIT-0 1,
-OFL-1.1 1, CC-BY-4.0 1, Python-2.0 1, `(MIT OR CC0-1.0)` 1. No GPL/AGPL/LGPL, no
-source-available restriction, no untracked package.
+OFL-1.1 1, CC-BY-4.0 1, Python-2.0 1, `(MIT OR CC0-1.0)` 1. No
+GPL/AGPL/LGPL package is in the frontend npm closure; no source-available
+restriction or untracked package is present.
 
 - MPL-2.0 ×24 is one project: `lightningcss` (Tailwind 4's CSS
   engine) plus its platform binaries — file-level copyleft,
@@ -255,7 +271,7 @@ retain the original parent tarball's integrity and bundled-dependency metadata,
 without inventing standalone registry hashes. npm's mandatory high-severity
 audit is retained; moderate-only findings remain separately visible.
 
-## Inventory (generated 2026-09-03; 76 packages in the release
+## Inventory (generated 2026-10-14; 78 packages in the release
 closure `.[dev,research,e2e,moomoo]`)
 
 Regenerate with `python tools/license_review.py` in an environment
@@ -306,6 +322,8 @@ Version numbers drift with the lock; the license key is the contract.
 | playwright | 1.62.0 | Apache-2.0 |
 | pluggy | 1.6.0 | MIT |
 | protobuf | 7.36.1 | BSD-3-Clause |
+| psycopg | 3.3.6 | LGPL-3.0-only |
+| psycopg-binary | 3.3.6 | LGPL-3.0-only |
 | pycparser | 3.0 (Linux-only) | BSD-3-Clause |
 | pycryptodome | 3.23.0 | BSD-3-Clause |
 | pydantic | 2.13.5 | MIT |

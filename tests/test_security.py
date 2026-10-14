@@ -123,6 +123,10 @@ class TestLicenseReview:
             "2.0, January 2004"
         )
         assert review._from_text(text) is None
+        mixed_case = (
+            "Apache License Version 2.0\nwith cOmMoNs cLaUsE restrictions"
+        )
+        assert review._from_text(mixed_case) is None
 
     def test_with_exception_qualifier_is_stripped(self) -> None:
         review = _load_license_review()
@@ -130,6 +134,8 @@ class TestLicenseReview:
             "BSD-2-Clause AND Apache-2.0 WITH LLVM-exception"
         )
         assert resolved == "Apache-2.0 | BSD-2-Clause"
+        assert review._from_expression("MIT WITH GPL-3.0-only") is None
+        assert review._from_expression("MIT WITH Unknown-exception") is None
 
     def test_permissive_spdx_members_are_allowed(self) -> None:
         review = _load_license_review()
@@ -149,6 +155,61 @@ class TestLicenseReview:
         review = _load_license_review()
         assert review._from_expression("GPL-3.0-only") is None
         assert review._from_expression("MIT OR GPL-3.0-only") is None
+
+    def test_approved_lgpl_family_is_allowed_but_strong_copyleft_is_not(self) -> None:
+        review = _load_license_review()
+        assert review._from_expression("LGPL-3.0") == "LGPL-3.0"
+        assert review._from_expression("LGPL-3.0-only") == "LGPL-3.0-only"
+        assert review._from_expression("LGPL-3.0-or-later") == (
+            "LGPL-3.0-or-later"
+        )
+        assert review._from_expression("LGPL-2.1-only") == "LGPL-2.1-only"
+        assert review._from_expression("LGPL-2.1-or-later") == (
+            "LGPL-2.1-or-later"
+        )
+        assert review._from_expression("LGPL-2.0-only") == "LGPL-2.0-only"
+        assert review._from_expression("LGPL-2.0-or-later") == (
+            "LGPL-2.0-or-later"
+        )
+        assert review._from_expression("MIT AND LGPL-3.0-only") == (
+            "LGPL-3.0-only | MIT"
+        )
+        assert review._from_expression("GPL-3.0-only") is None
+        assert review._from_expression("AGPL-3.0-only") is None
+        assert review._from_expression("MIT AND GPL-3.0-only") is None
+
+    def test_lgpl_text_detection_is_exact_and_conservative(self) -> None:
+        review = _load_license_review()
+        assert (
+            review._from_text(
+                "GNU LESSER GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007"
+            )
+            == "LGPL-3.0"
+        )
+        assert (
+            review._from_text(
+                "GNU LESSER GENERAL PUBLIC LICENSE\nVersion 2.1, February 1999"
+            )
+            == "LGPL-2.1"
+        )
+        assert (
+            review._from_text(
+                "GNU LIBRARY GENERAL PUBLIC LICENSE\nVersion 2, June 1991"
+            )
+            == "LGPL-2.0"
+        )
+        assert review._from_text("GNU General Public License v3") is None
+        assert review._from_text("AGPL-3.0-or-later") is None
+
+    def test_psycopg_distributions_classify_from_exact_spdx_metadata(self) -> None:
+        review = _load_license_review()
+        for name in ("psycopg", "psycopg-binary"):
+            dist = _FakeDist(
+                name,
+                "3.3.6",
+                **{"License-Expression": "LGPL-3.0-only"},
+            )
+            assert review.classify(dist) == "LGPL-3.0-only"
 
     def test_moomoo_closure_license_metadata_is_classified_conservatively(self) -> None:
         review = _load_license_review()
@@ -385,7 +446,6 @@ class TestAuditLock:
         "unresolved",
         [
             "GPL-3.0-only",
-            "LGPL-3.0-or-later",
             "Apache-2.0 WITH Commons-Clause",
             "Proprietary",
         ],
