@@ -422,3 +422,26 @@ base128606191,20000docsGit remain. Previous196006forecast +190000phase =>
 128992197 within original129MB; all measured failed roots/old peaks remain.
 This is explicit forecast-reserve reconciliation, not a claim the original
 subcaps passed, or an increased allowance. Full-C/Git attribution stays pending.
+
+Ruling: metadata preflight measured193087B before any request or remote effect.
+Allocate7000B of remaining7803B within original129000000B cumulative cap to
+this phase (197000B maximum), without consuming another reserve or increasing
+the overall allowance. Earlier failed32KB/60KB roots remain retained/FAILED.
+
+Ruling: updated-image real job retains existing DB/fixture, failed jobs and
+exact owned cleanup. Read configuration from NEW operation with exact measured
+snapshot, rather than old dataset-phase pins. Carry changed scripts compressed
+and capture only exclusive fixed diagnostic schema/stage/code. Allocate50000B
+ONCE from prior wire350000 docs/Git forecast (300000remain); base128556191,
+phase247000, original129MB cumulative unchanged. No runtime gate is bypassed.
+
+Ruling: actual same-image/policy _read rejects root os.open with EACCES at
+entry line88; exact1041B binding independently decodes. Use O_PATH only for
+root traversal anchors in entry and observer (4opens); subsequent reads/walks
+retain O_RDONLY/nofollow/signatures/hash checks. No policy/native permission
+change or new architecture. Linux RED4 then focusedGREEN4; initial added walk
+fixture used non-Python name and correctly refused, corrected fixture retained.
+Before full affected entry check and new immutable image/job, spend200000B
+ONCE from prior remaining300000wire docs/Git forecast (100000remain).
+base128356191/phase447000 plus previous196006 stays128999197<=129MB.
+Every earlier failed peak and actual code/test output remains accounted.

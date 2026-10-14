@@ -85,7 +85,8 @@ def _read(path: Path, limit: int) -> bytes:
         parts = path.parts
         if not path.is_absolute() or not parts or parts[0] != "/" or ".." in parts:
             raise ValueError
-        parent = os.open("/", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        # The anchor is used for openat/stat traversal, never root enumeration.
+        parent = os.open("/", os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW)
         descriptors.append(parent)
         held: list[tuple[int, str, tuple[int, ...]]] = []
         for part in parts[1:-1]:

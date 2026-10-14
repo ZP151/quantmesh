@@ -1,5 +1,33 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current actual entry binding read diagnosis and narrow repair
+
+Verifier measured new immutable source image7a285551/source2503f2b, rawOCI
+fc530c80, manifest9c84def8/inventorya0c63719 and current81distribution/162file
+metadata73662c8f/runtime1c636754. Passive own CID removed/Engine6images0containers;
+not numerical admission. Real job74f0450a/c570acdb/9.276s reuses original PG,
+credentials/fixture, current parent/live binding crosses GO and entry diagnostic
+records binding rejection. TLSv1.3/SCRAM/ASGI submit/claim pass; no report/artifact.
+All own container/policy/artifact mount/postmaster/port cleanup pass. Exact1041B
+binding independently decodes. Read-only same-image/policy diagnostic5158ce07
+proves PermissionError errno13 at entry _read line88 opening root O_RDONLY.
+An initial diagnostic inspect24,213B exceeded16KB transport: never-started own
+CIDe4f0439d reconciled/removed, exact loaded policy removed, failure retained;
+corrected bounded128KB inspect captures actual read refusal, own cleanup passes.
+No new numerical job was created by either diagnostic.
+
+Planner ruling: root traversal anchors use Linux O_PATH instead of root read;
+actual following directory/file reads, nofollow/stat identity/hash/association
+checks unchanged, no AppArmor/seccomp/native whitelist/authority expansion.
+Implementer changes4root opens in entry/provenance. Linux actual test RED4,
+focused GREEN4 then whole entry41pass0.27s;158144B native full fixture retained.
+Initial source_walk fixture non-Python name correctly refused; fixed test uses
+source.py, retains failure log. Source-only tests are not Worker acceptance.
+Existing failed32KB/60KB fixtures and original caps unchanged. Forecast reserve
+allocations in current plan keep129MB total/5GB cloud, all historical peaks and
+whole-C pending. Next updated committed immutable source image/current exact
+metadata/pins→one real numerical job→report/page/reopen, not old proof reruns.
+
 ## Current pinned entry diagnostic source checkpoint
 
 Root implements existing frozen diagnosis scope; independent fast read-only

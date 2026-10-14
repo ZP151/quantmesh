@@ -8,6 +8,15 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Actual updated-image job74f0450a rejects at binding stage. Exact binding decodes;
+actual same-policy read gets EACCES opening root O_RDONLY (line88). Repair root
+traversal anchors only to O_PATH in entry/provenance, without relaxing policy or
+read/byte/nofollow checks. RED4/GREEN4/full Linux entry41pass0.27s,158144B retained.
+Next immutable updated source/current metadata→real job→report/page/reopen;
+no numerical/report qualification yet. Evidence output/0038-entry-stage/.
+Original129MB stays via explicit unspent forecast reserve allocation; prior
+FAILED subcaps/peaks retained. Whole A ACTIVE; no auth/new fee is needed now.
+
 Entry diagnostic source ready (not yet in actual image): fixed <=256B
 schema1/stage/code/qualifiedfalse under own no-follow0700 /output/exclusive0600;
 no exception/input text, IO failure cannot mask existing stderr/exit2. RED3,

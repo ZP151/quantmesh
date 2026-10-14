@@ -74,7 +74,8 @@ def _read(path: Path, limit: int, *, allow_empty: bool = False) -> tuple[bytes, 
         parts = path.parts
         if not path.is_absolute() or not parts or parts[0] != "/" or ".." in parts:
             _fail()
-        current = os.open("/", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        # Root is a traversal anchor; actual directory/file reads stay checked.
+        current = os.open("/", os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW)
         fds.append(current)
         directories: list[tuple[int, str, tuple[int, ...]]] = []
         for name in parts[1:-1]:
@@ -136,7 +137,7 @@ def _directory_exists(path: Path) -> bool:
     try:
         if not path.is_absolute() or ".." in path.parts:
             return False
-        current = os.open("/", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        current = os.open("/", os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW)
         descriptors.append(current)
         for name in path.parts[1:]:
             following = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=current)
@@ -223,7 +224,7 @@ def _source_set(source_root: Path) -> dict[str, str]:
         parts = path.parts
         if not path.is_absolute() or not parts or parts[0] != "/" or ".." in parts:
             _fail()
-        current = os.open("/", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        current = os.open("/", os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW)
         descriptors.append(current)
         for name in parts[1:]:
             check_deadline()

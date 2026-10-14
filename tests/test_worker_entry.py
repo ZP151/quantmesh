@@ -29,6 +29,40 @@ def _entry_module():
     return module
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux traversal-only root handle")
+@pytest.mark.parametrize(
+    "operation", ["entry_read", "observer_read", "directory_exists", "source_walk"]
+)
+def test_source_traversal_does_not_require_root_directory_read(tmp_path, monkeypatch, operation):
+    package = tmp_path / "quantmesh"
+    package.mkdir()
+    target = package / "source.py"
+    target.write_bytes(b"pinned source")
+    original_open = os.open
+    root_flags = []
+
+    def restricted_open(path, flags, *args, **kwargs):
+        if path == "/":
+            root_flags.append(flags)
+            if not flags & os.O_PATH:
+                raise PermissionError(13, "root directory read denied")
+            assert flags & os.O_DIRECTORY and flags & os.O_NOFOLLOW
+        return original_open(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(os, "open", restricted_open)
+    if operation == "entry_read":
+        assert _entry_module()._read(target, 128) == b"pinned source"
+    elif operation == "observer_read":
+        assert provenance._read(target, 128)[0] == b"pinned source"
+    elif operation == "directory_exists":
+        assert provenance._directory_exists(tmp_path)
+    else:
+        assert provenance._source_set(tmp_path) == {
+            "quantmesh/source.py": hashlib.sha256(b"pinned source").hexdigest()
+        }
+    assert root_flags
+
+
 @pytest.mark.skipif(sys.platform != "linux", reason="Linux owned diagnostic directory")
 @pytest.mark.parametrize("stage", ["source_preflight", "project_import", "compute"])
 def test_failed_entry_retains_only_bounded_stage_without_exception_text(

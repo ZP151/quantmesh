@@ -1,5 +1,20 @@
 # QuantMesh Domain Context
 
+## Current actual binding read obstruction — source repair verified
+
+Updated image7a285551/current metadata73662c8f succeeded; actual PG/Worker job
+74f0450a failed at fixed entry stage binding. Exact1041B parent binding decodes
+independently. Same-image/policy read diagnostic proves EACCES at root O_RDONLY
+open (entry line88), not malformed binding. Own CIDs/policy/PG/mount cleanup
+confirmed, failed attempt retained. Root anchors now O_PATH for traversal only
+in entry and observer; actual file/directory reads and nofollow/hash/identity
+checks unchanged, no kernel permission expansion. Linux RED4/GREEN4/fullentry
+41pass0.27s; full native fixture158144B retained. Next committed updated image/
+metadata/pins then one actual job/report. Numerical/UI/reopen remain UNPROVEN.
+PR175 draft370a745/required checks green; full A ACTIVE/no new fees/live=false.
+Resource reserve ruling in current plan preserves original129MB/whole-host5GB,
+all old failed subcaps and whole-C pending; no source-only success claim.
+
 ## Current entry failure diagnosis source checkpoint
 
 Existing evidence cannot identify inner rejection. Fixed stage/code-only <=256B
