@@ -13,13 +13,16 @@ import inspect
 import json
 import re
 import sqlite3
+import ssl
 import uuid
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Protocol
+from urllib.parse import parse_qs, unquote, urlsplit
 
+import pg8000.dbapi
 from pydantic import TypeAdapter, ValidationError
 
 from quantmesh.research.jobs import (
@@ -503,17 +506,69 @@ class _PostgresConnection:
         self.schema = schema
 
     def execute(self, statement: str, parameters=()):
-        statement = re.sub(r"\bjobs\b", f'"{self.schema}".jobs', statement)
-        statement = re.sub(r"\banalysis_outbox\b", f'"{self.schema}".analysis_outbox', statement)
+        statement = re.sub(
+            r"\b(FROM|JOIN|UPDATE|INTO)\s+(jobs|analysis_outbox)\b(?!\s*\.)",
+            lambda match: f'{match.group(1)} "{self.schema}".{match.group(2)}',
+            statement,
+            flags=re.IGNORECASE,
+        )
+        statement = re.sub(
+            r"\bDELETE\s+FROM\s+(jobs|analysis_outbox)\b(?!\s*\.)",
+            lambda match: f'DELETE FROM "{self.schema}".{match.group(1)}',
+            statement,
+            flags=re.IGNORECASE,
+        )
         statement = re.sub(r"\browid\b", "queue_position", statement)
-        if statement.startswith(f'INSERT INTO "{self.schema}".jobs VALUES'):
+        if re.match(r'INSERT INTO "' + re.escape(self.schema) + r'"\.jobs VALUES', statement):
             statement = statement.replace(
                 f'INSERT INTO "{self.schema}".jobs VALUES',
                 f'INSERT INTO "{self.schema}".jobs '
                 "(job_id, operator_id, idempotency_key, payload) VALUES",
                 1,
             )
-        return self.connection.execute(statement.replace("?", "%s"), parameters)
+        cursor = self.connection.cursor()
+        cursor.execute(statement.replace("?", "%s"), parameters)
+        return cursor
+
+
+def _connect_postgres(dsn: str):
+    """Connect from an explicit PostgreSQL URI with verified TLS by default."""
+    if not isinstance(dsn, str):
+        raise ValueError("invalid PostgreSQL configuration")
+    parsed = urlsplit(dsn)
+    if (
+        parsed.scheme not in ("postgres", "postgresql")
+        or not parsed.username
+        or not parsed.hostname
+        or parsed.fragment
+        or not parsed.path.strip("/")
+    ):
+        raise ValueError("invalid PostgreSQL configuration")
+    options = parse_qs(parsed.query, keep_blank_values=True)
+    if set(options) - {"sslmode"}:
+        raise ValueError("invalid PostgreSQL configuration")
+    sslmode = options.get("sslmode", ["verify-full"])
+    if sslmode not in (["verify-full"], ["disable"]):
+        raise ValueError("invalid PostgreSQL TLS configuration")
+    if sslmode == ["disable"] and parsed.hostname.casefold() not in {
+        "localhost",
+        "127.0.0.1",
+        "::1",
+    }:
+        raise ValueError("invalid PostgreSQL TLS configuration")
+    try:
+        port = parsed.port or 5432
+    except ValueError:
+        raise ValueError("invalid PostgreSQL configuration") from None
+    return pg8000.dbapi.connect(
+        user=unquote(parsed.username),
+        password=unquote(parsed.password or ""),
+        host=parsed.hostname,
+        port=port,
+        database=unquote(parsed.path.lstrip("/")),
+        timeout=5,
+        ssl_context=False if sslmode == ["disable"] else ssl.create_default_context(),
+    )
 
 
 class PostgresJobStore(SQLiteJobStore):
@@ -533,11 +588,6 @@ class PostgresJobStore(SQLiteJobStore):
     ) -> None:
         if not isinstance(schema, str) or not re.fullmatch(r"[a-z][a-z0-9_]{0,62}", schema):
             raise ValueError("invalid PostgreSQL schema")
-        try:
-            import psycopg
-        except ImportError:
-            raise StoreUnavailable("PostgreSQL driver unavailable") from None
-
         self.dsn = dsn
         self.schema = schema
         self.lake_root = Path(lake_root) if lake_root is not None else settings.lake_root
@@ -545,9 +595,9 @@ class PostgresJobStore(SQLiteJobStore):
             Path(artifact_root) if artifact_root is not None else (self.lake_root / "artifacts")
         )
         self._clock = clock or (lambda: datetime.now(UTC))
-        self._psycopg = psycopg
+        self._pg8000 = pg8000
         try:
-            with psycopg.connect(dsn) as con:
+            with self._transaction() as con:
                 con.execute("SELECT pg_advisory_xact_lock(%s)", (self._LOCK_ID,))
                 con.execute(f'CREATE SCHEMA IF NOT EXISTS "{schema}"')
                 con.execute(
@@ -625,18 +675,19 @@ class PostgresJobStore(SQLiteJobStore):
                     )
         except StoreUnavailable:
             raise
-        except psycopg.Error:
+        except (pg8000.dbapi.Error, OSError):
             raise StoreUnavailable("job store unavailable") from None
 
     @contextmanager
     def _transaction(self):
         con = None
         try:
-            con = self._psycopg.connect(self.dsn)
-            con.execute("SELECT pg_advisory_xact_lock(%s)", (self._LOCK_ID,))
-            yield _PostgresConnection(con, self.schema)
+            con = _connect_postgres(self.dsn)
+            adapter = _PostgresConnection(con, self.schema)
+            adapter.execute("SELECT pg_advisory_xact_lock(%s)", (self._LOCK_ID,))
+            yield adapter
             con.commit()
-        except self._psycopg.Error:
+        except (pg8000.dbapi.Error, OSError):
             if con is not None:
                 con.rollback()
             raise StoreUnavailable("job store unavailable") from None

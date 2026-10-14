@@ -19,6 +19,36 @@ from tests.research_fixtures import pinned_lake
 POSTGRES_URL = os.environ.get("QUANTMESH_TEST_POSTGRES_URL")
 
 
+class _TestConnection:
+    """Small DB-API helper matching pg8000's cursor-based interface."""
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def execute(self, statement, parameters=()):
+        cursor = self.connection.cursor()
+        cursor.execute(statement, parameters)
+        return cursor
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        try:
+            if exc_type is None:
+                self.connection.commit()
+            else:
+                self.connection.rollback()
+        finally:
+            self.connection.close()
+
+
+def _test_connection():
+    from quantmesh.research.job_store import _connect_postgres
+
+    return _TestConnection(_connect_postgres(POSTGRES_URL))
+
+
 def test_postgres_backend_preserves_job_store_protocol():
     from quantmesh.research.job_store import PostgresJobStore
 
@@ -44,22 +74,20 @@ def test_postgres_backend_preserves_job_store_protocol():
 
 
 @pytest.mark.skipif(
-    not POSTGRES_URL or importlib.util.find_spec("psycopg") is None,
-    reason="set QUANTMESH_TEST_POSTGRES_URL and install psycopg to run PostgreSQL integration",
+    not POSTGRES_URL or importlib.util.find_spec("pg8000") is None,
+    reason="set QUANTMESH_TEST_POSTGRES_URL and install pg8000 to run PostgreSQL integration",
 )
 def test_postgres_store_migrates_v1_outbox_ordering_column(tmp_path):
     """A populated v1 database gains deterministic FIFO ordering before use."""
     from quantmesh.research.job_store import PostgresJobStore
 
     schema = "qm_legacy_" + re.sub("-", "", uuid.uuid4().hex)
-    import psycopg
-
     lake = tmp_path / "lake"
     pinned_lake(lake)
     artifact_root = tmp_path / "artifacts"
     now = datetime.now(UTC)
     try:
-        with psycopg.connect(POSTGRES_URL) as connection:
+        with _test_connection() as connection:
             connection.execute(f'CREATE SCHEMA "{schema}"')
         store = PostgresJobStore(
             POSTGRES_URL, schema=schema, lake_root=lake, artifact_root=artifact_root
@@ -93,7 +121,7 @@ def test_postgres_store_migrates_v1_outbox_ordering_column(tmp_path):
             jobs.append(job)
 
         # Reverse physical row insertion so migration must use enqueue timestamps.
-        with psycopg.connect(POSTGRES_URL) as connection:
+        with _test_connection() as connection:
             rows = connection.execute(
                 f'SELECT job_id, lease, attempt FROM "{schema}".analysis_outbox '
                 "ORDER BY queue_position"
@@ -123,7 +151,7 @@ def test_postgres_store_migrates_v1_outbox_ordering_column(tmp_path):
         assert migrated.claim_analysis("blocked", now + timedelta(seconds=30)) is None
         migrated._clock = lambda: now
         appended = migrated.submit("local", "legacy-after-migration", request_for(lake))
-        with psycopg.connect(POSTGRES_URL) as connection:
+        with _test_connection() as connection:
             version = connection.execute(
                 f'SELECT version FROM "{schema}".job_store_schema WHERE singleton=TRUE'
             ).fetchone()[0]
@@ -143,9 +171,12 @@ def test_postgres_store_migrates_v1_outbox_ordering_column(tmp_path):
                     (schema, table),
                 ).fetchall()
                 assert len(queue_indexes) == 1
+            job_ids = [job.job_id for job in jobs] + [appended.job_id]
+            placeholders = ", ".join("%s" for _ in job_ids)
             positions = connection.execute(
-                f'SELECT job_id, queue_position FROM "{schema}".jobs WHERE job_id = ANY(%s)',
-                ([job.job_id for job in jobs] + [appended.job_id],),
+                f'SELECT job_id, queue_position FROM "{schema}".jobs '
+                f"WHERE job_id IN ({placeholders})",
+                job_ids,
             ).fetchall()
             assert len({position for _, position in positions}) == 3
             assert dict(positions)[appended.job_id] > max(
@@ -153,21 +184,19 @@ def test_postgres_store_migrates_v1_outbox_ordering_column(tmp_path):
             )
             assert version == 2
     finally:
-        with psycopg.connect(POSTGRES_URL) as connection:
+        with _test_connection() as connection:
             connection.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')
 
 
 @pytest.mark.skipif(
-    not POSTGRES_URL or importlib.util.find_spec("psycopg") is None,
-    reason="set QUANTMESH_TEST_POSTGRES_URL and install psycopg to run PostgreSQL integration",
+    not POSTGRES_URL or importlib.util.find_spec("pg8000") is None,
+    reason="set QUANTMESH_TEST_POSTGRES_URL and install pg8000 to run PostgreSQL integration",
 )
 def test_postgres_store_reopens_jobs_reports_and_analysis_outbox(tmp_path):
     from quantmesh.research.job_store import PostgresJobStore
 
     schema = "qm_test_" + re.sub("-", "", uuid.uuid4().hex)
-    import psycopg
-
-    with psycopg.connect(POSTGRES_URL) as connection:
+    with _test_connection() as connection:
         connection.execute(f'CREATE SCHEMA "{schema}"')
 
     lake = tmp_path / "lake"
@@ -222,7 +251,7 @@ def test_postgres_store_reopens_jobs_reports_and_analysis_outbox(tmp_path):
         assert recovered and recovered.job_id == job.job_id
         assert recovered.attempt == lease.attempt + 1
         assert reopened.heartbeat_analysis(lease, now + timedelta(seconds=62)) is False
-        with psycopg.connect(POSTGRES_URL) as connection:
+        with _test_connection() as connection:
             for table in ("jobs", "analysis_outbox"):
                 queue_indexes = connection.execute(
                     "SELECT indexdef FROM pg_indexes WHERE schemaname=%s AND tablename=%s "
@@ -231,5 +260,5 @@ def test_postgres_store_reopens_jobs_reports_and_analysis_outbox(tmp_path):
                 ).fetchall()
                 assert len(queue_indexes) == 1
     finally:
-        with psycopg.connect(POSTGRES_URL) as connection:
+        with _test_connection() as connection:
             connection.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')

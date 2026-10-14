@@ -256,6 +256,7 @@ def _from_text(text: str) -> str | None:
 
 _CLASSIFIER_MAP = {
     "License :: OSI Approved :: MIT License": "MIT",
+    "License :: OSI Approved :: MIT No Attribution License (MIT-0)": "MIT-0",
     "License :: OSI Approved :: BSD License": "BSD-3-Clause",
     "License :: OSI Approved :: BSD-3-Clause": "BSD-3-Clause",
     "License :: OSI Approved :: BSD-2-Clause License": "BSD-2-Clause",

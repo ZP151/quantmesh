@@ -161,6 +161,12 @@ def test_security_workflow_remains_independent_and_dependency_scoped() -> None:
     assert ".github/workflows/security.yml" in paths
 
 
+def test_security_project_install_uses_the_frozen_python_audit_constraints() -> None:
+    workflow = _load_workflow("security.yml")
+    project_install = _steps(workflow["jobs"]["security"])["Install project environment"]["run"]
+    assert "-c requirements-audit.txt" in project_install
+
+
 def test_required_python_check_aggregates_all_gate_failures():
     workflow = _load_workflow("ci.yml")
     job = workflow["jobs"]["python"]

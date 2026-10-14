@@ -152,13 +152,11 @@ fails loudly otherwise.
 
 ## Decisions recorded on this surface
 
-- **Psycopg uses the approved weak-copyleft allowlist (ADR-0027)** — the
-  operator approved LGPL and specifically named comparable weak-copyleft
-  identifiers after the release gate rejected `psycopg[binary]`. The audited closure pins both `psycopg` and
-  `psycopg-binary`; the audit continues to reject GPL/AGPL, Commons Clause,
-  proprietary and unknown declarations. This is a dependency-policy decision,
-  not legal advice or a finding that every possible redistribution model
-  already satisfies LGPL obligations.
+- **LGPL classification remains enabled, but is not used by the PostgreSQL runtime** —
+  ADR-0027 retains the exact weak-copyleft classifier policy. The operator
+  selected BSD-licensed pg8000 for the root runtime, so `psycopg` and
+  `psycopg-binary` are absent from the release closure. Strong GPL/AGPL,
+  Commons Clause, proprietary and unknown declarations remain refused.
 
 - **vectorbt was removed from the `research` extra (ADR-0012
   decision 4)** — it ships as Apache-2.0 **with the Commons Clause**
@@ -290,6 +288,7 @@ Version numbers drift with the lock; the license key is the contract.
 | annotated-doc | 0.0.5 | MIT |
 | annotated-types | 0.8.0 | MIT |
 | anyio | 4.15.0 | MIT |
+| asn1crypto | 1.5.1 | MIT |
 | arch | 7.2.0 | BSD-2-Clause |
 | certifi | 2026.7.22 | MPL-2.0 (documented exception) |
 | cffi | 2.1.1 (Linux-only) | MIT-0 |
@@ -326,11 +325,10 @@ Version numbers drift with the lock; the license key is the contract.
 | packaging | 26.3 | Apache-2.0 | BSD-2-Clause |
 | pandas | 2.3.3 | BSD-3-Clause |
 | patsy | 1.0.3 | BSD-3-Clause |
+| pg8000 | 1.31.5 | BSD-3-Clause |
 | playwright | 1.62.0 | Apache-2.0 |
 | pluggy | 1.6.0 | MIT |
 | protobuf | 7.36.1 | BSD-3-Clause |
-| psycopg | 3.3.6 | LGPL-3.0-only |
-| psycopg-binary | 3.3.6 | LGPL-3.0-only |
 | pycparser | 3.0 (Linux-only) | BSD-3-Clause |
 | pycryptodome | 3.23.0 | BSD-3-Clause |
 | pydantic | 2.13.5 | MIT |
@@ -350,6 +348,7 @@ Version numbers drift with the lock; the license key is the contract.
 | ruff | 0.16.6 | MIT |
 | scikit-learn | 1.9.0 | BSD-3-Clause |
 | scipy | 1.18.1 | BSD-3-Clause |
+| scramp | 1.4.17 | MIT-0 |
 | SecretStorage | 3.5.0 (Linux-only) | BSD-3-Clause |
 | simplejson | 4.1.2 | MIT (documented exception) |
 | six | 1.17.0 | MIT |

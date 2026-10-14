@@ -2,6 +2,21 @@
 
 ## Current goal ACTIVE — synthetic Reader probe passed; full Worker remains gated
 
+## Current checkpoint — pg8000 migration ready for exact-head CI
+
+Operator chose pg8000 to preserve the existing license policy. The root
+PostgreSQL store and security install constraint are implemented; local
+affected tests are green and the disposable PostgreSQL 16 integration file
+passed 3/3. This worktree delta is not yet pushed or covered by exact-head CI.
+The security/license policy is unchanged.
+
+Full Worker is still gated: production Worker execution is not yet wired to a
+trusted parent binding, and owned-container inspection does not yet revalidate
+the complete command, mounts and security controls. Do not claim Worker
+admission. Server-owned market-data connectivity is also still unresolved; the
+known AWS staging path depends on the Windows OpenD reverse tunnel.
+
+
 ### Latest license-policy checkpoint — 2026-10-14
 
 The user approved admitting the LGPL-2.0/2.1/3.0 weak-copyleft family and

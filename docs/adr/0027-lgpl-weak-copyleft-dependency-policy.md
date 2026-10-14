@@ -74,8 +74,10 @@ allowlist. This ADR does not add LGPL packages to that closure.
 
 ## Consequences
 
-- Psycopg may remain the PostgreSQL driver, subject to exact closure pins and
-  passing the security gate.
+- The Python classifier continues to recognize the approved exact LGPL
+  identifiers. The root runtime later selected BSD-licensed pg8000 instead;
+  ADR-0028 records that driver choice. This does not remove or broaden the
+  classifier policy.
 - The audit parser admits only exact SPDX identifiers after maintainer review;
   the operator's standing authorization covers comparable weak/file-level
   copyleft identifiers, while GPL/AGPL, Commons Clause and unknown terms remain

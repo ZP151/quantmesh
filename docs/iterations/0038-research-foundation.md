@@ -1756,3 +1756,34 @@ applicable distribution, linking, modification, source-offer and network-use
 duties. This does not authorize wildcard matching or strong copyleft, Commons
 Clause, proprietary, ambiguous or unknown licenses. No further identifier was
 added in response to the standing authorization alone.
+
+
+### 2026-10-14 PostgreSQL driver policy-preserving replacement
+
+Following the operator's explicit choice, the root store now uses pg8000 1.31.5
+(BSD-3-Clause) rather than Psycopg/LGPL. The exact LGPL classifier remains
+unchanged and its strong-copyleft/unknown refusals remain in force. The
+synchronous `JobStore` contract, parameterized cursor execution, transaction
+commit/rollback/close, migration advisory lock, sanitized store errors, strict
+TLS-by-default PostgreSQL URI policy, FIFO migration, lease fencing, reports
+and outbox are retained. `security.yml` now installs the application with
+`requirements-audit.txt` constraints; a regression protects this against
+resolver drift.
+
+Verification: affected Windows tests 57 passed, 2 skipped, 1 existing NumPy
+warning; the PostgreSQL 16 disposable integration file separately passed 3/3
+on the migrated pg8000 implementation. Ruff and `git diff --check` pass;
+format check passes after formatting the new workflow assertion. A constrained
+pip dry-run resolved 73 platform packages with no unpinned/new or mismatched
+versions; the six absent rows are Linux-only pins. The fresh Windows license
+closure passed. The exact PR head used here predates this uncommitted delta,
+so GitHub CI does not yet cover it; the current checkpoint must be pushed for
+new exact-head CI. No AWS/service, production database, model-secret or trading
+action occurred.
+
+Worker parent binding remains incomplete: `LinuxWorkerExecution` still does
+not provide a parent-generated binding to the child, and owned-container inspect
+does not revalidate the full command/mount/security configuration. This remains
+a hard admission blocker and must be addressed before any production Worker
+claim. No market-data source has been moved to the research server: the current
+known staging route still depends on the Windows OpenD tunnel.
