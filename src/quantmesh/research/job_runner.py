@@ -456,7 +456,7 @@ def run_next_job(
         bundle = attempt / "bundle" if execution is not None else attempt
         output = attempt / "output" if execution is not None else attempt
         if execution is not None:
-            bundle.mkdir()
+            bundle.mkdir(mode=0o700)
         _snapshot(job, Path(inputs_root).absolute(), bundle / "inputs")
         runtime = (
             execution.runtime_fingerprint() if execution is not None else runtime_fingerprint()

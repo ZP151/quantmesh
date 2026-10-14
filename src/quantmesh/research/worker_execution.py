@@ -21,6 +21,7 @@ from quantmesh.research.linux_owned import (
     LinuxOwnedProcess,
     bootstrap_digest,
 )
+from quantmesh.research.worker_bundle import handoff_worker_bundle
 
 if TYPE_CHECKING:
     from quantmesh.research.job_store import JobStore
@@ -93,6 +94,7 @@ class LinuxWorkerExecution:
         prepare = getattr(self.admission, "prepare_parent_binding", None)
         if not callable(prepare):
             raise LinuxContainmentError("parent_binding_required")
+        handoff_worker_bundle(bundle, self.profile.uid, self.profile.gid)
         return LinuxOwnedProcess(
             self.profile,
             list(_COMMAND),

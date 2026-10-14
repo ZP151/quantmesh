@@ -1,5 +1,77 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current checkpoint — fixed entry and private bundle handoff; real image next
+
+PR175 exact370a745 CI38595332643 completed SUCCESS on2026-10-14 16:51:32UTC;
+all selected checks succeed, domain/browser are the classified skips. GitHub
+review threads are empty and human reviews are0. It remains DRAFT/unmerged,
+with Class C human/safety reviews and explicit operator acceptance outstanding.
+No gate was rerun and no staging deployment changed.
+
+Planner/Implementer: canonical standalone entry and source-only observer now
+accept the actual bootstrap's --binding-sha256 suffix, verify the external digest
+before binding decode/entry/observer/project reads, and reuse a freshly verified
+builder module for every source preflight. Foreign/substituted module registry
+entries are preserved/refused; only owned entries are removed. Component-held
+no-follow source reads track opened descriptors before association checks.
+The unchanged child call is preceded/followed by source revalidation. Source
+observation is explicitly neither native nor Engine/CID/image admission.
+
+Root separately integrates held metadata-only handoff of this attempt's private
+bundle before container creation. Files0400, nested dirs0500 and bundle root0700
+remain private under the configured UID/GID; root or identical caller UID/GID is
+required. No data is decoded, ancestor/borrowed sibling changed or broad access
+granted. The runner's execution bundle mkdir is now0700. Count4096 includes
+queued directories before further enumeration, with257MiB/10s bounds. Actual
+WSL same-UID evidence does not qualify AWS different-UID/container access.
+
+Reviewer: one bounded entry review finds an unbounded source traversal P2;
+streaming fd-relative depth-first scandir now counts every entry/root against
+20,000 nodes with30s deadline and held/named associations. Its two RED/GREEN
+counterexamples are retained; the second/final bounded review clears that item.
+Root then disproves its descriptor-cleanup conclusion with an actual Linux
+check: scandir leaves its supplied fd open, so the redundant caller dup leaked.
+Actual /proc/self/fd regression RED exposes two descriptors; passing the already
+held descriptor directly fixes success/refusal paths (GREEN2). This cleanup
+remediation is verified by root, not falsely described as a new agent approval.
+The separate bundle scoped review is clear; no third architecture review or
+revival of stopped a718900-line object-graph WIP.
+
+Verifier: final actual WSL entry29/bundle9/worker_execution11 combined suite
+passes49/18.53s, one existing NumPy warning. Earlier45/19.07s and47/19.26s raw
+logs and native phase roots remain, alongside all REDs. The runner reused one
+label; root restored the actual45-case log from its retained phase and saved
+the47-case pair separately. Ruff/format7files and native git diff--check pass.
+Evidence: output/0038-worker-fixed-entry/ and0038-worker-bundle-handoff/,
+especially entry-final.log/.exit, scan-fd-red/green and fixed-entry-resource.json.
+There is still NO successful complete _preflight orchestration or numerical
+entry run on a real3.12.15 image. Helper tests and callback guards are not that
+proof; the source-image plan carries the actual positive requirement forward.
+
+Actual read-only private SSH with ubuntu succeeds; Engine29.9.0 IDcfe71bf3
+and image093b4734 match,2images/0containers unchanged. AWS free159,850,516,480B
+and original delta1,580,736,512B remain within5GB/free50GB. No new image,
+environment, package, listener, key/model call, source cutover or Windows action.
+
+Resource receipt carries prior110,709,736B/all failures forward: current phase
+3,469,331 bytes within8,000,000B, cumulative 114,179,067 within
+123,000,000B; actual C free 167,104,495,616B. Initial agent resource estimate used
+MiB/WSL virtual free and is retained as non-authoritative; two early agent
+basetemps were automatically removed by pytest retention, their raw logs and
+conservative allocation remain. Resource-helper first KeyError is retained and
+corrected by selecting per-phase receipts. No explicit temp cleanup/baseline
+reset; original whole-C attribution PENDING and old SSE allocation FAILED.
+
+Next executable step is 2026-10-15-worker-source-image.md: seal the exact committed
+source/entry/bootstrap/81-lock/notice inputs and materialize an immutable OWNED
+source layer on the existing frozen numerical image after scoped recipe review.
+Then actual current-loader/kernel/noexec and independent parent/go admission,
+unchanged three baselines/direct reference/canonical repeat/6bps, real two-job
+60s lease/15s heartbeat/global2 owner-exit23/reclaim/report<=90s, private durable
+PG/backup recovery, advisory Agent/Eval and server-owned market acceptance all
+remain required. No opaque cache exception or default Linux activation.
+Goal ACTIVE; paper=true/live=false,168h NOT_REQUIRED; three-server cost unchanged.
+
 ## Current checkpoint — fixed-layout metadata cycle repaired; entry/parent pending
 
 The canonical fixed-entry layout places manifest.json and inventory.json inside
