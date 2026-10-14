@@ -29,6 +29,9 @@ PYTHON_PATH = "/usr/local/bin/python3"
 CLI_TIMEOUT = 5.0
 CLI_BYTES = 64 * 1024
 CONTROL_WRITE_SECONDS = 1.0
+# Public CPython build signer measured in the immutable configured image.
+# This exact public value is not a permission for arbitrary GPG credentials.
+_PUBLIC_PYTHON_SIGNER_ENV = "GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305"
 
 
 class LinuxContainmentError(RuntimeError):
@@ -83,10 +86,8 @@ def _matches_owned_container(
             and host["Devices"] in (None, [])
             and host["DeviceRequests"] in (None, [])
             and host["CgroupnsMode"] in (None, "private")
-            and all(
-                host.get(key) in (None, "")
-                for key in ("PidMode", "IpcMode", "UTSMode", "UsernsMode")
-            )
+            and host.get("IpcMode") in (None, "", "private")
+            and all(host.get(key) in (None, "") for key in ("PidMode", "UTSMode", "UsernsMode"))
             and host.get("Cgroup") in (None, "")
             and host.get("CgroupParent") in (None, "")
             and host.get("CgroupRules") in (None, [])
@@ -398,7 +399,8 @@ class LinuxExecutionProfile:
                 or image["Os"] != "linux"
                 or config.get("Volumes")
                 or any(
-                    e.split("=", 1)[0]
+                    e != _PUBLIC_PYTHON_SIGNER_ENV
+                    and e.split("=", 1)[0]
                     not in {
                         "PATH",
                         "LANG",

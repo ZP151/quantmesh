@@ -1,5 +1,21 @@
 # QuantMesh Domain Context
 
+## Latest parent integration checkpoint — profile compatibility corrected
+
+Root RED2 proves legal private IPC/public Python signer refusals. Parent-only
+linux_owned now accepts private IPC and exactly the measured public signer row;
+host/shareable/container IPC and unknown/private GPG variables remain refused.
+Affected owned/execution68pass30.54s and scoped independent review clear.
+Initial61pass/7fail was a local harness missing PYTHONPATH for child controllers;
+retained, fixed only the wrapper's existing source path, then full corrected run.
+No numerical image requalification or new packages. Software allocation2MB
+carries122,022,633B conservative frontier, cumulative129MB remains.
+Fresh ubuntu metadata-only intake finds target /home/ubuntu/qm-research paths
+absent and no8110/5432 listener. This describes only frozen service targets;
+no credential contents read, no assertion that all host software is absent.
+Concrete parent/service→PG→Worker→report/page/reopen is the next primary path.
+Full A ACTIVE; no server report or native activation is yet demonstrated.
+
 ## Latest checkpoint — actual source preflight passes after direct repair
 
 Committed fixe34d22f is materialized on the same frozen base/81lock, image

@@ -351,6 +351,8 @@ def test_inspect_refuses_container_control_or_mount_drift():
         ],
     }
     assert _matches_owned_container(doc, **expected)
+    private_ipc = {**doc, "HostConfig": {**doc["HostConfig"], "IpcMode": "private"}}
+    assert _matches_owned_container(private_ipc, **expected)
 
     empty_output_mode = {**doc, "Mounts": [*doc["Mounts"]]}
     empty_output_mode["Mounts"][1] = {**doc["Mounts"][1], "Mode": ""}
@@ -392,6 +394,8 @@ def test_inspect_refuses_container_control_or_mount_drift():
         ("DeviceRequests", [{"Capabilities": [["gpu"]]}]),
         ("PidMode", "host"),
         ("IpcMode", "host"),
+        ("IpcMode", "shareable"),
+        ("IpcMode", "container:" + "d" * 64),
     ):
         changed = {**doc, "HostConfig": {**doc["HostConfig"], field: wrong}}
         assert not _matches_owned_container(changed, **expected)
@@ -411,6 +415,38 @@ def test_explicit_bytecode_env_image_admission(profile, paths, engine, monkeypat
     monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", with_bytecode)
     process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
     process.close()
+
+
+@pytest.mark.parametrize(
+    "signer,accepted",
+    [
+        ("GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305", True),
+        ("GPG_KEY=unknown", False),
+        ("GPG_KEY", False),
+        ("GPG_PRIVATE_KEY=fixture", False),
+    ],
+)
+def test_image_allows_only_exact_measured_public_python_signer(
+    profile, engine, monkeypatch, signer, accepted
+):
+    # Actual immutable Python image carries this public build signer. An
+    # arbitrary GPG value, private-key variable or job input cannot admit it.
+    original = profile.invoke
+
+    def changed(self, args):
+        result = original(args)
+        if args[:2] == ["image", "inspect"]:
+            value = json.loads(result)
+            value[0]["Config"] = {"Env": ["PYTHONDONTWRITEBYTECODE=1", signer]}
+            return json.dumps(value)
+        return result
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", changed)
+    if accepted:
+        assert profile.prerequisites()["image_id"] == profile.image_id
+    else:
+        with pytest.raises(owned.LinuxContainmentError, match="^unqualified_runtime$"):
+            profile.prerequisites()
 
 
 @pytest.mark.parametrize("entry", ["owner", "native_sibling"])

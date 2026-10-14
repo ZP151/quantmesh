@@ -1,5 +1,26 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Parent-only profile compatibility checkpoint
+
+Planner keeps the same server baseline/report action, allocates2MB software/test
+bytes with completed source frontier122,022,633B conservatively carried inside
+129MB. Implementer accepts only actual private IPC and the exact public Python
+build-signer Env row; shared/host/container IPC and arbitrary/private GPG fields
+stay denied. No credentials, source verification or numerical gate relaxed.
+Verifier RED2/3pass, initial full run61pass/7fail (standalone child harness lacked
+project source path) retained; wrapper corrected to existing fixed PYTHONPATH,
+GREEN68pass30.54s. Ruff/format/diff pass. Reviewer worker_image_metadata_review
+scoped semantic/permission/test review clear; no closed native/source re-review.
+No actual parent profile invocation/native activation or source-image rebuild.
+Metadata-only ubuntu intake: target /home/ubuntu/qm-research runtime/config/
+credentials/lake/artifacts/attempts absent, no8110/5432 listener. No secret read
+or all-host absence claim. Need prepare that frozen private service/Worker/PG
+path, then actual one report/page/restart/reopen; no new user feature yet.
+Evidence output/0038-parent-profile-compat/{red,green,green-corrected}.log/.exit,
+*-resource.json and server-intake.json; all fixtures/harness failures retained.
+Source imagea0abb2dc/e34d22f/source-only acceptance stays sealed. Full A ACTIVE,
+paper=true/live=false, Class C human release gates unchanged/no extra fee.
+
 ## Latest checkpoint — source timeout resolved on actual server
 
 Root materializes exacte34d22f against the unchanged base093b4734/five layers and
