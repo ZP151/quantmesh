@@ -17,6 +17,7 @@ dependencies = [
   "numpy>=2,<3",
   "python-multipart>=0.0.9,<1",  # M9 Phase B: native workstation forms
   "pandas>=2.2,<3",
+  "psycopg[binary]>=3.2,<4",
   "pydantic>=2.9,<3",
   "pydantic-settings>=2.6,<3",
   "tzdata>=2024.1",  # zoneinfo on Windows reads the IANA database from tzdata

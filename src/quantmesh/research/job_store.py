@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+import re
 import sqlite3
 import uuid
 from collections.abc import Callable, Iterator
@@ -492,3 +493,112 @@ class SQLiteJobStore:
             )
             con.execute("DELETE FROM analysis_outbox WHERE job_id=?", (job.job_id,))
             return True
+
+
+class _PostgresConnection:
+    """Small SQL compatibility layer for the shared, validated store operations."""
+
+    def __init__(self, connection, schema: str) -> None:
+        self.connection = connection
+        self.schema = schema
+
+    def execute(self, statement: str, parameters=()):
+        statement = re.sub(r"\bjobs\b", f'"{self.schema}".jobs', statement)
+        statement = re.sub(r"\banalysis_outbox\b", f'"{self.schema}".analysis_outbox', statement)
+        statement = re.sub(r"\browid\b", "queue_position", statement)
+        if statement.startswith(f'INSERT INTO "{self.schema}".jobs VALUES'):
+            statement = statement.replace(
+                f'INSERT INTO "{self.schema}".jobs VALUES',
+                f'INSERT INTO "{self.schema}".jobs '
+                "(job_id, operator_id, idempotency_key, payload) VALUES",
+                1,
+            )
+        return self.connection.execute(statement.replace("?", "%s"), parameters)
+
+
+class PostgresJobStore(SQLiteJobStore):
+    """PostgreSQL-backed durable job store implementing the existing contract."""
+
+    _SCHEMA_VERSION = 1
+    _LOCK_ID = 0x514D4A4F425354
+
+    def __init__(
+        self,
+        dsn: str,
+        *,
+        schema: str = "quantmesh",
+        lake_root: Path | None = None,
+        artifact_root: Path | None = None,
+        clock: Callable[[], datetime] | None = None,
+    ) -> None:
+        if not isinstance(schema, str) or not re.fullmatch(r"[a-z][a-z0-9_]{0,62}", schema):
+            raise ValueError("invalid PostgreSQL schema")
+        try:
+            import psycopg
+        except ImportError:
+            raise StoreUnavailable("PostgreSQL driver unavailable") from None
+
+        self.dsn = dsn
+        self.schema = schema
+        self.lake_root = Path(lake_root) if lake_root is not None else settings.lake_root
+        self.artifact_root = (
+            Path(artifact_root) if artifact_root is not None else (self.lake_root / "artifacts")
+        )
+        self._clock = clock or (lambda: datetime.now(UTC))
+        self._psycopg = psycopg
+        try:
+            with psycopg.connect(dsn) as con:
+                con.execute("SELECT pg_advisory_xact_lock(%s)", (self._LOCK_ID,))
+                con.execute(f'CREATE SCHEMA IF NOT EXISTS "{schema}"')
+                con.execute(
+                    f'CREATE TABLE IF NOT EXISTS "{schema}".job_store_schema '
+                    "(singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (singleton), "
+                    "version INTEGER NOT NULL)"
+                )
+                con.execute(
+                    f'INSERT INTO "{schema}".job_store_schema(singleton, version) '
+                    "VALUES (TRUE, %s) ON CONFLICT (singleton) DO NOTHING",
+                    (self._SCHEMA_VERSION,),
+                )
+                row = con.execute(
+                    f'SELECT version FROM "{schema}".job_store_schema WHERE singleton=TRUE'
+                ).fetchone()
+                if row is None or row[0] != self._SCHEMA_VERSION:
+                    raise StoreUnavailable("unsupported job store schema")
+                con.execute(
+                    f'CREATE TABLE IF NOT EXISTS "{schema}".jobs ('
+                    "queue_position BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE, "
+                    "job_id TEXT PRIMARY KEY, operator_id TEXT NOT NULL, "
+                    "idempotency_key TEXT NOT NULL, payload TEXT NOT NULL, "
+                    "UNIQUE(operator_id, idempotency_key))"
+                )
+                con.execute(
+                    f'CREATE TABLE IF NOT EXISTS "{schema}".analysis_outbox ('
+                    "job_id TEXT PRIMARY KEY REFERENCES "
+                    f'"{schema}".jobs(job_id) ON DELETE CASCADE, '
+                    "lease TEXT, attempt INTEGER NOT NULL DEFAULT 0 CHECK (attempt >= 0))"
+                )
+        except StoreUnavailable:
+            raise
+        except psycopg.Error:
+            raise StoreUnavailable("job store unavailable") from None
+
+    @contextmanager
+    def _transaction(self):
+        con = None
+        try:
+            con = self._psycopg.connect(self.dsn)
+            con.execute("SELECT pg_advisory_xact_lock(%s)", (self._LOCK_ID,))
+            yield _PostgresConnection(con, self.schema)
+            con.commit()
+        except self._psycopg.Error:
+            if con is not None:
+                con.rollback()
+            raise StoreUnavailable("job store unavailable") from None
+        except BaseException:
+            if con is not None:
+                con.rollback()
+            raise
+        finally:
+            if con is not None:
+                con.close()
