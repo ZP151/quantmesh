@@ -1,8 +1,48 @@
 # Active Goal
 
-## Current goal ACTIVE — kernel policy prepared; full native Worker remains gated
+## Current checkpoint — PR #175 Linux fixture isolation correction
 
-## Current checkpoint — dependency branch and authenticated server access
+CI `38574294649` against `de06066` ended FAILED: 4924 passed, four failed,
+141 skipped. Research-service, fast, dependency-license and security gates
+passed. All four failures are in `test_worker_execution.py`: its module-shared
+SQLite queue retained the missing-binding test's deliberately unclaimed job;
+subsequent success/nonzero/OOM/cancellation cases claimed the previous job.
+Root reproduces three wrong-job failures plus one pass on the existing WSL
+runtime. Only immutable lake/report fixtures remain shared; each test now owns
+its queue, artifacts and fake Engine files. The entire Linux module passes
+12/12 with one existing NumPy warning. A bounded independent fixture review
+has no P1/P2; Ruff/format/diff checks pass. The correction is pushed as `f5e38ea804343c7f551be0dea364158e77057f6e`;
+exact-head CI `38584253826` is now running. The kernel dependency branch has
+merged this tested fixture correction normally, without force or parent-PR
+scope expansion.
+
+The first local RED launcher hit its 60s bound while using a C-mounted temp
+path; the exact test process is confirmed gone and the directory is retained.
+The corrected runner uses exclusive WSL-native temp roots and supervised
+150s process bounds. An affected-suite run passed49/skipped21 but failed one
+Git fingerprint check because the Windows worktree `.git` pointer is not a
+Linux path. Its diagnostics remain; the repeat binds the actual Git directory
+and worktree only in the test process environment, with no config mutation.
+The corrected affected-suite run passes50/skips21 with one existing NumPy
+warning (29.80s). Full Linux Worker module12 + affected50 =62 passing checks;
+Windows-only21 cases are skipped here, not claimed as new native proof.
+
+This fix changes no production job, schema, license, execution or trading
+behavior. The pg8000/no-LGPL decision remains. Kernel construction is separately
+committed at `674c1db` on `codex/0038-worker-kernel`, not in this PR candidate;
+it is not native enforcement or admission. Actual private SSH works as
+`ubuntu`; the earlier `zhou` denial needs no Tailnet ACL change. Full native
+Worker/report/PG service recovery, Agent/Eval and server-owned market sources
+remain unverified. Applicable human/CI gates remain; overall goal ACTIVE,
+paper=true/live=false, formal168h NOT_REQUIRED. No environment/image or paid
+resource added. Plan `docs/superpowers/plans/2026-10-14-worker-ci-isolation.md`
+reserves a new6MB phase/cumulative46MB ceiling while retaining all original
+baselines, failures, whole-C attribution pending and >=50GB free floor.
+Evidence: `output/0038-ci38574294649-diagnostics/`.
+
+## Historical kernel checkpoint — kernel policy prepared; full native Worker remains gated
+
+## Historical kernel checkpoint — dependency branch and authenticated server access
 
 PR #175 remains DRAFT at exact `de06066b7e1a3e56e74c2321a4eed71f1e331fe5`.
 Its CI `38574294649` is live: classify/research_service/fast pass, release is
@@ -38,7 +78,9 @@ Evidence is under `output/0038-worker-kernel-*`; the retained initial pytest
 harness failure is sanitized and its original hash/byte peak is recorded.
 Plan: `docs/superpowers/plans/2026-10-14-worker-kernel-boundary.md`.
 
-## Historical checkpoint — PR #175 review fixes prepared before de06066
+## Historical checkpoint before final CI isolation correction
+
+## Historical checkpoint — PR #175 review fixes before de06066
 
 Operator chose pg8000 to preserve the existing license policy. The root
 PostgreSQL store and security install constraint are pushed at `5b8fbe5`.

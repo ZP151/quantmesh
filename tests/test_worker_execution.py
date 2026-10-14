@@ -40,7 +40,7 @@ def api():
 
 
 @pytest.fixture(scope="module")
-def small_fixture(tmp_path_factory):
+def small_fixture_data(tmp_path_factory):
     # Lazy initialization keeps absent-feature RED from allocating fixture copies.
     values = []
 
@@ -49,7 +49,6 @@ def small_fixture(tmp_path_factory):
             root = tmp_path_factory.mktemp("construction")
             lake = root / "lake"
             pinned_lake(lake)
-            store = SQLiteJobStore(root / "jobs.sqlite", lake_root=lake)
             request = request_for(lake)
             report = run_baseline_report(
                 dataset="equities",
@@ -62,7 +61,23 @@ def small_fixture(tmp_path_factory):
                 commit=job_runner.get_strategy("momentum", "1").implementation_digest,
                 registry=ReportRegistry(root / "direct", lake_root=lake),
             )
-            values.append((root, lake, store, report))
+            values.append((lake, report))
+        return values[0]
+
+    return prepare
+
+
+@pytest.fixture
+def small_fixture(tmp_path, small_fixture_data):
+    # Reuse immutable numerical inputs only. Each case owns its queue and output:
+    # a deliberately unclaimed job must never become another case's next job.
+    values = []
+
+    def prepare():
+        if not values:
+            lake, report = small_fixture_data()
+            store = SQLiteJobStore(tmp_path / "jobs.sqlite", lake_root=lake)
+            values.append((tmp_path, lake, store, report))
         return values[0]
 
     return prepare
