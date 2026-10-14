@@ -19,8 +19,9 @@ vulnerabilities, and Ruff/diff checks pass. The added EPL/CDDL policy regression
 first failed as expected, then focused tests passed 5/5; Ruff and diff checks
 pass. The attempted full security suite used an incomplete ambient environment
 and stopped because psycopg was absent, so it is not a product-code failure or
-release result. The policy extension is not yet committed or covered by CI; no
-service/AWS change occurred.
+release result. The policy extension is committed and pushed to PR #175; fresh
+exact-head CI and review remain required before merge. No service/AWS change
+occurred.
 
 The user cleared the unfinished old goal and explicitly requested a new goal.
 The controller now reports ACTIVE for the remaining approved iteration0038 A
