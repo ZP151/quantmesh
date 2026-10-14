@@ -39,8 +39,22 @@ Interfaces: `build_kernel_policy(elf_files: dict[str, str], *, docker_default: b
 
 ## Task 2 — Native enforcement and independent parent integration
 
+Planner ruling after PR175 CI fixture repair: use a separate bounded 2MB
+metadata-intake reservation (cumulative ceiling48MB, previous measured upper
+43,877,260 bytes retained). Stream the existing immutable image through one
+never-started, nonce-owned container; hash ELF regular files and archive links,
+keep only <=512KiB metadata, never extract/materialize the image or load code.
+Export is capped at1.5GB read/90s; container limits/network none/no privileges,
+same Engine/image/counts before and after, removal by fullID/image/nonce. Original
+AWS5GB/free50GB limits remain. Review this finite recipe before actual use.
+Image content measurement is not native containment, admission or numerical
+qualification. Source intake pins the installed Docker29.9.0 commit's Apache2.0
+default profile (SHA785b2429); pure construction preserves37 original rules as
+43 restricted rules, but synthetic ELF placeholders still do not prove a real
+image closure. All earlier failures and separate kernel7MB/CI6MB budgets remain.
+
 - [ ] Freeze a bounded test-owned operator recipe using the existing immutable image and a new exclusive phase, including exact policy/ELF/source hashes, engine/kernel identity, limits, noexec task mounts, an independent surviving sibling and cleanup by exact ID/nonce.
-- [ ] Pin the exact upstream default seccomp profile compatible with the installed Engine; preserve its source/license and verify generated policy compatibility.
+- [x] Pin the exact upstream default seccomp profile compatible with the installed Engine; preserve its source/license and verify generated policy compatibility.
 - [ ] Under the applicable reviewed operational boundary, install only the uniquely named task profile; test actual mmap/mprotect/pkey/memfd/SHM denial, legitimate baseline imports and numerical execution. An unsupported import or mount is a retained failure and requires a planner correction, never an exemption.
 - [ ] Integrate the actual enforcing kernel policy and mount evidence into image admission, the fixed standalone entry and the immutable parent binding. Revalidate at pre-dispatch/post-compute/publication, then run existing full baseline/report and two-job reclaim acceptance.
 - [ ] Clean only exact owned test resources. Actual profile-load, noexec mount setup, independent parent, numerical equality, persistent reports and server user acceptance remain required before enabling a Linux Worker.
@@ -48,3 +62,5 @@ Interfaces: `build_kernel_policy(elf_files: dict[str, str], *, docker_default: b
 Primary references: [Docker AppArmor](https://docs.docker.com/engine/security/apparmor/), [Docker seccomp](https://docs.docker.com/engine/security/seccomp/), [AppArmor policy permissions](https://apparmor-documentation-c38b15.gitlab.io/documentation/in-depth/profiles/core-policy-reference/).
 
 Implementation ruling: the initial additive ERRNO draft is superseded before review or native use. The upstream [containerd default profile](https://github.com/containerd/containerd/blob/main/contrib/seccomp/seccomp_default.go) documents that broad ALLOW rules can make ERRNO branches unreachable, and runc can split repeated argument-index conditions as OR. Independent allowance-evaluation regressions first fail 10 cases against the draft, then pass 42 total checks after restrictive rule intersection. No loaded policy or runtime certificate relied on the draft.
+
+Actual metadata checkpoint: inventory8ec11903 / 886ELF / 633mapping paths; exact Engine default policy parses on AppArmor with skip-kernel-load. RLIMIT_AS parser allocation regression passes. First inherited-label refusal and exact never-started CID cleanup retained; no actual enforcing policy or Worker acceptance yet.

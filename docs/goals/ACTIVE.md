@@ -1,6 +1,40 @@
 # Active Goal
 
-## Current checkpoint — PR #175 Linux fixture isolation correction
+## Current kernel preparation — measured image, no enforcing profile loaded
+
+PR #175 is now `f5e38ea`; CI38584253826 is running after the Linux test-queue
+isolation correction (62 focused pass/21 Windows-only skip, narrow review clear).
+The kernel dependency branch merged that correction normally; no force push,
+production deployment or new image/environment is involved.
+
+Actual image093b4734 ELF intake passes8.20s: 13,683 archive members, 886 ELF
+regular files, 410,780,672 bytes streamed without extraction or retention of the
+image, and200,392 bytes of metadata. Inventory SHA8ec11903 binds the exact image
+and five rootfs layers. The never-started task container is removed; the same
+Engine returns to2images/0containers. Generated policy has633 measured ELF/alias
+mapping paths, exact Engine-default SHA785b2429, AppArmor SHA47195e0f, seccomp
+SHA187dadd8, combined SHA08acecf7. Actual AppArmor syntax parser exits0 with
+kernel-load/cache disabled. No enforcing profile, native Worker or parent
+certificate is claimed.
+
+Scoped operational review found a P2: tarfile can allocate oversized PAX/GNU
+metadata before path checks. Parser-only RLIMIT_AS256MiB now applies after the
+export CLI is spawned and is restored before cleanup. A focused real Linux
+allocation check refuses512MiB and restores prior limits. The first actual
+intake refused an inherited image installation label before any container
+start; exact ID/image/name/nonce and never-started state were independently
+read back, then that owned CID was removed. Its failure/source/cleanup receipts
+remain. The corrected recipe pins the inherited label as well as the new nonce.
+Original resource baselines/failures remain; metadata intake2MB/cumulative48MB
+ceiling, >=50GB free and original AWS5GB delta cap remain. Actual measured
+resource receipt is `output/0038-worker-kernel-native-preparation/resource.json`.
+
+Next: independently reviewed finite enforcing-profile/noexec-mount/syscall and
+legitimate-import witness, then fixed entry/independent parent and complete
+numerical/report/PG/service/Agent/Eval/server-source loops. Overall goal ACTIVE,
+paper=true/live=false and formal168h NOT_REQUIRED; no model key/call or spending.
+
+## Prior integration checkpoint — PR #175 Linux fixture isolation correction
 
 CI `38574294649` against `de06066` ended FAILED: 4924 passed, four failed,
 141 skipped. Research-service, fast, dependency-license and security gates
