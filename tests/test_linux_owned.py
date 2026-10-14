@@ -228,7 +228,7 @@ def test_kernel_blueprint_closes_writable_engine_mounts(profile, paths, engine, 
     configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
     process = owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
     create = next(args for args in engine[0] if args[0] == "create")
-    assert "--tmpfs=/dev:rw,noexec,nosuid,size=8m,mode=755" in create
+    assert "--tmpfs=/dev:rw,noexec,nosuid,size=8m,mode=755,dev" in create
     observed = process._inspect()
     mounts = {m["Destination"]: m for m in observed["Mounts"]}
     for name in ("hostname", "hosts", "resolv.conf"):

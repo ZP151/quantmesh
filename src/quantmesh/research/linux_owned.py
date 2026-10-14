@@ -40,7 +40,9 @@ _KERNEL_NETWORK = {
     "hosts": b"127.0.0.1 localhost\n",
     "resolv.conf": b"# network none\n",
 }
-_DEV_TMPFS = "rw,noexec,nosuid,size=8m,mode=755"
+# Docker tmpfs otherwise defaults to nodev, which prevents runc opening null.
+# Device I/O is required for stdio; execution remains forbidden on this mount.
+_DEV_TMPFS = "rw,noexec,nosuid,size=8m,mode=755,dev"
 
 
 class LinuxContainmentError(RuntimeError):

@@ -2,6 +2,19 @@
 
 ## Actual PG/registered job first call and direct Engine correction
 
+Latest corrected full callc4447602/12.535s still fails before GO; root-owned
+cleanup fixed and all own CID/policy/mount/PG/port releases confirmed. Direct
+same frozen controller diagnosis identifies nodev default on custom /dev tmpfs:
+runc cannot open /dev/null. Explicit dev preserves noexec/nosuid/fixed device
+AppArmor permissions; actual ready/768MB/CPU1/bootstrap139d628e then126 due to
+deliberate EOF/NO GO. Native RED/GREEN receipts retained; affected RED1/GREEN2
+mount/security cases/Ruff/diff green, two94B fixture roots retained. Not a report
+or full numerical qualification. Same opt-in blueprint repaired; no new native
+family/third structural review. Planner consumes previous forecast's explicit
+30000 future-call reserve once (949413=466281+303132+150000+30000), rebased
+carried128816191+new bytes; gross128846191 and all failures/150KB docsGit stay
+recorded, original129MB/5GB unchanged. Next exact committed same Worker job path.
+
 User report/page/reopen still unavailable. Planner preserves full A scope and
 same fixture/cost/isolation acceptance. Verifier ubuntu58004b5f startup failed:
 actual owned Unix socket path197B too long; diagnostic exit0 confirms process/

@@ -359,3 +359,17 @@ CID/policy/mount/process reconciliation; new idempotency key preserves failed jo
 100KB subcap FAILED136139B retained; original129MB cumulative still128982330B.
 Remaining local operational tail must forecast within original129MB and retain
 all earlier failures; no bulk tests/copies, new source/native family or fee.
+
+Actual wire-fixedc4447602/12.535s still fails before GO; all own container/policy/
+mount/PG/port cleanup now confirmed. Direct same controller diagnosis proves
+runc cannot open /dev/null: custom /dev tmpfs defaults nodev. Explicit dev keeps
+noexec/nosuid and existing AppArmor fixed-device rules; real controller returns
+ready/actual768MB/CPU1 and exact bootstrap SHA, then126 on deliberate stdin EOF
+(NO GO). Both diagnostic CIDs/controls cleaned. This repairs the same opt-in
+blueprint, not new arbitrary-device authority/native prerequisite. RED1/GREEN2
+affected mount/security cases/Ruff/diff pass, both94B native roots retained.
+The previous949413B forecast includes466281 native+303132 local+150000 docs/Git
+reserve+30000 future-call reserve. Consume that last30000 ONCE for this connected
+tail: base128816191 plus new actual bytes/tail forecast; retain original gross
+128846191 figure, all failed peaks and150000 docs/Git reserve. Original129MB
+maximum unchanged; no deletion/reset/omitted PG bytes or added cloud fee.
