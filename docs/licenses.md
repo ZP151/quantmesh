@@ -30,6 +30,13 @@ creates one).
   exact SPDX identifiers MPL-2.0, EPL-2.0 and CDDL-1.0 as the bounded
   weak-copyleft allowlist under
   [ADR-0027](adr/0027-lgpl-weak-copyleft-dependency-policy.md).
+- **Standing operator authorization**: maintainers may add a future exact
+  SPDX identifier without another per-license approval when official-text
+  review establishes comparable weak- or file/component-scoped copyleft.
+  Record the exact package/version, notice text, intended distribution form,
+  and applicable linking, modification, source-offer and network-use duties
+  before allowlisting it. The checker remains exact-ID based; this is not a
+  wildcard or an acceptance of unknown metadata.
 - **Refused**: GPL/AGPL, proprietary licenses, source-available restrictions
   such as the Commons Clause, and anything unclassified. An allowlist result
   is not a legal-compliance waiver: review the exact package, version and

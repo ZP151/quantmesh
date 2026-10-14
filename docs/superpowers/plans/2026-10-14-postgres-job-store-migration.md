@@ -24,7 +24,7 @@
 - Reopening a migrated store does not add duplicate indexes or reorder jobs.
 - Explicit legacy positions do not break future identity-generated positions.
 - Expired analysis leases are reclaimable with a higher attempt while stale lease owners remain fenced.
-- The Python closure admits only the specifically approved LGPL weak-copyleft family; GPL/AGPL, Commons Clause, proprietary and unknown licenses remain denied.
+- The Python closure admits the reviewed exact SPDX identifiers LGPL-2.0/2.1/3.0 (base, `-only`, `-or-later`), MPL-2.0, EPL-2.0 and CDDL-1.0. Maintainers may add another exact identifier without new operator approval only after official-text review confirms comparable weak/file-level copyleft and records package, version, notices, distribution and applicable source/relinking/network duties. GPL/AGPL, Commons Clause, proprietary and unknown licenses remain denied absent a separate decision.
 
 ---
 
@@ -53,7 +53,7 @@
 - Add: `docs/adr/0027-lgpl-weak-copyleft-dependency-policy.md`
 
 - [x] Add regression cases first and observe the LGPL acceptance and exact-text cases fail against the previous deny-all policy.
-- [x] Permit only LGPL-2.0, LGPL-2.1 and LGPL-3.0 base / `-only` / `-or-later` SPDX declarations; retain explicit GPL, AGPL and Commons-Clause rejection.
+- [x] Permit the operator-approved exact LGPL-2.0/2.1/3.0 base / `-only` / `-or-later`, MPL-2.0, EPL-2.0 and CDDL-1.0 SPDX identifiers; retain explicit GPL, AGPL and Commons-Clause rejection. The operator's standing authorization allows maintainers to add future comparable weak/file-level identifiers only after exact-text and package/distribution review; it does not create a wildcard.
 - [x] Pin the exact Psycopg distributions and versions identified by the failed fresh-release CI metadata; synchronize the Python closure inventory and dependency reuse record.
 - [x] Run the focused license suite and gate on a clean release environment; inspect the exact closure rows and confirm no unknown/untracked packages (72 Windows closure packages reviewed, six Linux-only pins tolerated, all 78 locked rows classified, no untracked packages).
 - [x] Run the focused PostgreSQL integration tests on disposable local PostgreSQL 16; retain paper-only and no-AWS scope (3 passed, 1 existing NumPy deprecation warning, 15.46s).

@@ -39,14 +39,20 @@ form review.
 The Python release closure may include LGPL-2.0, LGPL-2.1 and LGPL-3.0, whether
 the metadata uses the base version or its explicit SPDX `-only` or
 `-or-later` form. The operator also approved the same bounded treatment for the
-exact SPDX identifiers `MPL-2.0`, `EPL-2.0` and `CDDL-1.0`. No other version,
-license family or variant is inferred from a broad label such as “weak
-copyleft”; it remains refused until the operator and maintainers record an
-explicit exact-identifier decision. This allows comparable file/component-
-scoped copyleft terms without turning the classifier into a wildcard.
+exact SPDX identifiers `MPL-2.0`, `EPL-2.0` and `CDDL-1.0`.
 
-The audit continues to fail closed for GPL, AGPL, proprietary or unknown
-licenses, and source-available restrictions such as the Commons Clause.
+The operator preauthorizes maintainers to add another exact SPDX identifier
+without seeking a new per-license approval when review of its official text
+confirms it is a comparable weak- or file/component-scoped copyleft license.
+That review must record the exact package/version, notice text, linking and
+modification duties, network-use or source-offer duties where applicable, and
+the intended distribution form. The classifier remains an exact identifier
+allowlist, never a wildcard over SPDX families or free-form metadata. This
+standing authorization does not include strong whole-work copyleft families
+such as GPL/AGPL, source-available restrictions such as Commons Clause,
+proprietary terms, or unknown/ambiguous licenses; those remain refused pending
+a separate explicit decision and compatibility review.
+
 Compound declarations containing any refused member remain refused.
 
 SPDX exceptions are checked against their base-license pairing before the
@@ -70,8 +76,10 @@ allowlist. This ADR does not add LGPL packages to that closure.
 
 - Psycopg may remain the PostgreSQL driver, subject to exact closure pins and
   passing the security gate.
-- The audit parser admits only the exact weak-copyleft SPDX identifiers listed
-  above, explicitly distinguishes them from GPL/AGPL, and retains the refusal
-  for Commons Clause and unknown terms.
-- Future weak-copyleft identifiers or versions still require an explicit
-  policy decision; this approval does not open an unrestricted wildcard.
+- The audit parser admits only exact SPDX identifiers after maintainer review;
+  the operator's standing authorization covers comparable weak/file-level
+  copyleft identifiers, while GPL/AGPL, Commons Clause and unknown terms remain
+  refused unless a separate decision changes that boundary.
+- Future comparable weak/file-level copyleft identifiers require exact-text
+  and package review before allowlisting, but no additional operator approval;
+  this authorization does not open an unrestricted wildcard.
