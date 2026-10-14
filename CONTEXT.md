@@ -1,5 +1,79 @@
 # QuantMesh Domain Context
 
+## Current AWS restored; sealed data-file prerequisite passed — full admission pending
+
+2026-10-14 authentication is restored; actual private SSH commands and byte-exact
+receipt recovery work. Canonical schema observation and new sealed data-file
+prerequisite both pass on the existing093b4734 image. The latter executes
+02:23:51.757950093Z–02:23:54.879226758Z, exit0/noOOM/PID0; ownedCIDremoved,
+same Engine2images/0containers. All9 actual cases pass: original OHLCV after
+pathname replacement, exact sealed read, ordinary/sibling refusal, nonempty
+write/shrink/grow/chmod-X EPERM, stable identity/hash/seals. Flags11/seals47,
+UID10001/mode0400/nlink0,5775B fixtures; original AWS introduced1,401,495,552B
+and free160,029,757,440B. No baseline reset or new image/env/paid resource.
+
+The earlier ordinary FD candidate FAILED because DuckDB canonicalizes its
+allowlist to a mutable pathname; original and diagnostic receipts are preserved.
+No ordinary-path fallback was admitted. New bounded replacement design/source
+review is clear after the exact-transfer SHA pin P2 correction (RED3 altered
+sources accepted; GREEN4/noSSH). Scripted observer14 and saved actual checker
+pass separately; neither is represented as another native execution.
+Evidence: docs/evidence/research-foundation/aws-parquet-reader/README.md,
+SHA256.json, byte-exact raw receipts and check_saved.py. Actual sealed receipt
+50334ba2a5c2e0e8004442c983897d84a298c55c1e103579217934edaa32e84b
+and outputd1238efdfc097c1dc2da6bb55bc497172e75efcbfcee54f507cbd3a45244612f.
+
+The metadata/request guards in this candidate pass38/1warning/1.29s with a new
+workspace-owned JSON-only temp directory, plus Ruff/format checks. Old published
+e21fa2e CI38467367986 is terminalSUCCESS; it does not cover these new guards.
+Current candidate remains DRAFT/unmerged/undeployed until its own CI and human
+gates. Full job-wide G1/G3 reader, native/kernel/parent authority, actual private
+jobs/reports/Agent and server-source acceptance remain pending. NOEXEC_SEAL alone
+does not prove executable-mapping denial. Formal168h remains NOT_REQUIRED.
+Goal control still reports blocked from the old authentication event: this user
+turn continues useful work, but tools cannot change that control state to active.
+Historical checkpoints below preserve their point-in-time status, not current gates.
+
+## Historical checkpoint: Actual canonical schema and CI terminal success — full admission pending
+
+2026-10-14 actual AWS fixed-schema phase exits0 at01:35:30UTC (09:35Singapore):
+1155B/two rows/eight flat columns, UTC TIMESTAMP_MICROS/5DOUBLE/2UTF8. Actual
+Docker start01:35:26.451974258Z and finish01:35:29.440934071Z are serialized;
+noOOM/PID0, owned CID removed, same Engine2images/0containers. Raw receipt4803B
+SHAe603a5cb4c6c8389957849dba0351cbb6f897abe83d2dd71a5cffe8c1819a9cf
+and stdout2252B/SHA59dd1be1fddb39a37814a6f680cfa7ab61096ea55b1dbf5e43d95d918c4babde
+were recovered through actual private Tailnet SSHexit0, not the failed browser
+clipboard. Saved observer passes using ACTUAL serialized times, no replay labels.
+Evidence output/0038-canonical-parquet-schema/actual-checked.json. Prior probes,
+installation and failed clipboard/local-import evidence retained; none repeated.
+Actual whole original AWS introduced1,401,212,928B/free160,030,040,064B; no reset.
+
+Exact published e21fa2e CI38467367986 observed TERMINAL SUCCESS at21:54:47UTC Oct13:
+classify/research_service/release/fast/python success; browser/domain skipped.
+Observer76239 exits0 and is not restarted. New metadata/request38-test source
+is still uncommitted and NOT covered by that CI. No merge/deploy/service activation.
+AWS authentication blocker is resolved; actual Ubuntu and private SSH available.
+Full native/kernel/parent binding, G1/G3 across child reads, real private jobs/
+reports/Agent/server-source remain required. Full Option A is unfinished.
+
+
+## Historical checkpoint: New bounded manifest metadata/request leaf — unpublished
+
+Snapshot JSON limits and pre-copy request allocation guard are implemented:
+64 universe,4096 windows, matching declared counts and one complete test window.
+Metadata contract RED13/11; new request guard RED7, final JSON-only38passed/1warning
+0.96s. Prior Windows profile slice32passed/7POSIX-skipped/25deselected retained.
+Two distinct bounded read-only reviews are clear/no P1/P2; no full architecture
+review repeated. Evidence output/0038-bounded-manifest/checked-summary.json.
+Source remains uncommitted on e21fa2e; CI38467367986 observed still running.
+NEW fixed canonical two-row Parquet observation prepared:14scripted cases pass,
+bounded independent review clear. Actual AWS console expired; sign-in page held
+and user re-login requested. NO cloud schema execution or physical admission yet.
+Physical Parquet/native/kernel/parent chain and actual jobs/reports/Agent/source
+acceptance remain pending. No push, merge/deploy or service/trading activation.
+SAME baseline software cap explicitly24.8MB;200KB metadata and250KB fixed schema
+scope forecasts and ALL old failures/private unread crash ledgers are retained.
+
 ## Product vision
 
 QuantMesh is a local-first workstation for cross-market quantitative research, forecasting, paper trading and eventually guarded live execution. It combines equities, crypto venues and prediction markets without hiding venue-specific constraints.
@@ -16,7 +90,7 @@ stale app ingestion and qualifies server gateway migration. Formal168h is not
 required now, on-demand only. Historical failures remain unaccepted. Read
 ACTIVE and iteration0038 before interpreting the historical stage notes below.
 
-## Latest canonical policy PASS — CI release repair pending
+## Historical checkpoint: Latest canonical policy PASS — CI release repair pending
 
 Actual AWS order phase20:43:48UTC exits0 on reviewedbd7585d2/installed093b4734.
 Both constructor path refusals and four exact-path/configuration-lock cases pass;

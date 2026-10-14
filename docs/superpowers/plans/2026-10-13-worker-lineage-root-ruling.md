@@ -88,6 +88,65 @@ slot probe is represented as protection against it.
 
 ## Explicit cumulative software resource ruling
 
+2026-10-14 G1 held-file continuation: allocate NEW450,000B at most for held-FD
+prerequisite/operator/observer, reader source/tests, actual small fixtures, review,
+receipts and all Git/archive/integration copies. Explicitly raise this SAME
+software-only cumulative ceiling24.8MB to25.8MB, retaining original8,876,772B
+baseline and every earlier forecast/failure/crash ledger. No local native policy
+retry, environment/image/wheel/clone or extra paid resource. Native fixture bytes
+for this phase at most16KiB on the existing AWS image; original5GB/free50GB holds.
+First establish an actual exact /proc/self/fd/N read policy on a held no-follow
+file in a NEW exclusive canonical-parquet-fd-alias phase, binding the prior actual
+schema receipt e603a5cb. Exactly two canonical two-row shards: permit the one held
+FD alias, refuse its ordinary path and a sibling FD, and verify held FD identity
+before/after the bounded metadata/primitive queries. Prior passed phases stay
+untouched. After the original FD is held, replace its pathname with the different
+two-row sibling bytes; the FD route must still yield original OHLCV and original
+inode, not merely same-shape replacement data. Count all three retained files.
+Keep the reviewed fixed Docker controls and serialized actual timings.
+Only after this prerequisite succeeds freeze/integrate the job-wide reader using
+the observed flat physical/logical schema and row limits. Never fall back to
+mutable ordinary paths when an FD route is unsupported. This probe is NOT full
+native/kernel/image/Worker admission and does not activate any job/service.
+
+2026-10-14 canonical Parquet characterization continuation: NEW250,000B maximum
+for the fixed operator/child, scripted observer checks, review, raw receipts,
+bounded console proof and all copies. Explicitly raise the SAME software-only
+ceiling24.3MB to24.8MB; all original baselines/forecasts/failures stay counted.
+This ceiling includes the full250KB forecast PLUS already measured new copies;
+the initial24.6MB allocation left insufficient conservative room once the
+47,324B actual login-page proof and retained filename-import failure were counted.
+Increase is explicit before cloud execution; do not subtract either artifact.
+Reuse installed093b4734 only, one fresh canonical-parquet-schema phase, no new
+image/env/wheel/clone or paid resource. Actual AWS original5GB/free50GB remains.
+Generate exactly two synthetic UTC rows in the canonical eight-column Pandas
+frame shape, COPY under the already characterized disarmed exact-file policy,
+then collect bounded DESCRIBE/parquet_schema/parquet_file_metadata and two
+primitive rows. Keep -B-I-S, dumpable0, CORE0/CPU10s/FSIZE1MiB, 30s observer,
+512MiB container/16MiB noexec tmpfs/netnone/RO/capdrop. Bind the prior actual
+policy receipt; serialize actual Docker start/finish/exit/OOM/PID before cleanup.
+Review before actual execution. This is a fixed writer-schema observation,
+NOT arbitrary input admission or full G1/G3/native/kernel/Worker qualification.
+
+2026-10-14 metadata-only continuation: explicitly allocate at most200,000B
+for NEW bounded manifest source/tests/receipts/review/Git copies, on the SAME
+8,876,772B original baseline. Raise the software-only cumulative ceiling from
+24,000,000B to24,300,000B; retain every older forecast, failure and crash ledger.
+No new environment/image/wheel/clone, native execution or cloud purchase.
+This leaf limits the existing parent snapshot metadata decoder:256KiB JSON,
+depth16,32,768 decoded nodes,512-character strings,64 coverage entries and
+1,000,000 declared rows in total. Reject unknown manifest/coverage fields and
+coerced numeric scalars before Pydantic or any shard discovery/copy. Keep raw
+manifest digest and existing held-handle pin/re-pin behavior unchanged.
+Within the SAME200KB leaf budget, also bound the existing snapshot request to
+64 universe members and at most4096 walk-forward windows, calculated from the
+selected declared row counts before pin/copy without allocating test_starts.
+Require selected series declarations and aligned counts; child still must verify
+actual grids/counts/types. Public contracts, nine store methods and math stay fixed.
+Tests use small JSON values and reduced test limits; no Parquet content read.
+Passing this leaf is NOT G1/G3/full Worker admission: physical expanded rows,
+child-wide physical cardinality, native/kernel/parent binding and real jobs remain pending.
+
 2026-10-13 root remeasurement retains the original8,876,772B baseline and accepted
 construction upper9,829,943B. Owned test growth1,117,310B, additional root264,933B,
 public corrective archive258,718B and retained conservative300,000B source/Git
@@ -115,3 +174,62 @@ RED/GREEN and one new two-axis review cover only this new foundation. Existing
 completed cases are repeated only if a new defect or changed dependency warrants
 it. Full Option A remains ACTIVE; real numerical jobs, provider/Agent activation,
 production PG/report recovery/user loop and server-owned market cutover remain.
+
+## Held-FD actual failure and diagnostic delta — 2026-10-14
+
+Original ae9b3b74 phase exits1 at02:08:05UTC with AssertionError before
+metadata reads, step restricted_metadata_reader; noOOM/PID0/ownedCIDremoved,
+same Engine2images/0containers. Byte-exact failed receipt/output remain.
+Whole originalAWSintroduced1,401,307,136B/free160,029,945,856B; no reset.
+NEW canonical-parquet-fd-alias-diagnostic phase adds only safe fixed settings
+and finer step output. AST-normalized assertions, settings and queries remain
+identical; no fix or allowlist relaxation, no ordinary-path fallback.
+Source1eb01ada is frozen before one actual diagnostic execution on093b4734.
+This is within the same450KB/25.8MB scope; all failed source and receipts stay
+counted, no new image/env/fee. Native/kernel/Worker admission stays false.
+
+## Root replacement ruling after actual FD canonicalization failure
+
+Diagnostic1eb01ada exits1 at02:14:25UTC specifically reader_exact_allowlist:
+expected/proc/self/fd/3, actual/tmp/qm-parquet-fd-alias/original-held.parquet.
+Actual receipt1921B/SHA0d7413602013379fd61e40475d5361fad96348232396fdd8544a25cb1a53a61a;
+stdout773B/SHA13992c5f6228d9762922e1b1dbf8a92c5fb35451a2adac8e9e5062036c9ba475.
+No metadata query reached. Both failed phases/source/receipts stay unchanged.
+OwnedCIDremoved/noOOM/PID0/sameEngine2images0containers; originalAWSintroduced
+1,401,393,152B/free160,029,859,840B. SourceDuckDB1.5.5 config.cpp753-805
+canonicalizes the allowlist; local_file_system.cpp1342-1415 resolves nearest
+existing proc parent. No weaker ordinary-path fallback or admitted reader.
+
+NEW sealed anonymous data-file prerequisite replaces this failed candidate,
+under the SAME450KB/25.8MB scope. Nonexecute MFD flags11 and kernel seals
+WRITE/GROW/SHRINK/EXEC/SEAL freeze copied bounded bytes; use canonical actual
+PID/FD alias, held throughout connection, never a mutable dataset pathname.
+Design review is bounded clear, unsupported behavior refuses. New plan
+2026-10-14-sealed-fixture-prerequisite.md pins all9 actual cases and native
+claims remain false. Scripted missing-observerRED and14GREEN are software only.
+Fixed operator93da1b0e23739B and child071fd24b10432B await bounded source review
+and resource preflight before one new exclusive canonical-parquet-sealed-fd phase.
+Full executable mapping/seccomp/kernel/image/Worker qualification is separate.
+
+## Actual replacement accepted; job-wide reader is next
+
+New sealed phase source93da1b0e executes once at02:23:51.757950093Z–
+02:23:54.879226758Z, all9cases/exit0. Actual flags11/seals47/UID10001/
+mode0400/nlink0,original bytes/hash unchanged after pathname replacement;
+write/shrink/grow/chmod-X EPERM and ordinary/sibling refusals proven.
+Frozen transfer pin P2 resolved before execution with real guard RED3/GREEN4.
+Raw actual receipt50334ba2a5c2e0e8004442c983897d84a298c55c1e103579217934edaa32e84b
+and stdoutd1238efdfc097c1dc2da6bb55bc497172e75efcbfcee54f507cbd3a45244612f
+are recovered via privateSSHexit0 and independently revalidated from ACTUAL
+serialized times. Both failed predecessor phases remain. No container/OOM:
+ownedCIDremoved/PID0/sameEngine2images0containers. OriginalAWSintroduced
+1,401,495,552B/free160,029,757,440B. Durable archive is
+docs/evidence/research-foundation/aws-parquet-reader; same450KB/25.8MB
+software resource scope includes its complete byte copies/Git reserve.
+
+This establishes only the immutable input-read prerequisite. Next freeze one
+job-wide reader covering child verify, coverage/bar reads, baselines/report
+registry repins with actual row/schema/cumulative/request limits, keeping public
+store/strategy/math contracts unchanged. Full executable mmap/mprotect/kernel
+closure and trusted parent binding remain separate mandatory gates. No production
+Worker/image admission, services or actual jobs are activated by this receipt.
