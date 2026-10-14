@@ -8,6 +8,15 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Independent source preparation now progressed: FIXED target is application
+staging machinea6645ff4, not research. Actual11111 owner tailscaled1923; native
+OpenD/11112/dedicated account absent. Fixed reviewed vendor archive466932458B
+actually prepared on staging (fresh ubuntu0700 root), SHA72eaa6e4/CLIe05b901d/
+x86-64 match,9.515s. This is archive/ELF metadata only: no extraction/vendor
+execution/account/unit/permit/login/SDK/cutover. Remains blocked for activation
+by existing ClassC/CI/operator-window gates. Primary registered-profile decision
+still pending; no repeated unchanged Worker task. Full A ACTIVE/no new fees.
+
 PRIMARY: actual jobb96376a1/imagef5585dda/source6b2d979 identifies native cache
 _cython_3_2_9 rejected by existing general loaded-module origin gate at compute.
 No report/artifact/UI/reopen. Proposed registered fixture sandbox boundary in

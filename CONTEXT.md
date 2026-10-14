@@ -1,5 +1,19 @@
 # QuantMesh Domain Context
 
+## Latest independent source-host preparation (not service activation)
+
+Root actual staging SSH23:36UTC matches fixed machinea6645ff4;11111 belongs to
+tailscaled1923, native OpenD/11112/dedicated account/three managed paths absent.
+The stage plan targets this application host, NOT research host; neither source
+cutover nor installation follows from research-host absence alone. Same fixed
+reviewed466932458B vendor archive now actually prepared in fresh ubuntu0700 root
+on staging,23:39UTC/9.515s; SHA72eaa6e4 and sole43,128,840B CLI SHAe05b901d/ELF
+x86-64 match. No extraction/execution/user/unit/permit/authentication/SDK/source
+change, vendor signature not claimed. Source-host delta466944000B<=750MB/free
+140614557696B; independent from unchanged research5GB baseline. Primary profile
+decision still pending/full A ACTIVE. Evidence output/0038-worker-origin/opend-
+artifact-response.json and staging-source-intake/ownership.json.
+
 ## Current precise runtime obstruction; proposed profile awaiting user decision
 
 Actual fixed entry job b96376a1/imagef5585dda/source6b2d979 emits compute/

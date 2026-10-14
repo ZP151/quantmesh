@@ -535,3 +535,18 @@ Ruling: origin-job preflight791026B exceeds787KB BEFORE any request/SSH.
 Retain frozen failed caller and consume20000 ONCE from remaining60000wire
 docs/Git forecast (40000remain), base127996191/phase807000. Original129MB stays;
 new frozen corrected caller is counted in preflight. No actual old byte is omitted.
+
+Ruling, independent source preparation: fixed staging target (machine SHA
+a6645ff4) actually has only tailscaled1923 on11111, no native OpenD/11112 and
+no dedicated gateway account; research host is NOT the fixed stage target.
+Prepare only the already-reviewed fixed466932458B archive in a fresh ubuntu
+0700 owned directory on staging, exclusive0600 file and verified SHA72eaa6e4;
+stream-read only pinned ELF OpenD member metadata/hash (e05b901d), no extraction,
+execution, dependency install, vendor XML/state/log, OS account, unit, permit,
+authentication or source switch. This is artifact presence/platform metadata,
+not native startup/SDK/privacy/admission. Observed141081513984B free; allocation
+750MB on that source host/free50GB floor, never resets research5GB baseline.
+Local caller/evidence <=12KB allocated from remaining40000wire docs/Git reserve
+(28000remain); base127984191/new phase819000 with all prior peaks/caps retained,
+original129MB unchanged. Target<=240s; retain partial file/receipt on failure and
+reconcile exact nonce before retry. No paid resource or market authority change.
