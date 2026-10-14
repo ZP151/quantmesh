@@ -1,5 +1,17 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Resumption gate: three consecutive genuine impasse turns
+
+Goal tool status BLOCKED after third current-state audit. Full Option A scope
+is preserved, not completed or replaced by preparation. Primary: user decision
+on the written registered-fixture sandbox proposal remains absent. Existing
+native cache refusal stays intact; no repeated Worker runs. Independent safe
+preparation is exhausted; real OpenD requires Class C reviews/CI/operator window.
+Fresh PR175 remains draft/head370a745/zero human reviews, existing checks all
+terminal; no live handle justifies an automatic wait. Resume after actual human
+decision or release-state change; reset blocked audit for that resumed run.
+Evidence output/0038-worker-origin/impasse-audit.json; a9be4c0 preparation retained.
+
 ## Actual static OpenD dependency inspection — activation still pending
 
 Read-only staging SSH as ubuntu, 2026-10-14 23:46:59 UTC, exit0/6.026s.

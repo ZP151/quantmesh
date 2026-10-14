@@ -1,10 +1,22 @@
 # Active Goal — iteration0038 Option A
 
-Status ACTIVE. Deliver the original full A scope: PR175 gates, real Linux
+Status BLOCKED (2026-10-15 Singapore). Deliver the original full A scope: PR175 gates, real Linux
 Worker/Reader→numerical report and reopen, durable private PostgreSQL/jobs/
 backup recovery, advisory Agent/Eval and PC-independent server market feeds.
 paper=true/live=false;168h NOT_REQUIRED; login/outage/capacity drills on demand.
 Three approved AWS resources retained; no added cost or permission expansion.
+
+## Resumption gate: three consecutive genuine impasse turns
+
+Goal tool status BLOCKED after third current-state audit. Full Option A scope
+is preserved, not completed or replaced by preparation. Primary: user decision
+on the written registered-fixture sandbox proposal remains absent. Existing
+native cache refusal stays intact; no repeated Worker runs. Independent safe
+preparation is exhausted; real OpenD requires Class C reviews/CI/operator window.
+Fresh PR175 remains draft/head370a745/zero human reviews, existing checks all
+terminal; no live handle justifies an automatic wait. Resume after actual human
+decision or release-state change; reset blocked audit for that resumed run.
+Evidence output/0038-worker-origin/impasse-audit.json; a9be4c0 preparation retained.
 
 ## Actual static OpenD dependency inspection — activation still pending
 
