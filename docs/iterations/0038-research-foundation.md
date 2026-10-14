@@ -1,5 +1,44 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current checkpoint — actual loaded-policy bytes verified; complete Worker pending
+
+PR #175 final370a745 CI38595332643 is running; old f5e38ea CI38584253826 failed
+4928pass/141skip/two SSE startup errors. Its direct EADDRINUSE cause is corrected
+with actual server.started readiness, real-server RED and whole-module36pass,
+bounded final review clear. Initial port guard/shutdown/SSE assertions remain.
+8052d5b run38595242357 was superseded/cancelled, never rerun. The kernel branch
+normally merged the parent fix asca7856e, retaining both docs checkpoints.
+
+On the original private research server via ubuntu, the0.774s byte witness
+loads only the previously absent task profile from the pinned compiled binary.
+Kernel sysfs raw_data SHA and raw_sha256 both exactly matchd5a828a5; actual
+bytes62,633, modeenforce, ABIv5. Executed sourceSHA5ad15506, receiptSHA8c5a0c3f;
+root independent saved checker exits0. Exact profile removal succeeds; actual
+Engine/image/counts are unchanged at2images/0containers. No container/service/
+job/image/environment/default policy/credential/source/Windows action occurred.
+Evidence: `output/0038-worker-kernel-native-preparation/policy-byte-witness.json`,
+`policy-byte-witness-checked.json`, `.exit`, `policy-byte-final-resource.json`.
+This supplements the earlier successful native syscall/import witness; neither
+is a complete fixed-entry/independent-parent or registered backtest certificate.
+
+One scoped operational review finds only a P2: original AWS5GB delta was checked
+after mutation. Actual isolated recipe branch RED proves premature phase-create;
+GREEN refuses before any host operation after the same guard is added before
+creation/load. The first missing-json test-harness failure stays retained. No
+third architecture review or repeat of the successful native syscall run.
+
+Resource checkpoint carries107,145,664B forward; conservative double-count of
+diagnostic archive is intentional. Current2MB phase/cumulative112MB pass per
+receipt; the earlier SSE8MB allocation gate remains FAILED/retained. Original
+whole-C attribution pending and all baselines/failures remain, no temp deletion.
+Actual AWS free159,850,549,248B/delta1,580,703,744B stay within original bounds.
+
+Next: materialize immutable standalone entry/source/inventory for the actual
+fixed -B -I -S command, independently admit its image and parent binding, then
+complete numerical report/reclaim, private PostgreSQL/backup, actual Agent/Eval
+and server-owned market-source user loops. No Linux Worker default is enabled.
+Goal ACTIVE, paper=true/live=false,168h NOT_REQUIRED and three-server cost unchanged.
+
 ## Current checkpoint — PR #175 SSE fixture correction verified
 
 Exact f5e38ea CI38584253826 failed with4928 passed/141 skipped and two SSE
