@@ -22,8 +22,10 @@ source/docs/git reserve. Preserve failures/baselines and >=50GB free.
   poll `started`; leave initial port guard and join unchanged.
 - [x] Run the entire live-router module including real SSE, bounded timeout150s,
   fresh native WSL basetemp, no cache/new environment/full-suite repeat.
-- [ ] Ruff/format/diff, one bounded reviewer, resource receipt and mirrored
+- [x] Ruff/format/diff, one bounded reviewer, resource receipt and mirrored
   CONTEXT/ACTIVE/iteration checkpoint; commit/push exact parent branch.
 - [ ] Observe new exact-head CI; no failed-run rerun, merge/deploy before gates.
 
 Actual RED1fail on second bind; GREEN36pass/15.13s including both SSE cases. Actual GREENroot58,316,685B exceeds8MB phase allocation: retain FAILED gate. Before checkpoint work reserve2MB/cumulative112MB, carry all prior bytes/failures/whole-C pending forward, no cleanup/reset/paid change.
+
+Final bounded review clear/no P1/P2; all Ruff/format/diff checks pass.

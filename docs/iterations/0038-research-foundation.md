@@ -14,7 +14,8 @@ live-router GREEN passes36 tests/15.13s, including both actual HTTP SSE flows
 and the readiness HTTP200 regression;6 existing warnings. Failed CI archive,
 full pytest log, RED/GREEN and original failures remain under
 `output/0038-ci38584253826-diagnostics/`. No old-CI rerun or local full suite.
-Narrow final review and new exact-head CI are required before merge.
+Narrow independent final review has no P1/P2; Ruff/format/diff pass.
+New exact-head CI is required before merge.
 
 Actual full-module DuckDB fixtures occupy58,316,685 bytes; RED800,815 bytes.
 The8MB software-phase allocation gate FAILED and remains recorded as failed,
