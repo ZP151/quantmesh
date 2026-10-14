@@ -1658,3 +1658,35 @@ The format-only immutable parent binding parser is implemented in `worker_build.
 ### 2026-10-14 committed-reader continuation
 
 Commit58da85c9ee7313e373b15fb953c9c67a05208414 integrates the sealed FixtureReader, G1/G3 read routing and format-only parent-binding parser into draft PR175. Combined focused suite:314 passed/62 skipped/1 existing dependency warning in13.12s. Ruff, format check and diff check pass; independent scoped review found no P1/P2/P3. Exact-head CI has not appeared in GitHub yet, so the old768 checks are superseded and do not certify these changes. This does not qualify the Linux Worker, parent admission, kernel boundary, full numerical job, PostgreSQL production recovery, Agent user flow or independent server market feed.
+
+### 2026-10-14 PostgreSQL durable-job-store continuation
+
+The approved narrow schema-v1 compatibility slice is implemented in the
+existing `PostgresJobStore`: schema version 2 adds unique FIFO positions for
+jobs and analysis outbox; migration orders legacy rows by persisted enqueue /
+completion time and stable job ID under the existing schema transaction lock.
+Identity columns accept explicit migrated values and continue allocating later
+positions. The focused PostgreSQL integration creates populated v1 data,
+reverses physical outbox rows, migrates, verifies FIFO claims, one index per
+table, and post-migration sequence growth. Store reopen also verifies an
+expired analysis lease increments its attempt and fences the stale owner.
+
+Final disposable local PostgreSQL 16 run of
+`tests/test_research_postgres_job_store.py`: 3 passed, 1 existing dependency
+warning, 3.22s, exit 0. Ruff and formatting checks on the two changed Python
+files pass. On resume, the focused test file without its prior disposable PG
+environment ran 1 passed / 2 skipped (psycopg and test DSN were absent); this
+did not replace the recorded actual-database run. Current `git diff --check`,
+Ruff and format checks pass. Independent scoped PostgreSQL store review round 2 found no
+actionable P1/P2/P3. The bounded execution plan is
+`docs/superpowers/plans/2026-10-14-postgres-job-store-migration.md`.
+
+The implementation commits `d11f091` and `86648c7` are local on
+`codex/0038-research-foundation`, ahead of PR #175's remote head
+`42ac0e0d695cea24b9b0e89c7937addef8c85e7b`; they are not yet covered by its
+CI. A broader Windows Python 3.13 run reported 400 passed, 68 skipped, and 6
+failures in existing runtime/admission checks that require Linux CPython 3.12;
+this is recorded as an environment limitation, not a green full-suite result.
+The local PostgreSQL result does not qualify PostgreSQL 18.6/TLS, production
+service recovery, backups, Worker-native admission, Agent/Eval, or market-source
+deployment. No AWS change, model call, secret configuration, or trade occurred.

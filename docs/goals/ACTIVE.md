@@ -88,6 +88,25 @@ binary's successful Linux handshake or market entitlement. See
 https://openapi.moomoo.com/moomoo-api-doc/en/opend/opend-cmd.html and
 https://openapi.moomoo.com/moomoo-api-doc/en/opend/opend-intro.html.
 
+### Latest bounded durable-store checkpoint — 2026-10-14
+
+PostgreSQL job/outbox schema v1→v2 FIFO migration and expired analysis-lease
+recovery are implemented locally in commits `d11f091` and `86648c7`; the
+disposable PostgreSQL 16 integration file passes 3 tests (1 dependency warning,
+3.22s), Ruff/format checks pass, and scoped review round 2 has no actionable
+P1/P2/P3. These commits are ahead of, and not included in, PR #175 remote head
+`42ac0e0`. Exact-head CI has not covered them; do not treat this local slice as
+merged/released or as production PostgreSQL qualification.
+
+The broader Windows Python 3.13 regression run was 400 passed / 68 skipped /
+6 failed; the failures are existing runtime/admission checks requiring Linux
+CPython 3.12, so native admission remains pending. The detailed bounded plan is
+`docs/superpowers/plans/2026-10-14-postgres-job-store-migration.md`. Next gate:
+integrate the commits into PR #175 and run exact-head CI while retaining the
+Linux-native, production database/recovery, Agent/Eval and server-owned market
+source gates. No service deploy, AWS resource change, model key/call, or trading
+action occurred.
+
 ## Historical checkpoint: AWS restored; sealed data-file prerequisite passed
 
 2026-10-14 authentication is restored; actual private SSH commands and byte-exact
