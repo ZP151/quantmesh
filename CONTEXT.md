@@ -1,5 +1,24 @@
 # QuantMesh Domain Context
 
+## Parent policy and actual offline service runtime checkpoint
+
+Paired operator AppArmor/seccomp fields now preserve the default profile and
+compare the entire requested create/inspect security option list. Root's real
+writerless-FIFO RED times out before O_NONBLOCK; correction GREEN and affected
+owned/execution78 pass31.49s. Scoped independent review finds no P1/P2. These
+fields configure policy; they do not prove current enforcing kernel admission.
+Actual ubuntu offline preparation reuses all81 fixed cached wheels in a fresh
+private CPython3.12.3 venv, no download/bytecode/pth/service; exit0 in7.592s.
+Exact never-started bootstrap CID removed, Engine5images/0containers. Initial
+missing optional Docker Labels KeyError and phase retained, then .get repair.
+Source/RECORD/license/runtime admission and server numerical report still open.
+Next exact source checkout and existing runtime admission, then concrete Worker
+parent to PG/report/page/reopen. Full A ACTIVE; paper=true/live=false/no extra fee.
+Evidence output/0038-parent-integration/{parent-venv-corrected,kernel-green}.
+Implementer1MB fixture cap FAILED at original1,198,755B peak; carry that peak,
+never claim deletion made it pass. Root4MB forecast3,055,260B within cumulative
+129MB; whole-C attribution remains PENDING. No old source/native proof repeated.
+
 ## Latest parent integration checkpoint — profile compatibility corrected
 
 Root RED2 proves legal private IPC/public Python signer refusals. Parent-only

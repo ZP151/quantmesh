@@ -134,3 +134,50 @@ PG→persistent report/page/reopen; no numerical/user-loop success is inferred.
 Source accounting forecast7,843,566B<=8MB/cumulative122,022,633B<=129MB includes
 all failures/new packet/native fixtures/reserves; future Worker allocation must
 remain explicit within original approved resources. Whole-C attribution pending.
+
+## Concrete parent wiring: next bounded implementation
+
+This executes approved kernel-boundary Task2, not a new isolation architecture.
+The existing LinuxExecutionProfile cannot currently request the already-built
+AppArmor/seccomp policy, so a concrete parent cannot verify the required actual
+security options. Add paired optional operator fields `apparmor_profile` and
+`seccomp_path`; defaults preserve construction-only compatibility. New concrete
+Worker admission must require both and verify current enforcing bytes/mounts;
+their mere presence never grants native qualification. Profile rejects a partial
+pair, unsafe profile name/path, missing/nonregular/linked seccomp file and any
+unknown security option. The seccomp file is fixed private configuration, never
+job JSON. Create retains NNP/caps/network/identity/budgets and appends only the
+exact paired options; every inspect/recheck compares the complete requested list.
+
+Implementer owns only linux_owned.py/test_linux_owned.py; root owns later
+concrete admission/service/config/fixtures, so no parallel file conflict. RED:
+configured policy options absent from create/inspect, partial/unsafe pair or
+security drift must refuse. GREEN: targeted existing-env owned/execution tests.
+Root verifies and one bounded correctness review, max2 rounds; no new native
+proof family, source rebuild, full-suite rerun, default policy change or startup.
+Software allocation4MB carries conservative123,931,604B, cumulative129MB stays;
+native WSL fixture receipts, errors, source/Git/evidence/reserves remain counted.
+Before actual service runtime preparation, measure reuse of the already cached
+81 wheels and existing PG prefix; no download/version replacement or production
+listener. One real baseline/PG/report/page/reopen remains the success criterion.
+
+Parent-runtime preparation is necessary for that existing service contract;
+the numerical child's /usr/local image is not the service's required non-root
+venv. Actual fresh reuse intake verifies all81 cached wheel hashes (88,992,477B
+compressed/285,093,456B expanded) and the existing PG18.6 binaries. Host CPython
+3.12.3 has venv but no pip/ensurepip. Prepare one exclusive0700 runtime phase
+under the existing owned numerical root: stdlib venv without pip; take public
+pip25.0.1 source/metadata only from the frozen base2ed6491b via a never-started
+fully identified container, then use it as transient install tooling outside
+the venv. Offline `--no-index/--require-hashes/--only-binary/--no-deps/--no-compile`
+installation reuses only the current hash-verified81 wheel cache and frozen lock.
+No new wheel/version/download, runtime pip install, source image or daemon.
+Retain bootstrap/archive/install receipts. Remove only exact never-started CID;
+never delete a directory or restart on an unknown result. Verify actual installed
+81 versions/RECORD bytes/license policy before any service admission.
+Cloud allocation1GB forecasts this preparation including later exact checkout,
+within the original whole-host5GB/free50GB floor (PG bytes remain carried);
+software/evidence remains inside the current4MB/cumulative129MB. This is private
+prepare-only material, not merged-tree service deployment or server-report proof.
+One bounded operational recipe review precedes execution; no third structural
+review of prior source/kernel work. Human release gates remain unchanged.

@@ -53,6 +53,7 @@ def _matches_owned_container(
     inputs: str,
     output: str,
     memory_mib: int,
+    security_options: list[str] | None = None,
 ) -> bool:
     """Check the actual Engine record against every control requested by this owner."""
     try:
@@ -93,7 +94,8 @@ def _matches_owned_container(
             and host.get("CgroupRules") in (None, [])
             and host["ReadonlyRootfs"] is True
             and host["CapDrop"] == ["ALL"]
-            and host["SecurityOpt"] == ["no-new-privileges:true"]
+            and host["SecurityOpt"]
+            == (security_options if security_options is not None else ["no-new-privileges:true"])
             and host["PidsLimit"] == 128
             and host["NanoCpus"] == 1_000_000_000
             and host["Memory"] == memory_mib * 1024 * 1024
@@ -230,6 +232,55 @@ def _safe_path(path: Path) -> Path:
     return path.resolve()
 
 
+def _private_seccomp_path(path: Path) -> Path:
+    """Validate one bounded private seccomp JSON file before engine use."""
+    fd = None
+    try:
+        if os.name != "posix" or not isinstance(path, Path):
+            raise ValueError
+        resolved = _safe_path(path)
+        fd = os.open(
+            resolved,
+            os.O_RDONLY
+            | os.O_NONBLOCK
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_CLOEXEC", 0),
+        )
+        info = os.fstat(fd)
+        mode = info.st_mode & 0o777
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or info.st_nlink != 1
+            or info.st_size <= 0
+            or info.st_size > 256 * 1024
+            or info.st_uid != os.geteuid()
+            or mode & 0o077
+            or not mode & 0o400
+            or mode & 0o111
+        ):
+            raise ValueError
+        raw = bytearray()
+        while len(raw) <= info.st_size:
+            chunk = os.read(fd, min(4096, info.st_size + 1 - len(raw)))
+            if not chunk:
+                break
+            raw.extend(chunk)
+        named = resolved.lstat()
+        if (
+            len(raw) != info.st_size
+            or _binding_stat_signature(info) != _binding_stat_signature(os.fstat(fd))
+            or _binding_stat_signature(info) != _binding_stat_signature(named)
+            or not isinstance(json.loads(raw), dict)
+        ):
+            raise ValueError
+        return resolved
+    except (OSError, TypeError, ValueError, RecursionError, LinuxContainmentError):
+        raise LinuxContainmentError("unsafe_seccomp_policy") from None
+    finally:
+        if fd is not None:
+            os.close(fd)
+
+
 class _Transport:
     """Bounded stdout/stderr draining, including a hung CLI or oversized response."""
 
@@ -330,6 +381,8 @@ class LinuxExecutionProfile:
     uid: int
     gid: int
     fixture_root: Path
+    apparmor_profile: str | None = None
+    seccomp_path: Path | None = None
 
     def __post_init__(self):
         allowed = self.endpoint in {
@@ -345,11 +398,44 @@ class LinuxExecutionProfile:
             or not 1 <= self.gid <= 65535
         ):
             raise LinuxContainmentError("unsafe_profile")
+        if (self.apparmor_profile is None) != (self.seccomp_path is None):
+            raise LinuxContainmentError("unsafe_profile")
+        if self.apparmor_profile is not None:
+            if not isinstance(self.apparmor_profile, str) or not re.fullmatch(
+                r"qm-worker-(?:[a-z0-9]|[a-z0-9][a-z0-9-]{0,52}[a-z0-9])",
+                self.apparmor_profile,
+            ):
+                raise LinuxContainmentError("unsafe_profile")
+            object.__setattr__(self, "seccomp_path", _private_seccomp_path(self.seccomp_path))
         for name in ("docker_cli", "fixture_root"):
             path = _safe_path(Path(getattr(self, name)))
             object.__setattr__(self, name, path)
         if not self.docker_cli.is_file() or not self.fixture_root.is_dir():
             raise LinuxContainmentError("missing_profile_path")
+
+    @property
+    def security_options(self) -> list[str]:
+        options = ["no-new-privileges:true"]
+        if self.apparmor_profile is not None and self.seccomp_path is not None:
+            options.extend(
+                (
+                    f"apparmor={self.apparmor_profile}",
+                    f"seccomp={self.seccomp_path}",
+                )
+            )
+        return options
+
+    @property
+    def security_opt_args(self) -> list[str]:
+        options = ["--security-opt=no-new-privileges"]
+        if self.apparmor_profile is not None and self.seccomp_path is not None:
+            options.extend(
+                (
+                    f"--security-opt=apparmor={self.apparmor_profile}",
+                    f"--security-opt=seccomp={self.seccomp_path}",
+                )
+            )
+        return options
 
     def cli_environment(self) -> dict[str, str]:
         # Absolute executable; no HOME, Docker context/config, proxy or credentials.
@@ -511,7 +597,7 @@ class LinuxOwnedProcess:
             "--network=none",
             "--read-only",
             "--cap-drop=ALL",
-            "--security-opt=no-new-privileges",
+            *profile.security_opt_args,
             "--pids-limit=128",
             "--cpus=1",
             f"--memory={budget.memory_mib}m",
@@ -620,6 +706,7 @@ class LinuxOwnedProcess:
                 inputs=str(self.inputs),
                 output=str(self.output),
                 memory_mib=self.budget.memory_mib,
+                security_options=self.profile.security_options,
             ):
                 raise ValueError
             expected_binding = (

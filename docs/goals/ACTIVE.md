@@ -8,6 +8,18 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Latest checkpoint: paired parent policy fields reviewed/affected78pass; actual
+server private venv preparation exit0/81 frozen packages/CPython3.12.3,
+no download/pth/bytecode/service. Evidence output/0038-parent-integration/.
+Source checkout/RECORD/license admission and concrete Worker remain pending;
+no server numerical report yet. Kernel configuration is not kernel admission.
+Preparation's optional Labels failure retained; real fixed call7.592s and own
+never-started cleanup/Engine5images0containers passed. Software4MB carries
+original implementer1MB-cap FAILED peak1,198,755B plus all root tests/errors;
+cumulative129MB and original whole-host5GB/free50GB remain, no extra fee.
+Next prepare exact source checkout in the same1GB cloud phase and invoke the
+existing runtime admission; then connect the registered fixture/PG/Worker/report.
+
 Users already have the local fixture submit/report/page/recovery loop. The
 research-server equivalent is NOT demonstrated. Priority1 is one registered
 momentum1 fixture job→PG→isolated compute→immutable report→page→same job/ref

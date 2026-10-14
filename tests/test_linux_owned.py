@@ -74,6 +74,13 @@ def _inspect_for_create(profile, create, nonce, state):
                 "RW": not readonly,
             }
         )
+    security_opts = [
+        option.split("=", 1)[1] for option in create if option.startswith("--security-opt=")
+    ]
+    security_opts = [
+        "no-new-privileges:true" if option == "no-new-privileges" else option
+        for option in security_opts
+    ]
     return {
         "Id": "b" * 64,
         "Image": profile.image_id,
@@ -99,7 +106,7 @@ def _inspect_for_create(profile, create, nonce, state):
             "CgroupRules": [],
             "ReadonlyRootfs": True,
             "CapDrop": ["ALL"],
-            "SecurityOpt": ["no-new-privileges:true"],
+            "SecurityOpt": security_opts,
             "PidsLimit": 128,
             "NanoCpus": 1_000_000_000,
             "Memory": memory * 1024 * 1024,
@@ -182,6 +189,158 @@ def test_fixed_creation_and_gated_start(profile, paths, engine):
     assert process.poll() == 7
     process.close()
     assert calls[-1] == ["rm", "--force", "b" * 64]
+
+
+def test_operator_security_policies_are_created_and_inspected(profile, paths, engine, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "seccomp.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    configured = replace(
+        profile,
+        apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+        seccomp_path=seccomp,
+    )
+    calls, _, _, _ = engine
+    process = owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+
+    create = next(args for args in calls if args[0] == "create")
+    assert "--security-opt=apparmor=qm-worker-9f7cdb6c9ce7b9c9516c" in create
+    assert f"--security-opt=seccomp={seccomp.resolve()}" in create
+    process.close()
+
+
+@pytest.mark.parametrize(
+    "apparmor,seccomp",
+    [
+        ("qm-worker-9f7cdb6c9ce7b9c9516c", None),
+        (None, Path("/tmp/seccomp.json")),
+        ("default", Path("/tmp/seccomp.json")),
+        ("qm-worker-invalid/name", Path("/tmp/seccomp.json")),
+        ("qm-worker-" + "a" * 64, Path("/tmp/seccomp.json")),
+    ],
+)
+def test_profile_rejects_partial_or_unsafe_operator_security_policy(
+    profile, engine, apparmor, seccomp
+):
+    from dataclasses import replace
+
+    calls, _, _, _ = engine
+    with pytest.raises(owned.LinuxContainmentError):
+        replace(profile, apparmor_profile=apparmor, seccomp_path=seccomp)
+    assert calls == []
+
+
+def test_profile_rejects_nonprivate_or_linked_seccomp_policy(profile, engine, tmp_path):
+    from dataclasses import replace
+
+    calls, _, _, _ = engine
+    seccomp = tmp_path / "seccomp.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o644)
+    with pytest.raises(owned.LinuxContainmentError):
+        replace(
+            profile,
+            apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+            seccomp_path=seccomp,
+        )
+    assert calls == []
+
+    seccomp.chmod(0o600)
+    linked = tmp_path / "linked.json"
+    try:
+        os.link(seccomp, linked)
+    except OSError:
+        pytest.skip("host cannot create hard links")
+    with pytest.raises(owned.LinuxContainmentError):
+        replace(
+            profile,
+            apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+            seccomp_path=linked,
+        )
+    assert calls == []
+
+
+def test_profile_rejects_symlink_oversized_and_nonfile_seccomp_policy(profile, engine, tmp_path):
+    from dataclasses import replace
+
+    calls, _, _, _ = engine
+    seccomp = tmp_path / "seccomp.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    linked = tmp_path / "symlink.json"
+    try:
+        linked.symlink_to(seccomp)
+    except OSError:
+        pytest.skip("host cannot create symlinks")
+    for path in (linked, tmp_path):
+        with pytest.raises(owned.LinuxContainmentError):
+            replace(
+                profile,
+                apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+                seccomp_path=path,
+            )
+    seccomp.write_bytes(b"x" * (256 * 1024 + 1))
+    with pytest.raises(owned.LinuxContainmentError):
+        replace(
+            profile,
+            apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+            seccomp_path=seccomp,
+        )
+    assert calls == []
+
+
+def test_inspect_recheck_refuses_security_policy_drift(
+    profile, paths, engine, tmp_path, monkeypatch
+):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "seccomp.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    configured = replace(
+        profile,
+        apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+        seccomp_path=seccomp,
+    )
+    calls, _, _, _ = engine
+    process = owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    original = owned.LinuxExecutionProfile.invoke
+
+    def drifted(self, args):
+        result = original(self, args)
+        if args[0] == "inspect":
+            doc = json.loads(result)
+            doc[0]["HostConfig"]["SecurityOpt"] = ["no-new-privileges:true"]
+            return json.dumps(doc)
+        return result
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", drifted)
+    with pytest.raises(owned.LinuxContainmentError, match="ownership_mismatch"):
+        process.poll()
+    process.close()
+    assert ["rm", "--force", "b" * 64] in calls
+
+
+@pytest.mark.skipif(os.name != "posix", reason="real FIFO must not block policy validation")
+def test_private_seccomp_fifo_refuses_without_waiting_for_a_writer(tmp_path):
+    fifo = tmp_path / "policy.fifo"
+    os.mkfifo(fifo, 0o600)
+    code = (
+        "import sys;from pathlib import Path;"
+        "from quantmesh.research.linux_owned import _private_seccomp_path,LinuxContainmentError;"
+        "\ntry:_private_seccomp_path(Path(sys.argv[1]))"
+        "\nexcept LinuxContainmentError:sys.exit(0)"
+        "\nraise SystemExit(3)"
+    )
+    result = subprocess.run(
+        [sys.executable, "-B", "-c", code, str(fifo)],
+        capture_output=True,
+        timeout=10,
+        check=False,
+    )
+    assert result.returncode == 0 and not result.stdout and not result.stderr
 
 
 def test_parent_binding_is_written_and_rechecked_before_exit(profile, paths, engine):

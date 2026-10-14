@@ -1,5 +1,36 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Parent policy wiring and actual offline server venv
+
+User server report remains pending; this checkpoint connects existing approved
+kernel configuration and prepares the service runtime for the same frozen loop.
+Planner paired fields/default-preserving/full inspect comparison,4MB software
+carry123,931,604B and original whole-host5GB/free50GB/1GB parent preparation.
+Implementer only linux_owned/test_linux_owned; root fixes actual FIFO blocking
+with O_NONBLOCK. Genuine FIFO RED retained; full affected78pass31.49s, Ruff,
+format/diff clean. Reviewer actual_reader_probe_author scoped no P1/P2, no old
+native/source review rerun. Presence of policies never proves current admission.
+Actual ubuntu reuse verifies81 cached wheel hashes/PG binaries. Recipe's two
+operational review rounds fix ambient venv-module and installed pth startup;
+real isolated startup counterexamples RED2/GREEN2 retained. First actual call
+781434f1 fails KeyError before CID/install because the actual base Config omits
+optional Labels. Metadata-only intake proves missing field; .get correction,
+all failure files/phase kept. New known-outcome call5cef44fc exit0/7.592s,
+private CPython3.12.3 venv81packages/pyc0/pth0, no new download/service/admission.
+Phase /home/ubuntu/quantmesh-numeric-materialization-4e00a5cecd0047fa9d5aa71c020a077a/parent-runtime-5cef44fc01704789bb10c0fb779dc68b.
+Exact never-started CIDea81b0a7 removed; final Engine5images/0containers,
+free159,488,442,368B. Linux -S reports /usr base prefix truthfully, not an active
+venv prefix. Full source/RECORD/license/runtime gate follows exact Git checkout.
+Software forecast includes original implementer1,198,755B peak (1MBcap FAILED,
+two redundant roots removed by implementer; no retroactive pass), root native
+1,050,575B/FIFO2,313B/startup646B/all local errors/logs/docs/Git/future reserve.
+No root deletion. Whole-C attribution PENDING; historic overrun remains failed.
+Evidence output/0038-parent-integration/ requests/executed recipe/digests,
+parent-venv(-corrected).json/.exit, metadata-failure-intake, kernel/fifo logs,
+startup-red/green and runtime-reuse-corrected. Next exact source checkout then
+concrete parent→private PG→numerical report/page/restart/reopen. Full A ACTIVE,
+paper=true/live=false; no PR175 merge/release/production service/market cutover.
+
 ## Parent-only profile compatibility checkpoint
 
 Planner keeps the same server baseline/report action, allocates2MB software/test
