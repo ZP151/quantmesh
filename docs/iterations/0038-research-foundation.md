@@ -1,5 +1,27 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Latest actual parent admission passes; numerical user loop remains open
+
+User ability FIRST: server numerical report/page/reopen is NOT available yet.
+Verifier ubuntu actual nonce596d0b93/4.767s exits0: providerfd29672 on qualified
+parentbaseeb880b2 binds currenta0abb2dc/rawOCI7c78d260/sourcee34d22f/81lock and
+actual rawmetadata, recomputing build84d9ce2f/dependencyc0324165/fullPython3.12.15/
+interpreter4dbf3143. Public verify matches CURRENT enforcing v5 AppArmor raw
+compiled bytes and fixed seccomp. Exact temporary profile removed. No container/
+SQL/service started; livePID/full Worker/native cache/PGreport/UI not certified.
+Failed7a6f/9d4d receipts and owncleanup preserved. Only required kernelAPI reader
+corrected: fixed namespace reference, held no-follow raw_data bank/revision/
+member resolution; input/OCI/task symlink refusals unchanged/no third proof family.
+Root missing-adapter/parser REDs/wholeprovider13pass3.63s/Ruff/diff green.
+Independent current-parent-independent-checked.json binds executed host,
+committed provider/config/nonce/tuple/cleanup and exits0. Phase949,413B<=1MB/
+cumulative128,846,191B<=129MB; original FAILED80KBfixture/16KBreply subcaps and
+prior1198755Bpeak remain retained. New native466,281B/local303,132B plus150KB
+docs/Git/30KBfuture; whole-C PENDING. Original cloud PG-inclusive delta
+2,855,387,136B<=5GB/free159,407,419,392B/no new fee. Planner next privatePG+
+whole numerical Worker→durable report→existing page/restart/reopen, reusing
+current provider/kernel contract. Full A ACTIVE; no repeat successful old phases.
+
 ## Current connected parent admission and kernel mounts
 
 First actual provider call7a6f1e5a/3.76s: snapshot/rawmetadata/fingerprint/current

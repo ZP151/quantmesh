@@ -311,3 +311,12 @@ the same kernel-reader mechanical correction, not a new native proof/design
 review or ordinary-link waiver. RED missing reference-parser→GREEN13/3.63s,
 Ruff/diff green; all failed receipts/owned cleanup retained. Next actual same
 connected call with corrected committed bytes; full Worker/PG/report still open.
+
+Actual corrected596d0b93/4.767s exits0: public current parent image/runtime/kernel
+verify passes, exact temporary profile removed. Existing parentbaseeb880b2,
+providercandidatefd29672 and childimagesourcee34d22f are explicitly distinct;
+no production tree/deployment claim. No container/SQL/service started, livePID/
+whole Worker/numerical/cache/PGreport/UI remain open. Independent saved checker
+exit0; phase949,413B/cumulative128,846,191B within unchanged1MB/129MB, all original
+failures/peaks retained. Next frozen privatePG→whole registered numerical job→
+durable report→existing page/reopen, not another successful parent/source rerun.

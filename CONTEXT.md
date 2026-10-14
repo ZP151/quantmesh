@@ -1,5 +1,22 @@
 # QuantMesh Domain Context
 
+## Latest actual current parent image/policy admission — passed, report still open
+
+User SSH correction honored: actual calls use ubuntu. Candidate provider
+fd29672 on qualified parentbaseeb880b2 verifies current imagea0abb2dc/rawOCI
+7c78d260/sourcee34d22f/81lock, recomputed five-field runtime and CURRENT loaded
+AppArmor compiled/seccomp bytes. Public verify passes4.767s, nonce596d0b93;
+exact temporary profile removed. No container/SQL/service started: live-process
+binding/full numerical Worker/report/page/reopen still UNPROVEN. Prior failed
+7a6f1e5a/9d4d3673 and owned cleanup preserved. Actual fixed kernel namespace/
+raw_data bank reader corrected; ordinary snapshot/OCI/task symlinks still refuse.
+Root RED/wholeprovider13pass3.63s/Ruff/diff green, no third structural/proof family.
+Independent output/0038-concrete-admission/current-parent-independent-checked.json
+exits0. Phase949,413B<=1MB/cumulative128,846,191B<=129MB; original FAILED subcaps
+retained, whole-C PENDING. Original PG-inclusive cloud delta2,855,387,136B<=5GB/
+free159,407,419,392B/no extra fee. Primary next privatePG→complete Worker/Reader
+numerical job→durable report→existing page/reopen. Full A ACTIVE/paper=true/live=false.
+
 ## Current metadata and connected kernel-mount checkpoint
 
 Concrete provider software now recomputes the existing five-field runtime from

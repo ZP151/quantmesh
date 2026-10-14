@@ -8,13 +8,20 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
-Concrete provider software closes two scoped P2 controls; R2 clear and root
-provider11pass5.49s/exit0/Ruff/diff green. Actual current provider/whole Worker
-still unproven. Next ONE connected parent admission call with existing qualified
-parent runtime/immutable image/current policy, then PG/report/page. SSH ubuntu.
-Real existing snapshot shape read succeeds but original16KBreply cap FAILED at
-45962B, retained/reconciled without retry. Op capture OS hard-limit RED/GREEN
-4738B retained/R2 clear. All original caps/errors carried, no extra fee.
+Actual current parent image/runtime/policy admission PASS: nonce596d0b93,
+4.767s, candidatefd29672/currenta0abb2dc/sourcee34d22f, recomputed fivefields,
+current loaded compiled bytes matched. Exact temporary profile removed; NO
+container/SQL/service started or live-process/whole numerical Worker/report
+accepted. Two earlier kernel-reference failures/cleanup retained; fixed kernel
+API reader repaired, ordinary-link refusals unchanged/no third proof family.
+Wholeprovider13pass3.63s/Ruff/diff green. Evidence output/0038-concrete-admission/
+current-parent-independent-checked.json. NEXT privatePG→complete registered
+Worker/Reader numerical job→immutable report→page→samejob/ref restart/reopen.
+SSH ubuntu. Phase949,413B<=1MB/cumulative128,846,191B<=129MB; original FAILED
+453,924B/45962B subcaps and earlier peaks retained, whole-C PENDING. Original
+PG-inclusive cloud delta2,855,387,136B<=5GB/free159,407,419,392B/no new fee.
+
+### Earlier metadata/software checkpoint (closed)
 
 Current real image metadata prepared/checked nonce79cf75d4,81distributions,
 162rawfiles, private snapshot; exact NEVER-startedCID removed/Engine5images0.
