@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from quantmesh.research.worker_build import parse_parent_binding
+from quantmesh.research.worker_build import ParentBindingContract, parse_parent_binding
 
 
 def _binding() -> dict[str, object]:
@@ -36,6 +36,25 @@ def test_parent_binding_contract_parses_exact_canonical_bytes_without_granting_q
     assert parsed.expected_prefix == "/usr/local"
     assert not hasattr(parsed, "qualified")
     assert not hasattr(parsed, "admitted")
+
+
+def test_parent_binding_encoder_emits_exact_validated_bytes_and_digest():
+    from quantmesh.research.worker_build import WorkerBuildRejected, encode_parent_binding
+
+    contract = ParentBindingContract(**_binding())
+
+    raw, digest = encode_parent_binding(contract)
+
+    assert raw == json.dumps(_binding(), sort_keys=True, separators=(",", ":")).encode()
+    assert digest == hashlib.sha256(raw).hexdigest()
+    assert parse_parent_binding(raw, expected_sha256=digest) == contract
+
+    with pytest.raises(WorkerBuildRejected, match="^worker binding rejected$"):
+        encode_parent_binding(object())
+
+    object.__setattr__(contract, "owner_nonce", "not-a-nonce")
+    with pytest.raises(WorkerBuildRejected, match="^worker binding rejected$"):
+        encode_parent_binding(contract)
 
 
 def _parse(raw: bytes):

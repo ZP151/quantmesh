@@ -132,6 +132,25 @@ def parse_parent_binding(raw: bytes, *, expected_sha256: str) -> ParentBindingCo
         raise WorkerBuildRejected("worker binding rejected") from None
 
 
+def encode_parent_binding(contract: ParentBindingContract) -> tuple[bytes, str]:
+    """Serialize a trusted parent binding, validating it before returning its pin.
+
+    The returned digest must be delivered through the fixed parent-to-controller
+    launch channel. Reading the digest back from the binding file would make the
+    check self-authenticating and is deliberately not supported here.
+    """
+    try:
+        if type(contract) is not ParentBindingContract:
+            raise ValueError
+        value = {key: getattr(contract, key) for key in _PARENT_BINDING_KEYS}
+        raw = _canonical(value)
+        digest = hashlib.sha256(raw).hexdigest()
+        parse_parent_binding(raw, expected_sha256=digest)
+        return raw, digest
+    except (AttributeError, KeyError, TypeError, ValueError, UnicodeError, RecursionError):
+        raise WorkerBuildRejected("worker binding rejected") from None
+
+
 def _canonical(value: object) -> bytes:
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False

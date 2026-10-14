@@ -29,6 +29,16 @@ release/python pass; browser/domain skipped. Observer70375 exits0 and is not
 restarted. The exact-head review-thread snapshot is empty. PR175 remains DRAFT;
 full runtime/actual service and applicable human release gates still remain.
 
+2026-10-14 parent-binding progress: added an uncommitted canonical encoder for
+the already-reviewed `ParentBindingContract`. It emits exact validated bytes and
+an independently supplied SHA-256 pin; it cannot mark a binding qualified.
+`test_worker_binding_contract.py` passes16/16 (one existing NumPy warning), and
+Ruff/format/diff checks pass. The test was observed failing first because the
+encoder was absent. Container creation callback, digest handoff over the
+bootstrap go gate, complete child revalidation, OCI/kernel proof and numerical
+Worker execution remain unimplemented and unqualified. The green PR checks do
+not include this worktree delta.
+
 New G1 primitive metadata/framing leaf is UNCOMMITTED: source08f637f1/tests920e461c,
 161passed/1warning/1.04s, Ruff/format clear. Root verifies its behavior against
 actual saved two-row schema and remaining-row1 rejection. It does not decode

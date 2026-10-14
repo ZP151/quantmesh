@@ -43,6 +43,14 @@ release/python pass; browser/domain skipped. Observer70375 exits0 and is not
 restarted. The exact-head review-thread snapshot is empty. PR175 remains DRAFT;
 full runtime/actual service and applicable human release gates still remain.
 
+Current parent-binding progress (2026-10-14): the existing strict parser now has
+a small uncommitted canonical encoder that emits the validated binding bytes and
+their independent SHA-256. Its focused contract tests pass16/16, Ruff/format and
+diff checks pass. This is protocol construction only: no container callback,
+go-gate digest handoff, child revalidation boundaries, independent OCI/kernel
+proof, numerical Worker execution, or CI coverage is established yet. PR175's
+green checks still describe its committed head, not this worktree delta.
+
 New G1 primitive metadata/framing leaf is UNCOMMITTED: source08f637f1/tests920e461c,
 161passed/1warning/1.04s, Ruff/format clear. Root verifies its behavior against
 actual saved two-row schema and remaining-row1 rejection. It does not decode
