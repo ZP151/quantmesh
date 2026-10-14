@@ -1,5 +1,21 @@
 # QuantMesh Domain Context
 
+## Latest checkpoint — actual source preflight passes after direct repair
+
+Committed fixe34d22f is materialized on the same frozen base/81lock, image
+a0abb2dc/rawOCI7c78d260; real manifestc6f86654/inventory0a620766 verified. The
+actual public source preflight now passes positive and four refusal cases in
+6.913s, noOOM/exit0/exact owned cleanup. This resolves the observed40s stall;
+there is still NO server numerical report or full native admission. Fresh
+Engine inspection confirms5images/0containers. An emitted constant4 count in
+the original receipt is preserved with explicit erratum and reporterRED/GREEN;
+no source acceptance rerun. Source correction remains within8MB/129MB, latest
+forecast7,843,566B/cumulative122,022,633B/freeC166,210,347,008B; all failures kept.
+Evidence output/0038-worker-source-image/membership-correction/independent-checked.json.
+Next connect the concrete parent/Worker to the frozen private PG/report/page
+action. No new source-proof family, full-suite CI run, service deployment or fee.
+Full A ACTIVE and human release/native/noexec/ownership gates remain unchanged.
+
 ## Current checkpoint — actual preflight performance cause isolated
 
 No research-server user report loop is newly available. Actual stage evidence

@@ -1,5 +1,30 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Latest checkpoint — source timeout resolved on actual server
+
+Root materializes exacte34d22f against the unchanged base093b4734/five layers and
+81lock07f4e7ec. New imagea0abb2dc/raw OCI config7c78d260, source-layer0f397379;
+192files/2,726,497B, inventory9,212files/80links. Real OCI bytes checked and
+associated to actual Engine/image; no image-ID/config-digest substitution.
+The same public source-only call passes positive plus wrong GO/manifest and
+in-memory entry/observer mutation refusals in6.913s. Runtime ready0.906s,
+positive received_go1.209s/calling_preflight1.304s, next case5.202s. NoOOM,
+actual exit0, exact nonce40c750c6/CID4f8c5626 removed. No extra env/kernel proof.
+Original receipt emits constant4Images despite an executed guard requiring5;
+root reporterRED/GREEN catches/corrects it, preserves original, and separately
+reads actual Engine5images/0containers/exact sourcee34d22f. Independent saved
+request/executed bytes/OCI/cases checker exits0 with explicit erratum; no rerun.
+Resources forecast7,843,566B<=8MB/cumulative122,022,633B<=129MB, all old packets,
+failures/1,132,924B new Linux fixtures/reserves retained; Cfree166,210,347,008B.
+Cloud free159,830,958,080B; original delta1,600,294,912B<=5GB and cumulative
+source delta19,558,400B<=100MB. No new paid resources or permissions.
+Evidence output/0038-worker-source-image/membership-correction/{aws-materialization,
+membership-oci,source-preflight-membership,independent-checked,root-source-resource}.json,
+count-report-red/green.log/.exit; old source/failed diagnostics all retained.
+User still cannot submit a proven server numerical report. Next concrete
+parent/admission→Worker→PG→report/page/reopen is the sole primary path. Native,
+different-UID/noexec, human PR175 release and full A remain open/ACTIVE.
+
 ## Checkpoint — root source-preflight performance repair
 
 User outcome is still pending the first server report; this is a direct repair

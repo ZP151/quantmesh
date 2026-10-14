@@ -18,8 +18,8 @@ contract, not a claim that the commands below are deployed or currently pass.
 | Boundary | Frozen value / actual readiness |
 | --- | --- |
 | Hosts | Existing research8GB at ubuntu@quantmesh-research-8gb.tail99d23c.ts.net; existing application8GB and rollback2GB retained. No new paid resource. |
-| Source | Foundation PR175 head370a745caeee0d5d60d41b4eb4716316cb44b935; kernel integration8c9093015f18e2905f42065baa0237e81dcb20b9. Current image application bytes are committed41214ff3d049677ae9b599f5bd77ae23b817144f. Freeze a new exact SHA if code changes; deploy only a reviewed merged tree. |
-| Numerical runtime | Linuxamd64, actual CPython3.12.15 `/usr/local/bin/python3`, prefix/usr/local. Image7c3a8389dc95348125c10ea062bd3cbd2af2a645f1b66127ead7bad6c0c6097c, raw OCI configb5e9d3424e5915326235e869847fba670bb641d4f1321a4d83c884341cec3fdc.81-wheel lock07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a. Source preparation passes; numerical admission remains pending. |
+| Source | Foundation PR175 head370a745caeee0d5d60d41b4eb4716316cb44b935; corrected image source e34d22f4576efdab06d11aec5ae04f135078fdc6. Old41214ff preparation retained. Freeze a new exact SHA if code changes; deploy only a reviewed merged tree. |
+| Numerical runtime | Linuxamd64, actual CPython3.12.15 `/usr/local/bin/python3`, prefix/usr/local. Corrected imagea0abb2dc5cbdc53fe6422ea3cebb353e0784c235cce2e691bf516eb808a2db76, raw OCI config7c78d2608e9e9d425bae5aa41d81fa227cee6d9b57183b71ac668b7a593786c4.81-wheel lock07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a. Complete source-only preflight passes; numerical admission remains pending. |
 | Services/identity | Private authenticated Research API loopback8110, Ubuntu UID/GID1000; PostgreSQL18.6 dedicated DB/role/schema qm_research with TLS/SCRAM. Registered Worker UID/GID10001 in private PID/IPC/cgroup namespaces. For the bounded operator qualification, trusted parent may use already authorized sudo; no general root daemon is installed. Persistent supervision requires its reviewed release checklist. |
 | Configuration placement | Target `/home/ubuntu/qm-research/{config,credentials,lake,artifacts,attempts}`; directories0700. Named private files api_token/postgres_dsn0600, explicit runtime.json0600; no key/DSN in argv, reports, browser or prompts. These target files/services are not asserted installed. Model key/config is optional and separate. |
 | Dataset/request | Existing tests.research_fixtures.pinned_lake: equities, AAA/BBB/CCC,60×1h bars each, source=fixture/license=test. First request momentum1/AAA, train10/test5/step5, fee1+halfspread2+slippage3bps. DatasetRef revision/manifest/export SHA measured on actual server bytes; never invent a pin or call it real market evidence. analysis_requested=false, model budgets0. |
@@ -124,3 +124,13 @@ cumulative129MB/original5GB, carrying old packets/failures and1,132,924B new
 Linux fixtures; measure the new packet before dispatch. Rebuild only this
 affected committed source against the frozen base/lock, then continue the same
 thin call. No broader environment/kernel proof, extra fee or release approval.
+
+Completed correction checkpoint: actual imagea0abb2dc/sourcee34d22f full public
+source preflight passes all5cases6.913s and exact owned cleanup. Independent
+saved request/bytes/OCI checker plus fresh Engine read confirm5images/0containers;
+original emitted constant4 count is retained with erratum and reporterRED/GREEN.
+Do not repeat this phase. Current primary path is concrete parent/Worker→private
+PG→persistent report/page/reopen; no numerical/user-loop success is inferred.
+Source accounting forecast7,843,566B<=8MB/cumulative122,022,633B<=129MB includes
+all failures/new packet/native fixtures/reserves; future Worker allocation must
+remain explicit within original approved resources. Whole-C attribution pending.

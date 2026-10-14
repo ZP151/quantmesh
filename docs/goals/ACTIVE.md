@@ -13,18 +13,18 @@ research-server equivalent is NOT demonstrated. Priority1 is one registered
 momentum1 fixture job→PG→isolated compute→immutable report→page→same job/ref
 after service restart; Agent is optional and cannot block a basic report.
 
-Current source: integration branch codex/0038-worker-kernel, checkpoint8c90930.
-Prepared actual Linux3.12.15 image7c3a8389; real OCI configb5e9d342; application
-source41214ff, frozen81 lock07f4e7ec. Source/metadata materialization is done.
-Actual full source preflight is NOT done. Bounded stage evidence proves GO is
-received and public preflight begins within3.3s, then exceeds40s. A single10s
-stack identifies repeated full-inventory Path conversion in membership checks.
-Root fixes only that quadratic work; identical membership semantics/full byte
-checks remain. Actual Linux operation-budget RED3→GREEN3 and affected104 pass;
-narrow independent correctness review clear. Original prepared image is still
-unchanged and unaccepted; all failed exact owned CIDs removed,4images/0containers.
-Primary next obstruction: materialize this committed source correction and
-connect the existing Worker parent/admission path to the server report loop.
+Current source: integration branch codex/0038-worker-kernel, implementatione34d22f.
+Actual Linux3.12.15 imagea0abb2dc; raw OCI config7c78d260; application source
+e34d22f; frozen81 lock07f4e7ec/base093b4734 unchanged. Complete actual public
+source preflight passes positive/four negatives in6.913s; owned CID removed.
+The previous40s stall's real10s stack identified repeated Path conversion;
+the same membership set is now built once, preserving full byte checks.
+Actual Linux RED3/GREEN3/affected104 pass and scoped correctness review clear.
+Fresh Engine read confirms5images/0containers; original receipt mistakenly
+emitted constant4 despite its5-image guard. Erratum/RED/GREEN retained; no rerun.
+Primary next obstruction: wire concrete parent/admission and the existing
+Worker to the private PG→report→page/reopen loop. Numerical admission and a
+server user report remain UNPROVEN; source-only success is not full activation.
 Do not introduce another proof family or declare an empty log a success.
 
 ## Frozen delivery rules and next action
@@ -37,13 +37,12 @@ blocker, risk/cost/acceptance decision; stop automatic prerequisite expansion.
 Reuse existing fixture/math/store/artifact/page; arbitrary user Python remains
 out of scope and existing license/isolation/source/release gates remain.
 
-Next action: update only the affected committed source in a fresh immutable
-image, retaining the same frozen base/lock/entry/controller and all old receipts.
-Then execute the SAME target thin chain; no new environment/kernel proof merely
-to obtain a green helper. The completed diagnostic command was
-`python -B output/dispatch_source_preflight.py source-preflight-stack`.
-It cannot be blindly repeated: known failure, cleanup and a changed affected
-step with a fresh recorded nonce are prerequisites. Do not poll ended handles.
+Next action: continue the existing fixed Worker parent/entry/bundle contract,
+actual different-UID/noexec enforcing admission and the one registered report.
+Reuse actual source success; no more source probes or old image rebuilds.
+`python -B output/dispatch_source_preflight_membership.py` already exits0;
+its nonce40c750c6/CID4f8c5626/request/bytes/OCI are independently checked.
+Do not poll ended handles or repeat the accepted source-only phase.
 Native numerical/cache, different-UID/noexec/kernel/parent and concrete provider
 remain unaccepted. Current production image environment also has a legal
 public GPG_KEY rejected by its prereq allowlist; resolve in the thin integration.
@@ -65,9 +64,10 @@ latest preflight request/receipt, namespaceRED/GREEN and owncleanup retained.
 Planner now allocates8MB to this source/performance correction, still within
 existing cumulative129MB and original5GB/free50GB constraints; no paid capacity.
 Carry114,179,067B, old source packet/failures, and new1,132,924B Linux fixtures.
-Last diagnostic forecast4,932,710B preceded those fixtures. Fresh accounting
-must include them and proposed replacement packet before any next cloud write.
-Cloud original5GB/free50GB/source100MB stays; latest free159,840,600,064B.
+Last source forecast7,843,566B/cumulative122,022,633B carries retained new packet,
+all fixtures/logs and350KB docs/git+400KB future reserve. New unrelated Worker
+phase needs an explicit allocation/forecast, not silent8MB expansion.
+Cloud original5GB/free50GB/source100MB stays; latest free159,830,958,080B.
 Whole-C attribution PENDING and historical SSE overrun FAILED remain disclosed.
 [Full previous ACTIVE history](archive/2026-10-15-before-server-report-contract.md).
 Detailed role/evidence history remains in
