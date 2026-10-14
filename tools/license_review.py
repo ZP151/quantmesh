@@ -144,9 +144,10 @@ _SPDX_ALIASES = {
     "PSF License": "PSF-2.0",
 }
 
-# SPDX exception identifiers admitted by the current release closure.
-# Unknown exceptions stay closed until their effect is reviewed explicitly.
-_SPDX_EXCEPTIONS = {"LLVM-exception"}
+# SPDX exceptions are admitted only with the license identifier to which the
+# exception applies. Unknown exceptions and incompatible license pairings
+# stay closed.
+_SPDX_EXCEPTION_LICENSES = {"LLVM-exception": {"Apache-2.0"}}
 
 
 def _from_expression(expr: str) -> str | None:
@@ -161,8 +162,15 @@ def _from_expression(expr: str) -> str | None:
         # restricting condition that cancels the Apache grant; refused
         # before the qualifier strip could turn it into Apache-2.0.
         return None
-    qualifiers = re.findall(r"\s+WITH\s+([A-Za-z0-9._-]+)", expr, re.IGNORECASE)
-    if any(qualifier not in _SPDX_EXCEPTIONS for qualifier in qualifiers):
+    qualifiers = re.findall(
+        r"([A-Za-z0-9.+-]+)\s+WITH\s+([A-Za-z0-9._-]+)",
+        expr,
+        re.IGNORECASE,
+    )
+    if any(
+        license_id not in _SPDX_EXCEPTION_LICENSES.get(exception, set())
+        for license_id, exception in qualifiers
+    ):
         return None
     expr = re.sub(r"\s+WITH\s+[A-Za-z0-9._-]+", "", expr, flags=re.IGNORECASE)
     parts = [p.strip() for p in re.split(r"\s+AND\s+", expr)]

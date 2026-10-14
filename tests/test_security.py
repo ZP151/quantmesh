@@ -134,8 +134,18 @@ class TestLicenseReview:
             "BSD-2-Clause AND Apache-2.0 WITH LLVM-exception"
         )
         assert resolved == "Apache-2.0 | BSD-2-Clause"
+        assert review._from_expression("Apache-2.0 WITH LLVM-exception") == (
+            "Apache-2.0"
+        )
         assert review._from_expression("MIT WITH GPL-3.0-only") is None
         assert review._from_expression("MIT WITH Unknown-exception") is None
+        for incompatible in (
+            "MIT WITH LLVM-exception",
+            "LGPL-3.0-only WITH LLVM-exception",
+            "EPL-2.0 WITH LLVM-exception",
+            "CDDL-1.0 WITH LLVM-exception",
+        ):
+            assert review._from_expression(incompatible) is None
 
     def test_permissive_spdx_members_are_allowed(self) -> None:
         review = _load_license_review()

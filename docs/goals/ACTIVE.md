@@ -10,18 +10,17 @@ the Python release closure. This is an exact-identifier allowlist, not a
 wildcard; GPL/AGPL, Commons Clause, proprietary, unknown and unreviewed
 versions remain refused. Psycopg 3.3.6's exact `psycopg` and `psycopg-binary`
 wheel metadata both declare `LGPL-3.0-only`; notices and distribution-form
-obligations are recorded in ADR-0027. The independent review found two parser
-gaps; regression tests reproduced both, and the parser now accepts only the
-currently reviewed `LLVM-exception` qualifier and detects Commons Clause
-without case sensitivity. License tests pass 12/12 focused and 24/24 security;
-the clean 78-package Windows release closure passes, pip-audit reports no known
-vulnerabilities, and Ruff/diff checks pass. The added EPL/CDDL policy regression
-first failed as expected, then focused tests passed 5/5; Ruff and diff checks
-pass. The attempted full security suite used an incomplete ambient environment
-and stopped because psycopg was absent, so it is not a product-code failure or
-release result. The policy extension is committed and pushed to PR #175; fresh
-exact-head CI and review remain required before merge. No service/AWS change
-occurred.
+obligations are recorded in ADR-0027. Review reproduced the classifier gaps;
+the parser accepts only the reviewed `LLVM-exception` pairing with Apache-2.0
+and detects Commons Clause without case sensitivity. The added EPL/CDDL
+regression first failed as expected and then passed. A follow-up review caught
+an exception/base-license mismatch; its negative tests reproduced the issue,
+and the parser now refuses that mismatch. Current focused tests pass 11/11;
+the broader local security run was 23 passed/1 failed because the ambient
+environment lacks locked Psycopg, so it is not a release result. The earlier
+clean 78-package release closure and pip-audit evidence apply to the earlier
+LGPL-only parser checkpoint. Current exact-head CI and follow-up review remain
+required before merge. No service/AWS change occurred.
 
 The user cleared the unfinished old goal and explicitly requested a new goal.
 The controller now reports ACTIVE for the remaining approved iteration0038 A

@@ -7,10 +7,14 @@ ADR-0027: LGPL-2.0/2.1/3.0 base/`-only`/`-or-later`, MPL-2.0, EPL-2.0 and
 CDDL-1.0. GPL/AGPL, Commons Clause, proprietary, unknown and unreviewed
 identifiers stay refused; the frontend npm policy is unchanged. Added regression
 coverage showed expected RED for EPL/CDDL before implementation; focused policy
-tests pass 5/5, Ruff and `git diff --check` pass. The full ambient security test
-run is inconclusive because this environment lacks locked Psycopg; its closure
-gate must run in the clean release environment. No service or AWS state changed.
-The resulting policy commit needs fresh exact-head CI and review before merge.
+tests pass 5/5. Independent follow-up review found an incompatible SPDX
+exception/base-license pairing; the new negative tests reproduced RED and now
+pass after binding `LLVM-exception` only to `Apache-2.0`. Current focused
+license-classification tests pass 11/11; Ruff, formatter and diff checks pass.
+The full ambient security test run is 23 passed/1 failed because this
+environment lacks locked Psycopg; its closure gate must run in the clean
+release environment. No service or AWS state changed. Fresh exact-head CI and
+review are required before merge.
 
 ## Current goal ACTIVE — synthetic Reader probe passed; full Worker remains gated
 

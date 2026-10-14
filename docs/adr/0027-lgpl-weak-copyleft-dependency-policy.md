@@ -49,6 +49,12 @@ The audit continues to fail closed for GPL, AGPL, proprietary or unknown
 licenses, and source-available restrictions such as the Commons Clause.
 Compound declarations containing any refused member remain refused.
 
+SPDX exceptions are checked against their base-license pairing before the
+qualifier is removed for classification. In the current closure,
+`LLVM-exception` is accepted only with `Apache-2.0`, consistent with the
+[SPDX exception record](https://spdx.org/licenses/LLVM-exception.html);
+pairing it with LGPL, EPL, CDDL or another license remains refused.
+
 For every weak-copyleft component, release owners must identify the exact
 package, version and license text and evaluate the intended distribution
 before shipping. Where applicable, distribution must preserve notices and

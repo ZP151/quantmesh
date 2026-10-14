@@ -39,9 +39,9 @@ creates one).
   third-party set must equal the pinned closure (plus the venv's own
   pip/setuptools/wheel build tooling). This is the iteration-0013
   resolution of the ambient `license-expression`/`boolean.py` drift.
-- **`WITH <exception>` SPDX qualifiers relax** the license
-  (e.g. `BSD-2-Clause AND Apache-2.0 WITH LLVM-exception` for
-  llvmlite) and are stripped, never treated as restricting members.
+- **`WITH <exception>` SPDX qualifiers are license-pair checked** before
+  stripping. The current accepted pair is `Apache-2.0 WITH LLVM-exception`
+  (used by llvmlite); unknown exceptions and incompatible pairings fail closed.
 - **Free-text `License` fields read the first line as authoritative**
   when it names a known license: some wheels inline the entire
   `LICENSES/` folder into one field (pandas 2.3.3 Linux builds — BSD
