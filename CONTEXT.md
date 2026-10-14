@@ -1,6 +1,25 @@
 # QuantMesh Domain Context
 
-## Current goal ACTIVE — candidate CI passed, reader integration in progress
+## Current goal ACTIVE — Worker kernel boundary preparation
+
+The active recovery authority is `docs/goals/ACTIVE.md`. PR #175 candidate
+de06066 uses pg8000 without widening the license allowlist and preserves database
+failures during rollback/close; 53 focused tests including PG16 pass, scoped
+review clear. Exact CI38574294649 is running (classify/research_service/fast
+pass, release pending); applicable human gates remain.
+
+Dependency branch `codex/0038-worker-kernel` adds pure policy/mount construction:
+44 focused tests pass after a reviewed SHM_EXEC mask RED/GREEN repair. Existing
+host AppArmor syntax compilation and 49-instruction native libseccomp compilation
+with 14 independent BPF decisions pass. No filter/profile is loaded and no
+Worker is admitted. Actual private SSH uses `ubuntu`, not the Windows account;
+it succeeds without an ACL change. The research host has no QuantMesh units or
+service/PG listener. Next is real kernel/entry/independent parent admission,
+complete numerical reporting, private durable service/Agent/Eval and server
+market sources. Formal168h remains NOT_REQUIRED, paper=true/live=false, no
+additional paid resource. See the kernel-boundary plan and iteration evidence.
+
+## Historical checkpoint — candidate CI passed, reader integration in progress
 
 The user cleared the unfinished old goal and explicitly requested a new goal.
 The controller now reports ACTIVE for the remaining approved iteration0038 A

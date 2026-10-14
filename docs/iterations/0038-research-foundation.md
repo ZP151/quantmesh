@@ -1,5 +1,40 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current checkpoint — 2026-10-14 Worker kernel boundary preparation
+
+PR175 exactde06066 CI38574294649 is still live; classify/research_service/fast
+pass and release is running. The current pg8000 review fixes retain the deny
+license policy and sanitized transaction failures; actual PG16 focused53/53
+pass and scoped follow-up review is clear. No merge or deployment is inferred.
+
+New dependency branch codex/0038-worker-kernel starts from this exact parent.
+Its pure builder preserves baseline seccomp refusals and narrows existing
+ALLOW conditions; exact measured ELF paths alone receive AppArmor executable
+mapping permission. Actual mountinfo requires RO root, RO/noexec input,
+RW/noexec output/tmp, no executable writable mount and no ambiguous/nested
+bypass. 44 tests pass/one existing NumPy warning/1.10s; Ruff/format/diff pass.
+An initial additive-deny draft had10 semantic REDs and was replaced before use.
+The scoped independent review found one P1 wrongSHM flag; two REDs reproduced
+the defect, SHM_EXEC=0100000 fixes it, and the full suite passes. Actual host
+libseccomp compiles49BPF instructions;14 independent decisions pass on the
+exported filter. AppArmor4.0.1 syntax compilation exits0 with kernel-load and
+cache writes disabled. No filter/profile/container is activated by these checks;
+native enforcement, independent parent and complete Worker remain pending.
+
+Actual SSH ubuntu@quantmesh-research-8gb succeeds. Prior zhou denial was a wrong
+account, not proof that the approved account needed a new ACL rule. Read-only
+host intake confirms Docker29.9.0/AppArmor/seccomp/cgroup and no QuantMesh units
+or PG/research listeners. Passed synthetic Reader/old Task1 are not repeated.
+Evidence output/0038-worker-kernel-* retains the initial pytest oversized-ID
+setup/teardown failure, original hash and4,202,324-byte peak; ambient environment
+traceback representations are redacted. Original resource baselines/failures
+remain; the explicit cumulative40MB/phase7MB allocation is recorded in the new
+plan. Formal168h NOT_REQUIRED; existing three-machine budget; papertrue/livefalse.
+
+Next: Engine-default profile and ELF pinning, reviewed native noexec/policy
+recipe, fixed entry/independent parent, numerical report and two-job recovery,
+private PG/service/Agent/Eval and independent server market-source acceptance.
+
 ## Current license-policy decision — 2026-10-14
 
 For PR #175, the operator selected BSD-licensed pg8000 specifically to preserve

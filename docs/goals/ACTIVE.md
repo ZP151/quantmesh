@@ -1,8 +1,44 @@
 # Active Goal
 
-## Current goal ACTIVE — synthetic Reader probe passed; full Worker remains gated
+## Current goal ACTIVE — kernel policy prepared; full native Worker remains gated
 
-## Current checkpoint — PR #175 review fixes ready; full Worker remains gated
+## Current checkpoint — dependency branch and authenticated server access
+
+PR #175 remains DRAFT at exact `de06066b7e1a3e56e74c2321a4eed71f1e331fe5`.
+Its CI `38574294649` is live: classify/research_service/fast pass, release is
+still executing. The pg8000 policy/cleanup corrections passed 53 focused tests
+including actual disposable PG16; independent scoped review is clear. Applicable
+human review and full CI remain required before merge.
+
+New dependency branch `codex/0038-worker-kernel` starts at that exact candidate
+and keeps #175's candidate/CI intact. Its pure policy builder restricts existing
+Docker syscall ALLOW conditions, preserves baseline refusals/capability gates,
+binds executable mappings to exact measured ELF paths, and checks effective
+noexec mountinfo including nested mounts. Focused tests pass 44/44 (one existing
+NumPy warning); Ruff/format/diff pass. The first additive seccomp draft was
+replaced after 10 independent semantic REDs. Scoped review found one P1 wrong
+SHM flag; two REDs reproduce it, the correct SHM_EXEC guard passes the full suite.
+The host's libseccomp compiles 49 BPF instructions; independent evaluation of
+14 exported-BPF cases passes. AppArmor syntax compilation passes without
+loading a profile. These are construction/compiler checks, not kernel
+enforcement, independent parent admission or a full Worker certificate.
+
+Actual private SSH succeeds as `ubuntu` on the existing research host. The
+earlier `zhou` denial used the wrong account; no Tailnet ACL change is needed.
+Read-only intake confirms Docker29.9.0, AppArmor/segregated cgroup/seccomp support,
+two image records and zero containers, and no QuantMesh systemd units or
+research-service/PostgreSQL listeners. Server-market-source independence remains
+unfinished. The passed synthetic Reader and existing Windows source are retained.
+
+Next: pin the Engine-compatible default seccomp/ELF closure, prepare the exact
+owned native policy/noexec-mount recipe, then integrate the fixed entry and
+independently admitted parent, numerical reports, private PG/service recovery,
+Agent/Eval user flow and server-owned real market sources. Goal remains ACTIVE.
+Evidence is under `output/0038-worker-kernel-*`; the retained initial pytest
+harness failure is sanitized and its original hash/byte peak is recorded.
+Plan: `docs/superpowers/plans/2026-10-14-worker-kernel-boundary.md`.
+
+## Historical checkpoint — PR #175 review fixes prepared before de06066
 
 Operator chose pg8000 to preserve the existing license policy. The root
 PostgreSQL store and security install constraint are pushed at `5b8fbe5`.
@@ -22,9 +58,9 @@ The Worker start path now requires a parent-binding provider, uses the fixed
 canonical `/usr/local/bin/python3 -B -I -S` entry command, and binds actual
 Engine inspect controls/mounts before release. It revalidates the parent
 binding before publication and still cleans up an exactly owned container after
-configuration drift. These checks are synthetic on Windows: no native OCI
-Engine, trusted image-admission provider or `worker_entry.py` exists in this
-tree, so Worker admission remains unqualified and fail-closed. Server-owned
+configuration drift. These integration checks are synthetic on Windows; the
+existing research Engine/image does not qualify the missing trusted admission
+provider or `worker_entry.py`, so Worker admission remains fail-closed. Server-owned
 market-data connectivity is unresolved; the known AWS staging path depends
 on the Windows OpenD reverse tunnel.
 
