@@ -87,9 +87,9 @@ def _port_in_use() -> bool:
     return False
 
 
-def _wait_for_server() -> None:
+def _wait_for_server(server: uvicorn.Server) -> None:
     for _ in range(400):
-        if _port_in_use():
+        if server.started:
             return
         threading.Event().wait(0.1)
     raise AssertionError(f"uvicorn never came up on {SSE_HOST}:{SSE_PORT}")
@@ -110,7 +110,7 @@ def sse_env(tmp_path_factory):
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
     try:
-        _wait_for_server()
+        _wait_for_server(server)
         yield SSE_BASE_URL, feed
     finally:
         server.should_exit = True
@@ -127,6 +127,27 @@ def live_app(tmp_path):
     )
     with TestClient(app) as client:
         yield client, app, feed
+
+
+def test_sse_readiness_does_not_compete_for_the_server_port(tmp_path_factory, monkeypatch):
+    initial_port_check = _port_in_use
+    calls = 0
+
+    def port_check():
+        nonlocal calls
+        calls += 1
+        assert calls == 1, "readiness must not bind the server's listening port"
+        return initial_port_check()
+
+    monkeypatch.setattr(__name__ + "._port_in_use", port_check)
+    fixture = sse_env.__wrapped__(tmp_path_factory)
+    try:
+        base_url, _feed = next(fixture)
+        with httpx.Client(timeout=5.0) as client:
+            assert client.get(base_url + "/api/live/state").status_code == 200
+        assert calls == 1
+    finally:
+        fixture.close()
 
 
 @pytest.fixture()
