@@ -8,6 +8,14 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Concrete provider software closes two scoped P2 controls; R2 clear and root
+provider11pass5.49s/exit0/Ruff/diff green. Actual current provider/whole Worker
+still unproven. Next ONE connected parent admission call with existing qualified
+parent runtime/immutable image/current policy, then PG/report/page. SSH ubuntu.
+Real existing snapshot shape read succeeds but original16KBreply cap FAILED at
+45962B, retained/reconciled without retry. Op capture OS hard-limit RED/GREEN
+4738B retained/R2 clear. All original caps/errors carried, no extra fee.
+
 Current real image metadata prepared/checked nonce79cf75d4,81distributions,
 162rawfiles, private snapshot; exact NEVER-startedCID removed/Engine5images0.
 No kernel load, Worker admission or numerical report. Connected opt-in kernel

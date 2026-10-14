@@ -2,6 +2,25 @@
 
 ## Current connected parent admission and kernel mounts
 
+Concrete Implementer two-file provider complete. It recomputes five-field
+runtime, actual OCI/Engine/config/source/metadata pins, current compiled v5
+policy bytes and canonical15-field binding from fresh owned PID observations.
+R1 P2 fixed10001 UID/GID/all slots and actual attr/current/full before-after
+NNP/seccomp/caps/cgroup/mount drift; R2 no P1/P2. Genuine fixedalias/profile-ID
+RED2→GREEN3 retained; root whole provider11pass5.49s/exit0/Ruff/diff green.
+Earlier initial4pass was not RED; stale-argument test failures are harness
+errors, retained, not product counterexamples. Three-byte .exit file length
+must not be confused with numeric exit3. Agent native fixtures remain tiny and
+retained; no deletion. Current actual snapshot shape read exits0 but45962B reply
+exceeds declared16KB localcap: original FAILED response/exception retained,
+read classified from existing bytes, no repeat or qualification. Canonical
+actual shapes: empty-config0700/receipt0600/data0400,188source files,
+python3→python3.12, rawConfig equals Engine Config. Root operative bounded
+capture reviewR1 found post-hoc limits; exact native reproduction writes4096B,
+then kernel RLIMIT_FSIZE limits each retained stream512B/overflow120, normal0,
+4738B fixture retained. Operational R2 clear. Actual connected parent stage
+next, no Worker/report/advisory/service activation or release claim.
+
 Planner retains first registered server numerical report as the one user loop.
 Verifier actual immutable-image metadata capture: nonce79cf75d4 exits0/15.246s,
 81distributions/162rawfiles/current OCI and independent source/runtime pins;

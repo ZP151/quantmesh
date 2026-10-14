@@ -2,6 +2,16 @@
 
 ## Current metadata and connected kernel-mount checkpoint
 
+Concrete provider software now recomputes the existing five-field runtime from
+bound raw dependency metadata/source/lock, and reobserves CURRENT OCI/Engine,
+compiled enforcing AppArmor/seccomp and live process identity before GO.
+Round1 two P2 controls corrected: fixed10001 UID/GID/all four slots, actual
+AppArmor attr/current and full before/after process/security/mount observations.
+Exact interpreter alias and observed Engine/snapshot shapes used. Round2 clear;
+root full provider11pass5.49s/Ruff/diff green. No actual provider positive or
+numerical report yet. First actual connected admission stage next, using ubuntu,
+existing parent runtime and same reviewed policy bytes; no production release.
+
 Actual CURRENT imagea0abb2dc passive metadata capture exits0 in15.246s:
 rawOCI manifest/config/current Engine relation,81distributions/162 raw metadata
 files, source/lock/inventory/interpreter and fixedpolicy input hashes checked.
