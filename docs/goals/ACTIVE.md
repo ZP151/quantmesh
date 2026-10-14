@@ -8,6 +8,13 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Latest actual jobf33bc774/17.322s passes binding/source after O_PATH repair,
+rejects project_import. Exact clean environment reproduces Settings Path.home
+RuntimeError; UID10001 lacks passwd home and HOME was missing. Minimal controller
+HOME=/tmp repair keeps clean env/no credentials and noexec ephemeral backing.
+Native RED1/GREEN1/affected10pass0.96s; numerical report/page/reopen still open.
+Next updated immutable image/current exact pins→real registered report task.
+
 Actual updated-image job74f0450a rejects at binding stage. Exact binding decodes;
 actual same-policy read gets EACCES opening root O_RDONLY (line88). Repair root
 traversal anchors only to O_PATH in entry/provenance, without relaxing policy or

@@ -1,5 +1,17 @@
 # QuantMesh Domain Context
 
+## Current real task crosses binding/source; clean child HOME repaired in source
+
+Actual imagebf8fa149/source697f0c6 jobf33bc774 now passes fixed binding/source
+preflight, rejects project_import. Same verified-source import passes with image
+environment, but exact controller clean environment/cwd reproduces RuntimeError
+in Settings Path.home: fixed10001 UID has no passwd home and HOME was omitted.
+Controller now supplies fixed HOME=/tmp in its clean4-field environment; no
+inherited credentials/settings/network. Existing noexec16MiB /tmp policy stays.
+Native RED1/GREEN1 and affected loop/GO10pass0.96s (not numerical admission).
+Next updated exact image/current metadata/pins→actual report job; no report/UI/
+reopen accepted yet. All preceding own effects cleaned; full A stays ACTIVE.
+
 ## Current actual binding read obstruction — source repair verified
 
 Updated image7a285551/current metadata73662c8f succeeded; actual PG/Worker job

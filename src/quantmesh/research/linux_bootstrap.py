@@ -130,6 +130,7 @@ def supervise(
                 stderr=stderr,
                 env={
                     "PATH": "/usr/local/bin:/usr/bin:/bin",
+                    "HOME": "/tmp",
                     "LANG": "C.UTF-8",
                     "PYTHONDONTWRITEBYTECODE": "1",
                 },

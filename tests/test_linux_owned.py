@@ -785,6 +785,31 @@ def test_qualification_python_launch_disables_bytecode(profile, tmp_path, monkey
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="real standalone child env check")
+def test_standalone_child_has_fixed_ephemeral_home(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sentinel-never-inherit")
+
+    class Pulse:
+        def read(self, timeout):
+            time.sleep(0.01)
+            return []
+
+        def close(self):
+            pass
+
+    workload = (
+        "import os;from pathlib import Path;"
+        "assert Path.home()==Path('/tmp');"
+        "assert set(os.environ)=={'PATH','LANG','HOME','PYTHONDONTWRITEBYTECODE'}"
+    )
+    assert bootstrap.supervise(
+        [sys.executable, "-B", "-I", "-S", "-c", workload],
+        tmp_path,
+        3,
+        control=Pulse(),
+    ) == 0
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="real standalone child env check")
 def test_standalone_child_has_clean_bytecode_environment(tmp_path):
     (tmp_path / "local_fixture.py").write_text("value=1\n")
     workload = (

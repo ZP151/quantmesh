@@ -445,3 +445,21 @@ Before full affected entry check and new immutable image/job, spend200000B
 ONCE from prior remaining300000wire docs/Git forecast (100000remain).
 base128356191/phase447000 plus previous196006 stays128999197<=129MB.
 Every earlier failed peak and actual code/test output remains accounted.
+
+Ruling: updated-job local preflight447617B exceeded447000 by617B BEFORE any
+request or SSH effect. Retain original frozen caller; allocate10000B ONCE from
+remaining100000 wire docs/Git forecast (90000remain), phase457000/base128346191.
+Original129MB cumulative unchanged; corrected frozen caller counted before effect.
+
+Ruling: source-verified import-only control passes with image env, fails under
+exact clean controller env/cwd at Settings Path.home. Add fixed HOME=/tmp only,
+existing noexec16MiB tmpfs; clean other3fields preserved/no secret inheritance.
+Native RED1/GREEN1/affected loop10pass. First staged loop harness lacked child
+source import path; retained5fails then corrected exact stdlib-only test namespace.
+Output-budget negative retains200076B and causes phase457KB FAILED; no deletion.
+Earlier source receipt7843566 contains350000docsGit+400000future and is carried
+as122022633 into profile123931604, then subsequent wire/concrete phases unchanged.
+No previous source400000 consumption exists in active ledger. Consume300000 ONCE
+from that unspent source future forecast (100000remain), base128046191/phase757000;
+plus prior196006 =>128999197 within original129MB. All actual roots/errors stay.
+Next exact same registered job with fixed HOME, not another import-only control.

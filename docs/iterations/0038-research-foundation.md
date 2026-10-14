@@ -1,5 +1,31 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Actual O_PATH obstruction closed; child HOME import compatibility repair
+
+Actual updated source697f0c6 imagebf8fa149/rawOCI455f68be/manifestbf53b09f/
+inventoryfbff3e79, metadata79d044a2/runtimea4d1a11c/current81dependencies measured.
+New actual jobf33bc774/9e39d1e6/17.322s reaches binding/source preflight, rejects
+project_import. PG TLS/submit/claim still pass; all own container/policy/mount/
+postmaster/port cleanup pass. No artifact/report, no numerical certification.
+Source-verified import-only diagnosticbbf3f014 passes in image environment;
+exact controller environment/cwd diagnostic217f1b18 reproduces RuntimeError
+in settings.py class Settings line16→Path.home/expanduser. UID10001 has no
+passwd home and clean controller omitted HOME. Both exact diagnostic CIDs and
+policies removed; neither invokes numerical child nor touches SQL/credentials.
+
+Planner scopes fixed HOME=/tmp to existing child environment, existing noexec
+16MiB ephemeral tmpfs; no arbitrary override or inherited operator credentials.
+Implementer adds one fixed field; real child test RED1 then GREEN1 verifies
+Path.home and exact4-field env while parent OPENAI_API_KEY sentinel is absent.
+Affected loop/GO10pass0.96s. First loop test staging omitted source path for
+fresh subprocesses:5fails retained; corrected test-only namespace supplies exact
+stdlib controller bytes to those interpreters, no package installation, then
+10pass. Corrected loop output-limit test retains200076B (intentional200KB
+output), plus prior89B/0B/75B roots; phase457KB therefore FAILED/retained.
+Exact accounting ruling below consumes earlier unspent source forecast reserve,
+not actual bytes/failed caps. Next updated exact image→actual numerical job/report;
+no third architecture review, permission/native waiver, production release or fee.
+
 ## Current actual entry binding read diagnosis and narrow repair
 
 Verifier measured new immutable source image7a285551/source2503f2b, rawOCI
