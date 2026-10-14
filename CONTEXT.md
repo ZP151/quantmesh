@@ -1,5 +1,19 @@
 # QuantMesh Domain Context
 
+## Current actual job reaches binding/GO; pinned child entry rejects
+
+Latesta29780f0/10.987s, job14c6f374: real PG TLS/ASGI submit/claim and independent
+current parent/kernel/livePID/cgroup/mount binding reached; UID10001/0400 binding
+written, fixed child launched, stderr "worker entry rejected". No error/result/
+report; specific inner stage UNKNOWN. Numerical/report/page/reopen still open.
+Exact own CID/policy/mount/PG/port cleanup all pass; saved independent checker
+exit0 verifies evidence consistency only. Three mechanical actual wire/kernel
+repairs committed/pushed, latest58f63d6; childa0abb/sourcee34 not rebuilt. Next
+diagnose current entry refusal; no repeated green provider/SQL/source-only gate,
+third structural/native factory or opaque-helper waiver. Scoped forecast128992197
+<=129MB, initial100KB FAILED/all old peaks retained, whole-C PENDING; actual cloud
+PG-inclusive delta2882220032<=5GB/free159380586496B. Full A ACTIVE/no new fees.
+
 ## Latest binding blocker repaired in source, report still pending
 
 Actual d9ad9fd1/4cbc2680 now reaches controller ready; then cgroup-limit read

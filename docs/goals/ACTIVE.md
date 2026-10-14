@@ -8,6 +8,21 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+CURRENT actuala29780f0/10.987s: private PG TLS/ASGI submit/claim, current parent
+image/kernel/livePID/cgroup/mount binding now reached; UID10001/0400 binding
+written and fixed child launched after GO. Child stderr "worker entry rejected",
+no error/result/report: job14c6f374 FAILED, inner entry stage still UNKNOWN.
+This is progress beyond preGO, NOT numerical/report/UI/reopen qualification.
+All exact own CID/policy/mount/PG/port cleanup pass. Independent saved checker
+exit0 verifies failure/cleanup consistency, not runtime success. Evidence
+output/0038-first-whole-job/{cgroup-fixed-actual,worker-output,independent-checked,
+resource-current}.json. Sources58f63d6 on branch, childa0abb2dc/sourcee34 unchanged.
+Primary NEXT diagnose pinned entry's rejection before another unchanged job;
+preserve fixed entry/source/Reader/publication guards, no opaque-helper waiver.
+Resource named phase194006B +2000tail/base128796191=>128992197<=129MB, original
+100KB and all previous subcaps FAILED/retained, whole-C PENDING. Cloud original
+PG-inclusive delta2882220032<=5GB/free159380586496B. Full A ACTIVE/no new fee.
+
 Latest d9ad9fd1/4cbc2680 reaches real controller ready, then binding refuses
 _verify_cgroup: cgroupfs stat-size0 differs from its actual limit bytes. Ordinary
 file reader was incorrectly reused. Root narrow repair uses held no-follow

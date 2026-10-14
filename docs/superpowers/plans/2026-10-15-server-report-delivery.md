@@ -381,3 +381,16 @@ untouched, same livePID/current-kernel/limits acceptance. Wholeprovider14passes.
 Consume another20000 from previous150000 docsGit reservation ONCE (130000 remain)
 for connected evidence; base128796191, same129MB cap/all old peaks retained. This
 spends a forecast reserve, never discards an actual introduced byte or failure.
+
+Actual correcteda29780f0 now crosses current livePID/kernel/cgroup/mount binding
+and GO, then pinned entry emits only fixed rejection. No numerical result/report.
+All own cleanup independently confirmed, failed job retained. Next diagnose this
+exact entry boundary before repeating a job. If existing evidence is insufficient,
+scope only a bounded fixed-stage/error-code diagnostic in the already pinned
+entry: preserve its sanitized public refusal, source/argv/binding checks and
+Reader/publication authority. Reuse current wheel/base and source-layer build,
+no new package/native alias/kernel waiver or third structural proof family.
+Target<=2hours to precise cause/next actual report attempt; new architecture/native
+requirement returns to Planner with risk/effort/acceptance impact before expansion.
+Full A remains ACTIVE; no new fee or formal168h revival. Current evidence ledger
+phase194006B/base128796191/2000tail forecast128992197<=129MB, all failures retained.

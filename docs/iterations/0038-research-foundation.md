@@ -1,5 +1,28 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current whole registered job reaches actual binding/GO, not report
+
+User report/page/reopen remains unavailable. Root Verifier actual ubuntu
+a29780f0/10.987s with committed provider58f63d6/current childa0abb2dc/sourcee34:
+PG TLSv1.3/256bit/least-privilege SCRAM, authenticated existing ASGI submit and
+claim pass. Parent current image/kernel/livePID/mount/cgroup binding succeeds;
+binding1041B/UID10001/0400 and child-created stderr log prove GO crossed. Job
+14c6f374 FAILED/worker_failed/no artifacts, child stderr only "worker entry
+rejected", no error.json/result.json. Specific inner entry failure remains
+UNKNOWN; no numerical/native/report/API-network/browser/reopen certification.
+Exact own container/policy/mount/PG/port cleanup all true, independently saved
+read sees CID absent and postmaster absent. Root checker exit0 checks factual
+failure/cleanup/source hashes, explicitly numerical_report_qualified=false.
+Evidence output/0038-first-whole-job/cgroup-fixed-actual.json,worker-output.json,
+independent-checked.json,resource-current.json. Retained new native696B, named
+local193310B, phase194006B; base128796191 plus2000receipt tail=>128992197<=129MB.
+Initial100KB subcap FAILED, previous failed caps/peaks and all objects retained,
+whole-C attribution PENDING. Original PG-inclusive cloud delta2882220032B<=5GB,
+free159380586496B, no new fee/model calls. Source fixes4dffa6a/66db62b/58f63d6
+pushed; old PR175draft gates unchanged. Planner next bounded current-entry
+failure classification, same successful-job acceptance; no blind job replay,
+source-only repeat, third structural proof family or opaque native waiver.
+
 ## Latest actual binding refusal: cgroup virtual-file reader
 
 Controller now ready, actual PG/ASGI claim remains proven. Complete calls
