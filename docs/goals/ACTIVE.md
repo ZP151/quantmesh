@@ -91,11 +91,12 @@ https://openapi.moomoo.com/moomoo-api-doc/en/opend/opend-intro.html.
 ### Latest bounded durable-store checkpoint — 2026-10-14
 
 PostgreSQL job/outbox schema v1→v2 FIFO migration and expired analysis-lease
-recovery are implemented locally in commits `d11f091` and `86648c7`; the
+recovery are committed in `d11f091` and `86648c7`, with checkpoint commit
+`eaaed6f` pushed to PR #175. The
 disposable PostgreSQL 16 integration file passes 3 tests (1 dependency warning,
 3.22s), Ruff/format checks pass, and scoped review round 2 has no actionable
-P1/P2/P3. These commits are ahead of, and not included in, PR #175 remote head
-`42ac0e0`. Exact-head CI has not covered them; do not treat this local slice as
+P1/P2/P3. PR #175 now points at `eaaed6f`; its first immediate status read had
+no check records yet, so exact-head CI is pending. Do not treat this slice as
 merged/released or as production PostgreSQL qualification.
 
 The broader Windows Python 3.13 regression run was 400 passed / 68 skipped /

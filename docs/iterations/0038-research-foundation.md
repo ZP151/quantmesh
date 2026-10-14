@@ -1677,14 +1677,15 @@ warning, 3.22s, exit 0. Ruff and formatting checks on the two changed Python
 files pass. On resume, the focused test file without its prior disposable PG
 environment ran 1 passed / 2 skipped (psycopg and test DSN were absent); this
 did not replace the recorded actual-database run. Current `git diff --check`,
-Ruff and format checks pass. Independent scoped PostgreSQL store review round 2 found no
-actionable P1/P2/P3. The bounded execution plan is
+Ruff and format checks pass. Independent scoped PostgreSQL store review round 2
+found no actionable P1/P2/P3. The bounded execution plan is
 `docs/superpowers/plans/2026-10-14-postgres-job-store-migration.md`.
 
-The implementation commits `d11f091` and `86648c7` are local on
-`codex/0038-research-foundation`, ahead of PR #175's remote head
-`42ac0e0d695cea24b9b0e89c7937addef8c85e7b`; they are not yet covered by its
-CI. A broader Windows Python 3.13 run reported 400 passed, 68 skipped, and 6
+The implementation commits `d11f091` and `86648c7`, plus checkpoint commit
+`eaaed6f`, were pushed to PR #175's branch. The PR now points at
+`eaaed6fbf39fa5bd6116c1459dd78322d8c1f4b2`; its first immediate GitHub status
+read showed no check records yet, so exact-head CI is still pending. A broader
+Windows Python 3.13 run reported 400 passed, 68 skipped, and 6
 failures in existing runtime/admission checks that require Linux CPython 3.12;
 this is recorded as an environment limitation, not a green full-suite result.
 The local PostgreSQL result does not qualify PostgreSQL 18.6/TLS, production
