@@ -233,8 +233,22 @@ def _json(path: Path, expected: str) -> dict:
     return data
 
 
-def _inventory(path: Path, expected: str) -> dict[str, str]:
-    data = _json(path, expected)
+def _metadata_bytes(path: Path, expected: str) -> bytes:
+    raw = _read(path, _JSON_LIMIT)
+    if not _sha(expected) or hashlib.sha256(raw).hexdigest() != expected:
+        raise ValueError
+    return raw
+
+
+def _inventory(
+    path: Path, expected: str, *, manifest_path: Path, manifest_expected: str
+) -> dict[str, str]:
+    path, manifest_path = _path(str(path)), _path(str(manifest_path))
+    raw = _metadata_bytes(path, expected)
+    _metadata_bytes(manifest_path, manifest_expected)
+    data = json.loads(raw, object_pairs_hook=_pairs)
+    if not isinstance(data, dict):
+        raise ValueError
     if set(data) != {"roots", "files", "symlinks"}:
         raise ValueError
     files, links = data["files"], data["symlinks"]
@@ -254,6 +268,17 @@ def _inventory(path: Path, expected: str) -> dict[str, str]:
         raise ValueError
     if any(a != b and a.is_relative_to(b) for a in roots for b in roots):
         raise ValueError
+    metadata_paths = {str(path), str(manifest_path)}
+    if metadata_paths & (set(files) | set(links)):
+        raise ValueError
+    metadata_names = {str(path): "inventory.json", str(manifest_path): "manifest.json"}
+    covered_metadata = set()
+    for metadata_path, canonical_name in metadata_names.items():
+        candidate = Path(metadata_path)
+        if any(candidate.is_relative_to(root) for root in roots):
+            if candidate.name != canonical_name:
+                raise ValueError
+            covered_metadata.add(metadata_path)
     measured = set()
     for root in roots:
         for item in root.rglob("*"):
@@ -263,6 +288,7 @@ def _inventory(path: Path, expected: str) -> dict[str, str]:
                     raise ValueError
             elif not item.is_dir():
                 raise ValueError
+    measured.difference_update(covered_metadata)
     if measured != set(files) | set(links) or set(files) & set(links):
         raise ValueError
     for name, digest in files.items():
@@ -284,6 +310,8 @@ def _inventory(path: Path, expected: str) -> dict[str, str]:
             resolved.is_file() and str(resolved) not in files
         ):
             raise ValueError
+    _metadata_bytes(path, expected)
+    _metadata_bytes(manifest_path, manifest_expected)
     return files
 
 
@@ -496,9 +524,16 @@ def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict
             or not executable.is_relative_to(prefix)
         ):
             raise ValueError
-        files = _inventory(_path(data["inventory_path"]), data["inventory_sha256"])
+        current_manifest = _path(str(Path(manifest_path)))
+        inventory_path = _path(data["inventory_path"])
+        files = _inventory(
+            inventory_path,
+            data["inventory_sha256"],
+            manifest_path=current_manifest,
+            manifest_expected=manifest_sha256,
+        )
         required = [source, prefix]
-        inventory = _json(_path(data["inventory_path"]), data["inventory_sha256"])
+        inventory = _json(inventory_path, data["inventory_sha256"])
         if any(str(root) not in inventory["roots"] for root in required):
             raise ValueError
         roots = [_path(root) for root in inventory["roots"]]
@@ -605,6 +640,8 @@ def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict
             raise ValueError
         if _interpreter_pin(executable, prefix, files, inventory["symlinks"]) != interpreter:
             raise ValueError
+        _metadata_bytes(inventory_path, data["inventory_sha256"])
+        _metadata_bytes(current_manifest, manifest_sha256)
         executable_digest = interpreter[0]
         dependency = hashlib.sha256(
             _canonical(

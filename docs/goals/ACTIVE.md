@@ -1,5 +1,46 @@
 # Active Goal
 
+## Current checkpoint — fixed-layout metadata cycle repaired; entry/parent pending
+
+The canonical fixed-entry layout places manifest.json and inventory.json inside
+source_root=/opt/quantmesh. Requiring their hashes inside their own inventory
+creates a self-hash cycle. Only these two current, independently SHA-sealed
+metadata paths are now excluded from ordinary membership when covered by an
+inventory root, with canonical filenames, no files/symlinks dual listing, and
+bounded byte/digest checks before/after inventory verification and publication.
+Every other JSON/source/file remains in exact membership. Three-key inventory,
+eleven-key manifest and five-field runtime schemas remain; no native cache or
+image-admission exception, prefix mutation or default Linux activation.
+
+Agent canonical in-root RED fails. Its first C-mounted71-case attempt exits124
+at120s with one unflushed failure; cause UNKNOWN and diagnostics/root retained.
+Root confirms no matching test process remains. Same source on fresh native WSL
+root passes71/7.17s. Root adds a mutation marker proving the old alias late-link
+wrapper was refusing on missing-kwargs TypeError before mutation (actual RED1).
+Forwarding kwargs restores the real mutation; final71pass/6.81s includes marker
+and both metadata late-change refusals. Separate added unsealed-source case
+passes1/4.32s. An initial misplaced-marker experiment is retained, NOT RED proof.
+Scoped review has no P1/P2; its source-file coverage suggestion is added and
+verified. Ruff/format/diff pass. Source pins and all evidence remain under
+`output/0038-worker-sealed-metadata/`; resource final receipt carries previous
+108,397,325B/all failures forward within3MB phase/cumulative115MB, no deletion
+or baseline reset. Original whole-C attribution remains pending.
+
+PR175 parent370a745 exact CI38595332643 has classify/research_service/fast SUCCESS
+and release IN_PROGRESS at intake. It is not rerun, merged or deployed. This
+metadata repair is on the kernel dependency branch only; no source image has
+been built or activated. Actual source/library/ELF/kernel byte proofs already
+recorded remain intact and are not repeated.
+
+Next implement the actual fixed standalone entry with source_root=/opt/quantmesh
+and source-bound observer at /opt/quantmesh/quantmesh/research/worker_provenance.py,
+then independently bind the derived immutable source image and actual created
+CID/kernel/mount/control proof before the trusted go digest. Existing baseline,
+Reader, report/reclaim, private PG, Agent/Eval and server-market acceptance all
+remain required; opaque native cache refusal is not removed merely to pass a
+probe. Do not revive the stopped a718900-line WIP or manufacture source prefixes.
+Goal ACTIVE; paper=true/live=false,168h NOT_REQUIRED, no added paid resource.
+
 ## Current checkpoint — actual loaded-policy bytes verified; complete Worker pending
 
 PR #175 final370a745 CI38595332643 is running; old f5e38ea CI38584253826 failed

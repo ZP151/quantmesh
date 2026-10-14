@@ -94,6 +94,34 @@ def _bind(sealed):
     return _sha(sealed.manifest.read_bytes())
 
 
+def _place_metadata_inside_source(sealed):
+    sealed.inventory = sealed.source / "inventory.json"
+    sealed.manifest = sealed.source / "manifest.json"
+    sealed.data["inventory_path"] = str(sealed.inventory)
+    ordinary = {
+        str(path): _sha(path.read_bytes())
+        for root in (sealed.source, sealed.prefix, sealed.library.parent, sealed.notice.parent)
+        for path in root.rglob("*")
+        if path.is_file() and path not in {sealed.inventory, sealed.manifest}
+    }
+    sealed.inventory.write_text(
+        json.dumps(
+            dict(
+                roots=[
+                    str(sealed.source),
+                    str(sealed.prefix),
+                    str(sealed.library.parent),
+                    str(sealed.notice.parent),
+                ],
+                files=ordinary,
+                symlinks={},
+            )
+        )
+    )
+    sealed.data["inventory_sha256"] = _sha(sealed.inventory.read_bytes())
+    return _bind(sealed)
+
+
 def _runtime(api, sealed, monkeypatch):
     monkeypatch.setenv("PYTHONDONTWRITEBYTECODE", "1")
     monkeypatch.setattr(
@@ -182,6 +210,7 @@ def test_interpreter_alias_drift_and_unmeasured_targets_refuse(sealed, monkeypat
     api = _api()
     _runtime(api, sealed, monkeypatch)
     target, inventory = _interpreter_alias(sealed)
+    mutations = []
     if fault == "undeclared":
         inventory["symlinks"] = {}
     elif fault == "unmeasured":
@@ -198,10 +227,11 @@ def test_interpreter_alias_drift_and_unmeasured_targets_refuse(sealed, monkeypat
         inventory["files"][str(alternative)] = _sha(alternative.read_bytes())
         original = api._inventory
 
-        def change_after_inventory(*args):
-            measured = original(*args)
+        def change_after_inventory(*args, **kwargs):
+            measured = original(*args, **kwargs)
             sealed.exe.unlink()
             sealed.exe.symlink_to(alternative.name)
+            mutations.append(fault)
             return measured
 
         monkeypatch.setattr(api, "_inventory", change_after_inventory)
@@ -210,6 +240,7 @@ def test_interpreter_alias_drift_and_unmeasured_targets_refuse(sealed, monkeypat
 
         def change_before_publication():
             target.write_bytes(b"changed after inventory admission")
+            mutations.append(fault)
             return distributions()
 
         monkeypatch.setattr(api, "_distributions", change_before_publication)
@@ -217,6 +248,8 @@ def test_interpreter_alias_drift_and_unmeasured_targets_refuse(sealed, monkeypat
     sealed.data["inventory_sha256"] = _sha(sealed.inventory.read_bytes())
     with pytest.raises(api.WorkerBuildRejected, match="^worker build rejected$"):
         api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+    if fault in {"late_link", "late_bytes"}:
+        assert mutations == [fault]
 
 
 def test_missing_runtime_bytecode_policy_refuses(sealed, monkeypatch):
@@ -271,6 +304,81 @@ def test_external_manifest_hash_required(sealed, monkeypatch):
     _runtime(api, sealed, monkeypatch)
     with pytest.raises(api.WorkerBuildRejected):
         api.measure_worker_runtime(sealed.manifest, manifest_sha256="0" * 64)
+
+
+def test_metadata_inside_source_root_is_independently_sealed(sealed, monkeypatch):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    binding = _place_metadata_inside_source(sealed)
+    assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=binding)
+
+
+@pytest.mark.parametrize("metadata", ["manifest", "inventory"])
+def test_changed_covered_metadata_bytes_refuse(sealed, monkeypatch, metadata):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    binding = _place_metadata_inside_source(sealed)
+    path = getattr(sealed, metadata)
+    path.write_bytes(path.read_bytes() + b" ")
+    with pytest.raises(api.WorkerBuildRejected):
+        api.measure_worker_runtime(sealed.manifest, manifest_sha256=binding)
+
+
+@pytest.mark.parametrize("metadata", ["manifest", "inventory"])
+def test_covered_metadata_must_use_canonical_filename(sealed, monkeypatch, metadata):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    _place_metadata_inside_source(sealed)
+    path = getattr(sealed, metadata)
+    renamed = path.with_name("alternate.json")
+    path.rename(renamed)
+    setattr(sealed, metadata, renamed)
+    if metadata == "inventory":
+        sealed.data["inventory_path"] = str(renamed)
+    with pytest.raises(api.WorkerBuildRejected):
+        api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+
+
+@pytest.mark.parametrize(
+    "entry", ["extra_json", "extra_source", "listed_manifest", "listed_inventory"]
+)
+def test_covered_metadata_and_new_source_files_are_not_ordinary_inventory_entries(
+    sealed, monkeypatch, entry
+):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    _place_metadata_inside_source(sealed)
+    data = json.loads(sealed.inventory.read_text())
+    if entry == "extra_json":
+        (sealed.source / "unsealed.json").write_text("{}")
+    elif entry == "extra_source":
+        (sealed.source / "quantmesh" / "unsealed.py").write_text("VALUE = 2\n")
+    elif entry == "listed_manifest":
+        data["files"][str(sealed.manifest)] = "0" * 64
+    else:
+        data["symlinks"][str(sealed.inventory)] = "manifest.json"
+    sealed.inventory.write_text(json.dumps(data))
+    sealed.data["inventory_sha256"] = _sha(sealed.inventory.read_bytes())
+    with pytest.raises(api.WorkerBuildRejected):
+        api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+
+
+@pytest.mark.parametrize("metadata", ["manifest", "inventory"])
+def test_metadata_changed_after_inventory_verification_refuses(sealed, monkeypatch, metadata):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    _place_metadata_inside_source(sealed)
+    original = api._inventory
+
+    def change_after_inventory(*args, **kwargs):
+        measured = original(*args, **kwargs)
+        path = getattr(sealed, metadata)
+        path.write_bytes(path.read_bytes() + b" ")
+        return measured
+
+    monkeypatch.setattr(api, "_inventory", change_after_inventory)
+    with pytest.raises(api.WorkerBuildRejected):
+        api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
 
 
 def test_json_duplicate_key_refuses(sealed, monkeypatch):
