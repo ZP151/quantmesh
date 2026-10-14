@@ -16,6 +16,7 @@ import re
 import stat
 import sys
 import types
+from dataclasses import dataclass
 from pathlib import Path
 
 LINUX_LOCK_SHA256 = "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a"
@@ -27,6 +28,108 @@ _distributions = importlib.metadata.distributions
 
 class WorkerBuildRejected(ValueError):
     """Sanitized source/runtime rejection; never echo a manifest or host path."""
+
+
+@dataclass(frozen=True, slots=True)
+class ParentBindingContract:
+    """Parsed structure only; this record does not grant image or Worker admission."""
+
+    schema: int
+    engine_id: str
+    image_id: str
+    image_config_sha256: str
+    container_id: str
+    owner_nonce: str
+    manifest_sha256: str
+    inventory_sha256: str
+    dependency_lock_sha256: str
+    python_executable_sha256: str
+    entry_sha256: str
+    observer_sha256: str
+    expected_prefix: str
+    python_version: str
+    kernel_profile_sha256: str
+
+
+_PARENT_BINDING_LIMIT = 16 * 1024
+_PARENT_BINDING_KEYS = frozenset(
+    {
+        "schema",
+        "engine_id",
+        "image_id",
+        "image_config_sha256",
+        "container_id",
+        "owner_nonce",
+        "manifest_sha256",
+        "inventory_sha256",
+        "dependency_lock_sha256",
+        "python_executable_sha256",
+        "entry_sha256",
+        "observer_sha256",
+        "expected_prefix",
+        "python_version",
+        "kernel_profile_sha256",
+    }
+)
+_PARENT_BINDING_DIGESTS = frozenset(
+    {
+        "image_config_sha256",
+        "manifest_sha256",
+        "inventory_sha256",
+        "dependency_lock_sha256",
+        "python_executable_sha256",
+        "entry_sha256",
+        "observer_sha256",
+        "kernel_profile_sha256",
+    }
+)
+
+
+def parse_parent_binding(raw: bytes, *, expected_sha256: str) -> ParentBindingContract:
+    """Validate bounded canonical parent-binding bytes, without granting authority.
+
+    The caller must obtain ``expected_sha256`` from the trusted parent/argv
+    boundary. This function verifies only exact bytes and field relationships;
+    it does not verify an Engine, container, image, kernel profile, or runtime.
+    """
+    try:
+        if (
+            type(raw) is not bytes
+            or not 0 < len(raw) <= _PARENT_BINDING_LIMIT
+            or not _sha(expected_sha256)
+            or hashlib.sha256(raw).hexdigest() != expected_sha256
+        ):
+            raise ValueError
+        value = json.loads(raw, object_pairs_hook=_pairs)
+        if type(value) is not dict or set(value) != _PARENT_BINDING_KEYS:
+            raise ValueError
+        if _canonical(value) != raw:
+            raise ValueError
+        if type(value["schema"]) is not int or value["schema"] != 1:
+            raise ValueError
+        for key in _PARENT_BINDING_KEYS - {"schema"}:
+            item = value[key]
+            if type(item) is not str or not item or len(item) > 256:
+                raise ValueError
+            if any(ord(char) < 0x20 or ord(char) == 0x7F for char in item):
+                raise ValueError
+        if any(not _sha(value[key]) for key in _PARENT_BINDING_DIGESTS):
+            raise ValueError
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", value["image_id"]):
+            raise ValueError
+        if not re.fullmatch(r"[0-9a-f]{64}", value["container_id"]):
+            raise ValueError
+        if not re.fullmatch(r"[0-9a-f]{32}", value["owner_nonce"]):
+            raise ValueError
+        if not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", value["engine_id"]):
+            raise ValueError
+        if value["expected_prefix"] != "/usr/local":
+            raise ValueError
+        if not re.fullmatch(r"3\.12\.\d{1,3}", value["python_version"]):
+            raise ValueError
+        return ParentBindingContract(**value)
+    except (AttributeError, KeyError, TypeError, ValueError, UnicodeError, RecursionError):
+        raise WorkerBuildRejected("worker binding rejected") from None
 
 
 def _canonical(value: object) -> bytes:

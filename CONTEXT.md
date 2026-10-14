@@ -1,6 +1,56 @@
 # QuantMesh Domain Context
 
-## Current AWS restored; sealed data-file prerequisite passed — full admission pending
+## Current goal ACTIVE — candidate CI passed, reader integration in progress
+
+The user cleared the unfinished old goal and explicitly requested a new goal.
+The controller now reports ACTIVE for the remaining approved iteration0038 A
+scope. This is a replacement, not a claim that the old A deliverables finished.
+Formal168h remains NOT_REQUIRED/on-demand; paper=true/live=false, existing three
+AWS instances retained, no new paid resource or model secret configured.
+
+Exact768b3b8 CI38501519292 is TERMINAL SUCCESS: classify/research_service/fast/
+release/python pass; browser/domain skipped. Observer70375 exits0 and is not
+restarted. The exact-head review-thread snapshot is empty. PR175 remains DRAFT;
+full runtime/actual service and applicable human release gates still remain.
+
+New G1 primitive metadata/framing leaf is UNCOMMITTED: source08f637f1/tests920e461c,
+161passed/1warning/1.04s, Ruff/format clear. Root verifies its behavior against
+actual saved two-row schema and remaining-row1 rejection. It does not decode
+Parquet or create bars, and CI768 does NOT cover this new leaf. A hostile
+metaclass equality case has retained RED2/GREEN correction. Both REDs are
+byte-exact gzip archives. The producer briefly exceeded its35KB sub-scope by340B;
+final footprint17,278B after verified archival. Preserve this overrun and the
+first root checker import-path failure; neither is silently erased or waived.
+
+The NEW uncommitted reader and routing now pass244software checks/1existing
+warning/1.30s, plus14-file Ruff/format and a scoped spec/quality review with no
+P1/P2. One reader binding covers both child verifies, baseline/ReportRegistry
+resolve+record, evidence and receipt/result writes. It uses sealed per-shard
+copies, bounded metadata/row chunks, all declared coverage, cached rows and held
+repins including normal exit. Actual saved DuckDB6-field DESCRIBE and30.5MiB
+readback correct earlier mock assumptions; connection controls now apply at
+creation. The primitive row converter has24 checks and a scoped clear review.
+These mocks do not certify a new Linux reader/helper or full native execution.
+
+The NEW AWS epoch projection prerequisite now passes on the same093b4734 image:
+2026-10-14T07:49:40.153289494Z–07:49:43.531030993Z, childexit0/noOOM/PID0,
+ownedCIDremoved, sameEngine2images/0containers. Two exactUTC microsecond values,
+8logical/9physical/1footer, EOF and locked settings match;2322B synthetic fixture
+plussealedcopy. Actualstoredreceipt5405B/SHA3823733a86cf44c953a7bd5ea4649bb47bffac1cfc5e9d8e894e012ee28b353c
+andchildoutput2603B/SHAe7dc572956571ee7a42a1f844eb3b0bf15453ba1cf1622d96fe23377dbeb05e8
+were recovered over privateSSH and match actualstdout/observation. Native source
+module1d4ef218 is unchanged. Prior failed guard attempt never launched a
+container; rawfailure and failedsourcecopies retained. P1inode/P2path-reopen and
+actualreceipt-shape regressions have retained RED/GREEN and scoped reviews;
+newdispatcher executes verifiedbytes, not mutablepath. All16pureguards pass.
+
+Next: actual NEW reader/helper qualification and complete native/kernel/
+independent parent authority, then durable jobs, reports, Agent/Eval and server
+market-source user flows. This finite projection PASS does not certify the new
+reader/helper or full Worker. No completed probe, old CI, Windows helper/tunnel
+or application deployment is repeated. New code remains uncommitted/unreleased.
+
+## Historical checkpoint: AWS restored; sealed data-file prerequisite passed
 
 2026-10-14 authentication is restored; actual private SSH commands and byte-exact
 receipt recovery work. Canonical schema observation and new sealed data-file
@@ -379,3 +429,14 @@ QuantMesh currently uses one bounded context: quantitative research and guarded 
 - Custody of user funds
 - Training a foundation model from scratch
 - Supporting every broker or prediction market at launch
+
+## Fast continuation dispatched
+
+The app accepted a follow-up to THIS same Codex thread with model=gpt-6-luna,
+thinking=medium, under the user's explicit fast-model/continue instruction.
+The already-running root response retains its model; the tool applies the
+following continuation override. read_thread does not expose a model-setting
+field, so no claim of changing this running response is made. This resolves
+the earlier direct-setter limitation for future turns; no product advisory
+model/API key, fees, release approval or goal completion changed. Goal remains
+ACTIVE; source/evidence handoff in output/0038-held-fixture-reader/fast-continuation-handoff.json.

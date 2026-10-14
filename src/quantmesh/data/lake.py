@@ -26,6 +26,7 @@ import pandas as pd
 from pydantic import ValidationError
 
 from quantmesh._fs import atomic_replace
+from quantmesh.data._fixture_read_scope import current_reader
 from quantmesh.data.layout import (
     SHARD_NAME,
     shards_in,
@@ -192,6 +193,11 @@ class Lake:
         be timezone-aware. Returns an empty list when the partition does
         not exist.
         """
+        reader = current_reader(self.root, dataset)
+        if reader is not None:
+            return reader.read_bars(
+                interval=interval, venue=venue, symbol=symbol, start=start, end=end
+            )
         validate_dataset_name(dataset)
         interval_to_timedelta(interval)
         validate_symbol(symbol)
@@ -273,6 +279,9 @@ class Lake:
         experiments read through this gate so pinned revisions mean
         something.
         """
+        reader = current_reader(self.root, name)
+        if reader is not None:
+            return reader.dataset()
         validate_dataset_name(name)
         manifest_path = self.root / name / MANIFEST_NAME
         if not manifest_path.exists():

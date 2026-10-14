@@ -22,11 +22,13 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
+from quantmesh.data._fixture_read_scope import bind_reader
 from quantmesh.research._fixture_handles import (
     DirectoryHandles,
     UnsupportedSnapshotProfile,
     require_snapshot_profile,
 )
+from quantmesh.research._fixture_reader import FixtureReader
 from quantmesh.research.baselines import run_baseline_report
 from quantmesh.research.fixture_snapshot import copy_fixture_snapshot
 from quantmesh.research.job_artifacts import (
@@ -109,12 +111,16 @@ def runtime_fingerprint(
     )
 
 
-def _verify(job: JobRecord, inputs_root: Path) -> None:
+def _verify_identity(job: JobRecord) -> None:
     if canonical_request_digest(job.request) != job.request_digest:
         raise ValueError("request digest mismatch")
     spec = get_strategy(job.request.strategy_id, job.request.strategy_version)
     if spec.implementation_digest != job.implementation_digest:
         raise ValueError("queued engine changed")
+
+
+def _verify(job: JobRecord, inputs_root: Path) -> None:
+    _verify_identity(job)
     validate_dataset(job.request, inputs_root, datetime.now(UTC))
 
 
@@ -307,51 +313,55 @@ def _child_main(
         job = JobRecord.model_validate_json(
             _read_child_file(path, path / "job.json", _MAX_INPUT_METADATA_BYTES)
         )
-        _verify(job, path / "inputs")
+        _verify_identity(job)
         r = job.request
-        registry = ReportRegistry(output / "registry", lake_root=path / "inputs")
-        report = run_baseline_report(
-            dataset=r.dataset.dataset_id,
-            revision=r.dataset.revision,
-            strategy=r.strategy_id,
-            interval=r.interval,
-            universe=r.universe,
-            window_spec=r.window_spec,
-            costs=r.costs,
-            commit=job.implementation_digest,
-            registry=registry,
-        )
-        report.evidence.update(
-            request_digest=job.request_digest,
-            manifest_digest=r.dataset.manifest_digest,
-            export_digest=r.dataset.export_digest,
-            build_digest=runtime["build_digest"],
-            dependency_digest=runtime["dependency_digest"],
-        )
-        _verify(job, path / "inputs")
-        (output / "receipt.json").write_bytes(
-            _canonical(
-                dict(
-                    report=report.model_dump(mode="json"),
-                    runtime=runtime,
-                    attempt=job.attempt,
-                    owner=job.lease_owner,
-                    fixture_only=True,
-                    limits=dict(
-                        platform=sys.platform,
-                        memory_mib=r.budget.memory_mib,
-                        cpu_limit=1.0,
-                        memory_semantics="job_commit"
-                        if os.name == "nt"
-                        else "cgroup_v2"
-                        if output_directory is not None
-                        else "process_address_space",
-                        tree_owned=True,
-                    ),
+        inputs_root = path / "inputs"
+        with FixtureReader(job, inputs_root, time.monotonic() + r.budget.timeout_seconds) as reader:
+            with bind_reader(inputs_root, r.dataset.dataset_id, reader):
+                _verify(job, inputs_root)
+                registry = ReportRegistry(output / "registry", lake_root=inputs_root)
+                report = run_baseline_report(
+                    dataset=r.dataset.dataset_id,
+                    revision=r.dataset.revision,
+                    strategy=r.strategy_id,
+                    interval=r.interval,
+                    universe=r.universe,
+                    window_spec=r.window_spec,
+                    costs=r.costs,
+                    commit=job.implementation_digest,
+                    registry=registry,
                 )
-            )
-        )
-        (output / "result.json").write_bytes(canonical_result(report))
+                report.evidence.update(
+                    request_digest=job.request_digest,
+                    manifest_digest=r.dataset.manifest_digest,
+                    export_digest=r.dataset.export_digest,
+                    build_digest=runtime["build_digest"],
+                    dependency_digest=runtime["dependency_digest"],
+                )
+                _verify(job, inputs_root)
+                (output / "receipt.json").write_bytes(
+                    _canonical(
+                        dict(
+                            report=report.model_dump(mode="json"),
+                            runtime=runtime,
+                            attempt=job.attempt,
+                            owner=job.lease_owner,
+                            fixture_only=True,
+                            limits=dict(
+                                platform=sys.platform,
+                                memory_mib=r.budget.memory_mib,
+                                cpu_limit=1.0,
+                                memory_semantics="job_commit"
+                                if os.name == "nt"
+                                else "cgroup_v2"
+                                if output_directory is not None
+                                else "process_address_space",
+                                tree_owned=True,
+                            ),
+                        )
+                    )
+                )
+                (output / "result.json").write_bytes(canonical_result(report))
     except DatasetRejected:
         (output / "error.json").write_text('{"error_code":"dataset_rejected"}')
         raise SystemExit(2) from None

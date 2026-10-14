@@ -7,6 +7,7 @@ import math
 from datetime import UTC, datetime
 from pathlib import Path
 
+from quantmesh.data._fixture_read_scope import current_reader
 from quantmesh.data.lake import Lake
 from quantmesh.data.layout import shards_in, validate_dataset_name
 from quantmesh.domain.market_data import interval_to_timedelta, monotonic_violations
@@ -48,6 +49,9 @@ def get_strategy(strategy_id: str, version: str) -> StrategySpec:
 
 
 def _fixture_pin(root: Path, name: str) -> tuple[DatasetRef, object]:
+    reader = current_reader(root, name)
+    if reader is not None:
+        return reader.pin()
     try:
         validate_dataset_name(name)
         manifest_path = root / name / "manifest.json"

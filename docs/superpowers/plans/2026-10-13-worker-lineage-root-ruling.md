@@ -1,5 +1,25 @@
 # Root ruling: bounded lineage foundation, native admission still refused
 
+## 2026-10-14 synthetic Reader observation checkpoint
+
+One independently reviewed, fresh-nonce run of the bounded probe package passed
+on the existing private Engine and immutable image. The sealed source digest
+505162d3501041d7a9a246e2d2fbf19bb40d45c8e2f830f9a7971b48a6d90684 read the
+fixed synthetic Parquet fixture (SHA256
+fec5973112fc7d5f7e183618dde618052c9477aef7590d522fc3335c3e7d594c) through
+`FixtureReader.read_bars`, yielding exactly two rows at 2026-01-05T00:00Z and
+00:01Z. Parent UID/GID/mode/hash checks passed; the networkless, read-only,
+resource-bounded owned container exited 0 without OOM, was removed, and the
+same Engine returned to two images and zero containers. Raw evidence and the
+saved independent checker are under
+`output/0038-held-fixture-reader/job-reader-actual/actual-fixture-reader-5923a8d00de74753aa6c0b04bec31203`.
+
+This is strictly a synthetic reader observation. It does not establish native
+or kernel profile qualification, independent Worker parent admission, snapshot
+UID handoff, complete G1/G3 job execution, result/report validation, durable
+PostgreSQL recovery, Agent/Eval service execution, or production readiness.
+The earlier exit-137 phase is retained unchanged; its cause remains unknown.
+
 Status: follow-up to a718 proposal SHA256
 30b225607bfb56347d3131ab2df5a71639701151527eb1551881e56a16743748.
 The proposal is unexecuted. One new bounded review finds three P2 design gaps:
@@ -233,3 +253,121 @@ registry repins with actual row/schema/cumulative/request limits, keeping public
 store/strategy/math contracts unchanged. Full executable mmap/mprotect/kernel
 closure and trusted parent binding remain separate mandatory gates. No production
 Worker/image admission, services or actual jobs are activated by this receipt.
+
+## New active goal and G1 physical primitive leaf — 2026-10-14
+
+New goal is ACTUALACTIVE after user cleared the unfinished old controller goal.
+768b3b8 CI38501519292 terminalSUCCESS and emptyreviewthreads; no merge/deploy.
+New guard leaf source08f637f1/tests920e461c161passed/1warning; retained missing
+helperRED159 and hostilemetaclassRED2. Exacttype identity checks precede all
+valuecomparisons, footer rowcount consumes remainingbudget before Barobjects,
+Parquet framing bounds metadatafooter256KiB and file256MiB without decoding.
+Root saved actualschema rows2 passes and remaining1 refuses. Uncommitted, CI768
+does not cover it; full G1/jobwide/native/kernel/Worker admission remains pending.
+Producer35340B peak exceeds its35KB sub-scope by340B. Only its new syntheticRED
+logs are byteexact verifiedgzip before ownedplaintextremoval; final17278B.
+All originalC/AWS baselines/caps/failures stay retained, no silentreset/waiver.
+Firstrootchecker used stale editablepackagepath and failed before checking;
+new -B-I softwarecheck explicitly uses current verifiedsrc. This is never the
+productionimport/admissionrecipe. No new runtimebundle/nativepolicyretry.
+
+## Fast implementation preference — 2026-10-14
+
+User requests a fast model and continued execution. Actual new independent
+implementation uses host-available gpt-6-luna/medium with a narrow context;
+root chat model cannot be changed by current tools. Production advisory model
+configuration and API keys remain unchanged. Existing A goal remains ACTIVE.
+
+New stream helper source183eba88 plus job routing scope now have a combined
+195passed/1warning/1.08s software run (161metadata+22stream+12context).
+Root reproduced one double-source-close RED, fixed relinquishment beforeclose,
+normalcleanup failure refusal and originalconsumerexception preservation.
+Root found test formatting failure, corrected with exact AST equality; all6
+new files lint/format pass. Earlier full stream RED dumps are NOT_RETAINED;
+recovered counts are explicitly summaries only; lifecycleRED and finalGREEN
+are retained, including both the initially misplaced logs/hand-off copy and
+the proper output copy. All copies enter the same original resource ledger.
+
+All new code remains uncommitted and not covered by768CI. Whole-child routing
+and actual Linux/helper/job/image/kernel/parent admission are still pending;
+these mocked syscall checks grant no native or execution authority.
+
+Ruling: extend the bounded G1 software reader scope from450000 to1200000bytes,
+and cumulative source/test/evidence/Git forecast ceiling from25800000 to26600000
+before further implementation. The extra750KB covers primitive row conversion,
+the job-wide reader, integration tests, one scoped review and finite AWS proof
+receipts. Preserve baseline8876772, whole-C attribution PENDING,50GB free gate,
+all earlier evidence and paid resource limits. If wrong, bounded source/evidence
+rework costs750KB; this is no disk-baseline reset or native admission waiver.
+
+Ruling: retain the new epoch staging guard's original test-copy accounting gap.
+The initial39232B package report excluded one transient26737B source copy in
+its own disposable test directory; calculated peak65969B exceeded the original
+45000B actor ceiling by20969B (filesystem metadata additional, not measured).
+Authorize a70000B replacement actor ceiling and an explicit30000B conservative
+transient-copy reserve under the same26600000B cumulative ceiling. Future guard
+tests use memory mocks or tiny workspace-owned fake fixtures, not full copies
+in global temp. Preserve existing bytecode, failed source/review/RED evidence;
+none grants runtime authority. If wrong, bounded test/evidence rework costs30KB,
+with no change to the original baseline or pending whole-C attribution.
+
+New job-reader/routing task: root verified244software checks/1warning/1.30s,
+14-fileRuff/format/diffclear and one NEW scoped spec+qualityreviewclear. All code
+UNCOMMITTED;768CI does not cover it. The first9-reader mocks were insufficient:
+default connect, omitted6-to2DESCRIBEprojection and wrong32MB readback corrected
+against SAVED actual receipt, plus closed native type gates, deadline checks and
+exit repin/error cleanup. Reader now18focused checks, rows24/routing7; prior
+235GREEN preserved as superseded. Row RED2 contained1real metaclass callback
+regression and1test timestamp unit typo; final24GREEN distinguishes them.
+Evidence: output/0038-held-fixture-reader/reader-routing-review-package.json,
+root-verified-reader-green.log/.exit and reader-routing-review.txt. Native
+newreader/helper, completekernel/parent, PGjobs/reports/Agent/source remain
+PENDING. Epochoperator NEWsource review finds wrong-root/file-inode P1 BEFORE
+anyremote invocation; fixing with purefake transfer tests, no oldprobe rerun.
+
+Actual NEW epoch attempt: private SSH works, exit1, stdout477B/stderr0;
+reason prior_sealed_success BEFOREPHASEmkdir or Dockerlaunch. Executed
+source/pins and raw failure preserved in epoch-projection-actual. Prior actual
+50334ba2 receipt is unchanged; outerWorker_admission is absent, inner
+observation.Worker_admission isfalse. Fix strict real shape, not a defaultfalse
+waiver. Also restore32MB creationconfig vs30.5MiB readback, and full8logical
+columns vs6DESCRIBE fields. Source/observer fix tests and newsource-bound review
+precede another NEWphase attempt; no oldsuccessful phase rerun. The source
+path-reopenP2 had been independentlyclosed with verifiedbuffer compilation.
+Ruling: extend only epoch staging actor70000->80000B for actual-shape RED/GREEN
+and source review, under existing1200000G1/26600000cumulative forecasts. Retain
+failedactual originals, oldlimits/overruns/bytecode/copy evidence; no nativegate,
+originaldiskbaseline or paid resource waiver. If wrong, bounded rework10KB.
+
+Ruling: extend cumulative software/evidence ceiling26600000->26700000B before
+raw stored AWS receipt recovery and final handoff mirrors. The100KB is bounded
+evidence/source bookkeeping, not a runtime image, disk-baseline reset, native
+permission or new paid resource. Original8876772B baseline and whole-C PENDING
+attribution stay; free50GB and original AWS introduced5GB gates stay. If wrong,
+bounded additional evidence/rework costs100KB. All earlier limits/overruns remain.
+
+NEW epoch prerequisite ACTUAL PASS: fixed source child e7fbd7ac/operator38e017d2/
+dispatchf9864d0d,16pureguards and actual-shape scopedreviewclear beforeexecution.
+ActualDocker07:49:40.153289494Z–07:49:43.531030993Z exit0/noOOM/PID0;
+CID05f463a93ff41c35049224f28a950e92451f7870249661c7f8514b52bb455019
+removed;Engine2images0containers;2322B fixture+memfd; exact2UTCinteger microsecond
+rows/eightlogical/ninephysical/onefooter/EOF/lockedconfig. Actual rawserver
+receipt5405B SHA3823733a86cf44c953a7bd5ea4649bb47bffac1cfc5e9d8e894e012ee28b353c
+and output2603B SHAe7dc572956571ee7a42a1f844eb3b0bf15453ba1cf1622d96fe23377dbeb05e8
+recoveredprivatessh0, comparedtorealstdout, no replay. AWS originalbaseline
+161431252992B, actualfree159867269120B/introduced1563983872B remainwithinoriginal
+gates. Newreader/helper/nativekernel/parent and serviceacceptance stayPENDING;
+244software checks still current/uncommitted, CI768notapplicable tothesechanges.
+Evidence output/0038-held-fixture-reader/epoch-projection-actual-v2/; firstfailure
+in epoch-projection-actual/ retained and never claimed as nativeexecution.
+
+## Fast continuation dispatched
+
+The app accepted a follow-up to THIS same Codex thread with model=gpt-6-luna,
+thinking=medium, under the user's explicit fast-model/continue instruction.
+The already-running root response retains its model; the tool applies the
+following continuation override. read_thread does not expose a model-setting
+field, so no claim of changing this running response is made. This resolves
+the earlier direct-setter limitation for future turns; no product advisory
+model/API key, fees, release approval or goal completion changed. Goal remains
+ACTIVE; source/evidence handoff in output/0038-held-fixture-reader/fast-continuation-handoff.json.

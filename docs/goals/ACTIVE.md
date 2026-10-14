@@ -1,6 +1,94 @@
 # Active Goal
 
-## Current AWS restored; sealed data-file prerequisite passed — full admission pending
+## Current goal ACTIVE — synthetic Reader probe passed; full Worker remains gated
+
+The user cleared the unfinished old goal and explicitly requested a new goal.
+The controller now reports ACTIVE for the remaining approved iteration0038 A
+scope. This is a replacement, not a claim that the old A deliverables finished.
+Formal168h remains NOT_REQUIRED/on-demand; paper=true/live=false, existing three
+AWS instances retained, no new paid resource or model secret configured.
+
+Exact768b3b8 CI38501519292 is TERMINAL SUCCESS: classify/research_service/fast/
+release/python pass; browser/domain skipped. Observer70375 exits0 and is not
+restarted. The exact-head review-thread snapshot is empty. PR175 remains DRAFT;
+full runtime/actual service and applicable human release gates still remain.
+
+New G1 primitive metadata/framing leaf is UNCOMMITTED: source08f637f1/tests920e461c,
+161passed/1warning/1.04s, Ruff/format clear. Root verifies its behavior against
+actual saved two-row schema and remaining-row1 rejection. It does not decode
+Parquet or create bars, and CI768 does NOT cover this new leaf. A hostile
+metaclass equality case has retained RED2/GREEN correction. Both REDs are
+byte-exact gzip archives. The producer briefly exceeded its35KB sub-scope by340B;
+final footprint17,278B after verified archival. Preserve this overrun and the
+first root checker import-path failure; neither is silently erased or waived.
+
+The NEW uncommitted reader and routing now pass244software checks/1existing
+warning/1.30s, plus14-file Ruff/format and a scoped spec/quality review with no
+P1/P2. One reader binding covers both child verifies, baseline/ReportRegistry
+resolve+record, evidence and receipt/result writes. It uses sealed per-shard
+copies, bounded metadata/row chunks, all declared coverage, cached rows and held
+repins including normal exit. Actual saved DuckDB6-field DESCRIBE and30.5MiB
+readback correct earlier mock assumptions; connection controls now apply at
+creation. The primitive row converter has24 checks and a scoped clear review.
+These mocks do not certify a new Linux reader/helper or full native execution.
+
+Actual bounded Reader probe now PASSES once on the existing private research
+Engine/image: nonce5923a8d00de74753aa6c0b04bec31203, exit0, exact synthetic
+FixtureReader.read_bars returned the expected two UTC rows. Fixture SHA is
+fec5973112fc7d5f7e183618dde618052c9477aef7590d522fc3335c3e7d594c; source
+bundle root SHA is505162d3501041d7a9a246e2d2fbf19bb40d45c8e2f830f9a7971b48a6d90684.
+Parent input owner/mode/hash verification passed for UID/GID10001; container
+network-none, read-only rootfs/mount, pinned image and controls passed, no OOM,
+owned CID removed, same Engine ended at2 images/0 containers. Raw receipt,
+stdout/stderr, pre-cleanup diagnostics and independent saved checker are in
+output/0038-held-fixture-reader/job-reader-actual/actual-fixture-reader-
+5923a8d00de74753aa6c0b04bec31203. Earlier exit137 phase and raw empty logs stay
+preserved; cause remains undetermined. This is one synthetic Reader observation
+only: Worker/native/kernel/parent admission, snapshot UID handoff, result/report
+validation, production services and full Option A are all false.
+
+The NEW AWS epoch projection prerequisite now passes on the same093b4734 image:
+2026-10-14T07:49:40.153289494Z–07:49:43.531030993Z, childexit0/noOOM/PID0,
+ownedCIDremoved, sameEngine2images/0containers. Two exactUTC microsecond values,
+8logical/9physical/1footer, EOF and locked settings match;2322B synthetic fixture
+plussealedcopy. Actualstoredreceipt5405B/SHA3823733a86cf44c953a7bd5ea4649bb47bffac1cfc5e9d8e894e012ee28b353c
+andchildoutput2603B/SHAe7dc572956571ee7a42a1f844eb3b0bf15453ba1cf1622d96fe23377dbeb05e8
+were recovered over privateSSH and match actualstdout/observation. Native source
+module1d4ef218 is unchanged. Prior failed guard attempt never launched a
+container; rawfailure and failedsourcecopies retained. P1inode/P2path-reopen and
+actualreceipt-shape regressions have retained RED/GREEN and scoped reviews;
+newdispatcher executes verifiedbytes, not mutablepath. All16pureguards pass.
+
+Next: advance full job-wide G1/G3 and native/kernel/independent-parent admission
+without broadening this synthetic probe's claim; then validate durable jobs,
+reports, the advisory Agent/Eval user flow, and server-owned market sources.
+This finite Reader PASS does not certify Worker admission or production service.
+No old CI, Windows helper/tunnel or application deployment is repeated. New
+code remains uncommitted/unreleased.
+
+Server-market-source blocker remains real: static review of the Linux SDK wire,
+private-terminal, staging-window, source-witness and OpenD-port branches found
+only plans/qualification tooling/configuration. None proves AWS has native
+Moomoo connectivity. The current known production route still depends on AWS
+loopback11111 forwarded from the Windows OpenD reverse SSH tunnel. Real pinned
+Linux SDK acknowledgement, vendor user login/market permission, server source
+witness and an open-session application cutover are pending. Preserve the old
+route as rollback; a planned maintenance witness is needed to establish PC
+independence. At the last read-only host check, the research service itself was
+not installed/running (no QuantMesh systemd unit, 8110/5432 listener, or Docker
+container). PostgreSQL implementation already exists in the repository; its
+private durable service/job/report recovery is not deployed or accepted. The
+OpenAI advisory adapter is offline-capable but no API key/model call is
+configured; request the user's secret only immediately before server secret
+configuration. No additional AWS resource or fee is authorized in this goal.
+Current official Moomoo docs list Ubuntu as a supported command-line OpenD
+platform and say the OpenD login requires the user's platform ID and password;
+that establishes vendor-documented platform support only, not this pinned
+binary's successful Linux handshake or market entitlement. See
+https://openapi.moomoo.com/moomoo-api-doc/en/opend/opend-cmd.html and
+https://openapi.moomoo.com/moomoo-api-doc/en/opend/opend-intro.html.
+
+## Historical checkpoint: AWS restored; sealed data-file prerequisite passed
 
 2026-10-14 authentication is restored; actual private SSH commands and byte-exact
 receipt recovery work. Canonical schema observation and new sealed data-file
@@ -1506,3 +1594,60 @@ closed-session failures remain preserved. Integrate the documentation-only
 evidence PR after required CI/review gates, then pause the release heartbeat.
 Do not redeploy the app or mark the whole goal complete. Actual Windows
 login/outage,24hcapacity,shutdown/reboot drills and PR #159 remain separate.
+
+## Fast implementation preference — 2026-10-14
+
+User requests a fast model and continued execution. Actual new independent
+implementation uses host-available gpt-6-luna/medium with a narrow context;
+root chat model cannot be changed by current tools. Production advisory model
+configuration and API keys remain unchanged. Existing A goal remains ACTIVE.
+
+New stream helper source183eba88 plus job routing scope now have a combined
+195passed/1warning/1.08s software run (161metadata+22stream+12context).
+Root reproduced one double-source-close RED, fixed relinquishment beforeclose,
+normalcleanup failure refusal and originalconsumerexception preservation.
+Root found test formatting failure, corrected with exact AST equality; all6
+new files lint/format pass. Earlier full stream RED dumps are NOT_RETAINED;
+recovered counts are explicitly summaries only; lifecycleRED and finalGREEN
+are retained, including both the initially misplaced logs/hand-off copy and
+the proper output copy. All copies enter the same original resource ledger.
+
+All new code remains uncommitted and not covered by768CI. Whole-child routing
+and actual Linux/helper/job/image/kernel/parent admission are still pending;
+these mocked syscall checks grant no native or execution authority.
+
+## Fast continuation dispatched
+
+The app accepted a follow-up to THIS same Codex thread with model=gpt-6-luna,
+thinking=medium, under the user's explicit fast-model/continue instruction.
+The already-running root response retains its model; the tool applies the
+following continuation override. read_thread does not expose a model-setting
+field, so no claim of changing this running response is made. This resolves
+the earlier direct-setter limitation for future turns; no product advisory
+model/API key, fees, release approval or goal completion changed. Goal remains
+ACTIVE; source/evidence handoff in output/0038-held-fixture-reader/fast-continuation-handoff.json.
+
+## Approved narrow follow-up — parser and safety regressions — 2026-10-14
+
+The user approved a format-only parent binding parser in `worker_build.py`.
+It requires a trusted expected digest, exact canonical JSON, bounded bytes,
+unique/exact fields and strict schema/type/value checks. Its immutable parse
+result has no admission/qualification flag and does not inspect Engine,
+container, image, kernel or runtime state. Dedicated suite passes15 with1
+existing dependency warning; Ruff and `git diff --check` pass. This code is
+uncommitted and not covered by PR175 CI. Running it with legacy
+`test_worker_build.py` on this Windows Python3.13 interpreter produced45
+passes/4 skips/5 failures; those failures are existing runtime admission tests
+requiring Linux CPython3.12 and neither validate nor refute the parser. The
+final focused run used a unique basetemp and passed.
+
+The frozen three regressions associated with issue174 pass on the current
+iteration candidate: canonical origin rejection, unresolved citation
+blocking and stale-source paper-fill refusal (`test_audit_badcases.py`:3
+passed). An isolated alternate patch from origin/main also passed focused
+tests, but overlaps newer code already present in this candidate and was not
+transplanted. A scoped independent review found no actionable P1/P2/P3; review
+noted no explicit HTTPS-loopback or non-UTC-aware-timestamp case. No
+service/cloud/trading action was taken. Goal remains ACTIVE; native Worker
+qualification, durable service recovery and market-source independence remain
+separate gates.
