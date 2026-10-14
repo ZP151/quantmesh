@@ -1733,3 +1733,12 @@ it was not rerun for this parser-only correction. The reviewed checkpoint is
 pushed to PR #175, but is not yet covered by CI; a new exact-head CI run and
 applicable release review remain required. No AWS, server, model key/API call,
 or trade action occurred.
+
+The operator subsequently granted standing authorization for future
+comparable weak/file/component-level copyleft cases: maintainers may add a
+precise SPDX identifier without another per-license approval after official
+text and exact package/version review, preserving notices and recording the
+applicable distribution, linking, modification, source-offer and network-use
+duties. This does not authorize wildcard matching or strong copyleft, Commons
+Clause, proprietary, ambiguous or unknown licenses. No further identifier was
+added in response to the standing authorization alone.

@@ -22,6 +22,16 @@ clean 78-package release closure and pip-audit evidence apply to the earlier
 LGPL-only parser checkpoint. Current exact-head CI and follow-up review remain
 required before merge. No service/AWS change occurred.
 
+The user has now granted maintainers standing authority to admit additional
+licenses in genuinely comparable weak/file/component-level copyleft cases,
+without another per-license approval. This is not a blanket legal waiver or
+automatic classifier rule: before each addition, maintainers must review the
+official license text and exact SPDX/package/version, preserve notices, and
+record distribution, relinking, source-offer and network-use duties. Keep
+strong copyleft (including GPL/AGPL), Commons Clause, proprietary, ambiguous
+and unknown terms denied unless the user makes a separate decision. No new
+license identifier is being added by this authorization alone.
+
 The user cleared the unfinished old goal and explicitly requested a new goal.
 The controller now reports ACTIVE for the remaining approved iteration0038 A
 scope. This is a replacement, not a claim that the old A deliverables finished.
