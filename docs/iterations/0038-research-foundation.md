@@ -1,5 +1,53 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current checkpoint — source metadata produced; image defaults refused
+
+Planner/Implementer: the stdlib metadata producer now seals the exact committed
+41214ff source, frozen81 lock, libraries and license notices under four explicit
+roots. It rejects extra roots and unsafe/mismatched inputs; only its newly owned
+metadata inode may be removed on publication failure. The preserved initial
+broad catalog is unexecuted; actual base links to /etc/ssl and timezone config
+cause narrowing, never an implicit /etc read or permission expansion.
+
+Reviewer/Verifier: metadata review two rounds clears partial publication and
+extra-root findings. Root fresh actual WSL verification passes28/2.89s;
+Ruff/format2files and diff whitespace pass. A separate operational review finds
+ambiguous-commit cleanup P2: root RED proves premature CID removal, GREEN4
+covers zero/one/multiple/wrong image associations; final review clears it.
+Unknown outcomes preserve a stopped owned CID and never trigger a blind retry.
+
+Actual ubuntu/private-host materialization succeeds:192 committed files,
+2,726,259B, real Python3.12.15/prefix /usr/local, inventory9,212 files/80 links.
+Actual inventory SHAa9a9ab86 and manifest38151dc3 are recorded in
+output/0038-worker-source-image/aws-materialization.json. Docker creates image
+7821e57e, retaining the five exact base layers plus source layera10b62f6.
+Its defaults are refused: ENTRYPOINT [] did not clear the container's python3
+entrypoint, while CMD also begins python3. Root read-only exact-nonce diagnosis
+confirms this direct cause. Stopped owned CIDa0be6c4a and failed image remain;
+there is no successful image admission, complete source preflight or Worker run.
+
+The next bounded correction sets explicit Python ENTRYPOINT/flags-only CMD on
+the retained stopped source CID, with a fresh configuration nonce and no source
+recopy/reinstallation. Retain old image, original resource baseline and receipts.
+Raw OCI config bytes, actual full positive/negative source preflight, native
+current-loader/noexec/kernel and independent parent/go admission remain open.
+Then three baselines/direct reference/repeat/6bps, real jobs/lease/global2 recovery,
+private PostgreSQL backup/report recovery, advisory Agent/Eval and server-owned
+market feeds remain mandatory. Personal-PC dependency has not been removed.
+
+Resources: root source allocation4,257,885B including350KB reserve, carried
+114,179,067B, cumulative118,436,952B under129MB, current6MB prospective slice.
+C free166,984,110,080B; native fixtures and all failed phases carried/retained.
+Original whole-C attribution PENDING and historical SSE allocation FAILED remain.
+Cloud introduced source preparation stays inside original5GB/free50GB gates;
+the actual failed receipt preserves final-state NOT_PROVEN, not a cleanup pass.
+
+PR175 exact370a745 remains OPEN/DRAFT with successful selected CI38595332643,
+classified domain/browser skips and0 human reviews (actual GitHub recheck).
+Class C human/safety reviews and explicit operator acceptance remain required.
+No rerun, merge, deployment, new paid resource, model call, secret or Windows
+action. Goal ACTIVE; paper=true/live=false,168h NOT_REQUIRED; budget unchanged.
+
 ## Current checkpoint — fixed entry and private bundle handoff; real image next
 
 PR175 exact370a745 CI38595332643 completed SUCCESS on2026-10-14 16:51:32UTC;

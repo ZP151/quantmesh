@@ -71,14 +71,14 @@ source layer, canonical metadata SHA and exact source commit/recipe pins.
 
 ## Verification and release boundaries
 
-- [ ] TDD metadata producer: duplicate/escaping/untracked input paths, altered
+- [x] TDD metadata producer: duplicate/escaping/untracked input paths, altered
   body/digest, symlink/hardlink/special files, count/byte/deadline exhaustion,
   metadata dual-listing and missing license/lock/source reject before publication.
-- [ ] Minimal producer plus pinned recipe; targeted checks, exact resource receipt
+- [x] Minimal producer plus pinned recipe; targeted checks, exact resource receipt
   and scoped pre-execution review. No general image-builder or package installer.
 - [ ] Actual private-host finite materialization and independent saved receipt
   checker. Frozen base layer bytes remain; owned container removed, borrowed
-  objects unchanged. An image/config ID alone is not numerical admission.
+objects unchanged. An image/config ID alone is not numerical admission.
 - [ ] Actual full successful source `_preflight` at the canonical paths under
   real Linuxamd64 `/usr/local`3.12.15 `-B -I -S`, and actual negative binding/
   source tamper cases. Do not manufacture host/version/prefix metadata in tests.
@@ -95,3 +95,49 @@ human/safety reviews and explicit operator acceptance remain the release gate;
 no admin bypass, production deployment or assumption that these preparations
 remove that gate. Paper=true/live=false,168h NOT_REQUIRED, three-server cost
 unchanged. New source work gets its own required checks before integration.
+
+## Root closure ruling from actual preserved base metadata
+
+The initial proposed /usr/lib and /usr/share roots are not executed. Actual
+preserved base virtual catalog3ab80f39 shows /usr/lib/ssl links to /etc/ssl
+(including private) and /usr/share/zoneinfo/localtime to /etc/localtime.
+Do not add /etc or follow these aliases to qualify metadata. The exact producer
+root tuple is narrowed to /opt/quantmesh, /usr/local,
+/usr/lib/x86_64-linux-gnu and /usr/share/doc. The current catalog preserves all
+required actual Python/native library and notice byte paths in those roots.
+Unmodified inherited base layers retain OS timezone/config data; this source
+inventory does not claim to attest every loaded native object or whole-image
+file. Those independent actual admission/current-loader checks remain required.
+Arbitrary extra roots /home or /etc are refused before traversal/publication.
+
+On metadata IO failure, only a newly created metadata inode may be removed,
+with a held parent/name/identity check. Preexisting/replaced metadata is never
+removed. Source inputs/catalogs/failed phase roots/raw error evidence remain;
+the operational recipe records any remaining actual partial metadata bytes
+before its owned container is removed. A cleanup is not successful publication.
+
+## Actual preparation and retained configuration refusal
+
+The reviewed one-shot source materializer executes successfully on ubuntu:
+192 committed files/2,726,259B, actual Linux Python3.12.15, inventory9,212 regular
+files/80 links. Inventory SHAa9a9ab86 and manifest38151dc3 are real byte hashes.
+Producer verification28 passes/2.89s; Ruff/format/diff checks pass. Exact roots
+and catalogbfb40dc9 replace the preserved unexecuted broad proposal.
+
+Root reproduces the operational review's ambiguous-commit cleanup defect
+(RED), then verifies zero/one/multiple/wrong association recovery (GREEN4).
+The second/final recipe review clears the correction before execution.
+The actual commit yields image7821e57e with five unchanged base layers plus
+source layera10b62f6. Docker29.9 does not clear the create-time Python entrypoint
+with the proposed `--change ENTRYPOINT []`: actual Entrypoint remains python3
+while Cmd also begins python3. The derived-default check correctly refuses.
+The stopped owned CIDa0be6c4a is retained; no Worker started, image qualified,
+new source attempt retried, borrowed object removed or deployment changed.
+
+Next correction is explicit Python ENTRYPOINT plus flags-only CMD, consistent
+with the actual linux_owned launch contract, on the already stopped/owned CID.
+Preserve failed image7821e57e and its receipt. Use a fresh configuration nonce,
+validate unchanged CID/source labels and original Engine/base/source layers,
+record the new image independently, and reconcile any uncertain commit before
+cleanup. Do not recopy source, rerun metadata production or reset budget.
+Actual raw OCI config bytes and full positive source preflight remain required.
