@@ -223,6 +223,27 @@ def test_kernel_namespace_link_rejects_ordinary_filesystem_targets():
     assert not admission._is_kernel_namespace_link(writable, "apparmorfs:[152]")
 
 
+def test_kernel_raw_policy_references_only_address_the_held_namespace():
+    import stat
+    from types import SimpleNamespace
+
+    import quantmesh.research.worker_admission as admission
+
+    info = SimpleNamespace(st_mode=stat.S_IFLNK | 0o444, st_uid=0, st_gid=0)
+    for field, filename in {
+        "raw_abi": "abi",
+        "raw_data": "raw_data",
+        "raw_sha256": "sha256",
+    }.items():
+        assert (
+            admission._kernel_policy_revision(info, field, f"../../raw_data/124/{filename}")
+            == "124"
+        )
+    for target in ("/tmp/abi", "../../raw_data/124/../abi", "../../raw_data/124/sha256"):
+        with pytest.raises(WorkerAdmissionRejected):
+            admission._kernel_policy_revision(info, "raw_abi", target)
+
+
 @pytest.mark.skipif(
     os.name != "posix" or os.getuid() != 1000, reason="private snapshot owner contract"
 )

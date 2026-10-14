@@ -15,6 +15,16 @@ source preserved; next corrected connected call uses new committed provider.
 Original shell-quoting test wrapper parse error occurred before running tests;
 real file-based RED1/exit1 and GREEN12/exit0 separately retained, not conflated.
 
+Next actual9d4d3673/3.657s passes fixed namespace entry, refuses raw_abi's
+kernel-created reference; exact ownprofile removed, no container/SQL/service.
+Known active docker-default readonly metadata demonstrates root0444 links
+../../raw_data/124/{abi,raw_data,sha256}. Root completes same kernelAPI adapter
+by parsing only identical numeric revisions and opening bank/revision/member
+inside held namespace using NOFOLLOW; arbitrary targets/ref drift refuse.
+Existing compiledSHA/enforce/v5/live-label gates stay; no extra structural
+review/proof family or input-symlink exception. RED missing parser/GREEN13
+3.63s, Ruff/diff green. All actual failed receipts/cleanup remain recorded.
+
 Concrete Implementer two-file provider complete. It recomputes five-field
 runtime, actual OCI/Engine/config/source/metadata pins, current compiled v5
 policy bytes and canonical15-field binding from fresh owned PID observations.

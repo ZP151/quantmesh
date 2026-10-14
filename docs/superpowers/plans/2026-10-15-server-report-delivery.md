@@ -299,3 +299,15 @@ RED missing known-kernel adapter→GREEN12/4.00s/Ruff; no third structural revie
 old source/native proof family or arbitrary-path alternative. Same known failed
 first nonce remains preserved; code change justifies one corrected connected
 call after its completed owned-profile cleanup is independently checked.
+
+Corrected9d4d3673 reaches loaded profile, then its raw_abi member refuses
+O_NOFOLLOW. Actual read-only docker-default metadata proves the same kernel API
+uses three root0444 references ../../raw_data/<revision>/{abi,raw_data,sha256}.
+Resolve their identical numeric revision inside the already held namespace:
+open raw_data bank/revision/files with no-follow FDs, never follow a relative
+link, require root/non-writable directories and stable before/after references.
+Existing compiled hash/name/enforce/v5/PID-label gates remain. This completes
+the same kernel-reader mechanical correction, not a new native proof/design
+review or ordinary-link waiver. RED missing reference-parser→GREEN13/3.63s,
+Ruff/diff green; all failed receipts/owned cleanup retained. Next actual same
+connected call with corrected committed bytes; full Worker/PG/report still open.

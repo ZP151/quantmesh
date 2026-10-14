@@ -228,7 +228,16 @@ def _read_snapshot_member(
 def _read_kernel_member(directory_fd: int, name: str, maximum: int) -> bytes:
     fd = None
     try:
-        if name not in {"profiles", "name", "mode", "raw_abi", "raw_data", "raw_sha256"}:
+        if name not in {
+            "profiles",
+            "name",
+            "mode",
+            "raw_abi",
+            "raw_data",
+            "raw_sha256",
+            "abi",
+            "sha256",
+        }:
             raise ValueError
         fd = os.open(
             name,
@@ -317,6 +326,62 @@ def _open_kernel_policy_profiles() -> tuple[int, list[int]]:
         raise WorkerAdmissionRejected("worker_admission_failed") from None
 
 
+def _kernel_policy_revision(info: os.stat_result, field: str, target: str) -> str:
+    members = {"raw_abi": "abi", "raw_data": "raw_data", "raw_sha256": "sha256"}
+    if (
+        field not in members
+        or not stat.S_ISLNK(info.st_mode)
+        or stat.S_IMODE(info.st_mode) != 0o444
+        or info.st_uid != 0
+        or info.st_gid != 0
+    ):
+        raise WorkerAdmissionRejected("worker_admission_failed")
+    match = re.fullmatch(r"\.\./\.\./raw_data/([0-9]+)/" + members[field], target)
+    if match is None:
+        raise WorkerAdmissionRejected("worker_admission_failed")
+    return match[1]
+
+
+def _read_kernel_policy_bytes(profile_fd: int, namespace_fd: int) -> tuple[bytes, str, str]:
+    """Resolve the three kernel references using held no-follow namespace FDs.
+
+    No relative link is followed. Its numeric revision selects only a directory
+    inside the already held kernel namespace's raw_data bank.
+    """
+    bank_fd = revision_fd = None
+    try:
+        references = {}
+        for name in ("raw_abi", "raw_data", "raw_sha256"):
+            info = os.stat(name, dir_fd=profile_fd, follow_symlinks=False)
+            target = os.readlink(name, dir_fd=profile_fd)
+            references[name] = (info, target, _kernel_policy_revision(info, name, target))
+        revisions = {value[2] for value in references.values()}
+        if len(revisions) != 1:
+            raise ValueError
+        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        bank_fd = os.open("raw_data", flags, dir_fd=namespace_fd)
+        revision_fd = os.open(revisions.pop(), flags, dir_fd=bank_fd)
+        for fd in (bank_fd, revision_fd):
+            info = os.fstat(fd)
+            if not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022:
+                raise ValueError
+        raw = _read_kernel_member(revision_fd, "raw_data", _MAX_POLICY)
+        abi = _read_kernel_member(revision_fd, "abi", 32).decode("ascii").strip()
+        sha = _read_kernel_member(revision_fd, "sha256", 128).decode("ascii").strip()
+        for name, (info, target, _) in references.items():
+            if _identity(info) != _identity(
+                os.stat(name, dir_fd=profile_fd, follow_symlinks=False)
+            ) or target != os.readlink(name, dir_fd=profile_fd):
+                raise ValueError
+        return raw, abi, sha
+    except (OSError, ValueError, TypeError, UnicodeError):
+        raise WorkerAdmissionRejected("worker_admission_failed") from None
+    finally:
+        for fd in (revision_fd, bank_fd):
+            if fd is not None:
+                os.close(fd)
+
+
 def _read_loaded_apparmor(expected_name: str) -> tuple[bytes, str]:
     root_fd, descriptors = _open_kernel_policy_profiles()
     try:
@@ -348,9 +413,7 @@ def _read_loaded_apparmor(expected_name: str) -> tuple[bytes, str]:
                 raise ValueError
             name = _read_kernel_member(profile_fd, "name", 256).decode("ascii").strip()
             mode = _read_kernel_member(profile_fd, "mode", 32).decode("ascii").strip()
-            raw_abi = _read_kernel_member(profile_fd, "raw_abi", 32).decode("ascii").strip()
-            raw_data = _read_kernel_member(profile_fd, "raw_data", _MAX_POLICY)
-            raw_sha = _read_kernel_member(profile_fd, "raw_sha256", 128).decode("ascii").strip()
+            raw_data, raw_abi, raw_sha = _read_kernel_policy_bytes(profile_fd, descriptors[-2])
             if (
                 name != expected_name
                 or mode != "enforce"
