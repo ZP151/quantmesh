@@ -1,6 +1,54 @@
 # QuantMesh Domain Context
 
-## Current kernel preparation — measured image, no enforcing profile loaded
+## Current checkpoint — real native kernel sub-witness passed; full Worker pending
+
+PR #175 candidate `f5e38ea804343c7f551be0dea364158e77057f6e` has CI38584253826
+still running: classify/research_service/fast pass, release pending. The Linux
+queue-isolation fix passes62 focused checks/21 Windows-only skips and bounded
+review; old failed CI38574294649 and all local failures remain retained.
+
+On the existing research server via `ubuntu`, the actual pinned AppArmor/seccomp
+policy temporarily enforced on frozen image093b4734. The finite13.57s witness
+passes: seven real anonymous-exec/W+X mmap, executable mprotect/pkey_mprotect,
+unsafe memfd and executable SHM requests return EPERM; ordinary RW/read-only
+memory, noexec-sealed memfd writes and read-only SHM pass. Legitimate NumPy dot14
+and DuckDB scalar42 pass. Parent and child independently read effective512MiB,
+swap0, CPU1 and64-PID cgroup limits. Both actual mountinfo views pass noexec/RO
+validation. Their only difference is the cgroup namespace root: the parent's
+exact /system.slice/docker-<probeCID>.scope maps to child '/', with every other
+mount field identical. The saved independent checker validates that exact CID
+mapping and exits0; the initial overly strict byte-equality failure is retained.
+
+The independently running sibling survives probe removal. Both exact owned
+containers and the task-only AppArmor profile are removed; same Engine returns
+to2images/0containers. No production service/image/credential/default policy or
+Windows helper/source/tunnel changed. Successful executed source SHAf2bd19b9;
+raw receipt SHA813a5b04; policy SHA08acecf7. Evidence:
+`output/0038-worker-kernel-native-preparation/kernel-witness.json`,
+`kernel-witness-checked.json`, `.exit`, and `native-final-resource.json`.
+This proves the finite native boundary/import sub-witness, not a fixed entry,
+independent image/parent admission, full registered backtest/report, durable
+PG/recovery, real Agent/Eval or server-owned market-source acceptance.
+
+Scoped operational review found accepted-profile-load/cleanup-deadline P2s;
+isolated actual-branch RED2/GREEN closes them. Effective cgroup reads replace
+configured-only evidence. Failed trials/source/cleanup are retained: first
+Docker security-option matcher incorrectly expected a filename while actual
+Engine binds the seccomp JSON bytes (SHA matches); two start refusals identified
+Docker tmpfs's implicit nodev preventing /dev/null. Exact installed Moby source
+confirms defaults, and explicit dev on the isolated noexec /dev tmpfs restores
+normal character-device access; no exec permission or capability was added.
+Every failed trial cleans its exact resources/profile, without unrelated stops.
+
+Goal remains ACTIVE. Next integrate the fixed standalone entry and independent
+parent with this proven boundary, then complete numerical report/job recovery,
+private PG service/backup, Agent/Eval and server source user loops. Keep
+paper=true/live=false, formal168h NOT_REQUIRED and three-server budget unchanged.
+Resource reservations remain cumulative51MB/native phase3MB; original baselines,
+all failures, whole-C attribution pending and free50GB floor stay recorded.
+
+
+## Prior kernel preparation — measured image before enforcing sub-witness
 
 PR #175 is now `f5e38ea`; CI38584253826 is running after the Linux test-queue
 isolation correction (62 focused pass/21 Windows-only skip, narrow review clear).

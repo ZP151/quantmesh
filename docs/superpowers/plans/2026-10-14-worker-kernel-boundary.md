@@ -64,3 +64,53 @@ Primary references: [Docker AppArmor](https://docs.docker.com/engine/security/ap
 Implementation ruling: the initial additive ERRNO draft is superseded before review or native use. The upstream [containerd default profile](https://github.com/containerd/containerd/blob/main/contrib/seccomp/seccomp_default.go) documents that broad ALLOW rules can make ERRNO branches unreachable, and runc can split repeated argument-index conditions as OR. Independent allowance-evaluation regressions first fail 10 cases against the draft, then pass 42 total checks after restrictive rule intersection. No loaded policy or runtime certificate relied on the draft.
 
 Actual metadata checkpoint: inventory8ec11903 / 886ELF / 633mapping paths; exact Engine default policy parses on AppArmor with skip-kernel-load. RLIMIT_AS parser allocation regression passes. First inherited-label refusal and exact never-started CID cleanup retained; no actual enforcing policy or Worker acceptance yet.
+
+## Finite enforcing-profile witness recipe
+
+Use the measured633-path policy and the same frozen093b4734 image. Prepare
+`output/qualify_aws_kernel_policy.py` and a byte-pinned transport wrapper before
+one scoped operational review. Reserve3MB for source/policy/receipt/test-owned
+temporary material, cumulative ceiling51MB from measured45,062,608 bytes;
+retain prior reservations/failures and original AWS5GB/free50GB bounds.
+
+Only a previously absent uniquely content-named `qm-worker-*` AppArmor profile
+may be loaded, then removed after its exact owned containers are removed. No
+global Docker/default profile, service, firewall, credential or image changes.
+Two nonce-owned containers use network none, all capabilities dropped,
+no-new-privileges, user10001, memory/CPU/PID caps and a read-only root. The
+probe gets the pinned AppArmor/seccomp and noexec tmpfs inputs/output/tmp/dev;
+explicit readonly public fixture files override Docker's generated /etc binds.
+An independently running sibling uses its own default profile and must survive
+the probe removal. Never kill or stop an unrelated process/container.
+
+Before start, after start and after compute, read back exact fullCID/image/
+labels/name/commands/controls and policy file digests. Capture actual running
+PID mountinfo with identity recheck; run `verify_mountinfo` in the root checker.
+Child checks real mmap/mprotect/pkey_mprotect/memfd/SHM refusals without executing
+generated machine code, verifies legitimate nonexecutable memory, canonical
+Python flags/prefix, AppArmor/NoNewPrivs/Seccomp and small NumPy/DuckDB values.
+Unsupported syscalls/imports/mounts remain failures, no exemption. Bound total
+work time150s plus a separate bounded120s cleanup grace/logs128KiB, record child exit/OOM/limits, surviving sibling and exact
+cleanup/profile removal. This still is not fixed-entry/parent/whole-Worker or
+PostgreSQL/Agent/server-source acceptance; those remain separate required gates.
+
+Pre-execution scoped review finds two P2 lifecycle gaps (accepted AppArmor load
+after parser timeout; the work deadline blocking cleanup) and configured-only
+cgroup evidence. Actual isolated cleanup branches have RED2/GREEN0 failures,
+without Docker/kernel calls. Cleanup now queries the previously-absent exact
+profile after any load attempt, refuses removal while a nonce-owned container
+remains, and gets an independent120s grace with all per-command bounds kept.
+The child and independently surviving parent read the effective cgroup v2
+memory/swap/PID/CPU files, with runningPID recheck. Mountinfo remains subject to
+the independent root `verify_mountinfo` checker after the real run.
+
+Completed finite native sub-witness (Task2 overall stays open): actual source
+f2bd19b9 / receipt813a5b04; seven real EPERM denials, ordinary memory and
+NumPy14/DuckDB42, actual cgroup512MiB/swap0/CPU1/PID64, both noexec mountinfo
+views, exact cgroup namespace root/CID mapping, surviving sibling and exact
+container/profile cleanup pass. Root saved checker exit0. Raw-equality checker
+failure retained, no repeat of the successful runtime. Earlier SecurityOpt path
+matcher and implicit-nodev start failures remain with exact cleanup. Installed
+[Moby tmpfs defaults](https://github.com/moby/moby/blob/a5b58c94d334674eae3a3207d4f05417643a90d0/daemon/oci_linux.go)
+are pinned before the isolated /dev dev/noexec correction. Full registered
+baseline, standalone entry, image/parent admission and publication remain open.
