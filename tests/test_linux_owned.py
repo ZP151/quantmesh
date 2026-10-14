@@ -658,6 +658,17 @@ def test_inspect_refuses_container_control_or_mount_drift():
     empty_output_mode["Mounts"][1] = {**doc["Mounts"][1], "Mode": ""}
     assert _matches_owned_container(empty_output_mode, **expected)
 
+    # Docker --mount readonly has an empty Mode; RW is the authoritative flag.
+    empty_input_mode = {**doc, "Mounts": [*doc["Mounts"]]}
+    empty_input_mode["Mounts"][0] = {**doc["Mounts"][0], "Mode": ""}
+    assert _matches_owned_container(empty_input_mode, **expected)
+    for changed_mount in (
+        {**empty_input_mode["Mounts"][0], "RW": True},
+        {**empty_input_mode["Mounts"][0], "Mode": "rw"},
+    ):
+        changed = {**empty_input_mode, "Mounts": [changed_mount, doc["Mounts"][1]]}
+        assert not _matches_owned_container(changed, **expected)
+
     mutations = (
         ("command", ["-B", "-I", "/opt/other.py", "2048", "300", "/worker"]),
         ("inputs", "/private/other-inputs"),

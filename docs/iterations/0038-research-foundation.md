@@ -1,5 +1,34 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Actual PG/registered job first call and direct Engine correction
+
+User report/page/reopen still unavailable. Planner preserves full A scope and
+same fixture/cost/isolation acceptance. Verifier ubuntu58004b5f startup failed:
+actual owned Unix socket path197B too long; diagnostic exit0 confirms process/
+cluster/port stopped/no SQL, then unused Unix sockets disabled (TLS loopback
+TCP already used). Nextcfb51975/10.398s actual PG least-privilege SCRAM/TLSv1.3
+256bit/ASGI submit and Worker claim pass, job44622a77 FAILED worker_failed, no
+binding/GO/numerical output. Root0600 creation record could not be read by
+Ubuntu cleanup; privileged same-phase exact-nonce read confirms own CID absent,
+exact compiled policy unloaded and own bind removed. PG exit0/port free.
+Same failed blueprint NEVER-started inspect proves all RO --mounts have empty
+Mode/RWfalse, unlike old fake Engine shape. Own diagnostic CID removed. Root
+Implementer mechanical matcher correction accepts empty/ro only with strict
+RWfalse, rejects RWtrue/rw and preserves all source/namespace/security controls.
+Pure affected security-axis RED1/GREEN1/3.79s/Ruff/diff green; no native numerical
+claim, child image rebuild, third structural review or arbitrary helper waiver.
+Operational review2 rounds closed: disk failure now retains receipt, owned
+startup capture fallback/cleanup stays exact direct child; SQL-bearing PG log
+sink forced stderr/collectoroff and discarded, actual settings proved before
+role SQL, private client streams never retained. Two tiny native recipe roots
+153B each retained/8checks each; old synthetic protocol log untouched.
+100KB operational subcap FAILED actual136139B, carries128846191=>128982330<=129MB;
+whole-C pending/all old peaks and failures retained. Cloud free159398674432B,
+original PG-inclusive delta2864132096B<=5GB/no new fee. Next reuse known DB/role/
+credentials/fixture in same phase, fresh idempotent registered job after this
+committed parent correction→immutable report→page/restart/reopen. PR175 draft
+head370a745/CI38595332643 success,0humanreviews; no deployment/merge bypass.
+
 ## Latest actual parent admission passes; numerical user loop remains open
 
 User ability FIRST: server numerical report/page/reopen is NOT available yet.

@@ -1,5 +1,19 @@
 # QuantMesh Domain Context
 
+## Actual private PG job reached; Worker readonly wire correction
+
+Ubuntu callcfb51975 proves actual least-privilege PG TLSv1.3/256bit and existing
+authenticated ASGI submit/Worker claim. Job44622a77 fails before GO/no report.
+Exact CID already removed; privileged cleanup reconciles root0600 record and
+removes only owned policy/mount, PG stopped/port free. Actual Engine readonly
+--mount reports Mode empty/RWfalse, repaired narrow parent matcher with strict
+RWfalse and negative rw/RWtrue controls, RED1/GREEN1/Ruff/diff. Child image stays
+a0abb2dc/sourcee34; no third structural review or new native proof family.
+Original startup197B Unix socket corrected to existing TLS loopback TCP only.
+Next reuse same qualified DB/fixture, new idempotent job→report/page/reopen.
+100KB operational subcap FAILED136139B retained; cumulative128982330B<=129MB,
+whole-C PENDING/all prior failures retained. Full A ACTIVE/no new fee/live=false.
+
 ## Latest actual current parent image/policy admission — passed, report still open
 
 User SSH correction honored: actual calls use ubuntu. Candidate provider

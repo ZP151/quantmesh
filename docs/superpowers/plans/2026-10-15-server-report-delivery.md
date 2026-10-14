@@ -320,3 +320,42 @@ whole Worker/numerical/cache/PGreport/UI remain open. Independent saved checker
 exit0; phase949,413B/cumulative128,846,191B within unchanged1MB/129MB, all original
 failures/peaks retained. Next frozen privatePG→whole registered numerical job→
 durable report→existing page/reopen, not another successful parent/source rerun.
+
+## First complete registered job operational allocation
+
+Next connected qualification, not a production deployment: reuse qualified
+PG18.6 prefix and the stopped owned protocol cluster; verify binary/data/system
+identity before starting one owned loopback-only postmaster on a reserved port.
+Create only the previously absent dedicated qm_research DB/least-privilege role
+and schema. New random password/api token stay in named0600 server files only.
+Existing public CA/server certificates are independently pinned and expiry
+checked. Explicit process-local SSL_CERT_FILE references that public CA so the
+unchanged pg8000 default verified TLS context works; no global trust-store change
+or credential environment variable. Model unavailable/analysisfalse/budget0.
+
+Reuse actual parent sourceeb880b2/81venv, current immutable childa0abb2dc and
+committed parent modules7ae1fd0 (provider/runtime controls only). One private
+fixture→authenticated existing ASGI POST→real PG store→public WorkerRunner with
+actual different-UID/noexec mounts/current policy→immutable report/API bytes.
+ASGI in-memory checks are labeled; real browser/network service remains required.
+Durable artifact backing is one owned self-bind remounted noexec/nosuid/nodev;
+only the exact final job directory/published object are handed to UID1000 for
+API reopen. No chmod-all fallback, mock kernel admission or bypassing child
+native/cache checks. Capture created CID/nonce before effects for owned cleanup;
+all failures/partial files retained. Stop/restart only our pidfd/start/exe/data/
+system-ID-bound postmaster; never the original tunnel or another process.
+
+Local operational allocation100KB carries128,846,191B (all old peaks/failures),
+stays<=129MB. No local dataset, venv/packages/full suite; only bounded scripts,
+request/receipt/evidence. Existing parent1GB/original whole-host5GB/free50GB
+remain; reserve200MB for new DB/WAL/artifacts within those existing bounds.
+No cloud fee, production service/supervisor or arbitrary strategy is added.
+
+Actual first startup/next registered job reached and failed before GO as recorded
+in iteration0038. Planner scopes modern Engine RO Mode-empty compatibility to
+the existing matcher with RWfalse still mandatory; acceptance stays actual report,
+not more prerequisite probes. Same DB/credentials/fixture reuse after exact own
+CID/policy/mount/process reconciliation; new idempotency key preserves failed job.
+100KB subcap FAILED136139B retained; original129MB cumulative still128982330B.
+Remaining local operational tail must forecast within original129MB and retain
+all earlier failures; no bulk tests/copies, new source/native family or fee.

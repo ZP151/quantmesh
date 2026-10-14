@@ -121,7 +121,9 @@ def _matches_owned_container(
             and set(mounts) == set(expected_mounts)
             and all(
                 mounts[name][0:2] == ("bind", source)
-                and mounts[name][2] in (("", "rw") if writable else ("ro",))
+                # --mount readonly is represented by RW=false and empty Mode
+                # on current Engine; legacy -v mounts report Mode="ro".
+                and mounts[name][2] in (("", "rw") if writable else ("", "ro"))
                 and mounts[name][3] is writable
                 for name, (source, _, writable) in expected_mounts.items()
             )

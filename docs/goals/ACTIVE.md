@@ -8,6 +8,21 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Actual private PG/ASGI job submit and Worker claim now proven, TLSv1.3/256bit,
+qm_research least-privilege SCRAM, fixture only/budget0; job44622a77 FAILED before
+GO/no report. Noncecfb51975/10.398s; owned PG stopped/port released. Ubuntu could
+not read root0600 cleanup record; privileged exact-nonce reconciliation confirms
+CID absent and removes only owned policy/mount. Earlier startup58004b5f failed:
+Unix socket197B too long, corrected to existing verified TLS loopback TCP only.
+Real NEVER-started inspect proves readonly --mount Mode empty/RWfalse. Narrow
+parent matcher repair accepts empty/ro only with strict RWfalse, refusing rw or
+RWtrue; pure affected security-axis RED1/GREEN1/Ruff/diff green. No child image
+rebuild, third structural review, input-link waiver or old proof rerun. Next ONE
+same DB/fixture, new idempotent baseline job with corrected committed parent.
+Operational100KB subcap FAILED/retained; actual136,139B carries128,846,191B =>
+128,982,330B<=129MB. Old failures/peaks/whole-C PENDING retained; no new fee.
+Evidence output/0038-first-whole-job/; numerical report/UI/reopen remain open.
+
 Actual current parent image/runtime/policy admission PASS: nonce596d0b93,
 4.767s, candidatefd29672/currenta0abb2dc/sourcee34d22f, recomputed fivefields,
 current loaded compiled bytes matched. Exact temporary profile removed; NO
