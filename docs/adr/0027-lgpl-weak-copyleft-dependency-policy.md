@@ -26,22 +26,36 @@ the universal Psycopg wheel and
 the CPython 3.13 Windows binary wheel. The [upstream Psycopg license](https://github.com/psycopg/psycopg/blob/master/LICENSE.txt)
 is the GNU Lesser General Public License version 3.
 
+The additional exact identifiers were checked against the Open Source
+Initiative's [MPL-2.0](https://opensource.org/license/MPL-2.0),
+[EPL-2.0](https://opensource.org/license/EPL-2.0) and
+[CDDL-1.0](https://opensource.org/license/CDDL-1.0) license records. Their
+reciprocal obligations have different scopes; inclusion in an inventory
+allowlist only means a package may proceed to exact-package and distribution-
+form review.
+
 ## Decision
 
 The Python release closure may include LGPL-2.0, LGPL-2.1 and LGPL-3.0, whether
 the metadata uses the base version or its explicit SPDX `-only` or
-`-or-later` form. This is the full allowlisted weak-copyleft family for this
-decision. The audit continues to fail closed for GPL, AGPL, proprietary or
-unknown licenses, and source-available restrictions such as the Commons
-Clause. Compound declarations containing any refused member remain refused.
+`-or-later` form. The operator also approved the same bounded treatment for the
+exact SPDX identifiers `MPL-2.0`, `EPL-2.0` and `CDDL-1.0`. No other version,
+license family or variant is inferred from a broad label such as “weak
+copyleft”; it remains refused until the operator and maintainers record an
+explicit exact-identifier decision. This allows comparable file/component-
+scoped copyleft terms without turning the classifier into a wildcard.
 
-For LGPL-covered components, release owners must identify the exact package,
-version and license text and evaluate the intended distribution before
-shipping. Where applicable, distribution must preserve notices and license
-text and meet the LGPL's source, modification and relinking requirements.
-The inventory checker records classification; it does not certify that a
-particular product distribution complies with those obligations. This ADR is
-an engineering policy decision, not legal advice.
+The audit continues to fail closed for GPL, AGPL, proprietary or unknown
+licenses, and source-available restrictions such as the Commons Clause.
+Compound declarations containing any refused member remain refused.
+
+For every weak-copyleft component, release owners must identify the exact
+package, version and license text and evaluate the intended distribution
+before shipping. Where applicable, distribution must preserve notices and
+license text and meet that license's source, modification, relinking and
+reciprocity requirements. The inventory checker records classification; it
+does not certify that a particular product distribution complies with those
+obligations. This ADR is an engineering policy decision, not legal advice.
 
 The frontend npm license gate remains governed by its own inventory and
 allowlist. This ADR does not add LGPL packages to that closure.
@@ -50,7 +64,8 @@ allowlist. This ADR does not add LGPL packages to that closure.
 
 - Psycopg may remain the PostgreSQL driver, subject to exact closure pins and
   passing the security gate.
-- The audit parser and tests explicitly distinguish LGPL from GPL/AGPL and
-  retain the refusal for Commons Clause and unknown terms.
-- Any future weak-copyleft family outside LGPL requires a separate explicit
-  decision; this approval does not open an unrestricted license wildcard.
+- The audit parser admits only the exact weak-copyleft SPDX identifiers listed
+  above, explicitly distinguishes them from GPL/AGPL, and retains the refusal
+  for Commons Clause and unknown terms.
+- Future weak-copyleft identifiers or versions still require an explicit
+  policy decision; this approval does not open an unrestricted wildcard.

@@ -1,5 +1,17 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Latest license decision extension — 2026-10-14
+
+The operator approved the exact Python weak-copyleft SPDX set recorded in
+ADR-0027: LGPL-2.0/2.1/3.0 base/`-only`/`-or-later`, MPL-2.0, EPL-2.0 and
+CDDL-1.0. GPL/AGPL, Commons Clause, proprietary, unknown and unreviewed
+identifiers stay refused; the frontend npm policy is unchanged. Added regression
+coverage showed expected RED for EPL/CDDL before implementation; focused policy
+tests pass 5/5, Ruff and `git diff --check` pass. The full ambient security test
+run is inconclusive because this environment lacks locked Psycopg; its closure
+gate must run in the clean release environment. No service or AWS state changed.
+The resulting policy commit needs fresh exact-head CI and review before merge.
+
 ## Current goal ACTIVE — synthetic Reader probe passed; full Worker remains gated
 
 The user cleared the unfinished old goal and explicitly requested a new goal.

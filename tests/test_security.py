@@ -158,6 +158,11 @@ class TestLicenseReview:
 
     def test_approved_lgpl_family_is_allowed_but_strong_copyleft_is_not(self) -> None:
         review = _load_license_review()
+        assert review._from_expression("MPL-2.0") == "MPL-2.0"
+        assert review._from_expression("EPL-2.0") == "EPL-2.0"
+        assert review._from_expression("CDDL-1.0") == "CDDL-1.0"
+        assert review._from_expression("EPL-1.0") is None
+        assert review._from_expression("CDDL-1.1") is None
         assert review._from_expression("LGPL-3.0") == "LGPL-3.0"
         assert review._from_expression("LGPL-3.0-only") == "LGPL-3.0-only"
         assert review._from_expression("LGPL-3.0-or-later") == (

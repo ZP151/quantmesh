@@ -87,6 +87,8 @@ ALLOWED = {
     "PSF-2.0",
     "ISC",
     "MPL-2.0",  # file-level copyleft; permissive for redistribution (certifi, tqdm)
+    "EPL-2.0",  # weak copyleft; exact SPDX identifier admitted by policy
+    "CDDL-1.0",  # file-level weak copyleft; exact SPDX identifier admitted
     "0BSD",
     "Zlib",
     "CC0-1.0",

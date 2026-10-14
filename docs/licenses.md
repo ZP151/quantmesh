@@ -25,16 +25,16 @@ creates one).
   copyleft — permissive for redistribution; certifi, tqdm), 0BSD,
   Zlib, CC0-1.0, CNRI-Python (the historical CNRI Python license),
   MIT-CMU (Pillow's MIT variant), MIT-0 (MIT No Attribution,
-  OSI-approved; cffi declares it); and LGPL-2.0, LGPL-2.1 and LGPL-3.0
-  (including their explicit `-only` and `-or-later` SPDX forms) as an
-  approved weak-copyleft family under
+  OSI-approved; cffi declares it); LGPL-2.0, LGPL-2.1 and LGPL-3.0
+  (including their explicit `-only` and `-or-later` SPDX forms); and the
+  exact SPDX identifiers MPL-2.0, EPL-2.0 and CDDL-1.0 as the bounded
+  weak-copyleft allowlist under
   [ADR-0027](adr/0027-lgpl-weak-copyleft-dependency-policy.md).
 - **Refused**: GPL/AGPL, proprietary licenses, source-available restrictions
-  such as the Commons Clause, and anything unclassified. An LGPL allowlist
-  result is not a legal-compliance waiver: any redistribution must include
-  the required license/copyright notices and satisfy the applicable source,
-  relinking and modification obligations for the LGPL component. Review the
-  exact version and distribution form before shipping.
+  such as the Commons Clause, and anything unclassified. An allowlist result
+  is not a legal-compliance waiver: review the exact package, version and
+  distribution form, preserve required notices, and satisfy the applicable
+  source, modification, relinking or reciprocity obligations before shipping.
 - **Untracked installed packages are refused**: the installed
   third-party set must equal the pinned closure (plus the venv's own
   pip/setuptools/wheel build tooling). This is the iteration-0013
@@ -145,9 +145,9 @@ fails loudly otherwise.
 
 ## Decisions recorded on this surface
 
-- **Psycopg uses the approved LGPL exception family (ADR-0027)** — the
-  operator approved LGPL weak-copyleft dependencies after the release gate
-  rejected `psycopg[binary]`. The audited closure pins both `psycopg` and
+- **Psycopg uses the approved weak-copyleft allowlist (ADR-0027)** — the
+  operator approved LGPL and specifically named comparable weak-copyleft
+  identifiers after the release gate rejected `psycopg[binary]`. The audited closure pins both `psycopg` and
   `psycopg-binary`; the audit continues to reject GPL/AGPL, Commons Clause,
   proprietary and unknown declarations. This is a dependency-policy decision,
   not legal advice or a finding that every possible redistribution model
