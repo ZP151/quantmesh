@@ -1,5 +1,36 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Exact server parent checkout and existing runtime admission
+
+Root actually qualifies candidateeb880b2/treee7f6eb69 on native server FS:
+3,923regular Git blobs/43,953,107B,6,669installed RECORD files and existing
+_admit_runtime source/81package lock/license/nonroot CPython3.12.3venv gate
+pass11.201s. No database/API/listener/model/Worker or production deployment.
+One in-memory9,552,026B real Gitpack includes exact commit/tree/blobs, no
+ancestor history/local archive; shallow boundary is explicit, no invented Git.
+Operational recipe/caller scoped2roundreview clear after nonzero/invalid/missing
+SSH response becomes UNKNOWN with exact nonce/no-retry. Function-AST RED1/
+GREEN6 classification retained. First actual checkoute669afe2 rejects3actual
+PowerShell CRLF conversions mandated by .gitattributes, while normal Git diff
+is clean. UNKNOWN resolved by independently reading that exact owned receipt,
+which proves known failure before dependency admission. No blind rerun/newphase.
+Root same-phase correction archives the3before-images, verifies old/new blob
+IDs and CRLF→LF is the only difference, restores canonical blob bytes. Then
+all3,923blob checks and existing runtime gate pass, initial receipt preserved.
+One local pack-representation equality assertion fails before remote writes;
+corrected resumption sends no pack and reuses current existing pack SHA.
+Future record must not call pack encoding deterministic just because Git tree
+is immutable. No third structural review or repeated source/native acceptance.
+Latest cloud free159,412,133,888B; existing1GBparent/original5GB/free50GB guards
+pass. Local/evidence original peak cap failure remains failed and carried.
+Evidence output/0038-parent-integration/parent-checkout-eol-corrected.json/.exit,
+requests/executed bytes, parent-checkout-reconciled.json, raw failure/UNKNOWN,
+checkout-outcome-red-green.json and implementer-resource-exception.json.
+Implementer removed2redundant fixture roots after absolute path checks but NO
+OS ownership check and no standalone raw logs; root records this exception,
+does not delete more or claim resource cap recovered. Root78-pass evidence is
+independent and durable. Full A ACTIVE; next concrete admission→Worker→PG/report.
+
 ## Parent policy wiring and actual offline server venv
 
 User server report remains pending; this checkpoint connects existing approved

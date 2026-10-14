@@ -2,6 +2,16 @@
 
 ## Parent policy and actual offline service runtime checkpoint
 
+Actual exact candidate checkout/runtime follow-up also passes: eb880b2/tree
+e7f6eb69,3,923blobs/43,953,107B,6,669RECORD files and existing _admit_runtime
+source/81lock/license/nativeFS/nonrootvenv gate,11.201s. No SQL/service/Worker
+activation. Git attributes initially converted3PowerShell files to CRLF;
+failure and originals retained, known failed nonce reconciled, exact raw Git
+blobs restored in the SAME checkout/pack. Original failed receipt unchanged.
+Latest cloud free159,412,133,888B, parent1GB/originalwhole5GB/free50GB retained.
+Next missing concrete parent admission/current policy→Worker→PG/report/page.
+Old policy receipt093b/unloaded is not current a0abb2dc numerical admission.
+
 Paired operator AppArmor/seccomp fields now preserve the default profile and
 compare the entire requested create/inspect security option list. Root's real
 writerless-FIFO RED times out before O_NONBLOCK; correction GREEN and affected
@@ -11,9 +21,9 @@ Actual ubuntu offline preparation reuses all81 fixed cached wheels in a fresh
 private CPython3.12.3 venv, no download/bytecode/pth/service; exit0 in7.592s.
 Exact never-started bootstrap CID removed, Engine5images/0containers. Initial
 missing optional Docker Labels KeyError and phase retained, then .get repair.
-Source/RECORD/license/runtime admission and server numerical report still open.
-Next exact source checkout and existing runtime admission, then concrete Worker
-parent to PG/report/page/reopen. Full A ACTIVE; paper=true/live=false/no extra fee.
+At this preparation substep source/RECORD/license/runtime admission was still
+pending; subsequent actual follow-up above closes it. Server numerical report
+remains open. Full A ACTIVE; paper=true/live=false/no extra fee.
 Evidence output/0038-parent-integration/{parent-venv-corrected,kernel-green}.
 Implementer1MB fixture cap FAILED at original1,198,755B peak; carry that peak,
 never claim deletion made it pass. Root4MB forecast3,055,260B within cumulative

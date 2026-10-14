@@ -181,3 +181,29 @@ software/evidence remains inside the current4MB/cumulative129MB. This is private
 prepare-only material, not merged-tree service deployment or server-report proof.
 One bounded operational recipe review precedes execution; no third structural
 review of prior source/kernel work. Human release gates remain unchanged.
+
+Actual parent preparation and candidate admission complete: private3.12.3venv
+81fixedpackages, exact candidateeb880b2/treee7f6eb69 on native FS, all3,923blobs
+and6,669RECORD files checked, existing _admit_runtime lock/license/source gate
+exit0. No service/SQL/Worker activation. Shallow real Gitpack retained remotely;
+three Git-attribute CRLF before-images and failed receipt retained, canonical
+blob correction/resumption reuses same known failed phase, not another checkout.
+Evidence output/0038-parent-integration/; original whole-host/parent budgets
+remain carried. Root source78-pass tests/review close the paired-option leaf.
+
+Concrete provider next boundary (existing Task2, no architecture expansion):
+implement WorkerImageAdmission.verify(profile) exact five runtime fields and
+prepare_parent_binding(process,job,runtime,ready) canonical15-field bytes/SHA.
+Observe CURRENT actual Engine/image/raw OCI/source/lock/runtime and actual
+loaded enforcing AppArmor/seccomp/noexec controls; historical policy093b receipt
+alone refuses current a0abb2dc. Ready rebinds actual full CID/nonce/command/user/
+mount/security options/bootstrap/cgroup before GO; expected binding SHA travels
+existing trusted controller channel, never from child input. Existing exit
+validation re-observes provider fingerprint/policy and stopped/noOOM/exit0.
+Decisive refusals: image/config/runtime mismatch, ready CID/nonce/control drift,
+and post-exit policy/runtime drift. One new bounded provider module plus tests
+and frozen operator wiring, no saved-qualified Boolean/arbitrary Python.
+Reuse actual unchanged ELF/runtime inputs only after rebinding current bytes;
+do not launch another source proof family or re-review completed native design.
+First registered numerical thin call either yields real report or a precise
+architecture blocker; max2 structural reviews/timebox still governs the slice.

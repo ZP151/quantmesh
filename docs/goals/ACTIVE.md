@@ -11,14 +11,25 @@ Three approved AWS resources retained; no added cost or permission expansion.
 Latest checkpoint: paired parent policy fields reviewed/affected78pass; actual
 server private venv preparation exit0/81 frozen packages/CPython3.12.3,
 no download/pth/bytecode/service. Evidence output/0038-parent-integration/.
-Source checkout/RECORD/license admission and concrete Worker remain pending;
-no server numerical report yet. Kernel configuration is not kernel admission.
+Exact shallow candidate eb880b2/treee7f6eb69 is now actually present on native
+server filesystem:3,923blob/43,953,107B fully checked;6,669installed RECORD files
+and existing _admit_runtime source/81lock/license/nonroot-venv gate pass11.201s.
+This is candidate qualification only, no SQL/listener/production deployment.
+Concrete Worker remains pending; no server numerical report yet. Kernel
+configuration is not kernel admission.
 Preparation's optional Labels failure retained; real fixed call7.592s and own
 never-started cleanup/Engine5images0containers passed. Software4MB carries
 original implementer1MB-cap FAILED peak1,198,755B plus all root tests/errors;
 cumulative129MB and original whole-host5GB/free50GB remain, no extra fee.
-Next prepare exact source checkout in the same1GB cloud phase and invoke the
-existing runtime admission; then connect the registered fixture/PG/Worker/report.
+Initial checkout's actual Git eol=crlf conversion of3PowerShell blobs is retained;
+SSH nonzero was UNKNOWN then exact private receipt re-read proves known failure.
+Same phase/pack reused, three before-images archived and exact canonical Git
+blob bytes restored; full byte check and existing runtime admission then pass.
+Evidence parent-checkout-eol-corrected.json/.exit and reconciliation files.
+Next implement the missing concrete WorkerImageAdmission against CURRENT actual
+image/policy/CID/mounts before GO and again before publication, then connect the
+registered fixture/PG/Worker/report. Reuse closed source/native phases. Existing
+policy receipt093b is historical and unloaded; no cached admission boolean.
 
 Users already have the local fixture submit/report/page/recovery loop. The
 research-server equivalent is NOT demonstrated. Priority1 is one registered
