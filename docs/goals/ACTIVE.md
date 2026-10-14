@@ -1,6 +1,40 @@
 # Active Goal
 
-## Current checkpoint — interpreter alias repair; PR #175 CI failed
+## Current checkpoint — PR #175 SSE fixture correction verified
+
+Exact f5e38ea CI38584253826 failed with4928 passed/141 skipped and two SSE
+setup errors. Saved full pytest stderr proves EADDRINUSE on127.0.0.1:8644
+and Uvicorn thread exit3. Readiness repeatedly tried binding the server's own
+port. The initial occupied-port guard stays; readiness now reads the actual
+`server.started` state, using the existing SPA fixture pattern. Runtime,
+retention, Worker, dependencies and trading authority do not change.
+
+Root's real-server regression RED fails on the second bind attempt. Complete
+live-router GREEN passes36 tests/15.13s, including both actual HTTP SSE flows
+and the readiness HTTP200 regression;6 existing warnings. Failed CI archive,
+full pytest log, RED/GREEN and original failures remain under
+`output/0038-ci38584253826-diagnostics/`. No old-CI rerun or local full suite.
+Narrow independent final review has no P1/P2; Ruff/format/diff pass.
+New exact-head CI is required before merge.
+
+Actual full-module DuckDB fixtures occupy58,316,685 bytes; RED800,815 bytes.
+The8MB software-phase allocation gate FAILED and remains recorded as failed,
+not retroactively passed. No evidence/test root is deleted or baseline reset.
+Resource receipt carries prior47,082,944B forward. Before further work, reserve
+2MB for checkpoint/CI metadata with112MB cumulative ceiling; >=50GB free,
+whole-C attribution pending, no new environment/image/paid resource. This
+changes future software accounting only; original AWS5GB/free50GB bounds stay.
+
+Separate kernel branch3f23ff7 has the verified inventoried-interpreter alias
+repair (61 related tests), and the actual finite kernel witness already passed.
+No full numerical Worker/parent admission is inferred. Overall goal ACTIVE:
+fixed entry/independent parent, complete report/recovery, private PostgreSQL,
+Agent/Eval and server-owned real market sources remain. paper=true/live=false;
+formal168h NOT_REQUIRED, real drills on demand, three-server budget unchanged.
+
+## Current checkpoint — PR #175 Linux fixture isolation correction
+
+## Prior integration checkpoint — interpreter alias repair; PR #175 CI failed
 
 The fixed `/usr/local/bin/python3` entry's declared link to `python3.12` now
 requires the inventory's exact target, measured regular-file bytes inside the
