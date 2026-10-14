@@ -171,4 +171,3 @@ phase9,609,216B<=100MB. Current local allocation/cumulative/free bytes are in
 output/0038-worker-source-image/config-recovery-resource.json; all previous
 failures/native phases/reserves remain carried. Goal ACTIVE, paper=true/live=false,
 168h NOT_REQUIRED, existing three AWS resources and monthly budget unchanged.
-
