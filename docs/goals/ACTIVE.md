@@ -8,6 +8,19 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Current real image metadata prepared/checked nonce79cf75d4,81distributions,
+162rawfiles, private snapshot; exact NEVER-startedCID removed/Engine5images0.
+No kernel load, Worker admission or numerical report. Connected opt-in kernel
+blueprint now /dev noexec and3fixedreadonly/etc binds, default unchanged;
+RED4/GREEN4/affected33pass plus5drift refusals, scopedreview clear.
+Root80KBaffected fixture subcap FAILED453,924B retained; overall1MBforecast
+884,223B/cumulative128,781,001B still<=129MB, whole-C pending. Evidence
+output/0038-concrete-admission/independent-checked.json. Primary next:
+concrete provider review/current effective policy and noexec backings→whole
+registered job→PG/report/page/reopen. No new proof family or repeated oldphase.
+
+### Previous direct-wire checkpoint (closed software phase)
+
 Direct real-Engine compatibility repair: current bare NNP is preserved as bare,
 and seccomp filenames become exact JSON payloads in inspect. Fresh two owned
 NEVER-started current-image CIDs prove this, then both removed/Engine5/0. Source

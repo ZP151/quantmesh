@@ -1,5 +1,33 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current connected parent admission and kernel mounts
+
+Planner retains first registered server numerical report as the one user loop.
+Verifier actual immutable-image metadata capture: nonce79cf75d4 exits0/15.246s,
+81distributions/162rawfiles/current OCI and independent source/runtime pins;
+own NEVER-startedCIDc78bcd18 removed, Engine5/0. Actual private snapshot includes
+11 fixed inputs, raw metadata subtree and a nonauthority receipt. It does not
+load policies/execute Python or grant Worker/report admission. Historical full
+version measurement rebound to current image bytes remains distinctly labeled.
+Root Implementer closes existing kernel mount blueprint: opt-in paired policy
+adds /dev rw,noexec tmpfs and fixedreadonly /etc/hostname,hosts,resolv.conf binds.
+Default2binds/tmp unchanged; bounded fixed network bytes/parent owner/mode/link
+identity checked before create and on every inspect. RED4/GREEN4, affected33
+pass10.49s, five inspect drift refusals/exit0, Ruff/format/diff green. Scoped
+Reviewer finds no P1/P2; positive/different-mount refusal gap is now covered.
+No old native/source proof or third structural review repeated.
+Affected fixture80KBsubcap FAILED at453,924B; original root/logs retained, no
+deletion or claimed recovered pass. Current1MB overall forecast884,223B carries
+that overrun plus all original peaks: cumulative128,781,001B<=129MB. Whole-C
+attribution PENDING. Original PG-inclusive cloud delta2,855,002,112B<=5GB,
+free159,407,804,416B, existing1GBparent allocation unchanged/no added fee.
+Evidence output/0038-concrete-admission/image-metadata*,mount*.log/.exit/
+*-resource.json,independent-checked.json. Root next reviews concrete provider,
+uses current enforcing profile/noexec backing on first whole numerical call,
+then privatePG/durable report/page/reopen. No server user report yet. PR175
+actual recheck unchanged OPEN/DRAFT370a745/CI38595332643SUCCESS/0humanreviews;
+ClassC human/operator release gate remains. Full A ACTIVE.
+
 ## Direct actual-Engine wire repair
 
 Planner stays on first server report, no new source/native proof. Current real

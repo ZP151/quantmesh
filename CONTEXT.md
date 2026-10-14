@@ -1,5 +1,27 @@
 # QuantMesh Domain Context
 
+## Current metadata and connected kernel-mount checkpoint
+
+Actual CURRENT imagea0abb2dc passive metadata capture exits0 in15.246s:
+rawOCI manifest/config/current Engine relation,81distributions/162 raw metadata
+files, source/lock/inventory/interpreter and fixedpolicy input hashes checked.
+Nonce79cf75d4/own NEVER-startedCIDc78bcd18 removed; Engine5images/0containers.
+Snapshot receipt is not admission, policies copied but NOT loaded, no Worker
+or server report accepted. Full Python version is the earlier independent image
+measurement rebound to current bytes, not newly executed by this collector.
+
+Root's connected Task2 blueprint now adds /dev noexec tmpfs and3 fixedreadonly
+/etc network binds only for paired kernel profiles, keeping default2binds/tmp.
+Parent network file bytes/owner/mode/link identity rechecked every inspect.
+RED4→GREEN4, affected33pass10.49s, five inspected-drift refusals/exit0; scoped
+review no P1/P2. Affected80KBsubcap FAILED453,924B is retained without cleanup;
+overall1MB phase forecast884,223B/cumulative128,781,001B<=129MB carries it.
+Whole-C remains PENDING; original cloud whole delta2,855,002,112B<=5GB and
+free159,407,804,416B. Evidence output/0038-concrete-admission/independent-checked.json.
+Next concrete provider review/current loaded policy and actual noexec task
+backings→first whole registered numerical job→privatePG/report/page/reopen.
+Full Option A ACTIVE; no new source/native proof family, no additional fee.
+
 ## Actual Engine protocol correction before concrete Worker admission
 
 Two current-image never-started CIDs prove bare NNP stays bare and seccomp path

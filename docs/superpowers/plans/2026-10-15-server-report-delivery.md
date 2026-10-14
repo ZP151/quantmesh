@@ -207,3 +207,78 @@ Reuse actual unchanged ELF/runtime inputs only after rebinding current bytes;
 do not launch another source proof family or re-review completed native design.
 First registered numerical thin call either yields real report or a precise
 architecture blocker; max2 structural reviews/timebox still governs the slice.
+
+## Concrete admission implementation handoff
+
+Root closes wire correction4b596e0: actual bare NNP/exact JSON payload, immutable
+UTF8 capture,16KiB cap. Native tests/logs/source preserved, no Worker accepted.
+Next software allocation1MB conservatively carries127,896,778B (including every
+old peak/error/reserve), stays<=129MB; no new environment/full-suite or deletion.
+AWS metadata/config preparation stays in the existing1GBparent/original5GB.
+
+Implementer owns only src/quantmesh/research/worker_admission.py and
+tests/test_worker_admission.py; root owns existing linux_owned/kernel activation,
+operational collection/PG/report and tracked records. One provider, no additional
+abstract observer/authority interface. Use existing WorkerImageAdmission methods.
+Constructor takes frozen operator pins and a private source snapshot directory;
+job requests cannot supply either. Snapshot is collected from a CURRENT exact
+owned NEVER-started immutable-image CID: manifest/inventory plus exact installed
+METADATA/RECORD/direct_url bytes needed to recompute five runtime fields. Root
+binds snapshot hashes to independently expected image/OCI/manifest/inventory
+pins; no saved receipt, qualified Boolean or borrowed parent-venv runtime tuple.
+Full Python version is the independently measured frozen-image interpreter pin,
+not the parent3.12.3 version. Current immutable interpreter/libraries/config must
+rebind to it every verify; child subsequently independently measures the tuple.
+
+Provider independently reads CURRENT actual Engine/image and raw containerd
+OCI manifest/config blobs (bounded stable nofollow reads), checks their hash
+relationships and exact expected source/runtime inventory. Recompute source and
+dependency fingerprint from bound actual snapshot bytes using existing canonical
+formula; do not accept a saved five-field tuple. Kernel authority comes from
+CURRENT securityfs enforce mode/raw compiled bytes and exact configured policy
+byte pins, not old actual-image-policy.json. Existing build_kernel_policy and
+actual immutable ELF map/default pins remain the expected policy construction.
+Before GO use exact process._inspect and ready/cgroup/bootstrap checks, actual
+Engine CID/PID/start identity, host /proc/PID attr/status/mountinfo (differentUID,
+NNP,seccomp,caps/noexec); encode existing15-field ParentBindingContract. Recheck
+live process identity around host reads. Existing validate_exit re-runs provider
+verify before publication, so policy/image/config/runtime drift refuses then.
+Sanitized LinuxContainmentError only. No default activation/SQL/daemon/sudo
+policy/secret/model/user-code capability; privileged operator qualification is
+distinct from a persistent reviewed worker service.
+
+TDD decisively covers real byte-hash relationships/fingerprint computation,
+current Engine/OCI/policy drift, forged/changed ready CID/nonce/limits and
+post-exit verifier drift. Software tests use existing WSL runtime and one fresh
+named native fixture root capped80KB; root runs broader slice gates later.
+No third completed native/source review, no generic cache object-graph retry.
+Missing real current policy/noexec controls fail closed and remain the ONE
+connected runtime task; first whole numerical call determines report or exact
+architecture blockage under the existing24–48h/max2-round slice limit.
+
+Snapshot frozen filenames: oci-manifest.json,oci-config.json,manifest.json,
+inventory.json,runtime-metadata.json,requirements.lock,policy.apparmor,
+policy.seccomp.json,policy.compiled,elf-map.json,docker-default.json. Raw lock is
+copied from the actual manifest lock_path and bound to existing07f4e7ec digest;
+parse it to check exactly81 metadata versions. No new lock/dependency. Runtime
+metadata rows contain name/version/absolute metadata_directory and raw/text
+SHA256 for METADATA/RECORD/direct_url.json (absent optional entry empty digest).
+Full3.12.15 version is the frozen independently measured interpreter string,
+current immutable interpreter/library bytes rebound, not a new process/version
+measurement during passive collection. Actual tuple is independently checked by
+the child before computation; no parent3.12.3 value substituted.
+
+Actual metadata capture79cf75d4 exits0/15.246s, current image/runtime inputs
+checked, never-started ownCID removed/Engine5/0. Snapshot also has fixed
+receipt.json as operational nonauthority; actualELF map is plain path→SHA,
+Engine29.9 imageID is OCI manifestSHA a0abb2dc, rawconfigSHA7c78d260 remains
+separate; containerd content root /var/lib/containerd/io.containerd.content.v1.content/blobs/sha256.
+Actual AppArmor securityfs uses exactly one name.revision directory and contains
+the known auxiliary fields; require current name/enforce/v5/raw_data/raw_sha256
+bindings, not a nonexistent unsuffixed path or assumed five-only directory.
+Root existing Task2 opt-in kernel blueprint adds /dev noexec tmpfs and3 fixed
+readonly/etc binds; default2binds/tmp unchanged. RED4/GREEN4/affected33 and5
+driftrefusals, scopedreview clear.80KBaffected-root subcap FAILED453,924B stays
+retained/no cleanup; overall1MBforecast884,223B/cumulative128,781,001B<=129MB.
+Metadata/software alone grant no admission. Next actual loaded controls/noexec
+backings and ONE whole registered numerical job, not another prerequisite family.

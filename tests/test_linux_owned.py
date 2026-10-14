@@ -116,7 +116,11 @@ def _inspect_for_create(profile, create, nonce, state):
             "Memory": memory * 1024 * 1024,
             "MemorySwap": memory * 1024 * 1024,
             "RestartPolicy": {"Name": "no"},
-            "Tmpfs": {"/tmp": "rw,noexec,nosuid,size=16m"},
+            "Tmpfs": {
+                flag.split("=", 1)[1].split(":", 1)[0]: flag.split(":", 1)[1]
+                for flag in create
+                if flag.startswith("--tmpfs=")
+            },
             "LogConfig": {"Type": "none"},
         },
         "Mounts": mounts,
@@ -213,6 +217,76 @@ def test_operator_security_policies_are_created_and_inspected(profile, paths, en
     assert "--security-opt=apparmor=qm-worker-9f7cdb6c9ce7b9c9516c" in create
     assert f"--security-opt=seccomp={seccomp.resolve()}" in create
     process.close()
+
+
+def test_kernel_blueprint_closes_writable_engine_mounts(profile, paths, engine, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "kernel.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    process = owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    create = next(args for args in engine[0] if args[0] == "create")
+    assert "--tmpfs=/dev:rw,noexec,nosuid,size=8m,mode=755" in create
+    observed = process._inspect()
+    mounts = {m["Destination"]: m for m in observed["Mounts"]}
+    for name in ("hostname", "hosts", "resolv.conf"):
+        mount = mounts[f"/etc/{name}"]
+        assert mount["RW"] is False
+        assert Path(mount["Source"]).parent == profile.fixture_root / ".kernel-network"
+        assert Path(mount["Source"]).stat().st_mode & 0o777 == 0o444
+    from copy import deepcopy
+
+    for field in ("dev", "extra", "source", "mode", "rw"):
+        changed = deepcopy(observed)
+        if field == "dev":
+            changed["HostConfig"]["Tmpfs"]["/dev"] = "rw,nosuid,size=8m,mode=755"
+        elif field == "extra":
+            changed["HostConfig"]["Tmpfs"]["/unexpected"] = "rw,noexec"
+        else:
+            network_mount = next(m for m in changed["Mounts"] if m["Destination"] == "/etc/hosts")
+            network_mount[{"source": "Source", "mode": "Mode", "rw": "RW"}[field]] = {
+                "source": str(tmp_path / "untrusted"),
+                "mode": "rw",
+                "rw": True,
+            }[field]
+        assert not owned._matches_owned_container(
+            changed,
+            container_id=process.container_id,
+            image_id=configured.image_id,
+            nonce=process.nonce,
+            command=process._expected_inspect_command,
+            user=f"{configured.uid}:{configured.gid}",
+            inputs=str(paths[0]),
+            output=str(paths[1]),
+            memory_mib=2048,
+            security_options=configured.security_options,
+            kernel_network=profile.fixture_root / ".kernel-network",
+        )
+    process.close()
+
+
+@pytest.mark.parametrize("change", ["symlink", "content", "mode"])
+def test_kernel_network_files_refuse_drift_before_create(profile, paths, engine, tmp_path, change):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "kernel.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    root = profile.fixture_root / ".kernel-network"
+    root.mkdir(mode=0o700)
+    target = root / "hostname"
+    if change == "symlink":
+        target.symlink_to(seccomp)
+    else:
+        target.write_text("tampered\n" if change == "content" else "quantmesh-worker\n")
+        target.chmod(0o444 if change == "content" else 0o666)
+    with pytest.raises(owned.LinuxContainmentError, match="unsafe_kernel_network"):
+        owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    assert not any(args[0] == "create" for args in engine[0])
+    assert engine[3].sent == []
 
 
 def test_operator_policy_expectation_binds_actual_json_content(profile, tmp_path):

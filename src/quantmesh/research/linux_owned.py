@@ -35,6 +35,12 @@ CONTROL_WRITE_SECONDS = 1.0
 # Public CPython build signer measured in the immutable configured image.
 # This exact public value is not a permission for arbitrary GPG credentials.
 _PUBLIC_PYTHON_SIGNER_ENV = "GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305"
+_KERNEL_NETWORK = {
+    "hostname": b"quantmesh-worker\n",
+    "hosts": b"127.0.0.1 localhost\n",
+    "resolv.conf": b"# network none\n",
+}
+_DEV_TMPFS = "rw,noexec,nosuid,size=8m,mode=755"
 
 
 class LinuxContainmentError(RuntimeError):
@@ -57,6 +63,7 @@ def _matches_owned_container(
     output: str,
     memory_mib: int,
     security_options: list[str] | None = None,
+    kernel_network: Path | None = None,
 ) -> bool:
     """Check the actual Engine record against every control requested by this owner."""
     try:
@@ -66,6 +73,11 @@ def _matches_owned_container(
             "/inputs": (str(Path(inputs).resolve()), "ro", False),
             "/output": (str(Path(output).resolve()), "rw", True),
         }
+        expected_tmpfs = {"/tmp": "rw,noexec,nosuid,size=16m"}
+        if kernel_network is not None:
+            expected_tmpfs["/dev"] = _DEV_TMPFS
+            for name in _KERNEL_NETWORK:
+                expected_mounts[f"/etc/{name}"] = (str(kernel_network / name), "ro", False)
         mounts = {}
         for mount in doc["Mounts"]:
             destination = mount["Destination"]
@@ -104,13 +116,15 @@ def _matches_owned_container(
             and host["Memory"] == memory_mib * 1024 * 1024
             and host["MemorySwap"] == memory_mib * 1024 * 1024
             and host["RestartPolicy"]["Name"] == "no"
-            and host["Tmpfs"] == {"/tmp": "rw,noexec,nosuid,size=16m"}
+            and host["Tmpfs"] == expected_tmpfs
             and host["LogConfig"]["Type"] == "none"
             and set(mounts) == set(expected_mounts)
-            and mounts["/inputs"] == ("bind", expected_mounts["/inputs"][0], "ro", False)
-            and mounts["/output"][0:2] == ("bind", expected_mounts["/output"][0])
-            and mounts["/output"][2] in ("", "rw")
-            and mounts["/output"][3] is True
+            and all(
+                mounts[name][0:2] == ("bind", source)
+                and mounts[name][2] in (("", "rw") if writable else ("ro",))
+                and mounts[name][3] is writable
+                for name, (source, _, writable) in expected_mounts.items()
+            )
         )
     except (KeyError, TypeError, ValueError, OSError):
         return False
@@ -233,6 +247,56 @@ def _safe_path(path: Path) -> Path:
         if part.is_symlink() or (hasattr(part, "is_junction") and part.is_junction()):
             raise LinuxContainmentError("unsafe_path")
     return path.resolve()
+
+
+def _kernel_network_paths(root: Path, *, create: bool) -> Path:
+    """Fixed nonsecret read-only replacements for Docker's writable /etc mounts."""
+    try:
+        network = _safe_path(root / ".kernel-network")
+        if create:
+            network.mkdir(mode=0o700, exist_ok=True)
+        info = network.lstat()
+        if (
+            not stat.S_ISDIR(info.st_mode)
+            or info.st_uid != os.geteuid()
+            or info.st_mode & 0o777 != 0o700
+        ):
+            raise ValueError
+        for name, expected in _KERNEL_NETWORK.items():
+            path = network / name
+            if create:
+                try:
+                    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                except FileExistsError:
+                    pass
+                else:
+                    try:
+                        if os.write(fd, expected) != len(expected):
+                            raise ValueError
+                        os.fchmod(fd, 0o444)
+                    finally:
+                        os.close(fd)
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            try:
+                before = os.fstat(fd)
+                if (
+                    not stat.S_ISREG(before.st_mode)
+                    or before.st_uid != os.geteuid()
+                    or before.st_nlink != 1
+                    or before.st_mode & 0o777 != 0o444
+                    or before.st_size != len(expected)
+                    or os.read(fd, len(expected) + 1) != expected
+                    or _binding_stat_signature(before) != _binding_stat_signature(os.fstat(fd))
+                    or _binding_stat_signature(before) != _binding_stat_signature(path.lstat())
+                ):
+                    raise ValueError
+            finally:
+                os.close(fd)
+        if set(p.name for p in network.iterdir()) != set(_KERNEL_NETWORK):
+            raise ValueError
+        return network
+    except (OSError, ValueError, LinuxContainmentError):
+        raise LinuxContainmentError("unsafe_kernel_network") from None
 
 
 def _private_seccomp_policy(path: Path) -> tuple[Path, str]:
@@ -598,6 +662,21 @@ class LinuxOwnedProcess:
             *command,
         ]
         self._binding_identity = None
+        self._kernel_network = (
+            _kernel_network_paths(root, create=True)
+            if profile.apparmor_profile is not None
+            else None
+        )
+        kernel_args = []
+        if self._kernel_network is not None:
+            kernel_args.append(f"--tmpfs=/dev:{_DEV_TMPFS}")
+            for name in _KERNEL_NETWORK:
+                kernel_args.extend(
+                    [
+                        "--mount",
+                        f"type=bind,src={self._kernel_network / name},dst=/etc/{name},readonly",
+                    ]
+                )
         self.output.mkdir(parents=False)
         if os.name == "posix":
             os.chown(self.output, profile.uid, profile.gid)
@@ -625,6 +704,7 @@ class LinuxOwnedProcess:
             f"type=bind,src={self.inputs},dst=/inputs,readonly",
             "--mount",
             f"type=bind,src={self.output},dst=/output",
+            *kernel_args,
             "--entrypoint",
             PYTHON_PATH,
             profile.image_id,
@@ -707,6 +787,8 @@ class LinuxOwnedProcess:
 
     def _inspect(self, *, check_parent_binding: bool = True) -> dict:
         try:
+            if self._kernel_network is not None:
+                _kernel_network_paths(self.profile.fixture_root, create=False)
             doc = self._inspect_owner()
             if not _matches_owned_container(
                 doc,
@@ -719,6 +801,7 @@ class LinuxOwnedProcess:
                 output=str(self.output),
                 memory_mib=self.budget.memory_mib,
                 security_options=self.profile.security_options,
+                kernel_network=self._kernel_network,
             ):
                 raise ValueError
             expected_binding = (
