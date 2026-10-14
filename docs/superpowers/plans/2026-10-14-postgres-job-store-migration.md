@@ -24,7 +24,7 @@
 - Reopening a migrated store does not add duplicate indexes or reorder jobs.
 - Explicit legacy positions do not break future identity-generated positions.
 - Expired analysis leases are reclaimable with a higher attempt while stale lease owners remain fenced.
-- The Python closure admits the reviewed exact SPDX identifiers LGPL-2.0/2.1/3.0 (base, `-only`, `-or-later`), MPL-2.0, EPL-2.0 and CDDL-1.0. Maintainers may add another exact identifier without new operator approval only after official-text review confirms comparable weak/file-level copyleft and records package, version, notices, distribution and applicable source/relinking/network duties. GPL/AGPL, Commons Clause, proprietary and unknown licenses remain denied absent a separate decision.
+- The existing Python license allowlist is unchanged. LGPL, EPL and CDDL remain refused; the operator selected BSD-licensed pg8000 rather than widening the gate for Psycopg.
 
 ---
 
@@ -45,15 +45,14 @@
 - [x] Run the focused PostgreSQL integration file against a disposable local PostgreSQL 16 instance: 3 passed, 1 dependency warning, exit 0.
 - [x] Run Ruff and format checks on both changed Python files and `git diff --check`.
 
-### Task 2: Historical classifier expansion and original driver admission
+### Task 2: Preserve the existing license gate
 
 **Files:**
-- Modify: `tools/license_review.py`, `tests/test_security.py`
-- Modify: `requirements-audit.txt`, `docs/licenses.md`, `docs/REUSE_MATRIX.md`
-- Add: `docs/adr/0027-lgpl-weak-copyleft-dependency-policy.md`
+- Review: `tools/license_review.py`, `tests/test_security.py`
+- Preserve: `docs/licenses.md` and `requirements-audit.txt` policy semantics
 
-- [x] Add regression cases first and observe the LGPL acceptance and exact-text cases fail against the previous deny-all policy.
-- [x] Permit the operator-approved exact LGPL-2.0/2.1/3.0 base / `-only` / `-or-later`, MPL-2.0, EPL-2.0 and CDDL-1.0 SPDX identifiers; retain explicit GPL, AGPL and Commons-Clause rejection. The operator's standing authorization allows maintainers to add future comparable weak/file-level identifiers only after exact-text and package/distribution review; it does not create a wildcard.
+- [x] Add regression cases showing LGPL, EPL and CDDL metadata remain refused by the existing allowlist.
+- [x] Select pg8000 for the root runtime instead of changing the license gate to admit Psycopg.
 - [x] The earlier checkpoint pinned Psycopg based on exact metadata; that runtime choice is superseded by Task 3 below. Keep its review history and classifier tests, but remove those packages from the current runtime closure.
 - [x] Run the focused license suite and gate on a clean release environment; inspect the exact closure rows and confirm no unknown/untracked packages (72 Windows closure packages reviewed, six Linux-only pins tolerated, all 78 locked rows classified, no untracked packages).
 - [x] Run the focused PostgreSQL integration tests on disposable local PostgreSQL 16; retain paper-only and no-AWS scope (3 passed, 1 existing NumPy deprecation warning, 15.46s).
@@ -73,7 +72,7 @@ format and diff checks pass. These changes still require an exact-head CI run.
 **Files:**
 - Modify: `pyproject.toml`, `src/quantmesh/research/job_store.py`
 - Modify: `tests/test_postgres_connector.py`, `tests/test_research_postgres_job_store.py`, `tests/test_security.py`
-- Modify: `requirements-audit.txt`, `docs/licenses.md`, `docs/REUSE_MATRIX.md`, this plan, ADR-0027
+- Modify: `requirements-audit.txt`, `docs/licenses.md`, `docs/REUSE_MATRIX.md`, this plan, ADR-0028
 - Add: `docs/adr/0028-pg8000-postgresql-driver.md`
 
 - [x] Add connector tests first for URI parsing, TLS defaults/loopback exception, cursor placeholder adaptation and DB/socket error mapping; observe them fail against the Psycopg-only implementation.
@@ -89,4 +88,4 @@ This local SQL slice is eligible for the existing PR's CI and review gates. Prod
 
 ## 2026-10-14 Worker command/binding integration checkpoint
 
-Root integration now uses the exact canonical CPython path and fixed `-B -I -S` command required by the ruling, requires the trusted parent-binding callback, checks full actual-container controls and mounts, revalidates the binding before publication, and separates owned-container cleanup identity from execution admission. Tests cover empty default writable mount mode, privilege-control drift, cleanup after drift, missing provider refusal and pre-publication binding tamper. Focused suite: 58 passed/51 skipped/1 existing warning, 6.70s; Ruff, format and whitespace checks pass after final edits. All Engine cases are fake on this Windows host. `worker_entry.py`, trusted parent image admission, genuine OCI/native qualification and actual numerical execution remain hard blockers. This worktree delta is not pushed; exact-head CI/human gates remain outstanding.
+Root integration now uses the exact canonical CPython path and fixed `-B -I -S` command required by the ruling, requires the trusted parent-binding callback, checks full actual-container controls and mounts, revalidates the binding before publication, and separates owned-container cleanup identity from execution admission. Tests cover empty default writable mount mode, privilege-control drift, cleanup after drift, missing provider refusal and pre-publication binding tamper. Focused suite: 58 passed/51 skipped/1 existing warning, 6.70s; Ruff, format and whitespace checks pass after final edits. All Engine cases are fake on this Windows host. `worker_entry.py`, trusted parent image admission, genuine OCI/native qualification and actual numerical execution remain hard blockers. Commit `dee8fc6` is pushed to PR #175; exact-head CI run `38569411056` is in progress and applicable review remains outstanding.

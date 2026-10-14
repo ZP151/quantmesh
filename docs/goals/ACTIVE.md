@@ -2,17 +2,21 @@
 
 ## Current goal ACTIVE — synthetic Reader probe passed; full Worker remains gated
 
-## Current checkpoint — pg8000 landed locally; Worker boundary still software-only
+## Current checkpoint — PR #175 review fixes ready; full Worker remains gated
 
 Operator chose pg8000 to preserve the existing license policy. The root
 PostgreSQL store and security install constraint are pushed at `5b8fbe5`.
-The migrated implementation's disposable PostgreSQL 16 integration passed
-3/3. Current focused worker/runner/PostgreSQL-store tests pass 58 with 51
-platform/environment skips and one existing NumPy warning; Ruff and
-`git diff --check` pass. The PostgreSQL integration subset in that combined
-command skipped without a DSN; the prior 3/3 disposable PG16 result is
-separate. CI for the driver commit is pending/supersedable; the current Worker
-delta is uncommitted and has no exact-head CI yet. License policy is unchanged.
+The independent review found two actionable defects in `dee8fc6`: it widened
+the license gate against the explicit pg8000 decision, and transaction cleanup
+could mask a database failure if rollback/close also failed. Both were
+reproduced with regression tests and corrected: the existing deny-by-default
+license gate is restored, and cleanup errors preserve the primary failure or
+map to `StoreUnavailable`. The follow-up scoped review is clear. Focused tests
+including disposable PostgreSQL 16 pass 53/53 (one existing NumPy warning);
+Ruff, format and diff checks pass. These corrections are not yet pushed or
+covered by CI. GitHub run `38569411056` is still executing against old SHA
+`dee8fc6`; a corrected push will supersede it. No production service or AWS
+state changed.
 
 The Worker start path now requires a parent-binding provider, uses the fixed
 canonical `/usr/local/bin/python3 -B -I -S` entry command, and binds actual
@@ -25,35 +29,16 @@ market-data connectivity is unresolved; the known AWS staging path depends
 on the Windows OpenD reverse tunnel.
 
 
-### Latest license-policy checkpoint — 2026-10-14
+### License policy decision — 2026-10-14
 
-The user approved admitting the LGPL-2.0/2.1/3.0 weak-copyleft family and
-specifically named comparable SPDX licenses MPL-2.0, EPL-2.0 and CDDL-1.0 for
-the Python release closure. This is an exact-identifier allowlist, not a
-wildcard; GPL/AGPL, Commons Clause, proprietary, unknown and unreviewed
-versions remain refused. Psycopg 3.3.6's exact `psycopg` and `psycopg-binary`
-wheel metadata both declare `LGPL-3.0-only`; notices and distribution-form
-obligations are recorded in ADR-0027. Review reproduced the classifier gaps;
-the parser accepts only the reviewed `LLVM-exception` pairing with Apache-2.0
-and detects Commons Clause without case sensitivity. The added EPL/CDDL
-regression first failed as expected and then passed. A follow-up review caught
-an exception/base-license mismatch; its negative tests reproduced the issue,
-and the parser now refuses that mismatch. Current focused tests pass 11/11;
-the broader local security run was 23 passed/1 failed because the ambient
-environment lacks locked Psycopg, so it is not a release result. The earlier
-clean 78-package release closure and pip-audit evidence apply to the earlier
-LGPL-only parser checkpoint. Current exact-head CI and follow-up review remain
-required before merge. No service/AWS change occurred.
-
-The user has now granted maintainers standing authority to admit additional
-licenses in genuinely comparable weak/file/component-level copyleft cases,
-without another per-license approval. This is not a blanket legal waiver or
-automatic classifier rule: before each addition, maintainers must review the
-official license text and exact SPDX/package/version, preserve notices, and
-record distribution, relinking, source-offer and network-use duties. Keep
-strong copyleft (including GPL/AGPL), Commons Clause, proprietary, ambiguous
-and unknown terms denied unless the user makes a separate decision. No new
-license identifier is being added by this authorization alone.
+The operator selected BSD-licensed pg8000 for PR #175 specifically to keep the
+existing Python license gate unchanged. LGPL, EPL and CDDL remain refused, and
+the current candidate removes the earlier classifier expansion experiment.
+Exact SPDX exception/base-license pairing and case-insensitive Commons Clause
+refusal remain. Focused regressions reproduce and close the broadening and
+PostgreSQL cleanup-error review findings. Historical policy exploration is
+available in branch history but is not an active allowlist decision. No
+production service or AWS state changed.
 
 The user cleared the unfinished old goal and explicitly requested a new goal.
 The controller now reports ACTIVE for the remaining approved iteration0038 A

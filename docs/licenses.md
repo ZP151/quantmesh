@@ -25,23 +25,11 @@ creates one).
   copyleft — permissive for redistribution; certifi, tqdm), 0BSD,
   Zlib, CC0-1.0, CNRI-Python (the historical CNRI Python license),
   MIT-CMU (Pillow's MIT variant), MIT-0 (MIT No Attribution,
-  OSI-approved; cffi declares it); LGPL-2.0, LGPL-2.1 and LGPL-3.0
-  (including their explicit `-only` and `-or-later` SPDX forms); and the
-  exact SPDX identifiers MPL-2.0, EPL-2.0 and CDDL-1.0 as the bounded
-  weak-copyleft allowlist under
-  [ADR-0027](adr/0027-lgpl-weak-copyleft-dependency-policy.md).
-- **Standing operator authorization**: maintainers may add a future exact
-  SPDX identifier without another per-license approval when official-text
-  review establishes comparable weak- or file/component-scoped copyleft.
-  Record the exact package/version, notice text, intended distribution form,
-  and applicable linking, modification, source-offer and network-use duties
-  before allowlisting it. The checker remains exact-ID based; this is not a
-  wildcard or an acceptance of unknown metadata.
-- **Refused**: GPL/AGPL, proprietary licenses, source-available restrictions
-  such as the Commons Clause, and anything unclassified. An allowlist result
-  is not a legal-compliance waiver: review the exact package, version and
-  distribution form, preserve required notices, and satisfy the applicable
-  source, modification, relinking or reciprocity obligations before shipping.
+  OSI-approved; cffi declares it).
+- **Refused**: GPL/AGPL, LGPL, EPL, CDDL, proprietary licenses,
+  source-available restrictions such as the Commons Clause, and anything
+  unclassified. Any future exception requires an explicit policy decision and
+  exact package/distribution review.
 - **Untracked installed packages are refused**: the installed
   third-party set must equal the pinned closure (plus the venv's own
   pip/setuptools/wheel build tooling). This is the iteration-0013
@@ -152,11 +140,9 @@ fails loudly otherwise.
 
 ## Decisions recorded on this surface
 
-- **LGPL classification remains enabled, but is not used by the PostgreSQL runtime** —
-  ADR-0027 retains the exact weak-copyleft classifier policy. The operator
-  selected BSD-licensed pg8000 for the root runtime, so `psycopg` and
-  `psycopg-binary` are absent from the release closure. Strong GPL/AGPL,
-  Commons Clause, proprietary and unknown declarations remain refused.
+- **PostgreSQL runtime** — the operator selected BSD-licensed pg8000 rather
+  than Psycopg, whose `LGPL-3.0-only` metadata fails this unchanged policy.
+  `psycopg` and `psycopg-binary` are absent from the release closure.
 
 - **vectorbt was removed from the `research` extra (ADR-0012
   decision 4)** — it ships as Apache-2.0 **with the Commons Clause**

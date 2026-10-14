@@ -3,16 +3,15 @@
 - **Status:** Accepted
 - **Date:** 2026-10-14
 - **Decision owners:** QuantMesh operator and maintainers
-- **Supersedes:** ADR-0027's PostgreSQL driver choice only; its exact weak-
-  copyleft classifier policy remains in force.
+- **Supersedes:** the earlier Psycopg root-driver implementation. The
+  repository's existing license gate is unchanged.
 
 ## Context
 
 The root `PostgresJobStore` was implemented against Psycopg 3.3.6. Its exact
-runtime wheels declare `LGPL-3.0-only`. Although the operator had separately
-authorized a bounded weak-copyleft classifier policy, the operator selected
-the BSD-licensed pg8000 driver for the root runtime and explicitly required
-that the license policy remain unchanged.
+runtime wheels declare `LGPL-3.0-only`, which the existing project license
+gate refuses. The operator selected the BSD-licensed pg8000 driver and
+explicitly required that the license policy remain unchanged.
 
 The existing research-agent service already uses pg8000 synchronously through
 its DB-API cursor facade. The root store's public contract and transaction
@@ -43,9 +42,8 @@ path and a disposable local PostgreSQL service.
 
 - Psycopg is removed from the root runtime and its audited closure; no LGPL
   package is admitted by this driver migration.
-- ADR-0027's exact LGPL classifier remains enabled for future explicitly
-  reviewed components. GPL/AGPL, Commons Clause, proprietary, ambiguous and
-  unknown license declarations remain refused.
+- LGPL, EPL, CDDL, GPL/AGPL, Commons Clause, proprietary, ambiguous and
+  unknown license declarations remain refused by the existing gate.
 - pg8000's BSD notice and exact dependency versions remain in the inventory.
 - This synchronous adapter and PostgreSQL 16 local integration do not qualify
   production PostgreSQL TLS/HA/backups, worker containment, or service recovery.

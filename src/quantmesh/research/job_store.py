@@ -681,6 +681,7 @@ class PostgresJobStore(SQLiteJobStore):
     @contextmanager
     def _transaction(self):
         con = None
+        transaction_failed = False
         try:
             con = _connect_postgres(self.dsn)
             adapter = _PostgresConnection(con, self.schema)
@@ -688,13 +689,25 @@ class PostgresJobStore(SQLiteJobStore):
             yield adapter
             con.commit()
         except (pg8000.dbapi.Error, OSError):
+            transaction_failed = True
             if con is not None:
-                con.rollback()
+                try:
+                    con.rollback()
+                except (pg8000.dbapi.Error, OSError):
+                    pass
             raise StoreUnavailable("job store unavailable") from None
         except BaseException:
+            transaction_failed = True
             if con is not None:
-                con.rollback()
+                try:
+                    con.rollback()
+                except (pg8000.dbapi.Error, OSError):
+                    pass
             raise
         finally:
             if con is not None:
-                con.close()
+                try:
+                    con.close()
+                except (pg8000.dbapi.Error, OSError):
+                    if not transaction_failed:
+                        raise StoreUnavailable("job store unavailable") from None

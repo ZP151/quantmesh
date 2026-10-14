@@ -119,3 +119,72 @@ def test_postgres_transaction_maps_driver_and_socket_errors(monkeypatch, tmp_pat
 
     assert connection.rolled_back
     assert connection.closed
+
+
+def test_postgres_transaction_sanitizes_rollback_and_close_failures(monkeypatch):
+    from quantmesh.research import job_store
+
+    class BrokenConnection:
+        rolled_back = False
+        closed = False
+
+        def cursor(self):
+            raise job_store.pg8000.dbapi.DatabaseError("original private driver detail")
+
+        def rollback(self):
+            self.rolled_back = True
+            raise job_store.pg8000.dbapi.DatabaseError("rollback private detail")
+
+        def close(self):
+            self.closed = True
+            raise OSError("close private detail")
+
+    connection = BrokenConnection()
+    monkeypatch.setattr(job_store, "_connect_postgres", lambda dsn: connection)
+    store = object.__new__(job_store.PostgresJobStore)
+    store._pg8000 = job_store.pg8000
+    store.dsn = "postgres://private"
+    store.schema = "quantmesh"
+
+    with pytest.raises(job_store.StoreUnavailable, match="job store unavailable"):
+        with store._transaction():
+            pass
+
+    assert connection.rolled_back
+    assert connection.closed
+
+
+def test_postgres_transaction_maps_close_failure_after_commit(monkeypatch):
+    from quantmesh.research import job_store
+
+    class Cursor:
+        def execute(self, statement, parameters):
+            return self
+
+    class CloseFailureConnection:
+        committed = False
+        closed = False
+
+        def cursor(self):
+            return Cursor()
+
+        def commit(self):
+            self.committed = True
+
+        def close(self):
+            self.closed = True
+            raise job_store.pg8000.dbapi.DatabaseError("private close detail")
+
+    connection = CloseFailureConnection()
+    monkeypatch.setattr(job_store, "_connect_postgres", lambda dsn: connection)
+    store = object.__new__(job_store.PostgresJobStore)
+    store._pg8000 = job_store.pg8000
+    store.dsn = "postgres://private"
+    store.schema = "quantmesh"
+
+    with pytest.raises(job_store.StoreUnavailable, match="job store unavailable"):
+        with store._transaction():
+            pass
+
+    assert connection.committed
+    assert connection.closed

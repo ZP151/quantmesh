@@ -29,9 +29,7 @@ LICENSE_REVIEW = REPO / "tools" / "license_review.py"
 
 
 def _load_license_review():
-    spec = importlib.util.spec_from_file_location(
-        "license_review", LICENSE_REVIEW
-    )
+    spec = importlib.util.spec_from_file_location("license_review", LICENSE_REVIEW)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -51,13 +49,10 @@ class TestThreatModel:
         ADR decision reference."""
         text = THREAT_MODEL.read_text(encoding="utf-8")
         register = text.split("## Per-threat detail")[0]
-        rows = [
-            line for line in register.splitlines() if line.startswith("| T-")
-        ]
+        rows = [line for line in register.splitlines() if line.startswith("| T-")]
         # The suite source, once — tokens are substrings of it.
         suite_source = "\n".join(
-            p.read_text(encoding="utf-8")
-            for p in (REPO / "tests").glob("test_*.py")
+            p.read_text(encoding="utf-8") for p in (REPO / "tests").glob("test_*.py")
         )
         for row in rows:
             # Four content cells: id, threat, control, pinned-by (the
@@ -98,9 +93,7 @@ def _token_resolves(token: str, suite_source: str) -> bool:
             if re.search(rf"^### Decision {match.group(2)}\b", text, re.MULTILINE):
                 return True
         return False
-    if bare.startswith(("tests/", "docs/", "tools/", "src/")) and (
-        REPO / bare
-    ).exists():
+    if bare.startswith(("tests/", "docs/", "tools/", "src/")) and (REPO / bare).exists():
         return True
     if bare.endswith("*") and bare[:-1] in suite_source:
         return True
@@ -118,25 +111,19 @@ class TestLicenseReview:
     def test_commons_clause_is_refused_before_apache_text(self) -> None:
         review = _load_license_review()
         text = (
-            '“Commons Clause” License Condition v1.0 ... License: '
+            "“Commons Clause” License Condition v1.0 ... License: "
             "Apache 2.0 with Commons Clause ... Apache License Version "
             "2.0, January 2004"
         )
         assert review._from_text(text) is None
-        mixed_case = (
-            "Apache License Version 2.0\nwith cOmMoNs cLaUsE restrictions"
-        )
+        mixed_case = "Apache License Version 2.0\nwith cOmMoNs cLaUsE restrictions"
         assert review._from_text(mixed_case) is None
 
     def test_with_exception_qualifier_is_stripped(self) -> None:
         review = _load_license_review()
-        resolved = review._from_expression(
-            "BSD-2-Clause AND Apache-2.0 WITH LLVM-exception"
-        )
+        resolved = review._from_expression("BSD-2-Clause AND Apache-2.0 WITH LLVM-exception")
         assert resolved == "Apache-2.0 | BSD-2-Clause"
-        assert review._from_expression("Apache-2.0 WITH LLVM-exception") == (
-            "Apache-2.0"
-        )
+        assert review._from_expression("Apache-2.0 WITH LLVM-exception") == ("Apache-2.0")
         assert review._from_expression("MIT WITH GPL-3.0-only") is None
         assert review._from_expression("MIT WITH Unknown-exception") is None
         for incompatible in (
@@ -149,13 +136,12 @@ class TestLicenseReview:
 
     def test_permissive_spdx_members_are_allowed(self) -> None:
         review = _load_license_review()
-        assert review._from_expression(
-            "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0"
-        ) == "0BSD | BSD-3-Clause | CC0-1.0 | MIT | Zlib"
-        assert review._from_expression("MIT-CMU") == "MIT-CMU"
-        assert review._from_expression("Apache-2.0 AND CNRI-Python") == (
-            "Apache-2.0 | CNRI-Python"
+        assert (
+            review._from_expression("BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0")
+            == "0BSD | BSD-3-Clause | CC0-1.0 | MIT | Zlib"
         )
+        assert review._from_expression("MIT-CMU") == "MIT-CMU"
+        assert review._from_expression("Apache-2.0 AND CNRI-Python") == ("Apache-2.0 | CNRI-Python")
 
     def test_exact_mit_license_text_is_allowed(self) -> None:
         review = _load_license_review()
@@ -166,57 +152,22 @@ class TestLicenseReview:
         assert review._from_expression("GPL-3.0-only") is None
         assert review._from_expression("MIT OR GPL-3.0-only") is None
 
-    def test_approved_lgpl_family_is_allowed_but_strong_copyleft_is_not(self) -> None:
+    def test_unapproved_weak_copyleft_remains_refused(self) -> None:
         review = _load_license_review()
-        assert review._from_expression("MPL-2.0") == "MPL-2.0"
-        assert review._from_expression("EPL-2.0") == "EPL-2.0"
-        assert review._from_expression("CDDL-1.0") == "CDDL-1.0"
-        assert review._from_expression("EPL-1.0") is None
-        assert review._from_expression("CDDL-1.1") is None
-        assert review._from_expression("LGPL-3.0") == "LGPL-3.0"
-        assert review._from_expression("LGPL-3.0-only") == "LGPL-3.0-only"
-        assert review._from_expression("LGPL-3.0-or-later") == (
-            "LGPL-3.0-or-later"
+        for expression in (
+            "LGPL-2.0",
+            "LGPL-2.1-only",
+            "LGPL-3.0-or-later",
+            "EPL-2.0",
+            "CDDL-1.0",
+            "MIT AND LGPL-3.0-only",
+        ):
+            assert review._from_expression(expression) is None
+        assert (
+            review._from_text("GNU LESSER GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007") is None
         )
-        assert review._from_expression("LGPL-2.1-only") == "LGPL-2.1-only"
-        assert review._from_expression("LGPL-2.1-or-later") == (
-            "LGPL-2.1-or-later"
-        )
-        assert review._from_expression("LGPL-2.0-only") == "LGPL-2.0-only"
-        assert review._from_expression("LGPL-2.0-or-later") == (
-            "LGPL-2.0-or-later"
-        )
-        assert review._from_expression("MIT AND LGPL-3.0-only") == (
-            "LGPL-3.0-only | MIT"
-        )
-        assert review._from_expression("GPL-3.0-only") is None
-        assert review._from_expression("AGPL-3.0-only") is None
-        assert review._from_expression("MIT AND GPL-3.0-only") is None
 
-    def test_lgpl_text_detection_is_exact_and_conservative(self) -> None:
-        review = _load_license_review()
-        assert (
-            review._from_text(
-                "GNU LESSER GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007"
-            )
-            == "LGPL-3.0"
-        )
-        assert (
-            review._from_text(
-                "GNU LESSER GENERAL PUBLIC LICENSE\nVersion 2.1, February 1999"
-            )
-            == "LGPL-2.1"
-        )
-        assert (
-            review._from_text(
-                "GNU LIBRARY GENERAL PUBLIC LICENSE\nVersion 2, June 1991"
-            )
-            == "LGPL-2.0"
-        )
-        assert review._from_text("GNU General Public License v3") is None
-        assert review._from_text("AGPL-3.0-or-later") is None
-
-    def test_psycopg_distributions_classify_from_exact_spdx_metadata(self) -> None:
+    def test_psycopg_distributions_remain_outside_runtime_allowlist(self) -> None:
         review = _load_license_review()
         for name in ("psycopg", "psycopg-binary"):
             dist = _FakeDist(
@@ -224,7 +175,7 @@ class TestLicenseReview:
                 "3.3.6",
                 **{"License-Expression": "LGPL-3.0-only"},
             )
-            assert review.classify(dist) == "LGPL-3.0-only"
+            assert review.classify(dist).startswith("UNKNOWN")
 
     def test_moomoo_closure_license_metadata_is_classified_conservatively(self) -> None:
         review = _load_license_review()
@@ -279,9 +230,7 @@ class TestLicenseReview:
             if installed[name].version != closure[name]:
                 continue
             key = review.classify(installed[name])
-            assert not key.startswith("UNKNOWN"), (
-                f"{name} {installed[name].version}: {key}"
-            )
+            assert not key.startswith("UNKNOWN"), f"{name} {installed[name].version}: {key}"
 
     def test_licenses_doc_inventories_exactly_the_closure(self) -> None:
         """docs/licenses.md is the closure inventory: its rows must
@@ -313,9 +262,7 @@ class TestLicenseReview:
             key = review.classify(installed[name])
             # Compare the exact pinned package's metadata to the recorded
             # license. The deterministic release gate rejects version drift.
-            assert doc_rows[name] == key, (
-                f"{name}: docs say {doc_rows[name]}, review says {key}"
-            )
+            assert doc_rows[name] == key, f"{name}: docs say {doc_rows[name]}, review says {key}"
 
 
 class _FakeMetadata(dict):
@@ -362,11 +309,13 @@ class TestClosureContract:
                     # pip-audit 2.10.1's transitive toolchain, exactly
                     # the documented ambient drift:
                     _FakeDist(
-                        "license-expression", "30.4.4",
+                        "license-expression",
+                        "30.4.4",
                         **{"License-Expression": "Apache-2.0"},
                     ),
                     _FakeDist(
-                        "boolean.py", "5.0",
+                        "boolean.py",
+                        "5.0",
                         **{"License-Expression": "BSD-2-Clause"},
                     ),
                 ]
@@ -382,20 +331,14 @@ class TestClosureContract:
         closure_file.write_text("pinnedpkg==1.0\n", encoding="utf-8")
         assert review.main(["--closure", str(closure_file)]) == 1
 
-    def test_pinned_but_missing_package_is_refused(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_pinned_but_missing_package_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
         review = _load_license_review()
         monkeypatch.setattr(
             review,
             "md",
-            _FakeMetaModule(
-                [_FakeDist("pinnedpkg", "1.0", **{"License-Expression": "MIT"})]
-            ),
+            _FakeMetaModule([_FakeDist("pinnedpkg", "1.0", **{"License-Expression": "MIT"})]),
         )
-        _, failures, _, _ = review.review(
-            {"pinnedpkg": "1.0", "never-installed": "9.9.9"}
-        )
+        _, failures, _, _ = review.review({"pinnedpkg": "1.0", "never-installed": "9.9.9"})
         assert len(failures) == 1
         assert "never-installed" in failures[0]
 
@@ -406,9 +349,7 @@ class TestClosureContract:
         monkeypatch.setattr(
             review,
             "md",
-            _FakeMetaModule(
-                [_FakeDist("pinnedpkg", "2.0", **{"License-Expression": "MIT"})]
-            ),
+            _FakeMetaModule([_FakeDist("pinnedpkg", "2.0", **{"License-Expression": "MIT"})]),
         )
         _, failures, _, _ = review.review({"pinnedpkg": "1.0"})
         assert failures == [

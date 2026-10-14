@@ -5,12 +5,12 @@ from importlib import metadata
 from tools import license_review
 
 
-def test_postgres_runtime_closure_uses_pg8000_and_keeps_lgpl_classification():
+def test_postgres_runtime_closure_uses_pg8000_without_weakening_license_policy():
     closure = license_review.read_closure()
     assert closure["pg8000"] == "1.31.5"
     assert "psycopg" not in closure
     assert "psycopg-binary" not in closure
-    assert license_review._from_expression("LGPL-3.0-only") == "LGPL-3.0-only"
+    assert license_review._from_expression("LGPL-3.0-only") is None
 
 
 def test_pg8000_pinned_metadata_classifies_as_bsd_three_clause():

@@ -1,20 +1,14 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
-## Latest license decision extension — 2026-10-14
+## Current license-policy decision — 2026-10-14
 
-The operator approved the exact Python weak-copyleft SPDX set recorded in
-ADR-0027: LGPL-2.0/2.1/3.0 base/`-only`/`-or-later`, MPL-2.0, EPL-2.0 and
-CDDL-1.0. GPL/AGPL, Commons Clause, proprietary, unknown and unreviewed
-identifiers stay refused; the frontend npm policy is unchanged. Added regression
-coverage showed expected RED for EPL/CDDL before implementation; focused policy
-tests pass 5/5. Independent follow-up review found an incompatible SPDX
-exception/base-license pairing; the new negative tests reproduced RED and now
-pass after binding `LLVM-exception` only to `Apache-2.0`. Current focused
-license-classification tests pass 11/11; Ruff, formatter and diff checks pass.
-The full ambient security test run is 23 passed/1 failed because this
-environment lacks locked Psycopg; its closure gate must run in the clean
-release environment. No service or AWS state changed. Fresh exact-head CI and
-review are required before merge.
+For PR #175, the operator selected BSD-licensed pg8000 specifically to preserve
+the repository's existing Python license gate. LGPL, EPL and CDDL remain
+refused; no classifier expansion is part of this candidate. SPDX exception
+pairing and Commons Clause case-folding hardening remain. Regression tests now
+assert that weak-copyleft package metadata is refused. The earlier
+policy-expansion experiment remains in Git history but is not included as an
+active policy or shipped ADR. No service or AWS state changed for this decision.
 
 ## Current goal ACTIVE — synthetic Reader probe passed; full Worker remains gated
 
@@ -1722,16 +1716,13 @@ The local PostgreSQL result does not qualify PostgreSQL 18.6/TLS, production
 service recovery, backups, Worker-native admission, Agent/Eval, or market-source
 deployment. No AWS change, model call, secret configuration, or trade occurred.
 
-### 2026-10-14 approved LGPL dependency-policy continuation
+### 2026-10-14 historical license-policy exploration
 
-User approved the narrow policy expansion needed by the pinned PostgreSQL
-driver: LGPL-2.0, LGPL-2.1 and LGPL-3.0, including SPDX `-only` and
-`-or-later` variants. This does not admit GPL/AGPL, Commons Clause,
-proprietary or unknown declarations, and the policy is not a legal-compliance
-waiver. ADR-0027 records the exact `psycopg==3.3.6` and
-`psycopg-binary==3.3.6` wheel metadata (`LGPL-3.0-only`), upstream notices,
-and redistribution/relinking obligations. The docs explicitly retain a
-separate no-GPL/AGPL/LGPL npm-closure statement.
+An earlier iteration considered a bounded weak-copyleft expansion for the
+Psycopg driver and recorded exact package metadata and parser tests. The later
+PR #175 choice is to use pg8000 and preserve the existing refusal policy; the
+expansion is therefore not in the current release candidate. Historical test
+and review evidence remains available in the branch history.
 
 Independent review found that arbitrary SPDX `WITH` identifiers were stripped
 and mixed-case Commons Clause could evade refusal. New tests reproduced both
@@ -1748,21 +1739,16 @@ pushed to PR #175, but is not yet covered by CI; a new exact-head CI run and
 applicable release review remain required. No AWS, server, model key/API call,
 or trade action occurred.
 
-The operator subsequently granted standing authorization for future
-comparable weak/file/component-level copyleft cases: maintainers may add a
-precise SPDX identifier without another per-license approval after official
-text and exact package/version review, preserving notices and recording the
-applicable distribution, linking, modification, source-offer and network-use
-duties. This does not authorize wildcard matching or strong copyleft, Commons
-Clause, proprietary, ambiguous or unknown licenses. No further identifier was
-added in response to the standing authorization alone.
+The current PR does not rely on an open-ended license authorization. Any future
+change to the Python allowlist requires a separate explicit decision.
 
 
 ### 2026-10-14 PostgreSQL driver policy-preserving replacement
 
 Following the operator's explicit choice, the root store now uses pg8000 1.31.5
-(BSD-3-Clause) rather than Psycopg/LGPL. The exact LGPL classifier remains
-unchanged and its strong-copyleft/unknown refusals remain in force. The
+(BSD-3-Clause) rather than Psycopg/LGPL. The license classifier allowlist is
+unchanged: LGPL/EPL/CDDL, GPL/AGPL, proprietary and unknown refusals remain in
+force. The
 synchronous `JobStore` contract, parameterized cursor execution, transaction
 commit/rollback/close, migration advisory lock, sanitized store errors, strict
 TLS-by-default PostgreSQL URI policy, FIFO migration, lease fencing, reports
@@ -1792,4 +1778,4 @@ known staging route still depends on the Windows OpenD tunnel.
 
 A focused root integration closes four software-only gaps found in the second scoped review: `/output` inspection accepts Docker's default writable `Mode=""` only when `RW` is true; Engine inspection explicitly rejects privileged mode, added capabilities, devices/device requests and host namespace/cgroup overrides; cleanup checks exact container ID/image/owner nonce separately from execution admission so configuration drift cannot strand this attempt's container; and the parent binding is revalidated again immediately before result publication. The launched command is fixed to canonical `/usr/local/bin/python3 -B -I -S` and the bootstrap accepts only that full worker-entry command. Worker execution fails closed unless a parent-binding provider is supplied.
 
-Regression evidence: the first combined run had one flaky Windows readonly-file test failure; its isolated rerun passed, and a fresh complete affected run passed **58 tests, 51 skipped** in 6.70s, with one existing NumPy deprecation warning. Ruff, formatting and `git diff --check` passed before the final canonical-interpreter edit, so rerun quality checks after the final edits. Tests use the current worktree `src` via `PYTHONPATH`; fake Engine tests remain non-native evidence. Native OCI inspection, actual admitted parent provider, worker_entry.py, image/kernel qualification and real numerical Worker jobs remain blocked. This delta is uncommitted/unpushed and is not covered by PR CI.
+Regression evidence: the first combined run had one flaky Windows readonly-file test failure; its isolated rerun passed, and a fresh complete affected run passed **58 tests, 51 skipped** in 6.70s, with one existing NumPy deprecation warning. Ruff, formatting and `git diff --check` passed after final edits. Tests use the current worktree `src` via `PYTHONPATH`; fake Engine tests remain non-native evidence. Native OCI inspection, actual admitted parent provider, worker_entry.py, image/kernel qualification and real numerical Worker jobs remain blocked. Commit `dee8fc6` is pushed to PR #175 and exact-head CI run `38569411056` is in progress; applicable human review remains outstanding.
