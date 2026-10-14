@@ -207,6 +207,22 @@ def test_text_hash_uses_utf8_universal_newline_semantics():
     assert digest == _sha(normalized.encode())
 
 
+def test_kernel_namespace_link_rejects_ordinary_filesystem_targets():
+    import stat
+    from types import SimpleNamespace
+
+    import quantmesh.research.worker_admission as admission
+
+    kernel = SimpleNamespace(st_mode=stat.S_IFLNK | 0o444, st_uid=0, st_gid=0)
+    assert admission._is_kernel_namespace_link(kernel, "apparmorfs:[152]")
+    for target in ("/tmp/injected", "../policy", "apparmorfs:[152]/../other", "apparmorfs:[x]"):
+        assert not admission._is_kernel_namespace_link(kernel, target)
+    user = SimpleNamespace(st_mode=kernel.st_mode, st_uid=1000, st_gid=0)
+    writable = SimpleNamespace(st_mode=stat.S_IFLNK | 0o777, st_uid=0, st_gid=0)
+    assert not admission._is_kernel_namespace_link(user, "apparmorfs:[152]")
+    assert not admission._is_kernel_namespace_link(writable, "apparmorfs:[152]")
+
+
 @pytest.mark.skipif(
     os.name != "posix" or os.getuid() != 1000, reason="private snapshot owner contract"
 )

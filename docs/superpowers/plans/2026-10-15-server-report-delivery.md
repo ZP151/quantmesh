@@ -282,3 +282,20 @@ driftrefusals, scopedreview clear.80KBaffected-root subcap FAILED453,924B stays
 retained/no cleanup; overall1MBforecast884,223B/cumulative128,781,001B<=129MB.
 Metadata/software alone grant no admission. Next actual loaded controls/noexec
 backings and ONE whole registered numerical job, not another prerequisite family.
+
+Root Planner connected-call decision: actual7a6f1e5a passes snapshot/dependency
+fingerprint/EngineOCI then refuses the kernel path; exact owned profile removed,
+no container/SQL/service. Metadata-only diagnosis proves /policy is the genuine
+root-owned0444 kernel reference apparmorfs:[152]; O_NOFOLLOW returns ENOTDIR.
+This is a broken reader for an already required/proven kernel API, not a new
+native prerequisite or an input-file symlink waiver. Under standing narrow-fix
+authorization, adapt only this fixed /sys/kernel/security/apparmor anchor:
+no-follow ancestors, exact root-owned/non-writable namespace reference syntax,
+held namespace/profile FDs, before/after reference identity, actual compiled
+policy hash/enforce and worker attr/current still required. All snapshot/OCI/
+task/member paths keep original no-follow rules. Added effort<=1hour/no fee;
+acceptance stays actual current parent/whole numerical report, not test count.
+RED missing known-kernel adapter→GREEN12/4.00s/Ruff; no third structural review,
+old source/native proof family or arbitrary-path alternative. Same known failed
+first nonce remains preserved; code change justifies one corrected connected
+call after its completed owned-profile cleanup is independently checked.

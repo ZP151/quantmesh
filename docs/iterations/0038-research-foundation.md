@@ -2,6 +2,19 @@
 
 ## Current connected parent admission and kernel mounts
 
+First actual provider call7a6f1e5a/3.76s: snapshot/rawmetadata/fingerprint/current
+EngineOCI pass, loaded-kernel directory read refuses ENOTDIR, exact ownedprofile
+removed, no container/SQL/service/Worker. Actual fixed-path metadata diagnosis
+proves root0444 /policy link apparmorfs:[152]; generic no-follow traversal rejects
+this required kernel namespace endpoint. Root Planner scopes mechanical reader
+correction to fixed trusted kernel anchor/reference, held profilesFD and stable
+reference check; ordinary input/OCI/task/member symlink refusal unchanged.
+No new prerequisite/third structural review/opaque helper whitelist. RED adapter
+absent→GREEN wholeprovider12pass4.00s/Ruff/diff green. First failed receipt and
+source preserved; next corrected connected call uses new committed provider.
+Original shell-quoting test wrapper parse error occurred before running tests;
+real file-based RED1/exit1 and GREEN12/exit0 separately retained, not conflated.
+
 Concrete Implementer two-file provider complete. It recomputes five-field
 runtime, actual OCI/Engine/config/source/metadata pins, current compiled v5
 policy bytes and canonical15-field binding from fresh owned PID observations.

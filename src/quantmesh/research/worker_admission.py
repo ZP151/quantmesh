@@ -260,9 +260,65 @@ def _read_kernel_member(directory_fd: int, name: str, maximum: int) -> bytes:
             os.close(fd)
 
 
+def _is_kernel_namespace_link(info: os.stat_result, target: str) -> bool:
+    return bool(
+        stat.S_ISLNK(info.st_mode)
+        and stat.S_IMODE(info.st_mode) == 0o444
+        and info.st_uid == info.st_gid == 0
+        and re.fullmatch(r"apparmorfs:\[[0-9]+\]", target)
+    )
+
+
+def _open_kernel_policy_profiles() -> tuple[int, list[int]]:
+    """Enter only AppArmor's kernel-created namespace link at its fixed anchor.
+
+    This link is an actual virtual kernel API, not a filesystem destination.
+    All private snapshot, OCI, policy-member and process reads still use held
+    no-follow ancestors. Neither job input nor operator configuration picks it.
+    """
+    anchor = Path("/sys/kernel/security/apparmor")
+    anchor_fd, descriptors = _open_absolute_directory(anchor)
+    try:
+        anchor_before = os.fstat(anchor_fd)
+        if anchor_before.st_uid != 0 or anchor_before.st_mode & 0o022:
+            raise ValueError
+        link = os.stat("policy", dir_fd=anchor_fd, follow_symlinks=False)
+        target = os.readlink("policy", dir_fd=anchor_fd)
+        if not _is_kernel_namespace_link(link, target):
+            raise ValueError
+        # Intentionally follow this one immutable-to-worker kernel namespace
+        # reference. O_NOFOLLOW on it returns ENOTDIR on the actual host.
+        policy_fd = os.open("policy", os.O_RDONLY | os.O_DIRECTORY, dir_fd=anchor_fd)
+        descriptors.append(policy_fd)
+        policy = os.fstat(policy_fd)
+        if not stat.S_ISDIR(policy.st_mode) or policy.st_uid != 0 or policy.st_mode & 0o022:
+            raise ValueError
+        profiles_fd = os.open(
+            "profiles", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=policy_fd
+        )
+        descriptors.append(profiles_fd)
+        profiles = os.fstat(profiles_fd)
+        if (
+            not stat.S_ISDIR(profiles.st_mode)
+            or profiles.st_uid != 0
+            or profiles.st_mode & 0o022
+            or _identity(profiles)
+            != _identity(os.stat("profiles", dir_fd=policy_fd, follow_symlinks=False))
+            or _identity(link)
+            != _identity(os.stat("policy", dir_fd=anchor_fd, follow_symlinks=False))
+            or target != os.readlink("policy", dir_fd=anchor_fd)
+            or _identity(anchor_before) != _identity(os.fstat(anchor_fd))
+        ):
+            raise ValueError
+        return profiles_fd, descriptors
+    except (OSError, ValueError, TypeError):
+        for fd in reversed(descriptors):
+            os.close(fd)
+        raise WorkerAdmissionRejected("worker_admission_failed") from None
+
+
 def _read_loaded_apparmor(expected_name: str) -> tuple[bytes, str]:
-    root = Path("/sys/kernel/security/apparmor/policy/profiles")
-    root_fd, descriptors = _open_absolute_directory(root)
+    root_fd, descriptors = _open_kernel_policy_profiles()
     try:
         entries = os.listdir(root_fd)
         if len(entries) > 1024:
