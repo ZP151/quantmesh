@@ -16,11 +16,15 @@ after service restart; Agent is optional and cannot block a basic report.
 Current source: integration branch codex/0038-worker-kernel, checkpoint8c90930.
 Prepared actual Linux3.12.15 image7c3a8389; real OCI configb5e9d342; application
 source41214ff, frozen81 lock07f4e7ec. Source/metadata materialization is done.
-Actual full source preflight is NOT done: first legal private-IPC refusal fixed;
-corrected source probe starts but receives no first reply within40s, exits1.
-Its exact owned container is removed; actual final4images/0containers.
-Primary next obstruction: identify actual GO-versus-source-measurement stage
-and connect the existing Worker parent/admission path to the server report loop.
+Actual full source preflight is NOT done. Bounded stage evidence proves GO is
+received and public preflight begins within3.3s, then exceeds40s. A single10s
+stack identifies repeated full-inventory Path conversion in membership checks.
+Root fixes only that quadratic work; identical membership semantics/full byte
+checks remain. Actual Linux operation-budget RED3→GREEN3 and affected104 pass;
+narrow independent correctness review clear. Original prepared image is still
+unchanged and unaccepted; all failed exact owned CIDs removed,4images/0containers.
+Primary next obstruction: materialize this committed source correction and
+connect the existing Worker parent/admission path to the server report loop.
 Do not introduce another proof family or declare an empty log a success.
 
 ## Frozen delivery rules and next action
@@ -33,10 +37,11 @@ blocker, risk/cost/acceptance decision; stop automatic prerequisite expansion.
 Reuse existing fixture/math/store/artifact/page; arbitrary user Python remains
 out of scope and existing license/isolation/source/release gates remain.
 
-Next action: add bounded stage evidence to the existing owned GO/source call,
-then execute the SAME target thin chain; no new image/env/kernel proof merely
-to obtain a green helper. The completed failed command was
-`python -B output/dispatch_source_preflight.py source-preflight-private-corrected`.
+Next action: update only the affected committed source in a fresh immutable
+image, retaining the same frozen base/lock/entry/controller and all old receipts.
+Then execute the SAME target thin chain; no new environment/kernel proof merely
+to obtain a green helper. The completed diagnostic command was
+`python -B output/dispatch_source_preflight.py source-preflight-stack`.
 It cannot be blindly repeated: known failure, cleanup and a changed affected
 step with a fresh recorded nonce are prerequisites. Do not poll ended handles.
 Native numerical/cache, different-UID/noexec/kernel/parent and concrete provider
@@ -57,9 +62,12 @@ Human auth/payment/model secret requirements are raised before those actions.
 
 Current source/OCI/preflight evidence: output/0038-worker-source-image/;
 latest preflight request/receipt, namespaceRED/GREEN and owncleanup retained.
-Local source allocation6MB/cumulative129MB carries114,179,067B/all failures;
-last probe forecast4,859,281B/cumulative119,038,348B incl400KB future reserve.
-Cloud original5GB/free50GB/source100MB stays; latest free159,840,784,384B.
+Planner now allocates8MB to this source/performance correction, still within
+existing cumulative129MB and original5GB/free50GB constraints; no paid capacity.
+Carry114,179,067B, old source packet/failures, and new1,132,924B Linux fixtures.
+Last diagnostic forecast4,932,710B preceded those fixtures. Fresh accounting
+must include them and proposed replacement packet before any next cloud write.
+Cloud original5GB/free50GB/source100MB stays; latest free159,840,600,064B.
 Whole-C attribution PENDING and historical SSE overrun FAILED remain disclosed.
 [Full previous ACTIVE history](archive/2026-10-15-before-server-report-contract.md).
 Detailed role/evidence history remains in

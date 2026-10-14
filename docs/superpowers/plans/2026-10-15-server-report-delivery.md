@@ -114,3 +114,13 @@ Evidence index: output/0038-worker-source-image/source-preflight*.json,
 private-namespace-red/green.log/.exit, failed-preflight-cleanup.stdout,
 source-preflight-failure-details.stdout. Prepared image/source successes stay
 valid; this contract does not redo PR163/164/166, staging deployment or old CI.
+
+Subsequent bounded evidence closes that diagnostic question: GO is received,
+preflight enters within3.3s, and one10s stack lands in the repeated full-inventory
+membership conversion. Root's minimal linear-work correction keeps identical
+Path semantics and all full byte checks; RED3/GREEN3/affected104 and narrow
+correctness review pass. Source correction allocation is now8MB within unchanged
+cumulative129MB/original5GB, carrying old packets/failures and1,132,924B new
+Linux fixtures; measure the new packet before dispatch. Rebuild only this
+affected committed source against the frozen base/lock, then continue the same
+thin call. No broader environment/kernel proof, extra fee or release approval.

@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
@@ -209,6 +210,98 @@ def test_synthetic_package_sources_reject_unsealed_new_python_file(tmp_path):
 
     with pytest.raises(SourcePreflightRejected, match="^worker entry rejected$"):
         _assert_source_associations(root, declared, inventory)
+
+
+@pytest.mark.parametrize("missing", [None, "library_paths", "notice_paths"])
+def test_preflight_large_inventory_membership_has_linear_work(tmp_path, monkeypatch, missing):
+    """Count membership work, not wall-clock time or native/image admission."""
+    root = tmp_path / "source"
+    package = root / "quantmesh" / "research"
+    package.mkdir(parents=True)
+    entry = root / "worker_entry.py"
+    observer = package / "worker_provenance.py"
+    build = package / "worker_build.py"
+    source_raw = b"VALUE = 1\n"
+    source_sha = hashlib.sha256(source_raw).hexdigest()
+    for path in (entry, observer, build):
+        path.write_bytes(source_raw)
+    sources = {str(path.relative_to(root)): source_sha for path in (observer, build)}
+    files = {str(path): source_sha for path in (entry, observer, build)}
+    files.update({f"/usr/local/closure/{index}.so": source_sha for index in range(500)})
+    names = list(files)[3:]
+    inventory_path = root / "inventory.json"
+    manifest_path = root / "manifest.json"
+    inventory = {"roots": [str(root), "/usr/local"], "files": files, "symlinks": {}}
+    inventory_raw = json.dumps(inventory).encode()
+    inventory_path.write_bytes(inventory_raw)
+    manifest = {
+        "schema_version": 1,
+        "source_commit": "a" * 40,
+        "source_root": str(root),
+        "prefix": "/usr/local",
+        "python_executable": "/usr/local/bin/python3",
+        "lock_path": names[0],
+        "inventory_path": str(inventory_path),
+        "inventory_sha256": hashlib.sha256(inventory_raw).hexdigest(),
+        "source_files": sources,
+        "library_paths": names[:40],
+        "notice_paths": names[40:60],
+    }
+    if missing:
+        manifest[missing][-1] = "/usr/local/not-in-inventory"
+    manifest_raw = json.dumps(manifest).encode()
+    manifest_path.write_bytes(manifest_raw)
+    binding = json.loads(_canonical_binding_bytes())
+    binding.update(
+        manifest_sha256=hashlib.sha256(manifest_raw).hexdigest(),
+        inventory_sha256=manifest["inventory_sha256"],
+        entry_sha256=source_sha,
+        observer_sha256=source_sha,
+    )
+    raw = json.dumps(binding, sort_keys=True, separators=(",", ":")).encode()
+    calls = 0
+    inventory_calls = []
+
+    def counted_path(name):
+        nonlocal calls
+        calls += 1
+        return Path(name)
+
+    @contextmanager
+    def verified_builder(*_args):
+        # Only isolate the later builder scan; real source/metadata byte checks
+        # and this public preflight's membership validation still run.
+        yield SimpleNamespace(
+            parse_parent_binding=lambda *_a, **_kw: SimpleNamespace(**binding),
+            _path=Path,
+            _inventory=lambda *_a, **_kw: inventory_calls.append(True) or files,
+        )
+
+    monkeypatch.setattr(provenance, "Path", counted_path)
+    monkeypatch.setattr(provenance, "_verified_builder", verified_builder)
+    monkeypatch.setattr(provenance, "_directory_exists", lambda _path: True)
+    arguments = dict(
+        binding_raw=raw,
+        expected_binding_sha256=hashlib.sha256(raw).hexdigest(),
+        entry_raw=source_raw,
+        observer_raw=source_raw,
+        source_root=root,
+        entry_path=entry,
+        observer_path=observer,
+        build_path=build,
+        manifest_path=manifest_path,
+        inventory_path=inventory_path,
+    )
+    if missing:
+        with pytest.raises(SourcePreflightRejected):
+            provenance._preflight(**arguments)
+        assert not inventory_calls
+    else:
+        assert provenance._preflight(**arguments).source_root == str(root)
+        assert inventory_calls == [True]
+    # Increasing the number of required members cannot repeatedly convert the
+    # entire inventory. Bound the work by inventory size, not lists×inventory.
+    assert calls <= len(files) + 10
 
 
 def test_source_bytes_changed_after_sealing_are_rejected(tmp_path):

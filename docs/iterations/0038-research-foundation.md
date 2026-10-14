@@ -1,5 +1,26 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Checkpoint — root source-preflight performance repair
+
+User outcome is still pending the first server report; this is a direct repair
+to that path. Planner keeps the same baseline/fixture/PG/report action and
+allocates8MB source-correction bytes within cumulative129MB/original5GB, carrying
+all failures and1,132,924B new Linux fixture bytes. No paid resources or gates.
+Verifier: source-preflight-stages records waiting_go2.436s/received_go3.089s/
+calling_preflight3.295s. source-preflight-stack records the real10s stack at
+worker_provenance.py498/502/504 repeated-membership conversion;40s queue failure,
+noOOM, exact owned cleanup and final4images/0containers/free159,840,600,064B.
+Implementer: compute identical Path membership set once; no full byte-check or
+refusal removed. RED3 proves30,684/20,623/30,683 conversions on503records;
+GREEN3 and full affected entry/build/binding104pass9.05s. Ruff/diff pass.
+Reviewer worker_image_metadata_review: scoped semantic/refusal/test review clear,
+no P1/P2; no third review of the closed source recipe/native architecture.
+Evidence output/0038-worker-source-image/{source-preflight-stages*,
+source-preflight-stack*,stack-probe.stderr,membership-red/green/regression*}.
+Prepared source41214ff image7c3a remains unchanged; next materialize exact new
+commit against frozen base/lock and resume the SAME thin server-report chain.
+Full Option A ACTIVE; PR175 human release gates remain; no service activation.
+
 ## Current checkpoint — server report delivery contract adopted
 
 The user's six delivery rules are now canonical in

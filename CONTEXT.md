@@ -1,5 +1,19 @@
 # QuantMesh Domain Context
 
+## Current checkpoint — actual preflight performance cause isolated
+
+No research-server user report loop is newly available. Actual stage evidence
+proves runtime/GO/preflight entry; the bounded10s stack points to repeated
+full-inventory Path conversion at worker_provenance.py498/502/504, followed by
+the unchanged40s failure/owned cleanup. Root constructs the same membership
+set once; full source/inventory byte checks remain. Operation-budget RED3→GREEN3,
+affected entry/build/binding104pass, and scoped correctness review clear.
+Image7c3a/source41214ff remains unchanged; the committed correction needs its
+own immutable source image and same thin-path acceptance, not new kernel proofs.
+Planner source correction allocation8MB/cumulative129MB carries all prior bytes
+and1,132,924B new Linux fixtures; fresh next-write accounting required. Existing
+AWS budget, full A/release gates and paper=true/live=false remain unchanged.
+
 ## Current checkpoint — server report delivery contract adopted
 
 The user's six delivery rules are now canonical in

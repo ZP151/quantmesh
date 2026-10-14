@@ -492,16 +492,19 @@ def _preflight(
                 or contract.observer_sha256 != observer_digest
             ):
                 _fail()
+            # The immutable parsed inventory is shared by all membership checks.
+            # Rebuilding its Path set per library/notice makes real image
+            # preflight quadratic, before the unchanged full byte verifier.
+            inventory_paths = {Path(name) for name in files}
             if (
                 not isinstance(manifest["lock_path"], str)
-                or builder._path(manifest["lock_path"]) not in {Path(name) for name in files}
+                or builder._path(manifest["lock_path"]) not in inventory_paths
                 or any(
                     type(manifest[key]) is not list
                     or not manifest[key]
                     or len(set(manifest[key])) != len(manifest[key])
                     or any(
-                        not isinstance(path, str)
-                        or builder._path(path) not in {Path(name) for name in files}
+                        not isinstance(path, str) or builder._path(path) not in inventory_paths
                         for path in manifest[key]
                     )
                     for key in ("library_paths", "notice_paths")
