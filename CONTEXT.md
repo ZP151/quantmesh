@@ -1,5 +1,34 @@
 # QuantMesh Domain Context
 
+## Current checkpoint — server report delivery contract adopted
+
+The user's six delivery rules are now canonical in
+[server report delivery](docs/superpowers/plans/2026-10-15-server-report-delivery.md).
+First priority is the actual research-server baseline→private PG→isolated
+report→page→restart/reopen loop, reusing existing local成果. Root owns the
+integrated24–48h slice; no arbitrary Python, no gate waiver, no extra native
+prerequisite without a risk/cost/acceptance decision, no third structural review.
+Agent/key availability cannot block deterministic reports. Full A remains ACTIVE.
+
+Actual source-only probe first refuses legal Docker private IPC before start;
+root actual-config RED/GREEN6 fixes only that enum. Exact never-started CID
+cleanup passes. Corrected probe creates/starts but no first response arrives
+within40s: zero stdout/stderr,0 accepted cases, exit1. Exact ownCID cleanup
+passes, final4images/0containers and free159,840,784,384B. Source preflight and
+whole Worker remain unproven; do not guess GO versus source measurement cause.
+Existing concrete parent/admission wiring, different-UID/noexec and public
+GPG_KEY prereq compatibility are recorded integration work, not new proof scope.
+Next add bounded stage evidence to this SAME thin call and connect the full
+server action. Two source recipe reviews are closed; no third review dispatch.
+
+Current image7c3a8389/rawconfigb5e9d342/source41214ff preparation and real bytes
+remain accepted. Kernel integration checkpoint8c90930; PR175 latest actual
+OPEN/DRAFT370a745, selectedCI SUCCESS and0 humans. Its release gate unchanged.
+ACTIVE is now a concise index; all147,440 historical bytes moved intact into
+docs/goals/archive/2026-10-15-before-server-report-contract.md (not deleted).
+Detailed failures, source/node/byte budgets and prior evidence remain indexed.
+No model/key/payment/deployment/Windows/market-source action was taken.
+
 ## Current checkpoint — immutable source image prepared; full preflight next
 
 Root's configuration-only correction passes its distinct scoped operational
