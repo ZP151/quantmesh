@@ -1,5 +1,29 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Actual child reaches compute; runtime refusal diagnosis checkpoint
+
+Verifier image09af77ba/sourcebe2b9e0/rawOCIb6c45a1f/manifestd1b6ec2f/
+inventory3c0eed80 and81dependency metadata9c3f7faa/runtime9ef6195c measured;
+source/passive own CIDs removed/Engine8images0containers. Actual job1cb0c686/
+nonce1b733f63/24.916s crosses binding/source/import/precompute into compute,
+then worker_failed error30B, fixed entry diagnostic compute72B, no report or
+registry. Parent/PG TLS submit/claim pass; all own CID/policy/mount/PG/port cleanup
+pass. Same attempt read-only output evidence retained, no blind task rerun.
+
+Runtime-only diagnosticcf08fdc6 (no numerical child) fails measure_worker_runtime
+at loaded-module origin606, but inline __main__ is itself unsealed; this is NOT
+proof of actual entry's failing module. Passive current import53202db9 lists
+typing.io/re, cython_runtime, _cython_3_2_9, _cython_3_1_4 and six.moves. General
+gate intentionally refuses opaque native caches. No altered native metadata,
+object graph factory, cache whitelist or qualified-state claim was introduced.
+Planner adds one bounded fixed-site diagnostic: only allowed module identifier,
+fixed code and qualifiedfalse,<=256B, bounded8contexts/64frames, no exception text,
+path/input/credential echo; site filenames are diagnostic, never attestation.
+RED1 then affected6pass0.10s/Ruff/diff green;536B native roots retained. Existing
+refusal/source/beforeafter/Reader/publication guards unchanged. Next updated exact
+entry→actual refusal identity; proposed registered fixture profile is reviewable
+in current plan and NOT implemented/accepted. Full A stays ACTIVE/no new fee.
+
 ## Actual O_PATH obstruction closed; child HOME import compatibility repair
 
 Actual updated source697f0c6 imagebf8fa149/rawOCI455f68be/manifestbf53b09f/

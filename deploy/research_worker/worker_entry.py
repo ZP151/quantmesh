@@ -315,13 +315,34 @@ def _retain_failure_stage() -> None:
         directory = os.fstat(directory_fd)
         if directory.st_uid != os.geteuid() or stat.S_IMODE(directory.st_mode) != 0o700:
             return
+        value = {
+            "schema": 1,
+            "stage": _STAGE if _STAGE in _FAILURE_STAGES else "unknown",
+            "code": "entry_rejected",
+            "qualified": False,
+        }
+        # This fixed refusal site is diagnostic only, never code attestation.
+        error = sys.exception()
+        for _ in range(8):
+            if error is None:
+                break
+            trace = error.__traceback__
+            for _ in range(64):
+                if trace is None:
+                    break
+                code = trace.tb_frame.f_code
+                if (
+                    code.co_filename == "/opt/quantmesh/quantmesh/research/worker_build.py"
+                    and code.co_name == "measure_worker_runtime"
+                    and trace.tb_lineno == 606
+                ):
+                    name = trace.tb_frame.f_locals.get("name")
+                    if type(name) is str and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.]{0,79}", name):
+                        value.update(code="loaded_module_origin_rejected", module=name)
+                trace = trace.tb_next
+            error = error.__cause__ or error.__context__
         raw = json.dumps(
-            {
-                "schema": 1,
-                "stage": _STAGE if _STAGE in _FAILURE_STAGES else "unknown",
-                "code": "entry_rejected",
-                "qualified": False,
-            },
+            value,
             sort_keys=True,
             separators=(",", ":"),
         ).encode("ascii")

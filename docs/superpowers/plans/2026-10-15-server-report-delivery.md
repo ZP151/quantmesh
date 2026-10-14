@@ -5,6 +5,61 @@ Issues [#172](https://github.com/ZP151/quantmesh/issues/172),
 root. Frozen on2026-10-15 Singapore; this contract changes delivery order, not
 the full Option A goal, approved isolation or release authority.
 
+## Proposed decision: registered baseline versus arbitrary Python admission
+
+Status: proposal only, not implemented/accepted. Existing no-cache-waiver rule
+remains until a scope decision. Actual fixed-entry job1cb0c686 on image09af77ba
+now reaches compute but fails; no numerical report is published. The original
+entry/read and missing-HOME compatibility defects are repaired in source and
+their actual boundaries now pass. Compute's precise internal exception is still
+sanitized by _child_main; do not label the whole runtime qualified.
+
+Source-verified passive import on the actual image finds _cython_3_2_9 and
+_cython_3_1_4 plus six.moves. worker_build._originless_helper intentionally
+refuses native Cython caches, and loaded-module inspection refuses originless
+entries. The import-only runtime diagnostic also contains inline __main__, so
+its line606 failure is NOT independently proof of the actual entry's failing
+module. No synthetic module metadata, cache allowlist or object graph validation
+may convert this observation into admission. The current general gate and the
+registered pandas-backed baseline have a concrete compatibility risk.
+
+Recommended bounded design to review: separate the trusted registered fixture
+execution profile from future arbitrary Python/plugin execution. A registered
+profile accepts only the fixed registered strategy/version and pinned fixture;
+the parent independently verifies CURRENT image/source/interpreter/81-wheel
+bytes, kernel enforcement, mounts, PID/cgroups and limits. The fixed entry
+measures actual runtime before project/native imports, verifies source and
+dependency bytes again before publication, and records that the native opaque
+cache state was NOT introspected. No saved boolean substitutes for current
+checks. General/untrusted Python keeps its existing refusal. Exact request,
+implementation and runtime identities, sealed Reader, numerical/report schema,
+costs, fencing and immutable publication remain required. It is not production
+or real-source strategy certification; no live orders or model secret is added.
+
+Risk: static byte closure and isolation establish the executed trusted code,
+not arbitrary in-memory native callback state after import. An untrusted
+strategy or plugin could falsify a result under this weaker claim; therefore
+such inputs remain excluded and the report must distinguish this profile.
+Existing kernel/noexec restrictions remain, with no added native mmap/library
+permissions. Runtime diagnostic must first identify the actual rejection in
+the fixed entry; do not fix the inline diagnostic artifact as production code.
+
+Acceptance for this proposed profile: negative controls reject custom source,
+unregistered strategy/data, image/source/dependency/mount/limit drift and stale
+job fences. Then ONE actual PG→isolated momentum1 fixture→cost-aware report→
+existing page→same job/ref/SHA after owned API/Worker restart. Native-cache
+general refusal tests still pass. One bounded design review at this new profile
+boundary; no restarted two-round object-graph research project. Estimate4–8h
+implementation/affected verification plus asynchronous required final review/CI;
+AWS compute remains the approved three-node budget, model cost0.
+
+Alternative: preserve the current general loaded-native-state gate for this
+registered baseline too. It stays refused until a separately specified and
+reviewed native-state solution exists; report delivery remains pending, and
+there is no defensible completion date for that research requirement. Continue
+independent server-feed and durable job/backup work meanwhile. This alternative
+does not authorize another opaque-cache whitelist/factory.
+
 ## One-page contract
 
 **User action/outcome:** choose registered momentum1 and the existing licensed
@@ -463,3 +518,13 @@ No previous source400000 consumption exists in active ledger. Consume300000 ONCE
 from that unspent source future forecast (100000remain), base128046191/phase757000;
 plus prior196006 =>128999197 within original129MB. All actual roots/errors stay.
 Next exact same registered job with fixed HOME, not another import-only control.
+
+Ruling: actual compute error hides inner context; passive inline runtime probe
+fails its own __main__ at606, so it cannot name actual rejection. Extend ONLY
+nonauthority entry diagnostic at fixed verified worker_build606 site with fixed
+code and identifier<=80 chars. Keep256B/qualifiedfalse/exclusive0600/nofollow,
+bound8contexts/64frames. Never use frame metadata to admit code/native state.
+Native RED1/affected6pass;536B retained. Next ONE current-entry job, no opaque
+cache bypass. Before new connected evidence, spend30000 ONCE from remaining
+90000wire docs/Git forecast (60000remain): base128016191/phase787000, original
+129MB cumulative unchanged. Source future100000 and concrete docs20000 remain.

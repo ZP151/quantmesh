@@ -1,5 +1,19 @@
 # QuantMesh Domain Context
 
+## Current actual job reaches compute; inner runtime rejection being identified
+
+Actual image09af77ba/sourcebe2b9e0/current81 metadata9c3f7faa, job1cb0c686
+reaches compute after binding/source/import/precompute checks. error.json is
+worker_failed; no report/registry. Own CID/policy/mount/PG/port cleanup confirmed.
+Passive verified-source import lists Cython caches/six.moves; inline runtime
+diagnostic fails loaded-module origin at606 but its own inline __main__ prevents
+it from identifying actual entry's rejected module. Do not infer admission or
+waive opaque cache checks. Fixed entry adds <=256B code/module-only nonauthority
+diagnostic at that exact refusal site; RED1/affected6pass0.10s/Ruff/diff green.
+Next updated actual entry job identifies precise refusal. Proposed registered
+fixture profile decision is in current plan, NOT implemented/accepted. Full A
+ACTIVE/report/UI/reopen/server-feed/Agent still pending; no fee/live expansion.
+
 ## Current real task crosses binding/source; clean child HOME repaired in source
 
 Actual imagebf8fa149/source697f0c6 jobf33bc774 now passes fixed binding/source

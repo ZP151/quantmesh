@@ -29,6 +29,42 @@ def _entry_module():
     return module
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux private diagnostic directory")
+def test_entry_diagnostic_identifies_loaded_module_refusal_without_exception_text(
+    tmp_path, monkeypatch
+):
+    entry = _entry_module()
+    tmp_path.chmod(0o700)
+    monkeypatch.setattr(entry, "_OUTPUT", tmp_path)
+    namespace = {}
+    source = (
+        "def measure_worker_runtime():\n"
+        + "    pass\n" * 603
+        + "    name = '_cython_3_2_9'\n"
+        + "    raise ValueError('sentinel-private-exception')\n"
+    )
+    exec(compile(source, "/opt/quantmesh/quantmesh/research/worker_build.py", "exec"), namespace)
+
+    def fail():
+        entry._STAGE = "compute"
+        try:
+            namespace["measure_worker_runtime"]()
+        except ValueError:
+            raise SystemExit(2) from None
+
+    monkeypatch.setattr(entry, "_run", fail)
+    assert entry.main() == 2
+    raw = (tmp_path / "entry-failure.json").read_bytes()
+    assert len(raw) <= 256 and b"sentinel" not in raw
+    assert json.loads(raw) == {
+        "schema": 1,
+        "stage": "compute",
+        "code": "loaded_module_origin_rejected",
+        "module": "_cython_3_2_9",
+        "qualified": False,
+    }
+
+
 @pytest.mark.skipif(sys.platform != "linux", reason="Linux traversal-only root handle")
 @pytest.mark.parametrize(
     "operation", ["entry_read", "observer_read", "directory_exists", "source_walk"]

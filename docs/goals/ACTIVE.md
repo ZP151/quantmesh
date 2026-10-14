@@ -8,6 +8,14 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+Latest real job1cb0c686/24.916s on image09af77ba reaches compute; no report.
+Fixed compute errorworker_failed now needs exact inner runtime classification.
+Passive import confirms opaque Cython caches, but inline diagnostic's __main__
+itself hits606, so do not claim that identifies actual failing module. Entry
+code/module-only diagnostic for exact runtime refusal prepared, native RED1/
+affected6pass. Next actual updated entry, then bounded profile design decision
+if general native-state gate blocks trusted baseline; no cache waiver allowed.
+
 Latest actual jobf33bc774/17.322s passes binding/source after O_PATH repair,
 rejects project_import. Exact clean environment reproduces Settings Path.home
 RuntimeError; UID10001 lacks passwd home and HOME was missing. Minimal controller
