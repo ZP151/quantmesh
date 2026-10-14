@@ -8,6 +8,18 @@ Three approved AWS resources retained; no added cost or permission expansion.
 
 ## Current user loop and primary obstruction
 
+PRIMARY: actual jobb96376a1/imagef5585dda/source6b2d979 identifies native cache
+_cython_3_2_9 rejected by existing general loaded-module origin gate at compute.
+No report/artifact/UI/reopen. Proposed registered fixture sandbox boundary in
+current plan awaits user decision; do not waive caches or repeat same task.
+All exact own cleanup confirmed by current SSH and saved independent checker.
+Reader ancestor-root O_PATH repair independent of that decision: RED3/affected
+5pass0.25s, drift/link refusal retained; not yet in actual image. Read-only
+server-feed audit confirms managed native OpenD absent; next separate operations
+work is bounded candidate installation/private operator terminal qualification,
+then actual server source acceptance, preserving Windows route until cutover.
+Full A ACTIVE; no extra fees/secret needs now/formal168h revival.
+
 Latest real job1cb0c686/24.916s on image09af77ba reaches compute; no report.
 Fixed compute errorworker_failed now needs exact inner runtime classification.
 Passive import confirms opaque Cython caches, but inline diagnostic's __main__

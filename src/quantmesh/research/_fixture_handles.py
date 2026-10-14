@@ -122,7 +122,13 @@ class DirectoryHandles:
             parent = current.parent if current != anchor else None
             parent_fd = self.directories[parent].fd if parent is not None else None
             name = current.name if parent is not None else str(anchor)
-            flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
+            # Ancestors anchor traversal; only configured roots are enumerated.
+            access = (
+                getattr(os, "O_PATH", os.O_RDONLY)
+                if parent is None and current not in self.roots.values()
+                else os.O_RDONLY
+            )
+            flags = access | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
             try:
                 fd = os.open(name, flags, dir_fd=parent_fd)
             except FileNotFoundError:

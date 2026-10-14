@@ -7,9 +7,10 @@ the full Option A goal, approved isolation or release authority.
 
 ## Proposed decision: registered baseline versus arbitrary Python admission
 
-Status: proposal only, not implemented/accepted. Existing no-cache-waiver rule
-remains until a scope decision. Actual fixed-entry job1cb0c686 on image09af77ba
-now reaches compute but fails; no numerical report is published. The original
+Status: proposal only, not implemented/accepted; user decision requested.
+Existing no-cache-waiver rule remains until a scope decision. Latest actual
+fixed-entry jobb96376a1/imagef5585dda proves loaded_module_origin_rejected for
+_cython_3_2_9 at compute; no numerical report is published. The original
 entry/read and missing-HOME compatibility defects are repaired in source and
 their actual boundaries now pass. Compute's precise internal exception is still
 sanitized by _child_main; do not label the whole runtime qualified.
@@ -18,8 +19,9 @@ Source-verified passive import on the actual image finds _cython_3_2_9 and
 _cython_3_1_4 plus six.moves. worker_build._originless_helper intentionally
 refuses native Cython caches, and loaded-module inspection refuses originless
 entries. The import-only runtime diagnostic also contains inline __main__, so
-its line606 failure is NOT independently proof of the actual entry's failing
-module. No synthetic module metadata, cache allowlist or object graph validation
+its line606 failure was NOT independently proof of the actual entry's failing
+module. The later actual fixed-entry diagnostic now identifies it. No synthetic
+module metadata, cache allowlist or object graph validation
 may convert this observation into admission. The current general gate and the
 registered pandas-backed baseline have a concrete compatibility risk.
 
@@ -41,8 +43,8 @@ not arbitrary in-memory native callback state after import. An untrusted
 strategy or plugin could falsify a result under this weaker claim; therefore
 such inputs remain excluded and the report must distinguish this profile.
 Existing kernel/noexec restrictions remain, with no added native mmap/library
-permissions. Runtime diagnostic must first identify the actual rejection in
-the fixed entry; do not fix the inline diagnostic artifact as production code.
+permissions. The actual fixed-entry rejection is now identified; do not fix the
+earlier inline diagnostic artifact as production code.
 
 Acceptance for this proposed profile: negative controls reject custom source,
 unregistered strategy/data, image/source/dependency/mount/limit drift and stale
@@ -528,3 +530,8 @@ Native RED1/affected6pass;536B retained. Next ONE current-entry job, no opaque
 cache bypass. Before new connected evidence, spend30000 ONCE from remaining
 90000wire docs/Git forecast (60000remain): base128016191/phase787000, original
 129MB cumulative unchanged. Source future100000 and concrete docs20000 remain.
+
+Ruling: origin-job preflight791026B exceeds787KB BEFORE any request/SSH.
+Retain frozen failed caller and consume20000 ONCE from remaining60000wire
+docs/Git forecast (40000remain), base127996191/phase807000. Original129MB stays;
+new frozen corrected caller is counted in preflight. No actual old byte is omitted.

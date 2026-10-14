@@ -1,5 +1,20 @@
 # QuantMesh Domain Context
 
+## Current precise runtime obstruction; proposed profile awaiting user decision
+
+Actual fixed entry job b96376a1/imagef5585dda/source6b2d979 emits compute/
+loaded_module_origin_rejected/_cython_3_2_9/qualifiedfalse. Full PG submit/claim/
+parent/GO/source/import pass, but general native-state gate refuses cache; no
+report/page/reopen. Exact own effects cleaned, current independent SSH cleanup
+and saved-byte checker pass (consistency only). Proposed registered fixture
+profile in current plan is NOT approved/implemented; no cache waiver. User
+decision requested, full A ACTIVE. Independent Reader root-traversal defect
+reproduced RED3/repaired O_PATH only for ancestor anchor; focused5pass0.25s,
+link/namespace replacement still refuse. Not yet in actual image. Server-feed
+root SSH23:32UTC finds no OpenD-named process/11111-11112 listener or three
+managed paths; original Windows route remains the historical dependency.
+No market request/auth attempt/secret read/paid resource/production release.
+
 ## Current actual job reaches compute; inner runtime rejection being identified
 
 Actual image09af77ba/sourcebe2b9e0/current81 metadata9c3f7faa, job1cb0c686

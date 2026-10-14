@@ -1,5 +1,41 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Actual origin refusal confirmed; independent Reader repair and server intake
+
+Verifier actual immutable imagef5585dda/source6b2d979/rawOCI58ca7eef/
+manifest014b644b/inventory66840be6,81dependency metadatae0a97020/runtime7b04f800.
+New real PG/Worker jobb96376a1/noncebff00c4a/24.811s passes submit/claim/parent/
+binding/source/import/precompute, then fixed entry records loaded_module_origin_
+rejected for _cython_3_2_9, qualifiedfalse. Existing general native-state gate
+intentionally refuses it. No report/artifact/numerical certificate or page.
+Exact own CID/policy/mount/postmaster/port cleanup all pass; fresh independent
+SSH confirms absence/free port/unmounted backing, cloud free159311851520B/
+original PG-inclusive delta2950955008B<=5GB. Saved independent checker exit0
+verifies exact Git/source/host/child/OCI/metadata/cleanup consistency only.
+Evidence output/0038-worker-origin/{job-response,independent-checked,actual-
+cleanup-current}.json. Operator profile proposal in current plan awaits user
+decision; original gate remains, no native whitelist/graph factory introduced.
+
+While awaiting decision, root reproduces the same root-read permission defect
+in DirectoryHandles before file read/scan/create: native RED3. Minimal O_PATH
+only for filesystem anchor when it is an ancestor rather than a configured
+role root; actual role directory reads/scan, owner/nofollow/identity checks stay.
+Native affected5pass0.25s includes link and replaced namespace refusal, Ruff/
+diff green. All three18B roots retained. Not yet materialized in an actual image;
+it does not remove the independent native runtime gate or certify a report.
+
+Parallel fast read-only server-feed audit is preliminary (agent omitted original
+UTC/exit and process-name prefix excluded some vendor aliases). Root corrects
+with one private ubuntu SSH23:32:15UTC/exit0: no comm-name containing OpenD,
+no11111/11112 listener, three managed paths absent (/opt/quantmesh/opend/
+10.10.7008/OpenD, /etc/quantmesh/opend/gateway-profile.json, /opt/quantmesh/opend/
+gateway-profile.json). Only metadata read, no argv/environment/file contents,
+vendor API/authentication or stock freshness requests. This scope does not
+search every arbitrary installation path. Native server source/cutover remains
+pending; preserve original Windows route. Next approved independent work is
+bounded native candidate/terminal qualification using existing plan/gates,
+raising vendor login only when actually requested. Full A stays ACTIVE.
+
 ## Actual child reaches compute; runtime refusal diagnosis checkpoint
 
 Verifier image09af77ba/sourcebe2b9e0/rawOCIb6c45a1f/manifestd1b6ec2f/

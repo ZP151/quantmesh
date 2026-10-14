@@ -4,6 +4,7 @@ import hashlib
 import importlib
 import json
 import os
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -17,6 +18,59 @@ from quantmesh.research.jobs import (
     canonical_request_digest,
 )
 from quantmesh.research.strategy_registry import get_strategy
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux held fixture namespace")
+@pytest.mark.parametrize("mutation", ["symlink", "replacement"])
+def test_fixture_handles_anchored_namespace_still_refuses_drift(tmp_path, mutation):
+    from quantmesh.research._fixture_handles import DirectoryHandles
+
+    root = tmp_path / "inputs"
+    original = tmp_path / "original"
+    root.mkdir()
+    with DirectoryHandles({"read": root}) as handles:
+        handles.directory(root, "read")
+        root.rename(original)
+        if mutation == "symlink":
+            root.symlink_to(original, target_is_directory=True)
+        else:
+            root.mkdir()
+        with pytest.raises(ValueError):
+            handles.verify()
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux traversal-only fixture anchor")
+@pytest.mark.parametrize("operation", ["read", "scan", "create"])
+def test_fixture_handles_traverse_without_root_directory_read(tmp_path, monkeypatch, operation):
+    from quantmesh.research._fixture_handles import DirectoryHandles
+
+    source = tmp_path / "record.bin"
+    source.write_bytes(b"sealed")
+    original_open = os.open
+    root_opens = []
+
+    def restricted_open(path, flags, *args, **kwargs):
+        if path == "/":
+            root_opens.append(flags)
+            if not flags & os.O_PATH:
+                raise PermissionError(13, "root read denied")
+            assert flags & os.O_DIRECTORY and flags & os.O_NOFOLLOW
+        return original_open(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(os, "open", restricted_open)
+    with DirectoryHandles({"read": tmp_path, "target": tmp_path}) as handles:
+        if operation == "read":
+            fd = handles.open_file(source, os.O_RDONLY, "read")
+            assert os.read(fd, 16) == b"sealed"
+            handles.close_file(fd)
+        elif operation == "scan":
+            with handles.scan(tmp_path, "read") as entries:
+                assert [item.name for item in entries] == ["record.bin"]
+        else:
+            fd = handles.directory(tmp_path / "nested", "target", create=True)
+            assert os.fstat(fd).st_uid == os.geteuid()
+        handles.verify()
+    assert root_opens
 
 
 @pytest.fixture(autouse=True)
