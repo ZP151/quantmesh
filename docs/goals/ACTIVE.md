@@ -1,5 +1,36 @@
 # Active Goal
 
+## Current checkpoint — interpreter alias repair; PR #175 CI failed
+
+The fixed `/usr/local/bin/python3` entry's declared link to `python3.12` now
+requires the inventory's exact target, measured regular-file bytes inside the
+actual prefix, and unchanged link/file identity at publication. No global alias
+or native-cache exemption is added. Root Linux RED reproduces the legitimate
+alias refusal (1 failed/5 passed); whole build/binding GREEN is61 passed in6.15s,
+with one existing NumPy warning. Bounded independent review has no P1/P2;
+Ruff/format/whitespace pass. Evidence: `output/0038-worker-interpreter-alias/`.
+This software repair does not qualify the full numeric Worker or parent.
+
+Actual server compilation of the measured AppArmor source yields62,633 bytes,
+SHA256d5a828a5, with kernel loading and cache writing disabled. A named-only
+read-only kernel field intake finds raw_data/raw_sha256 support among116
+profiles; initial64-profile bound refusal is recorded. Loaded-profile byte
+attestation remains pending; no already-passing native syscall trial repeats.
+
+PR #175 exact f5e38ea CI38584253826 ended FAILED:4928 passed/141 skipped,
+two SSE fixture setup errors waiting for Uvicorn on127.0.0.1:8644. Fast,
+research-service, dependency-license and security steps pass. Preserve failure
+and diagnose its actual thread/startup exception before correction; no old CI
+rerun or local full-suite repeat. Interpreter repair remains on the separate
+kernel dependency branch, without broadening the parent PR.
+
+Alias phase reserves4MB/cumulative55MB from original accounting; measured
+receipt `output/0038-worker-interpreter-alias/resource.json` keeps all failures
+and whole-C attribution pending. CI diagnosis reserves a further2MB/cumulative
+57MB; no new environment/image or paid resource. Overall goal ACTIVE:
+fixed-entry/independent parent, complete report/recovery, private PG, Agent/Eval
+and server-owned market sources remain. paper=true/live=false;168h NOT_REQUIRED.
+
 ## Current checkpoint — real native kernel sub-witness passed; full Worker pending
 
 PR #175 candidate `f5e38ea804343c7f551be0dea364158e77057f6e` has CI38584253826

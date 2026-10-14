@@ -4,6 +4,7 @@ import hashlib
 import importlib
 import importlib.util
 import json
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -149,6 +150,73 @@ def test_actual_runtime_fields_without_git(sealed, monkeypatch):
     assert result["python_version"] == "3.12.3 unit fixture"
     assert result["python_executable_digest"] == _sha(sealed.exe.read_bytes())
     assert not (sealed.source / ".git").exists()
+
+
+def _interpreter_alias(sealed):
+    target = sealed.exe.with_name("python3.12")
+    sealed.exe.rename(target)
+    sealed.exe.symlink_to(target.name)
+    data = json.loads(sealed.inventory.read_bytes())
+    data["files"][str(target)] = data["files"].pop(str(sealed.exe))
+    data["symlinks"][str(sealed.exe)] = target.name
+    sealed.inventory.write_text(json.dumps(data))
+    sealed.data["inventory_sha256"] = _sha(sealed.inventory.read_bytes())
+    return target, data
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="actual Linux alias semantics")
+def test_declared_interpreter_alias_uses_measured_target(sealed, monkeypatch):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    target, _ = _interpreter_alias(sealed)
+    result = api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+    assert result["python_executable_digest"] == _sha(target.read_bytes())
+    assert api.sys.executable == str(sealed.exe)
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="actual Linux alias semantics")
+@pytest.mark.parametrize(
+    "fault", ["undeclared", "unmeasured", "outside_prefix", "late_link", "late_bytes"]
+)
+def test_interpreter_alias_drift_and_unmeasured_targets_refuse(sealed, monkeypatch, fault):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    target, inventory = _interpreter_alias(sealed)
+    if fault == "undeclared":
+        inventory["symlinks"] = {}
+    elif fault == "unmeasured":
+        inventory["files"].pop(str(target))
+    elif fault == "outside_prefix":
+        foreign = sealed.library
+        # The external library is inventoried, but cannot become the interpreter.
+        sealed.exe.unlink()
+        sealed.exe.symlink_to(foreign)
+        inventory["symlinks"][str(sealed.exe)] = str(foreign)
+    elif fault == "late_link":
+        alternative = target.with_name("python3.13")
+        alternative.write_bytes(b"different measured interpreter")
+        inventory["files"][str(alternative)] = _sha(alternative.read_bytes())
+        original = api._inventory
+
+        def change_after_inventory(*args):
+            measured = original(*args)
+            sealed.exe.unlink()
+            sealed.exe.symlink_to(alternative.name)
+            return measured
+
+        monkeypatch.setattr(api, "_inventory", change_after_inventory)
+    elif fault == "late_bytes":
+        distributions = api._distributions
+
+        def change_before_publication():
+            target.write_bytes(b"changed after inventory admission")
+            return distributions()
+
+        monkeypatch.setattr(api, "_distributions", change_before_publication)
+    sealed.inventory.write_text(json.dumps(inventory))
+    sealed.data["inventory_sha256"] = _sha(sealed.inventory.read_bytes())
+    with pytest.raises(api.WorkerBuildRejected, match="^worker build rejected$"):
+        api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
 
 
 def test_missing_runtime_bytecode_policy_refuses(sealed, monkeypatch):

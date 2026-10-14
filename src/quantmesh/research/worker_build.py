@@ -287,6 +287,48 @@ def _inventory(path: Path, expected: str) -> dict[str, str]:
     return files
 
 
+def _interpreter_pin(executable: Path, prefix: Path, files: dict, links: dict) -> tuple:
+    """Repin only explicitly inventoried interpreter links and their file bytes."""
+
+    def signature(info):
+        return (
+            info.st_dev,
+            info.st_ino,
+            info.st_mode,
+            info.st_size,
+            info.st_mtime_ns,
+            info.st_ctime_ns,
+            info.st_uid,
+            info.st_gid,
+            info.st_nlink,
+        )
+
+    current, chain, seen = executable, [], set()
+    while current.is_symlink():
+        if len(chain) >= 32 or str(current) in seen:
+            raise ValueError
+        seen.add(str(current))
+        before = current.lstat()
+        target = os.readlink(current)
+        if links.get(str(current)) != target:
+            raise ValueError
+        chain.append((current, signature(before), target))
+        following = Path(target) if Path(target).is_absolute() else current.parent / target
+        current = _path(os.path.normpath(str(following)))
+        if not current.is_relative_to(prefix):
+            raise ValueError
+    if str(current) not in files or not current.is_relative_to(prefix):
+        raise ValueError
+    before = current.lstat()
+    digest = hashlib.sha256(_read(current, _FILE_LIMIT)).hexdigest()
+    if digest != files[str(current)] or signature(before) != signature(current.lstat()):
+        raise ValueError
+    for alias, identity, target in chain:
+        if signature(alias.lstat()) != identity or os.readlink(alias) != target:
+            raise ValueError
+    return digest, str(current), signature(before), tuple(chain)
+
+
 def _pins(path: Path) -> dict[str, str]:
     raw = _read(path, _JSON_LIMIT)
     if hashlib.sha256(raw).hexdigest() != LINUX_LOCK_SHA256:
@@ -469,8 +511,9 @@ def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict
                 raise ValueError
             if any(str(_path(p)) not in files for p in data[key]):
                 raise ValueError
-        if str(executable) not in files or str(_path(data["lock_path"])) not in files:
+        if str(_path(data["lock_path"])) not in files:
             raise ValueError
+        interpreter = _interpreter_pin(executable, prefix, files, inventory["symlinks"])
         pins = _pins(_path(data["lock_path"]))
         declared = data["source_files"]
         if not isinstance(declared, dict) or not declared:
@@ -560,7 +603,9 @@ def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict
             dependencies.append((name, dist.version, hashes))
         if actual != pins:
             raise ValueError
-        executable_digest = files[str(executable)]
+        if _interpreter_pin(executable, prefix, files, inventory["symlinks"]) != interpreter:
+            raise ValueError
+        executable_digest = interpreter[0]
         dependency = hashlib.sha256(
             _canonical(
                 dict(
