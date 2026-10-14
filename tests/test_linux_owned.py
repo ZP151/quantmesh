@@ -134,6 +134,103 @@ def test_fixed_creation_and_gated_start(profile, paths, engine):
     assert calls[-1] == ["rm", "--force", "b" * 64]
 
 
+def test_parent_binding_is_written_after_owned_container_ready_before_go(profile, paths, engine):
+    import hashlib
+
+    from quantmesh.research.worker_build import ParentBindingContract, encode_parent_binding
+
+    _, _, nonce, attach = engine
+    prepared = []
+
+    def prepare(process, ready):
+        prepared.append((process.container_id, process.nonce, ready["limits"]))
+        contract = ParentBindingContract(
+            schema=1,
+            engine_id="fixture",
+            image_id=profile.image_id,
+            image_config_sha256="a" * 64,
+            container_id=process.container_id,
+            owner_nonce=process.nonce,
+            manifest_sha256="b" * 64,
+            inventory_sha256="c" * 64,
+            dependency_lock_sha256="d" * 64,
+            python_executable_sha256="e" * 64,
+            entry_sha256="f" * 64,
+            observer_sha256="0" * 64,
+            expected_prefix="/usr/local",
+            python_version="3.12.15",
+            kernel_profile_sha256="1" * 64,
+        )
+        encoded = encode_parent_binding(contract)
+        prepared.append(encoded)
+        return encoded
+
+    process = owned.LinuxOwnedProcess(
+        profile,
+        [
+            "/usr/local/bin/python3",
+            "-B",
+            "-I",
+            "-S",
+            "/opt/quantmesh/worker_entry.py",
+            "--binding",
+            "/inputs/parent-binding.json",
+            "--manifest",
+            "/opt/quantmesh/manifest.json",
+            "--inventory",
+            "/opt/quantmesh/inventory.json",
+        ],
+        RunBudget(),
+        *paths,
+        prepare_parent_binding=prepare,
+    )
+
+    raw, digest = prepared[1]
+    binding_path = paths[0] / "parent-binding.json"
+    assert prepared[0] == ("b" * 64, nonce[0], attach.ready["limits"])
+    assert binding_path.read_bytes() == raw
+    assert hashlib.sha256(binding_path.read_bytes()).hexdigest() == digest
+    mode = binding_path.stat().st_mode & 0o777
+    if os.name == "posix":
+        assert mode == 0o400
+    else:
+        assert mode & 0o222 == 0
+    assert attach.sent == [f"go:{digest}"]
+    assert process.evidence["parent_binding_sha256"] == digest
+    process.close()
+
+
+def test_bootstrap_go_digest_is_forwarded_only_for_complete_worker_entry_command():
+    digest = "a" * 64
+    command = [
+        "/opt/quantmesh/venv/bin/python3",
+        "-B",
+        "-I",
+        "-S",
+        "/opt/quantmesh/worker_entry.py",
+        "--binding",
+        "/inputs/parent-binding.json",
+        "--manifest",
+        "/opt/quantmesh/manifest.json",
+        "--inventory",
+        "/opt/quantmesh/inventory.json",
+    ]
+    assert bootstrap._bound_command(command, digest) == [
+        *command,
+        "--binding-sha256",
+        digest,
+    ]
+    with pytest.raises(ValueError):
+        bootstrap._bound_command(command, None)
+    for malformed in (
+        [*command, "--unexpected", "value"],
+        ["/usr/bin/python3", *command[1:]],
+        [*command[:6], "/inputs/other-binding.json", *command[7:]],
+    ):
+        with pytest.raises(ValueError):
+            bootstrap._bound_command(malformed, digest)
+
+
 def test_explicit_bytecode_env_image_admission(profile, paths, engine, monkeypatch):
     original = profile.invoke
 
@@ -353,8 +450,17 @@ def test_native_hung_attachment_is_required():
     assert "hung_attach" in _qualification_module().REQUIRED
 
 
-@pytest.mark.parametrize("lines,buffer", [(["go", "pulse"], b""), (["go"], b"pul")])
-def test_pid1_go_preserves_coalesced_and_fragmented_pulses(tmp_path, monkeypatch, lines, buffer):
+@pytest.mark.parametrize(
+    "lines,buffer,parent_binding_sha256",
+    [
+        (["go", "pulse"], b"", None),
+        (["go"], b"pul", None),
+        (["go:" + "a" * 64], b"", "a" * 64),
+    ],
+)
+def test_pid1_go_preserves_pulses_and_passes_parent_digest(
+    tmp_path, monkeypatch, lines, buffer, parent_binding_sha256
+):
     # Protocol unit only: mocked PID1/cgroup admission is never native evidence.
     for key, value in {
         "memory.max": "67108864",
@@ -379,16 +485,18 @@ def test_pid1_go_preserves_coalesced_and_fragmented_pulses(tmp_path, monkeypatch
         def close(self):
             pass
 
-    observed = []
+    observed, controls = [], []
     monkeypatch.setattr(bootstrap, "Control", Control)
 
     def supervise(*args, **kwargs):
-        observed.append(kwargs.get("control"))
+        observed.append(kwargs.get("parent_binding_sha256"))
+        controls.append(kwargs.get("control"))
         return 0
 
     monkeypatch.setattr(bootstrap, "supervise", supervise)
     assert bootstrap.main() == 0
-    assert observed and observed[0].buffer == buffer
+    assert observed == [parent_binding_sha256]
+    assert controls and controls[0].buffer == buffer
 
 
 def test_qualification_missing_profile_is_nonzero(tmp_path):

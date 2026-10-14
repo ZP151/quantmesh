@@ -29,15 +29,19 @@ release/python pass; browser/domain skipped. Observer70375 exits0 and is not
 restarted. The exact-head review-thread snapshot is empty. PR175 remains DRAFT;
 full runtime/actual service and applicable human release gates still remain.
 
-2026-10-14 parent-binding progress: added an uncommitted canonical encoder for
-the already-reviewed `ParentBindingContract`. It emits exact validated bytes and
-an independently supplied SHA-256 pin; it cannot mark a binding qualified.
-`test_worker_binding_contract.py` passes16/16 (one existing NumPy warning), and
-Ruff/format/diff checks pass. The test was observed failing first because the
-encoder was absent. Container creation callback, digest handoff over the
-bootstrap go gate, complete child revalidation, OCI/kernel proof and numerical
-Worker execution remain unimplemented and unqualified. The green PR checks do
-not include this worktree delta.
+2026-10-14 parent-binding progress: commit `aa7c607` adds the canonical encoder
+for the already-reviewed `ParentBindingContract`; contract tests pass16/16. The
+current uncommitted slice adds an optional container-ready callback, writes the
+binding to the existing input mount before the start gate, and relays its digest
+over the bounded bootstrap control protocol. The bootstrap accepts this digest
+only alongside the complete fixed `-B -I -S` `worker_entry.py` argv and all
+parent-bound paths. Focused owned-worker, binding-contract and execution tests
+pass58/18 skipped; Ruff, formatting and diff checks pass. Windows tests verify
+read-only semantics only; Linux still requires exact mode0400. This is not wired
+into `LinuxWorkerExecution` or a child entrypoint here, and does not qualify
+child revalidation, native OCI/kernel isolation, numerical Worker execution or
+CI. PR175's green checks cover neither this delta nor the prior Reader worktree
+delta.
 
 New G1 primitive metadata/framing leaf is UNCOMMITTED: source08f637f1/tests920e461c,
 161passed/1warning/1.04s, Ruff/format clear. Root verifies its behavior against

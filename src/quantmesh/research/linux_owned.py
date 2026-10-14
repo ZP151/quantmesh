@@ -15,6 +15,7 @@ import subprocess
 import threading
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -266,6 +267,9 @@ class LinuxOwnedProcess:
         budget: RunBudget,
         inputs: Path,
         output: Path,
+        *,
+        prepare_parent_binding: Callable[[LinuxOwnedProcess, dict], tuple[bytes, str]]
+        | None = None,
     ):
         self.profile = profile
         self.container_id = None
@@ -354,7 +358,37 @@ class LinuxOwnedProcess:
             self.evidence.update(
                 limits=ready["limits"], bootstrap_sha256=bootstrap_digest(), container_id=returned
             )
-            self.transport.send("go")
+            if prepare_parent_binding is None:
+                if any(arg in command for arg in ("--binding", "--manifest", "--inventory")):
+                    raise LinuxContainmentError("parent_binding_required")
+                start_message = "go"
+            else:
+                try:
+                    raw, binding_sha256 = prepare_parent_binding(self, ready)
+                    if (
+                        type(raw) is not bytes
+                        or not isinstance(binding_sha256, str)
+                        or not re.fullmatch(r"[0-9a-f]{64}", binding_sha256)
+                        or len(raw) > 16 * 1024
+                        or hashlib.sha256(raw).hexdigest() != binding_sha256
+                    ):
+                        raise ValueError
+                    from quantmesh.research.worker_build import parse_parent_binding
+
+                    binding = parse_parent_binding(raw, expected_sha256=binding_sha256)
+                    if (
+                        binding.container_id != self.container_id
+                        or binding.owner_nonce != self.nonce
+                        or binding.image_id != self.profile.image_id
+                        or binding.engine_id != self.evidence.get("engine_id")
+                    ):
+                        raise ValueError
+                    _write_parent_binding(self.inputs, raw, self.profile.uid, self.profile.gid)
+                    self.evidence["parent_binding_sha256"] = binding_sha256
+                    start_message = f"go:{binding_sha256}"
+                except Exception as exc:
+                    raise LinuxContainmentError("parent_binding_failed") from exc
+            self.transport.send(start_message)
             self.started = time.monotonic()
         except (LinuxContainmentError, ValueError, KeyError, TypeError) as exc:
             try:
@@ -416,3 +450,71 @@ class LinuxOwnedProcess:
         finally:
             if self.transport:
                 self.transport.close()  # CLI death is never the containment operation.
+
+
+def _write_parent_binding(root: Path, raw: bytes, uid: int, gid: int) -> None:
+    """Create one immutable-to-child binding in the already RO-mounted bundle."""
+    name = "parent-binding.json"
+    path = root / name
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    directory_fd = None
+    fd = None
+    try:
+        if os.name == "posix" and os.open in os.supports_dir_fd and hasattr(os, "O_DIRECTORY"):
+            directory_fd = os.open(
+                root,
+                os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0),
+            )
+            fd = os.open(name, flags, 0o600, dir_fd=directory_fd)
+        else:
+            fd = os.open(path, flags, 0o600)
+        if os.name == "posix":
+            os.fchown(fd, uid, gid)
+        view = memoryview(raw)
+        while view:
+            written = os.write(fd, view)
+            if written <= 0:
+                raise OSError("short binding write")
+            view = view[written:]
+        os.fsync(fd)
+        os.fchmod(fd, 0o400)
+        os.fsync(fd)
+        info = os.fstat(fd)
+        named = (
+            os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+            if directory_fd is not None
+            else path.lstat()
+        )
+
+        def signature(value):
+            return (
+                value.st_dev,
+                value.st_ino,
+                value.st_mode,
+                value.st_nlink,
+                value.st_size,
+                value.st_mtime_ns,
+                value.st_ctime_ns,
+                value.st_uid,
+                value.st_gid,
+            )
+
+        mode = info.st_mode & 0o777
+        expected_mode = mode == 0o400 if os.name == "posix" else mode & 0o222 == 0
+        if (
+            signature(info) != signature(named)
+            or not expected_mode
+            or info.st_nlink != 1
+            or info.st_size != len(raw)
+        ):
+            raise OSError("binding identity changed")
+        if directory_fd is not None:
+            os.fsync(directory_fd)
+    except Exception:
+        raise LinuxContainmentError("parent_binding_failed") from None
+    finally:
+        if fd is not None:
+            os.close(fd)
+        if directory_fd is not None:
+            os.close(directory_fd)

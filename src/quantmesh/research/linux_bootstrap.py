@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import selectors
 import signal
 import subprocess
@@ -47,6 +48,33 @@ def output_size(root: Path) -> int:
     return total
 
 
+def _bound_command(command: list[str], parent_binding_sha256: str | None) -> list[str]:
+    """Append the parent-authenticated digest to the one fixed entry argv."""
+    flags = ("--binding", "--manifest", "--inventory")
+    present = {flag: command.count(flag) for flag in (*flags, "--binding-sha256")}
+    if parent_binding_sha256 is None:
+        if any(present.values()):
+            raise ValueError("missing_parent_binding")
+        return list(command)
+    if (
+        not re.fullmatch(r"[0-9a-f]{64}", parent_binding_sha256)
+        or any(present[flag] != 1 for flag in flags)
+        or present["--binding-sha256"]
+        or len(command) != 11
+        or command[0] != "/opt/quantmesh/venv/bin/python3"
+        or command[1:5] != ["-B", "-I", "-S", "/opt/quantmesh/worker_entry.py"]
+        or command[5::2] != ["--binding", "--manifest", "--inventory"]
+        or command[6::2]
+        != [
+            "/inputs/parent-binding.json",
+            "/opt/quantmesh/manifest.json",
+            "/opt/quantmesh/inventory.json",
+        ]
+    ):
+        raise ValueError("invalid_parent_binding")
+    return [*command, "--binding-sha256", parent_binding_sha256]
+
+
 class Control:
     """Nonblocking, bounded line protocol; no threads can keep PID1 alive."""
 
@@ -80,8 +108,13 @@ def supervise(
     watchdog_seconds: float = WATCHDOG_SECONDS,
     max_output_bytes: int = MAX_OUTPUT_BYTES,
     control: Control | None = None,
+    parent_binding_sha256: str | None = None,
 ) -> int:
     """Controller loop, independently testable on Linux without claiming PID1 proof."""
+    try:
+        command = _bound_command(command, parent_binding_sha256)
+    except (TypeError, ValueError):
+        return 126
     control = control or Control()
     started = last_pulse = time.monotonic()
     child = None
@@ -161,12 +194,25 @@ def main() -> int:
             while time.monotonic() < deadline:
                 lines = control.read(0.05)
                 if lines:
-                    if lines[0] != "go" or any(line != "pulse" for line in lines[1:]):
+                    first = lines[0]
+                    if first == "go":
+                        binding_sha256 = None
+                    elif first.startswith("go:") and re.fullmatch(r"go:[0-9a-f]{64}", first):
+                        binding_sha256 = first[3:]
+                    else:
+                        return 124
+                    if any(line != "pulse" for line in lines[1:]):
                         return 124
                     # Preserve an incomplete pulse already read from the byte stream.
                     # Complete post-go pulses were just observed, so supervision starts
                     # with a fresh deadline and the same control buffer/selector.
-                    return supervise(command, Path("/output"), timeout, control=control)
+                    return supervise(
+                        command,
+                        Path("/output"),
+                        timeout,
+                        control=control,
+                        parent_binding_sha256=binding_sha256,
+                    )
             else:
                 return 124
         finally:

@@ -43,13 +43,20 @@ release/python pass; browser/domain skipped. Observer70375 exits0 and is not
 restarted. The exact-head review-thread snapshot is empty. PR175 remains DRAFT;
 full runtime/actual service and applicable human release gates still remain.
 
-Current parent-binding progress (2026-10-14): the existing strict parser now has
-a small uncommitted canonical encoder that emits the validated binding bytes and
-their independent SHA-256. Its focused contract tests pass16/16, Ruff/format and
-diff checks pass. This is protocol construction only: no container callback,
-go-gate digest handoff, child revalidation boundaries, independent OCI/kernel
-proof, numerical Worker execution, or CI coverage is established yet. PR175's
-green checks still describe its committed head, not this worktree delta.
+Current parent-binding progress (2026-10-14): commit aa7c607 adds the canonical
+encoder for the strict parent-binding contract (16 contract tests pass). The
+current uncommitted slice adds an optional container-ready callback, writes the
+parent binding into the already-mounted input bundle before the start gate, and
+relays only its SHA-256 over the bounded bootstrap control protocol. The fixed
+bootstrap command accepts the digest only for the complete `-B -I -S`
+`worker_entry.py` argv with all three parent-bound paths. Focused owned-worker,
+binding-contract and execution tests pass58/18 skipped; Ruff, formatting and
+diff checks pass. Windows tests can only verify that the binding is read-only;
+the Linux runtime still requires exact mode0400. This protocol is not wired into
+`LinuxWorkerExecution` or a child entrypoint in this branch, and does not prove
+child revalidation, native OCI/kernel isolation, numerical Worker execution, or
+CI coverage. PR175's green checks cover neither this delta nor the prior Reader
+worktree delta.
 
 New G1 primitive metadata/framing leaf is UNCOMMITTED: source08f637f1/tests920e461c,
 161passed/1warning/1.04s, Ruff/format clear. Root verifies its behavior against
