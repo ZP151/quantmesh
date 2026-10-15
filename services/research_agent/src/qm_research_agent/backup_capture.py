@@ -1017,7 +1017,6 @@ def _run_pg_dump(
         "--snapshot",
         snapshot,
         "--dbname=service=quantmesh_bundle",
-        "--file=-",
     ]
     env = {
         "PATH": "/usr/bin:/bin",
@@ -1077,6 +1076,8 @@ def _run_pg_dump(
         if remaining <= 0:
             raise _refuse()
         if process.wait(timeout=remaining) != 0:
+            raise _refuse()
+        if stdout_bytes == 0:
             raise _refuse()
         os.fsync(dump_fd)
         info = os.fstat(dump_fd)
