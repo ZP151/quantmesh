@@ -1,0 +1,22 @@
+# Inert deployment template. Replace REVIEWED_MERGED_SHA only after review/merge.
+[Unit]
+Description=QuantMesh registered-fixture research worker
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/qm-research/releases/REVIEWED_MERGED_SHA/source
+Environment=PYTHONPATH=/home/ubuntu/qm-research/releases/REVIEWED_MERGED_SHA/source/services/research_agent/src:/home/ubuntu/qm-research/releases/REVIEWED_MERGED_SHA/source/src
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/home/ubuntu/qm-research/runtime/venv/bin/python -B -m qm_research_agent.worker_runtime --config /home/ubuntu/qm-research/config/worker.json --run
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=20
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target
