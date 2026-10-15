@@ -490,6 +490,8 @@ def _checked_references(state: dict, artifact_root_fd: int) -> tuple[list[dict],
             ):
                 raise _refuse()
     for job_id, record in records_by_id.items():
+        if record.analysis_state == "running" and record.state != "succeeded":
+            raise _refuse()
         if not record.request.analysis_requested:
             if record.analysis_state != "not_requested" or job_id in outbox_jobs:
                 raise _refuse()
