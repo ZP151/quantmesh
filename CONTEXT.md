@@ -1,5 +1,35 @@
 # QuantMesh Domain Context
 
+## Current release CI regression repair (2026-10-15)
+
+PR175 d65e003 CI38709107533 completed FAILURE09:50UTC: 5132passed,
+142skipped,8failed/3075.96s. Diagnostics are retained at
+output/0038-ci38709107533-diagnostics and release-readiness/ci38709107533-failed.log.
+No old CI rerun or local full suite. Six failures expose job decoding occurring
+before runtime fingerprint/metadata refusal; one receipt fixture supplies only
+legacy two-field identity; one replay fixture uses an unfrozen retention clock.
+
+Narrow repair restores runtime measurement and held runtime.json verification
+before JobRecord decoding, then keeps job identity/registered selection before
+FixtureReader or numerical inputs. No admission/schema/limit is weakened. Receipt
+test supplies the existing five-field contract; replay test uses the established
+freeze_buffer_clock and explicitly runs genuine prune_if_due for all four states.
+Existing native runner RED7/4pass and deterministic retention RED3/1pass retained.
+Final affected WSL CPython3.12 checks113pass/21skip/39.59s; actual Windows
+39pass/33skip/7.54s; Ruff/format/diff green. One narrow automatic diff review has
+no P1/P2; this is not a repeated structural profile review or human approval.
+
+The initial affected run's1failure/110pass/21skip is a local WSL Windows-worktree
+Git path error, preserved. Test-process GIT_DIR/GIT_COMMON_DIR point to the actual
+same repository; independent rev-parse matches d65e003. No product workaround.
+All four owned WSL test phases remain retained (~154MiB), separate from prior
+browser1MiB QA and original FAILED129MB estimate; no package/image/cloud effect.
+New commit needs fresh exact-head CI and Class C human reviews before release.
+Real-report advisory projection refusal, aggregate Agent containment, explicit
+runner wiring, persistent services/recovery and server sources remain pending.
+Evidence output/0038-ci38709107533-fix/{runner-red,clock-red,green,affected,windows}
+logs/exit/resource records. Full Option A remains ACTIVE, paper=true/live=false.
+
 ## Current real browser/report/API restart witness (2026-10-15)
 
 Actual ubuntu private SSH and current372c2ff Worker image06bfff6e now complete
@@ -37,9 +67,10 @@ report-before/after-restart.json, downloaded JSON and verified-page.png.
 Next exact-head broad gates/PR175 integration and required human release reviews;
 no persistent deployment or full Option A completion. Server-owned OpenD activation,
 real Agent aggregate containment/approved egress and paid witness, durable backup/
-recovery remain pending. User confirms an available OpenAI project key/credit;
-prepare named private input mechanism before asking for entry, never key in chat.
-No key installed or model call made. paper=true/live=false;168h NOT_REQUIRED.
+recovery remain pending. The user has privately configured the owner-only
+OpenAI key; metadata-only verification passes, contents not read. Account/model
+availability remains unverified; no model call. paper=true/live=false;
+168h NOT_REQUIRED. Do not request key input again without an actual failure.
 
 
 ## Current registered-fixture report result (bounded qualification)

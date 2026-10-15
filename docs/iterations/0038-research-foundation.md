@@ -1,5 +1,35 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current release CI regression repair (2026-10-15)
+
+PR175 d65e003 CI38709107533 completed FAILURE09:50UTC: 5132passed,
+142skipped,8failed/3075.96s. Diagnostics are retained at
+output/0038-ci38709107533-diagnostics and release-readiness/ci38709107533-failed.log.
+No old CI rerun or local full suite. Six failures expose job decoding occurring
+before runtime fingerprint/metadata refusal; one receipt fixture supplies only
+legacy two-field identity; one replay fixture uses an unfrozen retention clock.
+
+Narrow repair restores runtime measurement and held runtime.json verification
+before JobRecord decoding, then keeps job identity/registered selection before
+FixtureReader or numerical inputs. No admission/schema/limit is weakened. Receipt
+test supplies the existing five-field contract; replay test uses the established
+freeze_buffer_clock and explicitly runs genuine prune_if_due for all four states.
+Existing native runner RED7/4pass and deterministic retention RED3/1pass retained.
+Final affected WSL CPython3.12 checks113pass/21skip/39.59s; actual Windows
+39pass/33skip/7.54s; Ruff/format/diff green. One narrow automatic diff review has
+no P1/P2; this is not a repeated structural profile review or human approval.
+
+The initial affected run's1failure/110pass/21skip is a local WSL Windows-worktree
+Git path error, preserved. Test-process GIT_DIR/GIT_COMMON_DIR point to the actual
+same repository; independent rev-parse matches d65e003. No product workaround.
+All four owned WSL test phases remain retained (~154MiB), separate from prior
+browser1MiB QA and original FAILED129MB estimate; no package/image/cloud effect.
+New commit needs fresh exact-head CI and Class C human reviews before release.
+Real-report advisory projection refusal, aggregate Agent containment, explicit
+runner wiring, persistent services/recovery and server sources remain pending.
+Evidence output/0038-ci38709107533-fix/{runner-red,clock-red,green,affected,windows}
+logs/exit/resource records. Full Option A remains ACTIVE, paper=true/live=false.
+
 ## Current real browser/report/API restart witness (2026-10-15)
 
 Actual ubuntu private SSH and current372c2ff Worker image06bfff6e now complete
@@ -37,9 +67,10 @@ report-before/after-restart.json, downloaded JSON and verified-page.png.
 Next exact-head broad gates/PR175 integration and required human release reviews;
 no persistent deployment or full Option A completion. Server-owned OpenD activation,
 real Agent aggregate containment/approved egress and paid witness, durable backup/
-recovery remain pending. User confirms an available OpenAI project key/credit;
-prepare named private input mechanism before asking for entry, never key in chat.
-No key installed or model call made. paper=true/live=false;168h NOT_REQUIRED.
+recovery remain pending. The user has privately configured the owner-only
+OpenAI key; metadata-only verification passes, contents not read. Account/model
+availability remains unverified; no model call. paper=true/live=false;
+168h NOT_REQUIRED. Do not request key input again without an actual failure.
 
 
 ## Actual first fixed-profile PG numerical report and process restart
@@ -2897,3 +2928,24 @@ known staging route still depends on the Windows OpenD tunnel.
 A focused root integration closes four software-only gaps found in the second scoped review: `/output` inspection accepts Docker's default writable `Mode=""` only when `RW` is true; Engine inspection explicitly rejects privileged mode, added capabilities, devices/device requests and host namespace/cgroup overrides; cleanup checks exact container ID/image/owner nonce separately from execution admission so configuration drift cannot strand this attempt's container; and the parent binding is revalidated again immediately before result publication. The launched command is fixed to canonical `/usr/local/bin/python3 -B -I -S` and the bootstrap accepts only that full worker-entry command. Worker execution fails closed unless a parent-binding provider is supplied.
 
 Regression evidence: the first combined run had one flaky Windows readonly-file test failure; its isolated rerun passed, and a fresh complete affected run passed **58 tests, 51 skipped** in 6.70s, with one existing NumPy deprecation warning. Ruff, formatting and `git diff --check` passed after final edits. Tests use the current worktree `src` via `PYTHONPATH`; fake Engine tests remain non-native evidence. Native OCI inspection, actual admitted parent provider, worker_entry.py, image/kernel qualification and real numerical Worker jobs remain blocked. Commit `dee8fc6` is pushed to PR #175 and exact-head CI run `38569411056` is in progress; applicable human review remains outstanding.
+
+
+## User-requested automated release/advisory checks — 2026-10-15
+
+Two fast read-only agents audited the current d65e003 release evidence and the
+advisory activation boundary. Current release CI38709107533 remains running;
+classifier/fast/research_service pass, browser/domain skip by classifier, zero
+human reviews and no unresolved inline review threads. These checks do not
+replace Class C human approvals. Actual browser/report/API+PG restart evidence
+and separate API eb880b2/Worker372c2ff identities agree. Raw remote
+browser_verified=false deliberately leaves CUA proof to the coordinator;
+browser.json and the independent checker provide the actual witness.
+
+Root reproduces the current real saved report failing approved() at
+result.evidence.execution_profile_{digest,id,version}; no secret read or provider
+call. A report-safe advisory projection, aggregate invocation-tree resource
+containment and explicit fail-closed runner activation remain required before
+actual paid acceptance. No runtime edit, deployment, SSH, CI rerun or full local
+test. Raw evidence unchanged; output/0038-release-readiness/automated-audit.json,
+approval-packet.json and report-browser-handoff.json record the bounded audit.
+Operator key metadata is configured; account/model access remains unverified.

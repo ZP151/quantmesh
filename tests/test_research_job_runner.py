@@ -435,6 +435,51 @@ def test_runtime_rejection_precedes_job_and_content_decoding(tmp_path, monkeypat
     assert markers == []
 
 
+@pytest.mark.parametrize("fault", ["fingerprint", "receipt"])
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux registered-profile entry boundary")
+def test_profile_runtime_rejection_precedes_job_decoding(
+    tmp_path, monkeypatch, fault, directory_profile
+):
+    from quantmesh.research import job_runner, worker_build
+
+    bundle, output = tmp_path / "bundle", tmp_path / "output"
+    bundle.mkdir()
+    output.mkdir()
+    (bundle / "runtime.json").write_text('{"different":true}')
+    (bundle / "job.json").write_text("{}")
+    profile = worker_build.registered_fixture_profile()
+    before = dict(
+        build_digest="a" * 64,
+        dependency_digest="b" * 64,
+        git_commit="c" * 40,
+        python_version="3.12.3",
+        python_executable_digest="d" * 64,
+    )
+    markers = []
+
+    def fingerprint(**kwargs):
+        if fault == "fingerprint":
+            raise ValueError("runtime refused")
+        return worker_build.runtime_with_profile(before, profile)
+
+    def decode(*args, **kwargs):
+        markers.append("job")
+        raise ValueError("job decoder reached")
+
+    monkeypatch.setattr(job_runner, "runtime_fingerprint", fingerprint)
+    monkeypatch.setattr(job_runner.JobRecord, "model_validate_json", decode)
+    with pytest.raises(SystemExit):
+        job_runner._child_main(
+            str(bundle),
+            output_directory=str(output),
+            build_manifest=bundle / "manifest.json",
+            manifest_sha256="e" * 64,
+            execution_profile=profile,
+            before_import_runtime=before,
+        )
+    assert markers == []
+
+
 @pytest.mark.parametrize("name", ["runtime.json", "job.json"])
 @pytest.mark.parametrize("fault", ["size", "symlink", "hardlink", "fifo"])
 def test_child_metadata_bounds_and_file_types_precede_job_decoder(
@@ -513,7 +558,13 @@ def child_receipt_fixture(tmp_path, directory_profile):
         commit=job.implementation_digest,
         registry=ReportRegistry(tmp_path / "direct", lake_root=lake),
     )
-    runtime = dict(build_digest="a" * 64, dependency_digest="b" * 64)
+    runtime = dict(
+        build_digest="a" * 64,
+        dependency_digest="b" * 64,
+        git_commit="c" * 40,
+        python_version="3.12.3",
+        python_executable_digest="d" * 64,
+    )
     report.evidence.update(
         runtime,
         request_digest=job.request_digest,

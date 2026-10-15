@@ -320,21 +320,14 @@ def _child_main(
                 raise ValueError("Linux child admission missing")
             _contained(path, path / "job.json")
             _contained(output, output / "result.json")
-        job = JobRecord.model_validate_json(
-            _read_child_file(path, path / "job.json", _MAX_INPUT_METADATA_BYTES)
-        )
-        _verify_identity(job)
+        # Reject runtime drift and unsafe metadata before decoding any job input.
         if execution_profile is None:
             runtime = runtime_fingerprint(
                 manifest_path=build_manifest, manifest_sha256=manifest_sha256
             )
         else:
-            from quantmesh.research.worker_build import (
-                runtime_with_profile,
-                validate_registered_job,
-            )
+            from quantmesh.research.worker_build import runtime_with_profile
 
-            validate_registered_job(job, execution_profile)
             runtime = runtime_fingerprint(
                 manifest_path=build_manifest,
                 manifest_sha256=manifest_sha256,
@@ -346,6 +339,14 @@ def _child_main(
             _read_child_file(path, path / "runtime.json", _MAX_INPUT_METADATA_BYTES)
         ):
             raise ValueError("runtime changed before execution")
+        job = JobRecord.model_validate_json(
+            _read_child_file(path, path / "job.json", _MAX_INPUT_METADATA_BYTES)
+        )
+        _verify_identity(job)
+        if execution_profile is not None:
+            from quantmesh.research.worker_build import validate_registered_job
+
+            validate_registered_job(job, execution_profile)
         r = job.request
         inputs_root = path / "inputs"
         with FixtureReader(job, inputs_root, time.monotonic() + r.budget.timeout_seconds) as reader:

@@ -635,8 +635,11 @@ def test_minute_replay_fallback_does_not_expand_other_venues(tmp_path: Path, ven
 
 
 @pytest.mark.parametrize("state", ["empty", "single", "missing-minute", "disconnected"])
-def test_minute_replay_collecting_and_gaps_never_fabricate_continuity(tmp_path: Path, state):
+def test_minute_replay_collecting_and_gaps_never_fabricate_continuity(
+    tmp_path: Path, monkeypatch, state
+):
     anchor = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     with LiveBuffer(tmp_path / "replay") as buffer:
         feed = LiveFeed(lake=buffer)
         if state != "empty":
@@ -659,6 +662,8 @@ def test_minute_replay_collecting_and_gaps_never_fabricate_continuity(tmp_path: 
         if state in {"missing-minute", "disconnected"}:
             second = anchor + timedelta(minutes=2 if state == "missing-minute" else 1)
             feed.ingest([_production_candle("BTC", second, second + timedelta(seconds=1), 101)])
+        # A background tick may sweep retention before either history request.
+        feed.prune_if_due(anchor + timedelta(minutes=3))
         history, workspace = _history_pair(feed, anchor + timedelta(minutes=3))
         assert history.status_code == workspace.status_code == 404
         expected = "no replay candles" if state == "empty" else "continuity is not proven"
