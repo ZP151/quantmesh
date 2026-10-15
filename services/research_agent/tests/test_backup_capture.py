@@ -720,6 +720,25 @@ def test_jobs_without_report_or_completed_analysis_are_capturable(
     assert result["manifest"]["row_sequence_maxima"]["jobs"] == 7
 
 
+def test_running_analysis_without_succeeded_backtest_or_outbox_is_rejected(monkeypatch, tmp_path):
+    lake, artifacts = tmp_path / "lake", tmp_path / "artifacts"
+    pinned_lake(lake)
+    artifacts.mkdir()
+    job = make_job(lake, state="running", analysis_requested=True)
+    job = job.model_copy(update={"analysis_state": "running"})
+    install_fake(monkeypatch, FakeDatabase(jobs=[db_job(job)]))
+
+    with pytest.raises(ValueError):
+        backup_capture.capture_manifest(
+            SecretStr("postgresql://fixture:fixture@127.0.0.1/fixture?sslmode=disable"),
+            schema="qm_research",
+            lake_root=lake,
+            artifact_root=artifacts,
+            output_root=tmp_path / "capture",
+            policy=None,
+        )
+
+
 def test_validate_manifest_refuses_tampered_manifest(tmp_path):
     root = tmp_path / "capture"
     root.mkdir(mode=0o700)
