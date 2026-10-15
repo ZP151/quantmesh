@@ -10,11 +10,15 @@ import hashlib
 import json
 import os
 import re
+import selectors
 import stat
+import subprocess
+import time
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from pydantic import SecretStr
 
@@ -44,6 +48,11 @@ _OBJECT_KEY = re.compile(r"^([A-Za-z0-9_-]{1,128})/([0-9a-f]{64})\.([a-z]+)$")
 _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
 _CLOEXEC = getattr(os, "O_CLOEXEC", 0)
 _DIRECTORY = getattr(os, "O_DIRECTORY", 0)
+_PG_DUMP_SHA256 = "137cf7c068b3459f5205f97f27cd206b537228e031d721f52535daf29c0ab6f8"
+_MAX_PG_DUMP_BYTES = 32 * 1024 * 1024
+_MAX_PG_DUMP_OUTPUT_BYTES = 2 * 1024 * 1024
+_PG_DUMP_TIMEOUT_SECONDS = 60.0
+_PG_DUMP_TERMINATE_SECONDS = 1.0
 
 
 class ManifestCaptureRefused(ValueError):
@@ -634,8 +643,10 @@ def _mkdir_child(parent_fd: int, name: str, *, private: bool) -> int:
     return fd
 
 
-def _remove_contents(directory_fd: int) -> None:
+def _remove_contents(directory_fd: int, *, preserve: frozenset[str] = frozenset()) -> None:
     for name in os.listdir(directory_fd):
+        if name in preserve:
+            continue
         info = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
         if stat.S_ISDIR(info.st_mode):
             child_fd = os.open(
@@ -653,7 +664,13 @@ def _remove_contents(directory_fd: int) -> None:
             os.unlink(name, dir_fd=directory_fd)
 
 
-def _remove_output_root(parent_fd: int, root_fd: int, name: str) -> None:
+def _remove_output_root(
+    parent_fd: int,
+    root_fd: int,
+    name: str,
+    *,
+    preserve: frozenset[str] = frozenset(),
+) -> None:
     try:
         entry = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
         root = os.fstat(root_fd)
@@ -662,7 +679,7 @@ def _remove_output_root(parent_fd: int, root_fd: int, name: str) -> None:
             root.st_ino,
         ):
             return
-        _remove_contents(root_fd)
+        _remove_contents(root_fd, preserve=preserve)
         os.rmdir(name, dir_fd=parent_fd)
     except OSError:
         # Preserve the original capture refusal; a leftover private directory is
@@ -857,6 +874,232 @@ def _validate_artifact_tree(root_fd: int, references: list[dict]) -> None:
         os.close(artifacts_fd)
 
 
+def _validate_bundle_inputs(dsn: SecretStr, schema: str, policy, pg_dump_path: Path):
+    """Validate every caller-controlled value before opening a database connection."""
+    if schema != _SCHEMA or not isinstance(dsn, SecretStr):
+        raise _refuse()
+    if policy is not None and not isinstance(policy, PortfolioBudgetPolicy):
+        raise _refuse()
+    raw_dsn = dsn.get_secret_value()
+    parsed = urlsplit(raw_dsn)
+    options = parse_qs(parsed.query, strict_parsing=True)
+    service_values = {
+        "host": parsed.hostname or "",
+        "port": str(parsed.port or 5432),
+        "user": unquote(parsed.username or ""),
+        "password": unquote(parsed.password or ""),
+        "dbname": unquote(parsed.path.lstrip("/")),
+        "sslmode": options.get("sslmode", ["verify-full"])[0],
+    }
+    if (
+        parsed.scheme not in ("postgres", "postgresql")
+        or not parsed.username
+        or not parsed.hostname
+        or parsed.fragment
+        or set(options) - {"sslmode"}
+        or options.get("sslmode", ["verify-full"]) not in (["disable"], ["verify-full"])
+        or any(ord(ch) < 32 for ch in raw_dsn)
+        or any(any(ord(ch) < 32 for ch in value) for value in service_values.values())
+    ):
+        raise _refuse()
+    sslmode = options.get("sslmode", ["verify-full"])[0]
+    hostname = parsed.hostname
+    if sslmode == "disable" and hostname not in {"localhost", "127.0.0.1", "::1"}:
+        raise _refuse()
+    if parsed.port is not None and not 1 <= parsed.port <= 65535:
+        raise _refuse()
+    pg_dump_path = Path(pg_dump_path)
+    if (
+        not pg_dump_path.is_absolute()
+        or ".." in pg_dump_path.parts
+        or pg_dump_path.name != "pg_dump"
+    ):
+        raise _refuse()
+
+    parent_fd = _open_directory(pg_dump_path.parent, owner=os.geteuid())
+    tool_fd = -1
+    lib_fd = -1
+    try:
+        tool_fd = os.open(pg_dump_path.name, os.O_RDONLY | _NOFOLLOW | _CLOEXEC, dir_fd=parent_fd)
+        tool_info = os.fstat(tool_fd)
+        if (
+            not stat.S_ISREG(tool_info.st_mode)
+            or tool_info.st_uid != os.geteuid()
+            or tool_info.st_nlink != 1
+            or tool_info.st_mode & 0o022
+            or not tool_info.st_mode & 0o100
+            or _hash_fd(tool_fd) != _PG_DUMP_SHA256
+        ):
+            raise _refuse()
+        lib_path = pg_dump_path.parent.parent / "lib"
+        lib_fd = _open_directory(lib_path, owner=os.geteuid())
+        return {
+            "tool_fd": tool_fd,
+            "tool_signature": _signature(tool_info),
+            "lib_fd": lib_fd,
+            "service_values": {
+                **service_values,
+            },
+        }
+    except BaseException:
+        for fd in (tool_fd, lib_fd):
+            if fd >= 0:
+                os.close(fd)
+        raise
+    finally:
+        os.close(parent_fd)
+
+
+def _hash_fd(fd: int) -> str:
+    digest = hashlib.sha256()
+    os.lseek(fd, 0, os.SEEK_SET)
+    while True:
+        block = os.read(fd, 65536)
+        if not block:
+            break
+        digest.update(block)
+    os.lseek(fd, 0, os.SEEK_SET)
+    return digest.hexdigest()
+
+
+def _service_file_bytes(values: dict[str, str]) -> bytes:
+    def quote(value: str) -> str:
+        if any(ord(ch) < 32 for ch in value):
+            raise _refuse()
+        return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+    return (
+        "[quantmesh_bundle]\n" + "".join(f"{key}={quote(value)}\n" for key, value in values.items())
+    ).encode("utf-8")
+
+
+def _identity_matches(parent_fd: int, name: str, expected: os.stat_result) -> bool:
+    try:
+        current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except OSError:
+        return False
+    return stat.S_ISREG(current.st_mode) and (current.st_dev, current.st_ino) == (
+        expected.st_dev,
+        expected.st_ino,
+    )
+
+
+def _run_pg_dump(
+    tool_fd: int, tool_signature: tuple, lib_fd: int, service_fd: int, snapshot: str, dump_fd: int
+):
+    tool_info = os.fstat(tool_fd)
+    if _signature(tool_info) != tool_signature or _hash_fd(tool_fd) != _PG_DUMP_SHA256:
+        raise _refuse()
+    args = [
+        "pg_dump",
+        "--no-password",
+        "--format=custom",
+        "--no-owner",
+        "--no-privileges",
+        "--schema=qm_research",
+        "--snapshot",
+        snapshot,
+        "--dbname=service=quantmesh_bundle",
+        "--file=-",
+    ]
+    env = {
+        "PATH": "/usr/bin:/bin",
+        "LC_ALL": "C",
+        "PGSERVICEFILE": f"/proc/self/fd/{service_fd}",
+        "LD_LIBRARY_PATH": f"/proc/self/fd/{lib_fd}",
+    }
+    process = None
+    selector = selectors.DefaultSelector()
+    stdout_bytes = stderr_bytes = 0
+    digest = hashlib.sha256()
+    deadline = time.monotonic() + _PG_DUMP_TIMEOUT_SECONDS
+    try:
+        process = subprocess.Popen(
+            args,
+            executable=f"/proc/self/fd/{tool_fd}",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=False,
+            close_fds=True,
+            pass_fds=(tool_fd, lib_fd, service_fd),
+            env=env,
+        )
+        assert process.stdout is not None and process.stderr is not None
+        for stream, label in ((process.stdout, "stdout"), (process.stderr, "stderr")):
+            os.set_blocking(stream.fileno(), False)
+            selector.register(stream, selectors.EVENT_READ, label)
+        open_streams = 2
+        while open_streams:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise _refuse()
+            events = selector.select(min(remaining, 0.1))
+            if not events and process.poll() is not None:
+                # Pipes become readable at EOF; continue until both are unregistered.
+                continue
+            for key, _ in events:
+                stream = key.fileobj
+                label = key.data
+                chunk = os.read(stream.fileno(), 65536)
+                if not chunk:
+                    selector.unregister(stream)
+                    open_streams -= 1
+                    continue
+                if label == "stdout":
+                    stdout_bytes += len(chunk)
+                    if stdout_bytes > _MAX_PG_DUMP_BYTES:
+                        raise _refuse()
+                    digest.update(chunk)
+                    _write_all(dump_fd, chunk)
+                else:
+                    stderr_bytes += len(chunk)
+                    if stderr_bytes > _MAX_PG_DUMP_OUTPUT_BYTES:
+                        raise _refuse()
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise _refuse()
+        if process.wait(timeout=remaining) != 0:
+            raise _refuse()
+        os.fsync(dump_fd)
+        info = os.fstat(dump_fd)
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or info.st_uid != os.geteuid()
+            or info.st_nlink != 1
+            or info.st_size != stdout_bytes
+            or stdout_bytes > _MAX_PG_DUMP_BYTES
+            or stat.S_IMODE(info.st_mode) != 0o600
+        ):
+            raise _refuse()
+        return {"dump_size": stdout_bytes, "dump_sha256": digest.hexdigest()}
+    except subprocess.TimeoutExpired:
+        raise _refuse() from None
+    finally:
+        if process is not None:
+            if process.poll() is None:
+                try:
+                    process.terminate()
+                except OSError:
+                    pass
+                try:
+                    process.wait(timeout=_PG_DUMP_TERMINATE_SECONDS)
+                except subprocess.TimeoutExpired:
+                    try:
+                        process.kill()
+                    except OSError:
+                        pass
+                    process.wait()
+            # The exact Popen child has exited before caller can roll back the exporter.
+            for stream in (process.stdout, process.stderr):
+                if stream is not None:
+                    try:
+                        stream.close()
+                    except OSError:
+                        pass
+        selector.close()
+
+
 def capture_manifest(
     dsn: SecretStr,
     *,
@@ -960,3 +1203,290 @@ def validate_manifest(root: Path, expected_digest: str) -> dict:
     finally:
         if root_fd >= 0:
             os.close(root_fd)
+
+
+def capture_backup_bundle(
+    dsn: SecretStr,
+    *,
+    schema: str,
+    lake_root: Path,
+    artifact_root: Path,
+    output_root: Path,
+    pg_dump_path: Path,
+    policy: PortfolioBudgetPolicy | None,
+) -> dict:
+    """Capture a manifest and pg_dump archive from one exported MVCC snapshot."""
+    connection = None
+    artifact_root_fd = output_parent_fd = output_root_fd = -1
+    capture_fd = service_fd = -1
+    service_identity = None
+    preserve_service_entry = False
+    admission = None
+    output_complete = False
+    output_path = Path(output_root)
+    output_name = output_path.name
+    try:
+        admission = _validate_bundle_inputs(dsn, schema, policy, Path(pg_dump_path))
+        artifact_root_fd = _open_directory(Path(artifact_root), owner=os.geteuid())
+        lake_fd = _open_directory(Path(lake_root), owner=os.geteuid())
+        os.close(lake_fd)
+        if not output_path.is_absolute() or output_name in {"", ".", ".."}:
+            raise _refuse()
+        output_parent_fd = _open_directory(output_path.parent, owner=os.geteuid())
+        os.mkdir(output_name, 0o700, dir_fd=output_parent_fd)
+        output_root_fd = os.open(
+            output_name, os.O_RDONLY | _DIRECTORY | _NOFOLLOW | _CLOEXEC, dir_fd=output_parent_fd
+        )
+        _verify_subdir(output_root_fd, private=True)
+        capture_fd = _mkdir_child(output_root_fd, "capture", private=True)
+        os.mkdir("artifacts", 0o700, dir_fd=capture_fd)
+
+        connection = connect(dsn)
+        _execute(connection, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        _execute(connection, "SET LOCAL statement_timeout='5s'")
+        _execute(connection, 'SET LOCAL search_path TO "qm_research"')
+        row = _fetchone(connection, "SELECT pg_export_snapshot()")
+        if not row or not isinstance(row[0], str) or not row[0] or len(row[0]) > 256:
+            raise _refuse()
+        snapshot = row[0]
+        state = _read_snapshot_state(connection, schema, policy)
+        references, jobs = _checked_references(state, artifact_root_fd)
+        manifest = _build_manifest(state, references, jobs, snapshot_was_exported=True)
+        for reference in references:
+            _copy_one(artifact_root_fd, capture_fd, reference)
+        manifest_digest = _write_manifest(capture_fd, manifest)
+        _validate_artifact_tree(capture_fd, references)
+
+        service_raw = _service_file_bytes(admission["service_values"])
+        service_fd = os.open(
+            "pg-service.conf",
+            os.O_RDWR | os.O_CREAT | os.O_EXCL | _NOFOLLOW | _CLOEXEC,
+            0o600,
+            dir_fd=output_root_fd,
+        )
+        service_identity = os.fstat(service_fd)
+        if (
+            not stat.S_ISREG(service_identity.st_mode)
+            or service_identity.st_uid != os.geteuid()
+            or service_identity.st_nlink != 1
+            or stat.S_IMODE(service_identity.st_mode) != 0o600
+        ):
+            raise _refuse()
+        _write_all(service_fd, service_raw)
+        os.fsync(service_fd)
+        os.lseek(service_fd, 0, os.SEEK_SET)
+        dump_fd = os.open(
+            "research.dump",
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | _NOFOLLOW | _CLOEXEC,
+            0o600,
+            dir_fd=output_root_fd,
+        )
+        try:
+            dump_info = _run_pg_dump(
+                admission["tool_fd"],
+                admission["tool_signature"],
+                admission["lib_fd"],
+                service_fd,
+                snapshot,
+                dump_fd,
+            )
+        finally:
+            os.close(dump_fd)
+        if _identity_matches(output_root_fd, "pg-service.conf", service_identity):
+            os.unlink("pg-service.conf", dir_fd=output_root_fd)
+        else:
+            preserve_service_entry = True
+            raise _refuse()
+        os.close(service_fd)
+        service_fd = -1
+
+        bundle = {
+            "bundle_version": 1,
+            "schema": _SCHEMA,
+            "manifest_sha256": manifest_digest,
+            "dump_sha256": dump_info["dump_sha256"],
+            "dump_size": dump_info["dump_size"],
+        }
+        bundle_raw = _canonical(bundle)
+        bundle_fd = os.open(
+            "bundle.json",
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | _NOFOLLOW | _CLOEXEC,
+            0o600,
+            dir_fd=output_root_fd,
+        )
+        try:
+            _write_all(bundle_fd, bundle_raw)
+            os.fsync(bundle_fd)
+        finally:
+            os.close(bundle_fd)
+        if set(os.listdir(output_root_fd)) != {"capture", "research.dump", "bundle.json"}:
+            raise _refuse()
+        bundle_digest = _sha(bundle_raw)
+        _validate_backup_bundle_fd(output_root_fd, bundle_digest)
+        result = {
+            "manifest_sha256": bundle["manifest_sha256"],
+            "dump_sha256": bundle["dump_sha256"],
+            "dump_size": bundle["dump_size"],
+            "bundle_sha256": bundle_digest,
+            "snapshot_closed": True,
+            "manifest_only": False,
+            "manifest": manifest,
+        }
+        output_complete = True
+        return result
+    except ManifestCaptureRefused:
+        raise
+    except Exception:
+        raise _refuse() from None
+    finally:
+        cleanup_failed = False
+        if service_fd >= 0:
+            try:
+                if service_identity is not None and _identity_matches(
+                    output_root_fd, "pg-service.conf", service_identity
+                ):
+                    os.unlink("pg-service.conf", dir_fd=output_root_fd)
+                elif service_identity is not None:
+                    preserve_service_entry = True
+            except Exception:
+                cleanup_failed = True
+            try:
+                os.close(service_fd)
+            except OSError:
+                cleanup_failed = True
+        if connection is not None:
+            for close in (connection.rollback, connection.close):
+                try:
+                    close()
+                except Exception:
+                    cleanup_failed = True
+        if not output_complete and output_parent_fd >= 0 and output_root_fd >= 0:
+            try:
+                _remove_output_root(
+                    output_parent_fd,
+                    output_root_fd,
+                    output_name,
+                    preserve=frozenset({"pg-service.conf"})
+                    if preserve_service_entry
+                    else frozenset(),
+                )
+            except Exception:
+                cleanup_failed = True
+        for fd in (
+            capture_fd,
+            output_root_fd,
+            output_parent_fd,
+            artifact_root_fd,
+            admission["tool_fd"] if admission else -1,
+            admission["lib_fd"] if admission else -1,
+        ):
+            if fd >= 0:
+                try:
+                    os.close(fd)
+                except OSError:
+                    cleanup_failed = True
+        if cleanup_failed:
+            raise _refuse() from None
+
+
+def validate_backup_bundle(root: Path, expected_digest: str) -> dict:
+    if not isinstance(expected_digest, str) or not _SHA256.fullmatch(expected_digest):
+        raise _refuse()
+    root_fd = capture_fd = -1
+    try:
+        root_fd = _open_directory(Path(root), owner=os.geteuid(), private=True)
+        if set(os.listdir(root_fd)) != {"capture", "research.dump", "bundle.json"}:
+            raise _refuse()
+        raw = _read_private_file(root_fd, "bundle.json", limit=4096)
+        if _sha(raw) != expected_digest:
+            raise _refuse()
+        bundle = json.loads(raw)
+        required = {
+            "bundle_version",
+            "schema",
+            "manifest_sha256",
+            "dump_sha256",
+            "dump_size",
+        }
+        if (
+            not isinstance(bundle, dict)
+            or set(bundle) != required
+            or bundle.get("bundle_version") != 1
+            or bundle.get("schema") != _SCHEMA
+            or not isinstance(bundle.get("manifest_sha256"), str)
+            or not _SHA256.fullmatch(bundle["manifest_sha256"])
+            or not isinstance(bundle.get("dump_sha256"), str)
+            or not _SHA256.fullmatch(bundle["dump_sha256"])
+            or type(bundle.get("dump_size")) is not int
+            or not 0 < bundle["dump_size"] <= _MAX_PG_DUMP_BYTES
+            or _canonical(bundle) != raw
+        ):
+            raise _refuse()
+        dump = _read_private_file(root_fd, "research.dump", limit=_MAX_PG_DUMP_BYTES)
+        if len(dump) != bundle["dump_size"] or _sha(dump) != bundle["dump_sha256"]:
+            raise _refuse()
+        capture_fd = os.open(
+            "capture", os.O_RDONLY | _DIRECTORY | _NOFOLLOW | _CLOEXEC, dir_fd=root_fd
+        )
+        _verify_subdir(capture_fd, private=True)
+        manifest = _validate_manifest_fd(capture_fd, bundle["manifest_sha256"])
+        return {**bundle, "bundle_sha256": expected_digest, "manifest": manifest}
+    except ManifestCaptureRefused:
+        raise
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        raise _refuse() from None
+    finally:
+        for fd in (capture_fd, root_fd):
+            if fd >= 0:
+                os.close(fd)
+
+
+def _validate_manifest_fd(root_fd: int, expected_digest: str) -> dict:
+    raw = _read_private_file(root_fd, "manifest.json", limit=4 * 1024 * 1024)
+    if _sha(raw) != expected_digest:
+        raise _refuse()
+    manifest = json.loads(raw)
+    if (
+        not isinstance(manifest, dict)
+        or manifest.get("manifest_version") != 1
+        or manifest.get("schema") != _SCHEMA
+        or not isinstance(manifest.get("references"), list)
+        or _canonical(manifest) != raw
+    ):
+        raise _refuse()
+    _validate_artifact_tree(root_fd, manifest["references"])
+    return manifest
+
+
+def _validate_backup_bundle_fd(root_fd: int, expected_digest: str) -> dict:
+    if set(os.listdir(root_fd)) != {"capture", "research.dump", "bundle.json"}:
+        raise _refuse()
+    raw = _read_private_file(root_fd, "bundle.json", limit=4096)
+    if _sha(raw) != expected_digest:
+        raise _refuse()
+    bundle = json.loads(raw)
+    required = {"bundle_version", "schema", "manifest_sha256", "dump_sha256", "dump_size"}
+    if (
+        not isinstance(bundle, dict)
+        or set(bundle) != required
+        or bundle.get("bundle_version") != 1
+        or bundle.get("schema") != _SCHEMA
+        or not isinstance(bundle.get("manifest_sha256"), str)
+        or not _SHA256.fullmatch(bundle["manifest_sha256"])
+        or not isinstance(bundle.get("dump_sha256"), str)
+        or not _SHA256.fullmatch(bundle["dump_sha256"])
+        or type(bundle.get("dump_size")) is not int
+        or not 0 < bundle["dump_size"] <= _MAX_PG_DUMP_BYTES
+        or _canonical(bundle) != raw
+    ):
+        raise _refuse()
+    dump = _read_private_file(root_fd, "research.dump", limit=_MAX_PG_DUMP_BYTES)
+    if len(dump) != bundle["dump_size"] or _sha(dump) != bundle["dump_sha256"]:
+        raise _refuse()
+    capture_fd = os.open("capture", os.O_RDONLY | _DIRECTORY | _NOFOLLOW | _CLOEXEC, dir_fd=root_fd)
+    try:
+        _verify_subdir(capture_fd, private=True)
+        manifest = _validate_manifest_fd(capture_fd, bundle["manifest_sha256"])
+    finally:
+        os.close(capture_fd)
+    return {**bundle, "bundle_sha256": expected_digest, "manifest": manifest}

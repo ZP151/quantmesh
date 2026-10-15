@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import subprocess
+import sys
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -46,15 +48,18 @@ class FakeDatabase:
         self.statements = []
         self.closed = False
         self.rolled_back = False
+        self.events = []
         self.snapshot = "owned-snapshot-token-must-not-escape"
 
     def cursor(self):
         return FakeCursor(self)
 
     def rollback(self):
+        self.events.append("rollback")
         self.rolled_back = True
 
     def close(self):
+        self.events.append("close")
         self.closed = True
 
 
@@ -765,3 +770,274 @@ def test_private_capture_root_rejects_symlink(tmp_path):
 
     with pytest.raises(ValueError):
         backup_capture.validate_manifest(alias, "0" * 64)
+
+
+def _bundle_setup(monkeypatch, tmp_path, body):
+    monkeypatch.setattr(backup_capture, "subprocess", subprocess, raising=False)
+    lake = tmp_path / "lake"
+    artifacts = tmp_path / "artifacts"
+    output_parent = tmp_path / "output-parent"
+    prefix = tmp_path / "prefix"
+    tool_bin = prefix / "bin"
+    tool_lib = prefix / "lib"
+    pinned_lake(lake)
+    artifacts.mkdir(mode=0o700)
+    output_parent.mkdir(mode=0o700)
+    tool_bin.mkdir(parents=True)
+    tool_lib.mkdir()
+    tool = tool_bin / "pg_dump"
+    tool.write_text(f"#!{sys.executable}\n{body}\n", encoding="utf-8")
+    tool.chmod(0o700)
+    digest = hashlib.sha256(tool.read_bytes()).hexdigest()
+    monkeypatch.setattr(backup_capture, "_PG_DUMP_SHA256", digest, raising=False)
+    database = FakeDatabase()
+    calls = install_fake(monkeypatch, database)
+    return lake, artifacts, output_parent / "bundle", tool, database, calls
+
+
+def _bundle_capture(lake, artifacts, output, tool):
+    return backup_capture.capture_backup_bundle(
+        SecretStr("postgresql://fixture:fixture@127.0.0.1/fixture?sslmode=disable"),
+        schema="qm_research",
+        lake_root=lake,
+        artifact_root=artifacts,
+        output_root=output,
+        pg_dump_path=tool,
+        policy=None,
+    )
+
+
+def _fake_dump_body(payload=b"PGDMP-fixture", *, stderr_token=False):
+    return "\n".join(
+        (
+            "import os, sys",
+            f"os.write(1, {payload!r})",
+            "if '--snapshot' not in sys.argv: raise SystemExit(41)",
+            "if '--file=-' not in sys.argv: raise SystemExit(45)",
+            "if '--dbname=service=quantmesh_bundle' not in sys.argv: raise SystemExit(42)",
+            "service_file = os.environ.get('PGSERVICEFILE', '')",
+            "if not service_file.startswith('/proc/self/fd/'): raise SystemExit(43)",
+            "if os.environ.get('PGPASSWORD'): raise SystemExit(44)",
+            "if any('postgresql://' in a for a in sys.argv): raise SystemExit(44)",
+            "if "
+            + repr(stderr_token)
+            + ": os.write(2, sys.argv[sys.argv.index('--snapshot') + 1].encode())",
+        )
+    )
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+def test_capture_backup_bundle_runs_pg_dump_before_exporter_close_and_hides_token(
+    monkeypatch, tmp_path
+):
+    lake, artifacts, output, tool, database, calls = _bundle_setup(
+        monkeypatch, tmp_path, _fake_dump_body(stderr_token=True)
+    )
+    real_popen = backup_capture.subprocess.Popen
+    child_events = []
+
+    def checked_popen(*args, **kwargs):
+        assert not database.rolled_back and not database.closed
+        assert any("select pg_export_snapshot()" in sql.lower() for sql, _ in database.statements)
+        argv = kwargs.get("args", args[0] if args else None)
+        assert database.snapshot in argv
+        child_events.append("spawned_while_exporter_open")
+        return real_popen(*args, **kwargs)
+
+    monkeypatch.setattr(backup_capture.subprocess, "Popen", checked_popen)
+    result = _bundle_capture(lake, artifacts, output, tool)
+
+    assert len(calls) == 1
+    assert child_events == ["spawned_while_exporter_open"]
+    assert database.events == ["rollback", "close"]
+    assert result["snapshot_closed"] is True
+    assert result["manifest_only"] is False
+    assert database.snapshot not in json.dumps(result)
+    assert database.snapshot.encode() not in b"".join(
+        path.read_bytes() for path in output.rglob("*") if path.is_file()
+    )
+    assert backup_capture.validate_backup_bundle(output, result["bundle_sha256"])
+    assert {path.name for path in output.iterdir()} == {
+        "capture",
+        "research.dump",
+        "bundle.json",
+    }
+    assert not list(output.rglob("pg-service.conf"))
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+def test_capture_backup_bundle_refuses_unpinned_tool_before_connect(monkeypatch, tmp_path):
+    lake = tmp_path / "lake"
+    artifacts = tmp_path / "artifacts"
+    output_parent = tmp_path / "output-parent"
+    pinned_lake(lake)
+    artifacts.mkdir(mode=0o700)
+    output_parent.mkdir(mode=0o700)
+    tool_bin = tmp_path / "prefix" / "bin"
+    (tmp_path / "prefix" / "lib").mkdir(parents=True)
+    tool_bin.mkdir()
+    tool = tool_bin / "pg_dump"
+    tool.write_text(f"#!{sys.executable}\nraise SystemExit(0)\n", encoding="utf-8")
+    tool.chmod(0o700)
+    calls = []
+    monkeypatch.setattr(backup_capture, "connect", lambda dsn: calls.append(dsn))
+
+    with pytest.raises(ValueError):
+        _bundle_capture(lake, artifacts, output_parent / "bundle", tool)
+
+    assert calls == []
+    assert not (output_parent / "bundle").exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+def test_capture_backup_bundle_executes_opened_inode_after_tool_path_replacement(
+    monkeypatch, tmp_path
+):
+    lake, artifacts, output, tool, database, _ = _bundle_setup(
+        monkeypatch, tmp_path, _fake_dump_body(payload=b"opened-inode")
+    )
+    original_popen = backup_capture.subprocess.Popen
+    moved = tmp_path / "opened-pg-dump"
+
+    def replace_path_then_spawn(*args, **kwargs):
+        os.replace(tool, moved)
+        tool.write_text(f"#!{sys.executable}\nraise SystemExit(99)\n", encoding="utf-8")
+        tool.chmod(0o700)
+        return original_popen(*args, **kwargs)
+
+    monkeypatch.setattr(backup_capture.subprocess, "Popen", replace_path_then_spawn)
+    result = _bundle_capture(lake, artifacts, output, tool)
+
+    assert result["dump_sha256"] == hashlib.sha256(b"opened-inode").hexdigest()
+    assert database.closed and database.rolled_back
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+def test_capture_backup_bundle_preserves_replaced_service_file_on_failure(monkeypatch, tmp_path):
+    lake, artifacts, output, tool, database, _ = _bundle_setup(
+        monkeypatch, tmp_path, _fake_dump_body(payload=b"opened-inode")
+    )
+    original_runner = backup_capture._run_pg_dump
+
+    def replace_service_file(*args, **kwargs):
+        result = original_runner(*args, **kwargs)
+        service_path = output / "pg-service.conf"
+        service_path.unlink()
+        service_path.write_bytes(b"replacement-must-survive")
+        service_path.chmod(0o600)
+        return result
+
+    monkeypatch.setattr(backup_capture, "_run_pg_dump", replace_service_file)
+    with pytest.raises(ValueError, match="research snapshot manifest refused"):
+        _bundle_capture(lake, artifacts, output, tool)
+
+    assert database.events == ["rollback", "close"]
+    assert (output / "pg-service.conf").read_bytes() == b"replacement-must-survive"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+def test_capture_backup_bundle_timeout_reaps_child_and_closes_database(monkeypatch, tmp_path):
+    marker = tmp_path / "child.pid"
+    body = (
+        "import os, sys, time\n"
+        f"open({str(marker)!r}, 'w').write(str(os.getpid()))\n"
+        "time.sleep(20)\n"
+    )
+    lake, artifacts, output, tool, database, _ = _bundle_setup(monkeypatch, tmp_path, body)
+    monkeypatch.setattr(backup_capture, "_PG_DUMP_TIMEOUT_SECONDS", 0.2, raising=False)
+
+    with pytest.raises(ValueError, match="research snapshot manifest refused"):
+        _bundle_capture(lake, artifacts, output, tool)
+
+    assert database.events == ["rollback", "close"]
+    assert not output.exists()
+    if marker.exists():
+        pid = int(marker.read_text())
+        assert not os.path.exists(f"/proc/{pid}")
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+def test_capture_backup_bundle_child_failure_is_redacted_and_closes_resources(
+    monkeypatch, tmp_path
+):
+    body = (
+        "import os, sys\n"
+        "os.write(2, sys.argv[sys.argv.index('--snapshot') + 1].encode())\n"
+        "raise SystemExit(9)\n"
+    )
+    lake, artifacts, output, tool, database, _ = _bundle_setup(monkeypatch, tmp_path, body)
+
+    with pytest.raises(ValueError, match="research snapshot manifest refused") as refused:
+        _bundle_capture(lake, artifacts, output, tool)
+
+    assert database.events == ["rollback", "close"]
+    assert database.snapshot not in str(refused.value)
+    assert not output.exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+@pytest.mark.parametrize("limit_kind", ["output", "dump"])
+def test_capture_backup_bundle_enforces_child_byte_limits(monkeypatch, tmp_path, limit_kind):
+    if limit_kind == "output":
+        body = "import os, time\nos.write(2, b'x' * 4096)\ntime.sleep(5)"
+        limit_name = "_MAX_PG_DUMP_OUTPUT_BYTES"
+    else:
+        body = "import os, time\nos.write(1, b'x' * 4096)\ntime.sleep(5)"
+        limit_name = "_MAX_PG_DUMP_BYTES"
+    lake, artifacts, output, tool, database, _ = _bundle_setup(monkeypatch, tmp_path, body)
+    monkeypatch.setattr(backup_capture, limit_name, 64, raising=False)
+
+    with pytest.raises(ValueError, match="research snapshot manifest refused"):
+        _bundle_capture(lake, artifacts, output, tool)
+
+    assert database.events == ["rollback", "close"]
+    assert not output.exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+def test_validate_backup_bundle_rejects_dump_artifact_and_extra_path(monkeypatch, tmp_path):
+    lake, artifacts, output, tool, _, _ = _bundle_setup(monkeypatch, tmp_path, _fake_dump_body())
+    result = _bundle_capture(lake, artifacts, output, tool)
+    extra = output / "extra"
+    extra.write_text("unexpected", encoding="utf-8")
+    with pytest.raises(ValueError):
+        backup_capture.validate_backup_bundle(output, result["bundle_sha256"])
+    extra.unlink()
+
+    dump = output / "research.dump"
+    dump.write_bytes(b"changed dump")
+    with pytest.raises(ValueError):
+        backup_capture.validate_backup_bundle(output, result["bundle_sha256"])
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+def test_validate_backup_bundle_rejects_referenced_artifact_substitution(monkeypatch, tmp_path):
+    lake, artifacts, output_parent = tmp_path / "lake", tmp_path / "artifacts", tmp_path / "out"
+    pinned_lake(lake)
+    artifacts.mkdir(mode=0o700)
+    output_parent.mkdir(mode=0o700)
+    job = make_job(lake, job_id="job-report", state="succeeded")
+    job, ref = with_report(job, artifacts)
+    database = FakeDatabase(jobs=[db_job(job)])
+    install_fake(monkeypatch, database)
+    body = _fake_dump_body()
+    tool_bin = tmp_path / "prefix" / "bin"
+    (tmp_path / "prefix" / "lib").mkdir(parents=True)
+    tool_bin.mkdir()
+    tool = tool_bin / "pg_dump"
+    tool.write_text(f"#!{sys.executable}\n{body}\n", encoding="utf-8")
+    tool.chmod(0o700)
+    monkeypatch.setattr(
+        backup_capture,
+        "_PG_DUMP_SHA256",
+        hashlib.sha256(tool.read_bytes()).hexdigest(),
+        raising=False,
+    )
+    output = output_parent / "bundle"
+
+    result = _bundle_capture(lake, artifacts, output, tool)
+    artifact_copy = output / "capture" / "artifacts" / ref.object_key
+    artifact_copy.write_bytes(b"substituted report")
+
+    with pytest.raises(ValueError):
+        backup_capture.validate_backup_bundle(output, result["bundle_sha256"])
