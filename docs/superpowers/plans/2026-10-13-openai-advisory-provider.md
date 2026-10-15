@@ -176,3 +176,80 @@ This adds effect_filesystem.py, worker pre-decode integration, focused syscall/
 ordering tests and an adversarial native fixture; no dependencies or key use.
 [Kernel Landlock documentation](https://docs.kernel.org/userspace-api/landlock.html)
 describes inherited filesystem restrictions and ABI3 truncation coverage.
+
+## Task2b — Explicit advisory process bootstrap (software only)
+
+Prerequisite complete: Task2a97a4c6b, native attempt6/saved checker exit0,
+Agent service264pass/5skip and two bounded reviews. PR175fb66ed2 is merged.
+This implements the already-approved report-only Agent portion of Option A;
+no new provider, model permission, budget, host, secret setup or paid call.
+
+One operator action: explicitly run the dedicated advisory process for an
+allowlisted immutable report using a private server configuration. Success:
+default preflight constructs no model/SQL/process or reads the model key;
+explicit execution proves the actual delegated/guarded child boundary first,
+then constructs the existing PG ledger and OpenAI adapter. Existing API startup
+remains model-unavailable and starts no loop. Offline evidence is not activation.
+
+Files:
+- services/research_agent/src/qm_research_agent/advisory_runtime.py: private
+  bounded unique-key JSON configuration and CLI; default preflight, explicit
+  --run and optional --once; no background loop at import. Reuse load_runtime,
+  source/wheel admission, private reads, PostgresJobStore and EffectLedger.
+- orchestrator.py: optional effect_scope_unit and report digest allowlist,
+  preserving default fixtures. Scoped invocation passes the explicit unit;
+  refusal before reservation for a non-allowlisted report. A fatal scope
+  cleanup/admission exception propagates to terminate this manager, retaining
+  any uncertain reservation rather than continuing with an unknown live scope.
+- openai_responses.py: factory forwards those construction-only options.
+- tests/test_advisory_runtime.py plus affected orchestrator/provider fixtures.
+
+Configuration is owner-only0600 under0700 using existing no-follow private
+reader. Exact fields: schema_version1, service_config absolute Path, unit fixed
+quantmesh-research-advisory.service, model/price_version fixed current adapter
+constants, remote_consent exactly true, key_file explicit absolute Path,
+allowed_report_digests nonempty unique lowercase SHA256s. Reject coercions,
+duplicate JSON keys and additional fields. Use the service's already-required
+portfolio policy/category, bounded by existing monthly50/development200;
+never infer a key, endpoint, model or cost from environment. Only trusted
+activation reads key contents; no repr/log/argv/env/container mount or hash.
+Preflight returns no key-present/provider-available claim.
+
+Ruling: use an internal public synthetic ScriptedModelTransport canary through
+actual bounded_complete with the fixed unit before reading the model key or
+creating SQL/model effects on --run. It proves actual child admission and
+write denial instead of accepting a qualification boolean/receipt as authority.
+The canary is not a provider call, report, paid allowance or production return.
+Default preflight starts no canary. Unsupported admission returns a fixed error.
+
+On explicit execution, re-admit exact source/runtime before first SQL, require
+policy/category, read the private key through the existing bounded reader,
+construct only the fixed OpenAI Responses gateway/runner and invoke run_next.
+The immutable report digest allowlist limits initial data egress to the approved
+synthetic sample. The normal process polls sequentially with a stop Event;
+--once performs at most one claimed analysis, including saved replay/idle.
+SIGTERM stops the loop; systemd KillMode=control-group owns process-tree exit.
+Fatal containment failure exits the manager for whole-unit cleanup; unknown
+effects are retained and never automatically recalled. No PID/lease/backup or
+HTTP API capability claims are manufactured by bootstrap.
+
+- [x] Write focused RED for private-config coercion/duplicate/unknown fields,
+  no-effect preflight and missing opt-in, canary-before-key/SQL/model order,
+  unavailable containment zero key/SQL/provider effects, whitelist zero reserve,
+  exact scoped invocation and manager fail-stop with uncertain effect retained.
+- [x] Implement the minimal CLI/config/forwarding without API/bootstrap defaults
+  changing. Test cancellation/idle/once using private fixture boundaries only;
+  no real key/network/provider/systemd or SQL during these offline tests.
+- [x] Focused GREEN then full affected service suite, Ruff/diff and at most two
+  independent spec/quality rounds for this new slice. Preserve failing attempts
+  and source-bound evidence; commit/push one coherent checkpoint.
+- [ ] Final Class C PR exact-head CI and actual human/operator release approval
+  before installing permanent configuration or reading the real model key.
+- [ ] From reviewed merged bytes, private service/Worker recovery and actual
+  report-only provider usage/citation/restart replay remain separate real gates.
+
+Task2b checkpoint: focused21pass, startup cancellation RED6fail15pass then21pass.
+Affected service285pass/5skip/2existing warnings/100.63s; two reviews PASS after
+startup-stop P2 fix. Root Ruff/format4files and formatted focused21pass/2.79s.
+Evidence output/0038-advisory-optin-runtime/. Full native CLI/256MiB canary and
+activation remain separate pending gates; no SQL/model key/provider effects.

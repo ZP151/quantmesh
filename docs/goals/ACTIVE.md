@@ -1,5 +1,36 @@
 # Active Goal — iteration0038 Option A
 
+## Explicit advisory bootstrap software verified; release pending (2026-10-15)
+
+Task2b provides a separate opt-in CLI and exact owner-private configuration;
+HTTP API defaults remain model-unavailable. Default preflight performs no
+canary/SQL/model-key/provider effect. Explicit execution admits current source,
+runs the scripted bounded child canary, re-admits source, validates existing
+50USD monthly/200USD development portfolio caps, then creates the ledger and
+privately constructs the fixed OpenAI Responses runner. An immutable report
+SHA allowlist rejects before reservation. Fatal containment failure stops the
+manager and retains uncertain effects; no automatic paid recall is added.
+SIGTERM is checked before and between startup stages and during sequential
+polling; systemd remains responsible for whole-unit process-tree termination.
+
+Focused21passed; startup-stop RED6failed15passed becomes GREEN21passed. Final
+affected Agent service285passed/5skipped/2existing warnings/100.63s, exit0.
+Two bounded reviews: Spec/Quality PASS after resolving startup-cancellationP2.
+Root formatting initially found2files; formatting only plus21focused tests
+(2.79s), Ruff4files/format/diff pass. Exact source hashes and logs are retained
+in output/0038-advisory-optin-runtime/{verification.md,checked-summary.json}.
+No dependencies, protocol/lock, numerical engine, trading or API defaults change.
+
+Task2a actual native attempt6 remains separate: it qualifies the aggregate
+boundary, not the new full CLI or its256MiB startup canary. Permanent units,
+actual merged runtime/PG setup, Worker lease/cancel/reclaim/backup, real-provider
+usage/citation/restart replay and server-owned market cutover remain open.
+No real model key has been read or provider called. Next prepare current-source
+Class C PR/CI/review packet and explicit private deployment/rollback configuration.
+PR175 approval/merge is complete and must not be requested again; new-source
+human/operator release gates remain. Full A ACTIVE;168h NOT_REQUIRED.
+
+
 ## Advisory aggregate boundary qualified; activation pending (2026-10-15)
 
 On codex/0038-advisory-runtime from merged PR175 fb66ed2, the new boundary
