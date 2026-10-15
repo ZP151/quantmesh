@@ -160,6 +160,17 @@ bytes. Scripted outputs include `scripted_fixture=true` and provider=`scripted`.
 Unavailable before a call has nullable provider/model/prompt/output metadata.
 Advisory failure or cancellation preserves deterministic backtest success.
 
+The registered fixture report has a prompt-only view: its complete
+`execution_profile_id/version/digest` metadata becomes `profile.id/version/digest`
+only under `result.evidence`. This accepts exactly `registered-fixture`, integer
+version1 and a lowercase SHA256, with `fixture_only=true` and native cache state
+`unverified`. Partial metadata, conflicting `profile`, unknown profiles and
+sensitive fields still reject before any reservation or model call. All other
+fields still pass through the shared secret/order filter. The original report
+bytes, artifact SHA and citation never change; this view grants no execution or
+native-state assurance. Captured synthetic report tests exercise the actual
+published schema and scripted archive/restart replay, not a real provider call.
+
 The configured gateway runs in an owned process with a bounded wall deadline.
 Private server configuration crosses a local pipe, never an artifact/log.
 Its environment is restricted and its home/cwd is a service-owned empty home.

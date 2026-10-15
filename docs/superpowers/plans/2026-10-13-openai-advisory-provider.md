@@ -78,3 +78,33 @@ No real-provider claim, investment-quality claim or full Option A completion com
 ## Official sources and data boundary
 
 [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) documents the selected alias, supported reasoning levels and prices. [Responses migration](https://developers.openai.com/api/docs/guides/migrate-to-responses) supports the endpoint choice and explicit store=false. [Data controls](https://developers.openai.com/api/docs/guides/your-data) distinguish application state from abuse monitoring: store=false does not establish Zero Data Retention; abuse monitoring can retain data for up to30 days, and special controls require provider approval. Only specifically approved report/context can leave the private server. Provider choice alone is not broad data-egress approval.
+
+
+## Bounded real-report compatibility repair — 2026-10-15
+
+The operator requests necessary repairs and faster advancement after confirming
+that the prior-head Request Changes report consolidates two independent humans.
+Do not repeat reviewer-count requests. Its Request Changes disposition remains;
+this is not automatic approval of later source or deployment.
+
+One user action: request advisory on the existing immutable fixed-fixture report.
+Success: its actual report schema reaches a scripted advisory exactly once and
+replays identical archived output after reopening the store. This is report
+compatibility only, with no key/network/API/service activation.
+
+- [x] Preserve captured synthetic3503B reportSHA173f770ee5d2b25ea6042b3a46fe240a92068b6911498abc47a737db143c5beb as a test fixture. Rebind only test job lineage when testing local publication.
+- [x] RED actual native prompt/archive cases2failed14passed; Windows default Python collection error (missing langgraph) retained, no dependency install. Reuse existing WSL CPython3.12 service environment.
+- [x] In service orchestrator only, map the complete validated registered profile metadata trio at result.evidence to profile{id,version,digest}. Require exact version1/type, fixed id, lowercase SHA256 and original fixture/unverified claims. Refuse partial metadata or name collisions. Keep immutable artifact, current generic filter, model output, budget/ledger/effect identity unchanged.
+- [x] GREEN16passed includes original artifact byte preservation, all other forbidden fields, malformed/partial/scope metadata refusals with zero reservation/effect, and one scripted archive/restart replay. Existing successful backtests remain succeeded.
+- [x] Existing service regression218passed/5skipped/101.18s, Ruff/format/diff and narrow independent diff review (no P1/P2) complete. Actual evidence under output/0038-advisory-report-projection/.
+- [ ] Push the prepared integration checkpoint without replacing the live PR73921ba CI38717227840. Only after that run terminates, advance the PR branch normally and require fresh final-head CI. No merge/deploy gate bypass.
+
+Next aggregate-boundary work should reuse the existing Worker cgroup control
+semantics, not directly its network=none image protocol. A service-owned delegated
+cgroup-v2 subtree must cap aggregate memory/swap/CPU/PIDs and be manager-killed on
+owner loss; bounded.py must attach the effect before sending its private payload.
+Do not grant the API a Docker socket or CAP_SYS_ADMIN. Native fixture-only tests
+must prove descendant memory/CPU/PID limits, timeout/owner-loss cleanup and a
+surviving sibling. Existing systemd255/controller presence is not proof of a
+usable delegated subtree; fail closed if delegation is absent. This is the next
+unimplemented qualification, not a passed activation gate.

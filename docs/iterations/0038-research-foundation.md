@@ -1,5 +1,50 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Advisory report compatibility repair prepared (2026-10-15)
+
+The user's latest necessary-fix instruction advances the real-report blocker.
+Only the verified report's complete execution_profile_{id,version,digest} trio
+at result.evidence maps to inert profile{id,version,digest}; require fixed id,
+exact int1/lowercase SHA256 and original fixture/unverified claims. Other fields
+and values still pass the unchanged common secret/order filter. Original report
+bytes/citation/effect identity stay intact; no authority or provider is enabled.
+Captured synthetic3503B fixtureSHA173f770... preserves the actual report schema.
+Native RED2fail14pass, then16pass/12.19s; full Agent service218pass/5skip/101.18s.
+Ruff/format/diff pass; one bounded independent automatic review has no P1/P2.
+Default Windows Python missing-langgraph collection error is retained; no install
+was performed, existing WSL CPython3.12 service environment provided actual tests.
+Evidence output/0038-advisory-report-projection/{red-native,green-native,
+affected-native,checked-summary} and narrow-review.txt; no secret/model/network/
+cloud/service effect. Preserve prior successful Worker/browser/image proof;
+this service-source repair does not retrospectively alter its measured bytes.
+
+Prepare one integration checkpoint; do not cancel live PR73921ba CI38717227840.
+Keep the PR branch at73921ba while it runs, push the tested source to the existing
+integration branch, then advance the PR normally after terminal CI and require
+fresh final-head gates. Two independent human reviews are user-confirmed; their
+prior-head Request Changes is not current-source approval. Full Option A remains
+ACTIVE. Next: delegated aggregate model-tree containment, fail-closed runner
+wiring, then gated persistent deployment/recovery and actual bounded advisory.
+
+## Human Request Changes received for prior head (2026-10-15)
+
+The user supplied an explicitly human technical review of d65e003 with conclusion
+REQUEST_CHANGES; keep PR175 Draft. The user subsequently confirms this report
+consolidates TWO independent human reviews; this satisfies the recorded review
+count and must not be described as zero received human reviews. Its disposition
+is still Request Changes on d65e003, not approval of73921ba. No separate named
+safety-owner approval is inferred from a Request Changes conclusion. The report's
+limited static/accessible-CI scope does not certify all2744files or production.
+Six ordering regressions, the old two-field receipt fixture and real retention
+clock race were corrected in73921ba with113Linux/39Windows targeted passes;
+no validator/assertion or production error/retention/calendar was weakened.
+Current CI38717227840 release still running, fast/service/classifier pass;
+prior failed CI retained. Required humans and actual production/model/Worker/
+backup/source acceptance remain OPEN. No repeat full tests, merge or deployment.
+Finding-by-finding response: output/0038-release-readiness/
+human-review-d65e003-request-changes.json. Small review-state note awaits the
+next coherent checkpoint; do not cancel live CI for this record alone.
+
 ## Current release CI regression repair (2026-10-15)
 
 PR175 d65e003 CI38709107533 completed FAILURE09:50UTC: 5132passed,

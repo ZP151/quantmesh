@@ -44,6 +44,40 @@ def approved(value):
         raise ValueError("unapproved report text")
 
 
+def _report_for_prompt(envelope):
+    """Project only the registered report's inert profile metadata, not authority.
+
+    The immutable artifact and its citation stay unchanged. The shared secret/
+    order filter still sees every value and every other original field.
+    """
+    result = envelope.get("result")
+    if not isinstance(result, dict) or not isinstance(result.get("evidence"), dict):
+        return envelope
+    evidence = result["evidence"]
+    fields = ("execution_profile_id", "execution_profile_version", "execution_profile_digest")
+    if not any(name in evidence for name in fields):
+        return envelope
+    if (
+        not all(name in evidence for name in fields)
+        or "profile" in evidence
+        or evidence["execution_profile_id"] != "registered-fixture"
+        or type(evidence["execution_profile_version"]) is not int
+        or evidence["execution_profile_version"] != 1
+        or type(evidence["execution_profile_digest"]) is not str
+        or re.fullmatch(r"[0-9a-f]{64}", evidence["execution_profile_digest"]) is None
+        or evidence.get("fixture_only") is not True
+        or evidence.get("opaque_native_cache_state") != "unverified"
+    ):
+        raise ValueError("unapproved report profile")
+    projected = {name: value for name, value in evidence.items() if name not in fields}
+    projected["profile"] = {
+        "id": evidence[fields[0]],
+        "version": evidence[fields[1]],
+        "digest": evidence[fields[2]],
+    }
+    return {**envelope, "result": {**result, "evidence": projected}}
+
+
 class ApprovedRemoteGateway(ModelGateway):
     """Explicit server configuration only. No key/environment autodetection."""
 
@@ -119,6 +153,7 @@ class AdvisoryRunner:
             or envelope.get("schema_version") != 1
         ):
             raise ValueError("report lineage invalid")
+        envelope = _report_for_prompt(envelope)
         approved(envelope)
         request = ModelRequest(
             messages=[
