@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 from qm_research_agent.artifacts import archive, verified_bytes
 from qm_research_agent.bounded import bounded_complete
+from qm_research_agent.linux_effect_scope import EffectScopeRejected
 from quantmesh.ai.gateway import ModelGateway
 from quantmesh.ai.transport import HttpModelTransport, ScriptedModelTransport
 from quantmesh.ai.wire import ChatMessage, ModelRequest, ModelResponse
@@ -135,10 +136,20 @@ def supported_budget(budget):
 
 class AdvisoryRunner:
     def __init__(
-        self, store, effects, *, provider: str, price: Decimal | None, price_version: str | None
+        self,
+        store,
+        effects,
+        *,
+        provider: str,
+        price: Decimal | None,
+        price_version: str | None,
+        effect_scope_unit: str | None = None,
+        allowed_report_digests: frozenset[str] | None = None,
     ):
         self.store, self.effects = store, effects
         self.provider, self.price, self.price_version = provider, price, price_version
+        self.effect_scope_unit = effect_scope_unit
+        self.allowed_report_digests = allowed_report_digests
 
     def prompt(self, job, report):
         if report not in job.artifacts or report.kind != "report":
@@ -195,6 +206,11 @@ class AdvisoryRunner:
             )
 
         effect_digest = report.sha256
+        if (
+            self.allowed_report_digests is not None
+            and effect_digest not in self.allowed_report_digests
+        ):
+            return unavailable("model_unavailable")
         existing = self.effects.read(job.job_id, effect_digest)
         if not existing and (
             not supported_budget(job.request.budget)
@@ -248,7 +264,15 @@ class AdvisoryRunner:
             thread = threading.Thread(target=heartbeat, daemon=True)
             thread.start()
             try:
-                response = bounded_complete(gateway, request, job.request.budget)
+                if self.effect_scope_unit is None:
+                    response = bounded_complete(gateway, request, job.request.budget)
+                else:
+                    response = bounded_complete(
+                        gateway,
+                        request,
+                        job.request.budget,
+                        effect_scope_unit=self.effect_scope_unit,
+                    )
                 raw = json.dumps(
                     {
                         "response": response.model_dump(),
@@ -265,6 +289,10 @@ class AdvisoryRunner:
                 if lost.is_set() or not self.effects.response(lease, effect_digest, raw):
                     return {"record": unavailable("unknown_effect")}
                 return {"response": raw}
+            except EffectScopeRejected:
+                # The manager must stop for systemd to own whole-unit cleanup.
+                # Keep an ambiguous reservation; automatic recall could double bill.
+                raise
             except Exception:
                 # Effect may already have reached a provider. Never silently recall it.
                 return {"record": unavailable("unknown_effect")}

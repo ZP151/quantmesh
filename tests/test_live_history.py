@@ -55,9 +55,11 @@ def _candle(
 
 
 def test_live_only_workstation_serves_one_shared_continuity_checked_series(
+    monkeypatch,
     tmp_path: Path,
 ) -> None:
     anchor = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     buffer = LiveBuffer(tmp_path / "lake")
     feed = LiveFeed(lake=buffer)
     feed.ingest(
@@ -66,6 +68,8 @@ def test_live_only_workstation_serves_one_shared_continuity_checked_series(
             _candle(anchor, sequence=101, close=101.0),
         ]
     )
+    # Exercise the real sweep that the app pump may run before its response.
+    buffer.prune()
     app = create_workstation_app(
         account=PaperAccount(cash=100_000.0),
         live_feed=feed,
@@ -95,9 +99,11 @@ def test_live_only_workstation_serves_one_shared_continuity_checked_series(
 
 
 def test_live_only_history_selects_nearest_coarser_interval_and_reports_fallback(
+    monkeypatch,
     tmp_path: Path,
 ) -> None:
     anchor = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     buffer = LiveBuffer(tmp_path / "lake")
     feed = LiveFeed(lake=buffer)
     feed.ingest(
@@ -118,6 +124,8 @@ def test_live_only_history_selects_nearest_coarser_interval_and_reports_fallback
             _candle(anchor, sequence=201, close=301.0, interval="30m"),
         ]
     )
+    # Exercise the real sweep that the app pump may run before its response.
+    buffer.prune()
     app = create_workstation_app(
         account=PaperAccount(cash=100_000.0),
         live_feed=feed,
@@ -140,10 +148,12 @@ def test_live_only_history_selects_nearest_coarser_interval_and_reports_fallback
 
 @pytest.mark.parametrize("selected_range", ["5d", "1m", "3m", "6m", "1y"])
 def test_live_only_history_fails_closed_for_unsupported_ranges(
+    monkeypatch,
     tmp_path: Path,
     selected_range: str,
 ) -> None:
     anchor = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     buffer = LiveBuffer(tmp_path / "lake")
     feed = LiveFeed(lake=buffer)
     feed.ingest(
@@ -157,6 +167,8 @@ def test_live_only_history_fails_closed_for_unsupported_ranges(
             _candle(anchor, sequence=101, close=101.0, interval="1m"),
         ]
     )
+    # Exercise the real sweep that the app pump may run before its response.
+    buffer.prune()
     app = create_workstation_app(
         account=PaperAccount(cash=100_000.0),
         live_feed=feed,
@@ -176,8 +188,11 @@ def test_live_only_history_fails_closed_for_unsupported_ranges(
         buffer.close()
 
 
-def test_live_replay_disconnect_barrier_refuses_to_bridge_candles(tmp_path: Path) -> None:
+def test_live_replay_disconnect_barrier_refuses_to_bridge_candles(
+    monkeypatch, tmp_path: Path
+) -> None:
     anchor = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     buffer = LiveBuffer(tmp_path / "lake")
     feed = LiveFeed(lake=buffer)
     feed.ingest([_candle(anchor - timedelta(minutes=5), sequence=100, close=100.0)])
@@ -199,6 +214,8 @@ def test_live_replay_disconnect_barrier_refuses_to_bridge_candles(tmp_path: Path
             _candle(anchor, sequence=101, close=101.0),
         ]
     )
+    # Exercise the real sweep that the app pump may run before its response.
+    buffer.prune()
     app = create_workstation_app(
         account=PaperAccount(cash=100_000.0),
         live_feed=feed,
@@ -214,8 +231,11 @@ def test_live_replay_disconnect_barrier_refuses_to_bridge_candles(tmp_path: Path
     buffer.close()
 
 
-def test_live_replay_range_excludes_recently_received_old_backfill(tmp_path: Path) -> None:
+def test_live_replay_range_excludes_recently_received_old_backfill(
+    monkeypatch, tmp_path: Path
+) -> None:
     anchor = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     buffer = LiveBuffer(tmp_path / "lake")
     feed = LiveFeed(lake=buffer)
     feed.ingest(
@@ -234,6 +254,8 @@ def test_live_replay_range_excludes_recently_received_old_backfill(tmp_path: Pat
             ),
         ]
     )
+    # Exercise the real sweep that the app pump may run before its response.
+    buffer.prune()
     app = create_workstation_app(
         account=PaperAccount(cash=100_000.0),
         live_feed=feed,
@@ -249,8 +271,9 @@ def test_live_replay_range_excludes_recently_received_old_backfill(tmp_path: Pat
     buffer.close()
 
 
-def test_live_replay_range_includes_market_data_at_lower_bound(tmp_path: Path) -> None:
+def test_live_replay_range_includes_market_data_at_lower_bound(monkeypatch, tmp_path: Path) -> None:
     anchor = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     lower_bound = anchor - timedelta(days=1)
     buffer = LiveBuffer(tmp_path / "lake")
     feed = LiveFeed(lake=buffer)
@@ -270,6 +293,8 @@ def test_live_replay_range_includes_market_data_at_lower_bound(tmp_path: Path) -
             ),
         ]
     )
+    # Exercise the real sweep that the app pump may run before its response.
+    buffer.prune()
     app = create_workstation_app(
         account=PaperAccount(cash=100_000.0),
         live_feed=feed,
@@ -286,8 +311,9 @@ def test_live_replay_range_includes_market_data_at_lower_bound(tmp_path: Path) -
     buffer.close()
 
 
-def test_live_replay_range_filters_data_time_before_tail_limit(tmp_path: Path) -> None:
+def test_live_replay_range_filters_data_time_before_tail_limit(monkeypatch, tmp_path: Path) -> None:
     anchor = datetime(2026, 8, 12, 20, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     buffer = LiveBuffer(tmp_path / "lake")
     feed = LiveFeed(lake=buffer)
     feed.ingest(
@@ -322,6 +348,8 @@ def test_live_replay_range_filters_data_time_before_tail_limit(tmp_path: Path) -
             anchor - timedelta(milliseconds=1),
         ],
     )
+    # Exercise the real sweep that the app pump may run before its response.
+    buffer.prune()
     app = create_workstation_app(
         account=PaperAccount(cash=100_000.0),
         live_feed=feed,
@@ -483,6 +511,7 @@ def test_minute_replay_live_append_after_replay_capture_keeps_exact_coverage(
     tmp_path: Path, monkeypatch, endpoint
 ):
     anchor = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     now = anchor + timedelta(minutes=2, seconds=2)
     with LiveBuffer(tmp_path / "replay") as buffer:
         feed = LiveFeed(lake=buffer)
@@ -602,8 +631,9 @@ def test_production_minute_candles_revise_append_and_survive_reopen(
 
 
 @pytest.mark.parametrize("venue", [Venue.MOOMOO, Venue.POLYMARKET, Venue.KALSHI])
-def test_minute_replay_fallback_does_not_expand_other_venues(tmp_path: Path, venue):
+def test_minute_replay_fallback_does_not_expand_other_venues(monkeypatch, tmp_path: Path, venue):
     anchor = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     with LiveBuffer(tmp_path / "replay") as buffer:
         feed = LiveFeed(lake=buffer)
         for index in [0, 1]:
@@ -686,8 +716,11 @@ def test_minute_replay_collecting_and_gaps_never_fabricate_continuity(
 
 
 @pytest.mark.parametrize("live_interval", ["1m", "5m"])
-def test_minute_replay_fallback_does_not_replace_manifest_history(tmp_path: Path, live_interval):
+def test_minute_replay_fallback_does_not_replace_manifest_history(
+    monkeypatch, tmp_path: Path, live_interval
+):
     anchor = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
+    freeze_buffer_clock(monkeypatch, anchor + timedelta(minutes=3))
     root = tmp_path / "lake"
     instrument = Instrument(
         symbol="BTC",

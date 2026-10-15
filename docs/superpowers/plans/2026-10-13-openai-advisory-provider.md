@@ -97,7 +97,7 @@ compatibility only, with no key/network/API/service activation.
 - [x] In service orchestrator only, map the complete validated registered profile metadata trio at result.evidence to profile{id,version,digest}. Require exact version1/type, fixed id, lowercase SHA256 and original fixture/unverified claims. Refuse partial metadata or name collisions. Keep immutable artifact, current generic filter, model output, budget/ledger/effect identity unchanged.
 - [x] GREEN16passed includes original artifact byte preservation, all other forbidden fields, malformed/partial/scope metadata refusals with zero reservation/effect, and one scripted archive/restart replay. Existing successful backtests remain succeeded.
 - [x] Existing service regression218passed/5skipped/101.18s, Ruff/format/diff and narrow independent diff review (no P1/P2) complete. Actual evidence under output/0038-advisory-report-projection/.
-- [ ] Push the prepared integration checkpoint without replacing the live PR73921ba CI38717227840. Only after that run terminates, advance the PR branch normally and require fresh final-head CI. No merge/deploy gate bypass.
+- [x] After739 CI terminal success, e24 advanced normally; finalCI38723976517 all green. User explicitly approves existing two-human/safety-owner review and resolves RC. Normal match-head squash PR175 mergesfb66ed2; full candidate/merge trees9202a0... match. No deployment or model activation.
 
 Next aggregate-boundary work should reuse the existing Worker cgroup control
 semantics, not directly its network=none image protocol. A service-owned delegated
@@ -108,3 +108,217 @@ must prove descendant memory/CPU/PID limits, timeout/owner-loss cleanup and a
 surviving sibling. Existing systemd255/controller presence is not proof of a
 usable delegated subtree; fail closed if delegation is absent. This is the next
 unimplemented qualification, not a passed activation gate.
+
+
+## Task2a — Owned delegated model scope and launch boundary
+
+One user action: the trusted configured advisory runner invokes a report-only
+effect under the existing job budget. Success for this software checkpoint:
+controller rejects missing/unsafe delegation before launch, attaches the owned
+child before private payload, and releases its exact whole scope on all exits.
+No endpoint/key/budget/protocol/lock change and no effect runner activation yet.
+The foundation merged bytes are fb66ed2; develop on codex/0038-advisory-runtime.
+
+Ruling: use the existing approved cgroup-v2 semantics with systemd delegation;
+not the Worker network=none OCI protocol, which cannot serve outbound HTTPS.
+Dedicated advisory unit (not the HTTP API) owns the effect subtree. Require
+systemd255-compatible Delegate=cpu memory pids, DelegateSubgroup=controller,
+KillMode=control-group and actual MainPID/current cgroup identity. Only its
+explicit service root may enable delegated controllers; never system.slice,
+root cgroup or another unit. No Docker socket or CAP_SYS_ADMIN is granted.
+[Systemd delegation](https://systemd.io/CGROUP_DELEGATION/) documents controller
+availability versus enabling and the254+ initial controller leaf. Native host
+readback is still mandatory, not inferred from version/property syntax.
+
+Files and interfaces:
+- services/research_agent/src/qm_research_agent/linux_effect_scope.py:
+  EffectScope(unit,budget), attach(ownedPopen), snapshot(), close(); fixed sanitized
+  EffectScopeRejected. Admit actual cgroup2fs/delegation/manager/self membership,
+  no-follow anchored root/scope identity, exact memory.max/swap0/cpu1/pids128,
+  direct-child PID identity and kernel membership. Close only own cgroup.kill,
+  bounded populated0 wait and exact empty-group removal; no recursive delete.
+- bounded.py: optional explicit effect_scope_unit; no environment discovery or
+  runtime configuration expansion. Construct before Popen, attach before payload,
+  close whole scope even after direct-child exit; retain existing Windows path
+  and cleanup of an owned child when admission/spawn/attach/timeout fails.
+- tests/test_linux_effect_scope.py and test_effect_scope_launch.py: private
+  syscall fixtures only, no public fake-admission flag or native certification.
+
+- [x] Controller RED/GREEN and adversarial identity/readback/cleanup cases32pass.
+- [x] Launch-order RED5 before code, then GREEN5/0.89s in existing WSL CPython3.12.
+- [x] Final affected service264pass/5skip, Ruff8files/diff, two bounded review rounds accept. Source checkpoint retains separate Class C/CI/PR gates.
+- [x] Disposable native fixture qualification (attempt6, saved checker exit0): aggregate descendant memory/CPU/
+  PID counters, timeout and manager-owner-loss cleanup, surviving sibling.
+  Use no provider/key/network effects; no false certification from syscall mocks.
+- [ ] Only after native boundary and actual reviewed private service config pass,
+  wire explicitly opted-in model runner and private secret/egress, then perform
+  the already-budgeted fixed report-only live call and restart/replay witness.
+
+Production changes remain gated on their own reviewed merged source; PR175
+approval does not retroactively certify new boundary code. No new AWS capacity.
+
+### Task2a review ruling: child cannot relax its own caps
+
+Round1 identifies same-UID effect access to delegated controls, incomplete
+DelegateControllers readback and partial/failing cleanup descriptor leaks.
+Ruling: retain the dedicated manager's delegation, but require an inherited
+Linux Landlock filesystem write-denial layer in its effect worker before private
+configuration is decoded. No filesystem write is needed by the report-only
+HTTPS adapter. Require Linux x86_64 and Landlock ABI>=3 (including truncation);
+failure is unavailable, without fallback. Existing stdout/stdin pipes and reads
+remain usable, no network capability is added. This is defense for the trusted
+configured gateway, not arbitrary uploaded Python admission or general sandbox
+certification. Unsupported host would block activation, not lower this boundary.
+The manager retains write access for exact-scope cleanup. A native child must
+fail to open all four limit files and cgroup.procs/cgroup.kill for write; a
+descendant must inherit the denial. Counters/manager cleanup must still work.
+This adds effect_filesystem.py, worker pre-decode integration, focused syscall/
+ordering tests and an adversarial native fixture; no dependencies or key use.
+[Kernel Landlock documentation](https://docs.kernel.org/userspace-api/landlock.html)
+describes inherited filesystem restrictions and ABI3 truncation coverage.
+
+## Task2b — Explicit advisory process bootstrap (software only)
+
+Prerequisite complete: Task2a97a4c6b, native attempt6/saved checker exit0,
+Agent service264pass/5skip and two bounded reviews. PR175fb66ed2 is merged.
+This implements the already-approved report-only Agent portion of Option A;
+no new provider, model permission, budget, host, secret setup or paid call.
+
+One operator action: explicitly run the dedicated advisory process for an
+allowlisted immutable report using a private server configuration. Success:
+default preflight constructs no model/SQL/process or reads the model key;
+explicit execution proves the actual delegated/guarded child boundary first,
+then constructs the existing PG ledger and OpenAI adapter. Existing API startup
+remains model-unavailable and starts no loop. Offline evidence is not activation.
+
+Files:
+- services/research_agent/src/qm_research_agent/advisory_runtime.py: private
+  bounded unique-key JSON configuration and CLI; default preflight, explicit
+  --run and optional --once; no background loop at import. Reuse load_runtime,
+  source/wheel admission, private reads, PostgresJobStore and EffectLedger.
+- orchestrator.py: optional effect_scope_unit and report digest allowlist,
+  preserving default fixtures. Scoped invocation passes the explicit unit;
+  refusal before reservation for a non-allowlisted report. A fatal scope
+  cleanup/admission exception propagates to terminate this manager, retaining
+  any uncertain reservation rather than continuing with an unknown live scope.
+- openai_responses.py: factory forwards those construction-only options.
+- tests/test_advisory_runtime.py plus affected orchestrator/provider fixtures.
+
+Configuration is owner-only0600 under0700 using existing no-follow private
+reader. Exact fields: schema_version1, service_config absolute Path, unit fixed
+quantmesh-research-advisory.service, model/price_version fixed current adapter
+constants, remote_consent exactly true, key_file explicit absolute Path,
+allowed_report_digests nonempty unique lowercase SHA256s. Reject coercions,
+duplicate JSON keys and additional fields. Use the service's already-required
+portfolio policy/category, bounded by existing monthly50/development200;
+never infer a key, endpoint, model or cost from environment. Only trusted
+activation reads key contents; no repr/log/argv/env/container mount or hash.
+Preflight returns no key-present/provider-available claim.
+
+Ruling: use an internal public synthetic ScriptedModelTransport canary through
+actual bounded_complete with the fixed unit before reading the model key or
+creating SQL/model effects on --run. It proves actual child admission and
+write denial instead of accepting a qualification boolean/receipt as authority.
+The canary is not a provider call, report, paid allowance or production return.
+Default preflight starts no canary. Unsupported admission returns a fixed error.
+
+On explicit execution, re-admit exact source/runtime before first SQL, require
+policy/category, read the private key through the existing bounded reader,
+construct only the fixed OpenAI Responses gateway/runner and invoke run_next.
+The immutable report digest allowlist limits initial data egress to the approved
+synthetic sample. The normal process polls sequentially with a stop Event;
+--once performs at most one claimed analysis, including saved replay/idle.
+SIGTERM stops the loop; systemd KillMode=control-group owns process-tree exit.
+Fatal containment failure exits the manager for whole-unit cleanup; unknown
+effects are retained and never automatically recalled. No PID/lease/backup or
+HTTP API capability claims are manufactured by bootstrap.
+
+- [x] Write focused RED for private-config coercion/duplicate/unknown fields,
+  no-effect preflight and missing opt-in, canary-before-key/SQL/model order,
+  unavailable containment zero key/SQL/provider effects, whitelist zero reserve,
+  exact scoped invocation and manager fail-stop with uncertain effect retained.
+- [x] Implement the minimal CLI/config/forwarding without API/bootstrap defaults
+  changing. Test cancellation/idle/once using private fixture boundaries only;
+  no real key/network/provider/systemd or SQL during these offline tests.
+- [x] Focused GREEN then full affected service suite, Ruff/diff and at most two
+  independent spec/quality rounds for this new slice. Preserve failing attempts
+  and source-bound evidence; commit/push one coherent checkpoint.
+- [ ] Final Class C PR exact-head CI and actual human/operator release approval
+  before installing permanent configuration or reading the real model key.
+- [ ] From reviewed merged bytes, private service/Worker recovery and actual
+  report-only provider usage/citation/restart replay remain separate real gates.
+
+Task2b checkpoint: focused21pass, startup cancellation RED6fail15pass then21pass.
+Affected service285pass/5skip/2existing warnings/100.63s; two reviews PASS after
+startup-stop P2 fix. Root Ruff/format4files and formatted focused21pass/2.79s.
+Evidence output/0038-advisory-optin-runtime/. Full native CLI/256MiB canary and
+activation remain separate pending gates; no SQL/model key/provider effects.
+
+
+## PR176 historical replay fixture repaired; fresh CI required (2026-10-15)
+
+CI38738520307 on d8487c3 ended FAILURE:5141passed/1failed/142skipped,
+21warnings/3260.56s. The sole replay-order failure races real seven-day lake
+retention against fixed historical test rows. The repair fixes only the shared
+test lake clock at T0+1day and explicitly calls prune before the replay read;
+feed freshness still uses the real clock, production retention and all existing
+count/order/provenance/time assertions remain unchanged. Deterministic RED:
+1failed/10.74s; GREEN:1passed/6.79s; affected router/feed/buffer suite:
+132passed/6warnings/34.17s. Ruff/format/whitespace pass. Independent narrow
+Spec/Quality review PASS, no P1/P2. Actual logs, exits, resource deltas, original
+test and failed CI log are retained in output/0038-ci38738520307-fix/.
+
+The next commit requires its own full CI; do not rerun the failed old run or
+reuse earlier head checks. PR176 remains Draft and no new human approval
+question has been sent: user requested the concrete packet only after all
+required checks pass. Existing native advisory proofs remain bound to their
+original measured files/build; this test-only change does not certify a new
+full merged deployment. PR175 is approved and merged separately.
+
+Async coordination reuses existing chats: #132 observes exact-head CI; #170
+implements only the two-slot Worker loop/internal stop scope in its own branch;
+#171 implements only the formal-service read-only snapshot/artifact/effect/
+portfolio manifest in its own branch after this root repair checkpoint. Public
+four-argument Worker interfaces stay frozen; no new JobStore/ledger is needed.
+Root owns shared docs, integration, approval and deployment; at most two writers.
+Permanent units/real Worker and backup recovery/provider/source cutover remain
+open. No secret/provider/deployment effect. Full A ACTIVE;168h NOT_REQUIRED.
+
+## PR176 fixed-date replay fixtures repaired; next exact-head CI pending (2026-10-15)
+
+CI38749233362 on287fe68 ended FAILURE:5140passed/2failed/142skipped,
+21warnings/3283.74s. AAPL/NVDA history reopen tests used fixed Oct8 receipts;
+on Oct15 the real default seven-day constructor sweep correctly removed them.
+The earlier generic replay fix passed. This is test calendar aging, not a
+real-market outage or a reason to change session-aware freshness/retention.
+Original focused RED2failed/9.64s becomes GREEN2passed/6.53s using the existing
+buffer-only fixture clock, default retention and explicit prune, preserving
+coverage/revision/append/reload/provenance assertions.
+
+A bounded same-family audit also identifies historical replay API/pump and
+recovery-cursor fixtures. Per-test clock alignment plus explicit API sweeps
+and a retained-candle precondition reproduce five genuine failures before the
+fix. An initial audit invocation had a wrong replay keyword; its failed log is
+retained separately from the corrected RED5failed/10.02s. Final twelve-file
+affected suite371passed/6warnings/63.64s; Ruff/format six files and whitespace
+pass. One independent narrow Spec/Quality review PASS, no P1/P2. Changes are
+only test fixtures: no production clock, retention, helper or session policy
+change, no global freeze. Intentional real-retention/zero-retention tests stay.
+Actual raw CI logs, source originals, RED/GREEN/audit/resource evidence are in
+output/0038-ci38749233362-fix/. Keep failed CI; do not rerun it.
+
+Concurrent software remains separate, not integrated/deployed: Worker loop
+39d0e64/21892d7 and explicit bootstrapb603120 (59/75affected passes), recovery
+manifest4ad5d07/e11a57b (57passes/2optional DSN skips). Root reads actual source
+and accepts the known state/lease/outbox/cleanup corrections. Backup's old
+native sample lacked its execution source hash and covered only empty capture
+plus a separate MVCC transaction; final native/restore is not certified.
+Open-source strategy research is delivered under output/0038-strategy-framework-research/:
+native engine/templates first, Qlib fallback; parameters/report identity and
+cash/fill semantics need explicit future product design, not a platform rewrite.
+
+Next exact-head CI must succeed before sending the user's prepared specific
+PR176 review/approval question. No merge/deploy/key/provider effect occurred.
+PR175 is already approved/merged. Permanent services, actual Worker recovery,
+encrypted restore, real advisory and server-owned source acceptance stay open.
+Full A ACTIVE;168h NOT_REQUIRED. No hourly local full test or old native rerun.

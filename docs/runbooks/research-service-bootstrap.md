@@ -116,3 +116,56 @@ Remaining gates: qualified aggregate Worker containment/Engine/image, actual
 Linux report execution and recovery, approved real provider/model/price/egress,
 private production deployment, TLS, encrypted off-host restore, capacity/p95,
 HA and operator release acceptance. This preparation authorizes none of them.
+
+
+## Explicit advisory runner (candidate software, not activated)
+
+The HTTP API bootstrap above continues to start no model runner. A separately
+managed process may use `python -B -m qm_research_agent.advisory_runtime
+--config /home/ubuntu/.config/quantmesh/research/advisory.json`. Without `--run`
+this performs the existing source/runtime preflight only; it starts no child,
+SQL connection or model-key read. `--once` is valid only together with `--run`.
+The same native clean-checkout, locked-runtime and private-file requirements
+apply. Service configuration may contain the existing explicit portfolio policy
+and category; operating monthly allowance cannot exceed50USD and development
+lifetime allowance cannot exceed200USD. Job budget/ledger admission still applies.
+
+The advisory JSON has exactly eight fields. All paths must be absolute, every
+report digest unique lowercase SHA256, schema_version exact integer1, and
+remote_consent exactlytrue. The values below describe the candidate interface;
+no configuration has been installed by this document:
+
+```json
+{
+  "schema_version": 1,
+  "service_config": "/home/ubuntu/.config/quantmesh/research/service.json",
+  "unit": "quantmesh-research-advisory.service",
+  "model": "gpt-6.1-sol",
+  "price_version": "openai-gpt-6.1-sol-standard-2026-10-13",
+  "remote_consent": true,
+  "key_file": "/home/ubuntu/.config/quantmesh/research/openai_api_key",
+  "allowed_report_digests": ["173f770ee5d2b25ea6042b3a46fe240a92068b6911498abc47a737db143c5beb"]
+}
+```
+
+The example digest identifies the already accepted synthetic fixed-fixture
+report only. A later regenerated report has a different digest and does not
+inherit this allowance. Additional data egress requires explicit approval.
+The existing privately configured model key must never be printed, hashed or
+copied into unit arguments, environment, logs or container mounts.
+
+Only explicit `--run` admits source/runtime, runs a scripted child through the
+actual cgroup/write-guard boundary, re-admits current bytes, binds PostgreSQL and
+budget authority, then privately reads the key and constructs the fixed OpenAI
+Responses runner. Digest refusal precedes reservation/effect lookup. The poll
+loop is sequential; `--run --once` attempts at most one analysis/replay/idle
+cycle. SIGTERM cooperatively prevents later startup stages when observed and
+stops polling; systemd KillMode=control-group owns whole-tree termination.
+Fatal containment refusal exits the manager, preserving uncertain reservations.
+
+Offline config/ordering/cancellation tests and prior isolated Task2a native
+proof are separate evidence. The new full bootstrap/canary, permanent unit,
+real PostgreSQL setup and paid provider flow remain unqualified until their
+actual release checks. New source is Class C: current-source CI and applicable
+human/operator acceptance precede permanent installation and real-key use.
+PR175 approval does not approve later source. No trading authority is added.

@@ -149,3 +149,37 @@ identity, observed durations and all failed attempts; retain the primary.
 6. Obtain operator foundation acceptance before strategy-family/custom-DSL
    trials. Record deployed/accepted/deferred states separately; no whole-product
    HA/live-money/168h claim or implicit production downgrade on a failed drill.
+
+## Advisory effect boundary checkpoint (2026-10-15)
+
+PR175 is code-integrated at fb66ed29d374e7f63acd47a52a508904bcbbc5ca,
+with approved candidate e24ed04 and identical full tree9202a0fad7311d2ad15f8065f1a290a2e4534493.
+This does not install a permanent service or activate a provider. Further
+boundary changes are being prepared on codex/0038-advisory-runtime.
+
+The dedicated advisory manager must run as the systemd MainPID beneath its own
+empty delegated service cgroup, with Delegate=yes, exact DelegateControllers
+cpu/memory/pids, DelegateSubgroup=controller and KillMode=control-group. The HTTP
+API receives no delegated subtree or Docker socket. Each unique effect sibling
+is attached before private configuration is decoded, has exact aggregate
+memory.max, memory.swap.max=0, cpu.max=100000/100000 and pids.max=128, and is
+removed through only its retained identity and cgroup.kill handle.
+
+Because delegated controls are writable by the service identity, the trusted
+effect worker additionally requires Landlock ABI3+ filesystem write denial
+before decoding private configuration. Reads and existing pipes remain usable;
+its descendants inherit denial. The manager retains its cleanup permissions.
+No arbitrary Python upload or hostile-code sandbox certificate follows from
+this boundary. Unsupported delegation or write denial makes the effect
+unavailable; there is no process-group-only production fallback.
+
+Native qualification uses temporary, network-denied synthetic fixture units,
+masking the configured key directory. It separately checks aggregate memory,
+CPU and PID pressure; cap/migration/kill write denial in child and descendant;
+owned-scope cleanup; manager loss and a surviving independent peer. Exact
+candidate file hashes, original failed attempts, receipts and actual cleanup
+are retained in output/0038-advisory-native/. An initial root-cgroup check for
+cgroup.kill was false because the root normally lacks that file; qualification
+checks the owned child file instead. Fixture proof is distinct from permanent
+unit configuration, actual model availability, lease/cancellation/reclaim,
+backup restore and server market-source acceptance.

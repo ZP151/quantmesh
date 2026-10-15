@@ -1,5 +1,171 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## PR176 fixed-date replay fixtures repaired; next exact-head CI pending (2026-10-15)
+
+CI38749233362 on287fe68 ended FAILURE:5140passed/2failed/142skipped,
+21warnings/3283.74s. AAPL/NVDA history reopen tests used fixed Oct8 receipts;
+on Oct15 the real default seven-day constructor sweep correctly removed them.
+The earlier generic replay fix passed. This is test calendar aging, not a
+real-market outage or a reason to change session-aware freshness/retention.
+Original focused RED2failed/9.64s becomes GREEN2passed/6.53s using the existing
+buffer-only fixture clock, default retention and explicit prune, preserving
+coverage/revision/append/reload/provenance assertions.
+
+A bounded same-family audit also identifies historical replay API/pump and
+recovery-cursor fixtures. Per-test clock alignment plus explicit API sweeps
+and a retained-candle precondition reproduce five genuine failures before the
+fix. An initial audit invocation had a wrong replay keyword; its failed log is
+retained separately from the corrected RED5failed/10.02s. Final twelve-file
+affected suite371passed/6warnings/63.64s; Ruff/format six files and whitespace
+pass. One independent narrow Spec/Quality review PASS, no P1/P2. Changes are
+only test fixtures: no production clock, retention, helper or session policy
+change, no global freeze. Intentional real-retention/zero-retention tests stay.
+Actual raw CI logs, source originals, RED/GREEN/audit/resource evidence are in
+output/0038-ci38749233362-fix/. Keep failed CI; do not rerun it.
+
+Concurrent software remains separate, not integrated/deployed: Worker loop
+39d0e64/21892d7 and explicit bootstrapb603120 (59/75affected passes), recovery
+manifest4ad5d07/e11a57b (57passes/2optional DSN skips). Root reads actual source
+and accepts the known state/lease/outbox/cleanup corrections. Backup's old
+native sample lacked its execution source hash and covered only empty capture
+plus a separate MVCC transaction; final native/restore is not certified.
+Open-source strategy research is delivered under output/0038-strategy-framework-research/:
+native engine/templates first, Qlib fallback; parameters/report identity and
+cash/fill semantics need explicit future product design, not a platform rewrite.
+
+Next exact-head CI must succeed before sending the user's prepared specific
+PR176 review/approval question. No merge/deploy/key/provider effect occurred.
+PR175 is already approved/merged. Permanent services, actual Worker recovery,
+encrypted restore, real advisory and server-owned source acceptance stay open.
+Full A ACTIVE;168h NOT_REQUIRED. No hourly local full test or old native rerun.
+
+## PR176 historical replay fixture repaired; fresh CI required (2026-10-15)
+
+CI38738520307 on d8487c3 ended FAILURE:5141passed/1failed/142skipped,
+21warnings/3260.56s. The sole replay-order failure races real seven-day lake
+retention against fixed historical test rows. The repair fixes only the shared
+test lake clock at T0+1day and explicitly calls prune before the replay read;
+feed freshness still uses the real clock, production retention and all existing
+count/order/provenance/time assertions remain unchanged. Deterministic RED:
+1failed/10.74s; GREEN:1passed/6.79s; affected router/feed/buffer suite:
+132passed/6warnings/34.17s. Ruff/format/whitespace pass. Independent narrow
+Spec/Quality review PASS, no P1/P2. Actual logs, exits, resource deltas, original
+test and failed CI log are retained in output/0038-ci38738520307-fix/.
+
+The next commit requires its own full CI; do not rerun the failed old run or
+reuse earlier head checks. PR176 remains Draft and no new human approval
+question has been sent: user requested the concrete packet only after all
+required checks pass. Existing native advisory proofs remain bound to their
+original measured files/build; this test-only change does not certify a new
+full merged deployment. PR175 is approved and merged separately.
+
+Async coordination reuses existing chats: #132 observes exact-head CI; #170
+implements only the two-slot Worker loop/internal stop scope in its own branch;
+#171 implements only the formal-service read-only snapshot/artifact/effect/
+portfolio manifest in its own branch after this root repair checkpoint. Public
+four-argument Worker interfaces stay frozen; no new JobStore/ledger is needed.
+Root owns shared docs, integration, approval and deployment; at most two writers.
+Permanent units/real Worker and backup recovery/provider/source cutover remain
+open. No secret/provider/deployment effect. Full A ACTIVE;168h NOT_REQUIRED.
+
+## Explicit advisory bootstrap software verified; release pending (2026-10-15)
+
+Task2b provides a separate opt-in CLI and exact owner-private configuration;
+HTTP API defaults remain model-unavailable. Default preflight performs no
+canary/SQL/model-key/provider effect. Explicit execution admits current source,
+runs the scripted bounded child canary, re-admits source, validates existing
+50USD monthly/200USD development portfolio caps, then creates the ledger and
+privately constructs the fixed OpenAI Responses runner. An immutable report
+SHA allowlist rejects before reservation. Fatal containment failure stops the
+manager and retains uncertain effects; no automatic paid recall is added.
+SIGTERM is checked before and between startup stages and during sequential
+polling; systemd remains responsible for whole-unit process-tree termination.
+
+Focused21passed; startup-stop RED6failed15passed becomes GREEN21passed. Final
+affected Agent service285passed/5skipped/2existing warnings/100.63s, exit0.
+Two bounded reviews: Spec/Quality PASS after resolving startup-cancellationP2.
+Root formatting initially found2files; formatting only plus21focused tests
+(2.79s), Ruff4files/format/diff pass. Exact source hashes and logs are retained
+in output/0038-advisory-optin-runtime/{verification.md,checked-summary.json}.
+No dependencies, protocol/lock, numerical engine, trading or API defaults change.
+
+Task2a actual native attempt6 remains separate: it qualifies the aggregate
+boundary, not the new full CLI or its256MiB startup canary. Permanent units,
+actual merged runtime/PG setup, Worker lease/cancel/reclaim/backup, real-provider
+usage/citation/restart replay and server-owned market cutover remain open.
+No real model key has been read or provider called. Next prepare current-source
+Class C PR/CI/review packet and explicit private deployment/rollback configuration.
+PR175 approval/merge is complete and must not be requested again; new-source
+human/operator release gates remain. Full A ACTIVE;168h NOT_REQUIRED.
+
+
+## Advisory aggregate boundary qualified; activation pending (2026-10-15)
+
+On codex/0038-advisory-runtime from merged PR175 fb66ed2, the new boundary
+requires actual cgroup2fs/systemd MainPID and exact DelegateControllers
+cpu/memory/pids; a controller leaf leaves the delegated root empty. Each effect
+gets aggregate memory/swap0/oneCPU/pids128 limits, identity-safe attachment
+before private configuration, and owned whole-tree cleanup. Its worker applies
+Landlock ABI3+ write denial before private decode, inherited by descendants,
+so the same service UID cannot relax its caps or migrate out. No arbitrary
+uploaded Python or general hostile-code sandbox is admitted.
+
+Actual research-host attempt6 verifies exact candidate file hashes: real
+bounded_complete/effect_worker scripted success, actual five-second worker
+expiry with a live descendant and scope removal, aggregate OOM/CPU/PID pressure,
+seven denied control writes in child and descendant, owner-loss two processes
+gone, and surviving independent peer. All temporary units/cgroups are removed.
+It uses the retained prior core runtime for isolated boundary qualification;
+it is not a full merged-tree service deployment. No key/provider call or new
+AWS capacity. Native files/failed attempts remain under
+output/0038-advisory-native/; saved evidence checker exits0.
+
+Two bounded automatic review rounds address all four findings. The uncertain
+first post-mkdir inode case deliberately leaves the unknown empty entry for
+manager-unit cleanup instead of risking deletion of a replacement. Final Agent
+service regression264passed/5skipped/2existing warnings/104.16s; Ruff8files,
+format and whitespace pass. Previous263pass/1failure is retained: DNS test's
+outer10s included cold imports plus the intentional5s broken-resolver control.
+Actual control5.0567s/qualified0.30335s and control-case total9.45s (about4.4s
+imports) explain the tight
+wrapper; the fixture now separately bounds startup20s and retains its0.3s
+transport deadline,10s post-readiness bound and original assertions. No provider
+code/deadline changed. Evidence output/0038-advisory-write-guard/checked-summary.json.
+
+Ruling: dedicated advisory delegation rather than Worker's network=none OCI
+profile enables later HTTPS; unavailable delegation/ABI3 blocks activation.
+Ruling: preserve uncertain empty cgroups for manager cleanup rather than delete
+an unproven inode; a repeated failure costs a stopped/unavailable advisory unit.
+Next: explicitly opted-in fail-closed advisory runner/private configuration,
+then current-source Class C/CI/operator release gates and full private service,
+Worker/recovery/model/source acceptance. PR175 approval is complete and must not
+be requested again; it does not approve later source. Full A stays ACTIVE;
+paper=true/live=false;168h NOT_REQUIRED. No further old CI/acceptance reruns.
+
+## PR175 approved merge; aggregate advisory boundary next (2026-10-15)
+
+User explicitly updates the existing two-human review (including safety owner)
+to APPROVED on exact e24ed04 and resolves Request Changes. Fresh required CI
+38723976517 is all successful,5142corepass/142skip/60golden checks; no open inline
+review thread. Normal ready+match-head squash merges PR175 at12:02:07UTC to
+fb66ed29d374e7f63acd47a52a508904bcbbc5ca. Fetch proves candidate and merged full
+trees both9202a0fad7311d2ad15f8065f1a290a2e4534493; full diff exits0. No admin/
+force, branch deletion, local-main reset, deployment or model activation.
+Evidence output/0038-release-readiness/{current-head-human-approval,
+reviewed-merge,ci38723976517-checked}.json. Prior RC/failed CI are history, not
+current approval blockers. Do not repeat PR175 merge/checks or reviewer requests.
+
+Next branch codex/0038-advisory-runtime starts from actual origin/main fb66ed2
+in the existing isolated worktree. This is the approved Task2 aggregate-boundary
+implementation, not a new goal or server expansion. A scoped fast implementer
+owns only linux_effect_scope.py and its offline tests; root owns launch integration
+and plan/evidence. No live service/cgroup/key/provider effects from offline tests.
+The reviewed next design uses a delegated cgroup2 subtree, manager control leaf,
+exact aggregate memory/swap/CPU/PID readback and attachment before private payload.
+The API/model defaults remain unavailable; native owner-loss/descendant/sibling
+qualification and reviewed activation configuration are still required.
+Full A remains ACTIVE; paper=true/live=false;168h NOT_REQUIRED.
+
 ## Advisory report compatibility repair prepared (2026-10-15)
 
 The user's latest necessary-fix instruction advances the real-report blocker.

@@ -34,6 +34,7 @@ from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import MarketUpdate, Provenance, SourceState, UpdateKind
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.prediction import demo_board
+from tests.live_clock import freeze_buffer_clock
 
 SSE_HOST = "127.0.0.1"
 SSE_PORT = 8644  # pinned like the other E2E ports; skip when taken
@@ -118,9 +119,14 @@ def sse_env(tmp_path_factory):
 
 
 @pytest.fixture()
-def live_app(tmp_path):
+def live_app(tmp_path, monkeypatch):
     """A workstation app with an attached feed (lake on tmp, pump
     started by the TestClient lifespan) and a bare account."""
+
+    # Route drills include fixed historical rows. Keep the lake's retention
+    # clock in that sample horizon; feed freshness still uses the real clock.
+    # The background sweep remains enabled with its unchanged default policy.
+    freeze_buffer_clock(monkeypatch, T0 + timedelta(days=1))
     feed = LiveFeed(lake=LiveBuffer(root=tmp_path), lag=LAG, stale=STALE)
     app = create_workstation_app(
         account=PaperAccount(cash=100_000.0), live_feed=feed, host="127.0.0.1"
@@ -442,6 +448,10 @@ class TestReplayEndpoint:
                 payload={"bid": 99.0, "ask": 99.5},
             )
         )
+        # Force the sweep that the background pump may otherwise race here.
+        # This routing fixture must preserve its historical replay sample.
+        assert feed.replay_buffer is not None
+        feed.replay_buffer.prune()
         response = client.get("/api/live/replay")
         assert response.status_code == 200
         body = response.json()

@@ -451,6 +451,8 @@ def make_openai_advisory(
     remote_consent: bool,
     model: str = DEFAULT_MODEL,
     price_version: str = PRICE_VERSION,
+    effect_scope_unit: str | None = None,
+    allowed_report_digests: frozenset[str] | None = None,
 ):
     """Construct only; the existing job/portfolio ledger decides every effect.
 
@@ -467,7 +469,13 @@ def make_openai_advisory(
     )
     return (
         AdvisoryRunner(
-            store, effects, provider="openai", price=Decimal("1.00"), price_version=price_version
+            store,
+            effects,
+            provider="openai",
+            price=Decimal("1.00"),
+            price_version=price_version,
+            effect_scope_unit=effect_scope_unit,
+            allowed_report_digests=allowed_report_digests,
         ),
         gateway,
     )

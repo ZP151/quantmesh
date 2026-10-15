@@ -26,6 +26,7 @@ from quantmesh.live.contract import (
 )
 from quantmesh.live.feed import LiveFeed, label
 from quantmesh.live.hyperliquid import HyperliquidVenueSupervisor, ScriptedHyperliquidTransport
+from tests.live_clock import freeze_buffer_clock
 
 T0 = datetime(2026, 8, 9, 10, 0, 0, tzinfo=UTC)
 LAG = timedelta(seconds=30)
@@ -237,7 +238,6 @@ class TestIngestAndCache:
         disconnected = feed.snapshot_exact(Venue.HYPERLIQUID, "BTC", UpdateKind.QUOTE, as_of=T0)
         assert disconnected.continuity_proven is False
         assert snapshot.continuity_proven is True
-
 
     def test_exact_snapshot_is_keyed_by_venue_symbol_and_kind(self) -> None:
         feed = _feed()
@@ -1095,7 +1095,11 @@ class TestLake:
         finally:
             reopened.close()
 
-    def test_attach_restores_hyperliquid_candle_recovery_cursor(self, tmp_path) -> None:
+    def test_attach_restores_hyperliquid_candle_recovery_cursor(
+        self, tmp_path, monkeypatch
+    ) -> None:
+        freeze_buffer_clock(monkeypatch, T0 + timedelta(minutes=6))
+
         class RecordingRest:
             def __init__(self) -> None:
                 self.start: datetime | None = None
@@ -1115,6 +1119,10 @@ class TestLake:
 
         reopened = LiveBuffer(root=tmp_path)
         try:
+            retained = reopened.replay(
+                venue=Venue.HYPERLIQUID, instrument="BTC", kinds=[UpdateKind.CANDLE]
+            )
+            assert [row.data_time for row in retained] == [prior]
             feed = _feed(lake=reopened)
             rest = RecordingRest()
             transport = ScriptedHyperliquidTransport([])

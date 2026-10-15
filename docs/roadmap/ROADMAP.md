@@ -1,5 +1,20 @@
 # QuantMesh Product Roadmap
 
+Current checkpoint2026-10-15: Option A remains ACTIVE. The private research
+host is created and retained alongside both existing application/rollback hosts;
+no further compute purchase is pending. PR175 is reviewed and mergedfb66ed2
+with exact-tree verification. Advisory aggregate containment checkpoint97a4c6b
+is pushed: actual Linux owned-tree pressure/timeout/owner-loss/tamper-denial
+qualification and264service tests pass. Explicit opt-in advisory bootstrap software is
+verified (285service passes, two bounded reviews); actual bootstrap remains
+pending qualification. Permanent private services, Worker lease/cancel/reclaim/backup,
+real-provider report usage/replay and server-owned market cutover remain open.
+No real model has been called and no strategy-performance certificate follows
+from the accepted synthetic report workflow. Formal168h remains NOT_REQUIRED.
+
+The October13 checkpoint below is historical; current ACTIVE/iteration0038
+records supersede its then-pending resource approvals and integration states.
+
 Current operator decision2026-10-12: [iteration0038](../iterations/0038-research-foundation.md)
 is ACTIVE, approved Option A recoverable research infrastructure before strategy
 expansion. Persistent jobs/reports, advisory Agent service and evaluation gates
