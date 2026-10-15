@@ -1,5 +1,30 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Fixed profile and explicit binding schema checkpoint
+
+Task1 implements canonical immutable-string registered-fixture/momentum1 contract
+with exact actual dataset revision/manifest/export and explicit native-state
+unverified claim. Binding schema1 remains exact15 fields; schema2 adds profile,
+rejecting missing/forged/mixed profiles and implicit downgrade. Job matching
+rejects data/strategy/custom parameters; request JSON cannot select profile.
+Initial16RED API failures; Windows old+new32pass1.15s, actual research Linux3.12
+contracts33pass0.14s after public request refusal case. Native files37929B.
+Ruff/diff green. This only versions the authority contract; entry/parent runtime
+activation and actual numerical/report/page/restart remain incomplete. Task2 next.
+
+## Registered-fixture implementation resumed after user review instruction
+
+Actual audit chat user request review blocker and advance verified; two read-only
+automated review axes approve bounded implementation subject to explicit sealed
+profile/schema identity, unchanged kernel/bytes/fencing, immutable limited-claim
+report and same-engine numerical comparison. These are not Class C human reviews.
+Current delivery plan specifies compatible schema1/explicit schema2, exact fixed
+fixture pins, runtime identity, negative controls and actual report/page/restart.
+Execute inline, no repeated generic approval or static OpenD preparation. Goal
+scheduler remains blocked because its exposed API has no resume status; retain
+original full objective and continue authorized development. Task1 starts RED.
+
+
 ## Resumption gate: three consecutive genuine impasse turns
 
 Goal tool status BLOCKED after third current-state audit. Full Option A scope

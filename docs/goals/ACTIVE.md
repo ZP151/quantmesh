@@ -1,12 +1,21 @@
 # Active Goal — iteration0038 Option A
 
-Status BLOCKED (2026-10-15 Singapore). Deliver the original full A scope: PR175 gates, real Linux
+Development RESUMED (2026-10-15 Singapore); scheduler tool remains blocked. Deliver the original full A scope: PR175 gates, real Linux
 Worker/Reader→numerical report and reopen, durable private PostgreSQL/jobs/
 backup recovery, advisory Agent/Eval and PC-independent server market feeds.
 paper=true/live=false;168h NOT_REQUIRED; login/outage/capacity drills on demand.
 Three approved AWS resources retained; no added cost or permission expansion.
 
-## Resumption gate: three consecutive genuine impasse turns
+## Resumed after verified user review-and-advance instruction
+
+Read actual user request in audit chat01a13ad1 and blocker-review-2026-10-15.md.
+Implement the fixed registered-fixture profile with all four review amendments
+in the existing delivery plan. No release/human gate waiver. Goal API has no
+resume operation: do not replace objective or claim tool status changed.
+Task1 exact versioned binding/profile codec, then parent/entry/report chain.
+Prior blocker audit below is historical, no longer a development stop.
+
+## Historical resumption gate: three consecutive genuine impasse turns
 
 Goal tool status BLOCKED after third current-state audit. Full Option A scope
 is preserved, not completed or replaced by preparation. Primary: user decision

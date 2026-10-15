@@ -49,6 +49,7 @@ class ParentBindingContract:
     expected_prefix: str
     python_version: str
     kernel_profile_sha256: str
+    execution_profile: str | None = None
 
 
 _PARENT_BINDING_LIMIT = 16 * 1024
@@ -85,6 +86,49 @@ _PARENT_BINDING_DIGESTS = frozenset(
 )
 
 
+def registered_fixture_profile() -> str:
+    """Operator-only fixed contract, not request configuration or admission proof."""
+    return _canonical(
+        dict(
+            profile_id="registered-fixture",
+            profile_version=1,
+            strategy_id="momentum",
+            strategy_version="1",
+            dataset_id="equities",
+            revision=1,
+            permission_class="fixture",
+            manifest_digest="79f7b95084db3eef4e81f4cd0031b7805fe5733105619682e1b9e4c8175941cf",
+            export_digest="d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501",
+            native_state="opaque native cache state unverified",
+        )
+    ).decode()
+
+
+def parse_execution_profile(raw: str) -> dict:
+    """Exact canonical v1 contract; unknown mode, data and assurance claims refuse."""
+    if type(raw) is not str or raw != registered_fixture_profile():
+        raise WorkerBuildRejected("worker profile rejected")
+    return json.loads(raw)
+
+
+def validate_registered_job(job: object, profile: str) -> None:
+    """Check on both sides of the parent boundary against its sealed selection."""
+    try:
+        expected = parse_execution_profile(profile)
+        request = job.request
+        dataset = request.dataset.model_dump()
+        keys = ("dataset_id", "revision", "manifest_digest", "export_digest", "permission_class")
+        if (
+            request.strategy_id != expected["strategy_id"]
+            or request.strategy_version != expected["strategy_version"]
+            or request.parameters != {}
+            or _canonical(dataset) != _canonical({key: expected[key] for key in keys})
+        ):
+            raise ValueError
+    except (AttributeError, TypeError, ValueError):
+        raise WorkerBuildRejected("worker profile rejected") from None
+
+
 def parse_parent_binding(raw: bytes, *, expected_sha256: str) -> ParentBindingContract:
     """Validate bounded canonical parent-binding bytes, without granting authority.
 
@@ -101,11 +145,17 @@ def parse_parent_binding(raw: bytes, *, expected_sha256: str) -> ParentBindingCo
         ):
             raise ValueError
         value = json.loads(raw, object_pairs_hook=_pairs)
-        if type(value) is not dict or set(value) != _PARENT_BINDING_KEYS:
+        if type(value) is not dict or type(value.get("schema")) is not int:
+            raise ValueError
+        keys = _PARENT_BINDING_KEYS
+        if value["schema"] == 2:
+            keys = keys | {"execution_profile"}
+            parse_execution_profile(value.get("execution_profile"))
+        elif value["schema"] != 1:
+            raise ValueError
+        if set(value) != keys:
             raise ValueError
         if _canonical(value) != raw:
-            raise ValueError
-        if type(value["schema"]) is not int or value["schema"] != 1:
             raise ValueError
         for key in _PARENT_BINDING_KEYS - {"schema"}:
             item = value[key]
@@ -143,6 +193,10 @@ def encode_parent_binding(contract: ParentBindingContract) -> tuple[bytes, str]:
         if type(contract) is not ParentBindingContract:
             raise ValueError
         value = {key: getattr(contract, key) for key in _PARENT_BINDING_KEYS}
+        if contract.schema == 2:
+            value["execution_profile"] = contract.execution_profile
+        elif contract.execution_profile is not None:
+            raise ValueError
         raw = _canonical(value)
         digest = hashlib.sha256(raw).hexdigest()
         parse_parent_binding(raw, expected_sha256=digest)

@@ -7,8 +7,11 @@ the full Option A goal, approved isolation or release authority.
 
 ## Proposed decision: registered baseline versus arbitrary Python admission
 
-Status: proposal only, not implemented/accepted; user decision requested.
-Existing no-cache-waiver rule remains until a scope decision. Latest actual
+Status: bounded implementation authorized on 2026-10-15 by the user request
+review blocker and advance, verified in source thread01a13ad1. Audit record:
+C:/Users/15492/.superpowers/diagnosing-superpowers/01a0ab0b-5c9e-7813-bb49-df106a27760d/blocker-review-2026-10-15.md.
+Its two automated review axes are NOT independent human release approvals.
+Strict general admission stays unchanged; the explicit profile below is required. Latest actual
 fixed-entry jobb96376a1/imagef5585dda proves loaded_module_origin_rejected for
 _cython_3_2_9 at compute; no numerical report is published. The original
 entry/read and missing-HOME compatibility defects are repaired in source and
@@ -61,6 +64,52 @@ reviewed native-state solution exists; report delivery remains pending, and
 there is no defensible completion date for that research requirement. Continue
 independent server-feed and durable job/backup work meanwhile. This alternative
 does not authorize another opaque-cache whitelist/factory.
+
+## Approved amendment: explicit profile and versioned wire implementation
+
+User instruction verified from the actual user message in the audit chat, not
+inferred from a delegate's approval. Execute inline in the existing worktree.
+No repeated generic design request. PR175/Class C production gates remain.
+The goal scheduler API currently still reports blocked and exposes no resume
+operation; development resumes under the user's instruction without replacing
+the existing goal/objective or falsely claiming a scheduler status transition.
+
+Binding compatibility: schema1 retains its exact15 keys and strict behavior.
+Schema2 has exactly those keys plus execution_profile, a bounded canonical JSON
+STRING sealing id/version, momentum1, equities/revision1/fixture permission and
+actual frozen manifest79f7b950/exportd4e71bbe. Old consumers refuse schema2;
+new consumers reject profile on schema1 and missing/malformed profile on schema2.
+No implicit migration or runtime/request fallback. Runtime v1 keeps exact5 fields;
+runtime_schema=2 plus execution_profile are explicit additions for this profile
+only. Parent selection is an operator-only constructor argument, never request
+JSON/environment or a response to strict failure. Binding/runtime/profile drift
+must fail at launch and exit. Report evidence includes profile digest/id/version,
+fixture_only and opaque_native_cache_state=unverified in canonical SHA identity.
+
+- [x] Task1: worker_build.py fixed profile factory/parser/job matching and exact
+  versioned binding codec; tests/test_worker_registered_profile.py plus existing
+  binding contract tests RED then GREEN. No activation in this checkpoint.
+- [ ] Task2: worker_execution.py/worker_admission.py trusted parent selection,
+  binding schema2 and launch/exit comparisons; worker_entry.py and
+  worker_provenance.py independent schema2 decode and actual strict pre-import
+  runtime measurement. job_runner.py selects profile only from that binding,
+  repeats actual source/dependency bytes at compute, preserves general loaded
+  module rejection, sealed Reader and all kernel/fence controls. Targeted
+  negatives: cross-profile/schema/runtime/evidence/data substitution and no fallback.
+- [ ] Task3: canonical report evidence checked against parent selection in
+  _validated_child_result; actual numerical/schema/cost and stale/cancel tests.
+  Reuse current report/API/UI and backup tools; no new execution/report engine.
+- [ ] Task4: freeze exact committed source/current image pins, ONE actual PG job,
+  compare same-engine fixture/config/6bps numerical and canonical result, then
+  existing page and owned API/Worker restart/same job/ref/SHA. Two structural
+  rounds/timebox rule remains; no native object-graph project. Fresh required
+  broad CI at demonstrable slice boundary, not old370a745 certification.
+
+Resource allocation before implementation: consume100000B ONCE from remaining
+source future reserve plus8000B wire docs/Git forecast for new profile caller/
+logs/native overlays; retain existing baseline,129MB cumulative and5GB host
+limits. Native fixtures must be shared/minimal and measured; no deletion of old
+failed evidence. Concrete docs20000B reserve stays. No package/cloud/model cost.
 
 ## One-page contract
 
@@ -571,3 +620,10 @@ OpenD copy. Actual transitive resolution/ABI/startup/SDK remain unqualified.
 No remote writes or vendor execution. Saved consistency checker exit0. Full A
 ACTIVE; primary profile decision still pending. PR175 draft/370a745/0humans,
 existing CI does not cover later branch commits. No CI rerun or merge.
+
+Task1 checkpoint: initial16RED failures identify missing profile API (9.63s);
+Windows profile+old binding32pass1.15s, then request-selection refusal added.
+Actual existing research-host CPython3.12 pure contract suite33pass0.14s,
+37929B retained overlay/test files. No numerical/image/activation claim. Ruff
+format/check and diff checks pass. Evidence output/0038-worker-profile/.
+Next Task2 parent/schema2/entry/runtime/report connection, no request fallback.
