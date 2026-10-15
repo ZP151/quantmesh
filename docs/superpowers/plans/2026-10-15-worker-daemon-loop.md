@@ -53,8 +53,8 @@
 - [x] Run the new focused tests and the amended context-scope test. Expected GREEN: actual store lease/attempt/fence assertions pass; no API signature changes.
 - [x] Run focused affected tests once: `tests/test_worker_daemon.py`, `tests/test_worker_execution.py`, and `tests/test_research_job_store.py` in the WSL CPython 3.12 environment. Do not run the full suite or repeat the historical 159-test run.
 - [x] Run Ruff and formatting on changed Python files, inspect the diff and check submodules. Resolve at most two independent Spec/Quality review rounds. Any third structural failure returns to the root owner for scope reduction.
-- [ ] Commit one coherent green checkpoint and push `codex/0038-worker-daemon-loop`; do not open a PR, merge, deploy, or update root ACTIVE/iteration records.
-- [ ] Save `output/0038-worker-daemon-loop/HANDOFF.md` and `checked-summary.json` with source HEAD, commit, exact command/count evidence, scope, and explicit not-done items (native OCI, CLI, PostgreSQL/cloud, deployment).
+- [x] Commit one coherent green checkpoint and push `codex/0038-worker-daemon-loop`; do not open a PR, merge, deploy, or update root ACTIVE/iteration records.
+- [x] Save `output/0038-worker-daemon-loop/HANDOFF.md` and `checked-summary.json` with source HEAD, commit, exact command/count evidence, scope, and explicit not-done items (native OCI, CLI, PostgreSQL/cloud, deployment).
 
 ## Acceptance
 
