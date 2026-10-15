@@ -1,5 +1,72 @@
 # QuantMesh Domain Context
 
+## Advisory aggregate boundary qualified; activation pending (2026-10-15)
+
+On codex/0038-advisory-runtime from merged PR175 fb66ed2, the new boundary
+requires actual cgroup2fs/systemd MainPID and exact DelegateControllers
+cpu/memory/pids; a controller leaf leaves the delegated root empty. Each effect
+gets aggregate memory/swap0/oneCPU/pids128 limits, identity-safe attachment
+before private configuration, and owned whole-tree cleanup. Its worker applies
+Landlock ABI3+ write denial before private decode, inherited by descendants,
+so the same service UID cannot relax its caps or migrate out. No arbitrary
+uploaded Python or general hostile-code sandbox is admitted.
+
+Actual research-host attempt6 verifies exact candidate file hashes: real
+bounded_complete/effect_worker scripted success, actual five-second worker
+expiry with a live descendant and scope removal, aggregate OOM/CPU/PID pressure,
+seven denied control writes in child and descendant, owner-loss two processes
+gone, and surviving independent peer. All temporary units/cgroups are removed.
+It uses the retained prior core runtime for isolated boundary qualification;
+it is not a full merged-tree service deployment. No key/provider call or new
+AWS capacity. Native files/failed attempts remain under
+output/0038-advisory-native/; saved evidence checker exits0.
+
+Two bounded automatic review rounds address all four findings. The uncertain
+first post-mkdir inode case deliberately leaves the unknown empty entry for
+manager-unit cleanup instead of risking deletion of a replacement. Final Agent
+service regression264passed/5skipped/2existing warnings/104.16s; Ruff8files,
+format and whitespace pass. Previous263pass/1failure is retained: DNS test's
+outer10s included cold imports plus the intentional5s broken-resolver control.
+Actual control5.0567s/qualified0.30335s and control-case total9.45s (about4.4s
+imports) explain the tight
+wrapper; the fixture now separately bounds startup20s and retains its0.3s
+transport deadline,10s post-readiness bound and original assertions. No provider
+code/deadline changed. Evidence output/0038-advisory-write-guard/checked-summary.json.
+
+Ruling: dedicated advisory delegation rather than Worker's network=none OCI
+profile enables later HTTPS; unavailable delegation/ABI3 blocks activation.
+Ruling: preserve uncertain empty cgroups for manager cleanup rather than delete
+an unproven inode; a repeated failure costs a stopped/unavailable advisory unit.
+Next: explicitly opted-in fail-closed advisory runner/private configuration,
+then current-source Class C/CI/operator release gates and full private service,
+Worker/recovery/model/source acceptance. PR175 approval is complete and must not
+be requested again; it does not approve later source. Full A stays ACTIVE;
+paper=true/live=false;168h NOT_REQUIRED. No further old CI/acceptance reruns.
+
+## PR175 approved merge; aggregate advisory boundary next (2026-10-15)
+
+User explicitly updates the existing two-human review (including safety owner)
+to APPROVED on exact e24ed04 and resolves Request Changes. Fresh required CI
+38723976517 is all successful,5142corepass/142skip/60golden checks; no open inline
+review thread. Normal ready+match-head squash merges PR175 at12:02:07UTC to
+fb66ed29d374e7f63acd47a52a508904bcbbc5ca. Fetch proves candidate and merged full
+trees both9202a0fad7311d2ad15f8065f1a290a2e4534493; full diff exits0. No admin/
+force, branch deletion, local-main reset, deployment or model activation.
+Evidence output/0038-release-readiness/{current-head-human-approval,
+reviewed-merge,ci38723976517-checked}.json. Prior RC/failed CI are history, not
+current approval blockers. Do not repeat PR175 merge/checks or reviewer requests.
+
+Next branch codex/0038-advisory-runtime starts from actual origin/main fb66ed2
+in the existing isolated worktree. This is the approved Task2 aggregate-boundary
+implementation, not a new goal or server expansion. A scoped fast implementer
+owns only linux_effect_scope.py and its offline tests; root owns launch integration
+and plan/evidence. No live service/cgroup/key/provider effects from offline tests.
+The reviewed next design uses a delegated cgroup2 subtree, manager control leaf,
+exact aggregate memory/swap/CPU/PID readback and attachment before private payload.
+The API/model defaults remain unavailable; native owner-loss/descendant/sibling
+qualification and reviewed activation configuration are still required.
+Full A remains ACTIVE; paper=true/live=false;168h NOT_REQUIRED.
+
 ## Advisory report compatibility repair prepared (2026-10-15)
 
 The user's latest necessary-fix instruction advances the real-report blocker.

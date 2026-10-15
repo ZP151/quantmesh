@@ -13,6 +13,7 @@ import os
 import pickle
 import subprocess
 import sys
+import time
 from dataclasses import FrozenInstanceError
 from datetime import timedelta
 from decimal import Decimal
@@ -497,16 +498,20 @@ RESOLVER_SELECTION_FIXTURE
 transport=p.OpenAIResponsesTransport(key=SecretStr('fixture-explicit-not-a-real-key'),
     allowed_origins=frozenset({'https://api.openai.com'}),remote_consent=True)
 request=build_chat_body(model_name='gpt-6.1-sol',request=ModelRequest(messages=[ChatMessage(role='user',content='fixture')]))
+from pathlib import Path
+Path(STARTUP_MARKER_FIXTURE).write_text('ready')
 started=time.monotonic()
 try: transport.complete(request)
 except Exception as error:
     print(json.dumps({'seconds':time.monotonic()-started,'error':str(error)}),flush=True)
 """
     resolver_pid = tmp_path / "resolver.pid"
+    startup_marker = tmp_path / "caller.ready"
     fake_resolver = (
         f"import os,time; open({str(resolver_pid)!r},'w').write(str(os.getpid())); time.sleep(3)"
     )
     code = code.replace("DNS_PROGRAM_FIXTURE", repr(fake_resolver))
+    code = code.replace("STARTUP_MARKER_FIXTURE", repr(str(startup_marker)))
     code = code.replace(
         "RESOLVER_SELECTION_FIXTURE",
         "" if use_owned_resolver else "p._owned_resolver=lambda client:None",
@@ -520,6 +525,14 @@ except Exception as error:
         [sys.executable, "-B", "-c", code], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     try:
+        # Interpreter/import startup is separately bounded; it is outside the
+        # model effect clock. The intentional broken-resolver control takes5s
+        # and imports from a mounted checkout can consume the old10s wrapper.
+        startup_deadline = time.monotonic() + 20
+        while not startup_marker.exists() and process.poll() is None:
+            if time.monotonic() >= startup_deadline:
+                pytest.fail("resolver fixture caller did not finish bounded startup")
+            time.sleep(0.01)
         try:
             stdout, stderr = process.communicate(timeout=10)
         except subprocess.TimeoutExpired:

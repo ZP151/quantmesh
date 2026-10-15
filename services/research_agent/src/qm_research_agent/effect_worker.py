@@ -62,6 +62,13 @@ if __name__ == "__main__":
                 os.environ["QM_EFFECT_OWNER_PID"]
             ):
                 raise RuntimeError("owned model containment unavailable")
+        if "QM_EFFECT_SCOPE_REQUIRED" in os.environ:
+            stage = "containment"
+            if os.environ["QM_EFFECT_SCOPE_REQUIRED"] != "1":
+                raise RuntimeError("owned model containment unavailable")
+            from qm_research_agent.effect_filesystem import deny_filesystem_writes
+
+            deny_filesystem_writes()
         # Trusted server-created configuration; never exposed as a public route.
         gateway, request, budget = pickle.loads(sys.stdin.buffer.read(2 * 1024 * 1024))
         stage = "containment"

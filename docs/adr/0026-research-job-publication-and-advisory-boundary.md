@@ -105,3 +105,25 @@ recovery need their own reviewed adapter/profile and observed acceptance.
 Local proof does not promote host redundancy, numerical research or model
 authority. Exact receipts and review disposition are in iteration0038 and
 docs/evidence/research-foundation/owned-research-backup.
+
+## Linux advisory effect ownership decision — 2026-10-15
+
+Use a dedicated systemd255+ advisory manager with an empty delegated cgroup
+root, a controller leaf, and effect sibling leaves. Admit actual MainPID,
+KillMode=control-group, Delegate=yes and exact cpu/memory/pids controller
+delegation. Each effect has verified aggregate memory/swap0/oneCPU/pids128
+limits and joins its owned scope before private configuration is decoded.
+The effect worker installs inherited Landlock ABI3+ filesystem write denial
+so its shared UID cannot relax limits, migrate to the manager or issue a kill
+through delegated files. The trusted manager retains cleanup write access.
+No Docker socket, CAP_SYS_ADMIN or package dependency is added to the API.
+This remains trusted configured gateway execution, not arbitrary Python
+admission. Unsupported kernel/delegation rejects; process groups/RLIMITs alone
+are not a Linux production fallback. An uncertain newly created directory
+identity is left for service-manager cleanup rather than deleting a replacement.
+
+Isolated actual Linux candidate qualification proves aggregate pressure,
+control-write refusal in child/descendant, actual scripted worker success and
+timeout with a descendant, manager loss and sibling survival. It does not
+qualify the full merged runtime, permanent services, provider availability,
+paid model effect or broader Option A recovery. Keep those gates separate.
