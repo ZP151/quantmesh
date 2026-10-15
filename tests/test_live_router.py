@@ -34,6 +34,7 @@ from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import MarketUpdate, Provenance, SourceState, UpdateKind
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.prediction import demo_board
+from tests.live_clock import freeze_buffer_clock
 
 SSE_HOST = "127.0.0.1"
 SSE_PORT = 8644  # pinned like the other E2E ports; skip when taken
@@ -122,16 +123,10 @@ def live_app(tmp_path, monkeypatch):
     """A workstation app with an attached feed (lake on tmp, pump
     started by the TestClient lifespan) and a bare account."""
 
-    class LakeClock(datetime):
-        @classmethod
-        def now(cls, tz=None):
-            current = T0 + timedelta(days=1)
-            return current.astimezone(tz) if tz is not None else current.replace(tzinfo=None)
-
     # Route drills include fixed historical rows. Keep the lake's retention
     # clock in that sample horizon; feed freshness still uses the real clock.
     # The background sweep remains enabled with its unchanged default policy.
-    monkeypatch.setattr("quantmesh.live.buffer.datetime", LakeClock)
+    freeze_buffer_clock(monkeypatch, T0 + timedelta(days=1))
     feed = LiveFeed(lake=LiveBuffer(root=tmp_path), lag=LAG, stale=STALE)
     app = create_workstation_app(
         account=PaperAccount(cash=100_000.0), live_feed=feed, host="127.0.0.1"

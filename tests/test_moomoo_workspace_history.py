@@ -11,6 +11,7 @@ from quantmesh.instruments.live_history import LiveHistoryService
 from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import MarketUpdate, Provenance, UpdateKind
 from quantmesh.live.feed import LiveFeed
+from tests.live_clock import freeze_buffer_clock
 from tests.test_instrument_workspace_api import NOW, _harness, _quote_feed
 
 ANCHOR = datetime(2026, 10, 8, 14, 0, tzinfo=UTC)
@@ -50,7 +51,12 @@ def _history(feed, at=ANCHOR + timedelta(minutes=1, seconds=6), symbol="AAPL"):
 
 
 @pytest.mark.parametrize("symbol", ["AAPL", "NVDA"])
-def test_private_equity_minute_replay_keeps_exact_coverage_and_revisions(tmp_path: Path, symbol):
+def test_private_equity_minute_replay_keeps_exact_coverage_and_revisions(
+    tmp_path: Path, symbol, monkeypatch
+):
+    # Reopening runs the real retention sweep; evaluate it in the sample horizon.
+    # Only the lake clock is pinned, not history freshness or the default policy.
+    freeze_buffer_clock(monkeypatch, ANCHOR + timedelta(minutes=3))
     root = tmp_path / "replay"
     with LiveBuffer(root) as buffer:
         feed = LiveFeed(lake=buffer)
@@ -60,6 +66,7 @@ def test_private_equity_minute_replay_keeps_exact_coverage_and_revisions(tmp_pat
                 _candle(ANCHOR + timedelta(minutes=1), 2, symbol=symbol),
             ]
         )
+        buffer.prune()
         series = _history(feed, symbol=symbol)
         assert series.resolution_fallback == "5m->1m"
         assert series.license == "moomoo-private-market-data"

@@ -1,5 +1,44 @@
 # QuantMesh Domain Context
 
+## PR176 fixed-date replay fixtures repaired; next exact-head CI pending (2026-10-15)
+
+CI38749233362 on287fe68 ended FAILURE:5140passed/2failed/142skipped,
+21warnings/3283.74s. AAPL/NVDA history reopen tests used fixed Oct8 receipts;
+on Oct15 the real default seven-day constructor sweep correctly removed them.
+The earlier generic replay fix passed. This is test calendar aging, not a
+real-market outage or a reason to change session-aware freshness/retention.
+Original focused RED2failed/9.64s becomes GREEN2passed/6.53s using the existing
+buffer-only fixture clock, default retention and explicit prune, preserving
+coverage/revision/append/reload/provenance assertions.
+
+A bounded same-family audit also identifies historical replay API/pump and
+recovery-cursor fixtures. Per-test clock alignment plus explicit API sweeps
+and a retained-candle precondition reproduce five genuine failures before the
+fix. An initial audit invocation had a wrong replay keyword; its failed log is
+retained separately from the corrected RED5failed/10.02s. Final twelve-file
+affected suite371passed/6warnings/63.64s; Ruff/format six files and whitespace
+pass. One independent narrow Spec/Quality review PASS, no P1/P2. Changes are
+only test fixtures: no production clock, retention, helper or session policy
+change, no global freeze. Intentional real-retention/zero-retention tests stay.
+Actual raw CI logs, source originals, RED/GREEN/audit/resource evidence are in
+output/0038-ci38749233362-fix/. Keep failed CI; do not rerun it.
+
+Concurrent software remains separate, not integrated/deployed: Worker loop
+39d0e64/21892d7 and explicit bootstrapb603120 (59/75affected passes), recovery
+manifest4ad5d07/e11a57b (57passes/2optional DSN skips). Root reads actual source
+and accepts the known state/lease/outbox/cleanup corrections. Backup's old
+native sample lacked its execution source hash and covered only empty capture
+plus a separate MVCC transaction; final native/restore is not certified.
+Open-source strategy research is delivered under output/0038-strategy-framework-research/:
+native engine/templates first, Qlib fallback; parameters/report identity and
+cash/fill semantics need explicit future product design, not a platform rewrite.
+
+Next exact-head CI must succeed before sending the user's prepared specific
+PR176 review/approval question. No merge/deploy/key/provider effect occurred.
+PR175 is already approved/merged. Permanent services, actual Worker recovery,
+encrypted restore, real advisory and server-owned source acceptance stay open.
+Full A ACTIVE;168h NOT_REQUIRED. No hourly local full test or old native rerun.
+
 ## PR176 historical replay fixture repaired; fresh CI required (2026-10-15)
 
 CI38738520307 on d8487c3 ended FAILURE:5141passed/1failed/142skipped,

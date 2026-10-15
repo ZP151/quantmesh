@@ -181,7 +181,10 @@ async def _wait_until(predicate, task):
 
 
 @pytest.mark.asyncio
-async def test_metric_burst_keeps_real_pump_subscribers_and_three_symbol_quotes_running(tmp_path):
+async def test_metric_burst_keeps_real_pump_subscribers_and_three_symbol_quotes_running(
+    tmp_path, monkeypatch
+):
+    freeze_buffer_clock(monkeypatch, OBSERVED + timedelta(minutes=1))
     with LiveBuffer(tmp_path) as buffer:
         transport = _QueueTransport()
         supervisor = _RecordedClockSupervisor(transport)
