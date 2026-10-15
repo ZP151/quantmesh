@@ -815,7 +815,7 @@ def _fake_dump_body(payload=b"PGDMP-fixture", *, stderr_token=False):
             "import os, sys",
             f"os.write(1, {payload!r})",
             "if '--snapshot' not in sys.argv: raise SystemExit(41)",
-            "if '--file=-' not in sys.argv: raise SystemExit(45)",
+            "if '--file=-' in sys.argv: raise SystemExit(45)",
             "if '--dbname=service=quantmesh_bundle' not in sys.argv: raise SystemExit(42)",
             "service_file = os.environ.get('PGSERVICEFILE', '')",
             "if not service_file.startswith('/proc/self/fd/'): raise SystemExit(43)",
@@ -826,6 +826,40 @@ def _fake_dump_body(payload=b"PGDMP-fixture", *, stderr_token=False):
             + ": os.write(2, sys.argv[sys.argv.index('--snapshot') + 1].encode())",
         )
     )
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX descriptor-backed child execution")
+def test_run_pg_dump_refuses_successful_child_with_empty_stdout(monkeypatch, tmp_path):
+    body = "\n".join(
+        (
+            "import os, sys",
+            "if '--snapshot' not in sys.argv: raise SystemExit(41)",
+            "if '--dbname=service=quantmesh_bundle' not in sys.argv: raise SystemExit(42)",
+            "service_file = os.environ.get('PGSERVICEFILE', '')",
+            "if not service_file.startswith('/proc/self/fd/'): raise SystemExit(43)",
+        )
+    )
+    _, _, _, tool, _, _ = _bundle_setup(monkeypatch, tmp_path, body)
+    lib_directory = tmp_path / "lib"
+    lib_directory.mkdir()
+    service_file = tmp_path / "pg-service.conf"
+    service_file.write_bytes(b"[quantmesh_bundle]\n")
+    service_file.chmod(0o600)
+    dump_file = tmp_path / "research.dump"
+    tool_fd = os.open(tool, os.O_RDONLY)
+    lib_fd = os.open(lib_directory, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    service_fd = os.open(service_file, os.O_RDONLY)
+    dump_fd = os.open(dump_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        signature = backup_capture._signature(os.fstat(tool_fd))
+        with pytest.raises(ValueError, match="^research snapshot manifest refused$"):
+            backup_capture._run_pg_dump(
+                tool_fd, signature, lib_fd, service_fd, "owned-test-snapshot", dump_fd
+            )
+        assert os.fstat(dump_fd).st_size == 0
+    finally:
+        for descriptor in (dump_fd, service_fd, lib_fd, tool_fd):
+            os.close(descriptor)
 
 
 @pytest.mark.skipif(not os.environ.get("QM_LIBPQ_LIBRARY"), reason="audited libpq parser witness")
