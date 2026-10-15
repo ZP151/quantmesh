@@ -65,8 +65,21 @@ class LinuxWorkerExecution:
     admission: WorkerImageAdmission
 
     def runtime_fingerprint(self) -> dict:
+        from quantmesh.research.worker_build import WorkerBuildRejected, profile_report_evidence
+
         runtime = self.admission.verify(self.profile)
-        if not isinstance(runtime, dict) or set(runtime) != {
+        if not isinstance(runtime, dict):
+            raise LinuxContainmentError("worker_admission_failed")
+        try:
+            profile_report_evidence(runtime)
+        except WorkerBuildRejected:
+            raise LinuxContainmentError("worker_admission_failed") from None
+        base = {
+            key: value
+            for key, value in runtime.items()
+            if key not in {"runtime_schema", "execution_profile"}
+        }
+        if set(base) != {
             "build_digest",
             "dependency_digest",
             "git_commit",
@@ -89,8 +102,12 @@ class LinuxWorkerExecution:
         return dict(runtime)
 
     def start(self, job: JobRecord, runtime: dict, bundle: Path, output: Path) -> LinuxOwnedProcess:
+        from quantmesh.research.worker_build import validate_registered_job
+
         if self.runtime_fingerprint() != runtime:
             raise LinuxContainmentError("worker_admission_changed")
+        if "execution_profile" in runtime:
+            validate_registered_job(job, runtime["execution_profile"])
         prepare = getattr(self.admission, "prepare_parent_binding", None)
         if not callable(prepare):
             raise LinuxContainmentError("parent_binding_required")
@@ -105,6 +122,10 @@ class LinuxWorkerExecution:
         )
 
     def validate_exit(self, child: LinuxOwnedProcess, job: JobRecord, runtime: dict) -> None:
+        from quantmesh.research.worker_build import validate_registered_job
+
+        if "execution_profile" in runtime:
+            validate_registered_job(job, runtime["execution_profile"])
         child._inspect()
         evidence = child.evidence
         if (

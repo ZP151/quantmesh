@@ -627,3 +627,25 @@ Actual existing research-host CPython3.12 pure contract suite33pass0.14s,
 37929B retained overlay/test files. No numerical/image/activation claim. Ruff
 format/check and diff checks pass. Evidence output/0038-worker-profile/.
 Next Task2 parent/schema2/entry/runtime/report connection, no request fallback.
+
+Task2/3 software checkpoint: parent constructor selects exact canonical profile;
+verify/start/exit bind explicit runtime_schema2 and schema2 authority. Fixed entry
+strictly measures actual runtime before project imports, then profile compute
+rechecks full byte closure and parent runtime. Source/kernel/Reader/fencing and
+strict loaded-module refusal stay; report identity includes fixture-only and
+opaque-cache-unverified claims. Runtime/evidence substitution RED7 plus missing
+pre-import RED1, corrected Windows43pass/1native skip1.30s; actual Linux memory
+overlay byte-fixture suite44pass0.39s,24310B retained, no image/numerical claim.
+One Windows-only absolute-path fixture failure retained then correctly classified
+Linux-only. Review round1's claimed request substitution was disproved by existing
+publish_result->_validate_result; concrete build/dependency evidence equality
+gap reproduced RED2 and fixed at parent. Round2 confirms no remaining actionable
+issue; not human release approval. Ruff/format/diff pass. Current code ready for
+new exact committed image and ONE actual profile job; page/restart still pending.
+
+Resource ruling for connected actual job: remaining concrete docs forecast20000B
+may be consumed ONCE for immutable image metadata/job caller and result capture.
+New base127836191/phase967000 plus prior196006 retains original129MB maximum;
+no additional capacity/cost and no old failed peak deletion. Current profile
+native62239B plus local28885B includes all failed/corrected unit logs/fixtures.
+No new package or environment. Whole-C/Git attribution remains PENDING.

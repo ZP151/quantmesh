@@ -2,13 +2,17 @@
 
 import hashlib
 import json
+import sys
 from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
 from test_worker_binding_contract import _binding
+from test_worker_build import _bind, _runtime
 
 from quantmesh.research import worker_build as build
+
+pytest_plugins = ["test_worker_build"]
 
 
 def canonical(value):
@@ -156,3 +160,137 @@ def test_request_json_cannot_select_the_parent_execution_profile():
     ResearchJobRequest.model_validate(request)
     with pytest.raises(ValueError):
         ResearchJobRequest.model_validate({**request, "execution_profile": selected()})
+
+
+def base_runtime():
+    return dict(
+        build_digest="a" * 64,
+        dependency_digest="b" * 64,
+        git_commit="c" * 40,
+        python_version="3.12.15 pinned",
+        python_executable_digest="d" * 64,
+    )
+
+
+def test_runtime_profile_and_report_claims_are_explicit_and_not_mutable_aliases():
+    runtime = build.runtime_with_profile(base_runtime(), selected())
+    assert runtime["runtime_schema"] == 2
+    assert runtime["execution_profile"] == selected()
+    assert len(runtime) == 7
+    evidence = build.profile_report_evidence(runtime)
+    assert evidence == dict(
+        execution_profile_id="registered-fixture",
+        execution_profile_version=1,
+        execution_profile_digest=hashlib.sha256(selected().encode()).hexdigest(),
+        fixture_only=True,
+        opaque_native_cache_state="unverified",
+    )
+    build.validate_report_profile(runtime, evidence)
+    assert build.profile_report_evidence(base_runtime()) == {}
+
+
+@pytest.mark.parametrize("change", ["missing", "claim", "profile", "downgrade"])
+def test_profile_report_and_runtime_substitution_refuse(change):
+    runtime = build.runtime_with_profile(base_runtime(), selected())
+    evidence = build.profile_report_evidence(runtime)
+    if change == "missing":
+        del evidence["execution_profile_digest"]
+    elif change == "claim":
+        evidence["opaque_native_cache_state"] = "verified"
+    elif change == "profile":
+        runtime["execution_profile"] = "{}"
+    else:
+        runtime = base_runtime()
+    with pytest.raises(build.WorkerBuildRejected):
+        build.validate_report_profile(runtime, evidence)
+
+
+def test_execution_accepts_explicit_parent_runtime_but_rejects_forged_mode():
+    from quantmesh.research.linux_owned import LinuxContainmentError
+    from quantmesh.research.worker_execution import LinuxWorkerExecution
+
+    runtime = build.runtime_with_profile(base_runtime(), selected())
+    provider = SimpleNamespace(verify=lambda profile: dict(runtime))
+    execution = LinuxWorkerExecution(SimpleNamespace(), provider)
+    assert execution.runtime_fingerprint() == runtime
+    runtime["execution_profile"] = "{}"
+    with pytest.raises(LinuxContainmentError):
+        execution.runtime_fingerprint()
+
+
+def test_fixed_entry_decodes_explicit_v2_before_source_preflight():
+    from test_worker_entry import _entry_module
+
+    value = {**_binding(), "schema": 2, "execution_profile": selected()}
+    raw = canonical(value)
+    assert _entry_module()._decode_binding(raw, hashlib.sha256(raw).hexdigest()) == value
+    value["schema"] = 1
+    raw = canonical(value)
+    with pytest.raises(ValueError):
+        _entry_module()._decode_binding(raw, hashlib.sha256(raw).hexdigest())
+
+
+def test_child_cannot_use_profile_without_actual_preimport_measurement(tmp_path):
+    from quantmesh.research.job_runner import _child_main
+
+    with pytest.raises(SystemExit) as stopped:
+        _child_main(str(tmp_path), execution_profile=selected())
+    assert stopped.value.code == 2
+    assert json.loads((tmp_path / "error.json").read_bytes()) == {"error_code": "worker_failed"}
+    assert not (tmp_path / "result.json").exists()
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux absolute runtime paths required")
+def test_registered_bytes_stay_pinned_and_strict_native_cache_refusal_remains(sealed, monkeypatch):
+    _runtime(build, sealed, monkeypatch)
+    pin = _bind(sealed)
+    build.sys.modules["opaque_generated_cache"] = SimpleNamespace()
+    with pytest.raises(build.WorkerBuildRejected):
+        build.measure_worker_runtime(sealed.manifest, manifest_sha256=pin)
+    current = build.measure_worker_runtime(
+        sealed.manifest,
+        manifest_sha256=pin,
+        execution_profile=selected(),
+    )
+    assert current["execution_profile"] == selected()
+    sealed.library.write_bytes(b"unreviewed native library replacement")
+    with pytest.raises(build.WorkerBuildRejected):
+        build.measure_worker_runtime(
+            sealed.manifest,
+            manifest_sha256=pin,
+            execution_profile=selected(),
+        )
+
+
+@pytest.mark.parametrize("field", ["build_digest", "dependency_digest"])
+def test_parent_rejects_report_runtime_substitution_after_schema_validation(monkeypatch, field):
+    from pathlib import Path
+
+    from quantmesh.research import job_runner
+
+    runtime = build.runtime_with_profile(base_runtime(), selected())
+    evidence = {
+        **build.profile_report_evidence(runtime),
+        "build_digest": runtime["build_digest"],
+        "dependency_digest": runtime["dependency_digest"],
+    }
+    evidence[field] = "0" * 64
+    report = SimpleNamespace(evidence=evidence)
+    # Isolate the parent binding check; real numerical/canonical validators have
+    # separate coverage and the actual server acceptance remains mandatory.
+    receipt = canonical(
+        dict(runtime=runtime, attempt=1, owner="owner", fixture_only=True, report={})
+    )
+    monkeypatch.setattr(
+        job_runner,
+        "_read_child_file",
+        lambda root, path, limit: b"result" if path.name == "result.json" else receipt,
+    )
+    monkeypatch.setattr(
+        job_runner, "StrategyReport", SimpleNamespace(model_validate=lambda value: report)
+    )
+    monkeypatch.setattr(job_runner, "canonical_result", lambda value: b"result")
+    with pytest.raises(ValueError):
+        job_runner._validated_child_result(
+            SimpleNamespace(attempt=1), "owner", runtime, Path("owned")
+        )

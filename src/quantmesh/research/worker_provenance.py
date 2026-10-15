@@ -385,11 +385,9 @@ def _preflight(
             "python_version",
             "kernel_profile_sha256",
         )
-        if (
-            set(binding_value) != set(fields)
-            or type(binding_value.get("schema")) is not int
-            or binding_value["schema"] != 1
-        ):
+        schema = binding_value.get("schema")
+        expected_fields = set(fields) | ({"execution_profile"} if schema == 2 else set())
+        if set(binding_value) != expected_fields or type(schema) is not int or schema not in (1, 2):
             _fail()
         manifest_digest = binding_value["manifest_sha256"]
         inventory_digest = binding_value["inventory_sha256"]
@@ -589,3 +587,18 @@ def revalidate(
     )
     if current != observation:
         _fail()
+
+
+def measure_runtime_before_import(observation: SourceObservation) -> dict:
+    """Actual strict measurement before project/native imports, never a receipt flag."""
+    revalidate(
+        observation,
+        binding_raw=_read(BINDING_PATH, MAX_BINDING_BYTES)[0],
+        entry_raw=_read(ENTRY_PATH, MAX_SOURCE_BYTES)[0],
+        observer_raw=_read(OBSERVER_PATH, MAX_SOURCE_BYTES)[0],
+    )
+    raw = _read(BUILD_PATH, MAX_SOURCE_BYTES)[0]
+    with _verified_builder(BUILD_PATH, raw) as builder:
+        return builder.measure_worker_runtime(
+            MANIFEST_PATH, manifest_sha256=observation.manifest_sha256
+        )

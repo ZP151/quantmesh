@@ -18,7 +18,13 @@ from pathlib import Path, PurePosixPath
 
 from quantmesh.research.linux_bootstrap import verify_limits
 from quantmesh.research.linux_owned import LinuxContainmentError, LinuxExecutionProfile
-from quantmesh.research.worker_build import ParentBindingContract, encode_parent_binding
+from quantmesh.research.worker_build import (
+    ParentBindingContract,
+    encode_parent_binding,
+    parse_execution_profile,
+    runtime_with_profile,
+    validate_registered_job,
+)
 from quantmesh.research.worker_kernel import build_kernel_policy, verify_mountinfo
 
 _MAX_JSON = 32 * 1024 * 1024
@@ -798,9 +804,12 @@ class WorkerImageAdmission:
 
     pins: WorkerAdmissionPins
     snapshot_root: Path
+    execution_profile: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "snapshot_root", Path(self.snapshot_root))
+        if self.execution_profile is not None:
+            parse_execution_profile(self.execution_profile)
 
     def _snapshot(self) -> dict[str, bytes]:
         root_fd = None
@@ -986,7 +995,11 @@ class WorkerImageAdmission:
             )
             self._live_image(profile)
             self._live_policy(profile, data)
-            return runtime
+            return (
+                runtime
+                if self.execution_profile is None
+                else runtime_with_profile(runtime, self.execution_profile)
+            )
         except WorkerAdmissionRejected:
             raise
         except (
@@ -1010,6 +1023,8 @@ class WorkerImageAdmission:
             ):
                 raise ValueError
             current = self.verify(process.profile)
+            if self.execution_profile is not None:
+                validate_registered_job(job, self.execution_profile)
             if (
                 current != runtime
                 or type(ready) is not dict
@@ -1048,7 +1063,7 @@ class WorkerImageAdmission:
             ):
                 raise ValueError
             binding = ParentBindingContract(
-                schema=1,
+                schema=1 if self.execution_profile is None else 2,
                 engine_id=process.evidence["engine_id"],
                 image_id=self.pins.image_id,
                 image_config_sha256=self.pins.image_config_sha256,
@@ -1063,6 +1078,7 @@ class WorkerImageAdmission:
                 expected_prefix=self.pins.expected_prefix,
                 python_version=self.pins.python_version.split(" ", 1)[0],
                 kernel_profile_sha256=self.pins.kernel_profile_sha256,
+                execution_profile=self.execution_profile,
             )
             return encode_parent_binding(binding)
         except (
@@ -1150,9 +1166,7 @@ def _proc_identity(pid: int) -> dict:
             os.close(fd)
 
 
-def _read_proc_member(
-    directory_fd: int, name: str, maximum: int, *, cgroup: bool = False
-) -> bytes:
+def _read_proc_member(directory_fd: int, name: str, maximum: int, *, cgroup: bool = False) -> bytes:
     fd = None
     try:
         allowed = (
@@ -1169,8 +1183,7 @@ def _read_proc_member(
         )
         before = os.fstat(fd)
         if not stat.S_ISREG(before.st_mode) or (
-            cgroup
-            and (before.st_uid != 0 or before.st_nlink != 1 or before.st_size != 0)
+            cgroup and (before.st_uid != 0 or before.st_nlink != 1 or before.st_size != 0)
         ):
             raise ValueError
         data = bytearray()

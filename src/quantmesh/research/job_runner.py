@@ -58,7 +58,10 @@ _REPO = _SOURCE_ROOT.parent
 
 
 def runtime_fingerprint(
-    *, manifest_path: Path | None = None, manifest_sha256: str | None = None
+    *,
+    manifest_path: Path | None = None,
+    manifest_sha256: str | None = None,
+    execution_profile: str | None = None,
 ) -> dict:
     """Bind source bytes and installed dependency metadata, independently of engine SHA.
 
@@ -68,7 +71,13 @@ def runtime_fingerprint(
     if manifest_path is not None or manifest_sha256 is not None:
         from quantmesh.research.worker_build import measure_worker_runtime
 
+        if execution_profile is not None:
+            return measure_worker_runtime(
+                manifest_path, manifest_sha256=manifest_sha256, execution_profile=execution_profile
+            )
         return measure_worker_runtime(manifest_path, manifest_sha256=manifest_sha256)
+    if execution_profile is not None:
+        raise ValueError("profile requires image byte admission")
     source = [
         (p.relative_to(_SOURCE_ROOT).as_posix(), hashlib.sha256(p.read_bytes()).hexdigest())
         for p in sorted((_SOURCE_ROOT / "quantmesh").rglob("*.py"))
@@ -288,10 +297,16 @@ def _child_main(
     output_directory: str | None = None,
     build_manifest: Path | None = None,
     manifest_sha256: str | None = None,
+    execution_profile: str | None = None,
+    before_import_runtime: dict | None = None,
 ) -> None:
     path = Path(directory)
     output = Path(output_directory) if output_directory is not None else path
     try:
+        if execution_profile is not None and (
+            before_import_runtime is None or output_directory is None or build_manifest is None
+        ):
+            raise ValueError("profile requires actual pre-import measurement")
         if output_directory is not None:
             if (
                 sys.platform != "linux"
@@ -305,15 +320,32 @@ def _child_main(
                 raise ValueError("Linux child admission missing")
             _contained(path, path / "job.json")
             _contained(output, output / "result.json")
-        runtime = runtime_fingerprint(manifest_path=build_manifest, manifest_sha256=manifest_sha256)
-        if runtime != json.loads(
-            _read_child_file(path, path / "runtime.json", _MAX_INPUT_METADATA_BYTES)
-        ):
-            raise ValueError("runtime changed before execution")
         job = JobRecord.model_validate_json(
             _read_child_file(path, path / "job.json", _MAX_INPUT_METADATA_BYTES)
         )
         _verify_identity(job)
+        if execution_profile is None:
+            runtime = runtime_fingerprint(
+                manifest_path=build_manifest, manifest_sha256=manifest_sha256
+            )
+        else:
+            from quantmesh.research.worker_build import (
+                runtime_with_profile,
+                validate_registered_job,
+            )
+
+            validate_registered_job(job, execution_profile)
+            runtime = runtime_fingerprint(
+                manifest_path=build_manifest,
+                manifest_sha256=manifest_sha256,
+                execution_profile=execution_profile,
+            )
+            if runtime != runtime_with_profile(before_import_runtime, execution_profile):
+                raise ValueError("runtime changed after pre-import measurement")
+        if runtime != json.loads(
+            _read_child_file(path, path / "runtime.json", _MAX_INPUT_METADATA_BYTES)
+        ):
+            raise ValueError("runtime changed before execution")
         r = job.request
         inputs_root = path / "inputs"
         with FixtureReader(job, inputs_root, time.monotonic() + r.budget.timeout_seconds) as reader:
@@ -338,6 +370,10 @@ def _child_main(
                     build_digest=runtime["build_digest"],
                     dependency_digest=runtime["dependency_digest"],
                 )
+                if execution_profile is not None:
+                    from quantmesh.research.worker_build import profile_report_evidence
+
+                    report.evidence.update(profile_report_evidence(runtime))
                 _verify(job, inputs_root)
                 (output / "receipt.json").write_bytes(
                     _canonical(
@@ -426,7 +462,17 @@ def _validated_child_result(job: JobRecord, owner: str, runtime: dict, output: P
         or receipt.get("owner") != owner
     ):
         raise ValueError("worker receipt mismatch")
-    if canonical_result(StrategyReport.model_validate(receipt.get("report"))) != raw:
+    report = StrategyReport.model_validate(receipt.get("report"))
+    from quantmesh.research.worker_build import validate_report_profile
+
+    validate_report_profile(runtime, report.evidence)
+    if any(
+        report.evidence.get(key) != runtime[key] for key in ("build_digest", "dependency_digest")
+    ):
+        raise ValueError("worker report runtime mismatch")
+    if "execution_profile" in runtime and receipt.get("fixture_only") is not True:
+        raise ValueError("worker profile claim mismatch")
+    if canonical_result(report) != raw:
         raise ValueError("worker result mismatch")
     return raw
 

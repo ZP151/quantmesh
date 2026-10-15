@@ -1,5 +1,20 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Registered profile parent/entry/report software connected
+
+Current explicit parent profile seals schema2/runtime_schema2 through start and
+exit. Entry strictly measures before imports; compute repeats static byte closure
+and exact runtime comparison without claiming opaque native state verification.
+Canonical report carries fixed profile/digest/fixture-only/unverified claims;
+parent checks them and exact runtime digests before existing job/input/numerical
+publication validation. No fallback or module-name whitelist. Runtime RED7,
+pre-import RED1, runtime lineage RED2; Windows43pass/1Linux skip and actual Linux
+memory-overlay44pass0.39s. Native37929+24310=62239B retained.
+Round2 scoped review clear after concrete lineage fix; review's broader initial
+claim was disproved against existing publication validation. Ruff/format/diff
+pass. This is software/byte-fixture evidence, not image/numerical/page/restart.
+Next exact committed image/current metadata -> ONE actual PG registered job.
+
 ## Fixed profile and explicit binding schema checkpoint
 
 Task1 implements canonical immutable-string registered-fixture/momentum1 contract

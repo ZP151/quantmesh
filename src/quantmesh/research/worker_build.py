@@ -129,6 +129,59 @@ def validate_registered_job(job: object, profile: str) -> None:
         raise WorkerBuildRejected("worker profile rejected") from None
 
 
+_RUNTIME_KEYS = frozenset(
+    {
+        "build_digest",
+        "dependency_digest",
+        "git_commit",
+        "python_version",
+        "python_executable_digest",
+    }
+)
+
+
+def runtime_with_profile(runtime: dict, profile: str) -> dict:
+    """Version the five actual byte identities with the parent's explicit scope."""
+    parse_execution_profile(profile)
+    if type(runtime) is not dict or set(runtime) != _RUNTIME_KEYS:
+        raise WorkerBuildRejected("worker profile rejected")
+    return {**runtime, "runtime_schema": 2, "execution_profile": profile}
+
+
+def profile_report_evidence(runtime: dict) -> dict:
+    if set(runtime) == _RUNTIME_KEYS:
+        return {}
+    if (
+        set(runtime) != _RUNTIME_KEYS | {"runtime_schema", "execution_profile"}
+        or type(runtime.get("runtime_schema")) is not int
+        or runtime["runtime_schema"] != 2
+    ):
+        raise WorkerBuildRejected("worker profile rejected")
+    profile = parse_execution_profile(runtime["execution_profile"])
+    return dict(
+        execution_profile_id=profile["profile_id"],
+        execution_profile_version=profile["profile_version"],
+        execution_profile_digest=hashlib.sha256(runtime["execution_profile"].encode()).hexdigest(),
+        fixture_only=True,
+        opaque_native_cache_state="unverified",
+    )
+
+
+def validate_report_profile(runtime: dict, evidence: dict) -> None:
+    expected = profile_report_evidence(runtime)
+    keys = {
+        "execution_profile_id",
+        "execution_profile_version",
+        "execution_profile_digest",
+        "fixture_only",
+        "opaque_native_cache_state",
+    }
+    if type(evidence) is not dict or _canonical(
+        {key: value for key, value in evidence.items() if key in keys}
+    ) != _canonical(expected):
+        raise WorkerBuildRejected("worker profile rejected")
+
+
 def parse_parent_binding(raw: bytes, *, expected_sha256: str) -> ParentBindingContract:
     """Validate bounded canonical parent-binding bytes, without granting authority.
 
@@ -536,13 +589,17 @@ def _originless_helper(name: str, module: object, modules: dict, files: dict) ->
     return True
 
 
-def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict:
+def measure_worker_runtime(
+    manifest_path: Path, *, manifest_sha256: str, execution_profile: str | None = None
+) -> dict:
     """Validate pinned actual bytes, then collect the unchanged five runtime fields.
 
     The caller supplies the manifest SHA from independent image admission. This
     function grants no Linux activation or image/native certificate by itself.
     """
     try:
+        if execution_profile is not None:
+            parse_execution_profile(execution_profile)
         data = _json(Path(manifest_path), manifest_sha256)
         if set(data) != {
             "schema_version",
@@ -619,7 +676,12 @@ def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict
         admitted_source = {str(source / relative) for relative in source_files}
         if str(_path(str(Path(__file__)))) not in admitted_source:
             raise ValueError
-        for name, module in tuple(sys.modules.items()):
+        # This explicit fixed-fixture profile claims current byte closure, not
+        # introspection of opaque native memory. Strict callers keep every loaded
+        # module check. The fixed entry additionally measures strictly BEFORE
+        # project/native imports; no request-selected mode or failure fallback.
+        loaded = tuple(sys.modules.items()) if execution_profile is None else ()
+        for name, module in loaded:
             if module is None:
                 continue
             if name != "quantmesh" and not name.startswith("quantmesh."):
@@ -708,12 +770,17 @@ def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict
                 )
             )
         ).hexdigest()
-        return dict(
+        runtime = dict(
             build_digest=hashlib.sha256(_canonical(sorted(source_files.items()))).hexdigest(),
             dependency_digest=dependency,
             git_commit=data["source_commit"],
             python_version=sys.version,
             python_executable_digest=executable_digest,
+        )
+        return (
+            runtime
+            if execution_profile is None
+            else runtime_with_profile(runtime, execution_profile)
         )
     except (OSError, ValueError, TypeError, KeyError, AttributeError, UnicodeError, RecursionError):
         raise WorkerBuildRejected("worker build rejected") from None

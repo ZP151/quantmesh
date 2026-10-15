@@ -191,10 +191,20 @@ def _decode_binding(raw: bytes, expected_sha256: str) -> dict:
     ):
         raise ValueError
     value = json.loads(raw, object_pairs_hook=_pairs)
-    if type(value) is not dict or set(value) != _BINDING_KEYS:
+    if type(value) is not dict:
         raise ValueError
-    if value.get("schema") != 1 or type(value.get("schema")) is not int:
+    schema = value.get("schema")
+    if type(schema) is not int or schema not in (1, 2):
         raise ValueError
+    keys = _BINDING_KEYS if schema == 1 else _BINDING_KEYS | {"execution_profile"}
+    if set(value) != keys:
+        raise ValueError
+    if schema == 2:
+        # Shape only here. The independently byte-verified builder validates the
+        # exact fixed profile in source preflight before any project import.
+        profile = value["execution_profile"]
+        if type(profile) is not str or not 0 < len(profile) <= 1024:
+            raise ValueError
     if (
         json.dumps(
             value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
@@ -280,6 +290,12 @@ def _run() -> int:
     for path in observation.search_paths:
         if path not in sys.path:
             sys.path.append(path)
+    execution_profile = binding.get("execution_profile")
+    before_import_runtime = (
+        observer.measure_runtime_before_import(observation)
+        if execution_profile is not None
+        else None
+    )
     # All source/package associations are now bound. This is the first project
     # import; existing runtime, Reader, result and publication guards stay intact.
     _STAGE = "project_import"
@@ -300,6 +316,8 @@ def _run() -> int:
             output_directory="/output",
             build_manifest=_MANIFEST,
             manifest_sha256=observation.manifest_sha256,
+            execution_profile=execution_profile,
+            before_import_runtime=before_import_runtime,
         ),
     )
     return 0
