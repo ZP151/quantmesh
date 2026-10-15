@@ -1,5 +1,50 @@
 # Active Goal — iteration0038 Option A
 
+## PR176 approved and merged; exact private source/runtime staged (2026-10-16 Singapore)
+
+The user confirms two independent human reviewers including Safety Owner
+approve exact170e066 and authorizes its normal code merge. Current CI38759759750
+passes5142core/142skip/60golden checks. The single fresh premerge observation
+finds the same head/basefb66, all required checks successful and no actionable
+review. Normal match-head squash at2026-10-15T16:43:19Z yieldsd90e3ac0c8a48464794f10874045c137e22ba974;
+candidate/merge complete treef2135ce2de92a00db9376ad8aed809d2be131c04 matches, fetched full diff0.
+The observer summary's stale tested-merge field was corrected against raw
+release logs to5b2b8ff42c3ec0043d70b2cf0dd26658c995b717; original evidence retained.
+No repeat CI/human question or PR175 gate is needed.
+
+Actual research-host intake confirms existing2CPU/8GB and no installed research
+API/PG/Worker/advisory units. Reviewed merged source is now staged at
+/home/ubuntu/qm-research/releases/d90e3ac0c8a48464794f10874045c137e22ba974/source;
+the copied existing locked81-wheel runtime is outside source at
+/home/ubuntu/qm-research/runtime/venv. Actual source/import/license/dependency
+admission passes7.625s with actual_build=d90e3ac0c8a48464794f10874045c137e22ba974,
+unchanged lock07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a.
+No dependency installation, service/config activation, SQL connection or key/
+provider read occurred. Staged363946096B; combined original whole+new1317519461B
+under5GB, parent+new772301795B under1GB, free158823743488B above50GB.
+This is an actual persistent source/runtime stage, not running-service acceptance.
+
+Worker software39d0e64/21892d7/b603120 remains separate, not yet integrated or
+deployed. Recovery-manifest e11a57b has accepted exact-source actual readonly
+capture/concurrent-writer and mutation-negative qualification; this certifies
+manifest capture only. New bundle b941dee is withheld: root's second bounded
+review reproduces a real libpq180006 service-file serialization bug without any
+database connection. Same backup chat is correcting this single known finding;
+no third structural review or Task2 encrypted-restore execution is authorized.
+
+Next: private PG/TLS/role/config and host-resource policy, independently checked
+rollback/unit startup, then new legal analysis-requested fixed-fixture task and
+report SHA binding before real advisory. Coherent Worker/backup integration and
+their required CI/human/runtime recovery gates remain. Preserve application
+69515b79/paper=true/live=false, rollbackc8e1813, Windows gateway and original
+tunnel. Server-owned OpenD install/auth/source switch is still open. No new paid
+resources. Full Option A ACTIVE; formal168h NOT_REQUIRED.
+
+Evidence: output/0038-release-readiness/pr176-reviewed-merge.json;
+output/0038-merged-private-deployment/{read-only-intake,stage-checked}.json;
+output/0038-orchestration/backup-bundle-review-round2.json. The next tracked
+release plan is docs/superpowers/plans/2026-10-16-private-research-release.md.
+
 ## PR176 fixed-date replay fixtures repaired; next exact-head CI pending (2026-10-15)
 
 CI38749233362 on287fe68 ended FAILURE:5140passed/2failed/142skipped,
