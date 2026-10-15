@@ -1,5 +1,34 @@
 # QuantMesh Domain Context
 
+## PR176 historical replay fixture repaired; fresh CI required (2026-10-15)
+
+CI38738520307 on d8487c3 ended FAILURE:5141passed/1failed/142skipped,
+21warnings/3260.56s. The sole replay-order failure races real seven-day lake
+retention against fixed historical test rows. The repair fixes only the shared
+test lake clock at T0+1day and explicitly calls prune before the replay read;
+feed freshness still uses the real clock, production retention and all existing
+count/order/provenance/time assertions remain unchanged. Deterministic RED:
+1failed/10.74s; GREEN:1passed/6.79s; affected router/feed/buffer suite:
+132passed/6warnings/34.17s. Ruff/format/whitespace pass. Independent narrow
+Spec/Quality review PASS, no P1/P2. Actual logs, exits, resource deltas, original
+test and failed CI log are retained in output/0038-ci38738520307-fix/.
+
+The next commit requires its own full CI; do not rerun the failed old run or
+reuse earlier head checks. PR176 remains Draft and no new human approval
+question has been sent: user requested the concrete packet only after all
+required checks pass. Existing native advisory proofs remain bound to their
+original measured files/build; this test-only change does not certify a new
+full merged deployment. PR175 is approved and merged separately.
+
+Async coordination reuses existing chats: #132 observes exact-head CI; #170
+implements only the two-slot Worker loop/internal stop scope in its own branch;
+#171 implements only the formal-service read-only snapshot/artifact/effect/
+portfolio manifest in its own branch after this root repair checkpoint. Public
+four-argument Worker interfaces stay frozen; no new JobStore/ledger is needed.
+Root owns shared docs, integration, approval and deployment; at most two writers.
+Permanent units/real Worker and backup recovery/provider/source cutover remain
+open. No secret/provider/deployment effect. Full A ACTIVE;168h NOT_REQUIRED.
+
 ## Explicit advisory bootstrap software verified; release pending (2026-10-15)
 
 Task2b provides a separate opt-in CLI and exact owner-private configuration;
