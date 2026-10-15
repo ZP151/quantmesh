@@ -1,5 +1,47 @@
 # QuantMesh Domain Context
 
+## Current real browser/report/API restart witness (2026-10-15)
+
+Actual ubuntu private SSH and current372c2ff Worker image06bfff6e now complete
+one REAL existing-page submission, job375c232057454d5288c1292a9185042f. Its
+3503B immutable reportSHA173f770ee5d2b25ea6042b3a46fe240a92068b6911498abc47a737db143c5beb
+matches real browser DOM, downloaded JSON and fresh held server artifact bytes.
+Momentum1/equities r1/AAA+BBB+CCC/train10/test5/step5/6bps uses the existing
+engine; canonical comparisonSHA84b978294770bf6ea7994e279236b1e002a23fbca862231069a3cb9f0bc27b28
+passes. Explicit fixture-only / opaque native cache unverified claims remain;
+synthetic statistics are not strategy performance or arbitrary Python admission.
+Authenticated REAL HTTPS API passes; unauthenticated options401. Owned nonroot
+API PID87833->90193, then actual page reload, authoritative refresh and API report
+reopen preserve the same job/ref/SHA/bytes. Real PG87750->90253 clean restart also
+retains the same report. Whole bounded operation186.366s/exit0. One-shot Worker
+completed normally; persistent Worker crash recovery is not claimed.
+
+API/SPA is the already qualified immutable parent checkouteb880b2; the current
+372c2ff source identity applies to pinned Worker modules/image, not a claimed
+full372c2ff service deployment. The temporary dispatcher reuses both real apps,
+with no replacement page/MockTransport/local-store submission. First failures
+(route registration race, self MagicDNS disabled, initial certificate handshake
+latency) remain retained in output/0038-browser-profile[-2,-3,-4]. Exact foreground
+route readiness and actual verified TLS warmup fix QA setup only; product timeouts
+and certificate validation remain. Temporary Tailnet DNS was restored to prior
+CorpDNS=false; production private-service DNS configuration remains a release item.
+
+Independent fresh cleanup/read checker exits0: exact CID/profile/mount absent,
+API/PG PIDs absent,41543/8110/8120 free,Serve{},prior DNSfalse. No cleanup performed
+by checker. Original PG-inclusive cloud delta2973900800B<=5GB, parent541962240B<=1GB,
+free159288905728B. New1MiB local QA phase carries all failed attempts/DOM/PNGs;
+prior129MB estimate remains FAILED and whole-C attribution pending. Evidence:
+output/0038-browser-profile-5/{response,browser,independent-checked,resource}.json,
+report-before/after-restart.json, downloaded JSON and verified-page.png.
+
+Next exact-head broad gates/PR175 integration and required human release reviews;
+no persistent deployment or full Option A completion. Server-owned OpenD activation,
+real Agent aggregate containment/approved egress and paid witness, durable backup/
+recovery remain pending. User confirms an available OpenAI project key/credit;
+prepare named private input mechanism before asking for entry, never key in chat.
+No key installed or model call made. paper=true/live=false;168h NOT_REQUIRED.
+
+
 ## Current registered-fixture report result (bounded qualification)
 
 Actual source372c2ff/image06bfff6e/current81metadata produced real PG-backed

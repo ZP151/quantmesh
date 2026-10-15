@@ -1,5 +1,47 @@
 # iteration0038: first server report delivery contract
 
+## Current real browser/report/API restart witness (2026-10-15)
+
+Actual ubuntu private SSH and current372c2ff Worker image06bfff6e now complete
+one REAL existing-page submission, job375c232057454d5288c1292a9185042f. Its
+3503B immutable reportSHA173f770ee5d2b25ea6042b3a46fe240a92068b6911498abc47a737db143c5beb
+matches real browser DOM, downloaded JSON and fresh held server artifact bytes.
+Momentum1/equities r1/AAA+BBB+CCC/train10/test5/step5/6bps uses the existing
+engine; canonical comparisonSHA84b978294770bf6ea7994e279236b1e002a23fbca862231069a3cb9f0bc27b28
+passes. Explicit fixture-only / opaque native cache unverified claims remain;
+synthetic statistics are not strategy performance or arbitrary Python admission.
+Authenticated REAL HTTPS API passes; unauthenticated options401. Owned nonroot
+API PID87833->90193, then actual page reload, authoritative refresh and API report
+reopen preserve the same job/ref/SHA/bytes. Real PG87750->90253 clean restart also
+retains the same report. Whole bounded operation186.366s/exit0. One-shot Worker
+completed normally; persistent Worker crash recovery is not claimed.
+
+API/SPA is the already qualified immutable parent checkouteb880b2; the current
+372c2ff source identity applies to pinned Worker modules/image, not a claimed
+full372c2ff service deployment. The temporary dispatcher reuses both real apps,
+with no replacement page/MockTransport/local-store submission. First failures
+(route registration race, self MagicDNS disabled, initial certificate handshake
+latency) remain retained in output/0038-browser-profile[-2,-3,-4]. Exact foreground
+route readiness and actual verified TLS warmup fix QA setup only; product timeouts
+and certificate validation remain. Temporary Tailnet DNS was restored to prior
+CorpDNS=false; production private-service DNS configuration remains a release item.
+
+Independent fresh cleanup/read checker exits0: exact CID/profile/mount absent,
+API/PG PIDs absent,41543/8110/8120 free,Serve{},prior DNSfalse. No cleanup performed
+by checker. Original PG-inclusive cloud delta2973900800B<=5GB, parent541962240B<=1GB,
+free159288905728B. New1MiB local QA phase carries all failed attempts/DOM/PNGs;
+prior129MB estimate remains FAILED and whole-C attribution pending. Evidence:
+output/0038-browser-profile-5/{response,browser,independent-checked,resource}.json,
+report-before/after-restart.json, downloaded JSON and verified-page.png.
+
+Next exact-head broad gates/PR175 integration and required human release reviews;
+no persistent deployment or full Option A completion. Server-owned OpenD activation,
+real Agent aggregate containment/approved egress and paid witness, durable backup/
+recovery remain pending. User confirms an available OpenAI project key/credit;
+prepare named private input mechanism before asking for entry, never key in chat.
+No key installed or model call made. paper=true/live=false;168h NOT_REQUIRED.
+
+
 Issues [#172](https://github.com/ZP151/quantmesh/issues/172),
 [#171](https://github.com/ZP151/quantmesh/issues/171), PR175. Integration owner:
 root. Frozen on2026-10-15 Singapore; this contract changes delivery order, not
@@ -89,14 +131,14 @@ fixture_only and opaque_native_cache_state=unverified in canonical SHA identity.
 - [x] Task1: worker_build.py fixed profile factory/parser/job matching and exact
   versioned binding codec; tests/test_worker_registered_profile.py plus existing
   binding contract tests RED then GREEN. No activation in this checkpoint.
-- [ ] Task2: worker_execution.py/worker_admission.py trusted parent selection,
+- [x] Task2: worker_execution.py/worker_admission.py trusted parent selection,
   binding schema2 and launch/exit comparisons; worker_entry.py and
   worker_provenance.py independent schema2 decode and actual strict pre-import
   runtime measurement. job_runner.py selects profile only from that binding,
   repeats actual source/dependency bytes at compute, preserves general loaded
   module rejection, sealed Reader and all kernel/fence controls. Targeted
   negatives: cross-profile/schema/runtime/evidence/data substitution and no fallback.
-- [ ] Task3: canonical report evidence checked against parent selection in
+- [x] Task3: canonical report evidence checked against parent selection in
   _validated_child_result; actual numerical/schema/cost and stale/cancel tests.
   Reuse current report/API/UI and backup tools; no new execution/report engine.
 - [ ] Task4: freeze exact committed source/current image pins, ONE actual PG job,
@@ -670,3 +712,38 @@ owned cleanup pass. BROWSER/NETWORK/API process restart still pending; no full
 release, arbitrary Python or strategy performance claim. Exact source and proof
 hashes mirrored in iteration. Original129MB local estimate FAILED retained;
 corrected call forecast129012193<=new129032768. Cloud5GB unchanged.
+
+
+Browser witness execution ruling: reuse the current372c2ff Worker image/pins,
+existing fixture/PG and committed workstation SPA. One bounded UI-created job
+is needed to prove actual user submission, rather than replaying the completed
+ASGI-only witness. A disposable nonroot loopback8110 API/SPA dispatcher and
+foreground Tailnet HTTPS8443 route serve this candidate qualification only;
+require empty prior Serve configuration, preserve public ingress closed, and
+stop only retained owned children/route after same-job/ref/SHA API restart.
+No persistent service deployment or production source-build claim. The existing
+page's model-call budget12/USD1 remains inert with analysis_requested=false;
+no model adapter/key/call is supplied. Compare actual requested fixture/config/
+6bps canonical math again; do not treat synthetic returns as performance.
+Allocate a separate bounded1MiB local QA evidence phase for scripts/DOM/images
+within existing user disk and three approved AWS instances. Prior129MB FAILED
+estimate and all failed attempts remain unchanged. Original cloud5GB, parent1GB
+and50GB-free guards still apply. Temporary operation <=15min plus bounded PG/
+cleanup overhead; no persistent route, Funnel, new package or paid capacity.
+
+Browser topology correction before effects: existing strict staging-origin validator
+requires default HTTPS443. Use temporary foreground Serve443 (prior config empty),
+not8443 and not a validator bypass. Actual API/SPA base is the existing immutable
+eb880b2 checkout; current372c2ff applies only to pinned Worker modules/image.
+Research API actual_build stays unqualified/None. These are separate source claims.
+
+Actual browser intake failures retained: f2c82fe9 route status queried before
+foreground registration; real1s status shows exact Foreground/TCP443/HTTPS/
+fixed proxy and removal on owned process exit. Add bounded8s readiness wait.
+b606e61e/38670447 fail before UI or Worker at self-domain DNS; actual hostname/
+100.108.159.22 identity and local route match, CorpDNS=false/getent exit2.
+For temporary qualification only, require prior CorpDNS=false, request existing
+Tailnet DNS accept=true, observe real hostname resolution, and restore exact
+false in outer finally. No public ingress, endpoint/TLS fallback, resolver
+monkeypatch or persistent DNS deployment. Production DNS remains in release
+checklist. All failed operations stopped own API/Serve/PG/profile/mount/port.
