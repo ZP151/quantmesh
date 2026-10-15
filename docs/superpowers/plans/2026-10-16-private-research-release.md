@@ -15,8 +15,9 @@ existing service/store/Worker/model adapters. No new platform or paid resources.
   runtime staged independently of source; actual runtime admission exit0/7.625s.
 - [x] Preserve all old failed CI/native/budget evidence and existing app/tunnel.
 
-The above is source/runtime staging only. No API/PG/Worker/advisory unit is
-installed; no SQL/model-key/provider action was performed by this stage.
+The initial source/runtime staging was inert. The subsequent PG/API installation
+and actual SQL/auth/TLS/resource/stop-restart acceptance below are now complete.
+Worker/advisory remain uninstalled; model key/provider remain untouched.
 
 ## Next bounded operational slice
 
@@ -26,17 +27,17 @@ independent rollback witness. Root owns new config/units/operational evidence;
 existing backup chat alone owns its current three source files. No concurrent
 write to those files or already merged PR176.
 
-- [ ] Record actual total host memory/CPU allocation including two max-budget
+- [x] Record actual total host memory/CPU allocation including two max-budget
   Worker containers, API/PG/advisory controller and future gateway/OS headroom;
   inspect actual existing Docker/systemd placement rather than claiming a
   process unit also caps Docker-launched containers.
-- [ ] Stage fresh owned PostgreSQL data, dedicated nonprivileged role, TLS trust,
+- [x] Stage fresh owned PostgreSQL data, dedicated nonprivileged role, TLS trust,
   private0600 credential files and exact code/config/unit manifests outside source.
   No old qualification DB/secret is reused as production authority. Use only
   already audited PG18.6 tooling after exact byte/notice admission.
-- [ ] Verify default source/config admission before SQL/listener effects. Render
+- [x] Verify default source/config admission before SQL/listener effects. Render
   literal merged source/expected_build; venv outside checkout, no current link.
-- [ ] Verify exact unit bytes/syntax first; activate under bounded resource policy,
+- [x] Verify exact unit bytes/syntax first; activate under bounded resource policy,
   then inspect actual MainPID/executable/start/cgroup/loopback/auth401/health/build/
   paper/live flags. Config-only systemctl output is not a running proof.
 - [ ] Prove service restart retains normal job identity and report references;
@@ -45,7 +46,7 @@ write to those files or already merged PR176.
 
 ## Worker/backup software and required follow-through
 
-- [ ] Root accepts only final known bundle service-serialization fix with real
+- [x] Root accepts only final known bundle service-serialization fix with real
   parser RED/GREEN, affected logs and exact source hash. At most two reviews for
   this slice; a third structural issue returns to Planner.
 - [ ] Integrate reviewed Worker loop/bootstrap and accepted backup leaves on this
@@ -78,3 +79,16 @@ write to those files or already merged PR176.
 No whole-A completion claim until all current required user-loop/Worker recovery/
 backup/model/source evidence exists. Formal168h is NOT_REQUIRED; Windows logon,
 outage/capacity/90s drills stay deferred and do not defer current Worker recovery.
+
+## Actual integration boundary2026-10-16
+
+Reviewed Worker leaves39d0e64/21892d7/b603120 and backup4ad5d07/e11a57b/
+b941dee/b5140c8 are integrated through72e407e. One final correctly isolated
+native affected suite passes440/26conditional skips, Ruff/format9files/diff.
+Two earlier launcher failures and the restored shared Git metadata are retained.
+The forthcoming final PR needs its own exact-head CI/human approval; no new
+Worker or backup source is deployed. Actual d90 PG/API run and independent
+metadata readback pass. No completed report/job persistence is claimed yet.
+Backup Task2 is reduced to an ignored actual same-snapshot encrypted restore
+qualification; no new qualifier CLI/source framework. User's separately
+authorized vn.py fixture slice issue177 stays in its independent worktree.

@@ -1,5 +1,64 @@
 # Active Goal — iteration0038 Option A
 
+## Private PG/API running; Worker/backup integration awaits final gates (2026-10-16 Singapore)
+
+The new private PostgreSQL/API are now enabled and running from reviewed merged
+d90e3ac, separate from the next software candidate. Actual TLS1.3/256bit SCRAM
+role has no superuser/createDB/createRole/replication/bypassRLS privileges;
+plaintext, wrong CA and wrong password fail. Authenticated health200 reports
+actual_build d90e3ac, advisory-only, model unavailable and Worker pending;
+unauthenticated health401. Actual PG768MiB/CPU75%/64PID and API512MiB/CPU50%/
+128PID cgroups have swap0 and matching MainPID/executable/start identities.
+Owned stop/restart removes old92926/92954, then PG93089/API93104 reopen the same
+PG system identifier7696939994682018330. This is a new-service stop/restart
+rollback witness, not a numerical-job/report recovery or existing-app rollback.
+Independent one-shot metadata readback confirms root-owned unit bytes, enabled/
+active states, exact source/tree/81lock, loopback listeners, oldPID absence and
+unauthenticated401. It uses root's saved authenticated200 evidence, not a new
+credential read. The collector's public trust-bundle/individual-CA hash mismatch
+is documented; it does not establish a new trust-bundle digest. Existing app,
+rollback, Windows source/tunnel and all model-key files remain untouched.
+
+One initial preparation command omitted the documented source WorkingDirectory;
+default preflight refused before SQL/listener. With cwd fixed it passes; fresh
+data/credentials were not regenerated. Preserve this failure and its receipt.
+Host budget reserves two2048MiB Workers, PG768/API512/Worker-controller384/
+advisory384/gateway256/Docker256MiB, leaving1216634880B for the OS. The Docker
+reserve is not a newly enforced daemon cap, and Docker-launched children are
+not claimed to belong to the Worker controller unit.
+
+Root integrates the seven already-reviewed Worker/backup leaves through72e407e.
+Final code affected suite on an exact fresh native Linux checkout440passed/
+26conditional skips/2existing warnings/63.42s; Ruff and format9files/diff pass.
+The first mixed test launcher omitted service PYTHONPATH; the second incorrectly
+exported Git directory variables across fixture git-init tests and used service
+cwd for root CLI tests. All failures remain. That launcher changed shared
+core.bare=true; root preserved its config, restored only core.bare=false and
+verified unchanged HEAD/clean tracked tree, without reset/source rollback.
+The final native checkout inherits no Git directory variables and uses root cwd.
+New source remains unmerged/undeployed pending exact-head CI and applicable
+actual human approval; d90 PG/API deployment does not certify this new Worker.
+
+The bundle libpq known-finding fix b5140c8 is accepted after actual parser
+RED/GREEN and99affected passes; no third structural review. The same backup
+chat now qualifies actual same-snapshot pg_dump/restic/fresh restore using only
+ignored harness/evidence and admitted tools, not a new product qualifier CLI.
+No production/full-Worker/off-host recovery claim follows from that local test.
+
+The user separately authorizes a vn.py API-to-UI fixed-fixture vertical slice in
+the product research chat, issue177, following its42-check upstream bake-off.
+Its independent branch/worktree owns the explicit experimental Windows runner,
+new versioned reports and opt-in UI/API. It cannot alter formal PG/Worker
+signatures, baseline validator or81-wheel closure. Root owns shared records.
+This new human instruction supersedes the earlier research-only scope; it does
+not replace full Option A or authorize model/trading/cloud effects.
+
+Evidence: output/0038-merged-private-deployment/{pg-api-prepared,activation-result}.json;
+19c1/output/0038-private-pg-api-independent/; output/0038-private-recovery-integration-native/;
+output/0038-private-recovery-integration-import-corrected/shared-git-repair.json.
+Persistent numerical Worker/recovery, encrypted restore, real advisory and
+server-owned gateway/source acceptance remain open. Full A ACTIVE.
+
 ## PR176 approved and merged; exact private source/runtime staged (2026-10-16 Singapore)
 
 The user confirms two independent human reviewers including Safety Owner
