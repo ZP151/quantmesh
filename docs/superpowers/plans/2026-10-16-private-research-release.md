@@ -92,3 +92,32 @@ metadata readback pass. No completed report/job persistence is claimed yet.
 Backup Task2 is reduced to an ignored actual same-snapshot encrypted restore
 qualification; no new qualifier CLI/source framework. User's separately
 authorized vn.py fixture slice issue177 stays in its independent worktree.
+
+## Parallel issue177 and known transport correction checkpoint
+
+The operator explicitly selected vn.py reuse for issue177. Draft
+[PR179](https://github.com/ZP151/quantmesh/pull/179), head7d3e807/tree7bf2593b,
+delivers the optional Windows fixed-synthetic workflow: official DoubleMA/AtrRSI
+selection, numeric parameters and cost units, native progress, parent-reconciled
+report, browser SHA verification and actual JSON download. Two bounded reviews
+pass; native repeat/cost/lifecycle/cashbook evidence and frontend436tests pass.
+The downloaded12936-byte built-SPA report SHA is
+57134549cb2f95127c3a129d24656ccb03723d25f057469643f062a4780f6720;
+root independently verifies it and the five current source hashes. This is an
+experimental user-loop milestone, not production, profitability, durable active
+job recovery, Linux/runtime-redistribution or advisory admission. ADR0029 remains
+in that independent PR; the default API does not mount the experimental routes.
+The one Windows full backend run is INCOMPLETE/exit-1 after bounded identity-stop;
+the observed original case separately passes51.45s and the full run later advances.
+Cause remains undetermined. Linux required CI and applicable human review remain
+open; neither PR179 nor full Option A is complete or merge-ready.
+
+Separately, PR178 oldhead446ab10 cannot merge even if CI passes: actual pg_dump
+custom format interpreted --file=- as a literal filename and left stdout empty.
+All native failure evidence and the20278-byte archive are preserved. The Planner
+reduced a new correction slice to default stdout plus early zero-output refusal;
+accepted1d21911 is integrated here as c26bbfe. Actual affected45+55tests pass.
+Public interfaces, schema, tool pin, credentials and limits remain unchanged.
+New-source native capture/encrypted fresh restore and final exact-head CI/human
+gates are still required. Existing d90 private PG/API acceptance remains valid;
+Worker/advisory activation and real provider/source recovery remain open.
