@@ -649,3 +649,24 @@ New base127836191/phase967000 plus prior196006 retains original129MB maximum;
 no additional capacity/cost and no old failed peak deletion. Current profile
 native62239B plus local28885B includes all failed/corrected unit logs/fixtures.
 No new package or environment. Whole-C/Git attribution remains PENDING.
+
+Ruling before real profile call: frozen caller failed pre-effect at985758B
+against967000 phase. Preserve both earlier caller failures; no SSH/job occurred.
+Its74077 local count duplicates16812B of old entry recipes already in825472
+carry; count only new7009B callers instead, yielding975955B forecast, still over
+old phase by8955B. The129000000B internal local estimate is FAILED, not rewritten
+as passed. Approved new profile work needs a separate additional32768B local
+evidence allowance: new internal ceiling129032768B/phase999768B. This is a
+coordinator bookkeeping choice within the user's existing disk/resources, not
+added cloud capacity/fees; actual local free196105183232B. Original cloud5GB/
+free50GB and parent1GB limits unchanged. Retain all old failed caps/files and
+whole-C attribution pending; no cleanup to make a budget green.
+
+Task4 actual report checkpoint: source372c2ff/image06bfff6e/current81 metadata,
+jobf0ac1c6c/noncec6068690/46.503s/exit0. Real PG->isolated numerical report->ASGI
+read and actual PG process restart/same ref/SHA pass. Same-engine fixture/config/
+6bps canonical result matches. Independent fresh actual3421B artifact read and
+owned cleanup pass. BROWSER/NETWORK/API process restart still pending; no full
+release, arbitrary Python or strategy performance claim. Exact source and proof
+hashes mirrored in iteration. Original129MB local estimate FAILED retained;
+corrected call forecast129012193<=new129032768. Cloud5GB unchanged.

@@ -1,5 +1,31 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Actual first fixed-profile PG numerical report and process restart
+
+Frozen372c2ff source, image06bfff6ebec933e18c4c14b7dff66a10f535a3a5050b3d9f57c8e0506c153e34,
+OCI6ae6cf50739a96d439a840ab23abc5019f91bc5497c33b3166f7ed203a45b8fa,
+manifestc385807d/inventorycfe19d9d/current81dependency snapshot8e6b3e1d.
+Source-layer7.843s and metadata15.218s prepare CURRENT bytes only. Actual ONE
+new registered job noncec6068690/46.503s/exit0 passes real TLSv1.3 PG submit/claim,
+current independent parent/kernel/mount/PID/binding, strict pre-import runtime,
+fixed-profile sealed Reader compute and exact report validation/publication.
+Jobf0ac1c6ca8814db4a76dee081fd2bb11; canonical SHAed50f670ab51614c572f6ad1f0c830e46af4fb569b8232fb86c69af43f86acaa;
+immutable reportSHAfc326e9b151a48204035213d6e18cf0d14bdbbb4262bac4d58893fc9b05bee23,
+3421B. Same existing engine/config/6bps canonical comparison passes,10 windows.
+Fixture/test workflow only; native opaque state remains explicitly unverified,
+not a trading or arbitrary-Python certificate. Report/API receipt claims are
+parent-bound. Existing real PG stopped/restarted84560->86710, both owned clean
+exit0; new store/ASGI reads retain same job/ref/bytes/SHA. Actual network API,
+browser page and API process restart still PENDING; do not call full user loop.
+Independent fresh server artifact read validates actual bytes/numerical schema/
+profile/cost; independent cleanup finds exact CID/profile/postmasters absent,
+41543 free, cloud delta2972282880<=5GB/free159290523648. No cleanup performed by
+independent checker. First local checker lacked worktree src import path and
+failed; retained, corrected checker exit0. Local forecast old129MB exceeded;
+new explicit32768B local-only allowance and old FAILED cap preserved in plan.
+Evidence output/0038-worker-profile/; no runtime deploy/model call/source cutover.
+
+
 ## Registered profile parent/entry/report software connected
 
 Current explicit parent profile seals schema2/runtime_schema2 through start and

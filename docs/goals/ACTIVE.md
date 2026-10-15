@@ -1,5 +1,24 @@
 # Active Goal — iteration0038 Option A
 
+## Actual fixed-profile numerical report now passes (current)
+
+Source372c2ff, image06bfff6e/current OCI6ae6cf50/81metadata8e6b3e1d.
+Real PG TLSv1.3 submit/claim -> enforcing isolated momentum1 fixture computation
+-> immutable3421B report succeeded in46.503s. Jobf0ac1c6ca8814db4a76dee081fd2bb11,
+reportSHAfc326e9b151a48204035213d6e18cf0d14bdbbb4262bac4d58893fc9b05bee23.
+Same-engine/config/6bps canonical comparison passes;10 windows, workflow/test
+fixture only, opaque native cache state unverified. PG restarted with new real
+PID and samejob/ref/SHA/bytes reopened. ASGI authenticated report read passes;
+BROWSER/REAL NETWORK API still pending, not full user-loop or production release.
+Fresh independent artifact read verifies SHA/numerical schema/profile/6bps;
+fresh own cleanup verifies no CID/profile/postmasters/41543, cloud delta2972282880
+within original5GB. Existing research Serve config empty,8110/8120 free.
+Next actual browser submit/report via fixed private HTTPS API and owned service
+restart, then exact-head broad gates. No repeated static OpenD preparation.
+Evidence output/0038-worker-profile/{job-response,actual-report,actual-report-
+checked,actual-cleanup}.json. Full scope retained; no model/public/trading fees.
+
+
 Development RESUMED (2026-10-15 Singapore); scheduler tool remains blocked. Deliver the original full A scope: PR175 gates, real Linux
 Worker/Reader→numerical report and reopen, durable private PostgreSQL/jobs/
 backup recovery, advisory Agent/Eval and PC-independent server market feeds.

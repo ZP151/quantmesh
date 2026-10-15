@@ -1,5 +1,18 @@
 # QuantMesh Domain Context
 
+## Current registered-fixture report result (bounded qualification)
+
+Actual source372c2ff/image06bfff6e/current81metadata produced real PG-backed
+isolated momentum1 fixture report,46.503s. Jobf0ac1c6c/reportfc326e9b/3421B;
+same-engine6bps canonical bytes match,10windows. Opaque cache state unverified,
+fixture-only claims are immutable and parent-checked. New PG PID restart/reopen
+retains same job/ref/SHA; ASGI read passes. Browser and real network API remain
+pending; no production deployment/PR175 human approval, arbitrary Python or
+real-source performance claim. Fresh independent SHA/numerical/cleanup checks
+pass; original AWS5GB delta2972282880/free159290523648. Goal development resumed
+under verified audit-chat user instruction; exposed scheduler has no resume API.
+
+
 ## Actual static OpenD dependency inspection — activation still pending
 
 Read-only staging SSH as ubuntu, 2026-10-14 23:46:59 UTC, exit0/6.026s.
