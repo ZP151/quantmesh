@@ -53,6 +53,8 @@ _MAX_PG_DUMP_BYTES = 32 * 1024 * 1024
 _MAX_PG_DUMP_OUTPUT_BYTES = 2 * 1024 * 1024
 _PG_DUMP_TIMEOUT_SECONDS = 60.0
 _PG_DUMP_TERMINATE_SECONDS = 1.0
+_PG_SERVICE_MAX_LINE_BYTES = 1022
+_PG_SERVICE_KEYS = ("host", "port", "user", "password", "dbname", "sslmode")
 
 
 class ManifestCaptureRefused(ValueError):
@@ -908,6 +910,7 @@ def _validate_bundle_inputs(dsn: SecretStr, schema: str, policy, pg_dump_path: P
         raise _refuse()
     if parsed.port is not None and not 1 <= parsed.port <= 65535:
         raise _refuse()
+    _service_file_bytes(service_values)
     pg_dump_path = Path(pg_dump_path)
     if (
         not pg_dump_path.is_absolute()
@@ -963,14 +966,28 @@ def _hash_fd(fd: int) -> str:
 
 
 def _service_file_bytes(values: dict[str, str]) -> bytes:
-    def quote(value: str) -> str:
-        if any(ord(ch) < 32 for ch in value):
+    if not isinstance(values, dict) or set(values) != set(_PG_SERVICE_KEYS):
+        raise _refuse()
+    lines = ["[quantmesh_bundle]"]
+    for key in _PG_SERVICE_KEYS:
+        value = values[key]
+        if not isinstance(value, str):
             raise _refuse()
-        return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
-
-    return (
-        "[quantmesh_bundle]\n" + "".join(f"{key}={quote(value)}\n" for key, value in values.items())
-    ).encode("utf-8")
+        try:
+            value_bytes = value.encode("utf-8", errors="strict")
+        except UnicodeError:
+            raise _refuse() from None
+        if any(byte < 32 or byte == 127 for byte in value_bytes):
+            raise _refuse()
+        if value_bytes and value_bytes[-1] in b" \t\n\r\v\f":
+            raise _refuse()
+        line = key.encode("ascii") + b"=" + value_bytes + b"\n"
+        # libpq reads service files with a 1024-byte buffer and rejects a
+        # line when fgets returns 1023 bytes or more.
+        if len(line) > _PG_SERVICE_MAX_LINE_BYTES:
+            raise _refuse()
+        lines.append(line.decode("utf-8"))
+    return (lines[0] + "\n" + "".join(lines[1:])).encode("utf-8")
 
 
 def _identity_matches(parent_fd: int, name: str, expected: os.stat_result) -> bool:

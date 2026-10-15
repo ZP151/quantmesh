@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ctypes
 import hashlib
 import json
 import os
@@ -7,6 +8,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import SecretStr
@@ -824,6 +826,100 @@ def _fake_dump_body(payload=b"PGDMP-fixture", *, stderr_token=False):
             + ": os.write(2, sys.argv[sys.argv.index('--snapshot') + 1].encode())",
         )
     )
+
+
+@pytest.mark.skipif(not os.environ.get("QM_LIBPQ_LIBRARY"), reason="audited libpq parser witness")
+def test_service_file_bytes_round_trip_through_libpq_parser(monkeypatch, tmp_path):
+    library_path = Path(os.environ["QM_LIBPQ_LIBRARY"]).resolve(strict=True)
+    assert hashlib.sha256(library_path.read_bytes()).hexdigest() == (
+        "755ba5cf7cf85ef3e2be4c8ef4fe7d00f2693f0398baeb38e525a81833ebb64f"
+    )
+    library = ctypes.CDLL(str(library_path))
+
+    class ConninfoOption(ctypes.Structure):
+        _fields_ = [
+            (name, ctypes.c_char_p)
+            for name in ("keyword", "envvar", "compiled", "val", "label", "dispchar")
+        ] + [("dispsize", ctypes.c_int)]
+
+    library.PQconndefaults.argtypes = []
+    library.PQconndefaults.restype = ctypes.POINTER(ConninfoOption)
+    library.PQconninfoFree.argtypes = [ctypes.POINTER(ConninfoOption)]
+    library.PQlibVersion.argtypes = []
+    library.PQlibVersion.restype = ctypes.c_int
+    assert library.PQlibVersion() == 180006
+    values = {
+        "host": "127.0.0.1",
+        "port": "55443",
+        "user": "bundle-user",
+        "password": "p'ass\\word=#x=y",
+        "dbname": "bundle-db",
+        "sslmode": "disable",
+    }
+    service_file = tmp_path / "pg_service.conf"
+    service_file.write_bytes(backup_capture._service_file_bytes(values))
+    service_file.chmod(0o600)
+    monkeypatch.setenv("PGSERVICE", "quantmesh_bundle")
+    monkeypatch.setenv("PGSERVICEFILE", str(service_file))
+    for key in ("PGHOST", "PGPORT", "PGUSER", "PGPASSWORD", "PGDATABASE", "PGSSLMODE"):
+        monkeypatch.delenv(key, raising=False)
+
+    options = library.PQconndefaults()
+    assert options
+    try:
+        parsed = {}
+        index = 0
+        while options[index].keyword:
+            key = options[index].keyword.decode("ascii")
+            if key in values:
+                parsed[key] = options[index].val
+            index += 1
+    finally:
+        library.PQconninfoFree(options)
+
+    assert parsed == {key: value.encode("utf-8") for key, value in values.items()}
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["trailing-space ", "trailing-tab\t", "line\nbreak", "line\rcarriage", "x" * 1020],
+)
+def test_service_file_bytes_refuses_values_that_libpq_cannot_preserve(value):
+    with pytest.raises(ValueError, match="research snapshot manifest refused"):
+        backup_capture._service_file_bytes(
+            {
+                "host": "localhost",
+                "port": "5432",
+                "user": "fixture",
+                "password": value,
+                "dbname": "fixture",
+                "sslmode": "verify-full",
+            }
+        )
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
+def test_capture_backup_bundle_refuses_unrepresentable_service_value_before_connect(
+    monkeypatch, tmp_path
+):
+    lake, artifacts, output, tool, _, _ = _bundle_setup(monkeypatch, tmp_path, _fake_dump_body())
+    connects = []
+    monkeypatch.setattr(backup_capture, "connect", lambda dsn: connects.append(dsn))
+    dsn = SecretStr("postgresql://fixture:trailing%20@127.0.0.1/fixture?sslmode=disable")
+
+    with pytest.raises(ValueError, match="research snapshot manifest refused"):
+        backup_capture.capture_backup_bundle(
+            dsn,
+            schema="qm_research",
+            lake_root=lake,
+            artifact_root=artifacts,
+            output_root=output,
+            pg_dump_path=tool,
+            policy=None,
+        )
+
+    assert connects == []
+    assert not output.exists()
 
 
 @pytest.mark.skipif(os.name == "nt", reason="Linux descriptor-backed executable admission")
